@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %} {{ title }} {% endblock %}
+
+{% block css_includes %}
+<link rel="stylesheet" media="screen" href="/css/handsontable/default.css">
+<link rel="stylesheet" media="screen" href="/css/handsontable/jquery.handsontable.full.css">
+{% endblock %}
+
+{% block content %}
+
+<div style="overflow: scroll" class="handsontable" id="handsontable_{{ table_name }}"></div>
+
+<br/>
+<div id='default_buttons'>
+    <button id="update-{{ table_name }}-table">Upload Table</button>
+    <button id="validate-{{ table_name }}-table">Validate Table</button>
+    <span id='custom_buttons'/>
+</div>
+
+<br/>
+<div id="{{ table_name }}_progress">
+    <div id="initial"></div>
+    <div id="status"></div>
+    <div class="status_tabs">
+        <ul>
+            <li><a data-target="summary" href="#summary">Summary<span class="count"/></a></li>
+            <li><a data-target="errors" href="#errors">Errors<span class="count"/></a></li>
+            <li><a data-target="messages" href="#messages">Messages<span class="count"/></a></li>
+            <li><a data-target="local_duplicates" href="#local_duplicates">Duplicates Locally<span class="count"/></a></li>
+            <li><a data-target="duplicates" href="#duplicates">Duplicates in CRITs<span class="count"/></a></li>
+        </ul>
+        <div id="summary">Note: Quickly double clicking a cell on the "Object Data" column will bring up a Objects dialog.</div>
+        <div id="errors"></div>
+        <div id="messages"></div>
+        <div id="local_duplicates"></div>
+        <div id="duplicates"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#update-{{ table_name }}-table').button({disabled: true})
+    $('#validate-{{ table_name }}-table').button({disabled: true})
+</script>
+
+<div class="handsontable" id="handsontable_object"></div>
+
+{% endblock %}
+
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/bulk_add_default.js"></script>
+<script type="text/javascript" src="/js/handsontable/jquery.handsontable.full.js"></script>
+
+<script type="text/javascript">
+    var defaultTableName = '{{ table_name }}';
+    {% if local_validate_columns %}
+        var defaultValidateColumns = {{local_validate_columns|safe}};
+    {% else %}
+        var defaultValidateColumns = null;
+    {% endif %}
+
+    {% include "handsontable.js" with formdict=formdict is_bulk_add_objects=is_bulk_add_objects %}
+
+    {% if custom_js %}
+        {% include custom_js with formdict=formdict is_bulk_add_objects=is_bulk_add_objects %}
+    {% endif %}
+
+    initializeHandsOnTable('handsontable_{{ table_name }}', '{{ table_name }}');
+</script>
+
+{% endblock %}

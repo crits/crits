@@ -1,0 +1,33 @@
+    <div class="content_box">
+        <h3 class="titleheader">
+            <span>Highlights<span>
+        </h3>
+        <table class="vertical" width="100%">
+        <thead>
+            <th>Date</th>
+            <th>Line</th>
+            <th>Line Date</th>
+            <th>Analyst</th>
+            <th style="max-width: 250px; min-width: 250px;">Line Data</th>
+            <th style="max-width: 250px; min-width: 250px;">Comment</th>
+        </thead>
+        <tbody>
+            {% for highlight in raw_data.highlights %}
+                <tr>
+                    <td>{{ highlight.date|date:'Y-m-d' }}</td>
+                    <td>{{ highlight.line }}</td>
+                    <td>
+                        <span class="edit_underline" id="highlight_date">{{ highlight.line_date }}</span>
+                    </td>
+                    <td>{{ highlight.analyst }}</td>
+                    <td style="max-width: 250px; min-width: 250px;">
+                        {{ highlight.line_data }}
+                    </td>
+                    <td style="max-width: 250px; min-width: 250px;">
+                        <span class="edit_underline" id="highlight_comment">{{ highlight.comment }}</span>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+    </div>

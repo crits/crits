@@ -1,0 +1,12 @@
+{% load url from future %}
+<div id="dialog-forge-relationship" title="Forge New Relationship">
+    <form id="form-forge-relationship" 
+	  action="{% url 'crits.relationships.views.add_new_relationship' %}"
+	  method='POST' enctype="multipart/form-data" item-type="relationship">
+    <table class="form">{{ relationship_form.as_table }}</table>
+    <div id="form-forge-relationship-results" class="message"></div>
+    </form>
+</div>
+
+{% block javascript_includes %}
+{% endblock %}

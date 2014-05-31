@@ -1,0 +1,27 @@
+{% load url from future %}
+    <table class="chart tablesorter" style="table-layout: fixed;">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Data Type</th>
+            <th>Tool</th>
+            <th>Description</th>
+            <th>Upload Date</th>
+            <th>ID</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for data in raw_data %}
+        <tr>
+            <td>
+                <a href="{% url 'crits.raw_data.views.raw_data_details' data.id %}">{{ data.title }}</a>
+            </td>
+            <td>{{ data.data_type }}</td>
+            <td>{{ data.tool.name }} ({{ data.tool.version }})</td>
+            <td>{{ data.description }}</td>
+            <td>{{ data.created|date:"m/d/Y" }}</td>
+            <td>{{ data.id }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>

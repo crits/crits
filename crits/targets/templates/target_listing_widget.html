@@ -1,0 +1,42 @@
+{% load url from future %}
+<div class="content_box" style="width: 100%;">
+    {% if paging %}
+    {% url 'crits.targets.views.user_target' as paging_url %}
+    {% include 'paging_widget_top.html' %}
+    {% endif %}
+    <div class="content_body">
+    <table class='chart target_tablesorter chart2'>
+        <thead>
+        <tr>
+        <th>First</th>
+        <th>Last</th>
+        <th>Email Address</th>
+        <th>Emp #</th>
+        <th>Count</th>
+        <th>Dept</th>
+        <th>Div</th>
+        <th>ID</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for hit in user_target %}
+        <tr>
+            <td>{{ hit.firstname }}</td>
+            <td>{{ hit.lastname }}</td>
+
+            <td><a href="{% url 'crits.targets.views.target_info' hit.email_address %}">{{ hit.email_address }}</a></td>
+
+            <td>{{ hit.organization_id}} </td>
+            <td>{{ hit.email_count|floatformat }}</td>
+            <td>{{ hit.department }}</td>
+            <td>{{ hit.division }}</td>
+            <td>{{ hit.id }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% if paging %}
+    {% include 'paging_widget_bottom.html' %}
+    {% endif %}
+</div>

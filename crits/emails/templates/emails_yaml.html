@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Email{% endblock %}
+
+{% block content %}
+
+<div class="content_box" style="display: table;">
+    <h3 class="titleheader">
+    <span>Upload Email</span>
+    </h3>
+    <form action="." method="POST" enctype="multipart/form-data">
+    <table class="form">
+    {{ form.as_table }}
+    </table>
+    <input class="form_submit_button" type="submit" value="Upload">
+    </form>
+</div>
+{{error}}
+
+{% endblock %}

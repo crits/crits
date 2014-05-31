@@ -1,0 +1,93 @@
+{% load url from future %}
+<div class="content_box" style="width: 75%;">
+    <h3 class="titleheader">
+        <span>Service</span>
+    </h3>
+    <div>
+    <table class='vertical services' width="100%">
+        <tbody>
+            <tr>
+                <td class="key">Name</td>
+                <td>{{ service.name }}</td>
+            </tr>
+            <tr>
+                <td class="key">Version</td>
+                <td>{{ service.version }}</td>
+            </tr>
+            <tr>
+                <td class="key">Type</td>
+                <td>{{ service.type }}</td>
+            </tr>
+            <!--<tr>
+                <td class="key">Purpose</td>
+                <td>{{ service.purpose }}</td>
+            </tr>-->
+            <tr>
+                <td class="key">Supported Types</td>
+                <td>{{ service.supported_types|join:", " }}</td>
+            </tr>
+            <tr>
+                <td class="key">Required Fields</td>
+                <td>{{ service.required_fields|join:", " }}</td>
+            </tr>
+            <tr>
+                <td class="key">Rerunnable</td>
+                <td>{{ service.rerunnable }}</td>
+            </tr>
+            <tr>
+                <td class="key">Enabled?</td>
+                <td>
+                {% if service.enabled %}
+                    {% if admin and service.status == "available"%}
+                        <span class="enabled" data-url="{% url 'crits.services.views.disable' service.name %}">Yes</span>
+                    {% else %}
+                        <span>Yes</span>
+                    {% endif %}
+                {% else %}
+                    {% if admin and service.status == "available"%}
+                        <span class="enabled" data-url="{% url 'crits.services.views.enable' service.name %}">No</span>
+                    {% else %}
+                        <span>No</span>
+                    {% endif %}
+                {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">Run on triage?</td>
+                <td>
+                {% if service.run_on_triage %}
+                    {% if admin and service.status == "available"%}
+                        <span class="enabled" data-url="{% url 'crits.services.views.disable_triage' service.name %}">Yes</span>
+                    {% else %}
+                        <span>Yes</span>
+                    {% endif %}
+                {% else %}
+                    {% if admin and service.status == "available"%}
+                        <span class="enabled" data-url="{% url 'crits.services.views.enable_triage' service.name %}">No</span>
+                    {% else %}
+                        <span>No</span>
+                    {% endif %}
+                {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">Description</td>
+                <td>{{ service.description.strip|linebreaksbr }}</td>
+            </tr>
+            <tr>
+                <td class="key">Status</td>
+                <td class="{{ service.status }}">
+                    {{ service.status|capfirst }}
+                    {% if admin and config_error %}
+                        - <span style="font-weight: bold; color: red">{{ config_error }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/services.js"></script>
+{% endblock %}

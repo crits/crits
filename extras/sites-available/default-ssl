@@ -1,0 +1,17 @@
+<IfModule mod_ssl.c>
+<VirtualHost _default_:443>
+	ServerAdmin webmaster@localhost
+
+	LogLevel warn
+	CustomLog /var/log/apache2/ssl_access.log combined
+
+	SSLEngine on
+	SSLCertificateFile    /etc/ssl/certs/crits.crt
+	SSLCertificateKeyFile /etc/ssl/private/crits.plain.key
+
+	DocumentRoot "/data/crits/extras/www"
+	WSGIScriptAlias /crits /data/crits/django.wsgi
+	WSGIApplicationGroup %{GLOBAL}
+
+</VirtualHost>
+</IfModule>

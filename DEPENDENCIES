@@ -1,0 +1,40 @@
+This is a list of all core dependencies for CRITs. Please be aware if you
+leverage services they may require their own dependencies. Since we import
+services into core when the web server loads, failure to install dependencies
+for these services may cause CRITs to break!
+
+* Apache
+* curl
+* mod-wsgi
+* MongoDB 2.6.1
+* PCRE3
+* Python 2.7.x
+* ssdeep
+* unrar
+* upx
+* zip
+* 7zip
+
+Python Libraries:
+* anyjson
+* cybox 2.0.0b6
+* dateutil
+* defusedxml 0.4.1
+* django 1.6.2
+* django-tastypie-0.11.0
+* django-tastypie-mongoengine-0.4.5
+* importlib
+* lxml
+* m2crypto
+* mongoengine 0.8.7
+* pycurl
+* pydeep
+* pymongo 2.7.0
+* pyparsing
+* python-ldap 2.4.15
+* python-magic
+* python-mimeparse 0.1.4.1
+* setuptools
+* simlejson
+* stix 1.0.0a7
+* yaml

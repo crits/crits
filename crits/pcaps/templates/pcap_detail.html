@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %} PCAP Detail {% endblock %}
+
+{% block content %}
+
+<script>
+    var pcap_md5 = "{{ pcap.md5 }}";
+    var update_pcap_description = "{% url 'crits.pcaps.views.set_pcap_description' pcap.md5 %}";
+</script>
+
+{% if pcap %}
+<div id="tabnav" class="tabnav" style="font-size:90%;">
+    <ul style="font-size: 125%;">
+    <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ pcap.analysis|length }})</span></a></li>
+    {% include 'services_tab_list_widget.html' %}
+</ul>
+
+<div id="details_section">
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        <li><a href="{% url 'crits.core.views.download_file' pcap.md5 %}?type=pcap">Download PCAP</a></li>
+        {% if admin %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="pcap" title="Delete PCAP" action='{% url "crits.pcaps.views.remove_pcap" pcap.md5 %}'>Delete PCAP</a></li>
+        {% endif %}
+    </ul>
+    </span>
+    <div class="content_box content_details">
+        <h3 class="titleheader">
+        <span>PCAP Details<span>
+        </h3>
+        <table class="vertical" width="100%">
+        <thead>
+        </thead>
+        <tbody>
+            <tr>
+            <td class='key'>ID</td>
+            <td>{{ pcap.id }}</td>
+            </tr>
+            <tr>
+            <td class='key'>Filename</td>
+            <td>{{ pcap.filename }}<a href="{% url 'crits.core.views.download_file' pcap.md5 %}?type=pcap"><div class="ui-icon ui-icon-disk download_file"></div></a></td>
+            </tr>
+            <tr>
+            <td class='key'>Created</td>
+            <td>{{ pcap.created }}</td>
+            </tr>
+            <tr>
+            <td class='key'>Length</td>
+            <td>{{ pcap.length }}</td>
+            </tr>
+            <tr>
+            <td class='key'>MD5</td>
+            <td>{{ pcap.md5 }}</td>
+            </tr>
+            <tr>
+            <td class='key'>Description</td>
+            {% if pcap.description %}
+                <td>
+                    <span class="edit_underline" id="pcap_description">{{pcap.description}}</span>
+                </td>
+            {% else %}
+                <td>
+                    <span class="edit_underline" id="pcap_description">None</span>
+                </td>
+            {% endif %}
+            <tr>
+                <td class="key">Status
+                    <span style="float: right;" class="object_status_response"></span>
+                </td>
+                <td>
+                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{pcap.status}}</span>
+                </td>
+            </tr>
+            </tr>
+            {% with sources=pcap.source obj_id=pcap.id obj_type=subscription.type %}
+                {% include "sources_listing_widget.html" %}
+            {% endwith %}
+            </tr>
+            <tr>
+                {% with releasability=pcap.releasability %}
+                    {% include 'releasability_list_widget.html' %}
+                {% endwith %}
+            </tr>
+        </tbody>
+        </table>
+    </div>
+    <div id="detail_floaters">
+        {% include 'details_options_widget.html' %}
+        {% with bucket_list=pcap.bucket_list %}
+            {% include 'bucket_list_widget.html' %}
+        {% endwith %}
+    </div>
+    <div>
+      {% with obj=pcap obj_type=subscription.type %}
+         {% include 'tickets_listing_widget.html' %}
+      {% endwith %}
+    </div>
+    <div>
+        {% with hit=pcap col=COL_PCAPS %}
+            {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% include 'relationships_listing_widget.html' %}
+    </div>
+    <div>
+        {% include 'objects_listing_widget.html' %}
+    </div>
+    <div>
+        {% include "comments_listing_widget.html" %}
+    </div>
+</div>
+{% with item=pcap %}
+    {% include "services_analysis_section.html" with crits_type="PCAP" identifier=pcap.md5 %}
+{% endwith %}
+{% include 'services_tab_tabs_widget.html' %}
+</div>
+
+{% else %}
+<h3>PCAP not found. If you just uploaded a PCAP, try refreshing as the system might not have completed processing your upload yet.</h3>
+
+{% endif %}
+
+{% endblock %}
+
+{% block javascript_includes %}
+ <script type="text/javascript" src="{{ STATIC_URL }}js/pcaps.js"></script>
+{% endblock %}
+
+

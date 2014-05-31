@@ -1,0 +1,2496 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.11: http://docutils.sourceforge.net/" />
+<title>CRITs User Manual</title>
+<style type="text/css">
+
+/*
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 7614 2013-02-21 15:55:51Z milde $
+:Copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
+*/
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
+
+.first {
+  /* Override more specific margin styles with "! important". */
+  margin-top: 0 ! important }
+
+.last, .with-subtitle {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dl.docutils dd {
+  margin-bottom: 0.5em }
+
+object[type="image/svg+xml"], object[type="application/x-shockwave-flash"] {
+  overflow: hidden;
+}
+
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title, .code .error {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+div.footer, div.header {
+  clear: both;
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin: 0 0 0.5em 1em ;
+  border: medium outset ;
+  padding: 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
+
+h1.title {
+  text-align: center }
+
+h2.subtitle {
+  text-align: center }
+
+hr.docutils {
+  width: 75% }
+
+img.align-left, .figure.align-left, object.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em }
+
+img.align-right, .figure.align-right, object.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em }
+
+img.align-center, .figure.align-center, object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-left {
+  text-align: left }
+
+.align-center {
+  clear: both ;
+  text-align: center }
+
+.align-right {
+  text-align: right }
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: inherit }
+
+/* div.align-center * { */
+/*   text-align: left } */
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font: inherit }
+
+pre.literal-block, pre.doctest-block, pre.math, pre.code {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+pre.code .ln { color: grey; } /* line numbers */
+pre.code, code { background-color: #eeeeee }
+pre.code .comment, code .comment { color: #5C6576 }
+pre.code .keyword, code .keyword { color: #3B0D06; font-weight: bold }
+pre.code .literal.string, code .literal.string { color: #0C5404 }
+pre.code .name.builtin, code .name.builtin { color: #352B84 }
+pre.code .deleted, code .deleted { background-color: #DEB0A1}
+pre.code .inserted, code .inserted { background-color: #A3D289}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0 }
+
+/* "booktabs" style (no vertical lines) */
+table.docutils.booktabs {
+  border: 0px;
+  border-top: 2px solid;
+  border-bottom: 2px solid;
+  border-collapse: collapse;
+}
+table.docutils.booktabs * {
+  border: 0px;
+}
+table.docutils.booktabs th {
+  border-bottom: thin solid;
+  text-align: left;
+}
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100% }
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="crits-user-manual">
+<h1 class="title">CRITs User Manual</h1>
+
+<!-- -*- coding: utf-8 -*- -->
+<!-- Note to self/developers: TODO items are comments surrounded -->
+<!-- by double hastags (##) -->
+<p>Welcome to the user help file for CRITs.</p>
+<p>There are two ways to use this help file. Use the Table of Contents,
+below, to pick a subject. Alternatively, you can use your browser's
+Find command to search through the document for a specific word of
+phrase.</p>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="auto-toc simple">
+<li><a class="reference internal" href="#general-overview-version-information" id="id1">1&nbsp;&nbsp;&nbsp;General Overview &amp; Version Information</a><ul class="auto-toc">
+<li><a class="reference internal" href="#version-information" id="id2">1.1&nbsp;&nbsp;&nbsp;Version Information</a></li>
+<li><a class="reference internal" href="#general-notes" id="id3">1.2&nbsp;&nbsp;&nbsp;General Notes</a></li>
+<li><a class="reference internal" href="#release-notes" id="id4">1.3&nbsp;&nbsp;&nbsp;Release Notes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#terms-and-concepts" id="id5">2&nbsp;&nbsp;&nbsp;Terms and Concepts</a><ul class="auto-toc">
+<li><a class="reference internal" href="#icons" id="id6">2.1&nbsp;&nbsp;&nbsp;Icons</a></li>
+<li><a class="reference internal" href="#concepts" id="id7">2.2&nbsp;&nbsp;&nbsp;Concepts</a></li>
+<li><a class="reference internal" href="#keyboard-shortcuts" id="id8">2.3&nbsp;&nbsp;&nbsp;Keyboard Shortcuts</a></li>
+<li><a class="reference internal" href="#advanced-search" id="id9">2.4&nbsp;&nbsp;&nbsp;Advanced Search</a></li>
+<li><a class="reference internal" href="#table-navigation" id="id10">2.5&nbsp;&nbsp;&nbsp;Table Navigation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#first-time-use" id="id11">3&nbsp;&nbsp;&nbsp;First-Time Use</a><ul class="auto-toc">
+<li><a class="reference internal" href="#browser-compatibility" id="id12">3.1&nbsp;&nbsp;&nbsp;Browser Compatibility</a></li>
+<li><a class="reference internal" href="#logging-into-crits" id="id13">3.2&nbsp;&nbsp;&nbsp;Logging Into CRITs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-ui" id="id14">4&nbsp;&nbsp;&nbsp;The UI</a><ul class="auto-toc">
+<li><a class="reference internal" href="#ui-layout" id="id15">4.1&nbsp;&nbsp;&nbsp;UI Layout</a></li>
+<li><a class="reference internal" href="#navigation-menu" id="id16">4.2&nbsp;&nbsp;&nbsp;Navigation Menu</a></li>
+<li><a class="reference internal" href="#profile-information" id="id17">4.3&nbsp;&nbsp;&nbsp;Profile Information</a></li>
+<li><a class="reference internal" href="#assigned-role" id="id18">4.4&nbsp;&nbsp;&nbsp;Assigned Role</a></li>
+<li><a class="reference internal" href="#search-bar" id="id19">4.5&nbsp;&nbsp;&nbsp;Search Bar</a></li>
+<li><a class="reference internal" href="#host-and-instance-information" id="id20">4.6&nbsp;&nbsp;&nbsp;Host and Instance Information</a></li>
+<li><a class="reference internal" href="#last-login-date" id="id21">4.7&nbsp;&nbsp;&nbsp;Last Login Date</a></li>
+<li><a class="reference internal" href="#security-classification" id="id22">4.8&nbsp;&nbsp;&nbsp;Security Classification</a></li>
+<li><a class="reference internal" href="#copyright-information" id="id23">4.9&nbsp;&nbsp;&nbsp;Copyright Information</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#user-profile-page" id="id24">5&nbsp;&nbsp;&nbsp;User Profile Page</a><ul class="auto-toc">
+<li><a class="reference internal" href="#user-info-tab" id="id25">5.1&nbsp;&nbsp;&nbsp;User Info Tab</a></li>
+<li><a class="reference internal" href="#login-attempts-tab" id="id26">5.2&nbsp;&nbsp;&nbsp;Login Attempts Tab</a></li>
+<li><a class="reference internal" href="#recent-activity-tab" id="id27">5.3&nbsp;&nbsp;&nbsp;Recent Activity Tab</a></li>
+<li><a class="reference internal" href="#subscriptions-tab" id="id28">5.4&nbsp;&nbsp;&nbsp;Subscriptions Tab</a></li>
+<li><a class="reference internal" href="#my-source-tab" id="id29">5.5&nbsp;&nbsp;&nbsp;My Source Tab</a></li>
+<li><a class="reference internal" href="#notifications-tab" id="id30">5.6&nbsp;&nbsp;&nbsp;Notifications Tab</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#campaign-page" id="id31">6&nbsp;&nbsp;&nbsp;Campaign Page</a><ul class="auto-toc">
+<li><a class="reference internal" href="#adding-a-new-campaign" id="id32">6.1&nbsp;&nbsp;&nbsp;Adding a New Campaign</a></li>
+<li><a class="reference internal" href="#viewing-editing-an-existing-campaign" id="id33">6.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Campaign</a></li>
+<li><a class="reference internal" href="#subscribing-to-a-campaign" id="id34">6.3&nbsp;&nbsp;&nbsp;Subscribing to a Campaign</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#certificate-page" id="id35">7&nbsp;&nbsp;&nbsp;Certificate Page</a><ul class="auto-toc">
+<li><a class="reference internal" href="#adding-a-new-certificate" id="id36">7.1&nbsp;&nbsp;&nbsp;Adding a New Certificate</a></li>
+<li><a class="reference internal" href="#viewing-editing-an-existing-certificate" id="id37">7.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Certificate</a></li>
+<li><a class="reference internal" href="#subscribing-to-a-certificate" id="id38">7.3&nbsp;&nbsp;&nbsp;Subscribing to a Certificate</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#domain-page" id="id39">8&nbsp;&nbsp;&nbsp;Domain Page</a><ul class="auto-toc">
+<li><a class="reference internal" href="#adding-a-new-domain" id="id40">8.1&nbsp;&nbsp;&nbsp;Adding a New Domain</a></li>
+<li><a class="reference internal" href="#viewing-editing-an-existing-domain" id="id41">8.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Domain</a></li>
+<li><a class="reference internal" href="#subscribing-to-a-domain" id="id42">8.3&nbsp;&nbsp;&nbsp;Subscribing to a Domain</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#email-page" id="id43">9&nbsp;&nbsp;&nbsp;Email Page</a><ul class="auto-toc">
+<li><a class="reference internal" href="#adding-a-new-email" id="id44">9.1&nbsp;&nbsp;&nbsp;Adding a New Email</a></li>
+<li><a class="reference internal" href="#viewing-editing-an-existing-email" id="id45">9.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Email</a></li>
+<li><a class="reference internal" href="#subscribing-to-an-email" id="id46">9.3&nbsp;&nbsp;&nbsp;Subscribing to an Email</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#event-page" id="id47">10&nbsp;&nbsp;&nbsp;Event Page</a><ul class="auto-toc">
+<li><a class="reference internal" href="#adding-a-new-event" id="id48">10.1&nbsp;&nbsp;&nbsp;Adding a New Event</a></li>
+<li><a class="reference internal" href="#viewing-editing-an-existing-event" id="id49">10.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Event</a></li>
+<li><a class="reference internal" href="#subscribing-to-an-event" id="id50">10.3&nbsp;&nbsp;&nbsp;Subscribing to an Event</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indicator-page" id="id51">11&nbsp;&nbsp;&nbsp;Indicator Page</a><ul class="auto-toc">
+<li><a class="reference internal" href="#adding-a-new-indicator" id="id52">11.1&nbsp;&nbsp;&nbsp;Adding a New Indicator</a></li>
+<li><a class="reference internal" href="#viewing-editing-an-existing-indicator" id="id53">11.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Indicator</a></li>
+<li><a class="reference internal" href="#subscribing-to-an-indicator" id="id54">11.3&nbsp;&nbsp;&nbsp;Subscribing to an Indicator</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ip-page" id="id55">12&nbsp;&nbsp;&nbsp;IP Page</a><ul class="auto-toc">
+<li><a class="reference internal" href="#adding-a-new-ip" id="id56">12.1&nbsp;&nbsp;&nbsp;Adding a New IP</a></li>
+<li><a class="reference internal" href="#viewing-editing-an-existing-ip" id="id57">12.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing IP</a></li>
+<li><a class="reference internal" href="#subscribing-to-an-ip" id="id58">12.3&nbsp;&nbsp;&nbsp;Subscribing to an IP</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pcap-page" id="id59">13&nbsp;&nbsp;&nbsp;PCAP Page</a><ul class="auto-toc">
+<li><a class="reference internal" href="#adding-a-new-pcap" id="id60">13.1&nbsp;&nbsp;&nbsp;Adding a New PCAP</a></li>
+<li><a class="reference internal" href="#viewing-editing-an-existing-pcap" id="id61">13.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing PCAP</a></li>
+<li><a class="reference internal" href="#subscribing-to-a-pcap" id="id62">13.3&nbsp;&nbsp;&nbsp;Subscribing to a PCAP</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sample-page" id="id63">14&nbsp;&nbsp;&nbsp;Sample Page</a><ul class="auto-toc">
+<li><a class="reference internal" href="#adding-a-new-sample" id="id64">14.1&nbsp;&nbsp;&nbsp;Adding a New Sample</a></li>
+<li><a class="reference internal" href="#viewing-editing-an-existing-sample" id="id65">14.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Sample</a></li>
+<li><a class="reference internal" href="#subscribing-to-a-sample" id="id66">14.3&nbsp;&nbsp;&nbsp;Subscribing to a Sample</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#target-page" id="id67">15&nbsp;&nbsp;&nbsp;Target Page</a><ul class="auto-toc">
+<li><a class="reference internal" href="#adding-a-new-target" id="id68">15.1&nbsp;&nbsp;&nbsp;Adding a New Target</a></li>
+<li><a class="reference internal" href="#viewing-editing-an-existing-target" id="id69">15.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Target</a></li>
+<li><a class="reference internal" href="#subscribing-to-a-target" id="id70">15.3&nbsp;&nbsp;&nbsp;Subscribing to a Target</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#administrative-functions" id="id71">16&nbsp;&nbsp;&nbsp;Administrative Functions</a><ul class="auto-toc">
+<li><a class="reference internal" href="#how-to-change-your-password" id="id72">16.1&nbsp;&nbsp;&nbsp;How to Change Your Password</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api" id="id73">17&nbsp;&nbsp;&nbsp;API</a><ul class="auto-toc">
+<li><a class="reference internal" href="#api-urls" id="id74">17.1&nbsp;&nbsp;&nbsp;API URLs</a></li>
+<li><a class="reference internal" href="#searching-using-get-parameters" id="id75">17.2&nbsp;&nbsp;&nbsp;Searching Using GET Parameters</a></li>
+<li><a class="reference internal" href="#limiting-get-request-results" id="id76">17.3&nbsp;&nbsp;&nbsp;Limiting GET Request Results</a></li>
+<li><a class="reference internal" href="#post-examples" id="id77">17.4&nbsp;&nbsp;&nbsp;POST Examples:</a></li>
+<li><a class="reference internal" href="#common-post-parameters" id="id78">17.5&nbsp;&nbsp;&nbsp;Common POST Parameters</a></li>
+<li><a class="reference internal" href="#campaign-api" id="id79">17.6&nbsp;&nbsp;&nbsp;Campaign API</a></li>
+<li><a class="reference internal" href="#certificate-api" id="id80">17.7&nbsp;&nbsp;&nbsp;Certificate API</a></li>
+<li><a class="reference internal" href="#domain-api" id="id81">17.8&nbsp;&nbsp;&nbsp;Domain API</a></li>
+<li><a class="reference internal" href="#email-api" id="id82">17.9&nbsp;&nbsp;&nbsp;Email API</a></li>
+<li><a class="reference internal" href="#event-api" id="id83">17.10&nbsp;&nbsp;&nbsp;Event API</a></li>
+<li><a class="reference internal" href="#indicator-api" id="id84">17.11&nbsp;&nbsp;&nbsp;Indicator API</a></li>
+<li><a class="reference internal" href="#indicator-activity-api" id="id85">17.12&nbsp;&nbsp;&nbsp;Indicator Activity API</a></li>
+<li><a class="reference internal" href="#ip-api" id="id86">17.13&nbsp;&nbsp;&nbsp;IP API</a></li>
+<li><a class="reference internal" href="#object-api" id="id87">17.14&nbsp;&nbsp;&nbsp;Object API</a></li>
+<li><a class="reference internal" href="#pcap-api" id="id88">17.15&nbsp;&nbsp;&nbsp;PCAP API</a></li>
+<li><a class="reference internal" href="#raw-data-api" id="id89">17.16&nbsp;&nbsp;&nbsp;Raw Data API</a></li>
+<li><a class="reference internal" href="#relationship-api" id="id90">17.17&nbsp;&nbsp;&nbsp;Relationship API</a></li>
+<li><a class="reference internal" href="#sample-api" id="id91">17.18&nbsp;&nbsp;&nbsp;Sample API</a></li>
+<li><a class="reference internal" href="#service-api" id="id92">17.19&nbsp;&nbsp;&nbsp;Service API</a></li>
+<li><a class="reference internal" href="#target-api" id="id93">17.20&nbsp;&nbsp;&nbsp;Target API</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="general-overview-version-information">
+<h1><a class="toc-backref" href="#id1">1&nbsp;&nbsp;&nbsp;General Overview &amp; Version Information</a></h1>
+<div class="section" id="version-information">
+<h2><a class="toc-backref" href="#id2">1.1&nbsp;&nbsp;&nbsp;Version Information</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Date:</th><td class="field-body">Mon, 27 Jan 2014</td>
+</tr>
+<tr class="field"><th class="field-name">Revision:</th><td class="field-body">0002</td>
+</tr>
+<tr class="field"><th class="field-name">Date:</th><td class="field-body">Mon, 19 Aug 2013</td>
+</tr>
+<tr class="field"><th class="field-name">Revision:</th><td class="field-body">0001</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="general-notes">
+<h2><a class="toc-backref" href="#id3">1.2&nbsp;&nbsp;&nbsp;General Notes</a></h2>
+<p>Please observe the following notes:</p>
+<ul class="simple">
+<li>This is a work in progress, and is to be considered a draft.</li>
+<li>This document uses relative links.</li>
+</ul>
+</div>
+<div class="section" id="release-notes">
+<h2><a class="toc-backref" href="#id4">1.3&nbsp;&nbsp;&nbsp;Release Notes</a></h2>
+<p>This section contains release notes to illustrate the changes for
+each revision.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Revision 00002:</th><td class="field-body">Written for CRITs 3.0</td>
+</tr>
+<tr class="field"><th class="field-name">Revision 00001:</th><td class="field-body">Initial commit. Written for CRITs 2.5</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="terms-and-concepts">
+<h1><a class="toc-backref" href="#id5">2&nbsp;&nbsp;&nbsp;Terms and Concepts</a></h1>
+<p>This section details icons, terms, and concepts that are used
+throughout the CRITs world.</p>
+<div class="section" id="icons">
+<h2><a class="toc-backref" href="#id6">2.1&nbsp;&nbsp;&nbsp;Icons</a></h2>
+<dl class="docutils">
+<dt><strong>Cross Symbol (</strong> <img alt="CROSS" src="/images/cross.png" /> <strong>)</strong></dt>
+<dd>The cross symbol is used to indicate that a new item or new
+information can be created. Clicking on the cross will open a
+dialogue to allow you to create the new item.</dd>
+<dt><strong>X</strong></dt>
+<dd>The letter 'X' is used to indicate that an item can be deleted.
+Clicking the 'X'will delete the item.</dd>
+<dt><strong>Pencil Icon (</strong> <img alt="PENCIL" src="/images/pencil.png" /> <strong>)</strong></dt>
+<dd>The pencil icon is used to indicate that an item an be edited.
+Clicking on the pencil will allow you to edit the item.</dd>
+<dt><strong>Right Arrow (</strong> <img alt="RIGHT_ARROW" src="/images/right_arrow.png" /> <strong>)</strong></dt>
+<dd>The right arrow is used to indicate that an item can be expanded.
+Clicking on the arrow will reveal more information.</dd>
+<dt><strong>Down Arrow (</strong> <img alt="DOWN_ARROW" src="/images/down_arrow.png" /> <strong>)</strong></dt>
+<dd>The down arrow is used to indicate that an item can be colapsed.
+Clicking on the arrow will hide information.</dd>
+<dt><strong>Trash Can (</strong> <img alt="TRASH" src="/images/trash.png" /> <strong>)</strong></dt>
+<dd>The trash can indicates that an item can be deleted <em>permanently</em>.</dd>
+<dt><strong>Person (</strong> <img alt="PERSON" src="/images/person.png" /> <strong>)</strong></dt>
+<dd>The person is used to indicate a relationship.</dd>
+<dt><strong>Tag (</strong> <img alt="TAG" src="/images/tag.png" /> <strong>)</strong></dt>
+<dd>The tag is used to indicate an object tag.</dd>
+<dt><strong>Speech Bubble (</strong> <img alt="SPEECH_BUBBLE" src="/images/speech_bubble.png" /> <strong>)</strong></dt>
+<dd>The speech bubble indicates that comments exist. Clicking the
+speech bubble will show the comments.</dd>
+<dt><strong>Disk (</strong> <img alt="DISK" src="/images/disk.png" /> <strong>)</strong></dt>
+<dd>The disk indicates that a packet capture (PCAP) can be saved.</dd>
+<dt><strong>Splunk Icon (</strong> <img alt="GREEN_ARROW" src="/images/green_arrow.png" /> <strong>)</strong> <em>(Implementation-Dependent)</em></dt>
+<dd>If configured by your administrator, the Splunk icon is used to
+indicate that a Splunk search can be performed on an indicator.
+Clicking the Splunk icon will start a Splunk search for that piece
+of information.</dd>
+</dl>
+</div>
+<div class="section" id="concepts">
+<h2><a class="toc-backref" href="#id7">2.2&nbsp;&nbsp;&nbsp;Concepts</a></h2>
+<p>A certain level of experience with Information Security is required
+to make proper use of CRITs. What follows are short explanations of
+concepts that are used in the world of CRITs. These are not meant
+to be exhaustive definitions. Instead, think of it as a Rosetta Stone
+to ensure that your own concepts and experience match the terms used
+in the system.</p>
+<dl class="docutils">
+<dt><strong>Activity</strong></dt>
+<dd>Activity is used to describe when an Indicator was identified, whether it be
+from log analysis or sensors being tripped. It allows you to develop a
+timeline for that Indicator.</dd>
+<dt><strong>Bucket List</strong></dt>
+<dd>Bucket lists are simply an analog of the common tag; they are used
+to group together objects that have a possible relationship. For
+instance, buckets can be used to quickly mark patterns for further
+study at a later time. This is a handy way of marking your &quot;gut&quot;
+instincts as you are viewing objects.</dd>
+<dt><strong>Campaign</strong></dt>
+<dd>When common, malicious behavior is repeated or when a single
+resource is repeatedly targeted, this is called a campaign.
+Identifying campaigns can give your organization insight into
+everything from APT identification to how to focus your intrusion
+prevention efforts.</dd>
+<dt><strong>Certificate</strong></dt>
+<dd>Certificates are top-level objects. They are anything from Server/Client
+certificates to signing certificates.</dd>
+<dt><strong>Domain</strong></dt>
+<dd>Domains are top-level objects. They allow you to track and relate domains and
+sub-domains with other top-level objects like IPs and Certificates.</dd>
+<dt><strong>Event</strong></dt>
+<dd>An event is a collection of related content within CRITs which may or may not
+be attributed to a known campaign.</dd>
+<dt><strong>Indicator</strong></dt>
+<dd>Indicators are pieces of metadata with a confidence and impact value
+associated with them. They help determine the reaction level an organization
+should have if that metadata is noticed anywhere on their network.</dd>
+<dt><strong>IP</strong></dt>
+<dd>IPs are top-level objects used for relating to Domains. It helps to show a
+timeline of what IPs were associated with a domain and when domains were
+active/parked.</dd>
+<dt><strong>Object</strong></dt>
+<dd>Objects are pieces of information extracted while performing analysis on a
+top-level object such as a Sample or PCAP.</dd>
+<dt><strong>PCAP</strong></dt>
+<dd>PCAPs are files containing network traffic. Usually PCAPs contain things like
+Samples and Emails but can also be used for populating Domains, IPs, and
+Indicators.</dd>
+<dt><strong>Relationship</strong></dt>
+<dd>A relationship is defined between two or more top-level objects  when they
+share a common trait. For instance, a direct relationship exists
+between a Domain and its IP address, so you may choose to define a
+relationship between each of these objects that would otherwise
+be independent. Relationships can be either horizontal (as in the
+above example) or vertical (as in hierarchical). CRITs supports
+relationships as defined in the CybOX specification. Each object
+has a &quot;child&quot; object in which related objects are declared.</dd>
+<dt><strong>Sample</strong></dt>
+<dd>Samples are binaries which you want to perform some level of analysis on due
+to their potential for being malicious.</dd>
+<dt><strong>Source</strong></dt>
+<dd><p class="first">Source is the term used to refer, very simply, to the intelligence
+source from which an object was imported. Alternatively, they
+can be considered as organizational units or buckets. Each
+object in CRITs needs to be attributed to a source, This allows
+you to get a better overall picture not only of the environment
+that the source represents, but a better feel for how reliable the
+object are from a particular source.</p>
+<p class="last">Sources are specified by your administrator, and there is no
+universal &quot;right way&quot; to define them. Having a solid
+understanding of how your organization defines sources will ensure
+that your own efforts will be compliant.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="keyboard-shortcuts">
+<h2><a class="toc-backref" href="#id8">2.3&nbsp;&nbsp;&nbsp;Keyboard Shortcuts</a></h2>
+<p>In order to expedite navigation, CRITs has built-in keyboard
+shortcuts available after clicking on the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>. Below
+is a list of these shortcuts. Note that the shortcuts are case
+sensitive.</p>
+<blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">a:</th><td class="field-body"><a class="reference internal" href="#advanced-search">Advanced Search</a></td>
+</tr>
+<tr class="field"><th class="field-name">d:</th><td class="field-body">Add a Domain</td>
+</tr>
+<tr class="field"><th class="field-name">e:</th><td class="field-body">Add an Email</td>
+</tr>
+<tr class="field"><th class="field-name">E:</th><td class="field-body">Add an Event</td>
+</tr>
+<tr class="field"><th class="field-name">i:</th><td class="field-body">Add an Indicator</td>
+</tr>
+<tr class="field"><th class="field-name">I:</th><td class="field-body">Add an IP Address</td>
+</tr>
+<tr class="field"><th class="field-name">n/m:</th><td class="field-body">Open the Navigation Menu</td>
+</tr>
+<tr class="field"><th class="field-name">p:</th><td class="field-body">Add a PCAP</td>
+</tr>
+<tr class="field"><th class="field-name">s:</th><td class="field-body">Add a Sample</td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+</div>
+<div class="section" id="advanced-search">
+<h2><a class="toc-backref" href="#id9">2.4&nbsp;&nbsp;&nbsp;Advanced Search</a></h2>
+<p>The Advanced Search dialog can be accessed by clicking on the &quot;Hourglass&quot;
+icon next to the search box in the upper right corner. This will
+allow you to search for items based on a number of criteria. Entering
+a term into any of the fields will search all of the fields of that
+type of indicator. For example, entering &quot;Bob&quot; into the &quot;Email&quot;
+field will return all emails that mention &quot;Bob&quot; in either the
+header or the body of the message.</p>
+</div>
+<div class="section" id="table-navigation">
+<h2><a class="toc-backref" href="#id10">2.5&nbsp;&nbsp;&nbsp;Table Navigation</a></h2>
+<p>The tables that are displayed in CRITs use several common user
+interface conventions to enhance usability.</p>
+<ul>
+<li><p class="first">Rows can be sorted by a column by clicking on the column name.</p>
+</li>
+<li><dl class="first docutils">
+<dt>Use drop down menus on the table header and footer to change the</dt>
+<dd><p class="first last">current page number or the number of rows to display on the table.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>The arrows on the left side of both the table header and footer</dt>
+<dd><p class="first last">allow you to navigate from page to page or to jump to the end or
+beginning page.</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">Clicking the &quot;Reload&quot; button will refresh the data in the table.</p>
+</li>
+<li><dl class="first docutils">
+<dt>Text on the right side of both the header and footer show you how</dt>
+<dd><p class="first last">many records are displayed out of the total data set.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="first-time-use">
+<h1><a class="toc-backref" href="#id11">3&nbsp;&nbsp;&nbsp;First-Time Use</a></h1>
+<div class="section" id="browser-compatibility">
+<h2><a class="toc-backref" href="#id12">3.1&nbsp;&nbsp;&nbsp;Browser Compatibility</a></h2>
+<p>CRITs works in most modern browsers, with support for the following:</p>
+<ul class="simple">
+<li>Chrome</li>
+<li>Firefox 23.0 and later</li>
+<li>IE 8 and later</li>
+</ul>
+<p>Note that IE 9 users may experience some rendering issues. If so, do
+the following:</p>
+<ol class="arabic simple">
+<li>Open Internet Explorer.</li>
+<li>Hit F12 or select the IE tool icon in the upper right corner and choose
+&quot;Developer Tools&quot;.</li>
+<li>In the new panel that opens at the bottom of the screen, change
+&quot;Document Mode: IE9 Standards&quot; to &quot;Internet Explorer 9
+Standards (Page Default)&quot;.</li>
+</ol>
+</div>
+<div class="section" id="logging-into-crits">
+<h2><a class="toc-backref" href="#id13">3.2&nbsp;&nbsp;&nbsp;Logging Into CRITs</a></h2>
+<p>When you browse to your CRITs instance you will be greeted with a Login page.
+From here you can authenticate or get assistance with resetting your password.</p>
+<p>Your administrator should provide you with a username, password, and
+URL for logging into CRITs. If not, please contact your
+administrator; you will be unable to proceed without this
+information.</p>
+<p>Once logged in, you will be greeted with your Dashboard. It's a good
+idea, at this point, to change your temporary password. For more
+information, see <a class="reference internal" href="#how-to-change-your-password">How to Change Your Password</a>. Remember, a system
+can only be as secure as its least secure user!</p>
+</div>
+</div>
+<div class="section" id="the-ui">
+<h1><a class="toc-backref" href="#id14">4&nbsp;&nbsp;&nbsp;The UI</a></h1>
+<div class="section" id="ui-layout">
+<h2><a class="toc-backref" href="#id15">4.1&nbsp;&nbsp;&nbsp;UI Layout</a></h2>
+<p>There are five pieces of the UI that are always available to you no matter what
+page you are on:</p>
+<ol class="arabic">
+<li><p class="first">The top bar which contains:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>The Gear image, from which you can access the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>.</li>
+<li>Your <a class="reference internal" href="#profile-information">Profile Information</a>.</li>
+<li>Your <a class="reference internal" href="#assigned-role">Assigned Role</a>.</li>
+<li><a class="reference internal" href="#search-bar">Search Bar</a>.</li>
+</ol>
+</blockquote>
+</li>
+<li><p class="first">The bottom bar which contains:</p>
+<blockquote>
+<ol class="arabic simple">
+<li><a class="reference internal" href="#host-and-instance-information">Host and Instance information</a>.</li>
+<li>Your <a class="reference internal" href="#last-login-date">Last Login Date</a>.</li>
+<li>The <a class="reference internal" href="#security-classification">Security Classification</a> of this CRITs instance.</li>
+<li><a class="reference internal" href="#copyright-information">Copyright Information</a>.</li>
+</ol>
+</blockquote>
+</li>
+<li><p class="first">The Navigation menu.</p>
+</li>
+<li><p class="first">The Advanced Search menu.</p>
+</li>
+<li><p class="first">The content area between the top and bottom bar.</p>
+</li>
+</ol>
+<p>The following sections describe each of these areas in more detail.</p>
+</div>
+<div class="section" id="navigation-menu">
+<h2><a class="toc-backref" href="#id16">4.2&nbsp;&nbsp;&nbsp;Navigation Menu</a></h2>
+<p>The Gear icon in the top left corner of the screen is the easiest
+means of navigating through CRITs. Each item in the menu is a
+hyperlink that will take you to the relevant section of the system.</p>
+<p>Clicking any of the &quot;+&quot; icons will allow you to quickly create an
+item of the relevant kind. For instance, click the &quot;+&quot; next to the
+&quot;IP&quot; menu item allows you to quickly create a new IP-type
+indicator.</p>
+</div>
+<div class="section" id="profile-information">
+<h2><a class="toc-backref" href="#id17">4.3&nbsp;&nbsp;&nbsp;Profile Information</a></h2>
+<p>To assist in the easier identification of users, CRITs includes
+several profile fields that help to identify you to other users in
+your instance. Clicking the link will bring you to your <a class="reference internal" href="#user-profile-page">User Profile
+Page</a>.</p>
+</div>
+<div class="section" id="assigned-role">
+<h2><a class="toc-backref" href="#id18">4.4&nbsp;&nbsp;&nbsp;Assigned Role</a></h2>
+<p>This section simply lists the role that has been assigned to you by
+your administrator. These roles are fully customizable, so your
+individual experience will vary.</p>
+</div>
+<div class="section" id="search-bar">
+<h2><a class="toc-backref" href="#id19">4.5&nbsp;&nbsp;&nbsp;Search Bar</a></h2>
+<p>The search bar acts as a universal query tool that will query the
+entire CRITs database for the term entered. This can be useful when
+for quick access to any item by name or content. This is also known
+as the &quot;Global Search Box&quot;</p>
+</div>
+<div class="section" id="host-and-instance-information">
+<h2><a class="toc-backref" href="#id20">4.6&nbsp;&nbsp;&nbsp;Host and Instance Information</a></h2>
+<p>The host and instance information sections display information set by
+your administrator that helps to confirm that you are using the
+intended system. It is a good idea to ask your administrator the
+expected values of these items to provide a modicum of identity
+confirmation.</p>
+</div>
+<div class="section" id="last-login-date">
+<h2><a class="toc-backref" href="#id21">4.7&nbsp;&nbsp;&nbsp;Last Login Date</a></h2>
+<p>This are simply displays the last date upon which you logged into the
+system. This can be useful as a point of basic security; seeing that
+you logged on during your vacation, for instance, is a sign that
+either your credentials were misused or that you work too hard.</p>
+</div>
+<div class="section" id="security-classification">
+<h2><a class="toc-backref" href="#id22">4.8&nbsp;&nbsp;&nbsp;Security Classification</a></h2>
+<p>Like the host and instance information, the security classification
+is used to denote the classification level of the contents of the
+system. U.S. government entities or their contractors, for instance,
+may operate an instance that is classified as &quot;Secret&quot;. As a best
+practice, the default value for this should be &quot;Unclassified&quot;.</p>
+</div>
+<div class="section" id="copyright-information">
+<h2><a class="toc-backref" href="#id23">4.9&nbsp;&nbsp;&nbsp;Copyright Information</a></h2>
+<p>Text marking the U.S. copyright information of CRITs.</p>
+</div>
+</div>
+<div class="section" id="user-profile-page">
+<h1><a class="toc-backref" href="#id24">5&nbsp;&nbsp;&nbsp;User Profile Page</a></h1>
+<p>The User Profile page can be reached from any section of CRITs by
+clicking on your username in the upper left corner. You can also get
+to this page by going to &quot;My CRITs&quot; in the navigation menu. On this page, you
+will find a number of personalization options, usage history, and
+subscription information.</p>
+<div class="section" id="user-info-tab">
+<h2><a class="toc-backref" href="#id25">5.1&nbsp;&nbsp;&nbsp;User Info Tab</a></h2>
+<p>This tab displays information about your account and general usage.
+Most importantly, this is where you will find the change password
+functionality. See <a class="reference internal" href="#how-to-change-your-password">How to Change Your Password</a> for more
+information.</p>
+</div>
+<div class="section" id="login-attempts-tab">
+<h2><a class="toc-backref" href="#id26">5.2&nbsp;&nbsp;&nbsp;Login Attempts Tab</a></h2>
+<p>This tab presents you with a table of all of your recent login
+attempts. Information such as user agent (i.e. browser), IP, and date
+are all available.</p>
+</div>
+<div class="section" id="recent-activity-tab">
+<h2><a class="toc-backref" href="#id27">5.3&nbsp;&nbsp;&nbsp;Recent Activity Tab</a></h2>
+<p>This tab presents you with a table of all of your recent activity in
+the system.</p>
+</div>
+<div class="section" id="subscriptions-tab">
+<h2><a class="toc-backref" href="#id28">5.4&nbsp;&nbsp;&nbsp;Subscriptions Tab</a></h2>
+<p>This tab lists your current subscriptions.</p>
+</div>
+<div class="section" id="my-source-tab">
+<h2><a class="toc-backref" href="#id29">5.5&nbsp;&nbsp;&nbsp;My Source Tab</a></h2>
+<p>This tab lists the current information sources to which you have
+access. Only items associated with these sources will be visible
+within CRITs. You can also check a box next to each source which
+will subscribe you to any and all content associated with that source
+going forward.</p>
+</div>
+<div class="section" id="notifications-tab">
+<h2><a class="toc-backref" href="#id30">5.6&nbsp;&nbsp;&nbsp;Notifications Tab</a></h2>
+<p>This tab lists all of your existing notifications. You can remove individual
+notifications, or clear them all. Note that by visiting the details page of
+any top-level object, it will clear any notifications you have for it
+automatically.</p>
+</div>
+</div>
+<div class="section" id="campaign-page">
+<h1><a class="toc-backref" href="#id31">6&nbsp;&nbsp;&nbsp;Campaign Page</a></h1>
+<p>This page can be accessed directly from the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>.
+From here, you can manage all of the campaigns to which you have
+access. The table on this page shows, by default, the first 25
+campaigns sorted by name. See <a class="reference internal" href="#table-navigation">Table Navigation</a> for more
+information on how to interact with the table.</p>
+<div class="section" id="adding-a-new-campaign">
+<h2><a class="toc-backref" href="#id32">6.1&nbsp;&nbsp;&nbsp;Adding a New Campaign</a></h2>
+<p>There are two common ways to add a new campaign to CRITs:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Open the <a class="reference internal" href="#navigation-menu">Navigation Menu</a> and click the cross symbol
+next to &quot;Campaign&quot;.</li>
+<li>From the <a class="reference internal" href="#campaign-page">Campaign Page</a>, click the &quot;Add campaign&quot;
+button.</li>
+</ol>
+</blockquote>
+<p>Doing either of these will open a new dialog box that allows you to
+define a new campaign. A campaign consists of some basic pieces of
+information, as follows:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Campaign:</th><td class="field-body">This is the display name for the campaign.</td>
+</tr>
+<tr class="field"><th class="field-name">Aliases:</th><td class="field-body">This is a comma-separated list of any other names for the
+campaign.</td>
+</tr>
+<tr class="field"><th class="field-name">Description:</th><td class="field-body">This is a brief description of the campaign for
+reference.</td>
+</tr>
+<tr class="field"><th class="field-name">Bucket List:</th><td class="field-body">This is a list of buckets you want to associate with this
+Campaign.</td>
+</tr>
+</tbody>
+</table>
+<p>Once these fields are filled out, press &quot;Add Campaign&quot;. You should
+see a message that the campaign was successfully added. If you
+encounter an error, report it to your administrator.</p>
+<p>Now that you have added the campaign, press &quot;Cancel&quot; or ESCAPE to close the
+dialog box. Press &quot;Reload&quot; to see your new campaign in the table.</p>
+</div>
+<div class="section" id="viewing-editing-an-existing-campaign">
+<h2><a class="toc-backref" href="#id33">6.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Campaign</a></h2>
+<p>Opening a campaign via the <a class="reference internal" href="#campaign-page">Campaign Page</a> or <a class="reference internal" href="#advanced-search">Advanced Search</a>
+will bring up the campaign information page.</p>
+<p>From here, you can view all of the objects that are associated with
+the campaign. The tabs at the top of the screen move you between the
+various child objects of the campaign. Clicking on the various links
+and icons will allow you to edit existing data or add new data,
+respectively. For more information on controls, please see the <a class="reference internal" href="#terms-and-concepts">Terms
+and Concepts</a> section.</p>
+</div>
+<div class="section" id="subscribing-to-a-campaign">
+<h2><a class="toc-backref" href="#id34">6.3&nbsp;&nbsp;&nbsp;Subscribing to a Campaign</a></h2>
+<p>When <a class="reference internal" href="#viewing-editing-an-existing-campaign">Viewing/Editing an Existing Campaign</a>, you have the option to
+subscribe to it so that it will show up on your <a class="reference internal" href="#user-profile-page">User Profile Page</a>
+under the &quot;Subscriptions&quot; tab. Simply select the blue checkmark
+next to your <a class="reference internal" href="#assigned-role">Assigned Role</a>. When you do, the check mark will
+change to an 'X', indicating that you are now subscribed. To
+unsubscribe, click the 'X' and it will turn back to a check mark to
+confirm.</p>
+</div>
+</div>
+<div class="section" id="certificate-page">
+<h1><a class="toc-backref" href="#id35">7&nbsp;&nbsp;&nbsp;Certificate Page</a></h1>
+<p>This page can be accessed directly from the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>.
+From here, you can manage all of the certificate to which you have
+access. The table on this page shows, by default, the first 25
+certificates sorted by date. See <a class="reference internal" href="#table-navigation">Table Navigation</a> for more
+information on how to interact with the table.</p>
+<div class="section" id="adding-a-new-certificate">
+<h2><a class="toc-backref" href="#id36">7.1&nbsp;&nbsp;&nbsp;Adding a New Certificate</a></h2>
+<p>There are two common ways to add a new certificate to CRITs:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Open the <a class="reference internal" href="#navigation-menu">Navigation Menu</a> and click the cross symbol
+next to &quot;Certificates&quot;.</li>
+<li>From the <a class="reference internal" href="#certificate-page">Certificate Page</a>, click the &quot;Add certificate&quot;
+button.</li>
+</ol>
+</blockquote>
+<p>Doing either of these will open a new dialog box that allows you to
+define a new certificate. A certificate consists of some basic pieces of
+information, as follows:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Filedata:</th><td class="field-body">Choose a local file to upload as the Certificate</td>
+</tr>
+<tr class="field"><th class="field-name">Description:</th><td class="field-body">Enter a brief description for the Certificate</td>
+</tr>
+<tr class="field"><th class="field-name">Source:</th><td class="field-body">From the drop-down, select the source of the Certificate</td>
+</tr>
+<tr class="field"><th class="field-name">Bucket List:</th><td class="field-body">This is a list of buckets you want to associate with this
+Certificate.</td>
+</tr>
+</tbody>
+</table>
+<p>Once these fields are filled out, press &quot;Add Certificate&quot;. You should
+see a message that the certificate was successfully added. If you
+encounter an error, report it to your administrator.</p>
+<p>Now that you have added the certificate, press &quot;Cancel&quot; or ESCAPE to close the
+dialog box. Press &quot;Reload&quot; to see your new certificate in the table.</p>
+</div>
+<div class="section" id="viewing-editing-an-existing-certificate">
+<h2><a class="toc-backref" href="#id37">7.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Certificate</a></h2>
+<p>Opening a certificate via the <a class="reference internal" href="#certificate-page">Certificate Page</a> or <a class="reference internal" href="#advanced-search">Advanced Search</a>
+will bring up the certificate information page.</p>
+<p>From here, you can view all of the objects that are associated with
+the certificate. Clicking on the various links and icons will allow you to edit
+existing data or add new data, respectively. For more information on controls,
+please see the <a class="reference internal" href="#terms-and-concepts">Terms and Concepts</a> section.</p>
+</div>
+<div class="section" id="subscribing-to-a-certificate">
+<h2><a class="toc-backref" href="#id38">7.3&nbsp;&nbsp;&nbsp;Subscribing to a Certificate</a></h2>
+<p>When <a class="reference internal" href="#viewing-editing-an-existing-certificate">Viewing/Editing an Existing Certificate</a>, you have the option to
+subscribe to it so that it will show up on your <a class="reference internal" href="#user-profile-page">User Profile Page</a>
+under the &quot;Subscriptions&quot; tab. Simply select the blue checkmark
+next to your <a class="reference internal" href="#assigned-role">Assigned Role</a>. When you do, the check mark will
+change to an 'X', indicating that you are now subscribed. To
+unsubscribe, click the 'X' and it will turn back to a check mark to
+confirm.</p>
+</div>
+</div>
+<div class="section" id="domain-page">
+<h1><a class="toc-backref" href="#id39">8&nbsp;&nbsp;&nbsp;Domain Page</a></h1>
+<p>This page can be accessed directly from the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>.
+From here, you can manage all of the domains to which you have
+access. The table on this page shows, by default, the first 25
+domains sorted by name. See <a class="reference internal" href="#table-navigation">Table Navigation</a> for more
+information on how to interact with the table.</p>
+<div class="section" id="adding-a-new-domain">
+<h2><a class="toc-backref" href="#id40">8.1&nbsp;&nbsp;&nbsp;Adding a New Domain</a></h2>
+<p>There are two common ways to add a new domain to CRITs:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Open the <a class="reference internal" href="#navigation-menu">Navigation Menu</a> and click the cross symbol
+next to &quot;Domain&quot;.</li>
+<li>From the <a class="reference internal" href="#domain-page">Domain Page</a>, click the &quot;Add Domain&quot;
+button.</li>
+</ol>
+</blockquote>
+<p>Doing either of these will open a new dialog box that allows you to
+define a new domain. A domain consists of seven pieces of
+information, as follows:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Domain Name:</th><td class="field-body">This is the FQDN and display name.</td>
+</tr>
+<tr class="field"><th class="field-name">Campaign:</th><td class="field-body">(Optional) This field allows you to associate the domain
+with a specific campaign.</td>
+</tr>
+<tr class="field"><th class="field-name">Domain Source:</th><td class="field-body">This is the intelligence source from which you
+learned of the domain.</td>
+</tr>
+<tr class="field"><th class="field-name">Domain Method:</th><td class="field-body">(Optional)</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">Domain Reference:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">(Optional)</td>
+</tr>
+<tr class="field"><th class="field-name">Add IP Address:</th><td class="field-body">Checking this box will allow you to immediately add
+and IP Address with which the domain is associated.</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">Add Indicator(s):</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">Checking this box will allow you add the domain as
+an indicator.</td>
+</tr>
+<tr class="field"><th class="field-name">Bucket List:</th><td class="field-body">This is a list of buckets you want to associate with this
+Domain (and any other Domains, IPs, Indicators generated by this step).</td>
+</tr>
+</tbody>
+</table>
+<p>Once these fields are filled out, press &quot;Add Domain&quot;. You should
+see a message that the domain was successfully added. If you
+encounter an error, report it to your administrator.</p>
+<p>Now that you have added the domain, press &quot;Cancel&quot; or ESCAPE to close the
+dialog box. Press &quot;Reload&quot; to see your new domain in the table.</p>
+</div>
+<div class="section" id="viewing-editing-an-existing-domain">
+<h2><a class="toc-backref" href="#id41">8.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Domain</a></h2>
+<p>Opening a domain via the <a class="reference internal" href="#domain-page">Domain Page</a> or <a class="reference internal" href="#advanced-search">Advanced Search</a>
+will bring up the domain information page.</p>
+<p>From here, you can view all of the objects that are associated with
+the domain. The tabs at the top of the screen move you between the
+various child objects of the domain. Clicking on the various links
+and icons will allow you to edit existing data or add new data,
+respectively. For more information on controls, please see the <a class="reference internal" href="#terms-and-concepts">Terms
+and Concepts</a> section.</p>
+</div>
+<div class="section" id="subscribing-to-a-domain">
+<h2><a class="toc-backref" href="#id42">8.3&nbsp;&nbsp;&nbsp;Subscribing to a Domain</a></h2>
+<p>When <a class="reference internal" href="#viewing-editing-an-existing-domain">Viewing/Editing an Existing Domain</a>, you have the option to
+subscribe to it so that it will show up on your <a class="reference internal" href="#user-profile-page">User Profile Page</a>
+under the &quot;Subscriptions&quot; tab. Simply select the blue checkmark
+next to your <a class="reference internal" href="#assigned-role">Assigned Role</a>. When you do, the check mark will
+change to an 'X', indicating that you are now subscribed. To
+unsubscribe, click the 'X' and it will turn back to a check mark to
+confirm.</p>
+</div>
+</div>
+<div class="section" id="email-page">
+<h1><a class="toc-backref" href="#id43">9&nbsp;&nbsp;&nbsp;Email Page</a></h1>
+<p>This page can be accessed directly from the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>.
+From here, you can manage all of the emails to which you have
+access. The table on this page shows, by default, the first 25
+emails sorted by name. See <a class="reference internal" href="#table-navigation">Table Navigation</a> for more
+information on how to interact with the table.</p>
+<div class="section" id="adding-a-new-email">
+<h2><a class="toc-backref" href="#id44">9.1&nbsp;&nbsp;&nbsp;Adding a New Email</a></h2>
+<p>There are two common ways to add a new email to CRITs:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Open the <a class="reference internal" href="#navigation-menu">Navigation Menu</a> and click the cross symbol
+next to &quot;Emails&quot;.</li>
+<li>From the <a class="reference internal" href="#email-page">Email Page</a>, click the &quot;Add Email&quot;
+button.</li>
+</ol>
+</blockquote>
+<p>Doing either of these will open a new dialog box that allows you to
+define a new email. An email consists of seventeen pieces of
+information, most of which can be found in the email header, as
+follows:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">From:</th><td class="field-body">Specify the email address from which the email was sent</td>
+</tr>
+<tr class="field"><th class="field-name">Sender:</th><td class="field-body">Specify the name from which the email was sent</td>
+</tr>
+<tr class="field"><th class="field-name">To:</th><td class="field-body">Specify the email addresses to which the email was sent</td>
+</tr>
+<tr class="field"><th class="field-name">CC:</th><td class="field-body">Specify the email addresses to which the email was copied</td>
+</tr>
+<tr class="field"><th class="field-name">Subject:</th><td class="field-body">Specify the subject line of the email</td>
+</tr>
+<tr class="field"><th class="field-name">Date:</th><td class="field-body">Specify the date on which the email was sent</td>
+</tr>
+<tr class="field"><th class="field-name">Reply To:</th><td class="field-body">Specify the reply-to email address of the email</td>
+</tr>
+<tr class="field"><th class="field-name">HELO:</th><td class="field-body">Identity passed by sender to SMTP server</td>
+</tr>
+<tr class="field"><th class="field-name">Boundary:</th><td class="field-body">SMTP server that located target host</td>
+</tr>
+<tr class="field"><th class="field-name">Message ID:</th><td class="field-body">Message ID from header</td>
+</tr>
+<tr class="field"><th class="field-name">Originating IP:</th><td class="field-body">Originating IP of SMTP request</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">X-Originating IP:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">X-Originating IP from header</td>
+</tr>
+<tr class="field"><th class="field-name">X-Mailer:</th><td class="field-body">Software used to send email</td>
+</tr>
+<tr class="field"><th class="field-name">Raw Header:</th><td class="field-body">Copied from the message</td>
+</tr>
+<tr class="field"><th class="field-name">Raw Body:</th><td class="field-body">Copied from the message</td>
+</tr>
+<tr class="field"><th class="field-name">Source:</th><td class="field-body">Intelligence source from which the email was captured</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">Source Reference:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">Add specific references</td>
+</tr>
+<tr class="field"><th class="field-name">Bucket List:</th><td class="field-body">This is a list of buckets you want to associate with this
+Email.</td>
+</tr>
+</tbody>
+</table>
+<p>Once these fields are filled out, press &quot;Add Email&quot;. You should
+see a message that the email was successfully added. If you
+encounter an error, report it to your administrator.</p>
+<p>Now that you have added the email, press &quot;Cancel&quot; or ESCAPE to close the
+dialog box. Press &quot;Reload&quot; to see your new email in the table.</p>
+</div>
+<div class="section" id="viewing-editing-an-existing-email">
+<h2><a class="toc-backref" href="#id45">9.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Email</a></h2>
+<p>Opening an email via the <a class="reference internal" href="#email-page">Email Page</a> or <a class="reference internal" href="#advanced-search">Advanced Search</a>
+will bring up the email information page.</p>
+<p>From here, you can view all of the objects that are associated with
+the email. The tabs at the top of the screen move you between the
+various child objects of the email. Clicking on the various links
+and icons will allow you to edit existing data or add new data,
+respectively.</p>
+<p>Of note, there are three specific buttons at the top of the
+&quot;Details&quot; tab. &quot;Add Attachment&quot; will open a dialog box that will
+allow you to upload an attachment associated with the email, most
+commonly the email itself. Pressing the &quot;Download Email&quot; button
+will let you download object information in various formats. Lastly,
+the &quot;Delete Email&quot; button will remove the email from the CRITs
+database.</p>
+<p>Tabs at the top of this page will present various views of the email
+object data for further analysis.</p>
+<p>For more information on controls, please see the <a class="reference internal" href="#terms-and-concepts">Terms
+and Concepts</a> section.</p>
+</div>
+<div class="section" id="subscribing-to-an-email">
+<h2><a class="toc-backref" href="#id46">9.3&nbsp;&nbsp;&nbsp;Subscribing to an Email</a></h2>
+<p>When <a class="reference internal" href="#viewing-editing-an-existing-email">Viewing/Editing an Existing Email</a>, you have the option to
+subscribe to it so that it will show up on your <a class="reference internal" href="#user-profile-page">User Profile Page</a>
+under the &quot;Subscriptions&quot; tab. Simply select the blue checkmark
+next to your <a class="reference internal" href="#assigned-role">Assigned Role</a>. When you do, the check mark will
+change to an 'X', indicating that you are now subscribed. To
+unsubscribe, click the 'X' and it will turn back to a check mark to
+confirm.</p>
+</div>
+</div>
+<div class="section" id="event-page">
+<h1><a class="toc-backref" href="#id47">10&nbsp;&nbsp;&nbsp;Event Page</a></h1>
+<p>This page can be accessed directly from the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>.
+From here, you can manage all of the events to which you have
+access. The table on this page shows, by default, the first 25
+events sorted by date added. See <a class="reference internal" href="#table-navigation">Table Navigation</a> for more
+information on how to interact with the table.</p>
+<div class="section" id="adding-a-new-event">
+<h2><a class="toc-backref" href="#id48">10.1&nbsp;&nbsp;&nbsp;Adding a New Event</a></h2>
+<p>There are two common ways to add a new event to CRITs:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Open the <a class="reference internal" href="#navigation-menu">Navigation Menu</a> and click the cross symbol
+next to &quot;Events&quot;.</li>
+<li>From the <a class="reference internal" href="#event-page">Event Page</a>, click the &quot;Add Event&quot;
+button.</li>
+</ol>
+</blockquote>
+<p>Doing either of these will open a new dialog box that allows you to
+define a new event. An event consists of six pieces of information,
+as follows:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Title:</th><td class="field-body">A title by which to identify the event</td>
+</tr>
+<tr class="field"><th class="field-name">Event Type:</th><td class="field-body">From the drop-down, select a pre-defined type</td>
+</tr>
+<tr class="field"><th class="field-name">Description:</th><td class="field-body">(Optional) Provide a brief description of the event</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">Occurrence Date:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">The date on which the event occurred</td>
+</tr>
+<tr class="field"><th class="field-name">Source:</th><td class="field-body">From the drop-down, select the source of the event</td>
+</tr>
+<tr class="field"><th class="field-name">Reference:</th><td class="field-body">(Optional) This is an undefined field; it is suggested
+that it be used to track a corresponding ID in an external
+system.</td>
+</tr>
+<tr class="field"><th class="field-name">Method:</th><td class="field-body">(Optional) This is an undefined field; it is suggested that
+it be used to denote the external tool that collected the
+event.</td>
+</tr>
+<tr class="field"><th class="field-name">Bucket List:</th><td class="field-body">This is a list of buckets you want to associate with this Event.</td>
+</tr>
+</tbody>
+</table>
+<p>Once these fields are filled out, press &quot;Add Event&quot;. You should
+see a message that the event was successfully added. If you
+encounter an error, report it to your administrator.</p>
+<p>Now that you have added the event, press &quot;Cancel&quot; or ESCAPE to close the
+dialog box. Press &quot;Reload&quot; to see your new event in the table.</p>
+</div>
+<div class="section" id="viewing-editing-an-existing-event">
+<h2><a class="toc-backref" href="#id49">10.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Event</a></h2>
+<p>Opening an event via the <a class="reference internal" href="#event-page">Event Page</a> or <a class="reference internal" href="#advanced-search">Advanced Search</a>
+will bring up the event information page.</p>
+<p>From here, you can view all of the fields that are associated with
+the event object. The tabs at the top of the screen move you between
+the various child objects of the event. Clicking on the various links
+and icons will allow you to edit existing data or add new data,
+respectively.</p>
+<p>Of note, there are three specific buttons at the top of the
+&quot;Details&quot; tab. &quot;Add Sample&quot; will open a dialog box that will
+allow you to upload malware or other sample associated with the
+event. Pressing the &quot;Download Event&quot; button will let you download
+object information in various formats. Lastly, the &quot;Delete Event&quot;
+button will remove the event from the CRITs database.</p>
+<p>For more information on controls, please see the <a class="reference internal" href="#terms-and-concepts">Terms
+and Concepts</a> section.</p>
+</div>
+<div class="section" id="subscribing-to-an-event">
+<h2><a class="toc-backref" href="#id50">10.3&nbsp;&nbsp;&nbsp;Subscribing to an Event</a></h2>
+<p>When <a class="reference internal" href="#viewing-editing-an-existing-event">Viewing/Editing an Existing Event</a>, you have the option to
+subscribe to it so that it will show up on your <a class="reference internal" href="#user-profile-page">User Profile Page</a>
+under the &quot;Subscriptions&quot; tab. Simply select the blue checkmark
+next to your <a class="reference internal" href="#assigned-role">Assigned Role</a>. When you do, the check mark will
+change to an 'X', indicating that you are now subscribed. To
+unsubscribe, click the 'X' and it will turn back to a check mark to
+confirm.</p>
+</div>
+</div>
+<div class="section" id="indicator-page">
+<h1><a class="toc-backref" href="#id51">11&nbsp;&nbsp;&nbsp;Indicator Page</a></h1>
+<p>This page can be accessed directly from the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>.
+From here, you can manage all of the indicators to which you have
+access. The table on this page shows, by default, the first 25
+indicators sorted by date added. See <a class="reference internal" href="#table-navigation">Table Navigation</a> for more
+information on how to interact with the table.</p>
+<div class="section" id="adding-a-new-indicator">
+<h2><a class="toc-backref" href="#id52">11.1&nbsp;&nbsp;&nbsp;Adding a New Indicator</a></h2>
+<p>There are two common ways to add a new indicator to CRITs:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Open the <a class="reference internal" href="#navigation-menu">Navigation Menu</a> and click the cross symbol
+next to &quot;Events&quot;. You may also click on either of the
+following options that will appear in a sub-menu to the
+right: &quot;New Indicator Blob&quot; or &quot;New Indicator CSV&quot;</li>
+<li>From the <a class="reference internal" href="#indicator-page">Indicator Page</a>, click the &quot;Add Indicator&quot;
+button.</li>
+</ol>
+</blockquote>
+<p>Doing either of these will open a new dialog box that allows you to
+define a new indicator. An indicator consists of eight pieces of
+information, as follows:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Indicator Type:</th><td class="field-body">Choose the type of indicator from the drop-down.
+Additional types may be available by clicking &quot;More Object
+Types&quot; at the bottom of the window.</td>
+</tr>
+<tr class="field"><th class="field-name">Value:</th><td class="field-body">Define the value for the indicator</td>
+</tr>
+<tr class="field"><th class="field-name">Confidence:</th><td class="field-body">Select the confidence level for the indicator</td>
+</tr>
+<tr class="field"><th class="field-name">Impact:</th><td class="field-body">Select the level of impact for the indicator</td>
+</tr>
+<tr class="field"><th class="field-name">Campaign:</th><td class="field-body">(Optional) Select a campaign with which to associate the
+indicator</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">Campaign Confidence:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">(Optional) Select a confidence level for the
+association with the campaign</td>
+</tr>
+<tr class="field"><th class="field-name">Source:</th><td class="field-body">From the drop-down, select the source of the indicator</td>
+</tr>
+<tr class="field"><th class="field-name">Reference:</th><td class="field-body">(Optional) Reference for the indicator</td>
+</tr>
+<tr class="field"><th class="field-name">Bucket List:</th><td class="field-body">This is a list of buckets you want to associate with this
+Indicator.</td>
+</tr>
+</tbody>
+</table>
+<div class="note">
+<p class="first admonition-title">Note</p>
+<p>Athough the &quot;Confidence&quot; and &quot;Campaign Confidence&quot; fields
+may be defined individually by your organization (or, indeed,
+have custom values set by your administrator), it is useful
+to have a &quot;default&quot; rating suggestion. Therefore, proposed
+meanings for the respective ratings follow.</p>
+<dl class="last docutils">
+<dt><strong>Confidence (Indicator)</strong></dt>
+<dd><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Unknown:</th><td class="field-body">The indicator has not been seen before, nor
+has it been reported by a trusted source;
+this is used to mark &quot;hunches&quot; that require
+confirmation.</td>
+</tr>
+<tr class="field"><th class="field-name">Benign:</th><td class="field-body">The indicator is known to be false, and
+should be ignored when identifying malware.</td>
+</tr>
+<tr class="field"><th class="field-name">Low:</th><td class="field-body">The indicator has not been seen, but comes from
+a medium- or high-confidence source.</td>
+</tr>
+<tr class="field"><th class="field-name">Medium:</th><td class="field-body">The indicator has been confirmed and/or it
+comes from a high-confidence source.</td>
+</tr>
+<tr class="field"><th class="field-name">High:</th><td class="field-body">The indicator has been confirmed multiple
+times.</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt><strong>Campaign Confidence</strong></dt>
+<dd><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Low:</th><td class="field-body">The campaign is not well defined and/or the
+indicator is not directly related to any
+other associated indicator.</td>
+</tr>
+<tr class="field"><th class="field-name">Medium:</th><td class="field-body">The campaign is confirmed and/or the
+indicator directly relates to another,
+associated indicator.</td>
+</tr>
+<tr class="field"><th class="field-name">High:</th><td class="field-body">The campaign is confirmed and well-known
+and/or the indicator is directly related to
+more than one other indicator associated
+with the campaign.</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</div>
+<p>Once these fields are filled out, press &quot;Upload Indicator&quot;. You should
+see a message that the indicator was successfully added. If you
+encounter an error, report it to your administrator.</p>
+<p>Now that you have added the indicator, press &quot;Cancel&quot; or ESCAPE to close the
+dialog box. Press &quot;Reload&quot; to see your new indicator in the table.</p>
+</div>
+<div class="section" id="viewing-editing-an-existing-indicator">
+<h2><a class="toc-backref" href="#id53">11.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Indicator</a></h2>
+<p>Opening an indicator via the <a class="reference internal" href="#indicator-page">Indicator Page</a> or <a class="reference internal" href="#advanced-search">Advanced Search</a>
+will bring up the indicator information page.</p>
+<p>From here, you can view all of the fields that are associated with
+the indicator object. The tabs at the top of the screen move you
+between the various child objects of the indicator. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.</p>
+<p>For more information on controls, please see the <a class="reference internal" href="#terms-and-concepts">Terms
+and Concepts</a> section.</p>
+</div>
+<div class="section" id="subscribing-to-an-indicator">
+<h2><a class="toc-backref" href="#id54">11.3&nbsp;&nbsp;&nbsp;Subscribing to an Indicator</a></h2>
+<p>When <a class="reference internal" href="#viewing-editing-an-existing-indicator">Viewing/Editing an Existing Indicator</a>, you have the option
+to subscribe to it so that it will show up on your <a class="reference internal" href="#user-profile-page">User Profile
+Page</a> under the &quot;Subscriptions&quot; tab. Simply select the blue
+checkmark next to your <a class="reference internal" href="#assigned-role">Assigned Role</a>. When you do, the check mark
+will change to an 'X', indicating that you are now subscribed. To
+unsubscribe, click the 'X' and it will turn back to a check mark to
+confirm.</p>
+</div>
+</div>
+<div class="section" id="ip-page">
+<h1><a class="toc-backref" href="#id55">12&nbsp;&nbsp;&nbsp;IP Page</a></h1>
+<p>This page can be accessed directly from the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>.
+From here, you can manage all of the IP to which you have
+access. The table on this page shows, by default, the first 25
+IP sorted by date added. See <a class="reference internal" href="#table-navigation">Table Navigation</a> for more
+information on how to interact with the table.</p>
+<div class="section" id="adding-a-new-ip">
+<h2><a class="toc-backref" href="#id56">12.1&nbsp;&nbsp;&nbsp;Adding a New IP</a></h2>
+<p>There are two common ways to add a new IP to CRITs:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Open the <a class="reference internal" href="#navigation-menu">Navigation Menu</a> and click the cross symbol
+next to &quot;IPs&quot;.</li>
+<li>From the <a class="reference internal" href="#ip-page">IP Page</a>, click the &quot;Add IP&quot;
+button.</li>
+</ol>
+</blockquote>
+<p>Doing either of these will open a new dialog box that allows you to
+define a new IP entry. An IP consists of seven pieces of
+information, as follows:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">IP:</th><td class="field-body">The IP address to record</td>
+</tr>
+<tr class="field"><th class="field-name">IP Type:</th><td class="field-body">Choose the type of record</td>
+</tr>
+<tr class="field"><th class="field-name">Analyst:</th><td class="field-body">Analyst who is reporting the IP</td>
+</tr>
+<tr class="field"><th class="field-name">Source:</th><td class="field-body">From the drop-down, select the source of the IP</td>
+</tr>
+<tr class="field"><th class="field-name">Source method:</th><td class="field-body">(Optional) Record how the IP was sourced</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">Source reference:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">(Optional) Reference for the IP source</td>
+</tr>
+<tr class="field"><th class="field-name">Add Indicator:</th><td class="field-body">(Optional) Check to add an indicator for the IP as
+well</td>
+</tr>
+<tr class="field"><th class="field-name">Bucket List:</th><td class="field-body">This is a list of buckets you want to associate with this IP.</td>
+</tr>
+</tbody>
+</table>
+<p>Once these fields are filled out, press &quot;Add IP&quot;. You should
+see a message that the IP was successfully added. If you
+encounter an error, report it to your administrator.</p>
+<p>Now that you have added the IP, press &quot;Cancel&quot; or ESCAPE to close the
+dialog box. Press &quot;Reload&quot; to see your new IP in the table.</p>
+</div>
+<div class="section" id="viewing-editing-an-existing-ip">
+<h2><a class="toc-backref" href="#id57">12.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing IP</a></h2>
+<p>Opening an IP via the <a class="reference internal" href="#ip-page">IP Page</a> or <a class="reference internal" href="#advanced-search">Advanced Search</a> will bring
+up the IP information page.</p>
+<p>From here, you can view all of the fields that are associated with
+the IP object. The tabs at the top of the screen move you
+between the various child objects of the indicator. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.</p>
+<p>For more information on controls, pleas see the <a class="reference internal" href="#terms-and-concepts">Terms
+and Concepts</a> section.</p>
+</div>
+<div class="section" id="subscribing-to-an-ip">
+<h2><a class="toc-backref" href="#id58">12.3&nbsp;&nbsp;&nbsp;Subscribing to an IP</a></h2>
+<p>When <a class="reference internal" href="#viewing-editing-an-existing-ip">Viewing/Editing an Existing IP</a>, you have the option
+to subscribe to it so that it will show up on your <a class="reference internal" href="#user-profile-page">User Profile
+Page</a> under the &quot;Subscriptions&quot; tab. Simply select the blue
+checkmark next to your <a class="reference internal" href="#assigned-role">Assigned Role</a>. When you do, the check mark
+will change to an 'X', indicating that you are now subscribed. To
+unsubscribe, click the 'X' and it will turn back to a check mark to
+confirm.</p>
+</div>
+</div>
+<div class="section" id="pcap-page">
+<h1><a class="toc-backref" href="#id59">13&nbsp;&nbsp;&nbsp;PCAP Page</a></h1>
+<p>This page can be accessed directly from the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>.
+From here, you can manage all of the PCAPs (Packet Captures) to
+which you have access. The table on this page shows, by default, the
+first 25 PCAP sorted by date added. See <a class="reference internal" href="#table-navigation">Table Navigation</a> for more
+information on how to interact with the table.</p>
+<div class="section" id="adding-a-new-pcap">
+<h2><a class="toc-backref" href="#id60">13.1&nbsp;&nbsp;&nbsp;Adding a New PCAP</a></h2>
+<p>There are two common ways to add a new PCAP to CRITs:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Open the <a class="reference internal" href="#navigation-menu">Navigation Menu</a> and click the cross symbol
+next to &quot;PCAPs&quot;.</li>
+<li>From the <a class="reference internal" href="#pcap-page">PCAP Page</a>, click the &quot;Add PCAP&quot;
+button.</li>
+</ol>
+</blockquote>
+<p>Doing either of these will open a new dialog box that allows you to
+define a new PCAP. A PCAP consists of three pieces of information,
+as follows:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Filedata:</th><td class="field-body">Choose a local file to upload as the PCAP sample</td>
+</tr>
+<tr class="field"><th class="field-name">Description:</th><td class="field-body">Enter a brief description for the PCAP</td>
+</tr>
+<tr class="field"><th class="field-name">Source:</th><td class="field-body">From the drop-down, select the source of the PCAP</td>
+</tr>
+<tr class="field"><th class="field-name">Bucket List:</th><td class="field-body">This is a list of buckets you want to associate with this PCAP.</td>
+</tr>
+</tbody>
+</table>
+<p>Once these fields are filled out, press &quot;Upload PCAP&quot;. You should
+see a message that the PCAP was successfully added. If you
+encounter an error, report it to your administrator.</p>
+<p>Now that you have added the PCAP, press &quot;Cancel&quot; or ESCAPE to close the
+dialog box. Press &quot;Reload&quot; to see your new PCAP in the table.</p>
+</div>
+<div class="section" id="viewing-editing-an-existing-pcap">
+<h2><a class="toc-backref" href="#id61">13.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing PCAP</a></h2>
+<p>Opening a PCAP via the <a class="reference internal" href="#pcap-page">PCAP Page</a> or <a class="reference internal" href="#advanced-search">Advanced Search</a> will bring
+up the PCAP information page.</p>
+<p>From here, you can view all of the fields that are associated with
+the PCAP object. The tabs at the top of the screen move you
+between the various child objects of the indicator. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.</p>
+<p>For more information on controls, pleas see the <a class="reference internal" href="#terms-and-concepts">Terms
+and Concepts</a> section.</p>
+</div>
+<div class="section" id="subscribing-to-a-pcap">
+<h2><a class="toc-backref" href="#id62">13.3&nbsp;&nbsp;&nbsp;Subscribing to a PCAP</a></h2>
+<p>When <a class="reference internal" href="#viewing-editing-an-existing-pcap">Viewing/Editing an Existing PCAP</a>, you have the option
+to subscribe to it so that it will show up on your <a class="reference internal" href="#user-profile-page">User Profile
+Page</a> under the &quot;Subscriptions&quot; tab. Simply select the blue
+checkmark next to your <a class="reference internal" href="#assigned-role">Assigned Role</a>. When you do, the check mark
+will change to an 'X', indicating that you are now subscribed. To
+unsubscribe, click the 'X' and it will turn back to a check mark to
+confirm.</p>
+</div>
+</div>
+<div class="section" id="sample-page">
+<h1><a class="toc-backref" href="#id63">14&nbsp;&nbsp;&nbsp;Sample Page</a></h1>
+<p>This page can be accessed directly from the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>.
+From here, you can manage all of the Samples to which you have
+access. The table on this page shows, by default, the first 25
+Samples sorted by date added. See <a class="reference internal" href="#table-navigation">Table Navigation</a> for more
+information on how to interact with the table.</p>
+<div class="section" id="adding-a-new-sample">
+<h2><a class="toc-backref" href="#id64">14.1&nbsp;&nbsp;&nbsp;Adding a New Sample</a></h2>
+<p>There are two common ways to add a new Sample to CRITs:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Open the <a class="reference internal" href="#navigation-menu">Navigation Menu</a> and click the cross symbol
+next to &quot;Samples&quot;.</li>
+<li>From the <a class="reference internal" href="#sample-page">Sample Page</a>, click the &quot;Add Sample&quot;
+button.</li>
+</ol>
+</blockquote>
+<p>Doing either of these will open a new dialog box that allows you to
+define a new Sample. When creating a new sample, you must choose
+between uploading a sample file or uploading sample metadata. A
+Sample file consists of nine pieces of information, as follows:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Upload type:</th><td class="field-body">Choose whether the sample is a file or metadata</td>
+</tr>
+<tr class="field"><th class="field-name">Filedata:</th><td class="field-body">Choose a local file to upload as the Sample</td>
+</tr>
+<tr class="field"><th class="field-name">File format:</th><td class="field-body">Select the format of the Sample being uploaded</td>
+</tr>
+<tr class="field"><th class="field-name">Password:</th><td class="field-body">(Optional) Enter the password for the Sample file</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">Email Me Results:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">Select to have CRITs email you analysis results</td>
+</tr>
+<tr class="field"><th class="field-name">Parent md5:</th><td class="field-body">The MD5 hash for the Sample file</td>
+</tr>
+<tr class="field"><th class="field-name">Source:</th><td class="field-body">From the drop-down, select the source of the Sample</td>
+</tr>
+<tr class="field"><th class="field-name">Reference:</th><td class="field-body">Reference for the Sample</td>
+</tr>
+<tr class="field"><th class="field-name">Bucket List:</th><td class="field-body">This is a list of buckets you want to associate with this Sample.</td>
+</tr>
+</tbody>
+</table>
+<p>Should you select &quot;Metadata Upload&quot; as the upload type, the required
+information changes. A Sample metadata consists of seven piece of
+information, as follows:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Upload type:</th><td class="field-body">Choose whether the sample is a file or metadata</td>
+</tr>
+<tr class="field"><th class="field-name">Filename:</th><td class="field-body">The name of the file encountered</td>
+</tr>
+<tr class="field"><th class="field-name">MD5:</th><td class="field-body">The MD5 has for the sample</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">Email Me Results:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">Select to have CRITs email you analysis results</td>
+</tr>
+<tr class="field"><th class="field-name">Parent md5:</th><td class="field-body">The MD5 hash for the Sample file</td>
+</tr>
+<tr class="field"><th class="field-name">Source:</th><td class="field-body">From the drop-down, select the source of the Sample</td>
+</tr>
+<tr class="field"><th class="field-name">Reference:</th><td class="field-body">Reference for the Sample</td>
+</tr>
+<tr class="field"><th class="field-name">Bucket List:</th><td class="field-body">This is a list of buckets you want to associate with this Sample.</td>
+</tr>
+</tbody>
+</table>
+<p>Once these fields are filled out, press &quot;Upload Sample&quot;. You should
+see a message that the Sample was successfully added. If you
+encounter an error, report it to your administrator.</p>
+<p>Now that you have added the Sample, press &quot;Cancel&quot; or ESCAPE to close the
+dialog box. Press &quot;Reload&quot; to see your new Sample in the table.</p>
+</div>
+<div class="section" id="viewing-editing-an-existing-sample">
+<h2><a class="toc-backref" href="#id65">14.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Sample</a></h2>
+<p>Opening a Sample via the <a class="reference internal" href="#sample-page">Sample Page</a> or <a class="reference internal" href="#advanced-search">Advanced Search</a> will bring
+up the Sample information page.</p>
+<p>From here, you can view all of the fields that are associated with
+the Sample object. The tabs at the top of the screen move you
+between the various child objects of the Sample. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.</p>
+<p>For more information on controls, pleas see the <a class="reference internal" href="#terms-and-concepts">Terms
+and Concepts</a> section.</p>
+</div>
+<div class="section" id="subscribing-to-a-sample">
+<h2><a class="toc-backref" href="#id66">14.3&nbsp;&nbsp;&nbsp;Subscribing to a Sample</a></h2>
+<p>When <a class="reference internal" href="#viewing-editing-an-existing-sample">Viewing/Editing an Existing Sample</a>, you have the option
+to subscribe to it so that it will show up on your <a class="reference internal" href="#user-profile-page">User Profile
+Page</a> under the &quot;Subscriptions&quot; tab. Simply select the blue
+checkmark next to your <a class="reference internal" href="#assigned-role">Assigned Role</a>. When you do, the check mark
+will change to an 'X', indicating that you are now subscribed. To
+unsubscribe, click the 'X' and it will turn back to a check mark to
+confirm.</p>
+</div>
+</div>
+<div class="section" id="target-page">
+<h1><a class="toc-backref" href="#id67">15&nbsp;&nbsp;&nbsp;Target Page</a></h1>
+<p>This page can be accessed directly from the <a class="reference internal" href="#navigation-menu">Navigation Menu</a>.
+From here, you can manage all of the targets to which you have
+access. The table on this page shows, by default, the first 25
+Targets sorted by date added. See <a class="reference internal" href="#table-navigation">Table Navigation</a> for more
+information on how to interact with the table.</p>
+<div class="section" id="adding-a-new-target">
+<h2><a class="toc-backref" href="#id68">15.1&nbsp;&nbsp;&nbsp;Adding a New Target</a></h2>
+<p>There are two common ways to add a new target to CRITs:</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Open the <a class="reference internal" href="#navigation-menu">Navigation Menu</a> and click the cross symbol
+next to &quot;Targets&quot;.</li>
+<li>From the <a class="reference internal" href="#sample-page">Sample Page</a>, click the &quot;Add Target&quot;
+button.</li>
+</ol>
+</blockquote>
+<p>Doing either of these will open a new dialog box that allows you to
+define a new target. A target consists of eight pieces of
+information, as follows:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Firstname:</th><td class="field-body">(Optional) First name of the target</td>
+</tr>
+<tr class="field"><th class="field-name">Lastname:</th><td class="field-body">(Optional) Last name of the target</td>
+</tr>
+<tr class="field"><th class="field-name">Division:</th><td class="field-body">(Optional) Organization division for the target</td>
+</tr>
+<tr class="field"><th class="field-name">Department:</th><td class="field-body">(Optional) Organizational department for the target</td>
+</tr>
+<tr class="field"><th class="field-name">Email address:</th><td class="field-body">The email address of the target</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">Organization id:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">(Optional) An internal organization id for the
+target</td>
+</tr>
+<tr class="field"><th class="field-name">Title:</th><td class="field-body">(Optional) The title held by the target</td>
+</tr>
+<tr class="field"><th class="field-name">Note:</th><td class="field-body">Miscellaneous notes</td>
+</tr>
+<tr class="field"><th class="field-name">Bucket List:</th><td class="field-body">This is a list of buckets you want to associate with this Target.</td>
+</tr>
+</tbody>
+</table>
+<p>Once these fields are filled out, press &quot;Add Target&quot;. You should
+see a message that the target was successfully added. If you
+encounter an error, report it to your administrator.</p>
+<p>Now that you have added the target, press &quot;Cancel&quot; or ESCAPE to close the
+dialog box. Press &quot;Reload&quot; to see your new target in the table.</p>
+</div>
+<div class="section" id="viewing-editing-an-existing-target">
+<h2><a class="toc-backref" href="#id69">15.2&nbsp;&nbsp;&nbsp;Viewing/Editing an Existing Target</a></h2>
+<p>Opening a target via the <a class="reference internal" href="#target-page">Target Page</a> or <a class="reference internal" href="#advanced-search">Advanced Search</a> will bring
+up the target information page.</p>
+<p>From here, you can view all of the fields that are associated with
+the target object. The tabs at the top of the screen move you
+between the various child objects of the target. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.</p>
+<p>For more information on controls, pleas see the <a class="reference internal" href="#terms-and-concepts">Terms
+and Concepts</a> section.</p>
+</div>
+<div class="section" id="subscribing-to-a-target">
+<h2><a class="toc-backref" href="#id70">15.3&nbsp;&nbsp;&nbsp;Subscribing to a Target</a></h2>
+<p>When <a class="reference internal" href="#viewing-editing-an-existing-target">Viewing/Editing an Existing Target</a>, you have the option
+to subscribe to it so that it will show up on your <a class="reference internal" href="#user-profile-page">User Profile
+Page</a> under the &quot;Subscriptions&quot; tab. Simply select the blue
+checkmark next to your <a class="reference internal" href="#assigned-role">Assigned Role</a>. When you do, the check mark
+will change to an 'X', indicating that you are now subscribed. To
+unsubscribe, click the 'X' and it will turn back to a check mark to
+confirm.</p>
+</div>
+</div>
+<div class="section" id="administrative-functions">
+<h1><a class="toc-backref" href="#id71">16&nbsp;&nbsp;&nbsp;Administrative Functions</a></h1>
+<p>This section explains administrative functions to which users have
+access.</p>
+<div class="section" id="how-to-change-your-password">
+<h2><a class="toc-backref" href="#id72">16.1&nbsp;&nbsp;&nbsp;How to Change Your Password</a></h2>
+<p>Follow these steps to change your password.</p>
+<blockquote>
+<ol class="arabic simple">
+<li>Click on your name in the upper left corner. This will
+bring you to the <a class="reference internal" href="#user-info-tab">User Info Tab</a>.</li>
+<li>Click on the &quot;Change Password&quot; button.</li>
+<li>Enter in your old password, new password, and confirm your
+new password.</li>
+<li>Click &quot;Submit&quot;.</li>
+</ol>
+</blockquote>
+</div>
+</div>
+<div class="section" id="api">
+<h1><a class="toc-backref" href="#id73">17&nbsp;&nbsp;&nbsp;API</a></h1>
+<p>CRITs comes with an authenticated API. The API leverages Tastypie. A lot of the
+features of Tastypie are overridden by CRITs code for our needs. More
+information on Tastypie can be found here:</p>
+<blockquote>
+<a class="reference external" href="http://tastypieapi.org/">http://tastypieapi.org/</a></blockquote>
+<p>Users can visit their profile page and generate API keys for their necessary
+tasks. Each API key can be revoked if that key becomes compromised or the user
+no longer wishes to use it.</p>
+<p>If you are using a web browser to access the API and you have an
+authenticated CRITs session already, you do not have to provide
+authentication information to utilize the API. To provide authentication
+information, append the following to your requests:</p>
+<blockquote>
+&amp;username=&lt;username&gt;&amp;api_key=&lt;api_key&gt;</blockquote>
+<p>Where &lt;username&gt; is your username, and &lt;api_key&gt; is the API key you wish to use.</p>
+<div class="section" id="api-urls">
+<h2><a class="toc-backref" href="#id74">17.1&nbsp;&nbsp;&nbsp;API URLs</a></h2>
+<p>The URL structure for the API comes in this form:</p>
+<p>/api/&lt;version&gt;/&lt;resource&gt;/...</p>
+<p>The &lt;version&gt; comes in the form of v# where # is the API version you
+are using.</p>
+<p>The &lt;resource&gt; is the content you wish to utilize within CRITs.
+Currently the available resources are:</p>
+<ul class="simple">
+<li>campaigns</li>
+<li>certificates</li>
+<li>domains</li>
+<li>emails</li>
+<li>events</li>
+<li>indicators</li>
+<li>ips</li>
+<li>pcaps</li>
+<li>raw_data</li>
+<li>samples</li>
+<li>targets</li>
+</ul>
+<p>For example, if you wanted to get a list of campaigns, you would use:</p>
+<blockquote>
+/api/v1/campaigns/</blockquote>
+<p>This would return a list of campaigns in JSON format. If you wish to change
+the format to something else, you would append &quot;?format=&lt;format&gt;&quot; where &lt;format&gt;
+is the format you want the data returned to you in. We currently support the
+following formats:</p>
+<ul class="simple">
+<li>json</li>
+<li>yaml</li>
+<li>xml</li>
+<li>stix</li>
+</ul>
+<p>If you choose the stix format, you will get a single stix document from the API
+which contains all of the objects returned from that API call.</p>
+<p>If you wish to get information about a single document, you would use:</p>
+<blockquote>
+/api/v1/campaigns/&lt;object_id&gt;/</blockquote>
+<p>If the results of the GET request have a file in GridFS, you can download them
+by appending &quot;?file=1&quot; on the end. <em>By default the file(s) will be returned to
+you in raw format.</em> If you wish to adjust which format the files are in when
+sent to you, you can append &quot;&amp;file_format=&lt;format&gt;&quot; where &lt;format&gt; is one of
+'base64', 'zlib', and 'invert'. The result will be a zip file with a password
+of 'infected' containing all of the files found with your GET request. If you
+query for just a single document you will still get a zip file with the same
+password. If there is an issue generating the zip file (whether due to no files
+being found, or some other error) you will get a non-zip file which contains any
+issues.</p>
+<p>Queries against the API are done via GET requests. If you wish to upload content
+to the system through the API, you must use a POST.</p>
+</div>
+<div class="section" id="searching-using-get-parameters">
+<h2><a class="toc-backref" href="#id75">17.2&nbsp;&nbsp;&nbsp;Searching Using GET Parameters</a></h2>
+<p>If you wish to limit the results of your GET request by the value of one or more
+fields, you can do so by adding more parameters. The format is similar to how
+you use search operators in the global search box. Here's an example:</p>
+<blockquote>
+/api/v1/samples/?c-campaign.name=Bad Guys&amp;c-filename=foo.txt</blockquote>
+<p>You'll notice a couple things here. The first is that there is a &quot;c-&quot; in front
+of the field name. This tells the API that this parameter should be used as a
+field to search against to limit your results. Second is that there is no
+operators for defining AND or OR. Currently this only supports AND operations.
+In our example, only samples with a Campaign Name of &quot;Bad Guys&quot; AND a filename
+of &quot;foo.txt&quot; will be returned to us. Finally, in this format the fields are both
+full matches.</p>
+<p>As long as you have a &quot;c-&quot; in front of the parameter, you can search against any
+field in the database, whether it is a CRITs supported field or not!</p>
+<p>If you wish to use regex, you can add &quot;&amp;regex=1&quot;. This will convert <em>all</em> &quot;c-&quot;
+parameters to regex searches (except those with comparison operators which is
+explained below).</p>
+<blockquote>
+/api/v1/samples/?c-campaign.name=Bad&amp;c-filename=foo&amp;regex=1</blockquote>
+<p>This will find all Samples where the filename contains &quot;foo&quot; and the Campaign Name
+contains &quot;Bad&quot;.</p>
+<p>If you wish to use the MongoDB comparison operators ('gt', 'gte', 'lt', 'lte',
+'in', 'nin'), you can use the syntax &quot;__&lt;operator&gt;&quot; when defining your field.
+Some examples:</p>
+<blockquote>
+<p>/api/v1/samples/?c-size__lte=100</p>
+<p>/api/v1/samples/?c-bucket_list__in=foo,bar</p>
+</blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Note:</th><td class="field-body">Using a comparison operator will override &quot;&amp;regex=1&quot; so none of the fields which use comparison operators will be converted into regex.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="limiting-get-request-results">
+<h2><a class="toc-backref" href="#id76">17.3&nbsp;&nbsp;&nbsp;Limiting GET Request Results</a></h2>
+<p>If you wish to limit the fields in the results of your GET request, you can use
+two features:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">only:</th><td class="field-body">Only populate these and any required fields.</td>
+</tr>
+<tr class="field"><th class="field-name">exclude:</th><td class="field-body">Do not populate these fields if they are not required.</td>
+</tr>
+</tbody>
+</table>
+<p>For example:</p>
+<blockquote>
+/api/v1/samples/?only=filename,mimetype,md5</blockquote>
+<p>Will only populate those and any required fields for each document. The
+inclusion of required fields is intentional. The classes expect that these
+fields are populated if they are required and do not have a default value to set,
+so if you do not include them they will complain.</p>
+<p>You can combine both only and exclude. The result will be all of the fields from
+only as long as they aren't in the exclude list, combined with any required
+fields.</p>
+</div>
+<div class="section" id="post-examples">
+<h2><a class="toc-backref" href="#id77">17.4&nbsp;&nbsp;&nbsp;POST Examples:</a></h2>
+<p>cURL:</p>
+<blockquote>
+curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/file.pcap">filedata=&#64;/path/to/file.pcap</a>&quot; -F &quot;source=&lt;your source&gt;&quot; <a class="reference external" href="http://localhost:1337/api/v1/pcaps/">http://localhost:1337/api/v1/pcaps/</a>?username=&lt;your username&gt;&amp;api_key=&lt;your api key&gt;</blockquote>
+<p>Python Script:</p>
+<blockquote>
+<div class="line-block">
+<div class="line">import requests</div>
+</div>
+<div class="line-block">
+<div class="line">url = '<a class="reference external" href="http://localhost:8000/api/v1/pcaps/">http://localhost:8000/api/v1/pcaps/</a>'</div>
+<div class="line">files = { 'filedata': open('/path/to/file.pcap', 'rb') }</div>
+</div>
+<div class="line-block">
+<div class="line">data = {</div>
+<div class="line-block">
+<div class="line">'api_key': '&lt;your api key&gt;',</div>
+<div class="line">'username': '&lt;your username&gt;',</div>
+<div class="line">'source': '&lt;source name&gt;'</div>
+</div>
+<div class="line">}</div>
+</div>
+<div class="line-block">
+<div class="line">r = requests.post(url, data=data, files=files)</div>
+</div>
+</blockquote>
+</div>
+<div class="section" id="common-post-parameters">
+<h2><a class="toc-backref" href="#id78">17.5&nbsp;&nbsp;&nbsp;Common POST Parameters</a></h2>
+<p>These parameters are frequently used across most top-level objects in CRITs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">bucket_list:</th><td class="field-body">Comma-separated list of buckets.</td>
+</tr>
+<tr class="field"><th class="field-name">source:</th><td class="field-body">Name of the source which provided this information.</td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li>should be a source already in your CRITs instance.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">method:</th><td class="field-body">Method in which the information was acquired from the source.</td>
+</tr>
+<tr class="field"><th class="field-name">reference:</th><td class="field-body">Reference for the source of the information.</td>
+</tr>
+<tr class="field"><th class="field-name">campaign:</th><td class="field-body">Campaign associated with this information.</td>
+</tr>
+<tr class="field"><th class="field-name">confidence:</th><td class="field-body">Campaign confidence associated with this information.</td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li>must be one of &quot;low&quot;, &quot;medium&quot;, or &quot;high&quot;</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">ticket:</th><td class="field-body">Associated Ticket.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="campaign-api">
+<h2><a class="toc-backref" href="#id79">17.6&nbsp;&nbsp;&nbsp;Campaign API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/campaigns/</p>
+<p>/api/v1/campaigns/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/campaigns/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">aliases:</th><td class="field-body">Comma-separated list of campaign aliases.</td>
+</tr>
+<tr class="field"><th class="field-name">description:</th><td class="field-body">Description of the campaign.</td>
+</tr>
+<tr class="field"><th class="field-name">name:</th><td class="field-body">Name of the campaign.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="certificate-api">
+<h2><a class="toc-backref" href="#id80">17.7&nbsp;&nbsp;&nbsp;Certificate API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/certificates/</p>
+<p>/api/v1/certificates/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/certificates/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">description:</th><td class="field-body">Description of the certificate.</td>
+</tr>
+<tr class="field"><th class="field-name">filedata:</th><td class="field-body">The certificate.</td>
+</tr>
+<tr class="field"><th class="field-name">related_id:</th><td class="field-body">ObjectId of the related top-level object.</td>
+</tr>
+<tr class="field"><th class="field-name">related_md5:</th><td class="field-body">MD5 of the related top-level object if it has one.</td>
+</tr>
+<tr class="field"><th class="field-name">related_type:</th><td class="field-body">The CRITs type of the related top-level object.</td>
+</tr>
+<tr class="field"><th class="field-name">relationship:</th><td class="field-body">The type of relationship.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="domain-api">
+<h2><a class="toc-backref" href="#id81">17.8&nbsp;&nbsp;&nbsp;Domain API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/domains/</p>
+<p>/api/v1/domains/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/domains/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">add_indicators:</th><td class="field-body">If you wish to add Indicators to the system for this information.</td>
+</tr>
+<tr class="field"><th class="field-name">add_ip:</th><td class="field-body">Tell the API that you are also adding an IP related to this domain.</td>
+</tr>
+<tr class="field"><th class="field-name">domain:</th><td class="field-body">The domain name.</td>
+</tr>
+<tr class="field"><th class="field-name">ip:</th><td class="field-body">The IP you want to relate to this domain.</td>
+</tr>
+<tr class="field"><th class="field-name">ip_source:</th><td class="field-body">The source of the IP.</td>
+</tr>
+<tr class="field"><th class="field-name">ip_method:</th><td class="field-body">The method in which you acquired this IP from the source.</td>
+</tr>
+<tr class="field"><th class="field-name">ip_reference:</th><td class="field-body">The reference about this IP source.</td>
+</tr>
+<tr class="field"><th class="field-name">same_source:</th><td class="field-body">If you want the IP to have the same source as the domain.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="email-api">
+<h2><a class="toc-backref" href="#id82">17.9&nbsp;&nbsp;&nbsp;Email API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/emails/</p>
+<p>/api/v1/emails/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/emails/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">upload_type:</th><td class="field-body">One of &quot;eml&quot;, &quot;msg&quot;, &quot;raw&quot;, &quot;yaml&quot;, &quot;fields&quot;.</td>
+</tr>
+<tr class="field"><th class="field-name">filedata:</th><td class="field-body">The email in EML, Raw, or YAML format.</td>
+</tr>
+<tr class="field"><th class="field-name">email_id:</th><td class="field-body">The ObjectId of the email if it is in YAML format and exists already.</td>
+</tr>
+<tr class="field"><th class="field-name">password:</th><td class="field-body">The password for the attachment if this is an MSG file.</td>
+</tr>
+</tbody>
+</table>
+<p>If you are uploading a type of &quot;fields&quot;, you can include these parameters but
+only &quot;date&quot; is required:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">date:</th><td class="field-body">The Date field.</td>
+</tr>
+<tr class="field"><th class="field-name">to:</th><td class="field-body">The To field.</td>
+</tr>
+<tr class="field"><th class="field-name">cc:</th><td class="field-body">The CC field.</td>
+</tr>
+<tr class="field"><th class="field-name">from:</th><td class="field-body">The From field.</td>
+</tr>
+<tr class="field"><th class="field-name">sender:</th><td class="field-body">The Sender field.</td>
+</tr>
+<tr class="field"><th class="field-name">subject:</th><td class="field-body">The email subject.</td>
+</tr>
+<tr class="field"><th class="field-name">reply_to:</th><td class="field-body">The Reply-To field.</td>
+</tr>
+<tr class="field"><th class="field-name">helo:</th><td class="field-body">The HELO.</td>
+</tr>
+<tr class="field"><th class="field-name">boundary:</th><td class="field-body">The Boundary.</td>
+</tr>
+<tr class="field"><th class="field-name">message_id:</th><td class="field-body">The email Message-ID</td>
+</tr>
+<tr class="field"><th class="field-name">raw_header:</th><td class="field-body">The raw header of the email.</td>
+</tr>
+<tr class="field"><th class="field-name">raw_body:</th><td class="field-body">The raw body of the email.</td>
+</tr>
+<tr class="field"><th class="field-name">originating_ip:</th><td class="field-body">The Originating IP field.</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">x_originating_ip:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">The X-Originating-IP field.</td>
+</tr>
+<tr class="field"><th class="field-name">x_mailer:</th><td class="field-body">The X-Mailer.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="event-api">
+<h2><a class="toc-backref" href="#id83">17.10&nbsp;&nbsp;&nbsp;Event API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/events/</p>
+<p>/api/v1/events/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/events/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">description:</th><td class="field-body">Description of the event.</td>
+</tr>
+<tr class="field"><th class="field-name">event_type:</th><td class="field-body">Type of Event.</td>
+</tr>
+<tr class="field"><th class="field-name">date:</th><td class="field-body">Date of the event.</td>
+</tr>
+<tr class="field"><th class="field-name">title:</th><td class="field-body">Title of the event.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="indicator-api">
+<h2><a class="toc-backref" href="#id84">17.11&nbsp;&nbsp;&nbsp;Indicator API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/indicators/</p>
+<p>/api/v1/indicators/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/indicators/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">add_domain:</th><td class="field-body">Add a Domain to CRITs if this is a domain indicator.</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">add_relationship:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">Add a relationship if this is a Domain, IP, etc.</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">indicator_confidence:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">The confidence level of this Indicator.</td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li>Must be one of &quot;unknown&quot;, &quot;benign&quot;, &quot;low&quot;, &quot;medium&quot;, &quot;high&quot;.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name" colspan="2">indicator_impact:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">The impact level of this Indicator.</td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li>Must be one of &quot;unknown&quot;, &quot;benign&quot;, &quot;low&quot;, &quot;medium&quot;, &quot;high&quot;.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">type:</th><td class="field-body">The type of the Indicator.</td>
+</tr>
+<tr class="field"><th class="field-name">value:</th><td class="field-body">Indicator value.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="indicator-activity-api">
+<h2><a class="toc-backref" href="#id85">17.12&nbsp;&nbsp;&nbsp;Indicator Activity API</a></h2>
+<p>POST:</p>
+<blockquote>
+/api/v1/indicator_activity/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">object_id:</th><td class="field-body">The ObjectId of the Indicator to add activity to.</td>
+</tr>
+<tr class="field"><th class="field-name">start_date:</th><td class="field-body">The start datetime of the activity.</td>
+</tr>
+<tr class="field"><th class="field-name">end_date:</th><td class="field-body">The end datetime of the activity.</td>
+</tr>
+<tr class="field"><th class="field-name">description:</th><td class="field-body">A description of the activity.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="ip-api">
+<h2><a class="toc-backref" href="#id86">17.13&nbsp;&nbsp;&nbsp;IP API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/ips/</p>
+<p>/api/v1/ips/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/ips/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">add_indicator:</th><td class="field-body">Add this IP as an Indicator.</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">indicator_reference:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">Reference for the source of the Indicator.</td>
+</tr>
+<tr class="field"><th class="field-name">ip:</th><td class="field-body">IP Address.</td>
+</tr>
+<tr class="field"><th class="field-name">ip_type:</th><td class="field-body">Type of IP Address.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="object-api">
+<h2><a class="toc-backref" href="#id87">17.14&nbsp;&nbsp;&nbsp;Object API</a></h2>
+<p>POST:</p>
+<blockquote>
+/api/v1/objects/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">crits_type:</th><td class="field-body">The type of top-level object to add this object to.</td>
+</tr>
+<tr class="field"><th class="field-name">crits_id:</th><td class="field-body">The ObjectId of the top-level object to add this object to.</td>
+</tr>
+<tr class="field"><th class="field-name">object_type:</th><td class="field-body">The Object Type of this object.</td>
+</tr>
+<tr class="field"><th class="field-name">source:</th><td class="field-body">The name of the source adding this information.</td>
+</tr>
+<tr class="field"><th class="field-name">method:</th><td class="field-body">The method of acquiring this information, or tool used to generate it.</td>
+</tr>
+<tr class="field"><th class="field-name">reference:</th><td class="field-body">The reference to this data (or the name of the file you are uploading).</td>
+</tr>
+<tr class="field"><th class="field-name">add_indicator:</th><td class="field-body">Also add as an Indicator if it is an Indicator type (boolean).</td>
+</tr>
+<tr class="field"><th class="field-name">filedata:</th><td class="field-body">The file you are uploading if this Object Type is a file.</td>
+</tr>
+<tr class="field"><th class="field-name">value:</th><td class="field-body">The value of the Object you are uploading (if no filedata).</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="pcap-api">
+<h2><a class="toc-backref" href="#id88">17.15&nbsp;&nbsp;&nbsp;PCAP API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/pcaps/</p>
+<p>/api/v1/pcaps/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/pcaps/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">filedata:</th><td class="field-body">The PCAP.</td>
+</tr>
+<tr class="field"><th class="field-name">related_id:</th><td class="field-body">ObjectId of the related top-level object.</td>
+</tr>
+<tr class="field"><th class="field-name">related_md5:</th><td class="field-body">MD5 of the related top-level object if it has one.</td>
+</tr>
+<tr class="field"><th class="field-name">related_type:</th><td class="field-body">The CRITs type of the related top-level object.</td>
+</tr>
+<tr class="field"><th class="field-name">relationship:</th><td class="field-body">The type of relationship.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="raw-data-api">
+<h2><a class="toc-backref" href="#id89">17.16&nbsp;&nbsp;&nbsp;Raw Data API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/raw_data/</p>
+<p>/api/v1/raw_data/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/raw_data/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">upload_type:</th><td class="field-body">One of &quot;metadata&quot; or &quot;file&quot;.</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">copy_relationships:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">Copy the relationships of the linked raw data version.</td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li>Requires a link_id</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">data:</th><td class="field-body">The raw data if the upload type is &quot;metadata&quot;.</td>
+</tr>
+<tr class="field"><th class="field-name">description:</th><td class="field-body">Description of the raw data.</td>
+</tr>
+<tr class="field"><th class="field-name">filedata:</th><td class="field-body">The raw data if the upload type is &quot;file&quot;.</td>
+</tr>
+<tr class="field"><th class="field-name">link_id:</th><td class="field-body">The Link ID of an existing version of this raw data.</td>
+</tr>
+<tr class="field"><th class="field-name">title:</th><td class="field-body">Title for the raw data.</td>
+</tr>
+<tr class="field"><th class="field-name">tool_details:</th><td class="field-body">Details about the tool.</td>
+</tr>
+<tr class="field"><th class="field-name">tool_name:</th><td class="field-body">The tool, utility, or host of the raw data.</td>
+</tr>
+<tr class="field"><th class="field-name">tool_version:</th><td class="field-body">The version of the tool, utility, or host of the raw data.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="relationship-api">
+<h2><a class="toc-backref" href="#id90">17.17&nbsp;&nbsp;&nbsp;Relationship API</a></h2>
+<p>POST:</p>
+<blockquote>
+/api/v1/relationships/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">left_type:</th><td class="field-body">The type of the first top-level object in the relationship.</td>
+</tr>
+<tr class="field"><th class="field-name">left_id:</th><td class="field-body">The ObjectId of the first top-level object in the relationship.</td>
+</tr>
+<tr class="field"><th class="field-name">right_type:</th><td class="field-body">The type of the second top-level object in the relationship.</td>
+</tr>
+<tr class="field"><th class="field-name">right_id:</th><td class="field-body">The ObjectId of the second top-level object in the relationship.</td>
+</tr>
+<tr class="field"><th class="field-name">rel_type:</th><td class="field-body">The relationship type.</td>
+</tr>
+<tr class="field"><th class="field-name">rel_date:</th><td class="field-body">The date the relationship applies (optional).</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="sample-api">
+<h2><a class="toc-backref" href="#id91">17.18&nbsp;&nbsp;&nbsp;Sample API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/samples/</p>
+<p>/api/v1/samples/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/samples/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">upload_type:</th><td class="field-body">One of &quot;metadata&quot; or &quot;file&quot;.</td>
+</tr>
+<tr class="field"><th class="field-name">filename:</th><td class="field-body">The name of the file if this is a &quot;metadata&quot; upload.</td>
+</tr>
+<tr class="field"><th class="field-name">md5:</th><td class="field-body">The MD5 of the file if this is a &quot;metadata&quot; upload.</td>
+</tr>
+<tr class="field"><th class="field-name">filedata:</th><td class="field-body">The sample if the upload type is &quot;file&quot;.</td>
+</tr>
+<tr class="field"><th class="field-name">password:</th><td class="field-body">The password to unzip the file if it is zipped and the upload type is &quot;file&quot;.</td>
+</tr>
+<tr class="field"><th class="field-name">file_format:</th><td class="field-body">The format of the file if the upload type is &quot;file&quot;.</td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li>Must be one of &quot;zip&quot;, &quot;rar&quot;, or &quot;raw&quot;.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">parent_md5:</th><td class="field-body">The MD5 of the parent sample if this was an embedded sample.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="service-api">
+<h2><a class="toc-backref" href="#id92">17.19&nbsp;&nbsp;&nbsp;Service API</a></h2>
+<p>POST:</p>
+<blockquote>
+/api/v1/services/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">object_type:</th><td class="field-body">The type of top-level object you are updating.</td>
+</tr>
+<tr class="field"><th class="field-name">object_id:</th><td class="field-body">The ObjectId to search for.</td>
+</tr>
+<tr class="field"><th class="field-name">analysis_id:</th><td class="field-body">The ID of the analysis task you want to update.</td>
+</tr>
+<tr class="field"><th class="field-name">result:</th><td class="field-body">The 'result' contents of your analysis result.</td>
+</tr>
+<tr class="field"><th class="field-name">result_type:</th><td class="field-body">The 'Type' of your result.</td>
+</tr>
+<tr class="field"><th class="field-name">result_subtype:</th><td class="field-body">The 'subtype' of your result.</td>
+</tr>
+<tr class="field"><th class="field-name">log_message:</th><td class="field-body">The contents of the log message.</td>
+</tr>
+<tr class="field"><th class="field-name">log_level:</th><td class="field-body">The level of the log (defaults to 'info').</td>
+</tr>
+<tr class="field"><th class="field-name">status:</th><td class="field-body">The status to set the task to when it is finished.</td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li>Must be one of &quot;error&quot; or &quot;completed&quot;</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">finish:</th><td class="field-body">Set to &quot;1&quot; to note that this task is finished and to mark it &quot;complete&quot;.</td>
+</tr>
+</tbody>
+</table>
+<p>If you include the &quot;result&quot; field, you will be required to also provide the
+&quot;result_type&quot; and &quot;result_subtype&quot;. Also, if you include the &quot;log_message&quot;
+field, &quot;log_level&quot; will be set to &quot;info&quot; if it is not provided.</p>
+</div>
+<div class="section" id="target-api">
+<h2><a class="toc-backref" href="#id93">17.20&nbsp;&nbsp;&nbsp;Target API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/targets/</p>
+<p>/api/v1/targets/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/targets/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">firstname:</th><td class="field-body">Target first name.</td>
+</tr>
+<tr class="field"><th class="field-name">lastname:</th><td class="field-body">Target last name.</td>
+</tr>
+<tr class="field"><th class="field-name">division:</th><td class="field-body">The division of an organization the Target is a part of.</td>
+</tr>
+<tr class="field"><th class="field-name">department:</th><td class="field-body">The department of an organization the Target is a part of.</td>
+</tr>
+<tr class="field"><th class="field-name">email_address:</th><td class="field-body">The email address of the Target.</td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">organization_id:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">The ID of the organization if they have one.</td>
+</tr>
+<tr class="field"><th class="field-name">title:</th><td class="field-body">The job title of the Target.</td>
+</tr>
+<tr class="field"><th class="field-name">note:</th><td class="field-body">Notes about the Target.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,1693 @@
+.. -*- coding: utf-8 -*-
+
+.. Note to self/developers: TODO items are comments surrounded
+.. by double hastags (##)
+
+===========================================
+ CRITs User Manual
+===========================================
+
+Welcome to the user help file for CRITs.
+
+There are two ways to use this help file. Use the Table of Contents,
+below, to pick a subject. Alternatively, you can use your browser's
+Find command to search through the document for a specific word of
+phrase.
+
+.. contents::
+.. sectnum::
+
+General Overview & Version Information
+===========================================
+
+Version Information
+-------------------------------------------
+:Date: Mon, 27 Jan 2014
+:Revision: 0002
+
+:Date: Mon, 19 Aug 2013
+:Revision: 0001
+
+General Notes
+-------------------------------------------
+Please observe the following notes:
+
+* This is a work in progress, and is to be considered a draft.
+* This document uses relative links.
+
+Release Notes
+-------------------------------------------
+This section contains release notes to illustrate the changes for
+each revision.
+
+:Revision 00002: Written for CRITs 3.0
+:Revision 00001: Initial commit. Written for CRITs 2.5
+
+Terms and Concepts
+===========================================
+
+This section details icons, terms, and concepts that are used
+throughout the CRITs world.
+
+Icons
+-------------------------------------------
+
+**Cross Symbol (** |cross| **)**
+   The cross symbol is used to indicate that a new item or new
+   information can be created. Clicking on the cross will open a
+   dialogue to allow you to create the new item.
+
+**X**
+   The letter \'X\' is used to indicate that an item can be deleted.
+   Clicking the \'X'\ will delete the item.
+
+**Pencil Icon (** |pencil| **)**
+   The pencil icon is used to indicate that an item an be edited.
+   Clicking on the pencil will allow you to edit the item.
+
+**Right Arrow (** |right_arrow| **)**
+   The right arrow is used to indicate that an item can be expanded.
+   Clicking on the arrow will reveal more information.
+
+**Down Arrow (** |down_arrow| **)**
+   The down arrow is used to indicate that an item can be colapsed.
+   Clicking on the arrow will hide information.
+
+**Trash Can (** |trash| **)**
+   The trash can indicates that an item can be deleted *permanently*.
+
+**Person (** |person| **)**
+   The person is used to indicate a relationship.
+
+**Tag (** |tag| **)**
+   The tag is used to indicate an object tag.
+
+**Speech Bubble (** |speech_bubble| **)**
+   The speech bubble indicates that comments exist. Clicking the
+   speech bubble will show the comments.
+
+**Disk (** |disk| **)**
+   The disk indicates that a packet capture (PCAP) can be saved.
+
+**Splunk Icon (** |green_arrow| **)** *(Implementation-Dependent)*
+   If configured by your administrator, the Splunk icon is used to
+   indicate that a Splunk search can be performed on an indicator.
+   Clicking the Splunk icon will start a Splunk search for that piece
+   of information.
+
+.. |CROSS| image:: /images/cross.png
+.. |X| image:: /images/x.png
+.. |PENCIL| image:: /images/pencil.png
+.. |RIGHT_ARROW| image:: /images/right_arrow.png
+.. |DOWN_ARROW| image:: /images/down_arrow.png
+.. |TRASH| image:: /images/trash.png
+.. |PERSON| image:: /images/person.png
+.. |TAG| image:: /images/tag.png
+.. |SPEECH_BUBBLE| image:: /images/speech_bubble.png
+.. |DISK| image:: /images/disk.png
+.. |GREEN_ARROW| image:: /images/green_arrow.png
+
+Concepts
+-------------------------------------------
+
+A certain level of experience with Information Security is required
+to make proper use of CRITs. What follows are short explanations of
+concepts that are used in the world of CRITs. These are not meant
+to be exhaustive definitions. Instead, think of it as a Rosetta Stone
+to ensure that your own concepts and experience match the terms used
+in the system.
+
+**Activity**
+   Activity is used to describe when an Indicator was identified, whether it be
+   from log analysis or sensors being tripped. It allows you to develop a
+   timeline for that Indicator.
+
+**Bucket List**
+   Bucket lists are simply an analog of the common tag; they are used
+   to group together objects that have a possible relationship. For
+   instance, buckets can be used to quickly mark patterns for further
+   study at a later time. This is a handy way of marking your \"gut\"
+   instincts as you are viewing objects.
+
+**Campaign**
+   When common, malicious behavior is repeated or when a single
+   resource is repeatedly targeted, this is called a campaign.
+   Identifying campaigns can give your organization insight into
+   everything from APT identification to how to focus your intrusion
+   prevention efforts.
+
+**Certificate**
+   Certificates are top-level objects. They are anything from Server/Client
+   certificates to signing certificates.
+
+**Domain**
+  Domains are top-level objects. They allow you to track and relate domains and
+  sub-domains with other top-level objects like IPs and Certificates.
+
+**Event**
+   An event is a collection of related content within CRITs which may or may not
+   be attributed to a known campaign.
+
+**Indicator**
+   Indicators are pieces of metadata with a confidence and impact value
+   associated with them. They help determine the reaction level an organization
+   should have if that metadata is noticed anywhere on their network.
+
+**IP**
+  IPs are top-level objects used for relating to Domains. It helps to show a
+  timeline of what IPs were associated with a domain and when domains were
+  active/parked.
+
+**Object**
+   Objects are pieces of information extracted while performing analysis on a
+   top-level object such as a Sample or PCAP.
+
+**PCAP**
+   PCAPs are files containing network traffic. Usually PCAPs contain things like
+   Samples and Emails but can also be used for populating Domains, IPs, and
+   Indicators.
+
+**Relationship**
+   A relationship is defined between two or more top-level objects  when they
+   share a common trait. For instance, a direct relationship exists
+   between a Domain and its IP address, so you may choose to define a
+   relationship between each of these objects that would otherwise
+   be independent. Relationships can be either horizontal (as in the
+   above example) or vertical (as in hierarchical). CRITs supports
+   relationships as defined in the CybOX specification. Each object
+   has a \"child\" object in which related objects are declared.
+
+**Sample**
+  Samples are binaries which you want to perform some level of analysis on due
+  to their potential for being malicious.
+
+**Source**
+   Source is the term used to refer, very simply, to the intelligence
+   source from which an object was imported. Alternatively, they
+   can be considered as organizational units or buckets. Each
+   object in CRITs needs to be attributed to a source, This allows
+   you to get a better overall picture not only of the environment
+   that the source represents, but a better feel for how reliable the
+   object are from a particular source.
+
+   Sources are specified by your administrator, and there is no
+   universal \"right way\" to define them. Having a solid
+   understanding of how your organization defines sources will ensure
+   that your own efforts will be compliant.
+
+.. _CybOX Objects: http://cybox.mitre.org/about/faqs.html#B2
+
+Keyboard Shortcuts
+-------------------------------------------
+In order to expedite navigation, CRITs has built-in keyboard
+shortcuts available after clicking on the `Navigation Menu`_. Below
+is a list of these shortcuts. Note that the shortcuts are case
+sensitive.
+
+        :a: `Advanced Search`_
+        :d: Add a Domain
+        :e: Add an Email
+        :E: Add an Event
+        :i: Add an Indicator
+        :I: Add an IP Address
+        :n/m: Open the Navigation Menu
+        :p: Add a PCAP
+        :s: Add a Sample
+
+Advanced Search
+-------------------------------------------
+The Advanced Search dialog can be accessed by clicking on the \"Hourglass\"
+icon next to the search box in the upper right corner. This will
+allow you to search for items based on a number of criteria. Entering
+a term into any of the fields will search all of the fields of that
+type of indicator. For example, entering \"Bob\" into the \"Email\"
+field will return all emails that mention \"Bob\" in either the
+header or the body of the message.
+
+Table Navigation
+-------------------------------------------
+
+The tables that are displayed in CRITs use several common user
+interface conventions to enhance usability.
+
+* Rows can be sorted by a column by clicking on the column name.
+* Use drop down menus on the table header and footer to change the
+   current page number or the number of rows to display on the table.
+* The arrows on the left side of both the table header and footer
+   allow you to navigate from page to page or to jump to the end or
+   beginning page.
+* Clicking the "Reload" button will refresh the data in the table.
+* Text on the right side of both the header and footer show you how
+   many records are displayed out of the total data set.
+
+First-Time Use
+===========================================
+
+Browser Compatibility
+-------------------------------------------
+
+CRITs works in most modern browsers, with support for the following:
+
+* Chrome
+* Firefox 23.0 and later
+* IE 8 and later
+
+Note that IE 9 users may experience some rendering issues. If so, do
+the following:
+
+1. Open Internet Explorer.
+2. Hit F12 or select the IE tool icon in the upper right corner and choose
+   \"Developer Tools\".
+3. In the new panel that opens at the bottom of the screen, change
+   \"Document Mode: IE9 Standards\" to \"Internet Explorer 9
+   Standards (Page Default)\".
+
+Logging Into CRITs
+-------------------------------------------
+
+When you browse to your CRITs instance you will be greeted with a Login page.
+From here you can authenticate or get assistance with resetting your password.
+
+Your administrator should provide you with a username, password, and
+URL for logging into CRITs. If not, please contact your
+administrator; you will be unable to proceed without this
+information.
+
+Once logged in, you will be greeted with your Dashboard. It's a good
+idea, at this point, to change your temporary password. For more
+information, see `How to Change Your Password`_. Remember, a system
+can only be as secure as its least secure user!
+
+The UI
+===========================================
+
+UI Layout
+-------------------------------------------
+
+There are five pieces of the UI that are always available to you no matter what
+page you are on:
+
+1. The top bar which contains:
+
+    1. The Gear image, from which you can access the `Navigation Menu`_.
+    2. Your `Profile Information`_.
+    3. Your `Assigned Role`_.
+    4. `Search Bar`_.
+
+2. The bottom bar which contains:
+
+    1. `Host and Instance information`_.
+    2. Your `Last Login Date`_.
+    3. The `Security Classification`_ of this CRITs instance.
+    4. `Copyright Information`_.
+
+3. The Navigation menu.
+4. The Advanced Search menu.
+5. The content area between the top and bottom bar.
+
+The following sections describe each of these areas in more detail.
+
+Navigation Menu
+-------------------------------------------
+
+The Gear icon in the top left corner of the screen is the easiest
+means of navigating through CRITs. Each item in the menu is a
+hyperlink that will take you to the relevant section of the system.
+
+Clicking any of the \"+\" icons will allow you to quickly create an
+item of the relevant kind. For instance, click the \"+\" next to the
+\"IP\" menu item allows you to quickly create a new IP-type
+indicator.
+
+Profile Information
+-------------------------------------------
+
+To assist in the easier identification of users, CRITs includes
+several profile fields that help to identify you to other users in
+your instance. Clicking the link will bring you to your `User Profile
+Page`_.
+
+Assigned Role
+-------------------------------------------
+
+This section simply lists the role that has been assigned to you by
+your administrator. These roles are fully customizable, so your
+individual experience will vary.
+
+Search Bar
+-------------------------------------------
+
+The search bar acts as a universal query tool that will query the
+entire CRITs database for the term entered. This can be useful when
+for quick access to any item by name or content. This is also known
+as the "Global Search Box"
+
+Host and Instance Information
+-------------------------------------------
+
+The host and instance information sections display information set by
+your administrator that helps to confirm that you are using the
+intended system. It is a good idea to ask your administrator the
+expected values of these items to provide a modicum of identity
+confirmation.
+
+Last Login Date
+-------------------------------------------
+
+This are simply displays the last date upon which you logged into the
+system. This can be useful as a point of basic security; seeing that
+you logged on during your vacation, for instance, is a sign that
+either your credentials were misused or that you work too hard.
+
+
+Security Classification
+-------------------------------------------
+
+Like the host and instance information, the security classification
+is used to denote the classification level of the contents of the
+system. U.S. government entities or their contractors, for instance,
+may operate an instance that is classified as \"Secret\". As a best
+practice, the default value for this should be "Unclassified".
+
+Copyright Information
+-------------------------------------------
+
+Text marking the U.S. copyright information of CRITs.
+
+User Profile Page
+===========================================
+
+The User Profile page can be reached from any section of CRITs by
+clicking on your username in the upper left corner. You can also get
+to this page by going to "My CRITs" in the navigation menu. On this page, you
+will find a number of personalization options, usage history, and
+subscription information.
+
+User Info Tab
+-------------------------------------------
+This tab displays information about your account and general usage.
+Most importantly, this is where you will find the change password
+functionality. See `How to Change Your Password`_ for more
+information.
+
+Login Attempts Tab
+-------------------------------------------
+This tab presents you with a table of all of your recent login
+attempts. Information such as user agent (i.e. browser), IP, and date
+are all available.
+
+Recent Activity Tab
+-------------------------------------------
+
+This tab presents you with a table of all of your recent activity in
+the system.
+
+Subscriptions Tab
+-------------------------------------------
+This tab lists your current subscriptions.
+
+My Source Tab
+-------------------------------------------
+This tab lists the current information sources to which you have
+access. Only items associated with these sources will be visible
+within CRITs. You can also check a box next to each source which
+will subscribe you to any and all content associated with that source
+going forward.
+
+Notifications Tab
+-------------------------------------------
+This tab lists all of your existing notifications. You can remove individual
+notifications, or clear them all. Note that by visiting the details page of
+any top-level object, it will clear any notifications you have for it
+automatically.
+
+Campaign Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the campaigns to which you have
+access. The table on this page shows, by default, the first 25
+campaigns sorted by name. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New Campaign
+-------------------------------------------
+There are two common ways to add a new campaign to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"Campaign\".
+        2. From the `Campaign Page`_, click the \"Add campaign\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new campaign. A campaign consists of some basic pieces of
+information, as follows:
+
+:Campaign: This is the display name for the campaign.
+:Aliases: This is a comma-separated list of any other names for the
+   campaign.
+:Description: This is a brief description of the campaign for
+   reference.
+:Bucket List: This is a list of buckets you want to associate with this
+   Campaign.
+
+Once these fields are filled out, press \"Add Campaign\". You should
+see a message that the campaign was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the campaign, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new campaign in the table.
+
+Viewing\/Editing an Existing Campaign
+-------------------------------------------
+
+Opening a campaign via the `Campaign Page`_ or `Advanced Search`_
+will bring up the campaign information page.
+
+From here, you can view all of the objects that are associated with
+the campaign. The tabs at the top of the screen move you between the
+various child objects of the campaign. Clicking on the various links
+and icons will allow you to edit existing data or add new data,
+respectively. For more information on controls, please see the `Terms
+and Concepts`_ section.
+
+Subscribing to a Campaign
+-------------------------------------------
+
+When `Viewing\/Editing an Existing Campaign`_, you have the option to
+subscribe to it so that it will show up on your `User Profile Page`_
+under the \"Subscriptions\" tab. Simply select the blue checkmark
+next to your `Assigned Role`_. When you do, the check mark will
+change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
+Certificate Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the certificate to which you have
+access. The table on this page shows, by default, the first 25
+certificates sorted by date. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New Certificate
+-------------------------------------------
+There are two common ways to add a new certificate to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"Certificates\".
+        2. From the `Certificate Page`_, click the \"Add certificate\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new certificate. A certificate consists of some basic pieces of
+information, as follows:
+
+:Filedata: Choose a local file to upload as the Certificate
+:Description: Enter a brief description for the Certificate
+:Source: From the drop-down, select the source of the Certificate
+:Bucket List: This is a list of buckets you want to associate with this
+    Certificate.
+
+Once these fields are filled out, press \"Add Certificate\". You should
+see a message that the certificate was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the certificate, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new certificate in the table.
+
+Viewing\/Editing an Existing Certificate
+-------------------------------------------
+
+Opening a certificate via the `Certificate Page`_ or `Advanced Search`_
+will bring up the certificate information page.
+
+From here, you can view all of the objects that are associated with
+the certificate. Clicking on the various links and icons will allow you to edit
+existing data or add new data, respectively. For more information on controls,
+please see the `Terms and Concepts`_ section.
+
+Subscribing to a Certificate
+-------------------------------------------
+
+When `Viewing\/Editing an Existing Certificate`_, you have the option to
+subscribe to it so that it will show up on your `User Profile Page`_
+under the \"Subscriptions\" tab. Simply select the blue checkmark
+next to your `Assigned Role`_. When you do, the check mark will
+change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
+Domain Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the domains to which you have
+access. The table on this page shows, by default, the first 25
+domains sorted by name. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New Domain
+-------------------------------------------
+There are two common ways to add a new domain to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"Domain\".
+        2. From the `Domain Page`_, click the \"Add Domain\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new domain. A domain consists of seven pieces of
+information, as follows:
+
+:Domain Name: This is the FQDN and display name.
+:Campaign: (Optional) This field allows you to associate the domain
+   with a specific campaign.
+:Domain Source: This is the intelligence source from which you
+   learned of the domain.
+:Domain Method: (Optional)
+:Domain Reference: (Optional)
+:Add IP Address: Checking this box will allow you to immediately add
+   and IP Address with which the domain is associated.
+:Add Indicator(s): Checking this box will allow you add the domain as
+   an indicator.
+:Bucket List: This is a list of buckets you want to associate with this
+    Domain (and any other Domains, IPs, Indicators generated by this step).
+
+Once these fields are filled out, press \"Add Domain\". You should
+see a message that the domain was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the domain, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new domain in the table.
+
+Viewing\/Editing an Existing Domain
+-------------------------------------------
+
+Opening a domain via the `Domain Page`_ or `Advanced Search`_
+will bring up the domain information page.
+
+From here, you can view all of the objects that are associated with
+the domain. The tabs at the top of the screen move you between the
+various child objects of the domain. Clicking on the various links
+and icons will allow you to edit existing data or add new data,
+respectively. For more information on controls, please see the `Terms
+and Concepts`_ section.
+
+Subscribing to a Domain
+-------------------------------------------
+
+When `Viewing\/Editing an Existing Domain`_, you have the option to
+subscribe to it so that it will show up on your `User Profile Page`_
+under the \"Subscriptions\" tab. Simply select the blue checkmark
+next to your `Assigned Role`_. When you do, the check mark will
+change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
+Email Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the emails to which you have
+access. The table on this page shows, by default, the first 25
+emails sorted by name. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New Email
+-------------------------------------------
+There are two common ways to add a new email to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"Emails\".
+        2. From the `Email Page`_, click the \"Add Email\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new email. An email consists of seventeen pieces of
+information, most of which can be found in the email header, as
+follows:
+
+:From: Specify the email address from which the email was sent
+:Sender: Specify the name from which the email was sent
+:To: Specify the email addresses to which the email was sent
+:CC: Specify the email addresses to which the email was copied
+:Subject: Specify the subject line of the email
+:Date: Specify the date on which the email was sent
+:Reply To: Specify the reply-to email address of the email
+:HELO: Identity passed by sender to SMTP server
+:Boundary: SMTP server that located target host
+:Message ID: Message ID from header
+:Originating IP: Originating IP of SMTP request
+:X-Originating IP: X-Originating IP from header
+:X-Mailer: Software used to send email
+:Raw Header: Copied from the message
+:Raw Body: Copied from the message
+:Source: Intelligence source from which the email was captured
+:Source Reference: Add specific references
+:Bucket List: This is a list of buckets you want to associate with this
+    Email.
+
+Once these fields are filled out, press \"Add Email\". You should
+see a message that the email was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the email, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new email in the table.
+
+Viewing\/Editing an Existing Email
+-------------------------------------------
+
+Opening an email via the `Email Page`_ or `Advanced Search`_
+will bring up the email information page.
+
+From here, you can view all of the objects that are associated with
+the email. The tabs at the top of the screen move you between the
+various child objects of the email. Clicking on the various links
+and icons will allow you to edit existing data or add new data,
+respectively.
+
+Of note, there are three specific buttons at the top of the
+\"Details\" tab. \"Add Attachment\" will open a dialog box that will
+allow you to upload an attachment associated with the email, most
+commonly the email itself. Pressing the \"Download Email\" button
+will let you download object information in various formats. Lastly,
+the \"Delete Email\" button will remove the email from the CRITs
+database.
+
+Tabs at the top of this page will present various views of the email
+object data for further analysis.
+
+For more information on controls, please see the `Terms
+and Concepts`_ section.
+
+Subscribing to an Email
+-------------------------------------------
+
+When `Viewing\/Editing an Existing Email`_, you have the option to
+subscribe to it so that it will show up on your `User Profile Page`_
+under the \"Subscriptions\" tab. Simply select the blue checkmark
+next to your `Assigned Role`_. When you do, the check mark will
+change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
+Event Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the events to which you have
+access. The table on this page shows, by default, the first 25
+events sorted by date added. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New Event
+-------------------------------------------
+There are two common ways to add a new event to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"Events\".
+        2. From the `Event Page`_, click the \"Add Event\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new event. An event consists of six pieces of information,
+as follows:
+
+:Title: A title by which to identify the event
+:Event Type: From the drop-down, select a pre-defined type
+:Description: (Optional) Provide a brief description of the event
+:Occurrence Date: The date on which the event occurred
+:Source: From the drop-down, select the source of the event
+:Reference: (Optional) This is an undefined field; it is suggested
+        that it be used to track a corresponding ID in an external
+        system.
+:Method: (Optional) This is an undefined field; it is suggested that
+        it be used to denote the external tool that collected the
+        event.
+:Bucket List: This is a list of buckets you want to associate with this Event.
+
+Once these fields are filled out, press \"Add Event\". You should
+see a message that the event was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the event, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new event in the table.
+
+Viewing\/Editing an Existing Event
+-------------------------------------------
+
+Opening an event via the `Event Page`_ or `Advanced Search`_
+will bring up the event information page.
+
+From here, you can view all of the fields that are associated with
+the event object. The tabs at the top of the screen move you between
+the various child objects of the event. Clicking on the various links
+and icons will allow you to edit existing data or add new data,
+respectively.
+
+Of note, there are three specific buttons at the top of the
+\"Details\" tab. \"Add Sample\" will open a dialog box that will
+allow you to upload malware or other sample associated with the
+event. Pressing the \"Download Event\" button will let you download
+object information in various formats. Lastly, the \"Delete Event\"
+button will remove the event from the CRITs database.
+
+For more information on controls, please see the `Terms
+and Concepts`_ section.
+
+Subscribing to an Event
+-------------------------------------------
+
+When `Viewing\/Editing an Existing Event`_, you have the option to
+subscribe to it so that it will show up on your `User Profile Page`_
+under the \"Subscriptions\" tab. Simply select the blue checkmark
+next to your `Assigned Role`_. When you do, the check mark will
+change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
+Indicator Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the indicators to which you have
+access. The table on this page shows, by default, the first 25
+indicators sorted by date added. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New Indicator
+-------------------------------------------
+There are two common ways to add a new indicator to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"Events\". You may also click on either of the
+           following options that will appear in a sub-menu to the
+           right: "New Indicator Blob" or "New Indicator CSV"
+        2. From the `Indicator Page`_, click the \"Add Indicator\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new indicator. An indicator consists of eight pieces of
+information, as follows:
+
+:Indicator Type: Choose the type of indicator from the drop-down.
+        Additional types may be available by clicking "More Object
+        Types" at the bottom of the window.
+:Value: Define the value for the indicator
+:Confidence: Select the confidence level for the indicator
+:Impact: Select the level of impact for the indicator
+:Campaign: (Optional) Select a campaign with which to associate the
+        indicator
+:Campaign Confidence: (Optional) Select a confidence level for the
+        association with the campaign
+:Source: From the drop-down, select the source of the indicator
+:Reference: (Optional) Reference for the indicator
+:Bucket List: This is a list of buckets you want to associate with this
+    Indicator.
+
+.. Note:: Athough the "Confidence" and "Campaign Confidence" fields
+        may be defined individually by your organization (or, indeed,
+        have custom values set by your administrator), it is useful
+        to have a "default" rating suggestion. Therefore, proposed
+        meanings for the respective ratings follow.
+
+        **Confidence (Indicator)**
+                :Unknown: The indicator has not been seen before, nor
+                        has it been reported by a trusted source;
+                        this is used to mark "hunches" that require
+                        confirmation.
+                :Benign: The indicator is known to be false, and
+                        should be ignored when identifying malware.
+                :Low: The indicator has not been seen, but comes from
+                        a medium- or high-confidence source.
+                :Medium: The indicator has been confirmed and/or it
+                        comes from a high-confidence source.
+                :High: The indicator has been confirmed multiple
+                        times.
+
+        **Campaign Confidence**
+                :Low: The campaign is not well defined and/or the
+                        indicator is not directly related to any
+                        other associated indicator.
+                :Medium: The campaign is confirmed and/or the
+                        indicator directly relates to another,
+                        associated indicator.
+                :High: The campaign is confirmed and well-known
+                        and/or the indicator is directly related to
+                        more than one other indicator associated
+                        with the campaign.
+
+Once these fields are filled out, press \"Upload Indicator\". You should
+see a message that the indicator was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the indicator, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new indicator in the table.
+
+Viewing\/Editing an Existing Indicator
+-------------------------------------------
+
+Opening an indicator via the `Indicator Page`_ or `Advanced Search`_
+will bring up the indicator information page.
+
+From here, you can view all of the fields that are associated with
+the indicator object. The tabs at the top of the screen move you
+between the various child objects of the indicator. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.
+
+For more information on controls, please see the `Terms
+and Concepts`_ section.
+
+Subscribing to an Indicator
+-------------------------------------------
+
+When `Viewing\/Editing an Existing Indicator`_, you have the option
+to subscribe to it so that it will show up on your `User Profile
+Page`_ under the \"Subscriptions\" tab. Simply select the blue
+checkmark next to your `Assigned Role`_. When you do, the check mark
+will change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
+IP Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the IP to which you have
+access. The table on this page shows, by default, the first 25
+IP sorted by date added. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New IP
+-------------------------------------------
+There are two common ways to add a new IP to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"IPs\".
+        2. From the `IP Page`_, click the \"Add IP\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new IP entry. An IP consists of seven pieces of
+information, as follows:
+
+:IP: The IP address to record
+:IP Type: Choose the type of record
+:Analyst: Analyst who is reporting the IP
+:Source: From the drop-down, select the source of the IP
+:Source method: (Optional) Record how the IP was sourced
+:Source reference: (Optional) Reference for the IP source
+:Add Indicator: (Optional) Check to add an indicator for the IP as
+        well
+:Bucket List: This is a list of buckets you want to associate with this IP.
+
+Once these fields are filled out, press \"Add IP\". You should
+see a message that the IP was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the IP, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new IP in the table.
+
+Viewing\/Editing an Existing IP
+-------------------------------------------
+
+Opening an IP via the `IP Page`_ or `Advanced Search`_ will bring
+up the IP information page.
+
+From here, you can view all of the fields that are associated with
+the IP object. The tabs at the top of the screen move you
+between the various child objects of the indicator. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.
+
+For more information on controls, pleas see the `Terms
+and Concepts`_ section.
+
+Subscribing to an IP
+-------------------------------------------
+
+When `Viewing\/Editing an Existing IP`_, you have the option
+to subscribe to it so that it will show up on your `User Profile
+Page`_ under the \"Subscriptions\" tab. Simply select the blue
+checkmark next to your `Assigned Role`_. When you do, the check mark
+will change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
+PCAP Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the PCAPs (Packet Captures) to
+which you have access. The table on this page shows, by default, the
+first 25 PCAP sorted by date added. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New PCAP
+-------------------------------------------
+There are two common ways to add a new PCAP to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"PCAPs\".
+        2. From the `PCAP Page`_, click the \"Add PCAP\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new PCAP. A PCAP consists of three pieces of information,
+as follows:
+
+:Filedata: Choose a local file to upload as the PCAP sample
+:Description: Enter a brief description for the PCAP
+:Source: From the drop-down, select the source of the PCAP
+:Bucket List: This is a list of buckets you want to associate with this PCAP.
+
+Once these fields are filled out, press \"Upload PCAP\". You should
+see a message that the PCAP was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the PCAP, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new PCAP in the table.
+
+Viewing\/Editing an Existing PCAP
+-------------------------------------------
+
+Opening a PCAP via the `PCAP Page`_ or `Advanced Search`_ will bring
+up the PCAP information page.
+
+From here, you can view all of the fields that are associated with
+the PCAP object. The tabs at the top of the screen move you
+between the various child objects of the indicator. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.
+
+For more information on controls, pleas see the `Terms
+and Concepts`_ section.
+
+Subscribing to a PCAP
+-------------------------------------------
+
+When `Viewing\/Editing an Existing PCAP`_, you have the option
+to subscribe to it so that it will show up on your `User Profile
+Page`_ under the \"Subscriptions\" tab. Simply select the blue
+checkmark next to your `Assigned Role`_. When you do, the check mark
+will change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
+Sample Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the Samples to which you have
+access. The table on this page shows, by default, the first 25
+Samples sorted by date added. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New Sample
+-------------------------------------------
+There are two common ways to add a new Sample to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"Samples\".
+        2. From the `Sample Page`_, click the \"Add Sample\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new Sample. When creating a new sample, you must choose
+between uploading a sample file or uploading sample metadata. A
+Sample file consists of nine pieces of information, as follows:
+
+:Upload type: Choose whether the sample is a file or metadata
+:Filedata: Choose a local file to upload as the Sample
+:File format: Select the format of the Sample being uploaded
+:Password: (Optional) Enter the password for the Sample file
+:Email Me Results: Select to have CRITs email you analysis results
+:Parent md5: The MD5 hash for the Sample file
+:Source: From the drop-down, select the source of the Sample
+:Reference: Reference for the Sample
+:Bucket List: This is a list of buckets you want to associate with this Sample.
+
+Should you select "Metadata Upload" as the upload type, the required
+information changes. A Sample metadata consists of seven piece of
+information, as follows:
+
+:Upload type: Choose whether the sample is a file or metadata
+:Filename: The name of the file encountered
+:MD5: The MD5 has for the sample
+:Email Me Results: Select to have CRITs email you analysis results
+:Parent md5: The MD5 hash for the Sample file
+:Source: From the drop-down, select the source of the Sample
+:Reference: Reference for the Sample
+:Bucket List: This is a list of buckets you want to associate with this Sample.
+
+Once these fields are filled out, press \"Upload Sample\". You should
+see a message that the Sample was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the Sample, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new Sample in the table.
+
+Viewing\/Editing an Existing Sample
+-------------------------------------------
+
+Opening a Sample via the `Sample Page`_ or `Advanced Search`_ will bring
+up the Sample information page.
+
+From here, you can view all of the fields that are associated with
+the Sample object. The tabs at the top of the screen move you
+between the various child objects of the Sample. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.
+
+For more information on controls, pleas see the `Terms
+and Concepts`_ section.
+
+Subscribing to a Sample
+-------------------------------------------
+
+When `Viewing\/Editing an Existing Sample`_, you have the option
+to subscribe to it so that it will show up on your `User Profile
+Page`_ under the \"Subscriptions\" tab. Simply select the blue
+checkmark next to your `Assigned Role`_. When you do, the check mark
+will change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
+Target Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the targets to which you have
+access. The table on this page shows, by default, the first 25
+Targets sorted by date added. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New Target
+-------------------------------------------
+There are two common ways to add a new target to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"Targets\".
+        2. From the `Sample Page`_, click the \"Add Target\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new target. A target consists of eight pieces of
+information, as follows:
+
+:Firstname: (Optional) First name of the target
+:Lastname: (Optional) Last name of the target
+:Division: (Optional) Organization division for the target
+:Department: (Optional) Organizational department for the target
+:Email address: The email address of the target
+:Organization id: (Optional) An internal organization id for the
+        target
+:Title: (Optional) The title held by the target
+:Note: Miscellaneous notes
+:Bucket List: This is a list of buckets you want to associate with this Target.
+
+Once these fields are filled out, press \"Add Target\". You should
+see a message that the target was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the target, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new target in the table.
+
+Viewing\/Editing an Existing Target
+-------------------------------------------
+
+Opening a target via the `Target Page`_ or `Advanced Search`_ will bring
+up the target information page.
+
+From here, you can view all of the fields that are associated with
+the target object. The tabs at the top of the screen move you
+between the various child objects of the target. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.
+
+For more information on controls, pleas see the `Terms
+and Concepts`_ section.
+
+Subscribing to a Target
+-------------------------------------------
+
+When `Viewing\/Editing an Existing Target`_, you have the option
+to subscribe to it so that it will show up on your `User Profile
+Page`_ under the \"Subscriptions\" tab. Simply select the blue
+checkmark next to your `Assigned Role`_. When you do, the check mark
+will change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
+Administrative Functions
+===========================================
+
+This section explains administrative functions to which users have
+access.
+
+How to Change Your Password
+-------------------------------------------
+
+Follow these steps to change your password.
+
+        1. Click on your name in the upper left corner. This will
+           bring you to the `User Info Tab`_.
+        2. Click on the "Change Password" button.
+        3. Enter in your old password, new password, and confirm your
+           new password.
+        4. Click "Submit".
+
+API
+===========================================
+
+CRITs comes with an authenticated API. The API leverages Tastypie. A lot of the
+features of Tastypie are overridden by CRITs code for our needs. More
+information on Tastypie can be found here:
+
+        http://tastypieapi.org/
+
+Users can visit their profile page and generate API keys for their necessary
+tasks. Each API key can be revoked if that key becomes compromised or the user
+no longer wishes to use it.
+
+If you are using a web browser to access the API and you have an
+authenticated CRITs session already, you do not have to provide
+authentication information to utilize the API. To provide authentication
+information, append the following to your requests:
+
+        &username=<username>&api_key=<api_key>
+
+Where <username> is your username, and <api_key> is the API key you wish to use.
+
+API URLs
+-------------------------------------------
+The URL structure for the API comes in this form:
+
+/api/<version>/<resource>/...
+
+The <version> comes in the form of v# where # is the API version you
+are using.
+
+The <resource> is the content you wish to utilize within CRITs.
+Currently the available resources are:
+
+- campaigns
+- certificates
+- domains
+- emails
+- events
+- indicators
+- ips
+- pcaps
+- raw_data
+- samples
+- targets
+
+For example, if you wanted to get a list of campaigns, you would use:
+
+        /api/v1/campaigns/
+
+This would return a list of campaigns in JSON format. If you wish to change
+the format to something else, you would append "?format=<format>" where <format>
+is the format you want the data returned to you in. We currently support the
+following formats:
+
+- json
+- yaml
+- xml
+- stix
+
+If you choose the stix format, you will get a single stix document from the API
+which contains all of the objects returned from that API call.
+
+If you wish to get information about a single document, you would use:
+
+        /api/v1/campaigns/<object_id>/
+
+If the results of the GET request have a file in GridFS, you can download them
+by appending "?file=1" on the end. *By default the file(s) will be returned to
+you in raw format.* If you wish to adjust which format the files are in when
+sent to you, you can append "&file_format=<format>" where <format> is one of
+'base64', 'zlib', and 'invert'. The result will be a zip file with a password
+of 'infected' containing all of the files found with your GET request. If you
+query for just a single document you will still get a zip file with the same
+password. If there is an issue generating the zip file (whether due to no files
+being found, or some other error) you will get a non-zip file which contains any
+issues.
+
+Queries against the API are done via GET requests. If you wish to upload content
+to the system through the API, you must use a POST.
+
+Searching Using GET Parameters
+-------------------------------------------
+
+If you wish to limit the results of your GET request by the value of one or more
+fields, you can do so by adding more parameters. The format is similar to how
+you use search operators in the global search box. Here's an example:
+
+        /api/v1/samples/?c-campaign.name=Bad Guys&c-filename=foo.txt
+
+You'll notice a couple things here. The first is that there is a "c-" in front
+of the field name. This tells the API that this parameter should be used as a
+field to search against to limit your results. Second is that there is no
+operators for defining AND or OR. Currently this only supports AND operations.
+In our example, only samples with a Campaign Name of "Bad Guys" AND a filename
+of "foo.txt" will be returned to us. Finally, in this format the fields are both
+full matches.
+
+As long as you have a "c-" in front of the parameter, you can search against any
+field in the database, whether it is a CRITs supported field or not!
+
+If you wish to use regex, you can add "&regex=1". This will convert *all* "c-"
+parameters to regex searches (except those with comparison operators which is
+explained below).
+
+        /api/v1/samples/?c-campaign.name=Bad&c-filename=foo&regex=1
+
+This will find all Samples where the filename contains "foo" and the Campaign Name
+contains "Bad".
+
+If you wish to use the MongoDB comparison operators ('gt', 'gte', 'lt', 'lte',
+'in', 'nin'), you can use the syntax "__<operator>" when defining your field.
+Some examples:
+
+        /api/v1/samples/?c-size__lte=100
+
+        /api/v1/samples/?c-bucket_list__in=foo,bar
+
+:Note: Using a comparison operator will override "&regex=1" so none of the fields which use comparison operators will be converted into regex.
+
+Limiting GET Request Results
+-------------------------------------------
+
+If you wish to limit the fields in the results of your GET request, you can use
+two features:
+
+:only: Only populate these and any required fields.
+:exclude: Do not populate these fields if they are not required.
+
+For example:
+
+        /api/v1/samples/?only=filename,mimetype,md5
+
+Will only populate those and any required fields for each document. The
+inclusion of required fields is intentional. The classes expect that these
+fields are populated if they are required and do not have a default value to set,
+so if you do not include them they will complain.
+
+You can combine both only and exclude. The result will be all of the fields from
+only as long as they aren't in the exclude list, combined with any required
+fields.
+
+POST Examples:
+-------------------------------------------
+
+cURL:
+
+        curl -F "filedata=@/path/to/file.pcap" -F "source=<your source>" http://localhost:1337/api/v1/pcaps/\?username\=<your username>\&api_key\=<your api key>
+
+Python Script:
+
+        | import requests
+
+        | url = 'http://localhost:8000/api/v1/pcaps/'
+        | files = { 'filedata': open('/path/to/file.pcap', 'rb') }
+
+        | data = {
+        |     'api_key': '<your api key>',
+        |     'username': '<your username>',
+        |     'source': '<source name>'
+        | }
+
+        | r = requests.post(url, data=data, files=files)
+
+
+Common POST Parameters
+-------------------------------------------
+
+These parameters are frequently used across most top-level objects in CRITs.
+
+:bucket_list: Comma-separated list of buckets.
+:source: Name of the source which provided this information.
+
+- should be a source already in your CRITs instance.
+
+:method: Method in which the information was acquired from the source.
+:reference: Reference for the source of the information.
+:campaign: Campaign associated with this information.
+:confidence: Campaign confidence associated with this information.
+
+- must be one of "low", "medium", or "high"
+
+:ticket: Associated Ticket.
+
+Campaign API
+-------------------------------------------
+
+GET:
+
+        /api/v1/campaigns/
+
+        /api/v1/campaigns/<object_id>/
+
+POST:
+
+        /api/v1/campaigns/
+
+Unique POST Parameters:
+
+:aliases: Comma-separated list of campaign aliases.
+:description: Description of the campaign.
+:name: Name of the campaign.
+
+Certificate API
+-------------------------------------------
+
+GET:
+
+        /api/v1/certificates/
+
+        /api/v1/certificates/<object_id>/
+
+POST:
+
+        /api/v1/certificates/
+
+Unique POST Parameters:
+
+:description: Description of the certificate.
+:filedata: The certificate.
+:related_id: ObjectId of the related top-level object.
+:related_md5: MD5 of the related top-level object if it has one.
+:related_type: The CRITs type of the related top-level object.
+:relationship: The type of relationship.
+
+Domain API
+-------------------------------------------
+
+GET:
+
+        /api/v1/domains/
+
+        /api/v1/domains/<object_id>/
+
+POST:
+
+        /api/v1/domains/
+
+Unique POST Parameters:
+
+:add_indicators: If you wish to add Indicators to the system for this information.
+:add_ip: Tell the API that you are also adding an IP related to this domain.
+:domain: The domain name.
+:ip: The IP you want to relate to this domain.
+:ip_source: The source of the IP.
+:ip_method: The method in which you acquired this IP from the source.
+:ip_reference: The reference about this IP source.
+:same_source: If you want the IP to have the same source as the domain.
+
+Email API
+-------------------------------------------
+
+GET:
+
+        /api/v1/emails/
+
+        /api/v1/emails/<object_id>/
+
+POST:
+
+        /api/v1/emails/
+
+Unique POST Parameters:
+
+:upload_type: One of "eml", "msg", "raw", "yaml", "fields".
+:filedata: The email in EML, Raw, or YAML format.
+:email_id: The ObjectId of the email if it is in YAML format and exists already.
+:password: The password for the attachment if this is an MSG file.
+
+If you are uploading a type of "fields", you can include these parameters but
+only "date" is required:
+
+:date: The Date field.
+:to: The To field.
+:cc: The CC field.
+:from: The From field.
+:sender: The Sender field.
+:subject: The email subject.
+:reply_to: The Reply-To field.
+:helo: The HELO.
+:boundary: The Boundary.
+:message_id: The email Message-ID
+:raw_header: The raw header of the email.
+:raw_body: The raw body of the email.
+:originating_ip: The Originating IP field.
+:x_originating_ip: The X-Originating-IP field.
+:x_mailer: The X-Mailer.
+
+Event API
+-------------------------------------------
+
+GET:
+
+        /api/v1/events/
+
+        /api/v1/events/<object_id>/
+
+POST:
+
+        /api/v1/events/
+
+Unique POST Parameters:
+
+:description: Description of the event.
+:event_type: Type of Event.
+:date: Date of the event.
+:title: Title of the event.
+
+Indicator API
+-------------------------------------------
+
+GET:
+
+        /api/v1/indicators/
+
+        /api/v1/indicators/<object_id>/
+
+POST:
+
+        /api/v1/indicators/
+
+Unique POST Parameters:
+
+:add_domain: Add a Domain to CRITs if this is a domain indicator.
+:add_relationship: Add a relationship if this is a Domain, IP, etc.
+:indicator_confidence: The confidence level of this Indicator.
+
+- Must be one of "unknown", "benign", "low", "medium", "high".
+
+:indicator_impact: The impact level of this Indicator.
+
+- Must be one of "unknown", "benign", "low", "medium", "high".
+
+:type: The type of the Indicator.
+:value: Indicator value.
+
+Indicator Activity API
+-------------------------------------------
+
+POST:
+
+        /api/v1/indicator_activity/
+
+Unique POST Parameters:
+
+:object_id: The ObjectId of the Indicator to add activity to.
+:start_date: The start datetime of the activity.
+:end_date: The end datetime of the activity.
+:description: A description of the activity.
+
+IP API
+-------------------------------------------
+
+GET:
+
+        /api/v1/ips/
+
+        /api/v1/ips/<object_id>/
+
+POST:
+
+        /api/v1/ips/
+
+Unique POST Parameters:
+
+:add_indicator: Add this IP as an Indicator.
+:indicator_reference: Reference for the source of the Indicator.
+:ip: IP Address.
+:ip_type: Type of IP Address.
+
+Object API
+-------------------------------------------
+
+POST:
+
+        /api/v1/objects/
+
+Unique POST Parameters:
+
+:crits_type: The type of top-level object to add this object to.
+:crits_id: The ObjectId of the top-level object to add this object to.
+:object_type: The Object Type of this object.
+:source: The name of the source adding this information.
+:method: The method of acquiring this information, or tool used to generate it.
+:reference: The reference to this data (or the name of the file you are uploading).
+:add_indicator: Also add as an Indicator if it is an Indicator type (boolean).
+:filedata: The file you are uploading if this Object Type is a file.
+:value: The value of the Object you are uploading (if no filedata).
+
+PCAP API
+-------------------------------------------
+
+GET:
+
+        /api/v1/pcaps/
+
+        /api/v1/pcaps/<object_id>/
+
+POST:
+
+        /api/v1/pcaps/
+
+Unique POST Parameters:
+
+:filedata: The PCAP.
+:related_id: ObjectId of the related top-level object.
+:related_md5: MD5 of the related top-level object if it has one.
+:related_type: The CRITs type of the related top-level object.
+:relationship: The type of relationship.
+
+Raw Data API
+-------------------------------------------
+
+GET:
+
+        /api/v1/raw_data/
+
+        /api/v1/raw_data/<object_id>/
+
+POST:
+
+        /api/v1/raw_data/
+
+Unique POST Parameters:
+
+:upload_type: One of "metadata" or "file".
+:copy_relationships: Copy the relationships of the linked raw data version.
+
+- Requires a link_id
+
+:data: The raw data if the upload type is "metadata".
+:description: Description of the raw data.
+:filedata: The raw data if the upload type is "file".
+:link_id: The Link ID of an existing version of this raw data.
+:title: Title for the raw data.
+:tool_details: Details about the tool.
+:tool_name: The tool, utility, or host of the raw data.
+:tool_version: The version of the tool, utility, or host of the raw data.
+
+Relationship API
+-------------------------------------------
+
+POST:
+
+        /api/v1/relationships/
+
+Unique POST Parameters:
+
+:left_type: The type of the first top-level object in the relationship.
+:left_id: The ObjectId of the first top-level object in the relationship.
+:right_type: The type of the second top-level object in the relationship.
+:right_id: The ObjectId of the second top-level object in the relationship.
+:rel_type: The relationship type.
+:rel_date: The date the relationship applies (optional).
+
+Sample API
+-------------------------------------------
+
+GET:
+
+        /api/v1/samples/
+
+        /api/v1/samples/<object_id>/
+
+POST:
+
+        /api/v1/samples/
+
+Unique POST Parameters:
+
+:upload_type: One of "metadata" or "file".
+:filename: The name of the file if this is a "metadata" upload.
+:md5: The MD5 of the file if this is a "metadata" upload.
+:filedata: The sample if the upload type is "file".
+:password: The password to unzip the file if it is zipped and the upload type is "file".
+:file_format: The format of the file if the upload type is "file".
+
+- Must be one of "zip", "rar", or "raw".
+
+:parent_md5: The MD5 of the parent sample if this was an embedded sample.
+
+Service API
+-------------------------------------------
+
+POST:
+
+        /api/v1/services/
+
+Unique POST Parameters:
+
+:object_type: The type of top-level object you are updating.
+:object_id: The ObjectId to search for.
+:analysis_id: The ID of the analysis task you want to update.
+:result: The 'result' contents of your analysis result.
+:result_type: The 'Type' of your result.
+:result_subtype: The 'subtype' of your result.
+:log_message: The contents of the log message.
+:log_level: The level of the log (defaults to 'info').
+:status: The status to set the task to when it is finished.
+
+- Must be one of "error" or "completed"
+
+:finish: Set to "1" to note that this task is finished and to mark it "complete".
+
+If you include the "result" field, you will be required to also provide the
+"result_type" and "result_subtype". Also, if you include the "log_message"
+field, "log_level" will be set to "info" if it is not provided.
+
+Target API
+-------------------------------------------
+
+GET:
+
+        /api/v1/targets/
+
+        /api/v1/targets/<object_id>/
+
+POST:
+
+        /api/v1/targets/
+
+Unique POST Parameters:
+
+:firstname: Target first name.
+:lastname: Target last name.
+:division: The division of an organization the Target is a part of.
+:department: The department of an organization the Target is a part of.
+:email_address: The email address of the Target.
+:organization_id: The ID of the organization if they have one.
+:title: The job title of the Target.
+:note: Notes about the Target.

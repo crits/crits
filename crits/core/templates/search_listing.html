@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}Results for '{{ term }}'{% endblock %}
+
+{% block content %}
+
+<div id="tabnav" class="tabnav" style="font-size:90%;">
+    <ul style="font-size: 125%;">
+        {% comment %}
+            name - is the name/type/title of the search results (e.g. Certificate, Sample, Domain, etc)
+            count - is the number of results for the type of search result
+            url - is the django url for the search listings for the type of search
+        {% endcomment %}
+        {% for result in results %}
+            {% if result.count > 0 %}
+                <li><a href="{% url result.url 'inline' %}{{ url_params|safe }}" id="{{result.name|lower}}s_tab"><span>{{ result.name }}s ({{ result.count }})</span></a></li>
+            {% else %}
+                <li class="empty_tab_results"><a href="{% url result.url 'inline' %}{{ url_params|safe }}" id="{{result.name|lower}}s_tab"><span>{{ result.name }}s ({{ result.count }})</span></a></li>
+            {% endif %}
+        {%endfor%}
+    </ul>
+</div>
+
+{% endblock %}

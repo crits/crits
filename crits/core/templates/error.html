@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+
+<div class="content_box">
+    <h3 class="titleheader">
+    <span>Error!</span>
+    </h3>
+    <div class="content_body">
+    {% if sample_md5 %}
+    <a href="{% url 'crits.samples.views.detail' sample_md5 %}">Back to {{ sample_md5 }}</a>
+    {% endif %}
+
+    {% if error %}
+    <pre>{{ error }}<pre></div>
+    {% endif %}
+    </div>
+</div>
+
+{% endblock %}

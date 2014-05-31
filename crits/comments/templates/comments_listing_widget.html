@@ -1,0 +1,43 @@
+<script>
+var comments_url_key = "{{comments.url_key|escapejs}}";
+
+</script>
+    <div class="content_box comment_box">
+        <h3 class="titleheader">
+        {% if aggregate %}
+            <span style="float: middle; width: 33%; text-align: right;">
+                Recent Activity: {{ today|date }}
+                {% if comments.comments|length < 1 %}
+                    (<span class="count">0</span>)
+                {% endif %}
+            </span>
+            <span style="float: right; width: 33%; text-align: right;">
+                <span class="pagination">
+                    <a name="yesterdaysactivity" class="previousdate left" href="#">{{ yesterday|date }}</a>
+                    <a name="tomorrowsactivity" class="nextdate right" href="#">{{ tomorrow|date }}</a>
+                </span>
+            </span>
+        {% else %}
+                <span class="collapsible">Comments (<span class="count">{{comments.comments|length}}</span>)</span>
+        {% endif %}
+        {% if subscription %}
+                <span class="add_button">
+		  <a href="#" title="Add Comment" class="ui-icon ui-icon-comment dialogClick" dialog="comments" persona="new" action="{% url 'crits.comments.views.add_update_comment' 'add' subscription.type subscription.id  %}"></a>
+		</span>
+                <span style="float: right;" class="ui-icon ui-icon-triangle-1-s collapsible"></span>
+        </h3>
+    <table class='vertical comment_table collapser' id="comment_listing" width="100%">
+            {% else %}
+        </h3>
+            <table class='vertical comment_table collapser' id="comment_listing" width="100%">
+            {% endif %}
+        <thead>
+        </thead>
+        <tbody>
+            <tr></tr>
+        {% for comment in comments.comments %}
+            {% include "comments_row_widget.html" %}
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>

@@ -1,0 +1,15 @@
+{% extends "containment.html" %}
+
+{% block title %} Import service configuration {% endblock %}
+
+{% block content %}
+<div class="content_box" style="width: 50%;">
+    <div class="content_body">
+        <form action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit" value="Submit" />
+        </form>
+    </div>
+</div>
+{% endblock %}

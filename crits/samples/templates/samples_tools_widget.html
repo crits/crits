@@ -1,0 +1,74 @@
+{% load url from future %}
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        <li><a href="#" id="strings_button">Strings</a></li>
+        <li><a href="#" id="stack_button">Stack Strings</a></li>
+        <li><a href="#" id="hex_button">Hex</a></li>
+        <li class="right"><a href="#" id="tool_forms_button">Tools</a></li>
+    </ul>
+    </span>
+    <table id="tool_forms" style="display: none;">
+    <tr>
+        <td style="vertical-align: top;">
+        </td>
+        <td style="vertical-align: top;">
+        <div class='content_box' style="display: table;" id="xor-form" title="XOR Search">
+            <p>
+                <b>XOR Search</b>
+            </p>
+            <form id="form-xor" action='#' method='POST'>
+                <table class='form'> {{ xor_search_form.as_table }} </table>
+                <input class='form_submit_button' type="submit" value="Search">
+            </form>
+            <div class='content_body' id='xor_search_results' style="display: none;">
+                <b>Key Matches: </b>
+                <select class="selectbox" id="xor_key_select">
+                </select>
+            </div>
+        </div>
+        </td>
+        <td style="vertical-align: top;">
+            <div class='content_box' style="display:table;" id="add-comment-static-form">
+                <p>
+                    <b>Comments</b>
+                </p>
+                <form id="form-add-comment-static" item-type="comment" action="{% url 'crits.comments.views.add_update_comment' 'add' subscription.type subscription.id  %}">
+                    <input class="form_submit_button" type="submit" value="Add Comment" id="add_comment_static">
+                </form>
+                <div class="message"><div>
+            </div>
+        </td>
+        <td style="vertical-align: top;">
+            <div class='content_box' style="display:table;" id="add-object-static-form">
+                <p>
+                    <b>Objects</b>
+                </p>
+	  <span style="display:none">
+	    {% comment %} Import these so they are available for the static-forms {% endcomment %}
+	    {% include "dialogs/add-object.html" %}  
+	    {% include "dialogs/comments.html" %}  
+	  </span>
+
+                <form id="form-add-object-static" method="POST" enctype="multipart/form-data" target="object-static-iframe" action='{% url "crits.objects.views.add_new_object" %}' item-type="object-static">
+		  {% comment %}
+		  Both of these buttons should probably not be type=submit, but that also affects
+		  the style, so left as is for now
+		  {% endcomment %}
+                    <input class="form_submit_button" type="submit" value="Add Object" id="add_object_static" >
+                    <iframe name="object-static-iframe" class="file-submit-iframe" style="display:none;"></iframe>
+                </form>
+                <div class="message"><div>
+            </div>
+        </td>
+    </tr>
+    </table>
+    <div class='content_box'>
+    <h3 class='titleheader'>
+        <span id="tools_span"></span>
+    </h3>
+    <div>
+        <pre id="tools_display" style="height: 400px; overflow-y: auto; font-size: 150%;">
+        </pre>
+    </div>
+    </div>
+</div>

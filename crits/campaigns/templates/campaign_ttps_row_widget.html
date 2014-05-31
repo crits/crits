@@ -1,0 +1,14 @@
+{% load url from future %}
+<tr class="ttp">
+    <td colspan="2" style="border-right: none;">
+        <span class="ttp_ttp edit_underline" style="float: left;" data-ttp="{{ ttp.ttp }}">{{ ttp.ttp }}</span>
+    </td>
+    <td style="text-align: right;">
+        {{ ttp.analyst }} | {{ ttp.date|date:"Y-m-d" }}
+    </td>
+    <td>
+    {% if admin %}
+    <span class="remove_ttp_button ui-icon ui-icon-trash" title="Remove TTP" data-ttp="{{ ttp.ttp }}"></span>
+    {% endif %}
+    </td>
+</tr>

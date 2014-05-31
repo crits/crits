@@ -1,0 +1,25 @@
+<tr class="inline_comment">
+    <td colspan="2">
+        <div class="ui-icon ui-icon-arrowreturnthick-1-e"></div>
+    </td>
+    <td>
+        <table class="inline_comment_contents">
+            <colgroup>
+                <col width="70px">
+                <col width="90%">
+                <col width="70px">
+                <col width="20px">
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td class="ic_username"><b>{{ username }}</b></td>
+                    <td class="ic_comment">{{ comment }}</td>
+                    <td class="ic_date">{{ date|date:"Y-m-d" }}</td>
+                    <td class="ic_reply">
+                        <a href="#" title="Add Comment" class="ui-icon ui-icon-comment dialogClick reply_inline_comment" dialog="comments" persona="new" action="{% url 'crits.raw_data.views.add_inline_comment' raw_data.id|stringformat:"s" %}?line={{ line }}"></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </td>
+</tr>

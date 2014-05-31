@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}Sample Detail{% endblock %}
+
+{% block content %}
+
+<script>
+    var sample_id_escaped = "{{ sample.id|escapejs }}";
+    var get_strings = "{% url 'crits.samples.views.strings' sample.md5 %}";
+    var get_stackstrings = "{% url 'crits.samples.views.stackstrings' sample.md5 %}";
+    var get_hex = "{% url 'crits.samples.views.hex' sample.md5 %}";
+    var xor_search = "{% url 'crits.samples.views.xor_searcher' sample.md5 %}";
+    var get_xor = "{% url 'crits.samples.views.xor' sample.md5 %}?key=";
+</script>
+
+{% if sample %}
+<div id="tabnav" class="tabnav" style="font-size:90%;">
+    <ul style="font-size: 125%;">
+    <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ sample.analysis|length }})</span></a></li>
+    <li><a href="#tools_section" id="tools_button"><span>Tools</span></a></li>
+    {% include 'services_tab_list_widget.html' %}
+     </ul>
+<div id="details_section">
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        <li><a href="#" class="dialogClick" dialog="download-sample">Download Sample</a></li>
+        <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.samples.views.upload_child' sample.md5 %}">Upload Related Sample</a></li>
+        <li><a href="#" class="dialogClick" dialog="new-pcap" persona="related">Upload Related PCAP</a></li>
+        <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=text">Text</a></li>
+        <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=yaml">YAML</a></li>
+        <li><a href="#" class="dialogClick" dialog="unrar-sample">Unrar</a></li>
+        <li><a href="#" class="dialogClick" dialog="unzip-sample">Unzip</a></li>
+        {% if admin %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="sample" action='{% url "crits.samples.views.remove_sample" sample.md5 %}'>Delete Sample</a></li>
+        {% endif %}
+    </ul>
+    </span>
+    <div class='content_box content_details'>
+        <h3 class='titleheader'>
+            <span>File Details</span>
+        </h3>
+        <table class="vertical" width="100%">
+            <thead>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="key">ID</td>
+                <td>{{ sample.id }}</td>
+            </tr>
+            <tr>
+                <td class="key">Filename</td>
+                <td>{{ sample.filename }}</td>
+            </tr>
+            <tr>
+                <td class="key">Filetype</td>
+                <td>{{ sample.filetype }}</td>
+            </tr>
+            <tr>
+                <td class="key">Mimetype</td>
+                <td>{{ sample.mimetype }}</td>
+            </tr>
+            <tr>
+                <td class="key">Size</td>
+                <td><a href="{% url 'crits.samples.views.samples_listing'%}?search_type=size&q={{sample.size}}&force_full=1">{{ sample.size }}</a></td>
+            </tr>
+            <tr>
+                {% if binary_exists == 0 %}
+                    <td class="key">MD5
+                        <span title="No binary available" class="missing_binary
+                        ui-icon-alert"></span>
+                    </td>
+                {% else %}
+                    <td class="key">MD5</td>
+                {% endif %}
+                <td>{{ sample.md5 }}</td>
+            </tr>
+            <tr>
+                <td class="key">SHA1</td>
+                <td>{{ sample.sha1 }}</td>
+            </tr>
+            <tr>
+                <td class="key">SHA256</td>
+                <td>{{ sample.sha256 }}</td>
+            </tr>
+            <tr>
+                <td class="key">SSDeep</td>
+                <td>{{ sample.ssdeep }}</td>
+            </tr>
+            <tr>
+                <td class="key">Status
+                    <span style="float: right;" class="object_status_response"></span>
+                </td>
+                <td>
+                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{sample.status}}</span>
+                </td>
+            </tr>
+            <tr>
+            {% with sources=sample.source obj_id=sample.id obj_type=subscription.type %}
+                {% include "sources_listing_widget.html" %}
+            {% endwith %}
+            </tr>
+            <tr>
+            {% with releasability=sample.releasability %}
+                {% include 'releasability_list_widget.html' %}
+            {% endwith %}
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="detail_floaters">
+        {% include 'details_options_widget.html' %}
+        {% with bucket_list=sample.bucket_list %}
+            {% include 'bucket_list_widget.html' %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with obj=sample obj_type=subscription.type %}
+                 {% include 'tickets_listing_widget.html' %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=sample col=COL_SAMPLES %}
+            {% include 'campaigns_display_widget.html' %}
+        {% endwith %}
+    </div>
+    <div>
+        {% include 'relationships_listing_widget.html' %}
+    </div>
+    <div>
+        {% include 'objects_listing_widget.html' %}
+    </div>
+    <div class='content_box'>
+        <h3 class='titleheader'>
+            <span>Quick Summary</span>
+        </h3>
+        <table class="vertical" width="100%">
+            <thead>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="key">Backdoor
+                    <span class="ui-icon ui-icon-pencil add_backdoor dialogClick" dialog="add-backdoor" persona="update" title="Edit Backdoor" style="float: right;"></span>
+                </td>
+                <td>
+                    {% if sample.backdoor %}
+                    <a href="{% url 'crits.samples.views.samples_listing' %}?search_type=backdoor&q={{ sample.backdoor.name }}&force_full=1"><span data-field="backdoor_types">{{ sample.backdoor.name }}</span> (<span data-field="backdoor_version">{{ sample.backdoor.version }}</span>)</a>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">Exploit
+                    <span class="ui-icon ui-icon-plusthick add_exploit dialogClick" dialog="add-exploit" persona="new" title="Add Exploit" style="float: right;"></span>
+                </td>
+                <td>
+                    {% for exploit in sample.exploit %}
+                        <a href="{% url 'crits.samples.views.samples_listing'%}?search_type=exploit&q={{exploit.cve}}&force_full=1">{{ exploit.cve}}</a>,&nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div>
+        {% include "comments_listing_widget.html" %}
+    </div>
+</div>
+{% with item=sample %}
+    {% include "services_analysis_section.html" with crits_type="Sample" identifier=sample.md5 %}
+{% endwith %}
+<div id="tools_section">
+    {% include 'samples_tools_widget.html' %}
+{% include 'services_tab_tabs_widget.html' %}
+</div>
+
+<div style="display: none;">
+
+<div id="dialog-add-backdoor" title="Edit Backdoor">
+    <form id="form-add-backdoor" action='{% url "crits.samples.views.add_backdoor" sample.md5 %}' method='POST' item-type="backdoor">
+    <table class='form'> {{ backdoor_form.as_table }} </table>
+    </form>
+</div>
+
+<div id="dialog-add-exploit" title="Add Exploit">
+    <form id="form-add-exploit" action='{% url "crits.samples.views.add_exploit" sample.md5 %}' method='POST'>
+    <table class='form'> {{ exploit_form.as_table }} </table>
+    </form>
+</div>
+<div id="dialog-add-child" title="Add Child">
+    <form id="form-add-child" action="" method="POST" enctype="multipart/form-data">
+    <table class="form">{{child_form.as_table}}</table>
+    </form>
+</div>
+<div id="dialog-download-sample" title="Download Sample">
+    <form id="form-download-sample" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
+    <table class="form">{{download_form.as_table}}</table>
+    </form>
+</div>
+
+<div id="dialog-unrar-sample" title="Unrar Sample">
+    <form id="form-unrar-sample" action="{% url 'crits.samples.views.unrar_sample' sample.md5 %}" method="POST" enctype="multipart/form-data">
+    <table class="form">{{unrar_sample_form.as_table}}</table>
+    </form>
+</div>
+
+<div id="dialog-unzip-sample" title="Unzip Sample">
+    <form id="form-unzip-sample" action="{% url 'crits.samples.views.unzip_sample' sample.md5 %}" method="POST" enctype="multipart/form-data">
+    {% comment %}
+        This is intentionally using unrar_sample_form here.
+        No need to pass an identical form in.
+    {% endcomment %}
+    <table class="form">{{unrar_sample_form.as_table}}</table>
+    </form>
+</div>
+
+</div>
+
+{% else %}
+<h1>Missing sample.</h1>
+
+{% endif %}
+
+{% endblock %}
+
+{% block javascript_includes %}
+ <script type="text/javascript" src="{{ STATIC_URL }}js/samples.js"></script>
+ {% endblock %}

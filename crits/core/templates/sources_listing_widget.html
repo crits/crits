@@ -1,0 +1,41 @@
+{% load url from future %}
+<td class="key" valign="top">
+    <div>
+      <span>Sources</span>
+      <span class="floatright">
+	<a href="#" class="ui-icon ui-icon-plusthick dialogClick" id="source-add" dialog="source-add" persona="new" action="{% url "crits.core.views.add_update_source" "add" obj_type obj_id %}" title="Add Source" data-intro="Add/ Collapse/ Expand" data-position="top"></a>
+      </span>
+    </div>
+    <div class="clearboth floatright">
+      <a href="#" id="toggle_sources" class="ui-icon ui-icon-triangle-1-e" title="Toggle All"></a>
+    </div>
+</td>
+
+<td>
+    <table style="table-layout:fixed;" class="chart collapser" id="source_listing">
+    <colgroup>
+        <col width="19"/> <!-- spacer -->
+        <col width="65%"/> <!-- method/reference -->
+        <col width="200" /> <!-- analyst/created -->
+        <col width="35"/> <!-- buttons -->
+    </colgroup>
+    <thead>
+    </thead>
+    <tbody class="guardian">
+        {% for source in sources %}
+        {% if source.name != "Other" %}
+            {% include "sources_header_widget.html" %}
+        {% else %}
+            <!-- put our "OTHER" source (i.e., sources the current user can't see) last -->
+            <tr class="other_source">
+                <td></td>
+                <td colspan="2" style="border-right:none;">{{source.name}} ({{source.instances|length|default:0}})</td>
+                <td></td>
+            </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+    </table>
+
+</td>
+

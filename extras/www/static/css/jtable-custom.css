@@ -1,0 +1,60 @@
+/*  Some custom jTable adjustments */
+
+div.jtable-main-container table.jtable tbody > tr {
+    height:auto;
+    padding:0;
+}
+div.jtable-main-container table.jtable tbody > tr:hover {
+    background-color: #EEE;
+}
+div.jtable-main-container table.jtable tbody > tr > td {
+    border:1px solid #DDDDDD;
+    padding:2px;
+    min-width:50px;
+    max-width:500px;
+    word-wrap:break-word;
+}
+div.icon-container > span {
+    display:block;
+    margin:0 auto;
+    border: 1px solid darkgray;
+    border-radius: 2px;
+    background-color:#D5DFE6;
+    height:16px;
+    width:16px;
+}
+.ui-widget {
+    font-family: Verdana,Arial,sans-serif;
+    font-size:1em;
+}
+div.jtable-main-container div.jtable-title {
+    font-size: 1em;
+    font-weight: bold;
+    line-height: 20px;
+}
+div.jtable-main-container div.jtable-title div.jtable-toolbar {
+    line-height: 15px;
+    width:100%;
+}
+div.jtable-main-container div.jtable-title div.jtable-toolbar
+span.jtable-toolbar-item {
+    padding: 0px;
+    height: 15px;
+    vertical-align: top;
+    float:right;
+}
+div.jtable-main-container div.jtable-title div.jtable-toolbar
+span.jtable-toolbar-item span.jtable-toolbar-item-text {
+    margin: 0px;
+    padding-left: 3px;
+    padding-right: 3px;
+    vertical-align: top;
+}
+div.jtable-main-container div.jtable-bottom-panel {
+    padding: 0px;
+}
+div.jtable-main-container div.jtable-title div.jtable-toolbar span.jtable-toolbar-center {
+    float:none;
+    position:relative;
+    left:40%;
+}

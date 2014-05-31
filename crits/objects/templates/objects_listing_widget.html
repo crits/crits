@@ -1,0 +1,136 @@
+{% load url from future %}
+<script type="text/javascript">
+    var my_id = "{{ subscription.id }}";
+    var my_type = "{{ subscription.type }}";
+    var update_objects_value = "{% url 'crits.objects.views.update_objects_value' %}";
+    var update_objects_source = "{% url 'crits.objects.views.update_objects_source' %}";
+    var get_user_source_list = "{% url 'crits.core.views.get_user_source_list' %}";
+    var indicator_from_object = "{% url 'crits.objects.views.indicator_from_object' %}";
+    var relationship_value = "{{ relationship.value|escapejs }}";
+</script>
+    <div class="content_box object_box" id="object_box_container">
+        <h3 class="titleheader">
+                    {% if objects %}
+            <span class="collapsible">Objects (<span class="count">{{ objects.Count }}</span>)</span>
+                    {% else %}
+            <span>Objects (0)</span>
+                    {% endif %}
+                        <span class="add_button" data-intro="Add an object" data-position="right">
+                            <a style="display: inline-block;" href="#" title="Add Object" class="ui-icon ui-icon-tag dialogClick" dialog="add-object" persona="new" data-id="{{ subscription.id }}" data-oid="{{ subscription.type }}"></a>
+                        </span>
+                        <span class="bulk_add_button" data-intro="Bulk add objects" data-position="right">
+                            <a style="display: inline-block;" href="#" title="Bulk Add Objects" class="ui-icon ui-icon-circle-plus" id="bulk_add_object"></a>
+                        </span>
+                        <span style="float: right;" class="ui-icon ui-icon-triangle-1-s collapsible"></span>
+        </h3>
+            {% if objects %}
+                <table class='chart object_listing collapser' id='object_listing'>
+                <colgroup>
+                    <col width="10%">
+                    <col width="90%">
+                </colgroup>
+                    <thead>
+                    </thead>
+                    <tbody>
+                        <tr style="margin: 0px; padding: 0px; border: 0px;">
+                            <td style="margin: 0px; padding: 0px; border: 0px;">
+                                <table class='chart object_listing_header' style="border: 0px;">
+                                    <thead>
+                                        <tr style="border-top: 0px;">
+                                            <th style="border-top: 0px; border-bottom: 0px;">Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </td>
+                            <td style="margin: 0px; padding: 0px; border: 0px;">
+                                <table class='chart object_listing_header' style="border: 0px;">
+                                        <colgroup>
+                                            <col width="15%">
+                                            <col width="30%">
+                                            <col width="10%">
+                                            <col width="10%">
+                                            <col width="35%">
+                                            <col width="20px">
+                                        </colgroup>
+                                            <thead>
+                                                <tr style="border-top: 0px;">
+                                                    <th style="border-top: 0px;">Name</th>
+                                                    <th style="border-top: 0px;">Value</th>
+                                                    <th style="border-top: 0px;">Date</th>
+                                                    <th style="border-top: 0px;">Analyst</th>
+                                                    <th style="border-top: 0px;">Source</th>
+                                                    <th style="border-top: 0px;">
+                                                      <div class="ui-icon ui-icon-trash" data-intro="Delete object" data-position="top"></div>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                            {% for key, value in objects.items %}
+                                    {% if key != "Other" and key != "Count" %}
+                                            {% with object_list=value object_type=key %}
+                                                    {% include 'objects_listing_row_widget.html' %}
+                                            {% endwith %}
+                                    {% endif %}
+                            {% endfor %}
+                            {% if objects.Other > 0 %}
+                                <tr>
+                                    <td colspan="7" class="object_spacer"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="7"><b>Other ({{ objects.Other }})</b></td>
+                                </tr>
+                            {% endif %}
+                    </tbody>
+                </table>
+            {% endif %}
+    </div>
+
+<script>
+
+    var dialogWindow = $('#handsontable_object')
+    var bulkAddButton = $("#bulk_add_object")
+    var defaultTableName = 'inline'
+    var defaultValidateColumns = null;
+
+    // this widget might get loaded multiple times so don't create the div more than once.
+    if($(dialogWindow).length === 0) {
+        $('#object_box_container').append('<div class="handsontable" id="handsontable_object"></div>')
+    }
+
+    if($('#handsontable_object').hasClass('ui-dialog-content') === false) {
+        // the dialog has not been initialized yet
+        $(bulkAddButton).on("click", function(event, ui) {
+            $('#handsontable_object').dialog({
+                autoOpen: false,
+                height: 400,
+                width: 600,
+            })
+
+            $('#handsontable_object').on('dialogopen', function(event, ui) {
+                $(this).load("{% url 'crits.objects.views.bulk_add_object_inline' %}?" + $.param({'useItemSource': false, 'otype': my_type, 'oid': my_id}));
+            })
+
+            $('#handsontable_object').dialog('option', 'title', "Bulk Add Objects For (" + my_type + ": " + my_id + ")")
+
+            $('#handsontable_object').dialog('open')
+        })
+    }
+    else {
+        // the dialog has already been initialized, so just disable the lazy loading
+        // and simply open the dialog window.
+        $(bulkAddButton).off("click")
+
+        $(dialogWindow).off('dialogopen')
+
+        $(bulkAddButton).on("click", function(event, ui) {
+            $(dialogWindow).dialog('open')
+        })
+    }
+
+</script>

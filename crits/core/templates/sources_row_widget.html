@@ -1,0 +1,27 @@
+{% load url from future %}
+<tr class="expand-child">
+    <td style="border-right:none;"></td><!-- collapsible spacer -->
+    <td style="border-right:none;">
+    <div>
+        <span data-field="name" style="display:none;">{{source.name}}</span>
+        <span class="heading">Method:</span> <span data-field="method">{{instance.method}}</span>
+    </div>
+    <div>
+        <span class="heading">Reference:</span> <span data-field="reference"><a href="{% url 'crits.core.views.global_search_listing' %}?search_type=global&q=field%3Asource.instances.reference+full%3A{{ instance.reference|urlencode }}">{{instance.reference}}</a></span>
+    </div>
+    </td>
+    <td style="border-right:none;">
+    <div>
+        <span class="heading">Analyst:</span> <span data-field="analyst">{{instance.analyst|default:""}}</span>
+    </div>
+    <div>
+        <span class="heading">Created: </span><span data-field="date">{{instance.date}}</span>
+    </div>
+    </td>
+    <td>
+    {% if admin %}
+    <a href="#" class="ui-icon ui-icon-close deleteClick" action="{% url 'crits.core.views.remove_source' obj_type obj_id %}" type='source' source_name="{{source.name}}" key="{{instance.date}}" title="Delete Source Instance"  data-intro="Edit/Delete Instance" data-position="right"></a>
+    {% endif %}
+    <a href="#" class="edit_source_button ui-icon ui-icon-pencil dialogClick" dialog="source-add" persona="update" action="{% url 'crits.core.views.add_update_source' 'update' obj_type obj_id %}" title="Edit Source"></a>
+    </td>
+</tr>

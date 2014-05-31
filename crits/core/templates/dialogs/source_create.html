@@ -1,0 +1,15 @@
+{% load url from future %}
+
+{% if user_role %}
+{% if source_add %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Add New Source">
+  <form id="form-{{ request.GET.dialog }}" 
+	action='{% url "crits.core.views.source_add" %}' 
+	method='POST' enctype="multipart/form-data" item-type="new-source">
+    <table class="form">{{ source_create.as_table }}</table>
+  </form>
+</div>
+
+{% endif %}
+{% endif %}

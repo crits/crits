@@ -1,0 +1,18 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Add New Indicator"
+     afterDialogClick="new_indicator_dialog();">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "crits.indicators.views.upload_indicator" %}' 
+	  method='POST' enctype="multipart/form-data"
+	  item-type="indicator" input_clear_filter="[type!='hidden']">
+    <table class="form">{{ upload_ind.as_table }}</table>
+    <input type="hidden" name="svalue" value="Upload Indicator">
+    <div id="form-upload-indicator-results" class="form_results"></div>
+    </form>
+</div>
+
+{% 
+# XXX The clear function for the static version of this form used to clear all the 
+# drop-downs too, not sure we care 
+%}

@@ -1,0 +1,45 @@
+Q:  I am trying to view CRITs in IE8 or IE9 and it looks absolutely horrible!
+A:  Make sure you are not using compatability mode and you aren't in quirks
+    mode (press "ALT" key if you don't see menus):
+        Tools -> Compatability View Settings
+            uncheck boxes for compatability view
+        Tools -> F12 Developer Tools
+        Click on "Browser Mode" and make sure it's set to your browser version
+            (not an old one or compatability view)
+        Click on "Document Mode" and make sure it's set to your browser version
+            (not quirks mode or old version)
+
+Q:  What is runscript and how do I use it?
+A:  runscript is a management command we made to facilitate running CRITs scripts
+    from within the CRITs environment without them having to actually live in
+    the codebase. The general format of the command is:
+
+    python manage.py runscript location script -- [script arguments]
+
+    location:   This is the name of a module directory in your PYTHONPATH
+                (or in syspath) which contains a 'scripts' directory holding
+                your CRITs scripts. This will most likely be a services
+                directory found in the 'crits_services' repository that you've
+                configured CRITs to discover in your custom_settings.py file.
+
+                Example: You have a service installed called "my_service" that
+                         comes with a scripts directory. The start of your
+                         runscript command will look like this:
+
+                         python manage.py runscript my_service
+
+    script:    The name of the script to run.
+
+                Example: In your "my_service/scripts" directory is a script
+                         named "my_script.py" which takes a -h (help) argument.
+                         You would run your script like this:
+
+                         python manage.py runscript my_service my_script -- -h
+
+                         Notice the double dashes. This is to tell runscript
+                         that you are done providing arguments to it and are
+                         now providing arguments to your script.
+
+    More information can be found using -h to runscript:
+
+    python manage.py runscript -h

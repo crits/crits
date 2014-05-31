@@ -1,0 +1,15 @@
+{% load url from future %}
+
+{% comment %}
+Does not use dynamic dialog name due to being included in samples_tools_widget
+{% endcomment %}
+
+<div id="dialog-add-object" title="Add New Object">
+    <form id="form-add-object" 
+	  action='{% url "crits.objects.views.add_new_object" %}' 
+	  method='POST' enctype="multipart/form-data" target="object-iframe"
+	  item-type="object" input_clear_filter="[type!='hidden']" >
+    <table class="form">{{ object_form.as_table }}</table>
+    <iframe name="object-iframe" class="file-submit-iframe" style="display:none;"></iframe>
+    </form>
+</div>

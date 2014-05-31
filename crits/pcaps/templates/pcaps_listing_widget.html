@@ -1,0 +1,25 @@
+{% load url from future %}
+    <table class="chart tablesorter" style="table-layout: fixed;">
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>Description</th>
+            <th>Upload Date</th>
+            <th>ID</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for pcap in pcap_list %}
+        <tr>
+            <td>
+                <a href="{% url 'crits.pcaps.views.pcap_details' pcap.md5 %}">{{ pcap.filename }}</a>
+            </td>
+            <td>{{ pcap.length }}</td>
+            <td>{{ pcap.description }}</td>
+            <td>{{ pcap.created|date:"m/d/Y" }}</td>
+            <td>{{ pcap.id }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>

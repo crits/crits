@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+
+    <link rel="stylesheet" href="/css/jquery-ui-timeglider.css" type="text/css" media="screen">
+    <script type="text/javascript" src="/js/timeglider-0.1.3.min.js"></script>
+    <script>
+    $(document).ready(function () { 
+          var tg1 = $("#tl").timeline({
+         "data_source":"./?format=json",
+         "min_zoom":1,
+         "max_zoom":30, 
+         "event_overflow": "scroll",
+         "show_centerline": true,
+         "display_zoom_level": true,
+         "show_footer": true,
+         "icon_folder": "/css/icons/",
+         });
+         $("#scrolldown").bind("click", function() {
+        $(".timeglider-timeline-event").animate({top:"+=100"})
+         })
+        
+         $("#scrollup").bind("click", function() {
+        $(".timeglider-timeline-event").animate({top:"-=100"})
+         })
+    });
+    </script>
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        <li class="right"><a href="#" id="scrollup">Up</a></li>
+    </ul>
+    </span>
+    <div id="tl" class="" style="height: 90%;"></div>
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        <li class="right"><a href="#" id="scrolldown">Down</a></li>
+    </ul>
+    </span>
+
+{% endblock %}

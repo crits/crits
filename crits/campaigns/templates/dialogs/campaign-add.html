@@ -1,0 +1,8 @@
+{% load url from future %}
+<div id="dialog-campaign-add" title="Add Campaign" style="display:none">
+    <form id="form-campaign-add" 
+	  method="POST" enctype="multipart/form-data" item-type="campaign">
+    <table class="form">{{campaign_form.as_table}}</table>
+    <div id="form-campaign-add-results" class="form_results"></div>
+    </form>
+</div>

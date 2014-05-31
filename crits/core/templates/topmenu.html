@@ -1,0 +1,36 @@
+<link rel="stylesheet" href="/ext/superfish/css/superfish-custom.css" type="text/css" media="screen" />
+<script type="text/javascript" src="/ext/superfish/js/superfish.min.js"></script>
+<script type="text/javascript" src="/plugin/topmenu/js/topmenu.js"></script>
+
+<style>
+/* Styles for the first menu item (sf-level0) */
+.top_item li.sf-firstrow {
+    background: {{nav_config.background_color}};
+}
+.sf-menu a.sf-level0 {
+    text-shadow: #111 1px 1px 1px;
+    border-style:solid;
+    border-color:#bbb;
+    border-width:1px;
+}
+.sf-menu a, .sf-menu a:link, .sf-menu a:visited  {
+    color: {{nav_config.text_color}};
+}
+.sf-menu a.sf-level0:hover,
+.ui-state-hover a.sf-level0 {
+    color: {{nav_config.hover_text_color}};
+    background: {{nav_config.hover_background_color}};
+    text-shadow: none;
+}
+.sf-menu li, .sf-menu li a + div {
+    /* box color for sub-level menu items */
+    background:	{{nav_config.background_color}};
+}
+.sf-menu li:hover, .sf-menu li.sfHover,
+.sf-menu a:focus, .sf-menu a:hover, .sf-menu a:active {
+    /* box color for menu items when the mouse hovers over them */
+    color: {{nav_config.hover_text_color}};
+    background:	{{nav_config.hover_background_color}};
+    outline: 0;
+}
+</style>

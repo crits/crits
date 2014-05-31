@@ -1,0 +1,31 @@
+{% load url from future %}
+    <div class="content_box">
+        <h3 class="titleheader"><span>Tickets</span>
+            <span class="add_button" data-intro="Add a ticket" data-position="right">
+	      <a href="#" title="Add Ticket" class="ui-icon ui-icon-plusthick dialogClick" dialog="ticket" persona="new" action="{% url 'crits.core.views.add_update_ticket' 'add' obj_type obj.id %}" 
+></a>
+	    </span>
+        </h3>
+        <div class="content_body">
+        <table class="chart" id="ticket_listing">
+            <thead>
+                {% if obj.tickets %}
+                <tr>
+                {% else %}
+                <tr style="display:none;">
+                {% endif %}
+                    <th>Ticket Number</th>
+                    <th>URL</th>
+                    <th>Date</th>
+                    <th>Analyst</th>
+                    <th></th> <!-- Edit/Delete col -->
+                </tr>
+            </thead>
+            <tbody>
+                    {% for ticket in obj.tickets %}
+                        {% include 'tickets_row_widget.html' %}
+                    {% endfor %}
+            </tbody>
+        </table>
+        </div> <!-- content_body -->
+    </div> <!-- content_box -->

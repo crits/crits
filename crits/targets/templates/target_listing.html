@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% block title %}Targets{% endblock %}
+
+{% block content %}
+<div id="tabnav" class="tabnav" style="font-size: 90%;">
+    <ul style="font-size: 125%;">
+    <li><a href="{% url 'crits.targets.views.targets_listing' 'inline' %}" id="target_button"><span>Targets</span></a></li>
+    <li><a href="{% url 'crits.targets.views.divisions_listing' 'inline' %}" id="division_button"><span>Division</span></a></li>
+    </ul>
+
+{% endblock %}
+
+{% block javascript_includes %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/targets.js"></script>
+{% endblock %}

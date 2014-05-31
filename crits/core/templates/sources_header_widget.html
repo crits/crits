@@ -1,0 +1,14 @@
+{% load url from future %}
+<tr>
+    <td class="collapsible" style="border-right:none;" ><a class="ui-icon ui-icon-triangle-1-e" href="#"></a></td>
+    <td colspan="2" class="collapsible_alt" style="border-right:none;"><a href="#">{{source.name}} ({{source.instances|length|default:0}}): {{source.instances.0.date|date:"DATE_FORMAT"}}
+</a></td>
+    <td>
+    {% if admin %}
+    <a href="#" class="delete_all_source_button ui-icon ui-icon-trash deleteClick" title="Delete Source" action="{% url 'crits.core.views.remove_all_source' obj_type obj_id %}" key="{{source.name}}" type="source"  data-intro="Delete Source" data-position="right"></a>
+    {% endif %}
+    </td>
+</tr>
+{% for instance in source.instances %}
+    {% include "sources_row_widget.html" %}
+{% endfor %}

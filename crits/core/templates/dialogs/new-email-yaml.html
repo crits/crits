@@ -1,0 +1,12 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Upload Email (YAML)">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "crits.emails.views.email_yaml_add" %}' 
+	  method='POST' enctype="mutipart/form-data"
+	  item-type="email-yaml">
+    <table class="form">{{ upload_email_yaml.as_table }}</table>
+    <div id="form-upload-email-results" class="form_results"></div>
+    </form>
+</div>
+

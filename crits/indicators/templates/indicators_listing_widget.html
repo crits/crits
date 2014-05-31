@@ -1,0 +1,51 @@
+{% load url from future %}
+{% if indicator_list %}
+
+        <table class='chart tablesorter'>
+        <thead>
+        <tr>
+        <th>Value</th>
+        <th>Type</th>
+        <th>Date Added</th>
+        <th>Campaign</th>
+        <th>Source</th>
+        <th>Status</th>
+        <th>ID</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for indicator in indicator_list %}
+        <tr>
+            <td>
+                {% if indicator.value %}
+                    <a href="{% url 'crits.indicators.views.indicator' indicator.id %}">{{ indicator.value }}</a>
+                {% endif %}
+                {% if splunk_search_url %}
+                <span style="float: right;">
+                    <a href="{{ splunk_search_url }}{{ indicator.value }}"><img src="/new_images/splunk.png" /></a>
+                </span>
+                {% endif %}
+            </td>
+        <td><a href="{% url 'crits.indicators.views.indicators_listing' %}?type={{ indicator.ind_type|urlencode }}">{{ indicator.ind_type }}</a></td>
+        <td>{{ indicator.created|date:"DATE_FORMAT" }}</td>
+        <td>
+            {% for camp in indicator.campaign %}
+                <a href="{% url 'crits.indicators.views.indicators_listing' %}?campaign={{camp.name}}">{{camp.name}}</a><br/>
+            {% endfor %}
+        </td>
+        <td>
+            {% for source in indicator.source %}
+                <a href="{% url 'crits.indicators.views.indicators_listing' %}?source={{source.name}}">{{source.name}}</a><br/>
+            {% endfor %}
+        </td>
+        <td>
+            {{ indicator.status }}
+        </td>
+        <td>
+            {{ indicator.id }}
+        </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+{% endif %}

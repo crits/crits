@@ -1,0 +1,16 @@
+{% load url from future %}
+<tr>
+    <td data-field="description">{{ activity.description }}</td>
+    <td data-field="start_date">{{ activity.start_date }}</td>
+    <td data-field="end_date">{{ activity.end_date }}</td>
+    <td data-field="date">{{ activity.date }}</td>
+    <td data-field="analyst">{{ activity.analyst }}</td>
+    <td>
+    {% if admin %}
+    <a href="#" title="Delete Activity" class="delete_activity_button ui-icon ui-icon-close deleteClick" type="activity" action="{% url 'crits.indicators.views.remove_activity' indicator_id %}" key="{{activity.date}}"></a>
+    {% endif %}
+    <a href="#" title="Edit Activity" 
+       action="{% url 'crits.indicators.views.add_update_activity' 'update' indicator_id %}"
+       class="edit_activity_button ui-icon ui-icon-pencil dialogClick"  dialog="add-activity" persona="update"></a>
+    </td>
+</tr>

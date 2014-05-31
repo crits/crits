@@ -1,0 +1,9 @@
+{% load url from future %}
+
+<div id="run-service-form" title="Options for {{ name }}" style="width: 100%;">
+    <form id="form-run-service" action="{% url 'crits.services.views.service_run' name crits_type identifier %}" method="post">{% csrf_token %}
+        <table class="form" style="width: 100%;">
+        {{ form.as_table }}
+        </table>
+    </form>
+</div>

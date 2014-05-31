@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Main{% endblock %}
+
+{% block content %}
+
+<h1>Welcome to CRiTS</h1>
+<p>
+Your username is "{{ user_name }}"
+<p>
+Your last login was {{ last_login }}
+<p>
+<h2>Stats</h2>
+<table class="single">
+{% for stat in stats %}
+    <tr>
+    <td class='key'>{{stat.name}}</td>
+    <td>{{stat.count}}</td>
+    </tr>
+{% endfor %}
+</table>
+{% endblock %}

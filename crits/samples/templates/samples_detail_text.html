@@ -1,0 +1,41 @@
+Sample Detail for {{ sample.md5 }}
+
+File Details
+Filename     {{ sample.filename }}
+Filetype     {{ sample.filetype }}
+Mimetype     {{ sample.mimetype }}
+Size         {{ sample.size }}
+
+Received From {% for stamp in sample.source %}
+ * {{ stamp.instances.0.date }} ({{ stamp.name}}) {% endfor %}
+
+Hashes
+MD5          {{ sample.md5 }}
+SHA1         {{ sample.sha1 }}
+SHA256       {{ sample.sha256 }}
+SSDEEP       {{ sample.ssdeep }}
+{% if sample.obj %}
+Objects{% for object in sample.obj %}
+* {{object.value}} ({{ object.name}}){% endfor %}{% endif %}
+{%if sample.exploit %}
+
+Exploit{% for exploit in sample.exploit %}
+ * {{ exploit.cve }}{% endfor %}{% endif %}{% if sample.campaign %}
+
+Campaign
+{% for campaign in sample.campaign %}
+* {{ campaign.name }} ({{campaign.confidence }}){% endfor %}{% endif %}{% if sample.backdoor %}
+
+Backdoor
+* {{ sample.backdoor.name }} {% if sample.backdoor.version %}v({{ sample.backdoor.version}}){% endif %}
+{% endif %}{% if sample.relationships %}
+
+Relationships{% for rel in sample.relationships %}
+* {{rel.relationship}} {{ rel.type }} {{rel.value}}{%endfor %}{% endif %}{% if sample.analysis %}
+
+Tool results{% for analysis in sample.analysis %}{% if analysis.results|length > 0%}
+{{analysis.service_name}} v({{analysis.version}}) 
+{% for result in analysis.results %}{% if result.result %}{%if result.result != '' %}
+* {{ result.result }}{%endif%}{% elif result.md5 %}
+* {{result.md5}}{% endif %}{% endfor %}{% endif %}
+{% endfor %}{% endif %}

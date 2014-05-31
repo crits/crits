@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}Sources Page{% endblock %}
+
+{% block content %}
+
+<span class="horizontal_menu">
+    <ul class="hmenu">
+    <li class="right"><a href="{% url 'crits.samples.views.sources' %}?refresh=yes">Refresh DB</a></li>
+    </ul>
+</span>
+
+{% if sources %}
+<div class="content_box" style="width: 100%;">
+    <h3 class="titleheader">
+    <span>Sources</span>
+    </h3>
+    <table class='chart tablesorter'>
+    <thead>
+        <tr>
+        <th>Source</th>
+        <th>Count</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for source in sources %}
+        <tr>
+            <td><a href="{% url 'crits.samples.views.samples_listing' %}?source={{ source.name|urlencode }}">{{ source.name }}</a></td>
+            <td>{{ source.sample_count|floatformat }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+*.pyc
+*.swp
+*.swo
+crits/config/database.py
+crits/config/overrides.py
+logs/*.log*
+.DS_Store
+documentation/src/_build/
+extras/www/static/admin/

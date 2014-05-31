@@ -1,0 +1,53 @@
+{% load url from future %}
+    <table class='chart tablesorter'>
+    <thead>
+        <tr>
+        <th width="15px">
+            <span class="ui-icon ui-icon-script" title="View Details">
+        </th>
+        <th>From</th>
+        <th>Recip</th>
+        <th>Subject</th>
+        <th width="50px">Date</th>
+        <th>Source</th>
+        <th>Campaign</th>
+        <th>ID</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for email in email_list %}
+        <tr>
+        <td>
+        {% if email.id %}
+        <a href="{% url 'crits.emails.views.email_detail' email.id %}">
+            <span class="ui-icon ui-icon-script" title="View Details"></span>
+        </a>
+        {% endif %}
+        </td>
+        <td><a href="{% url 'crits.emails.views.emails_listing' %}?from={{email.from_address}}">{{ email.from_address }}</a></td>
+        <td>{{ email.to|length }}</td>
+        <td style="overflow:hidden; width:50px;">
+        <a href="{% url 'crits.emails.views.emails_listing' %}?subject={{email.subject|urlencode}}">{{ email.subject }}</a>
+        </td>
+        <td>{{ email.isodate|date:"Y/m/d"}}</td>
+        <td>
+        {% for s in email.source %}
+            {% if s.name %}
+            <a href="{% url 'crits.emails.views.emails_listing' s.name %}">{{s.name}}</a><br />
+            {%endif%}
+        {%endfor%}
+        </td>
+        <td>
+        {% for campaign in email.campaign %}
+            {% if campaign.name %}
+            <a href="{% url 'crits.emails.views.emails_listing' %}?campaign={{campaign.name}}">{{campaign.name}}</a><br />
+            {% endif %}
+        {% endfor %}
+        </td>
+        <td>
+            {{ email.id }}
+        </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>

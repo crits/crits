@@ -1,0 +1,11 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Upload Raw Data">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "crits.raw_data.views.upload_raw_data" %}'
+      method='POST' enctype="multipart/form-data"
+	  item-type="new-raw-data">
+    <table class="form">{{ upload_raw_data.as_table }}</table>
+    <div id="form-new-raw-data-results" class="form_results"></div>
+    </form>
+</div>

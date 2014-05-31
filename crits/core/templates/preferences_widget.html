@@ -1,0 +1,35 @@
+{% load url from future %}
+
+<form class="ajaxPost" action="{% url 'crits.core.views.user_preference_update' pref.section %}" 
+      method='POST' enctype="multipart/form-data" data-key="ui">{% csrf_token %}
+  <table class="vertical" width="auto">
+    <thead><H3>{{ pref.title }}</H3></thead>
+    <tbody>
+      {% if not pref.form == None %} 
+      {{ pref.form.as_table }}
+      <tr>
+	<td class="submit" colspan="2">
+	  <button name="submit">Save</button> <span class="message"></span>
+	</td>
+      </tr>
+
+      {% elif not pref.toggle == "" %}
+      <tr class="required">
+        <th>
+          {{ pref.name }}:
+        </th>
+        <td>
+	  <a href="" class="preference_toggle" action="{% url 'crits.core.views.user_preference_toggle' pref.section pref.toggle %}">
+            {% if pref.enabled %}
+	    <span title="Click to disable" class="toggle">Enabled</span>
+	    {% else %}
+	    <span title="Click to enable" class="toggle">Disabled</span>
+	    {% endif %}
+	  </a>
+        </td>
+      </tr>
+
+      {% endif %}
+    </tbody>
+  </table>
+</form>

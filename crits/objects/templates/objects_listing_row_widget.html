@@ -1,0 +1,77 @@
+{% load url from future %}
+{% load filters %}
+
+{% if object_list|length > 0 %}
+<tr>
+    <td colspan="7" class="object_spacer"></td>
+</tr>
+<tr>
+<td>
+    <b>{{ object_type|default_if_none:"Unknown" }}:</b>
+    {% if nohide == None and object_list|length > 5 %}
+        <span style="float: right;" class="ui-icon ui-icon-triangle-1-e objects_dropdown"></span>
+    {% else %}
+        <span style="float: right;" class="ui-icon ui-icon-triangle-1-s objects_dropdown"></span>
+    {% endif %}
+    <b><span class="object_type_count count">{{ object_list|length }}</span></b>
+</td>
+<td style="padding: 0px; margin:0px; border-top: 0px;" colspan="6">
+    {% if nohide == None and object_list|length > 5 %}
+            <table class='chart' id='object_listing_table' style="display: none; border: 0px;">
+    {% else %}
+            <table class='chart' id='object_listing_table' style="border: 0px;">
+    {% endif %}
+        <colgroup>
+            <col width="15%">
+            <col width="30%">
+            <col width="10%">
+            <col width="10%">
+            <col width="35%">
+            <col width="20px">
+        </colgroup>
+        <thead>
+        </thead>
+        <tbody>
+            {% for object in object_list %}
+            <tr coll="{{ subscription.type }}" oid="{{ subscription.id }}" {% if object.type != None %} name="{{ object.name }}" type="{{ object.type }}" {% endif %} vvalue="{{ object.value }}">
+                <td> {{ object.name }} </td>
+                <td>
+                    <div class="object_value">
+                    <a class="object_value_search" style="display: inline;" href="{% url 'crits.core.views.global_search_listing' %}?search_type=object&otype={{ object_type }} - {{ object.name }}&q={{ object.value|urlencode }}&force_full=1"><span name="object_value">{{ object.value }}</span></a>
+                    </div>
+                    <div class="object_value_icon">
+                    {% if object.datatype == 'file' %}
+                        <a style="display: inline;" href="{% url 'crits.core.views.download_file' object.value %}?type=object">
+                            <div class="ui-icon ui-icon-disk download_file"></div>
+                        </a>
+                    {% else %}
+                        <span class="ui-icon ui-icon-pencil edit_object_value" title="Edit Value" style="float: right;"></span>
+                        {% if object|does_field_have_indicator:relationships %}
+                            <span class="ui-icon ui-icon-circle-plus indicator_from_object" title="Add Indicator: Warning: Indicator might already exist" data-type="{{ object_type }} - {{ object.name }}" style="float: right;"></span>
+                        {% else %}
+                            <span class="ui-icon ui-icon-plusthick indicator_from_object" title="Add Indicator" data-type="{{ object_type }} - {{ object.name }}" style="float: right;"></span>
+                        {% endif %}
+                    {% endif %}
+                    </div>
+                </td>
+                <td> {{ object.date|date }} </td>
+                <td>
+                  {{ object.analyst }}
+                </td>
+                <td>
+                  <b>Name:</b> <span name="source_name" sname="{{ object.source.0.name }}">{{ object.source.0.name }}</span><br />
+                    <b>Method:</b> <span name="source_method" method="{{ object.source.0.instances.0.method }}">{{ object.source.0.instances.0.method|default:"None" }}</span><br />
+                    <b>Reference:</b> <span name="source_reference" reference="{{ object.source.0.instances.0.reference }}">{{ object.source.0.instances.0.reference|default:"None"}}</span>
+                </td>
+                <td>
+                    {% if source_add %}
+                            <div class="ui-icon ui-icon-trash deleteClick" title="Delete Object" action="{% url 'crits.objects.views.delete_this_object' %}" coll="{{ subscription.type }}" oid="{{ subscription.id }}" {% if object.type != None %} name="{{ object.name }}" type="{{ object.type }}"{% endif %} vvalue="{{ object.value }}"></div>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</td>
+</tr>
+{% endif %}

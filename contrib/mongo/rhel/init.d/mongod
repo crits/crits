@@ -1,0 +1,106 @@
+#!/bin/bash
+#
+# mongod        Startup script for the Mongodb daemon
+#
+# chkconfig: - 85 15
+# description: The mongo daemon keeps the mongodb running.
+# processname: mongod
+# config: /etc/sysconfig/mongod
+# pidfile: /var/run/mongod.pid
+#
+### BEGIN INIT INFO
+# Provides: mongod
+# Short-Description: start and stop the mongodb daemon
+# Description: The mongodb daemon keeps mongodb running.
+### END INIT INFO
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+if [ -f /etc/sysconfig/mongod ]; then
+        . /etc/sysconfig/mongod
+fi
+
+exec=/data/mongod_start.sh
+prog=mongod
+[ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
+pidfile=${PIDFILE-/var/run/mongod.pid}
+lockfile=${LOCKFILE-/var/lock/subsys/mongod}
+
+lockfile=/var/lock/subsys/$prog
+
+start() {
+    [ -x $exec ] || exit 5
+    [ -f $config ] || exit 6
+    echo -n $"Starting $prog: "
+    $exec | grep 'forked process: ' | cut -f3 -d' ' > ${pidfile}
+    retval=$?
+    echo
+    if [ $retval -eq 0 ]; then
+        touch $lockfile || retval=4
+    fi
+    return $retval
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc -p ${pidfile} $prog
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && rm -f $lockfile
+    return $retval
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    restart
+}
+
+force_reload() {
+    restart
+}
+
+rh_status() {
+    # run checks to determine if the service is running or use generic status
+    status -p ${pidfile} $prog
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    reload)
+        rh_status_q || exit 7
+        $1
+        ;;
+    force-reload)
+        force_reload
+        ;;
+    status)
+        rh_status
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+        restart
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
+        exit 2
+esac
+exit $?

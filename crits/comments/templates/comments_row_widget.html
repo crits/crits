@@ -1,0 +1,72 @@
+{% load url from future %}
+
+<tr class="comment_row">
+    <td class="key">
+    <a href="{% url 'crits.comments.views.activity' 'byuser' comment.analyst %}">{{comment.analyst}}</a><br /> ({{comment.source.0.name}})
+    </td>
+    <td>
+        <div class="comment_body">
+            <span data-field="comment"> 
+                {{ comment.comment|safe }}
+            </span>
+            {% if comment.url_key and not subscription %}
+            <!-- link to the object page -->
+            <span class="comment_button">
+                {% with obj_type=comment.obj_type %}
+                    {% if obj_type == 'Campaign' %}
+                    <a href="{% url 'crits.campaigns.views.campaign_details' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View Campaign"></a>
+                    {% elif obj_type == 'Domain' %}
+                    <a href="{% url 'crits.domains.views.domain_detail' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View Domain"></a>
+                    {% elif obj_type == 'Email' %}
+                    <a href="{% url 'crits.emails.views.email_detail' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View Email"></a>
+                    {% elif obj_type == 'Event' %}
+                    <a href="{% url 'crits.events.views.view_event' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View Event"></a>
+                    {% elif obj_type == 'Indicator' %}
+                    <a href="{% url 'crits.indicators.views.indicator' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View Indicator"></a>
+                    {% elif obj_type == 'IP' %}
+                    <a href="{% url 'crits.ips.views.ip_detail' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View IP"></a>
+                    {% elif obj_type == 'PCAP' %}
+                    <a href="{% url 'crits.pcaps.views.pcap_details' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View PCAP"></a>
+                    {% elif obj_type == 'Sample' %}
+                    <a href="{% url 'crits.samples.views.detail' comment.url_key %}" class="ui-icon ui-icon-arrowthick-1-e" title="View Sample"></a>
+                    {% endif %}
+                {% endwith %}
+            </span>
+            {% endif %}
+            {% if comment.analyst == user.username %}
+            <span class="comment_button">
+                <a href="#" title="Delete Comment" class="ui-icon ui-icon-close deleteClick" type="comment" action="{% url 'crits.comments.views.remove_comment' comment.obj_id %}" key="{{comment.created}}">
+                </a>
+            </span>
+            <span class="comment_button">
+                <a href="#" title="Edit Comment" class="ui-icon ui-icon-pencil dialogClick" dialog="comments" persona="update" 
+		   action="{% url 'crits.comments.views.add_update_comment' 'update' comment.obj_type comment.obj_id %}">
+                </a>
+            </span>
+            {% endif %}
+            <span class="comment_button">
+                <a href="#" title="Reply to Comment" class="ui-icon ui-icon-arrowreturnthick-1-w dialogClick" dialog="comments" persona="reply" replace="false" action="{% url 'crits.comments.views.add_update_comment' 'reply' comment.obj_type comment.obj_id %}">
+                </a>
+            </span>
+{% comment %}
+                <!-- add some hidden cells so the data is available to the "reply" function -->
+{% endcomment %}
+		<span style="display:none">
+		  <span data-field="parent_analyst">{{comment.analyst}}</span>
+		  <span data-field="parent_date">{{comment.created}}</span>
+		  <span data-field="url_key">{{comment.url_key}}</span>
+		</span>
+        </div>
+            <div class="comment_info">
+                    <span>Commented at: <b>{{comment.created}}</b>
+                    {% if comment.edit_date != comment.created %}-- Edited: <b>{{comment.edit_date}}</b>
+                    {% endif %}
+                    </span>
+                {% if comment.parent %}
+                    <span class="comment_in_reply_to">
+                    In reply to: <b>{{comment.parent.analyst}}</b> on <b>{{comment.parent.date}}</b>
+                    </span>
+                {% endif %}
+            </div>
+        </td>
+</tr>

@@ -1,0 +1,12 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Upload PCAP">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "crits.pcaps.views.upload_pcap" %}' 
+	  method='POST' enctype="multipart/form-data" target="pcap-iframe" 
+	  item-type="new-pcap" submit-action="default">
+    <table class="form">{{ upload_pcap.as_table }}</table>
+    <iframe name="pcap-iframe" class="file-submit-iframe" style="display:none;"></iframe>
+    </form>
+</div>
+

@@ -1,0 +1,2133 @@
+import datetime
+import json, yaml
+import StringIO
+import csv
+
+from bson import json_util, ObjectId
+from dateutil.parser import parse
+from django.conf import settings
+from django.template.loader import render_to_string
+
+from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
+from mongoengine import StringField, ListField, EmbeddedDocumentField
+from mongoengine import IntField, UUIDField, DateTimeField, ObjectIdField
+from mongoengine import DynamicField, DictField
+from mongoengine.base import BaseDocument, ValidationError
+from mongoengine.queryset import Q
+
+# Determine if we should be caching queries or not.
+if settings.QUERY_CACHING:
+    from mongoengine import QuerySet as QS
+else:
+    from mongoengine import QuerySetNoCache as QS
+
+from pprint import pformat
+
+from crits.core.user_tools import user_sources, is_admin
+from crits.core.fields import CritsDateTimeField
+from crits.core.class_mapper import class_from_id, class_from_type
+
+# Hack to fix an issue with non-cached querysets and django-tastypie-mongoengine
+# The issue is in django-tastypie-mongoengine in resources.py from what I can
+# tell.
+try:
+    from mongoengine.queryset import tranform as mongoengine_tranform
+except ImportError:
+    mongoengine_tranform = None
+
+QUERY_TERMS_ALL = getattr(mongoengine_tranform, 'MATCH_OPERATORS', (
+    'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'mod', 'all', 'size', 'exists',
+    'not', 'within_distance', 'within_spherical_distance', 'within_box',
+    'within_polygon', 'near', 'near_sphere', 'contains', 'icontains',
+    'startswith', 'istartswith', 'endswith', 'iendswith', 'exact', 'iexact',
+    'match'
+))
+
+class Query(object):
+    """
+    Query class to hold available query terms.
+    """
+
+    query_terms = dict([(query_term, None) for query_term in QUERY_TERMS_ALL])
+
+class CritsQuerySet(QS):
+    """
+    CRITs default QuerySet. Used to override methods like .only() and to extend
+    it with other methods we want to perform on a QuerySet object.
+    """
+
+    _len = None
+    query = Query()
+
+    def __len__(self):
+        """
+        Modified version of the default __len__() which allows
+        us to get the length with or without caching enabled.
+        """
+
+        if self._len is not None:
+            return self._len
+        if settings.QUERY_CACHING:
+            if self._has_more:
+                # populate the cache
+                list(self._iter_results())
+            self._len = len(self._result_cache)
+        else:
+            self._len = self.count()
+        return self._len
+
+    def only(self, *fields):
+        """
+        Modified version of the default only() which allows
+        us to add default fields we always want to include.
+        """
+
+        #Always include schema_version so we can migrate if needed.
+        if 'schema_version' not in fields:
+            fields = fields + ('schema_version',)
+        return super(CritsQuerySet, self).only(*fields)
+
+    def from_json(self, json_data):
+        """
+        Converts JSON data to unsaved objects.
+
+        Takes either a Python list of individual JSON objects or the
+        result of calling json.dumps on a Python list of Python
+        dictionaries.
+
+        :param json_data: List or result of json.dumps.
+        :type json_data: list or str
+        :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
+        """
+
+        if not isinstance(json_data, list):
+            son_data = json_util.loads(json_data)
+            return [self._document._from_son(data) for data in son_data]
+        else:
+            #Python list of JSON objects
+            return [self._document.from_json(data) for data in json_data]
+
+    def to_dict(self, excludes=[], projection=[]):
+        """
+        Converts CritsQuerySet to a list of dictionaries.
+
+        :param excludes: List fields to exclude in each document.
+        :type excludes: list
+        :param projection: List fields to limit results on.
+        :type projectsion: list
+        :returns: list of dictionaries
+        """
+
+        return [obj.to_dict(excludes,projection) for obj in self]
+
+    def to_csv(self, fields):
+        """
+        Converts CritsQuerySet to CSV formatted string.
+
+        :param fields: List fields to return for each document.
+        :type fields: list
+        :returns: str
+        """
+
+        filter_keys = [
+                       'id',
+                       'password',
+                       'password_reset',
+                       'schema_version',
+                       ]
+        if not fields:
+            fields = self[0]._data.keys()
+        # Create a local copy
+        fields = fields[:]
+        for key in filter_keys:
+            if key in fields:
+                fields.remove(key)
+        csvout = ",".join(fields) + "\n"
+        csvout += "".join(obj.to_csv(fields) for obj in self)
+        return csvout
+
+    def to_json(self, exclude=None):
+        """
+        Converts a CritsQuerySet to JSON.
+
+        :param exclude: Fields to exclude from each document.
+        :type exclude: list
+        :returns: json
+        """
+
+        return json.dumps([obj.to_dict(exclude) for obj in self],
+            default=json_handler)
+
+    def from_yaml(self, yaml_data):
+        """
+        Converts YAML data to a list of unsaved objects.
+
+        :param yaml_data: The YAML to convert.
+        :type yaml_data: list
+        :returns: list
+        """
+
+        return [self._document.from_yaml(doc) for doc in yaml_data]
+
+    def to_yaml(self, exclude=None):
+        """
+        Converts a CritsQuerySet to a list of YAML docs.
+
+        :param exclude: Fields to exclude from each document.
+        :type exclude: list
+        :returns: list
+        """
+
+        return [doc.to_yaml(exclude) for doc in self]
+
+    def sanitize_sources(self, username=None):
+        """
+        Sanitize each document in a CritsQuerySet for source information and
+        return the results as a list.
+
+        :param username: The user which requested the data.
+        :type username: str
+        :returns: list
+        """
+
+        if not username:
+            return self
+        sources = user_sources(username)
+        final_list = []
+        for doc in self:
+            doc.sanitize_sources(username, sources)
+            final_list.append(doc)
+        return final_list
+
+
+class CritsDocumentFormatter(object):
+    """
+    Class to inherit from to gain the ability to convert a top-level object
+    class to another format.
+    """
+
+    def to_json(self):
+        """
+        Return the object in JSON format.
+        """
+
+        return self.to_mongo()
+
+    def to_dict(self):
+        """
+        Return the object as a dict.
+        """
+
+        return self.to_mongo()
+
+    def __str__(self):
+        """
+        Allow us to use `print`.
+        """
+
+        return self.to_json()
+
+    def merge(self, arg_dict=None, overwrite=False, **kwargs):
+        """
+        Merge a dictionary into a top-level object class.
+
+        :param arg_dict: The dictionary to get data from.
+        :type arg_dict: dict
+        :param overwrite: Whether or not to overwrite data in the object.
+        :type overwrite: boolean
+        """
+
+        merge(self, arg_dict=arg_dict, overwrite=overwrite)
+
+
+class CritsStatusDocument(BaseDocument):
+    """
+    Inherit to add status to a top-level object.
+    """
+
+    status = StringField(default="New")
+
+    def set_status(self, status):
+        """
+        Set the status of a top-level object.
+
+        :param status: The status to set:
+                       ('New', 'In Progress', 'Analyzed', Deprecated')
+        """
+
+        if status in ('New', 'In Progress', 'Analyzed', 'Deprecated'):
+            self.status = status
+            if status == 'Deprecated' and 'actions' in self:
+                i = 0
+                while i < len(self.actions):
+                    self.actions[i].active = "off"
+                    i += 1
+
+class CritsBaseDocument(BaseDocument):
+    """
+    Inherit to add a created and modified date to a top-level object.
+    """
+
+    created = CritsDateTimeField(default=datetime.datetime.now)
+    # modified will be overwritten on save
+    modified = CritsDateTimeField()
+
+
+class CritsSchemaDocument(BaseDocument):
+    """
+    Inherit to add a schema_version to a top-level object.
+
+    Default schema_version is 0 so that later, on .save(), we can tell if a
+    document coming from the DB never had a schema_version assigned and
+    raise an error.
+    """
+
+    schema_version = IntField(default=0)
+
+
+class UnsupportedAttrs(DynamicEmbeddedDocument, CritsDocumentFormatter):
+    """
+    Inherit to allow a top-level object to store unsupported attributes.
+    """
+
+    meta = {}
+
+
+class CritsDocument(BaseDocument):
+    """
+    Mixin for adding CRITs specific functionality to the MongoEngine module.
+
+    All CRITs MongoEngine-based classes should inherit from this class
+    in addition to MongoEngine's Document.
+
+    NOTE: this class uses some undocumented methods and attributes from MongoEngine's
+    BaseDocument and may need to be revisited if/when the code is updated.
+    """
+
+    meta = {
+        'duplicate_attrs':[],
+        'migrated': False,
+        'needs_migration': False,
+        'queryset_class': CritsQuerySet
+    }
+
+    unsupported_attrs = EmbeddedDocumentField(UnsupportedAttrs)
+
+    def __init__(self, **values):
+        """
+        Override .save() and .delete() with our own custom versions.
+        """
+
+        if hasattr(self, 'save'):
+            #.save() is normally defined on a Document, not BaseDocument, so
+            #   we'll have to monkey patch to call our save.
+            self.save = self._custom_save
+        if hasattr(self, 'delete'):
+            #.delete() is normally defined on a Document, not BaseDocument, so
+            #   we'll have to monkey patch to call our delete.
+            self.delete = self._custom_delete
+        super(CritsDocument, self).__init__(**values)
+
+    def _custom_save(self, force_insert=False, validate=True, clean=False,
+        write_concern=None,  cascade=None, cascade_kwargs=None,
+        _refs=None, username=None, **kwargs):
+        """
+        Custom save function. Extended to check for valid schema versions,
+        automatically update modified times, and audit the changes made.
+        """
+
+        from crits.core.handlers import audit_entry
+        if hasattr(self, 'schema_version') and not self.schema_version:
+            #Check that documents retrieved from the DB have a recognized
+            #   schema_version
+            if not self._created:
+                raise UnrecognizedSchemaError(self)
+            #If it's a new document, set the appropriate schema version
+            elif hasattr(self, '_meta') and 'latest_schema_version' in self._meta:
+                self.schema_version = self._meta['latest_schema_version']
+        #TODO: convert this to using UTC
+        if hasattr(self, 'modified'):
+            self.modified = datetime.datetime.now()
+        do_audit = False
+        if self.id:
+            audit_entry(self, username, "save")
+        else:
+            do_audit = True
+        super(self.__class__, self).save(force_insert=force_insert,
+                                         validate=validate,
+                                         clean=clean,
+                                         write_concern=write_concern,
+                                         cascade=cascade,
+                                         cascade_kwargs=cascade_kwargs,
+                                         _refs=_refs)
+        if do_audit:
+            audit_entry(self, username, "save", new_doc=True)
+        return
+
+    def _custom_delete(self, username=None, **write_concern):
+        """
+        Custom delete function. Overridden to allow us to extend to other parts
+        of CRITs and clean up dangling relationships, comments, objects, GridFS
+        files, bucket_list counts, and favorites.
+        """
+
+        from crits.core.handlers import audit_entry, alter_bucket_list
+        audit_entry(self, username, "delete")
+        if self._has_method("delete_all_relationships"):
+            self.delete_all_relationships(username=username)
+        if self._has_method("delete_all_comments"):
+            self.delete_all_comments()
+        if self._has_method("delete_all_objects"):
+            self.delete_all_objects()
+        if self._has_method("delete_all_favorites"):
+            self.delete_all_favorites()
+        if hasattr(self, 'filedata'):
+            self.filedata.delete()
+        if hasattr(self, 'bucket_list'):
+            alter_bucket_list(self, self.bucket_list, -1)
+        super(self.__class__, self).delete()
+        return
+
+    def __setattr__(self, name, value):
+        """
+        Overriden to handle unsupported attributes.
+        """
+
+        #Make sure name is a valid field for MongoDB. Also, name cannot begin with
+        #   underscore because that indicates a private MongoEngine attribute.
+        if (not self._dynamic and hasattr(self, 'unsupported_attrs')
+            and not name in self._fields and not name.startswith('_')
+            and not name.startswith('$') and not '.' in name
+            and name not in ('save', 'delete')):
+            if not self.unsupported_attrs:
+                self.unsupported_attrs = UnsupportedAttrs()
+            self.unsupported_attrs.__setattr__(name, value)
+        else:
+            super(CritsDocument, self).__setattr__(name, value)
+
+    def _has_method(self, method):
+        """
+        Convenience method for determining if a method exists for this class.
+
+        :param method: The method to check for.
+        :type method: str
+        :returns: True, False
+        """
+
+        if hasattr(self, method) and callable(getattr(self, method)):
+            return True
+        else:
+            return False
+
+    @classmethod
+    def _from_son(cls, son, _auto_dereference=True):
+        """
+        Override the default _from_son(). Allows us to move attributes in the
+        database to unsupported_attrs if needed, validate the schema_version,
+        and automatically migrate to newer schema versions.
+        """
+
+        doc = super(CritsDocument, cls)._from_son(son, _auto_dereference)
+        #Make sure any fields that are unsupported but exist in the database
+        #   get added to the document's unsupported_attributes field.
+        #Get database names for all fields that *should* exist on the object.
+        db_fields = [val.db_field for key,val in cls._fields.iteritems()]
+        #custom __setattr__ does logic of moving fields to unsupported_fields
+        [doc.__setattr__("%s"%key, val) for key,val in son.iteritems()
+            if key not in db_fields]
+
+        #After a document is retrieved from the database, and any unsupported
+        #   fields have been moved to unsupported_attrs, make sure the original
+        #   fields will get removed from the document when it's saved.
+        if hasattr(doc, 'unsupported_attrs'):
+            if doc.unsupported_attrs is not None:
+                for attr in doc.unsupported_attrs:
+                    #mark for deletion
+                    if not hasattr(doc, '_changed_fields'):
+                        doc._changed_fields = []
+                    doc._changed_fields.append(attr)
+
+        # Check for a schema_version. Raise exception so we don't
+        # infinitely loop through attempting to migrate.
+        if hasattr(doc, 'schema_version'):
+            if doc.schema_version == 0:
+                raise UnrecognizedSchemaError(doc)
+
+        # perform migration, if needed
+        if hasattr(doc, '_meta'):
+            doc._meta['migrated'] = False
+            if doc._meta.get('needs_migration', False):
+                doc.migrate()
+                doc._meta['migrated'] = True
+            if ('schema_version' in doc and
+                'latest_schema_version' in doc._meta and
+                doc.schema_version < doc._meta['latest_schema_version']):
+                # mark for migration
+                doc._meta['needs_migration'] = True
+                # reload doc to get full document from database
+                doc.reload()
+
+        return doc
+
+    def migrate(self):
+        """
+        Should be overridden by classes which inherit this class.
+        """
+
+        pass
+
+    def merge(self, arg_dict=None, overwrite=False, **kwargs):
+        """
+        Merge a dictionary into a top-level object class.
+
+        :param arg_dict: The dictionary to get data from.
+        :type arg_dict: dict
+        :param overwrite: Whether or not to overwrite data in the object.
+        :type overwrite: boolean
+        """
+
+        merge(self, arg_dict=arg_dict, overwrite=overwrite)
+
+    def to_csv(self, fields=[],headers=False):
+        """
+        Convert a class into a CSV.
+
+        :param fields: Fields to include in the CSV.
+        :type fields: list
+        :param headers: Whether or not to write out column headers.
+        :type headers: boolean
+        :returns: str
+        """
+
+        if not fields:
+            fields = self._data.keys()
+        csv_string = StringIO.StringIO()
+        csv_wr = csv.writer(csv_string)
+        if headers:
+            csv_wr.writerow([f.encode('utf-8') for f in fields])
+        # Build the CSV Row
+        row = []
+        for field in fields:
+            if field in self._data:
+                data = ""
+                if field == "aliases" and self._has_method("get_aliases"):
+                    data = ";".join(self.get_aliases())
+                elif field == "campaign" and self._has_method("get_campaign_names"):
+                    data = ';'.join(self.get_campaign_names())
+                elif field == "source" and self._has_method("get_source_names"):
+                    data = ';'.join(self.get_source_names())
+                elif field == "tickets":
+                    data = ';'.join(self.get_tickets())
+                else:
+                    data = self._data[field]
+                    if not hasattr(data, 'encode'):
+                        # Convert non-string data types
+                        data = unicode(data)
+                row.append(data.encode('utf-8'))
+
+        csv_wr.writerow(row)
+        return csv_string.getvalue()
+
+
+    def to_dict(self, exclude=[], include=[]):
+        """
+        Return the object's _data as a python dictionary.
+
+        All fields will be converted to base python types so that
+        no MongoEngine fields remain.
+
+        :param exclude: list of fields to exclude in the result.
+        :type exclude: list
+        :param include: list of fields to include in the result.
+        :type include: list
+        :returns: dict
+        """
+
+        #MongoEngine's to_mongo() returns an object in a MongoDB friendly
+        #   dictionary format. If we have no extra processing to do, just
+        #   return that.
+        data = self.to_mongo()
+        #
+        # Include, Exclude, return
+
+        # Check projection in db_field_map
+        # After the to_mongo, the fields have changed
+        newproj = []
+        for p in include:
+            if p in self._db_field_map:
+                p = self._db_field_map[p]
+            elif p == "id":  # _id is not in the db_field_map
+                p = "_id"
+            newproj.append(p)
+
+        if include:
+            result = {}
+            for k, v in data.items():
+                if k in newproj and k not in exclude:
+                    if k == "_id":
+                        k = "id"
+                    result[k] = v
+            return result
+        elif exclude:
+            result = {}
+            for k, v in data.items():
+                if k in exclude:
+                    continue
+                if k == "_id":
+                    k = "id"
+                result[k] = v
+            return result
+        return data
+
+    def _json_yaml_convert(self, exclude=None):
+        """
+        Helper to convert to a dict before converting to JSON.
+
+        :param exclude: list of fields to exclude.
+        :type exclude: list
+        :returns: json
+        """
+
+        d = self.to_dict(exclude)
+        return json.dumps(d, default=json_handler)
+
+    @classmethod
+    def from_json(cls, json_data):
+        """
+        Converts JSON data to an unsaved document instance.
+
+        NOTE: this method already exists in mongoengine 0.8, so it can
+        be removed from here when the codebase is updated.
+
+        :returns: class which inherits from
+                  :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        """
+
+        return cls._from_son(json_util.loads(json_data))
+
+    def to_json(self, exclude=None):
+        """
+        Convert to JSON.
+
+        :param exclude: list of fields to exclude.
+        :type exclude: list
+        :returns: json
+        """
+
+        return self._json_yaml_convert(exclude)
+
+    @classmethod
+    def from_yaml(cls, yaml_data):
+        """
+        Converts YAML data to an unsaved document instance.
+
+        :returns: class which inherits from
+                  :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        """
+
+        return cls._from_son(yaml.load(yaml_data))
+
+    def to_yaml(self, exclude=None):
+        """
+        Convert to JSON.
+
+        :param exclude: list of fields to exclude.
+        :type exclude: list
+        :returns: json
+        """
+
+        return yaml.dump(yaml.load(self._json_yaml_convert(exclude)),
+            default_flow_style=False)
+
+    def __str__(self):
+        """
+        Allow us to print the class in a readable fashion.
+
+        :returns: str
+        """
+
+        return pformat(self.to_dict())
+
+    def to_stix_indicator(self):
+        """
+        Creates a STIX Indicator object from a CybOX object.
+
+        :returns: list of [<indicator>, <releasability list>]
+        """
+
+        #We can't do anything with objects that aren't convertible to CybOX.
+        if not hasattr(self, "to_cybox"):
+            return (None, None)
+
+        from stix.indicator import Indicator as S_Ind
+        from stix.common.identity import Identity
+        ind = S_Ind()
+        obs, releas = self.to_cybox()
+        for ob in obs:
+            ind.add_observable(ob)
+        #TODO: determine if a source wants its name shared. This will
+        #   probably have to happen on a per-source basis rather than a per-
+        #   object basis.
+        identity = Identity(name=settings.COMPANY_NAME)
+        ind.set_producer_identity(identity)
+        return (ind, releas)
+
+# Embedded Documents common to most classes
+
+class AnalysisConfig(DynamicEmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Analysis Configuration dictionary.
+    """
+
+    meta = {}
+
+class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Source.
+    """
+
+    class SourceInstance(EmbeddedDocument, CritsDocumentFormatter):
+        """
+        Information on the instance of this source.
+        """
+
+        analyst = StringField()
+        date = CritsDateTimeField(default=datetime.datetime.now)
+        method = StringField()
+        reference = StringField()
+
+    instances = ListField(EmbeddedDocumentField(SourceInstance))
+    name = StringField()
+
+class CritsSourceDocument(BaseDocument):
+    """
+    Inherit if you want to track source information on a top-level object.
+    """
+
+    source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
+
+    def add_source(self, source_item=None, source=None, method=None,
+                   reference=None, date=None, analyst=None):
+        """
+        Add a source instance to this top-level object.
+
+        :param source_item: An entire source instance.
+        :type source_item: :class:`crits.core.crits_mongoengine.EmbeddedSource`
+        :param source: Name of the source.
+        :type source: str
+        :param method: Method of acquisition.
+        :type method: str
+        :param reference: Reference to the data from the source.
+        :type reference: str
+        :param date: The date of acquisition.
+        :type date: datetime.datetime
+        :param analyst: The user adding the source instance.
+        :type analyst: str
+        """
+
+        s = None
+        if source and analyst:
+            if not date:
+                date = datetime.datetime.now()
+            s = EmbeddedSource()
+            s.name = source
+            i = EmbeddedSource.SourceInstance()
+            i.date = date
+            i.reference = reference
+            i.method = method
+            i.analyst = analyst
+            s.instances = [i]
+        if not isinstance(source_item, EmbeddedSource):
+            source_item = s
+        if isinstance(source_item, EmbeddedSource):
+            for c, s in enumerate(self.source):
+                if s.name == source_item.name:
+                    for i in source_item.instances:
+                        self.source[c].instances.append(i)
+                    break
+            else:
+                self.source.append(source_item)
+
+    def edit_source(self, source=None, date=None, method=None,
+                    reference=None, analyst=None):
+        """
+        Edit a source instance from this top-level object.
+
+        :param source: Name of the source.
+        :type source: str
+        :param date: The date of acquisition to match on.
+        :type date: datetime.datetime
+        :param method: Method of acquisition.
+        :type method: str
+        :param reference: Reference to the data from the source.
+        :type reference: str
+        :param analyst: The user editing the source instance.
+        :type analyst: str
+        """
+
+        if source and date:
+            for c, s in enumerate(self.source):
+                if s.name == source:
+                    for i, si in enumerate(s.instances):
+                        if si.date == date:
+                            self.source[c].instances[i].method = method
+                            self.source[c].instances[i].reference = reference
+                            self.source[c].instances[i].analyst = analyst
+
+    def remove_source(self, source=None, date=None, remove_all=False):
+        """
+        Remove a source or source instance from a top-level object.
+
+        :param source: Name of the source.
+        :type source: str
+        :param date: Date to match on.
+        :type date: datetime.datetime
+        :param remove_all: Remove all instances of this source.
+        :type remove_all: boolean
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+
+        keepone = {'success': False,
+                   'message': "Must leave at least one source for access controls.  "
+                   "If you wish to change the source, please assign a new source and then remove the old."}
+
+        if source:
+            if date or remove_all:
+                for c, s in enumerate(self.source):
+                    if s.name == source:
+                        if remove_all:
+                            if len(self.source) > 1:
+                                del self.source[c]
+                                message = "Deleted source %s" % source
+                                return {'success': True,
+                                        'message': message}
+                            else:
+                                return keepone
+                        else:
+                            for i, si in enumerate(s.instances):
+                                if si.date == date:
+                                    if len(s.instances) > 1:
+                                        del self.source[c].instances[i]
+                                        message = "Deleted instance of  %s" % source
+                                        return {'success': True,
+                                                'message': message}
+                                    else:
+                                        if len(self.source) > 1:
+                                            del self.source[c]
+                                            message = "Deleted source %s" % source
+                                            return {'success': True,
+                                                    'message': message}
+                                        else:
+                                            return keepone
+            else:
+                return {'success': False,
+                        'message': 'Not removing all and no date to find.'}
+        else:
+            return {'success': False,
+                    'message': 'No source to locate'}
+
+    def sanitize_sources(self, username=None, sources=None):
+        """
+        Sanitize the source list down to only those a user has access to see.
+
+        :param username: The user requesting this data.
+        :type username: str
+        :param sources: A list of sources the user has access to.
+        :type sources: list
+        """
+
+        if username and hasattr(self, 'source'):
+            length = len(self.source)
+            if not sources:
+                sources = user_sources(username)
+            # use slice to modify in place in case any code is referencing
+            # the source already will reflect the changes as well
+            self.source[:] = [s for s in self.source if s.name in sources]
+            # a bit of a hack but we add a poorly formatted source to the
+            # source list which has an instances length equal to the amount
+            # of sources that were sanitized out of the user's list.
+            # not tested but this has the added benefit of throwing a
+            # ValidationError if someone were to try and save() this.
+            new_length = len(self.source)
+            if length > new_length:
+                i_length = length - new_length
+                s = EmbeddedSource()
+                s.name = "Other"
+                s.instances = [0] * i_length
+                self.source.append(s)
+
+    def get_source_names(self):
+        """
+        Return a list of source names that have provided this data.
+        """
+
+        return [obj['name'] for obj in self._data['source']]
+
+
+class EmbeddedTicket(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Ticket Class.
+    """
+
+    analyst = StringField()
+    date = CritsDateTimeField(default=datetime.datetime.now)
+    ticket_number = StringField()
+
+class EmbeddedTickets(BaseDocument):
+    """
+    Embedded Tickets List.
+    """
+
+    tickets = ListField(EmbeddedDocumentField(EmbeddedTicket))
+
+    def is_ticket_exist(self, ticket_number):
+        """
+        Does this ticket already exist?
+
+        :param ticket_number: The ticket to look for.
+        :type ticket_number: str
+        :returns: True, False
+        """
+
+        for ticket in self.tickets:
+            if ticket_number == ticket.ticket_number:
+                return True;
+
+        return False;
+
+    def add_ticket(self, ticket, analyst, date=None):
+        """
+        Add a ticket to this top-level object.
+
+        :param ticket: The ticket to add.
+        :type ticket: str
+        :param analyst: The user adding this ticket.
+        :type analyst: str
+        :param date: The date for the ticket.
+        :type date: datetime.datetime.
+        """
+
+        # Track the addition or subtraction of tags.
+        # Get the bucket_list for the object, find out if this is an addition
+        # or subtraction of a bucket_list.
+        if isinstance(ticket, list) and len(ticket) == 1 and ticket[0] == '':
+            parsed_tickets = []
+        elif isinstance(ticket, (str, unicode)):
+            parsed_tickets = ticket.split(',')
+        else:
+            parsed_tickets = ticket
+
+        parsed_tickets = [ticket_number.strip() for ticket_number in parsed_tickets]
+
+        for ticket_number in parsed_tickets:
+            # prevent duplicates
+            if self.is_ticket_exist(ticket_number) == False:
+                et = EmbeddedTicket()
+                et.analyst = analyst
+                et.ticket_number = ticket_number
+                if date:
+                    et.date = date
+                self.tickets.append(et)
+
+    def edit_ticket(self, analyst, ticket_number, date=None):
+        """
+        Edit a ticket this top-level object.
+
+        :param analyst: The user editing this ticket.
+        :type analyst: str
+        :param ticket_number: The new ticket value.
+        :type ticket_number: str
+        :param date: The date for the ticket.
+        :type date: datetime.datetime.
+        """
+
+        if not date:
+            return
+        found = False
+        c = 0
+        for t in self.tickets:
+            if t.date == date:
+                found = True
+                del self.tickets[c]
+            c += 1
+        if found:
+            et = EmbeddedTicket()
+            et.analyst = analyst
+            et.ticket_number = ticket_number
+            et.date = date
+            self.tickets.append(et)
+
+    def delete_ticket(self, date=None):
+        """
+        Delete a ticket from this top-level object.
+
+        :param date: The date the ticket was added.
+        :type date: datetime.datetime
+        """
+
+        if not date:
+            return
+        c = 0
+        for t in self.tickets:
+            if t.date == date:
+                del self.tickets[c]
+            c += 1
+
+    def get_tickets(self):
+        """
+        Get the tickets for this top-level object.
+
+        :returns: list
+        """
+
+        return [obj['ticket_number'] for obj in self._data['tickets']]
+
+
+class EmbeddedCampaign(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Campaign Class.
+    """
+
+    analyst = StringField()
+    confidence = StringField(default='low')
+    date = CritsDateTimeField(default=datetime.datetime.now)
+    description = StringField()
+    name = StringField(required=True)
+
+class Releasability(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Releasability Class.
+    """
+
+    class ReleaseInstance(EmbeddedDocument, CritsDocumentFormatter):
+        """
+        Releasability Instance Class.
+        """
+
+        analyst = StringField()
+        date = DateTimeField()
+
+
+    name = StringField()
+    analyst = StringField()
+    instances = ListField(EmbeddedDocumentField(ReleaseInstance))
+
+
+class UnrecognizedSchemaError(ValidationError):
+    """
+    Error if the schema for a document is not found or unrecognized.
+    """
+
+    def __init__(self, doc, **kwargs):
+        message = "Document schema is unrecognized: %s" % doc.schema_version
+        self.schema = doc._meta['schema_doc']
+        self.doc = doc.to_dict()
+        super(UnrecognizedSchemaError, self).__init__(message=message,
+            field_name='schema_version', **kwargs)
+
+
+class EmbeddedAnalysisResult(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Analysis Result from running an analytic service.
+    """
+
+    class EmbeddedAnalysisResultLog(EmbeddedDocument, CritsDocumentFormatter):
+        """
+        Log entry for a service run.
+        """
+
+        message = StringField()
+        #TODO: this should be a datetime object
+        datetime = StringField()
+        level = StringField()
+
+
+    #TODO: these should be datetime objects, not strings
+    analyst = StringField()
+    analysis_id = UUIDField(db_field="id", binary=False)
+    analysis_type = StringField(db_field="type")
+    config = EmbeddedDocumentField(AnalysisConfig)
+    finish_date = StringField()
+    log = ListField(EmbeddedDocumentField(EmbeddedAnalysisResultLog))
+    results = ListField(DynamicField(DictField))
+    service_name = StringField()
+    source = StringField()
+    start_date = StringField()
+    status = StringField()
+    template = StringField()
+    version = StringField()
+
+
+class EmbeddedObject(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Object Class.
+    """
+
+    analyst = StringField()
+    datatype = StringField(required=True)
+    date = CritsDateTimeField(default=datetime.datetime.now)
+    name = StringField(required=True)
+    source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
+    object_type = StringField(required=True, db_field="type")
+    value = StringField(required=True)
+
+
+class EmbeddedRelationship(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Relationship Class.
+    """
+
+    relationship = StringField(required=True)
+    relationship_date = CritsDateTimeField()
+    object_id = ObjectIdField(required=True, db_field="value")
+    date = CritsDateTimeField(default=datetime.datetime.now)
+    rel_type = StringField(db_field="type", required=True)
+    analyst = StringField()
+
+
+class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
+                          CritsSchemaDocument, CritsStatusDocument, EmbeddedTickets):
+    """
+    CRITs Base Attributes Class. The main class that should be inherited if you
+    are making a new top-level object. Adds all of the standard top-level object
+    features.
+    """
+
+    analysis = ListField(EmbeddedDocumentField(EmbeddedAnalysisResult))
+    analyst = StringField()
+    bucket_list = ListField(StringField())
+    campaign = ListField(EmbeddedDocumentField(EmbeddedCampaign))
+    obj = ListField(EmbeddedDocumentField(EmbeddedObject), db_field="objects")
+    relationships = ListField(EmbeddedDocumentField(EmbeddedRelationship))
+    releasability = ListField(EmbeddedDocumentField(Releasability))
+
+    def add_campaign(self, campaign_item=None):
+        """
+        Add a campaign to this top-level object.
+
+        :param campaign_item: The campaign to add.
+        :type campaign_item: :class:`crits.core.crits_mongoengine.EmbeddedCampaign`
+        """
+
+        if isinstance(campaign_item, EmbeddedCampaign):
+            if campaign_item.name != None and campaign_item.name.strip() != '':
+                for c, campaign in enumerate(self.campaign):
+                    if campaign.name == campaign_item.name:
+                        con = {'low': 1, 'medium': 2, 'high': 3}
+                        if con[campaign.confidence] < con[campaign_item.confidence]:
+                            self.campaign[c].confidence = campaign_item.confidence
+                            self.campaign[c].analyst = campaign_item.analyst
+                        break
+                else:
+                    self.campaign.append(campaign_item)
+
+    def remove_campaign(self, campaign_name=None, campaign_date=None):
+        """
+        Remove a campaign from this top-level object.
+
+        :param campaign_name: The campaign to remove.
+        :type campaign_name: str
+        :param campaign_date: The date the campaign was added.
+        :type campaign_date: datetime.datetime.
+        """
+
+        for c, campaign in enumerate(self.campaign):
+            if campaign.name == campaign_name or campaign.date == campaign_date:
+                del self.campaign[c]
+
+    def edit_campaign(self, campaign_name=None, campaign_item=None):
+        """
+        Edit an existing Campaign. This just removes the old entry and adds a
+        new one.
+
+        :param campaign_name: The campaign to remove.
+        :type campaign_name: str
+        :param campaign_item: The campaign to add.
+        :type campaign_item: :class:`crits.core.crits_mongoengine.EmbeddedCampaign`
+        """
+
+        if isinstance(campaign_item, EmbeddedCampaign):
+            self.remove_campaign(campaign_name=campaign_name,
+                                 campaign_date=campaign_item.date)
+            self.add_campaign(campaign_item=campaign_item)
+
+    def add_bucket_list(self, tags, analyst, append=True):
+        """
+        Add buckets to this top-level object.
+
+        :param tags: The buckets to be added.
+        :type tags: list, str
+        :param analyst: The analyst adding these buckets.
+        :type analyst: str
+        :param append: Whether or not to replace or append these buckets.
+        :type append: boolean
+        """
+
+        from crits.core.handlers import alter_bucket_list
+        # Track the addition or subtraction of tags.
+        # Get the bucket_list for the object, find out if this is an addition
+        # or subtraction of a bucket_list.
+        if isinstance(tags, list) and len(tags) == 1 and tags[0] == '':
+            parsed_tags = []
+        elif isinstance(tags, (str, unicode)):
+            parsed_tags = tags.split(',')
+        else:
+            parsed_tags = tags
+
+        parsed_tags = [t.strip() for t in parsed_tags]
+
+        names = None
+        if len(self.bucket_list) >= len(parsed_tags):
+            names = [x for x in self.bucket_list if x not in parsed_tags and x != '']
+            val = -1
+        else:
+            names = [x for x in parsed_tags if x not in self.bucket_list and x != '']
+            val = 1
+
+        if names:
+            alter_bucket_list(self, names, val)
+
+        if append:
+            for t in parsed_tags:
+                if t not in self.bucket_list:
+                    self.bucket_list.append(t)
+        else:
+            self.bucket_list = parsed_tags
+
+    def get_bucket_list_string(self):
+        """
+        Collapse the list of buckets into a single comma-separated string.
+
+        :returns: str
+        """
+
+        return ','.join(str(x) for x in self.bucket_list)
+
+    def get_comments(self):
+        """
+        Get the comments for this top-level object.
+
+        :returns: list
+        """
+
+        from crits.comments.handlers import get_comments
+        comments = get_comments(self.id, self._meta['crits_type'])
+        return comments
+
+    def delete_all_comments(self):
+        """
+        Delete all comments for this top-level object.
+        """
+
+        from crits.comments.comment import Comment
+        Comment.objects(obj_id=self.id,
+                        obj_type=self._meta['crits_type']).delete()
+
+    def add_object(self, object_type, name, value, source, method, reference,
+                   analyst, object_item=None):
+        """
+        Add an object to this top-level object.
+
+        :param object_type: The Object Type being added.
+        :type object_type: str
+        :param name: The name of the object being added.
+        :type name: str
+        :param value: The value of the object being added.
+        :type value: str
+        :param source: The name of the source adding this object.
+        :type source: str
+        :param method: The method in which the object was added or gathered.
+        :type method: str
+        :param reference: A reference to the original object.
+        :type reference: str
+        :param analyst: The user adding this object.
+        :type analyst: str
+        :param object_item: An entire object ready to be added.
+        :type object_item: :class:`crits.core.crits_mongoengine.EmbeddedObject`
+        """
+
+        if not isinstance(object_item, EmbeddedObject):
+            from crits.objects.handlers import get_objects_datatype
+            object_item = EmbeddedObject()
+            object_item.analyst = analyst
+            object_item.datatype = get_objects_datatype(name,
+                                                        object_type)
+            object_item.name = name
+            object_item.source = [create_embedded_source(source,
+                                                         method=method,
+                                                         reference=reference,
+                                                         analyst=analyst)]
+            object_item.object_type = object_type
+            object_item.value = value
+        for o in self.obj:
+            if o.name == name and o.value == value:
+                break
+        else:
+            self.obj.append(object_item)
+
+    def remove_object(self, object_type, name, value):
+        """
+        Remove an object from this top-level object.
+
+        :param object_type: The type of the object being removed.
+        :type object_type: str
+        :param name: The name of the object being removed.
+        :type name: str
+        :param value: The value of the object being removed.
+        :type value: str
+        """
+
+        for c, o in enumerate(self.obj):
+            if (o.name == name and
+                o.object_type == object_type and
+                o.value == value):
+                from crits.objects.handlers import delete_object_file
+                del self.obj[c]
+                delete_object_file(value)
+
+    def delete_all_objects(self):
+        """
+        Delete all objects for this top-level object.
+        """
+
+        from crits.objects.handlers import delete_object_file
+        for o in self.obj:
+            delete_object_file(o.value)
+        self.obj = []
+
+    def delete_all_favorites(self):
+        """
+        Delete all favorites for this top-level object.
+        """
+
+        from crits.core.user import CRITsUser
+        users = CRITsUser.objects()
+        for user in users:
+            type_ = self._meta['crits_type']
+            if type_ in user.favorites and str(self.id) in user.favorites[type_]:
+                user.favorites[type_].remove(str(self.id))
+                user.save()
+
+    def update_object_value(self, object_type, name, value, new_value):
+        """
+        Update the value for an object on this top-level object.
+
+        :param object_type: The type of the object being updated.
+        :type object_type: str
+        :param name: The name of the object being updated.
+        :type name: str
+        :param value: The value of the object being updated.
+        :type value: str
+        :param new_value: The new value of the object being updated.
+        :type new_value: str
+        """
+
+        for c, o in enumerate(self.obj):
+            if (o.name == name and
+                o.object_type == object_type and
+                o.value == value):
+                self.obj[c].value = new_value
+                break
+
+    def update_object_source(self, object_type, name, value,
+                             new_source=None, new_method=None,
+                             new_reference=None, analyst=None):
+        """
+        Update the source for an object on this top-level object.
+
+        :param object_type: The type of the object being updated.
+        :type object_type: str
+        :param name: The name of the object being updated.
+        :type name: str
+        :param value: The value of the object being updated.
+        :type value: str
+        :param new_source: The name of the new source.
+        :type new_source: str
+        :param new_method: The method of the new source.
+        :type new_method: str
+        :param new_reference: The reference of the new source.
+        :type new_reference: str
+        :param analyst: The user updating the source.
+        :type analyst: str
+        """
+
+        for c, o in enumerate(self.obj):
+            if (o.name == name and
+                o.object_type == object_type and
+                o.value == value):
+                if not analyst:
+                    analyst = self.obj[c].source[0].intances[0].analyst
+                source = [create_embedded_source(new_source,
+                                                 method=new_method,
+                                                 reference=new_reference,
+                                                 analyst=analyst)]
+                self.obj[c].source = source
+                break
+
+    def format_campaign(self, campaign, analyst):
+        """
+        Render a campaign to HTML to prepare for inclusion in a template.
+
+        :param campaign: The campaign to templetize.
+        :type campaign: :class:`crits.core.crits_mongoengine.EmbeddedCampaign`
+        :param analyst: The user requesting the Campaign.
+        :type analyst: str
+        :returns: str
+        """
+
+        html = render_to_string('campaigns_display_row_widget.html',
+                                {'campaign': campaign,
+                                 'hit': self,
+                                 'obj': None,
+                                 'admin': is_admin(analyst),
+                                 'relationship': {'type': self._meta['crits_type']}})
+        return html
+
+    def sort_objects(self):
+        """
+        Sort the objects for this top-level object.
+
+        :returns: dict
+        """
+
+        o_dict = dict((o.object_type,[]) for o in self.obj)
+        o_dict['Other'] = 0
+        o_dict['Count'] = len(self.obj)
+        for o in self.obj:
+            o_dict[o.object_type].append(o.to_dict())
+        return o_dict
+
+    def add_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
+                         rel_date=None, analyst=None, get_rels=False):
+        """
+        Add a relationship to this top-level object. If rel_item is provided it
+        will be used, otherwise rel_id and type_ must be provided.
+
+        :param rel_item: The top-level object to relate to.
+        :type rel_item: class which inherits from
+                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        :param rel_id: The ObjectId of the top-level object to relate to.
+        :type rel_id: str
+        :param type_: The type of top-level object to relate to.
+        :type type_: str
+        :param rel_type: The type of relationship.
+        :type rel_type: str
+        :param rel_date: The date this relationship applies.
+        :type rel_date: datetime.datetime
+        :param analyst: The user forging this relationship.
+        :type analyst: str
+        :param get_rels: Return the relationships after forging.
+        :type get_rels: boolean
+        :returns: dict with keys "success" (boolean) and "message" (str if
+                  failed, dict if successful)
+        """
+
+        got_rel = True
+        if not rel_item:
+            got_rel = False
+            if isinstance(rel_id, basestring) and isinstance(type_, basestring):
+                rel_item = class_from_id(type_, rel_id)
+            elif isinstance(rel_id, ObjectId) and isinstance(type_, basestring):
+                rel_item = class_from_id(type_, str(rel_id))
+            else:
+                return {'success': False,
+                        'message': 'Could not find object'}
+        if rel_item and rel_type:
+            # get reverse relationship
+            r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
+            if len(r) == 0:
+                return {'success': False,
+                        'message': 'Could not find relationship type'}
+            else:
+                r = r.first()
+            rev_type = r.reverse if rel_type == r.forward else r.forward
+            date = datetime.datetime.now()
+
+            # setup the relationship for me
+            my_rel = EmbeddedRelationship()
+            my_rel.relationship = rel_type
+            my_rel.rel_type = rel_item._meta['crits_type']
+            my_rel.analyst = analyst
+            my_rel.date = date
+            my_rel.relationship_date = rel_date
+            my_rel.object_id = rel_item.id
+
+            # setup the relationship for them
+            their_rel = EmbeddedRelationship()
+            their_rel.relationship = rev_type
+            their_rel.rel_type = self._meta['crits_type']
+            their_rel.analyst = analyst
+            their_rel.date = date
+            their_rel.relationship_date = rel_date
+            their_rel.object_id = self.id
+
+            # check for existing relationship before
+            # blindly adding them
+            for r in self.relationships:
+                if rel_date:
+                    if (r.object_id == my_rel.object_id
+                        and r.relationship == my_rel.relationship
+                        and r.relationship_date == my_rel.relationship_date
+                        and r.rel_type == my_rel.rel_type):
+                        return {'success': False,
+                                'message': 'Left relationship already exists'}
+                else:
+                    if (r.object_id == my_rel.object_id
+                        and r.relationship == my_rel.relationship
+                        and r.rel_type == my_rel.rel_type):
+                        return {'success': False,
+                                'message': 'Left relationship already exists'}
+            self.relationships.append(my_rel)
+            for r in rel_item.relationships:
+                if rel_date:
+                    if (r.object_id == their_rel.object_id
+                        and r.relationship == their_rel.relationship
+                        and r.relationship_date == their_rel.relationship_date
+                        and r.rel_type == their_rel.rel_type):
+                        return {'success': False,
+                                'message': 'Right relationship already exists'}
+                else:
+                    if (r.object_id == their_rel.object_id
+                        and r.relationship == their_rel.relationship
+                        and r.rel_type == their_rel.rel_type):
+                        return {'success': False,
+                                'message': 'Right relationship already exists'}
+            rel_item.relationships.append(their_rel)
+            if not got_rel:
+                rel_item.save(username=analyst)
+            if get_rels:
+                return {'success': True,
+                        'message': self.sort_relationships(analyst, meta=True)}
+            else:
+                return {'success': True,
+                        'message': 'Relationship forged'}
+        else:
+            return {'success': False,
+                    'message': 'Need valid object and relationship type'}
+
+    def _modify_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
+                             rel_date=None, new_type=None, new_date=None,
+                             modification=None, analyst=None):
+        """
+        Modify a relationship to this top-level object. If rel_item is provided it
+        will be used, otherwise rel_id and type_ must be provided.
+
+        :param rel_item: The top-level object to relate to.
+        :type rel_item: class which inherits from
+                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        :param rel_id: The ObjectId of the top-level object to relate to.
+        :type rel_id: str
+        :param type_: The type of top-level object to relate to.
+        :type type_: str
+        :param rel_type: The type of relationship.
+        :type rel_type: str
+        :param rel_date: The date this relationship applies.
+        :type rel_date: datetime.datetime
+        :param new_type: The new relationship type.
+        :type new_type: str
+        :param new_date: The new relationship date.
+        :type new_date: datetime.datetime
+        :param modification: What type of modification this is ("type",
+                             "delete", "date").
+        :type modification: str
+        :param analyst: The user forging this relationship.
+        :type analyst: str
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+
+        got_rel = True
+        if not rel_item:
+            got_rel = False
+            if isinstance(rel_id, basestring) and isinstance(type_, basestring):
+                rel_item = class_from_id(type_, rel_id)
+            else:
+                return {'success': False,
+                        'message': 'Could not find object'}
+        if isinstance(new_date, basestring):
+            new_date = parse(new_date, fuzzy=True)
+        if rel_item and rel_type and modification:
+            # get reverse relationship
+            r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
+            if len(r) == 0:
+                return {'success': False,
+                        'message': 'Could not find relationship type'}
+            else:
+                r = r.first()
+            rev_type = r.reverse if rel_type == r.forward else r.forward
+            if modification == "type":
+                # get new reverse relationship
+                r = RelationshipType.objects(Q(forward=new_type) | Q(reverse=new_type))
+                if len(r) == 0:
+                    return {'success': False,
+                            'message': 'Could not find reverse relationship type'}
+                else:
+                    r = r.first()
+                new_rev_type = r.reverse if new_type == r.forward else r.forward
+            for c, r in enumerate(self.relationships):
+                if rel_date:
+                    if (r.object_id == rel_item.id
+                        and r.relationship == rel_type
+                        and r.relationship_date == rel_date
+                        and r.rel_type == rel_item._meta['crits_type']):
+                        if modification == "type":
+                            self.relationships[c].relationship = new_type
+                        elif modification == "date":
+                            self.relationships[c].relationship_date = new_date
+                        elif modification == "delete":
+                            del self.relationships[c]
+                else:
+                    if (r.object_id == rel_item.id
+                        and r.relationship == rel_type
+                        and r.rel_type == rel_item._meta['crits_type']):
+                        if modification == "type":
+                            self.relationships[c].relationship = new_type
+                        elif modification == "date":
+                            self.relationships[c].relationship_date = new_date
+                        elif modification == "delete":
+                            del self.relationships[c]
+            for c, r in enumerate(rel_item.relationships):
+                if rel_date:
+                    if (r.object_id == self.id
+                        and r.relationship == rev_type
+                        and r.relationship_date == rel_date
+                        and r.rel_type == self._meta['crits_type']):
+                        if modification == "type":
+                            rel_item.relationships[c].relationship = new_rev_type
+                        elif modification == "date":
+                            rel_item.relationships[c].relationship_date = new_date
+                        elif modification == "delete":
+                            del rel_item.relationships[c]
+                else:
+                    if (r.object_id == self.id
+                        and r.relationship == rev_type
+                        and r.rel_type == self._meta['crits_type']):
+                        if modification == "type":
+                            rel_item.relationships[c].relationship = new_rev_type
+                        elif modification == "date":
+                            rel_item.relationships[c].relationship_date = new_date
+                        elif modification == "delete":
+                            del rel_item.relationships[c]
+            if not got_rel:
+                rel_item.save(username=analyst)
+            if modification == "delete":
+                return {'success': True,
+                        'message': 'Relationship deleted'}
+            else:
+                return {'success': True,
+                        'message': 'Relationship modified'}
+        else:
+            return {'success': False,
+                    'message': 'Need valid object and relationship type'}
+
+    def edit_relationship_date(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
+                               rel_date=None, new_date=None, analyst=None):
+        """
+        Modify a relationship date for a relationship to this top-level object.
+        If rel_item is provided it will be used, otherwise rel_id and type_ must
+        be provided.
+
+        :param rel_item: The top-level object to relate to.
+        :type rel_item: class which inherits from
+                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        :param rel_id: The ObjectId of the top-level object to relate to.
+        :type rel_id: str
+        :param type_: The type of top-level object to relate to.
+        :type type_: str
+        :param rel_type: The type of relationship.
+        :type rel_type: str
+        :param rel_date: The date this relationship applies.
+        :type rel_date: datetime.datetime
+        :param new_date: The new relationship date.
+        :type new_date: datetime.datetime
+        :param analyst: The user editing this relationship.
+        :type analyst: str
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+
+        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
+                             type_=type_, rel_type=rel_type,
+                             rel_date=rel_date, new_date=new_date,
+                             modification="date", analyst=analyst)
+
+    def edit_relationship_type(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
+                               rel_date=None, new_type=None, analyst=None):
+        """
+        Modify a relationship type for a relationship to this top-level object.
+        If rel_item is provided it will be used, otherwise rel_id and type_ must
+        be provided.
+
+        :param rel_item: The top-level object to relate to.
+        :type rel_item: class which inherits from
+                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        :param rel_id: The ObjectId of the top-level object to relate to.
+        :type rel_id: str
+        :param type_: The type of top-level object to relate to.
+        :type type_: str
+        :param rel_type: The type of relationship.
+        :type rel_type: str
+        :param rel_date: The date this relationship applies.
+        :type rel_date: datetime.datetime
+        :param new_type: The new relationship type.
+        :type new_type: str
+        :param analyst: The user editing this relationship.
+        :type analyst: str
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+
+        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
+                             type_=type_, rel_type=rel_type,
+                             rel_date=rel_date, new_type=new_type,
+                             modification="type", analyst=analyst)
+
+    def delete_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
+                            rel_date=None, analyst=None, *args, **kwargs):
+        """
+        Delete a relationship from a relationship to this top-level object.
+        If rel_item is provided it will be used, otherwise rel_id and type_ must
+        be provided.
+
+        :param rel_item: The top-level object to remove relationship to.
+        :type rel_item: class which inherits from
+                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        :param rel_id: The ObjectId of the top-level object to relate to.
+        :type rel_id: str
+        :param type_: The type of top-level object to relate to.
+        :type type_: str
+        :param rel_type: The type of relationship.
+        :type rel_type: str
+        :param rel_date: The date this relationship applies.
+        :type rel_date: datetime.datetime
+        :param analyst: The user removing this relationship.
+        :type analyst: str
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+
+        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
+                             type_=type_, rel_type=rel_type,
+                             rel_date=rel_date, analyst=analyst,
+                             modification="delete")
+
+    def delete_all_relationships(self, username=None):
+        """
+        Delete all relationships from this top-level object.
+
+        :param username: The user deleting all of the relationships.
+        :type username: str
+        """
+
+        for r in self.relationships:
+            if r.relationship_date:
+                self.delete_relationship(rel_id=str(r.object_id),
+                                         type_=r.rel_type,
+                                         rel_type=r.relationship,
+                                         rel_date=r.relationship_date,
+                                         analyst=username)
+            else:
+                self.delete_relationship(rel_id=str(r.object_id),
+                                         type_=r.rel_type,
+                                         rel_type=r.relationship,
+                                         analyst=username)
+
+    def sort_relationships(self, username=None, meta=False):
+        """
+        Sort the relationships for inclusion in a template.
+
+        :param username: The user requesting the relationships.
+        :type username: str
+        :param meta: Limit the results to only a subset of metadata.
+        :type meta: boolean
+        :returns: dict
+        """
+
+        if len(self.relationships) < 1:
+            return {}
+        rel_dict = dict((r.rel_type,[]) for r in self.relationships)
+        query_dict = {
+            'Campaign': ('id', 'name'),
+            'Certificate': ('id', 'md5', 'filename', 'description', 'campaign'),
+            'Domain': ('id', 'domain'),
+            'Email': ('id', 'from_address', 'sender', 'subject', 'campaign'),
+            'Event': ('id', 'title', 'event_type', 'description', 'campaign'),
+            'Indicator': ('id', 'ind_type', 'value', 'campaign'),
+            'IP': ('id', 'ip', 'campaign'),
+            'PCAP': ('id', 'md5', 'filename', 'description', 'campaign'),
+            'RawData': ('id', 'title', 'data_type', 'tool', 'description',
+                        'version', 'campaign'),
+            'Sample': ('id',
+                       'md5',
+                       'filename',
+                       'mimetype',
+                       'size',
+                       'backdoor',
+                       'exploit',
+                       'campaign'),
+            'Target': ('id', 'firstname', 'lastname', 'email_address', 'email_count'),
+        }
+        rel_dict['Other'] = 0
+        rel_dict['Count'] = len(self.relationships)
+        if not meta:
+            for r in self.relationships:
+                rd = r.to_dict()
+                rel_dict[rd['type']].append(rd)
+            return rel_dict
+        elif username:
+            user_source_access = user_sources(username)
+            for r in self.relationships:
+                rd = r.to_dict()
+                obj_class = class_from_type(rd['type'])
+                # TODO: these should be limited to the fields above, or at least exclude larger
+                # fields that we don't need.
+                fields = query_dict.get(rd['type'])
+                if r.rel_type not in ["Campaign", "Target"]:
+                    obj = obj_class.objects(id=rd['value'],
+                            source__name__in=user_source_access).only(*fields).first()
+                else:
+                    obj = obj_class.objects(id=rd['value']).only(*fields).first()
+                if obj:
+                    # we can't add and remove attributes on the class
+                    # so convert it to a dict that we can manipulate.
+                    result = obj.to_dict()
+                    if "_id" in result:
+                        result["id"] = result["_id"]
+                    if "type" in result:
+                        result["ind_type"] = result["type"]
+                        del result["type"]
+                    if "value" in result:
+                        result["ind_value"] = result["value"]
+                        del result["value"]
+                    # turn this relationship into a dict so we can update
+                    # it with the object information
+                    rd.update(result)
+                    rel_dict[rd['type']].append(rd)
+                else:
+                    rel_dict['Other'] += 1
+            return rel_dict
+        else:
+            return {}
+
+    def get_relationship_objects(self, username=None, sources=None):
+        """
+        Return the top-level objects this top-level object is related to.
+
+        :param username: The user requesting these top-level objects.
+        :type username: str
+        :param sources: The user's source access list to limit by.
+        :type sources: list
+        :returns: list
+        """
+
+        results = []
+        if not username:
+            return results
+        if not hasattr(self, 'relationships'):
+            return results
+        if not sources:
+            sources = user_sources(username)
+        for r in self.relationships:
+            rd = r.to_dict()
+            obj_class = class_from_type(rd['type'])
+            if r.rel_type not in ["Campaign", "Target"]:
+                obj = obj_class.objects(id=rd['value'],
+                        source__name__in=sources).first()
+            else:
+                obj = obj_class.objects(id=rd['value']).first()
+            if obj:
+                results.append(obj)
+        return results
+
+    def add_releasability(self, source_item=None, analyst=None, *args, **kwargs):
+        """
+        Add a source as releasable for this top-level object.
+
+        :param source_item: The source to allow releasability for.
+        :type source_item: dict or
+                           :class:`crits.core.crits_mongoengine.Releasability`
+        :param analyst: The user marking this as releasable.
+        :type analyst: str
+        """
+
+        if isinstance(source_item, Releasability):
+            rels = self.releasability
+            for r in rels:
+                if r.name == source_item.name:
+                    break
+            else:
+                if analyst:
+                    source_item.analyst = analyst
+                self.releasability.append(source_item)
+        elif isinstance(source_item, dict):
+            rels = self.releasability
+            for r in rels:
+                if r.name == source_item['name']:
+                    break
+            else:
+                if analyst:
+                    source_item['analyst'] = analyst
+                self.releasability.append(Releasability(**source_item))
+        else:
+            rel = Releasability(**kwargs)
+            if analyst:
+                rel.analyst = analyst
+            rels = self.releasability
+            for r in rels:
+                if r.name == rel.name:
+                    break
+            else:
+                self.releasability.append(rel)
+
+    def add_releasability_instance(self, name=None, instance=None, *args, **kwargs):
+        """
+        Add an instance of releasing this top-level object to a source.
+
+        :param name: The name of the source that received the data.
+        :type name: str
+        :param instance: The instance of releasability.
+        :type instance:
+            :class:`crits.core.crits_mongoengine.Releasability.ReleaseInstance`
+        """
+
+        if isinstance(instance, Releasability.ReleaseInstance):
+            rels = self.releasability
+            for c, r in enumerate(rels):
+                if r.name == name:
+                    rels[c].instances.append(instance)
+            self.releasability = rels
+
+    def remove_releasability(self, name=None, *args, **kwargs):
+        """
+        Remove a source as releasable for this top-level object.
+
+        :param name: The name of the source to remove from releasability.
+        :type name: str
+        """
+
+        if isinstance(name, basestring):
+            rels = self.releasability
+            for c, r in enumerate(rels):
+                if r.name == name and len(r.instances) == 0:
+                    del rels[c]
+            self.releasability = rels
+
+    def remove_releasability_instance(self, name=None, date=None, *args, **kwargs):
+        """
+        Remove an instance of releasing this top-level object to a source.
+
+        :param name: The name of the source.
+        :type name: str
+        :param date: The date of the instance to remove.
+        :type date: datetime.datetime
+        """
+
+        rels = self.releasability
+        for c, r in enumerate(rels):
+            if r.name == name:
+                for cc, i in enumerate(r.instances):
+                    if not isinstance(date, datetime.datetime):
+                        date = parse(date, fuzzy=True)
+                    if i.date == date:
+                        del rels[c].instances[cc]
+        self.releasability = rels
+
+    def sanitize_relationships(self, username=None, sources=None):
+        """
+        Sanitize the relationships list down to only what the user can see based
+        on source access.
+
+        :param username: The user to sanitize for.
+        :type username: str
+        :param source: The user's source list.
+        :type source: list
+        """
+
+        if username:
+            if not sources:
+                sources = user_sources(username)
+            final_rels = []
+            for r in self.relationships:
+                rd = r.to_dict()
+                obj_class = class_from_type(rd['type'])
+                if r.rel_type not in ["Campaign", "Target"]:
+                    obj = obj_class.objects(id=rd['value'],
+                            source__name__in=sources).only('id').first()
+                else:
+                    obj = obj_class.objects(id=rd['value']).only('id').first()
+                if obj:
+                    final_rels.append(r)
+            self.relationships = final_rels
+
+    def sanitize_releasability(self, username=None, sources=None):
+        """
+        Sanitize releasability list down to only what the user can see based
+        on source access.
+
+        :param username: The user to sanitize for.
+        :type username: str
+        :param source: The user's source list.
+        :type source: list
+        """
+
+        if username:
+            if not sources:
+                sources = user_sources(username)
+            # use slice to modify in place in case any code is referencing
+            # the source already will reflect the changes as well
+            self.releasability[:] = [r for r in self.releasability if r.name in sources]
+
+    def sanitize(self, username=None, sources=None, rels=True):
+        """
+        Sanitize this top-level object down to only what the user can see based
+        on source access.
+
+        :param username: The user to sanitize for.
+        :type username: str
+        :param source: The user's source list.
+        :type source: list
+        :param rels: Whether or not to sanitize relationships.
+        :type rels: boolean
+        """
+
+        if username:
+            if not sources:
+                sources = user_sources(username)
+            if hasattr(self, 'source'):
+                self.sanitize_sources(username, sources)
+            if hasattr(self, 'releasability'):
+                self.sanitize_releasability(username, sources)
+            if rels:
+                if hasattr(self, 'relationships'):
+                    self.sanitize_relationships(username, sources)
+
+    def get_campaign_names(self):
+        """
+        Get the campaigns associated with this top-level object as a list of
+        names.
+
+        :returns: list
+        """
+
+        return [obj['name'] for obj in self._data['campaign']]
+
+
+# Needs to be here to prevent circular imports with CritsBaseAttributes
+class RelationshipType(CritsDocument, CritsSchemaDocument, Document):
+    """
+    Relationship Type Class.
+    """
+
+    meta = {
+        "collection": settings.COL_RELATIONSHIP_TYPES,
+        "crits_type": 'RelationshipType',
+        "latest_schema_version": 1,
+        "minify_defaults": [
+            'forward',
+            'reverse',
+            'active',
+            'description',
+        ],
+        "schema_doc": {
+            'forward': 'The forward (left) side of the relationship pair',
+            'reverse': 'The reverse (right) side of the relationship pair',
+            'description': 'The description of the relationship pair',
+            'active': 'Enabled in the UI (on/off)'
+        },
+    }
+
+    forward = StringField(required=True)
+    reverse = StringField(required=True)
+    active = StringField(required=True)
+    description = StringField()
+
+    def migrate(self):
+        pass
+
+def merge(self, arg_dict=None, overwrite=False, **kwargs):
+    """
+    Merge attributes into self.
+
+    If arg_dict is supplied, it should be either a dictionary or
+    another object that can be iterated over like a dictionary's
+    iteritems (e.g., a list of two-tuples).
+
+    If arg_dict is not supplied, attributes can also be defined with
+    named keyword arguments; attributes supplied as keyword arguments
+    will be ignored if arg_dict is not None.
+
+    If overwrite is True, any attributes passed to merge will be
+    assigned to the object, regardless of whether those attributes
+    already exist. If overwrite is False, pre-existing attributes
+    will be preserved.
+    """
+
+    if not arg_dict:
+        arg_dict = kwargs
+    if isinstance(arg_dict, dict):
+        iterator = arg_dict.iteritems()
+    else:
+        iterator = arg_dict
+
+    if overwrite:
+        for k,v in iterator:
+            if k != '_id' and k != 'schema_version':
+                self.__setattr__(k, v)
+    else:
+        for k,v in iterator:
+            check = getattr(self, k, None)
+            if not check:
+                self.__setattr__(k, v)
+            elif hasattr(self, '_meta') and 'duplicate_attrs' in self._meta:
+                self._meta['duplicate_attrs'].append((k,v))
+
+# this is a duplicate of the function in data_tools to prevent
+# circular imports. long term the one in data_tools might go
+# away as most json conversion will happen using .to_json()
+# on the object.
+def json_handler(obj):
+    """
+    Handles converting datetimes and Mongo ObjectIds to string.
+
+    Usage: json.dumps(..., default=json_handler)
+    """
+    if isinstance(obj, datetime.datetime):
+        return datetime.datetime.strftime(obj, settings.PY_DATETIME_FORMAT)
+    elif isinstance(obj, ObjectId):
+        return str(obj)
+
+def create_embedded_source(name, source_instance=None, date=None,
+                           reference=None, method=None, analyst=None):
+    """
+    Create an EmbeddedSource object. If source_instance is provided it will be
+    used, otherwise date, reference, and method will be used.
+
+    :param name: The name of the source.
+    :type name: str
+    :param source_instance: An instance of this source.
+    :type source_instance:
+        :class:`crits.core.crits_mongoengine.EmbeddedSource.SourceInstance`
+    :param date: The date for the source instance.
+    :type date: datetime.datetime
+    :param reference: The reference for this source instance.
+    :type reference: str
+    :param method: The method for this source instance.
+    :type method: str
+    :param analyst: The user creating this embedded source.
+    :type analyst: str
+    :returns: None, :class:`crits.core.crits_mongoengine.EmbeddedSource`
+    """
+
+    if isinstance(name, basestring):
+        s = EmbeddedSource()
+        s.name = name
+        if isinstance(source_instance, EmbeddedSource.SourceInstance):
+            s.instances = [source_instance]
+        else:
+            if not date:
+                date = datetime.datetime.now()
+            i = EmbeddedSource.SourceInstance()
+            i.date = date
+            i.reference = reference
+            i.method = method
+            i.analyst = analyst
+            s.instances = [i]
+        return s
+    else:
+        return None

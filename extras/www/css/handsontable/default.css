@@ -1,0 +1,138 @@
+.handsontable table tbody tr td {
+  white-space: pre-line;
+  max-width: 350px;
+}
+
+.handsontable .requiredColumn {
+  color: red;
+  font-weight: bold;
+}
+
+.handsontable .htSuccess {
+  //-webkit-transition: background 0.75s ease;
+  //transition: background 0.75s ease;
+  background-color: lightgreen;
+}
+
+.handsontable .htDuplicate {
+  //-webkit-transition: background 0.75s ease;
+  //transition: background 0.75s ease;
+  background-color: lightpink;
+}
+
+.htLDuplicate {
+  //-webkit-transition: background 0.75s ease;
+  //transition: background 0.75s ease;
+  background-color: #46F0FF;
+}
+
+.htLDuplicate.htDuplicate {
+  //-webkit-transition: background 0.75s ease;
+  //transition: background 0.75s ease;
+  background-color: #46F0FF;
+  background-repeat: repeat-y;
+  background: -webkit-gradient(linear, left bottom, right bottom, from(#46F0FF), to(lightpink));
+  background: -webkit-linear-gradient(bottom, #46F0FF, lightpink);
+  background: -moz-linear-gradient(bottom, #46F0FF, lightpink);
+  background: -ms-linear-gradient(bottom, #46F0FF, lightpink);
+  background: -o-linear-gradient(bottom, #46F0FF, lightpink);
+}
+
+.htLDuplicate.htSuccess {
+  //-webkit-transition: background 0.75s ease;
+  //transition: background 0.75s ease;
+  background-color: #46F0FF;
+}
+
+.htLDuplicate.htInvalid {
+/*  background: #46F0FF;  Old browsers
+  background: -moz-linear-gradient(top, #46F0FF 1%, #46F0FF 40%, #FF4C42 60%, #FF4C42 100%);  FF3.6+
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(1%,#46F0FF), color-stop(40%,#46F0FF), color-stop(60%,#FF4C42), color-stop(100%,#FF4C42));  Chrome,Safari4+
+  background: -webkit-linear-gradient(top, #46F0FF 1%,#46F0FF 40%,#FF4C42 60%,#FF4C42 100%);  Chrome10+,Safari5.1+
+  background: -o-linear-gradient(top, #46F0FF 1%,#46F0FF 40%,#FF4C42 60%,#FF4C42 100%);  Opera 11.10+
+  background: -ms-linear-gradient(top, #46F0FF 1%,#46F0FF 40%,#FF4C42 60%,#FF4C42 100%);  IE10+
+  background: linear-gradient(to bottom, #46F0FF 1%,#46F0FF 40%,#FF4C42 60%,#FF4C42 100%);  W3C */
+
+  background-color: #46F0FF;
+  background-repeat: repeat-y;
+  background: -webkit-gradient(linear, left bottom, right bottom, from(#46F0FF), to(#FF4C42));
+  background: -webkit-linear-gradient(bottom, #46F0FF, #FF4C42);
+  background: -moz-linear-gradient(bottom, #46F0FF, #FF4C42);
+  background: -ms-linear-gradient(bottom, #46F0FF, #FF4C42);
+  background: -o-linear-gradient(bottom, #46F0FF, #FF4C42);
+}
+
+.htLDuplicate.htSuccess.area,
+.htLDuplicate.htDuplicate.area,
+.htLDuplicate.htInvalid.area,
+.handsontable tbody tr td.area{
+  background-color: #EEF4FF;
+  background: #EEF4FF;
+}
+
+.context-menu-list {
+  width: auto;
+}
+
+.context-menu-root {
+  width: auto;
+}
+
+.context-menu-root li span {
+  width: auto;
+  display: inline;
+}
+
+.handsontable .htPending {
+  //-webkit-transition: background 0.75s ease;
+  //transition: background 0.75s ease;
+  background-color: yellow;
+}
+
+.handsontable .typeahead {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 200px;
+}
+
+.status_tabs div li {
+  padding-top: 8px;
+}
+
+.ui-icon-left {
+  float: left;
+  margin: 0 8px;
+}
+
+.status_tabs .ui-tabs-panel {
+  max-height: 250px;
+  overflow: auto;
+}
+
+.ui-tabs a[data-target="errors"]
+{
+  background: #FF4C42;
+}
+
+.ui-tabs a[data-target="local_duplicates"]
+{
+  background: #46F0FF;
+}
+
+.ui-tabs a[data-target="duplicates"]
+{
+  background: lightpink;
+}
+
+.ui-tabs .ui-state-active a
+{
+  color: black;
+  border-style:solid;
+  border-width:3px;
+}
+
+.center-icon {
+  display:block;
+  margin: 0 auto;
+  vertical-align: middle;
+}

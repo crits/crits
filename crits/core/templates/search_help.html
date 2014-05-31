@@ -1,0 +1,133 @@
+<table cellspacing="5" summary="Regular expressions reference">
+    <tbody>
+        <tr>
+            <td colspan="2"><b>Global Search Help</b></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                By default all searches are regex searches (see below for help
+                on writing regex). There are search operators to help customize
+                your search results:
+            </td>
+        </tr>
+        <tr>
+            <td><code>type:<i>string</i></code></td>
+            <td>
+                Limit search to only <i>string</i> (sample, email, etc.)
+            </td>
+        </tr>
+        <tr>
+            <td><code>field:<i>string</i></code></td>
+            <td>
+                Limit search fields to only <i>string</i>. This is the field
+                name in the database (ex: filename, source.name).
+            </td>
+        </tr>
+        <tr>
+            <td><code>full:<i>string</i></code></td>
+            <td>
+                Perform a full text (non-regex) search for <i>string</i>.
+            </td>
+        </tr>
+        <tr>
+            <td><code>regex:<i>string</i></code></td>
+            <td>
+                Perform a regex search for <i>string</i>. See below for help on
+                writing regex.
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                Any strings in the search box which are not associated with a
+                search operator are considered regex search terms.
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><b>Regular Expression Help</b></td>
+        </tr>
+        <tr>
+            <td><code>.</code></td>
+            <td>Any character except newline.</td>
+        </tr>
+        <tr class="altBg">
+            <td><code>\.</code></td>
+            <td>A period (and so on for <code>\*</code>, <code>\(</code>, <code>\\</code>, etc.)</td>
+        </tr>
+        <tr>
+            <td><code>^</code></td>
+            <td>The start of the string.</td>
+        </tr>
+        <tr class="altBg">
+            <td><code>$</code></td>
+            <td>The end of the string.</td>
+        </tr>
+        <tr>
+            <td><code>\d</code>,<code>\w</code>,<code>\s</code></td>
+            <td>A digit, word character <code>[A-Za-z0-9_]</code>, or whitespace.</td>
+        </tr>
+        <tr class="altBg">
+            <td><code>\D</code>,<code>\W</code>,<code>\S</code></td>
+            <td>Anything except a digit, word character, or whitespace.</td>
+        </tr>
+        <tr>
+            <td><code>[abc]</code></td>
+            <td>Character a, b, or c.</td>
+        </tr>
+        <tr class="altBg">
+            <td><code>[a-z]</code></td>
+            <td>a through z.</td>
+        </tr>
+        <tr>
+            <td><code>[^abc]</code></td>
+            <td>Any character except a, b, or c.</td>
+        </tr>
+        <tr class="altBg">
+            <td><code>aa|bb</code></td>
+            <td>Either aa or bb.</td>
+        </tr>
+        <tr>
+            <td><code>?</code></td>
+            <td>Zero or one of the preceding element.</td>
+        </tr>
+        <tr class="altBg">
+            <td><code>*</code></td>
+            <td>Zero or more of the preceding element.</td>
+        </tr>
+        <tr>
+            <td><code>+</code></td>
+            <td>One or more of the preceding element.</td>
+        </tr>
+        <tr class="altBg">
+            <td><code>{<em>n</em>}</code></td>
+            <td>Exactly <em>n</em> of the preceding element.</td>
+        </tr>
+        <tr>
+            <td><code>{<em>n</em>,}</code></td>
+            <td><em>n</em> or more of the preceding element.</td>
+        </tr>
+        <tr class="altBg">
+            <td><code>{<em>m</em>,<em>n</em>}</code></td>
+            <td>Between <em>m</em> and <em>n</em> of the preceding element.</td>
+        </tr>
+        <tr>
+            <td><code>??</code>,<code>*?</code>,<code>+?</code>,<br/><code>{<em>n</em>}?</code>, etc.</td>
+            <td>Same as above, but as few as possible.</td>
+        </tr>
+        <tr class="altBg">
+            <td><code>(</code><em>expr</em><code>)</code></td>
+            <td>Capture <em>expr</em> for use with <code>\1</code>, etc.</td>
+        </tr>
+        <tr>
+            <td><code>(?:</code><em>expr</em><code>)</code></td>
+            <td>Non-capturing group.</td>
+        </tr>
+        <tr class="altBg">
+            <td><code>(?=</code><em>expr</em><code>)</code></td>
+            <td>Followed by <em>expr</em>.</td>
+        </tr>
+        <tr>
+            <td><code>(?!</code><em>expr</em><code>)</code></td>
+            <td>Not followed by <em>expr</em>.</td>
+        </tr>
+    </tbody>
+</table>

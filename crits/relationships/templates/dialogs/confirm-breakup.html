@@ -1,0 +1,11 @@
+    <div id="dialog-confirm-breakup" title="Confirm Breakup!" style="display: none;">
+      <div class="deletemsg"></div><br/>
+
+      <form id="form-confirm-breakup"
+	    action='{% url 'crits.relationships.views.break_relationship' %}' 
+	    method='POST' enctype="multipart/form-data" item-type="relationship">
+	
+	This relationship will be destroyed and cannot be recovered. Are you sure?
+      </form>
+      <div class="message"></div><br/>
+    </div>

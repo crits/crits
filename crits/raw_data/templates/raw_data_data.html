@@ -1,0 +1,11 @@
+{% load filters %}
+    <div class="content_box">
+        <h3 class="titleheader">
+        <span>Data<span>
+        </h3>
+        <div>
+            {% autoescape off %}
+            {{ raw_data.data|to_line_table }}
+            {% endautoescape %}
+        </div>
+    </div>

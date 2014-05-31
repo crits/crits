@@ -1,0 +1,20 @@
+{% load url from future %}
+
+<tr>
+    <td data-field="ticket_number">{{ticket.ticket_number}}</td>
+    <td data-field="url">
+      {% if "http://" in ticket.ticket_number or "https://" in ticket.ticket_number %}
+        {{ ticket.ticket_number|urlize }}
+      {% else %}
+        {{ crits_config.rt_url|add:ticket.ticket_number | urlize }}
+      {% endif %}
+    </td>
+    <td data-field="date">{{ticket.date}}</td>
+    <td data-field="analyst">{{ticket.analyst}}</td>
+    <td>
+    {% if admin %}
+    <a href="#" title="Delete Ticket" class="ui-icon ui-icon-close deleteClick" type="ticket" action="{% url 'crits.core.views.add_update_ticket' 'remove' obj_type obj.id %}" key="{{ticket.date}}"></a>
+    {% endif %}
+    <a href="#" title="Edit Ticket" class="ui-icon ui-icon-pencil dialogClick" dialog="ticket" persona="update" action="{% url 'crits.core.views.add_update_ticket' 'update' obj_type obj.id %}"></a>
+    </td>
+</tr>

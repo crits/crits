@@ -1,0 +1,89 @@
+{% load url from future %}
+{% load filters %}
+
+<div class="content_box">
+<a name="{{ analysis.service_name }}-{{ analysis.analysis_id }}"></a>
+<h3 class="titleheader">
+    <span class="collapsible">{{ analysis.service_name }} (v.{{ analysis.version}}) - 
+   {{ analysis.status|capfirst }}</span>
+   <span style="float: right;" class="ui-icon ui-icon-triangle-1-s
+       collapsible"></span>
+</h3>
+<div>
+    <p>
+    <a id="info_button" href="#" style="display: inline">Info</a>
+    | <a id="log_button" href="#" style="display: inline">Log</a>
+    | <a id="results_button" href="#" style="display: inline">Results</a>
+    {% if admin %}
+    | <a class="delete_analysis" href="{% url 'crits.services.views.delete_task' crits_type item.id analysis.analysis_id %}" style="display: inline" msg="Delete {{ analysis.service_name }} (v.{{ analysis.version }}) - {{ analysis.status|capfirst }} from {{ analysis.start_date }}?">Delete</a>
+    {% endif %}
+    </p>
+<div id="info" style="display: none;" class="titleheader">
+    <h3>Information</h3>
+    <ul>
+        <!--<li>ID: {{ analysis.analysis_id }}</li>-->
+        <li>Type: {{ analysis.analysis_type }}</li>
+        <li>Start: {{ analysis.start_date }}</li>
+        <li>Finish: {{ analysis.finish_date }}</li>
+        <li>Analyst: {{ analysis.analyst }}</li>
+    </ul>
+    <h4>Configuration</h4>
+{% if analysis.config %}
+    <ul>
+    {% for key, value in analysis.config.items %}
+        <li><b> {{ key }} </b>: {{ value }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    No configuration information available.
+{% endif %}
+</div>
+
+<div id="log" style="display: none;" class="titleheader">
+    <h3>Analysis Log</h3>
+    <table class="chart">
+    <thead>
+        <tr>
+            <th>Level</th>
+            <th>Date/Time</th>
+            <th>Message</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for l in analysis.log %}
+        <tr>
+            <td>{{ l.level }}</td>
+            <td>{{ l.datetime }}</td>
+            <td>{{ l.message|linebreaksbr }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+</div>
+
+
+
+<div id="results">
+    <h3>Results</h3>
+
+    {% if analysis.template %}
+        {% if analysis.template|template_exists %}
+            {% include analysis.template %}
+        {% else %}
+            <p>ERROR: Requested custom analysis template {{ analysis.template }} does not exist.</p>
+        {% endif %}
+    {% else %}
+        {% include 'services_results_default.html' %}
+    {% endif %}
+
+
+</div>
+
+{% comment %}
+{# This will show the raw JSON stored in the database (for debugging) #}
+{# Remove comment/endcomment tags to show. #}
+<pre>{{ analysis|pprint }}</pre>
+{% endcomment %}
+
+</div>
+</div>

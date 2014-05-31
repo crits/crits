@@ -1,0 +1,297 @@
+import urllib
+import json
+import datetime
+
+from django.http import HttpResponse, HttpResponseRedirect
+from django.conf import settings
+from django.contrib.auth.decorators import user_passes_test
+from django.core.urlresolvers import reverse
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+from django.forms.util import ErrorList
+
+from crits.core import form_consts
+from crits.core.data_tools import json_handler
+from crits.core.handsontable_tools import form_to_dict
+from crits.core.user_tools import user_can_view_data
+from crits.domains.forms import TLDUpdateForm, AddDomainForm, UpdateWhoisForm
+from crits.domains.handlers import get_domain, edit_domain_name
+from crits.domains.handlers import add_whois, edit_whois, add_new_domain
+from crits.domains.handlers import get_domain_details, update_tlds
+from crits.domains.handlers import generate_domain_jtable, generate_domain_csv, process_bulk_add_domain
+from crits.objects.forms import AddObjectForm
+from crits.core.handlers import get_object_types
+
+
+@user_passes_test(user_can_view_data)
+def domain_detail(request, domain):
+    """
+    Generate the Domain details page.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param domain: The domain to get details for.
+    :type domain: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    template = "domain_detail.html"
+    (new_template, args) = get_domain_details(domain,
+                                              request.user.username)
+    if new_template:
+        template = new_template
+    return render_to_response(template,
+                              args,
+                              RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def bulk_add_domain(request):
+    """
+    Bulk add domains via a bulk upload form.
+
+    Args:
+        request: The Django context which contains information about the
+            session and key/value pairs for the bulk add domains request
+
+    Returns:
+        If the request is not a POST and not a Ajax call then:
+            Returns a rendered HTML form for a bulk add of domains
+        If the request is a POST and a Ajax call then:
+            Returns a response that contains information about the
+            status of the bulk uploaded domains. This may include information
+            such as domains that failed or successfully added. This may
+            also contain helpful status messages about each operation.
+    """
+
+    all_obj_type_choices = [(c[0],
+                            c[0],
+                            {'datatype':c[1].keys()[0],
+                            'datatype_value':c[1].values()[0]}
+                            ) for c in get_object_types(False)]
+
+    formdict = form_to_dict(AddDomainForm(request.user))
+
+    if request.method == "POST" and request.is_ajax():
+        response = process_bulk_add_domain(request, formdict);
+
+        return HttpResponse(json.dumps(response,
+                            default=json_handler),
+                            mimetype='application/json')
+    else:
+        objectformdict = form_to_dict(AddObjectForm(request.user, all_obj_type_choices))
+
+        return render_to_response('bulk_add_default.html',
+                                 {'formdict': formdict,
+                                  'objectformdict': objectformdict,
+                                  'title': "Bulk Add Domains",
+                                  'table_name': 'domain',
+                                  'local_validate_columns': [form_consts.Domain.DOMAIN_NAME],
+                                  'custom_js': "domain_handsontable.js",
+                                  'is_bulk_add_objects': True},
+                                  RequestContext(request));
+
+@user_passes_test(user_can_view_data)
+def domains_listing(request,option=None):
+    """
+    Generate the Domain listing page.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Action to take.
+    :type option: str of either 'jtlist', 'jtdelete', 'csv', or 'inline'.
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if option == "csv":
+        return generate_domain_csv(request)
+    return generate_domain_jtable(request, option)
+
+@user_passes_test(user_can_view_data)
+def add_domain(request):
+    """
+    Add a domain. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.is_ajax() and request.method == "POST":
+        add_form = AddDomainForm(request.user, request.POST)
+        result = False
+        retVal = {}
+        errors = []
+        if add_form.is_valid():
+            #form is valid, but we may still have post-validation errors
+            errors = add_form._errors.setdefault("domain", ErrorList())
+            data = add_form.cleaned_data
+            (result, errors, retVal) = add_new_domain(data,
+                                              request,
+                                              errors)
+        if not result:
+            retVal['form'] = add_form.as_table()
+        if errors:
+            if not 'message' in retVal:
+                retVal['message'] = ""
+            elif not isinstance(retVal['message'], str):
+                retVal['message'] = str(retVal['message'])
+            for e in errors:
+                retVal['message'] += '<div>' + str(e) + '</div>'
+        retVal['success'] = result
+        return HttpResponse(json.dumps(retVal,
+                                       default=json_handler),
+                            mimetype="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected POST' },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def edit_domain(request, domain):
+    """
+    Edit a domain. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param domain: The domain to edit.
+    :type domain: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        new_name = request.POST.get('value')
+        analyst = request.user.username
+        if get_domain(new_name)[0] != 'no_tld_found_error':
+            edit_domain_name(domain, new_name, analyst)
+            return HttpResponse(new_name)
+        else:
+            return HttpResponse(domain)
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST' },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def get_whois(request, domain):
+    """
+    Get whois data for a domain. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param domain: The domain to query for.
+    :type domain: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    #TODO: get whois data from a non-attributable source
+    return update_whois(request, domain, editable=False)
+
+@user_passes_test(user_can_view_data)
+def update_whois(request, domain, editable=True):
+    """
+    Edit whois data for a domain. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param domain: The domain to query for.
+    :type domain: str
+    :param editable: We are editing.
+    :type editable: boolean
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        form = UpdateWhoisForm(request.POST, domain=domain)
+        date = request.POST.get('date')
+        analyst = request.user.username
+        if date:
+            # kind of hackish, but lets us ensure a newly added date
+            # doesn't get flagged as a non-available option
+            # during validation
+            if date not in form.fields['date'].choices:
+                form.fields['date'].choices.append((date, date))
+        if form.is_valid():
+            whois_data = form.cleaned_data['data']
+            result = None
+            if date:
+                date = datetime.datetime.strptime(date,
+                                                  settings.PY_DATETIME_FORMAT)
+                result = edit_whois(domain,
+                                    whois_data,
+                                    date,
+                                    analyst)
+            else: #adding a new entry
+                date = datetime.datetime.now()
+                result = add_whois(domain,
+                                    whois_data,
+                                    date,
+                                    analyst,
+                                    editable)
+            if result['success']:
+                date = datetime.datetime.strftime(date,
+                                                  settings.PY_DATETIME_FORMAT)
+                return HttpResponse(json.dumps({'success': True,
+                                                'data': str(result['whois']),
+                                                'date': date,
+                                                'analyst': analyst}),
+                                    mimetype="application/json")
+            else:
+                return HttpResponse(json.dumps({'success':False,
+                                                'message':result['message']}),
+                                    mimetype="application/json")
+        else:
+            #TODO: return and repopulate form with error messages
+            return HttpResponse(json.dumps({'success': False,
+                                            'form': form.as_table()}),
+                                mimetype="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST' },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def domain_search(request):
+    """
+    Search for domains.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    query = {}
+    query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
+    #return render_to_response('error.html', {'error': query})
+    return HttpResponseRedirect(reverse('crits.domains.views.domains_listing')
+                                + "?%s" % urllib.urlencode(query))
+
+@user_passes_test(user_can_view_data)
+def tld_update(request):
+    """
+    Update TLDs. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == 'POST':
+        form = TLDUpdateForm(request.POST, request.FILES)
+        if form.is_valid():
+            filedata = request.FILES['filedata']
+            result = update_tlds(filedata)
+            if result['success']:
+                response = {'success': True,
+                            'message': 'Success! <a href="%s">Go to Domains.</a>'
+                            % reverse('crits.domains.views.domains_listing')}
+            else:
+                response = {'success': False, 'form': form.as_table()}
+        else:
+            response = {'success': False, 'form': form.as_table()}
+        return render_to_response('file_upload_response.html',
+                                  {'response': json.dumps(response)},
+            RequestContext(request))
+    else:
+        return render_to_response('error.html',
+                                  {'error': 'Expected POST'},
+                                  RequestContext(request))

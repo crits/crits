@@ -1,0 +1,15 @@
+{% load url from future %}
+    <h3 class="titlefooter">
+    <span class='info'>
+        Viewing {{ paging.number }} - {{ paging.view_size }} of {{ paging.num_pages }}
+    </span>
+    <span class='pagination'>
+        {% if paging.has_previous %}
+        <a class="left" href="{{ paging_url }}?skip={{ paging.previous_page_number }}{{ paging.rget }}">Prev</a>
+        {% endif %}
+        {% if paging.has_next %}
+        <a class="right" href="{{ paging_url }}?skip={{ paging.next_page_number }}{{ paging.rget }}"> Next</a>
+        {% endif %}
+    </span>
+    <span class='title'>{{ paging.title }}</span>
+    </h3>

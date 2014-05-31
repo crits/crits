@@ -1,0 +1,116 @@
+{% extends "containment.html" %}
+{% load url from future %}
+
+{% block title %} Services {% endblock %}
+
+{% block content %}
+<div class="content_box">
+    <h3 class="titleheader">
+        <span>Services ({{ services.count }})</span>
+    </h3>
+    <div class="content_body">
+    {% if services %}
+    <table class="chart tablesorter services">
+        <thead>
+            <colgroup>
+                <col width="150px">
+                <col width="50px">
+                <col width="100px">
+                <!--<col width="75px">-->
+                <col width="75px">
+                <col width="75px">
+                <col width="75px">
+                <col width="100px">
+            </colgroup>
+            <tr>
+                <th>Name</th>
+                <th>Version</th>
+                <th>Type</th>
+                <!--<th>Purpose</th>-->
+                <th>Supported Types</th>
+                <th>Enabled?</th>
+                <th>Run on triage?</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for service in services %}
+            <tr>
+            {% if service.status == "unavailable" %}
+                <td>{{ service.name }}</td>
+            {% else %}
+                <td><a href="{% url 'crits.services.views.detail' service.name %}">{{ service.name }}</a></td>
+            {% endif %}
+                <td>{{ service.version }}</td>
+                <td>{{ service.type }}</td>
+                <!--<td>{{ service.purpose }}</td>-->
+                <td>{{ service.supported_types|join:", " }}</td>
+                <td>
+                {% if service.enabled %}
+                    {% if admin and service.status == "available"%}
+                        <span class="enabled" data-url="{% url 'crits.services.views.disable' service.name %}">Yes</span>
+                    {% else %}
+                        <span>Yes</span>
+                    {% endif %}
+                {% else %}
+                    {% if admin and service.status == "available"%}
+                        <span class="enabled" data-url="{% url 'crits.services.views.enable' service.name %}">No</span>
+                    {% else %}
+                        <span>No</span>
+                    {% endif %}
+                {% endif %}
+                </td>
+                <td>
+                {% if service.run_on_triage %}
+                    {% if admin and service.status == "available"%}
+                        <span class="enabled" data-url="{% url 'crits.services.views.disable_triage' service.name %}">Yes</span>
+                    {% else %}
+                        <span>Yes</span>
+                    {% endif %}
+                {% else %}
+                    {% if admin and service.status == "available"%}
+                        <span class="enabled" data-url="{% url 'crits.services.views.enable_triage' service.name %}">No</span>
+                    {% else %}
+                        <span>No</span>
+                    {% endif %}
+                {% endif %}
+                </td>
+                <td class="{{service.status}}">{{ service.status|capfirst }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    </div>
+</div>
+<h3>Notes</h3>
+<ul>
+    <li>
+        A service marked as <strong>"Misconfigured"</strong> needs to have one
+        or more configuration options changed. An administrator can do this by
+        clicking on the name of the service to bring up the "Service Details"
+        page. This page will also show (to administrators) a more complete
+        description of what options need to be changed in order to make the
+        service "Available".
+    </li>
+    <li>
+        A service marked as <strong>"Unavailable"</strong> means the service
+        was previously available but could not be loaded. This could be caused
+        by a number of factors, but most likely either:
+        <ol>
+            <li>the corresponding directory (or some file in it) was removed
+            from the system or SERVICE_DIRS list in custom_settings.py, or </li>
+            <li>a required dependency for the service is no longer available.</li>
+        </ol>
+        In the latter case, the "crits.log" file should identify what dependency
+        is missing. In either case, the problem cannot be fixed through the web
+        interface.
+    </li>
+</ul>
+
+{% endblock %}
+
+{% block javascript_includes %}
+ <script type="text/javascript" src="{{ STATIC_URL }}js/services.js"></script>
+{% endblock %}
+

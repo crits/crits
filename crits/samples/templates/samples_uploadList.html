@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %} <h1>Uploaded Files</h1> {% endblock %}
+
+{% block content %}
+    {% if sample_md5 %}
+    <div class="content_box" style="display: table;">
+        <h3 class="titleheader">
+        <span>Files Extracted From {{ archivename }}</span>
+        </h3>
+        <table class='vertical'>
+        <thead>
+        </thead>
+        <tbody>
+        {% for s in sample_md5 %}
+            <tr>
+                <td class="key">Filename</td>
+                <td><a href="{% url 'crits.samples.views.detail' s %}">{{ s }}</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+{% endblock %}

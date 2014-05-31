@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<script>
+    var reset_password = "{% url 'crits.core.views.reset_password' %}";
+</script>
+
+  {% if reset %}
+    <div class="reset_password">
+        Fill out the form below to reset your password.
+        <table class="vertical">
+            <thead>
+            </thead>
+            <tbody>
+                <tr id="uname">
+                    <td class="key">
+                        Username
+                    </td>
+                    <td>
+                        <input id="r_username" type="textbox" size="40" name="username" class="textbox">
+                    </td>
+                </tr>
+                <tr id="email_address">
+                    <td class="key">
+                        Email Address
+                    </td>
+                    <td>
+                        <input id="r_email" type="textbox" size="40" name="email" class="textbox">
+                    </td>
+                </tr>
+                <tr id="rcode" style="display: none;">
+                    <td class="key">
+                        Reset Code
+                    </td>
+                    <td>
+                        <input id="reset_code" type="textbox" size="40" name="reset_code" class="textbox">
+                    </td>
+                </tr>
+                <tr id="new_password" style="display: none;">
+                    <td class="key">
+                        New Password
+                    </td>
+                    <td>
+                        <input id="new_p" type="password" size="40" name="new_p" class="textbox" autocomplete="off">
+                    </td>
+                </tr>
+                <tr id="new_password_confirm" style="display: none;">
+                    <td class="key">
+                        Confirm
+                    </td>
+                    <td>
+                        <input id="new_p_c" type="password" size="40" name="new_p_c" class="textbox" autocomplete="off">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="form_submit_button" id="reset_password" data-state="email">Send Email</button>
+        <span id="ajax_response"></span>
+    </div>
+  {% endif %}
+  <div class="login_box" style="text-align:center;margin-top:150px">
+    <p>
+      <font size="3">
+        {{ message|safe}}
+      </font>
+    </p>
+  </div>
+
+  {% if login %}
+    <div id="login_form" class="login_box">
+        <form id="login_form_container" method="POST" action="javascript:processLogin();">
+        <table class="vertical">
+            <thead>
+            </thead>
+            <tbody>
+                {% if show_auth %}
+                <tr id="login_uname">
+                    <td class="key">
+                        Username
+                    </td>
+                    <td>
+                        <input id="l_username" type="textbox" size="40" name="username" class="textbox" autofocus>
+                    </td>
+                </tr>
+                <tr id="login_pwd">
+                    <td class="key">
+                        Password
+                    </td>
+                    <td>
+                        <input id="l_password" type="password" size="40" name="password" class="textbox" autocomplete="off">
+                    </td>
+                </tr>
+                {% endif %}
+                <tr id="login_tkn">
+                    <td class="key">
+                        Token
+                    </td>
+                    <td>
+                        <input id="l_token" type="password" size="40" name="token" class="textbox" autocomplete="off">
+                        <p>
+                            <font size="2">
+                                {{ token_message|safe}}
+                            </font>
+                        </p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <br />
+        <a href="{% url 'crits.core.views.reset_password' %}" style="float: left;">Forgot Password?</a>
+        <input class="login_submit_button" id="submit_login" type="submit" value="Login" />
+        </form>
+        <span id="ajax_response"></span>
+    </div>
+  {% endif %}
+
+    <img src="/new_images/crits_logo.png" class="login_logo"></img>
+
+{% endblock %}

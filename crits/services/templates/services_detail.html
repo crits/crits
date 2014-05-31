@@ -1,0 +1,13 @@
+{% extends "containment.html" %}
+{% load url from future %}
+
+{% block title %} Services {% endblock %}
+
+{% block content %}
+<div>
+    <p><a href="{% url 'crits.services.views.list' %}">Back to Service List</a></p>
+</div>
+{% include "services_detail_widget.html" %}
+{% include "services_config_widget.html" with config_list=service.config_list %}
+
+{% endblock %}

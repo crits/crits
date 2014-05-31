@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}Domain Details{% endblock %}
+
+{% block css_includes %}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/diffview.css"/>
+{% endblock %}
+
+{% block content %}
+
+<!-- NOTE: other javascript is loaded at the bottom of the page to speed up page load.
+    The following js uses django template tags which need to be loaded before the page's html in order to
+    work properly in the static js files. -->
+<script type="text/javascript">
+    var whois_data = $.parseJSON("{{ whois_data|escapejs }}");
+    var whois_update_url = "{% url 'crits.domains.views.update_whois' domain.domain %}";
+</script>
+
+<div id="tabnav" class="tabnav" style="font-size: 90%;">
+    <ul style="font-size: 125%;">
+    <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ domain.analysis|length }})</span></a></li>
+    <li><a href="#whois_section" id="whois_button"><span>Whois ({{ whois_len }})</span></a></li>
+    {% include 'services_tab_list_widget.html' %}
+    </ul>
+
+    <div id="details_section">
+    <div class="content_box content_details">
+      <h3 class="titleheader">
+    <span>Details for <span class="edit text" action="{% url 'crits.domains.views.edit_domain' domain.domain %}">{{ domain.domain }}</span></span>
+      </h3>
+        
+        <div class="content_body">
+        <table class="vertical" width="100%">
+        <thead></thead>
+        <tbody>
+            <tr>
+                <td class="key">ID</td>
+                <td>{{domain.id}}</td>
+            </tr>
+            <tr>
+                <td class="key">Created</td>
+                <td>{{domain.created}}</td>
+            </tr>
+            <tr>
+                <td class="key">DNSMon Enabled</td>
+                <td>{{domain.watchlistEnabled|default:"False"}}</td>
+            </tr>
+            <tr>
+                <td class="key">Status
+                    <span style="float: right;" class="object_status_response"></span>
+                </td>
+                <td>
+                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{domain.status}}</span>
+                </td>
+            </tr>
+            <tr>
+                {% with sources=domain.source obj_id=domain.id obj_type=subscription.type %}
+                    {% include "sources_listing_widget.html" %}
+                {% endwith %}
+            </tr>
+            <tr>
+                {% with releasability=domain.releasability %}
+                    {% include "releasability_list_widget.html" %}
+                {% endwith %}
+            </tr>
+        </tbody>
+        </table>
+        </div>
+    </div>
+    <div id="detail_floaters">
+        {% include 'details_options_widget.html' %}
+        {% with bucket_list=domain.bucket_list %}
+            {% include 'bucket_list_widget.html' %}
+        {% endwith %}
+    </div>
+    {% if samples %}
+    <div class="content_box">
+    <div class="content_body">
+        <h3 class="titleheader">Matching Samples</h3>
+         {% with sample_list=samples %}
+           {% include 'samples_malware_mini_widget.html' %}
+         {% endwith %}
+    </div><!-- samples content_body -->
+    </div><!-- samples content_box -->
+    {% endif %}
+
+    <div>
+      {% with obj=domain obj_type=subscription.type %}
+         {% include 'tickets_listing_widget.html' %}
+      {% endwith %}
+    </div>
+
+    {% with hit=domain col=COL_DOMAINS %}
+        {% include "campaigns_display_widget.html" %}
+    {% endwith %}
+
+    <div>
+       {% include 'relationships_listing_widget.html' %}
+    </div>
+    <div>
+       {% include 'objects_listing_widget.html' %}
+    </div>
+    <div>
+       {% include "comments_listing_widget.html" %}
+    </div>
+
+    </div> <!-- details_section -->
+
+    <div id="whois_section" style="display: table;">
+    <div id="tabnav_whois" class="tabnav" style="font-size: 90%;">
+        <ul style="font-size: 110%;">
+        <li><a href="#whois_detail" id="whois_detail_button"><span>Whois Detail</span></a></li>
+        <li><a href="#whois_raw" id="whois_raw_button"><span>Raw Whois</span></a></li>
+        <li><a href="#whois_diff" id="whois_diff_button"><span>Whois Diff</span></a></li>
+        </ul>
+    <div id="whois_detail" style="display: table;">
+        <div class="content_box">
+      <div class="content_body">
+        <h3 class="titleheader">
+          <span>Whois for {{ domain.domain }}</span>
+      </h3>
+            {% if forms.whois %}
+                <form id="form-add-whois" style="display: inline;" method="POST" enctype="multipart/form-data">
+                    <table class="form">
+                    {{ forms.whois.as_table }}
+                    </table>
+                    <button class="form_submit_button" type="submit">Save Whois</button>  <!-- name="svalue"  -->
+                </form>
+                <button class="form_submit_button" type="button" onclick="getWhois()">Get Whois</button>
+                <div>Note: WHOIS parsing is best effort and may require manual editing after saving. See the "raw" view for the original data entered.</div>
+            {% endif %}
+        </div><!-- content_body -->
+        </div><!-- content_box -->
+    </div> <!-- whois_detail -->
+    <div id="whois_raw" style="display: table;">
+        <div class="content_body">
+        <h3 class="titleheader">
+            <span>Raw Whois for {{domain.domain}}</span>
+        </h3>
+        {% if forms.raw_whois %}
+        <form id="form-raw-whois" style="display: inline;" method="GET" enctype="multipart/form-data">
+            <table class="form">
+            {{ forms.raw_whois.as_table }}
+            </table>
+        </form>
+        {% endif %}
+        </div>
+    </div>
+    <div id="whois_diff" style="display: table;">
+        <div class="content_box">
+        <h3 class="titleheader">
+            <span>Diff Whois for {{domain.domain}}</span>
+        </h3>
+        <div class="content_body">
+            {% if forms.diff_whois %}
+                <form id="form-diff-whois" style="display: inline;" method="GET" enctype="multipart/form-data">
+                    <table class="form">
+                    {{forms.diff_whois.as_table}}
+                    </table>
+                    <button class="form_submit_button" type="submit">Diff Whois</button>
+                    <div id="id_diff_data" style="padding: 5px;"></div>
+                </form>
+            {% endif %}
+        </div> <!--content_body-->
+        </div><!--content_box-->
+    </div><!--whois_diff-->
+    </div><!-- whois_section -->
+    </div> <!--tabnav_whois-->
+    {% with item=domain %}
+        {% include "services_analysis_section.html" with crits_type="Domain" identifier=domain.id %}
+    {% endwith %}
+
+    {% include 'services_tab_tabs_widget.html' %}
+</div><!-- tabnav -->
+
+{% endblock %}
+
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/diffview.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/jsdiff.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/difflib.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/domains_details.js"></script>
+{% endblock %}

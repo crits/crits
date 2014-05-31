@@ -1,0 +1,19 @@
+{% load url from future %}
+
+<script type="text/javascript">
+    var type = "{{subscription.type}}";
+    var id = "{{subscription.id}}";
+    var ttp_target = "{% url 'crits.campaigns.views.campaign_ttp' subscription.id %}";
+</script>
+
+<td class="key" valign="top">
+    <div>
+        <span>TTPs</span>
+        <span style="float: right;">
+            <a href="#" class="ui-icon ui-icon-plusthick" id="add_ttp" title="Add TTP"></a>
+        </span>
+    </div>
+</td>
+<td id="ttp_data">
+    {% include 'campaign_ttps_data_widget.html' %}
+</td>

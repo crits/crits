@@ -1,0 +1,67 @@
+{% load url from future %}
+
+<script src="/js/tag-it.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript">
+    var loading = true;
+    $(document).ready(function() {
+        $("#bucket_list").tagit({
+            allowSpaces: true,
+            removeConfirmation: true,
+            afterTagAdded: function(event, ui) {
+                var my_tags = $("#bucket_list").tagit("assignedTags");
+                update_buckets(my_tags);
+
+            },
+            afterTagRemoved: function(event, ui) {
+                var my_tags = $("#bucket_list").tagit("assignedTags");
+                update_buckets(my_tags);
+            },
+            onTagClicked: function(event, ui) {
+                var url = "{% url 'crits.core.views.global_search_listing' %}?search_type=bucket_list&force_full=1&search=Search&q=" + ui.tagLabel
+                window.location.href = url;
+            },
+        });
+        function update_buckets(my_tags) {
+            if (!loading) {
+                var oid = "{{ subscription.id }}";
+                var itype = "{{ subscription.type }}"
+                var data = {
+                            'oid': oid,
+                            'tags': my_tags.toString(),
+                            'itype': itype
+                };
+                $.ajax({
+                    type: "POST",
+                    url: "{% url 'crits.core.views.bucket_modify' %}",
+                    data: data,
+                    datatype: 'json',
+                    //success: function(data) {
+                    //    console.log(my_tags);
+                    //}
+                });
+            }
+        }
+        $(document).trigger('enable_buckets');
+    });
+</script>
+
+<div class="content_box buckets">
+    <h3 class='titleheader'>
+        <span>Bucket List</span>
+    </h3>
+    <div data-intro="Add buckets (tags) about this object!" data-position="bottom">
+        <ul id="bucket_list">
+            {% if bucket_list %}
+                {% for bucket in bucket_list %}
+                    <li>{{ bucket }}</li>
+                {% endfor %}
+            {% endif %}
+        </ul>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).bind('enable_buckets', function(){
+        loading = false;
+    });
+</script>

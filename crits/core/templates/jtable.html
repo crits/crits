@@ -1,0 +1,78 @@
+{% load url from future %}
+
+{% block content %}
+<div style="width: 100%; margin-bottom: 10px;">
+    <div class='content_body'>
+        <div id='{{ jtid }}'></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+            $(document).ready(function() {
+                $('#{{ jtid }}').jtable({
+                    "title": "{{ jtable.title }}",
+                    "sorting": {{ jtable.sorting }},
+                    "paging": {{ jtable.paging }},
+                    "pageSize": {{ jtable.pageSize }},
+                    "pageSizes": [{{ jtable.pageSize }}, 10, 25, 50, 100, 250, 500],
+                    "defaultSorting": "{{ jtable.defaultSorting }}",
+                    "jqueryuiTheme": true,
+                    "multiSorting": {{ jtable.multiSorting }},
+                    {% if jtable.paging == "true" %}
+                    "toolbar": {
+                        "items": [
+                            {
+                                'tooltip': "Reload table data",
+                                'text': 'Reload',
+                                'click': function () { $('#{{ jtid }}').jtable('reload');}
+                            },
+                            {
+                                'tooltip': "Download to CSV",
+                                'text': 'CSV',
+                                'click': function() { jtCSVDownload("{{ jtid }}"); },
+                            },
+                            {% for item in jtable.toolbar %}
+                            {
+                                {% autoescape off %}
+                                {% for key,value in item.items %}
+                                    "{{ key }}": {{ value }},
+                                {% endfor %}
+                                {% endautoescape %}
+                            },
+                            {% endfor %}
+
+                        ]
+                    },
+                    {% endif %}
+
+                    "recordsLoaded": function(event,data) { 
+  	                                   jtRecordsLoaded(event,data,"{{ button }}"); 
+ 	            },
+
+                    "actions": {
+                        {% autoescape off %}
+                        {% for key,value in jtable.actions.items %}
+                            "{{ key }}": "{{ value }}",
+                        {% endfor %}
+                        {% endautoescape %}
+                    },
+                    "fields": {
+                        {% for field_dict in jtable.fields %}
+                        {% autoescape off %}
+                            {{ field_dict.fieldname }}: {
+                                {% for key,value in field_dict.items %}
+                                    "{{ key }}": {{ value }},
+                                {% endfor %}
+                            },
+                        {% endautoescape %}
+                        {% endfor %}
+                    }
+                });
+
+                $('#{{ jtid }}').jtable('load');
+
+            });
+
+</script>
+
+{% endblock %}

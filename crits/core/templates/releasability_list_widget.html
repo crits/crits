@@ -1,0 +1,32 @@
+{% load url from future %}
+
+<script type="text/javascript">
+    var type = "{{subscription.type}}";
+    var id = "{{subscription.id}}";
+</script>
+
+<td class="key" valign="top">
+    <div>
+        <span>Releasability</span>
+        <span class="floatright">
+            <a href="#" class="ui-icon ui-icon-plusthick dialogClick" dialog="releasability-add" persona="new" title="Add Releasability"></a>
+        </span>
+    </div>
+    <div class="clearboth floatright" id="add_releasability_container">
+        <a href="#" id="toggle_releasability" class="ui-icon ui-icon-triangle-1-e" title="Toggle All"></a>
+    </div>
+</td>
+<td>
+    <table style="table-layout:fixed;" class="chart rcollapser" id="releasability_list">
+        <col width="19" /> <!-- spacer -->
+        <col width="65%" /> <!-- name -->
+        <col width="200" /> <!-- analyst/created -->
+        <col width="40" /> <!-- buttons -->
+        <thead>
+        </thead>
+        <tbody class="guardian">
+            {% include "releasability_header_widget.html" %}
+        </tbody>
+    </table>
+</td>
+

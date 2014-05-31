@@ -1,0 +1,203 @@
+/* expand/collapse */
+
+table .collapsible {
+	padding: 0 0 3px 0;
+}
+
+table.chart tbody td.collapsible a { /*, th a#toggleAll {*/
+	margin: 2px;
+	display: block;
+	width: 15px;
+	height: 15px;
+	outline: 0;
+	/*background: url(/css/images/ui-icons_222222_256x240.png) no-repeat -32px -16px;  */
+}
+
+table.chart tbody td.collapsible a {
+	margin: 2px;
+	display: block;
+	width: 15px;
+	height: 15px;
+	outline: 0;
+/*  background: url(/css/images/ui-icons_222222_256x240.png) no-repeat -64px -16px;  */
+}
+
+table#source_listing tbody td span {
+    float: none;
+}
+
+table#source_listing tbody td span.heading {
+    font-weight:bold;
+}
+
+table.chart tbody td a.ui-icon, table.vertical tbody td a#toggleAll {
+    display: block;
+    float: right;
+}
+
+table.vertical tbody td.longtext {
+  word-break: normal;
+  white-space: pre-line;
+}
+
+.clearboth {
+    clear: both;
+}
+
+.floatright, .right {
+    display: block;
+    float: right;
+}
+
+.floatleft, .left {
+    display: block;
+    float: left;
+}
+
+table.chart tbody td a.ui-icon.ui-icon-plusthick {
+    float:none;
+}
+
+ul.errorlist {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+select:focus, input:focus, textarea:focus {
+    border-style:solid;
+    outline: none;
+    border-color: #9ecaed;
+    box-shadow: 0 0 10px #9ecaed;
+}
+
+#tabnav .ui-tabs-active:not(.ui-state-disabled) {
+    border: 1px solid #5583ed;
+    border-color:#5583ed;
+    box-shadow: 0 0 4px #5583ed;
+    border-bottom-color: #ddd;
+}
+
+#tabnav .ui-tabs-active a {
+    color: #5583ed;
+}
+
+td highlight span:hover {
+    color: #5583ed;
+}
+
+table.form .errorlist li {
+    // It might look nicer if these were positioned to the right of the input dialog
+    // Not sure how to do that..
+    float: none;
+}
+
+.errorlist li {
+    font-size: 12px !important;
+    padding: 4px 5px 4px 25px;
+    margin: 0 0 3px 0;
+    border: 1px solid red;
+    color: white;
+    background: red url(/static/admin/img/icon_alert.gif) 5px .3em no-repeat;
+}
+
+.errorlist li a {
+    color: white;
+    text-decoration: underline;
+}
+
+td ul.errorlist {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+td ul.errorlist li {
+    margin: 0 !important;
+}
+
+/* mirrors div.content top: needed to overrides html.mm-opened from mm-menu */
+html.mm-opened .mm-page,
+html.mm-opened #mm-blocker {
+    top: 25px;
+}
+
+.mm-search {
+    top: 24px;
+    z-index: 3;
+}
+
+.shortcut_keys_table tbody tr:nth-child(even){ background-color:#add8e6; }
+
+.shortcut_keys_table tbody tr:nth-child(odd){ background-color:#ffffff; }
+
+.shortcut_keys_table table{
+    text-align: center;
+}
+
+.shortcut_keys_table{
+    text-align: center;
+}
+
+.shortcut_keys_table th{
+    font-size: 16px;
+    padding-top: 25px;
+    text-align: left;
+    background-color:#ffffff
+}
+
+.shortcut_keys_table td{
+    vertical-align:left;
+    text-align:left;
+    padding:4px;
+    font-size:12px;
+    font-family:Arial;
+    font-weight:normal;
+    color:#000000;
+}
+
+.shortcut_keys_table td:first-child{
+    text-align:right;
+    white-space:nowrap;
+}
+
+.textbox {
+    padding-left: 3px;
+}
+
+/* Following kdb CSS taken from and modified from:
+   https://github.com/michaelhue/keyscss (MIT License) */
+
+/* Base style, essential for every key. */
+kbd.light {
+    display: inline;
+    display: inline-block;
+    min-width: 1em;
+    padding: .2em .3em;
+    font: normal .85em/1 "Lucida Grande", Lucida, Arial, sans-serif;
+    text-align: center;
+    text-decoration: none;
+    -moz-border-radius: .3em;
+    -webkit-border-radius: .3em;
+    font-family:Courier;
+    border-radius: .3em;
+    font-size:18px;
+    border: none;
+    cursor: default;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+kbd.light {
+    background: rgb(250, 250, 250);
+    background: -moz-linear-gradient(top, rgb(210, 210, 210), rgb(255, 255, 255));
+    background: -webkit-gradient(linear, left top, left bottom, from(rgb(210, 210, 210)), to(rgb(255, 255, 255)));
+    color:  rgb(50, 50, 50);
+    text-shadow: 0 0 2px rgb(255, 255, 255);
+    -moz-box-shadow: inset 0 0 1px rgb(255, 255, 255), inset 0 0 .4em rgb(200, 200, 200), 0 .1em 0 rgb(130, 130, 130), 0 .11em 0 rgba(0, 0, 0, .4), 0 .1em .11em rgba(0, 0, 0, .9);
+    -webkit-box-shadow: inset 0 0 1px rgb(255, 255, 255), inset 0 0 .4em rgb(200, 200, 200), 0 .1em 0 rgb(130, 130, 130), 0 .11em 0 rgba(0, 0, 0, .4), 0 .1em .11em rgba(0, 0, 0, .9);
+    box-shadow: inset 0 0 1px rgb(255, 255, 255), inset 0 0 .4em rgb(200, 200, 200), 0 .1em 0 rgb(130, 130, 130), 0 .11em 0 rgba(0, 0, 0, .4), 0 .1em .11em rgba(0, 0, 0, .9);
+}
+
+A.noclick {
+    cursor: default;
+}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %} Target Details Editor {% endblock %}
+
+{% block content %}
+{% if form %}
+<div class="content_box" style="display: table;">
+    <h3 class="titleheader">
+    <span>Details</span>
+    </h3>
+    <div class="content_body" style="display: table;">
+    <form action='{% url 'crits.targets.views.target_details' %}' method='POST' style="display: inline;">
+        <table class='form'> {{ form.as_table }}</table>
+        <input class="form_submit_button" type="submit" name="svalue" value="Submit">
+        <input class="form_submit_button" type="submit" name="svalue" value="Delete" style="float: right;">
+    </form>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

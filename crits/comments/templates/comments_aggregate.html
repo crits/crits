@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %} Aggregate Comments {% endblock %}
+{% block content %}
+<script type="text/javascript">
+    var activity_url = "{% url 'crits.comments.views.activity' %}";
+    var new_comments_url = "{% url 'crits.comments.views.get_new_comments' %}";
+    var atype = "{{ atype }}";
+    var value = "{{ value }}";
+</script>
+<script>
+</script>
+<table cellpadding="5px">
+    <colgroup>
+        <col width="100px">
+        <col width="100%">
+    </colgroup>
+    <thead>
+    </thead>
+    <tbody>
+    <tr>
+        <td valign="top">
+            <span class="activity_options">
+                <div id="calendar" style="font-size: 75%;">
+                </div>
+                <input size="23" type="text" id="activitydate" name="activitydate">
+                <span id="activity_date_error" style="display: none;"></span>
+                <table class="vertical" style="width: 175px;">
+                    <thead>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="key">Comments:</td>
+                            <td>
+                                <input type="checkbox" id="show_comments" checked="yes">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="key">Reset:</td>
+                            <td>
+                                <a href="{% url 'crits.comments.views.activity' %}">Today's<br />Activity</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </span>
+        </td>
+        <td valign="top">
+            <span class="activity_list">
+            {% with aggregate="true" %}
+                {% include "comments_listing_widget.html" %}
+            {% endwith %}
+            </span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+{% endblock %}
+
+{% block javascript_includes %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/comments.js"></script>
+{% endblock %}

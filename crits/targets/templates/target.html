@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}Target Details{% endblock %}
+
+{% block content %}
+
+<div id="tabnav" class="tabnav" style="font-size:90%">
+    <ul style="font-size: 125%">
+    <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
+    <li><a href="#emails_section" id="emails_button"><span>Emails ({{email_list.count}})</span></a></li>
+    {% include 'services_tab_list_widget.html' %}
+    </ul>
+<div id="details_section">
+<div class="content_box content_details">
+    <h3 class="titleheader">
+    <span>Details</span>
+    </h3>
+    <div class="content_body">
+    <table class="vertical" width="100%">
+        <thead>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="key">ID</td>
+            <td>
+                {% if target_detail.id %}
+                    {{target_detail.id}}
+                {% else %}
+                    <font color="red">
+                        This is a new UNSAVED Target. Please edit details to save the Target and generate an ID.
+                    </font>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td class="key">Name</td>
+            <td>
+                {{target_detail.firstname}} {{target_detail.lastname}}
+            </td>
+        </tr>
+        <tr>
+            <td class="key">Email Address</td>
+            <td>{{target_detail.email_address}}</td>
+        <tr>
+            <td class="key">Organization ID</td>
+            <td>{{target_detail.organization_id}}</td>
+        </tr>
+        <tr>
+            <td class="key">Department</td>
+            <td>{{target_detail.department}}</td>
+        </tr>
+        <tr>
+            <td class="key">Division</td>
+            <td>{{target_detail.division}}</td>
+        </tr>
+        <tr>
+            <td class="key">Title</td>
+            <td>{{target_detail.title}}</td>
+        </tr>
+        <tr>
+            <td class="key">Notes</td>
+            <td>{{target_detail.note}}</td>
+        </tr>
+        <tr>
+            <td class="key">Status
+                <span style="float: right;" class="object_status_response"></span>
+            </td>
+            <td>
+                <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{target_detail.status}}</span>
+            </td>
+        </tr>
+        <tr>
+            {% with releasability=target_detail.releasability %}
+                {% include "releasability_list_widget.html" %}
+            {% endwith %}
+        </tr>
+        </tbody>
+    </table>
+    </div>
+    <button class="form_submit_button" id="edit_details">Edit Details</button>
+</div>
+{% if target_detail.id %}
+    <div id="detail_floaters">
+        {% include 'details_options_widget.html' %}
+        {% with bucket_list=target_detail.bucket_list %}
+            {% include 'bucket_list_widget.html' %}
+        {% endwith %}
+    </div>
+
+    <div>
+      {% with obj=target_detail obj_type=subscription.type %}
+         {% include 'tickets_listing_widget.html' %}
+      {% endwith %}
+    </div>
+
+    <div>
+      {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
+         {% include "campaigns_display_widget.html" %}
+      {% endwith %}
+    </div>
+
+    <div>
+        {% include 'relationships_listing_widget.html' %}
+    </div>
+    <div>
+        {% include 'objects_listing_widget.html' %}
+    </div>
+    <div>
+        {% include 'comments_listing_widget.html' %}
+    </div>
+{% endif %}
+
+</div>
+<div id="emails_section">
+    <div class='content_box' style='width: 100%;'>
+        {% include 'email_listing_widget.html' %}
+    </div>
+</div>
+
+{% if target_detail.id %}
+    {% include 'services_tab_tabs_widget.html' %}
+    </div>
+{% endif %}
+
+<div style="display: none;">
+    <div id="edit-details-form" title="Edit Details" style="display: table;">
+        <form id="form-edit-details" action='{% url 'crits.targets.views.add_update_target' %}' method='POST' style="display: inline;">
+        <table class='form'> {{ form.as_table }}</table>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascript_includes %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/targets.js"></script>
+{% endblock %}

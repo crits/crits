@@ -1,0 +1,29 @@
+{% load url from future %}
+<script src="/js/flot/jquery.flot.js" type="text/javascript"></script>
+<script>
+$(document).ready(function() {
+    var dataurl = "{% url 'crits.campaigns.views.campaign_stats' %}?campaign={{campaign_name|urlencode}}";
+    var chart = $("#chart");
+    var options = {
+        lines: { show: true },
+        points: { show: true },
+        xaxis: {
+        mode: "time",
+        minTickSize: [1, "month"],
+        }
+    };
+    function onDataReceived(data) {
+        $.plot(chart, data, options);
+    }
+    
+    $.ajax({
+        url: dataurl,
+        method: 'GET',
+        dataType: 'json',
+        success: onDataReceived
+    });
+
+    });
+</script>  
+<div id="chart" style="width:600px;height:300px;">
+</div>

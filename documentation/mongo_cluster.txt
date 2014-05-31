@@ -1,0 +1,166 @@
+######################
+# Clustering MongoDB #
+######################
+
+Starting off with a clustered database system positions you for long-term
+scalability. It prevents the headache of converting a single server instance to
+a cluster down the road. You can the combined power of all of your systems for
+computational analysis (via mapreduce and aggregation) and vastly improve your
+read and write performance.
+
+The rest of this document will assume you are familiar with the terms that
+are used in the MongoDB documentation found in the following links:
+
+- http://docs.mongodb.org/manual/sharding/
+- http://docs.mongodb.org/manual/core/sharded-clusters/
+- http://docs.mongodb.org/manual/core/sharded-cluster-architectures/
+- http://docs.mongodb.org/manual/core/sharded-cluster-internals/
+- http://docs.mongodb.org/manual/administration/sharded-clusters/
+
+###################
+# Recommendations #
+###################
+
+- We recommend 7 servers to start out with:
+- The basic layout is:
+    - one server for the UI and mongo router (allows you to query the database)
+    - 6 servers to house the DB and config servers
+    - the 6 servers will be split into 2 shard of 3 replicas
+
+##################
+# Helper Scripts #
+##################
+
+- In the 'contrib/mongo' directory that came with CRITs, you will find two
+  directories, one for Ubuntu, and one for RHEL.
+    In each of these are 3 scripts:
+    - mongod_start.sh -> this starts an instance of the mongod database process
+    - mongoc_start.sh -> this starts an instance of a mongo config server
+    - mongos_start.sh -> this starts an instance of a mongo router
+    These scripts can be copied to your servers and used to start them
+    appropriately.
+        - some editing is required that we will cover below
+
+#################################
+# Example cluster configuration #
+#################################
+
+In our example we are going to setup a MongoDB cluster with two shards. Each
+shard will be a MongoDB replicaSet. We will call these replicaSets rs_a and rs_b.
+
+Setup rs_a:
+
+- on each server you want in your rs_a replica:
+    - Create the database directory:
+        mkdir /data/db
+    - copy the mongod_start.sh script to this server into /data
+    - edit the script and append the following to the end of the mongod command:
+        --shardsvr --replSet rs_a
+    - run the script as sudo
+        sudo /data/mongod_start.sh
+- on one of the rs_a servers, run the following:
+    mongo localhost:27018
+- paste the following cfg block into the mongo shell, replacing
+  servera, serverb, and serverc with your server names:
+
+cfg = {
+    _id : "rs_a",
+    members : [
+        {_id : 0, host : "servera:27018", priority : 1},
+        {_id : 1, host : "serverb:27018", priority : 1},
+        {_id : 2, host : "serverc:27018", priority : 0}
+    ]
+}
+
+- initiate the cfg you just entered by entering the following into the mongo shell:
+    rs.initiate(cfg)
+
+Setup rs_b:
+
+- on each server:
+    - Create the database directory:
+        mkdir /data/db
+    - copy the mongod_start.sh script to this server into /data
+    - edit the script and append the following to the end of the mongod command:
+        --shardsvr --replSet rs_b
+    - run the script as sudo
+        sudo /data/mongod_start.sh
+- on one of the rs_b servers, run the following:
+    mongo localhost:27018
+- paste the following cfg block into the mongo shell, replacing
+  servera, serverb, and serverc with your server names:
+
+cfg = {
+    _id : "rs_b",
+    members : [
+        {_id : 0, host : "serverd:27018", priority : 1},
+        {_id : 1, host : "servere:27018", priority : 1},
+        {_id : 2, host : "serverf:27018", priority : 0}
+    ]
+}
+
+- initiate the cfg you just entered by entering the following into the mongo shell:
+    rs.initiate(cfg)
+
+Setting up config servers:
+
+- choose any 3 servers out of the 6 (we recommend not one of the primary nodes)
+- create the config server directory:
+    mkdir /data/configdb
+- copy the mongoc_start.sh script to this server into /data
+- run the script
+    sudo /data/mongoc_start.sh
+    - default port for the config server will be 27019
+
+Setting up the router:
+
+- on the server housing the CRITs web UI:
+    - copy the mongos_start.sh script to this server into /data
+    - edit the script to replace the example server names with the names of
+      your 3 servers running the config db
+    - run the script:
+        sudo /data/mongos_start.sh
+- at this point all queries for your cluster *must* be done through this router!
+- run the following to get to your cluster's mongo router shell:
+    - mongo localhost:27017
+- switch to the admin database by typing the following into the shell:
+    use admin
+- paste the following lines into the shell one-by-one, replacing the server names with your appropriate server names:
+
+db.runCommand( { addShard : "rs_a/servera:27018,serverb:27018,serverc:27018" } );
+db.runCommand( { addShard : "rs_b/serverd:27018,servere:27018,serverf:27018" } );
+db.runCommand( { enablesharding : "crits" } );
+db.runCommand( { shardcollection : "crits.sample", key : { "md5": 1 } });
+db.runCommand( { shardcollection : "crits.pcaps", key : { "md5" : 1 } });
+db.runCommand( { shardcollection : "crits.sample.files", key : { "md5" : 1 } } );
+db.runCommand( { shardcollection : "crits.pcaps.files", key : { "md5" : 1 } });
+db.runCommand( { shardcollection : "crits.objects.files", key : { "md5" : 1 } });
+db.runCommand( { shardcollection : "crits.sample.chunks", key : { "files_id" : 1 } } );
+db.runCommand( { shardcollection : "crits.pcaps.chunks", key : { "files_id" : 1 } } );
+db.runCommand( { shardcollection : "crits.objects.chunks", key : { "files_id" : 1 } } );
+
+Cluster administration:
+
+- at this point if you need to shut down the cluster, do it in the following order:
+    - stop the router (run these on the router)
+        mongo localhost:27017
+        use admin
+        db.shutdownServer()
+    - stop the config servers (run these on each config server)
+        mongo localhost:27019
+        use admin
+        db.shutdownServer()
+    - stop the secondary nodes (run these on each secondary node)
+        mongo localhost:27018
+        use admin
+        db.shutdownServer()
+    - stop the primary nodes (run these on each primary node)
+        mongo localhost:27018
+        use admin
+        db.shutdownServer()
+- if you need to start the cluster again, do it in the following order:
+    - start the config servers using the mongoc_start.sh scripts you copied to
+      the servers
+    - start the primary and secondary nodes using the mongod_start.sh scripts
+      you copied to the servers
+    - start the router using the mongos_start.sh script you copied to the server

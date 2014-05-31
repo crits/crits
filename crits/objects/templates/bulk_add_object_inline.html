@@ -1,0 +1,74 @@
+{% block css_includes %}
+<link rel="stylesheet" media="screen" href="/css/handsontable/default.css">
+<link rel="stylesheet" media="screen" href="/css/handsontable/jquery.handsontable.full.css">
+{% endblock %}
+
+{% block content %}
+
+<div class="handsontable" id="handsontable_{{ table_name }}">
+<br/>
+<div id='default_buttons'>
+    <button id="update-{{ table_name }}-inline-table">Upload Table</button>
+    <button id="validate-{{ table_name }}-inline-table">Validate Table</button>
+    <span id='custom_buttons'/>
+</div>
+<div id="{{ table_name }}_errors"></div>
+</div>
+
+<script type="text/javascript">
+    $('#update-{{ table_name }}-inline-table').button()
+    $('#validate-{{ table_name }}-inline-table').button()
+</script>
+
+{% endblock %}
+
+{% block javascript_includes %}
+
+<script type="text/javascript">
+
+    {% with height='undefined' navigation_control='false' %}
+    if(typeof(Handsontable) === 'undefined') {
+        $.when($.getScript("/js/handsontable/jquery.handsontable.full.js"),
+               $.getScript("{{ STATIC_URL }}js/bulk_add_default.js")).done(function() {
+            var defaultInlineTableName = '{{ table_name }}';
+
+            {% include "handsontable.js" with formdict=formdict prefix="Inline" %}
+
+            {% if not is_prevent_initial_table %}
+                initializeHandsOnTableInline('handsontable_{{ table_name }}', '{{ table_name }}');
+
+                $("#update-" + defaultInlineTableName + "-inline-table").click(function() {
+                    $(this).button({disabled: true});
+                    uploadTable(defaultInlineTableName, null, false, {Otype: my_type, Oid: my_id}, "{% url 'crits.objects.views.bulk_add_object_inline' %}");
+                });
+
+                $("#validate-" + defaultInlineTableName + "-inline-table").click(function() {
+                    $(this).button({disabled: true});
+                    uploadTable(defaultInlineTableName, null, true, {Otype: my_type, Oid: my_id}, "{% url 'crits.objects.views.bulk_add_object_inline' %}");
+                });
+            {% endif %}
+        });
+    } else {
+        var defaultInlineTableName = '{{ table_name }}';
+
+        {% include "handsontable.js" with formdict=formdict prefix="Inline" %}
+
+        {% if not is_prevent_initial_table %}
+            initializeHandsOnTableInline('handsontable_{{ table_name }}', '{{ table_name }}');
+
+            $("#update-" + defaultInlineTableName + "-inline-table").click(function() {
+                $(this).button({disabled: true});
+                uploadTable(defaultInlineTableName, null, false, {Otype: my_type, Oid: my_id}, "{% url 'crits.objects.views.bulk_add_object_inline' %}");
+            });
+
+            $("#validate-" + defaultInlineTableName + "-inline-table").click(function() {
+                $(this).button({disabled: true});
+                uploadTable(defaultInlineTableName, null, true, {Otype: my_type, Oid: my_id}, "{% url 'crits.objects.views.bulk_add_object_inline' %}");
+            });
+        {% endif %}
+    }
+    {% endwith %}
+
+</script>
+
+{% endblock %}

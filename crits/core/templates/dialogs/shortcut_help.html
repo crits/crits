@@ -1,0 +1,69 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}" class="shortcut_keys_table" title="Shortcut Keys">
+    <table>
+        <tbody>
+            <tr>
+                <th></th>
+                <th>Add Commands</th>
+            </tr>
+            <tr>
+                <td><kbd class="light">d</kbd></td>
+                <td>Add a Domain</td>
+            </tr>
+            <tr>
+                <td><kbd class="light">e</kbd></td>
+                <td>Add an Email</td>
+            </tr>
+            <tr>
+                <td><kbd class="light">E</kbd></td>
+                <td>Add an Event</td>
+            </tr>
+            <tr>
+                <td><kbd class="light">i</kbd></td>
+                <td>Add an Indicator</td>
+            </tr>
+            <tr>
+                <td><kbd class="light">I</kbd></td>
+                <td>Add an IP Address</td>
+            </tr>
+            <tr>
+                <td><kbd class="light">p</kbd></td>
+                <td>Add a PCAP</td>
+            </tr>
+            <tr>
+                <td><kbd class="light">s</kbd></td>
+                <td>Add a Sample</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr>
+                <th></th>
+                <th>Navigation Commands</th>
+            </tr>
+            <tr>
+                <td><kbd class="light">a</kbd></td>
+                <td>Advanced Search Menu</td>
+            </tr>
+            <tr>
+                <td><kbd class="light">n</kbd> or <kbd class="light">m</kbd></td>
+                <td>Open the Navigation Menu</td>
+            </tr>
+            <tr>
+                <td><kbd class="light">Esc</kbd></td>
+                <td>Close the Navigation and Advanced Search Menu</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr>
+                <th></th>
+                <th>Help Commands</th>
+            </tr>
+            <tr>
+                <td><kbd class="light">?</kbd></td>
+                <td>Shortcut Help Menu</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+

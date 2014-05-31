@@ -1,0 +1,53 @@
+{% extends "containment.html" %}
+{% load url from future %}
+
+{% block title %}CRITs Configuration{% endblock %}
+
+{% block content %}
+
+<style>
+    #config_sections {
+        border-right: 1px solid #bbb;
+        width: 100px;
+        min-height: 575px;
+        max-height: 575px;
+        overflow-x: auto;
+        display: inline-block;
+        vertical-align: top;
+        padding-right: 10px;
+        margin-left: 25%;
+    }
+    #config_form_input {
+        width: 500px;
+        min-height: 100%;
+        max-height: 100%;
+        overflow-x: auto;
+        display: inline-block;
+        vertical-align: top;
+    }
+    #config_results {
+        color: #ff0000;
+    }
+</style>
+
+<form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
+    <div id="config_sections">
+        <input id="config_form_submit" class="form_submit_button" type="submit" name="submit" value="Submit"></input>
+        <br /><br />
+        <div id="config_results"></div>
+    </div>
+    <div id="config_form_input">
+        <div id="info_section">
+            <table class="form">
+                {{ config_form.as_table }}
+            </table>
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block javascript_includes %}
+ <script type="text/javascript" src="{{ STATIC_URL }}js/config.js"></script>
+{% endblock %}
+

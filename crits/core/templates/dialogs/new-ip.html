@@ -1,0 +1,13 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Add New IP"
+     afterDialogClick="new_ip_dialog();">
+
+    <form id="form-{{ request.GET.dialog }}" 
+	  action="{% url 'crits.ips.views.add_update_ip' 'add' %}" 
+	  method="POST" enctype="multipart/form-data"
+	  item-type="ip"
+	  input_clear_filter='[name!="created"][name!="analyst"]'>
+    <table class="form">{{ ip_form.as_table }}</table>
+    </form>
+</div>

@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# This script is intended to be copied to your .git/hooks/pre-commit file and made executable
+# 
+# It will nicely remind you that you forgot to do a collectstatic before commiting
+#
+# In the future we might want to do js/css minification or other things too.
+#
+# If you are sure you wanted to do the commit, doing it a second time will not see the changes nor care if you actually added them to your 
+# commit, so you can force the commit if for some reason you wanted to.
+#
+
+
+set -e
+
+out=$(python manage.py collectstatic --noinput 2>&1 |grep 'static file')
+
+set -- $out
+if [ "$1" != "0" ]; then
+  echo "manage.py collectstatic automatically performed: $out 
+
+You may wish to do 
+
+  git add -u extras/www/static/
+
+prior to committing this!
+"
+  git status -s -uno extras/www/static/
+  exit 1;
+fi 

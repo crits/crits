@@ -1,0 +1,22 @@
+{% load url from future %}
+{% if campaign.name %}
+    <tr>
+    <td data-field="name"><a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">{{campaign.name}}</a></td>
+    <td data-field="confidence">{{campaign.confidence}}</td>
+    <td data-field="description">{{campaign.description}}</td>
+    <td data-field="analyst">{{campaign.analyst}}</td>
+    <td data-field="date">{{campaign.date}}</td>
+    {% with hit=obj|default:hit %}
+    <td>
+        {% if admin %}
+        <a href="#" title="Delete Campaign" class="ui-icon ui-icon-close deleteClick" 
+	   type="campaign" value="{{campaign.date}}" 
+	   data-del-type="Campaign Association" 
+	   data-del-key="{{ hit.name }}"
+	   action="{% url 'crits.campaigns.views.remove_campaign' relationship.type hit.id %}" key="{{campaign.name}}"></a>
+        {% endif %}
+        <a href="#" title="Edit Campaign" class="ui-icon ui-icon-pencil dialogClick" dialog="campaign-add" persona="update" action="{% url 'crits.campaigns.views.edit_campaign' relationship.type hit.id %}"></a>
+    </td>
+    {% endwith %}
+    </tr>
+{% endif %}

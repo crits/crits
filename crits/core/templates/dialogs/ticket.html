@@ -1,0 +1,9 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}">
+    <form id="form-{{ request.GET.dialog }}"
+	  method="POST" enctype="multipart/form-data" item-type="ticket">
+    <table class="form">{{new_ticket.as_table}}</table>
+    </form>
+</div>
+

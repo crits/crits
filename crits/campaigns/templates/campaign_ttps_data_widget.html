@@ -1,0 +1,13 @@
+<table style="table-layout:fixed;" class="chart rcollapser" id="ttp_list">
+    <col width="19" /> <!-- spacer -->
+    <col width="75%" /> <!-- ttp -->
+    <col width="150" /> <!-- analyst/created -->
+    <col width="20" /> <!-- buttons -->
+    <thead>
+    </thead>
+    <tbody>
+        {% for ttp in campaign_detail.ttps %}
+            {% include "campaign_ttps_row_widget.html" %}
+        {% endfor %}
+    </tbody>
+</table>

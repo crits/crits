@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% load filters %}
+
+{% block title %} Raw Data Details {% endblock %}
+
+{% block content %}
+
+<script>
+    var raw_data_id = "{{ raw_data.id }}";
+    var add_highlight = "{% url 'crits.raw_data.views.add_highlight' raw_data.id %}";
+    var remove_highlight = "{% url 'crits.raw_data.views.remove_highlight' raw_data.id %}";
+    var details_by_link = "{% url 'crits.raw_data.views.details_by_link' raw_data.link_id|stringformat:"s" %}"
+    var update_raw_data_description = "{% url 'crits.raw_data.views.set_raw_data_description' raw_data.id %}";
+    var update_raw_data_tool_details = "{% url 'crits.raw_data.views.set_raw_data_tool_details' raw_data.id %}";
+    var update_raw_data_tool_name = "{% url 'crits.raw_data.views.set_raw_data_tool_name' raw_data.id %}";
+    var update_raw_data_type = "{% url 'crits.raw_data.views.set_raw_data_type' raw_data.id %}";
+    var update_raw_data_highlight_comment = "{% url 'crits.raw_data.views.set_raw_data_highlight_comment' raw_data.id %}";
+    var update_raw_data_highlight_date = "{% url 'crits.raw_data.views.set_raw_data_highlight_date' raw_data.id %}";
+    var get_raw_data_type_dropdown = "{% url 'crits.raw_data.views.get_raw_data_type_dropdown' %}";
+    var get_inline_comments = "{% url 'crits.raw_data.views.get_inline_comments' raw_data.id|stringformat:"s" %}";
+    var get_raw_data_versions = "{% url 'crits.raw_data.views.get_raw_data_versions' raw_data.id|stringformat:"s" %}";
+</script>
+
+{% if raw_data %}
+<div id="tabnav" class="tabnav" style="font-size:90%;">
+    <ul style="font-size: 125%;">
+    <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
+    <li><a href="#highlights_section" id="highlights_button"><span>Highlights</span></a></li>
+    <li><a href="#raw_section" id="raw_button"><span>Raw Data</span></a></li>
+    <li><a href="#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ raw_data.analysis|length }})</span></a></li>
+    {% include 'services_tab_list_widget.html' %}
+</ul>
+
+<div id="details_section">
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        <li><a href="#" id="upload-new-version" class="dialogClick" dialog="upload-new-version" data-action="{% url 'crits.raw_data.views.upload_raw_data' raw_data.link_id|stringformat:"s" %}">Upload New Version</a></li>
+        {% if admin %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="raw_data" action='{% url "crits.raw_data.views.remove_raw_data" raw_data.id %}'>Delete Raw Data</a></li>
+        {% endif %}
+    </ul>
+    </span>
+    <div class="content_box content_details">
+        <h3 class="titleheader">
+            <span id="raw_data_title" title="Copy to clipboard" data-title="{{ raw_data.title }}">"{{ raw_data.title }}" Details<span>
+        </h3>
+        <table class="vertical" width="100%">
+        <thead>
+        </thead>
+        <tbody>
+            <tr>
+            <td class='key'>ID</td>
+            <td>{{ raw_data.id }}</td>
+            </tr>
+            <tr>
+            <td class='key'>Created</td>
+            <td>{{ raw_data.created }}</td>
+            </tr>
+            <tr>
+            <td class='key'>Tool</td>
+            {% if raw_data.tool.name %}
+                <td>
+                    <span class="edit_underline" id="raw_data_tool_name">{{raw_data.tool.name}}</span>
+                </td>
+            {% else %}
+                <td>
+                    <span class="edit_underline" id="raw_data_tool_name">None</span>
+                </td>
+            {% endif %}
+            </tr>
+            <tr>
+            <td class='key'>Tool Version</td>
+            <td id="raw_data_tool_version">{{ raw_data.tool.version }}</td>
+            </tr>
+            <tr>
+            <td class='key'>Tool Details</td>
+            {% if raw_data.tool.details %}
+                <td>
+                    <span class="edit_underline" id="raw_data_tool_details">{{raw_data.tool.details}}</span>
+                </td>
+            {% else %}
+                <td>
+                    <span class="edit_underline" id="raw_data_tool_details">None</span>
+                </td>
+            {% endif %}
+            </tr>
+            <tr>
+                <td class='key'>Data Type</td>
+                    <span style="float: right;" class="object_status_response"></span>
+                </td>
+                <td>
+                    <span class="edit" id="raw_data_type" action="{% url 'crits.raw_data.views.set_raw_data_type' subscription.id %}">{{raw_data.data_type}}</span>
+                </td>
+            </tr>
+            <tr>
+            <tr>
+            <td class='key'>Version</td>
+            <td>
+                <select id="jump_versions" data-link="{{ raw_data.link_id }}"
+                    data-length={{ versions }} data-version={{ raw_data.version }}>
+                </select>
+            </td>
+            </tr>
+            <tr>
+            <tr>
+            <td class='key'>Description</td>
+            {% if raw_data.description %}
+                <td>
+                    <span class="edit_underline" id="raw_data_description">{{raw_data.description}}</span>
+                </td>
+            {% else %}
+                <td>
+                    <span class="edit_underline" id="raw_data_description">None</span>
+                </td>
+            {% endif %}
+            </tr>
+            <tr>
+                <td class="key">Status
+                    <span style="float: right;" class="object_status_response"></span>
+                </td>
+                <td>
+                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{raw_data.status}}</span>
+                </td>
+            </tr>
+            <tr>
+            {% with sources=raw_data.source obj_id=raw_data.id obj_type=subscription.type %}
+                {% include "sources_listing_widget.html" %}
+            {% endwith %}
+            </tr>
+            <tr>
+                {% with releasability=raw_data.releasability %}
+                    {% include 'releasability_list_widget.html' %}
+                {% endwith %}
+            </tr>
+        </tbody>
+        </table>
+    </div>
+    <div id="detail_floaters">
+        {% include 'details_options_widget.html' %}
+        {% with bucket_list=raw_data.bucket_list %}
+            {% include 'bucket_list_widget.html' %}
+        {% endwith %}
+    </div>
+    <div>
+        {% include 'raw_data_data.html' %}
+    </div>
+    <div>
+      {% with obj=raw_data obj_type=subscription.type %}
+         {% include 'tickets_listing_widget.html' %}
+      {% endwith %}
+    </div>
+    <div>
+        {% with hit=raw_data col=COL_RAW_DATA %}
+            {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% include 'relationships_listing_widget.html' %}
+    </div>
+    <div>
+        {% include 'objects_listing_widget.html' %}
+    </div>
+    <div>
+        {% include "comments_listing_widget.html" %}
+    </div>
+</div>
+<div id="highlights_section">
+    {% include 'raw_data_highlights.html' %}
+</div>
+<div id="raw_section">
+    <div class="content_box">
+        <h3 class="titleheader">
+        <span>Data<span>
+        </h3>
+        <div>
+            <pre>{{ raw_data.data|cgi_escape }}</pre>
+        </div>
+    </div>
+</div>
+{% include 'raw_data_versions.html' %}
+{% with item=raw_data %}
+    {% include "services_analysis_section.html" with crits_type="RawData" identifier=raw_data.id %}
+{% endwith %}
+{% include 'services_tab_tabs_widget.html' %}
+</div>
+
+{% else %}
+<h3>Raw Data not found. If you just uploaded Raw Data, try refreshing as the system might not have completed processing your upload yet.</h3>
+
+{% endif %}
+
+<a href="#" id="add_inline_comment" title="Add Comment" class="ui-icon
+ui-icon-comment dialogClick" dialog="comments" persona="new" action="{% url 'crits.raw_data.views.add_inline_comment' raw_data.id|stringformat:"s" %}"></a>
+
+{% endblock %}
+
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/raw_data.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/diffview.js"></script><script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/jsdiff.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/difflib.js"></script>
+{% endblock %}
+

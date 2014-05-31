@@ -1,0 +1,18 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Upload TLDs">
+  <p>Steps to update:
+    <ol>
+      <li>Download the effective tld list from <a target=_new href="https://publicsuffix.org/list/effective_tld_names.dat">Publicsuffix.org</a></li>
+      <li>Use the form below to upload that file into CRITs</li>
+    </ol>
+  </p>
+  
+  <form id="form-{{ request.GET.dialog }}" 
+	action='{% url "crits.domains.views.tld_update" %}' 
+	method='POST' enctype="multipart/form-data" target="tld-iframe" item-type="">
+    <table class="form">{{ upload_tlds.as_table }}</table>
+    <iframe name="tld-iframe" class="file-submit-iframe" style="display:none;"></iframe>
+  </form>
+</div>
+

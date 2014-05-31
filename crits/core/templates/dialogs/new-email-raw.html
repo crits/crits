@@ -1,0 +1,11 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Upload Email (Raw)">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "crits.emails.views.email_raw_add" %}' 
+	  method='POST' enctype="mutipart/form-data"
+	  item-type="email-raw">
+      <table class="form">{{ upload_email_raw.as_table }}</table>
+      <div id="form-add-email-raw-results" class="form_results"></div>
+    </form>
+</div>

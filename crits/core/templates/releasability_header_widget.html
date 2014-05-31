@@ -1,0 +1,20 @@
+{% load url from future %}
+{% for rel in releasability %}
+    <tr class="rel_source">
+        <td class="rcollapsible" style="border-right:none;" ><a class="ui-icon ui-icon-triangle-1-e" href="#"></a></td>
+        <td colspan="2" class="rcollapsible_alt" style="border-right:none;">
+            <a href="#">{{rel.name}} ({{rel.instances|length|default:0}}) - Assigned by {{ rel.analyst }}</a>
+        </td>
+        <td data-intro="Add Instance/Delete" data-position="right">
+          {% if admin and not rel.instances|length %}
+          <span class="remove_releasability_button ui-icon ui-icon-trash" title="Remove All" action="{% url 'crits.core.views.source_releasability' %}" data-action="remove" data-name="{{rel.name}}" style="float: right; border-left: 1px solid #ddd;"></span>
+          {% endif %}
+        <span class="add_releasability_instance_button ui-icon ui-icon-plusthick" title="Add {{ rel.name }} Instance" action="{% url 'crits.core.views.source_releasability' %}" data-action="add_instance" data-name="{{rel.name}}" style="float: right;"></span>
+
+        </span>
+        </td>
+    </tr>
+    {% for instance in rel.instances %}
+        {% include "releasability_row_widget.html" %}
+    {% endfor %}
+{% endfor %}

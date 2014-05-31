@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<h2>Email chart for {{campaign}}</h2>
+   <script src="/js/flot/jquery.flot.js" type="text/javascript"></script>
+   <script>
+$(document).ready(function() {
+    var dataurl = "{% url 'crits.campaigns.views.campaign_stats' %}?campaign={{campaign}}";
+    var chart = $("#chart");
+    var options = {
+        lines: { show: true },
+        points: { show: true },
+        xaxis: {
+        mode: "time",
+        minTickSize: [1, "month"],
+        }
+    };
+    function onDataReceived(data) {
+        $.plot(chart, data, options);
+    }
+    
+    $.ajax({
+        url: dataurl,
+        method: 'GET',
+        dataType: 'json',
+        success: onDataReceived
+    });
+
+    });
+   </script>  
+   <div id="chart" style="width:600px;height:600px;">
+   </div>
+
+{% endblock %}

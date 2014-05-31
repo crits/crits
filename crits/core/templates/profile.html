@@ -1,0 +1,753 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% load filters %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<script>
+    var source_subscription = "{% url 'crits.core.views.source_subscription' %}";
+    var change_password = "{% url 'crits.core.views.change_password' %}";
+    var change_totp_pin = "{% url 'crits.core.views.change_totp_pin' %}";
+    var create_api_key = "{% url 'crits.core.views.create_api_key' %}";
+    var revoke_api_key = "{% url 'crits.core.views.revoke_api_key' %}";
+    var get_api_key = "{% url 'crits.core.views.get_api_key' %}";
+    $(document).ready(function() {
+        $(".chart").tablesorter();
+        $(".tabnav").tabs({
+            create: function() {
+                $('.tabnav').show();
+            }
+        });
+    });
+</script>
+<style>
+  table.vertical { min-width: 50%; }
+  table.vertical th {
+     width: 25em;
+     text-align: right;
+     padding: 0.5em;
+     padding-right: 1em;
+  }
+  table.vertical td.submit {
+     text-align: center;
+  }
+  {% comment %} 
+  # May add this back, and/or checkboxes to the toggle options
+  # It likely could be done with before/after styles so view doesn't have to return it.
+  <span class="ui-icon ui-icon-mail-open left"> 
+  {% endcomment %} 
+
+</style>
+
+<div class="tabnav" style="font-size:90%;">
+    <ul style="font-size: 125%;">
+      <li><a href="#user_info_section" id="user_info_button"><span>User Info</span></a></li>
+      <li><a href="#user_preferences_section" id="user_preferences_button"><span>Preferences</span></a></li>
+      <li><a href="#user_logins_section" id="user_logins_button"><span>Login Attempts</span></a></li>
+      <li><a href="#recent_activity_section" id="recent_activity_button"><span>Recent Activity</span></a></li>
+    <li><a href="#subscriptions_section" id="subscriptions_button"><span>Subscriptions ({{ subscription_count }})</span></a></li>
+    <li><a href="#sources_section" id="sources_button"><span>My Sources</span></a></li>
+    <li><a href="#api_section" id="api_button"><span>My API Keys ({{ user_info.api_keys|length }})</span></a></li>
+    <li><a href="#notifications_section" id="notifications_button"><span>Notifications ({{ notifications|length }})</span></a></li>
+    <li><a href="#favorites_section" id="favorites_button"><span>Favorites ({{ total_favorites}})</span></a></li>
+    </ul>
+<div id="user_info_section">
+    <table class="vertical" width="100%">
+        <thead>
+            <colgroup>
+                <col width="15%">
+                <col width="85%">
+            </colgroup>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="key">
+                    Username
+                </td>
+                <td>
+                    {{ user_info.username }}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">
+                    First Name
+                </td>
+                <td>
+                    {{ user_info.first_name }}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">
+                    Last Name
+                </td>
+                <td>
+                    {{ user_info.last_name }}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">
+                    Email Address
+                </td>
+                <td>
+                    {{ user_info.email }}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">
+                    Last Login
+                </td>
+                <td>
+                    {{ user_info.last_login }}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">
+                    Invalid Login Attempts
+                </td>
+                <td>
+                    {{ user_info.invalid_login_attempts }}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">
+                    Failed Password Resets
+                </td>
+                <td>
+                    {{ user_info.password_reset.attempts }}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">
+                    Date Joined
+                </td>
+                <td>
+                    {{ user_info.date_joined }}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">
+                    Organization
+                </td>
+                <td>
+                    {{ user_info.organization }}
+                </td>
+            </tr>
+            <tr>
+                <td class="key">
+                    CRITs Role
+                </td>
+                <td>
+                    {{ user_info.role }}
+                </td>
+            </tr>
+            <tr id="current_password" style="display: none;">
+                <td class="key">
+                    Current Password
+                </td>
+                <td>
+                    <input id="current_p" type="password" size="40" name="current_p" class="textbox">
+                </td>
+            </tr>
+            <tr id="new_password" style="display: none;">
+                <td class="key">
+                    New Password
+                </td>
+                <td>
+                    <input id="new_p" type="password" size="40" name="new_p" class="textbox">
+                </td>
+            </tr>
+            <tr id="new_password_confirm" style="display: none;">
+                <td class="key">
+                    Confirm Password
+                </td>
+                <td>
+                    <input id="new_p_c" type="password" size="40" name="new_p_c" class="textbox">
+                </td>
+            </tr>
+            <tr id="totp_pin" style="display: none;">
+                <td class="key">
+                    TOTP Pin
+                </td>
+                <td>
+                    <input id="new_totp_pin" type="password" size="4" name="new_totp_pin" class="textbox">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <button class="form_submit_button" id="enable_totp">Enable/Change TOTP</button>
+    <button class="form_submit_button" id="change_password">Change Password</button>
+    <button class="form_submit_button" style="display: none;" id="submit_pin">Submit</button>
+    <button class="form_submit_button" style="display: none;" id="submit_password">Submit</button>
+    <span id="password_change_results"></span>
+</div>
+
+<div id="user_preferences_section">
+  {% for pref in preferences %}
+    {% include "preferences_widget.html" %}
+  {% endfor %}
+</div>
+
+<div id="user_logins_section">
+    <table class="chart" width="100%">
+        <thead>
+            <th>User-Agent</th>
+            <th>Accept Language</th>
+            <th>Location</th>
+            <th>Success</th>
+            <th>Date</th>
+        </thead>
+        <tbody>
+            {% for login in user_info.login_attempts %}
+                <tr>
+                    <td>
+                        {{ login.user_agent }}
+                    </td>
+                    <td>
+                        {{ login.accept_language }}
+                    </td>
+                    <td>
+                        {{ login.remote_addr }}
+                    </td>
+                    <td>
+                        {{ login.success }}
+                    </td>
+                    <td>
+                        {{ login.date }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div id="recent_activity_section">
+<table width="100%">
+    <tr>
+    <td colspan="3">
+        {% if indicators %}
+        <div class='content_box' style='width: 100%;'>
+            <h3 class='titleheader'>
+            <span>Recent Indicators</span>
+            </h3>
+            <div class='content_body'>
+                {% with indicator_list=indicators %}
+                    {% include 'indicators_listing_widget.html' %}
+                {% endwith %}
+            </div>
+        </div>
+        {% endif %}
+    </td>
+    </tr>
+    <tr>
+    <td colspan="3">
+        {% if emails %}
+        <div class='content_box' style='width: 100%;'>
+            <h3 class='titleheader'>
+            <span>Recent Emails</span>
+            </h3>
+            <div class='content_body'>
+            {% with email_list=emails %}
+                {% include 'email_listing_widget.html' %}
+            {% endwith %}
+            </div>
+        </div>
+        {% endif %}
+    </td>
+    </tr>
+       <tr>
+    <td colspan="3">
+        {% if samples %}
+        <div class='content_box' style='width: 100%;'>
+            <h3 class='titleheader'>
+            <span>Recent Samples</span>
+            </h3>
+            <div class='content_body'>
+            {% with sample_list=samples %}
+                {% include 'samples_listing_widget.html' %}
+            {% endwith %}
+            </div>
+        </div>
+        {% endif %}
+    </td>
+    </tr>
+</table>
+</div>
+<div id="subscriptions_section">
+    <div class="tabnav" style="font-size: 90%;">
+    <ul style="font-size: 125%;">
+        {% if subscriptions.Sample %}
+        <li><a href="#sample_subscriptions" id="samples_button"><span>Samples ({{ subscriptions.Sample|length }})</span></a></li>
+        {% endif %}
+        {% if subscriptions.PCAP %}
+        <li><a href="#pcap_subscriptions" id="pcaps_button"><span>PCAPs ({{ subscriptions.PCAP|length }})</span></a></li>
+        {% endif %}
+        {% if subscriptions.Email %}
+        <li><a href="#email_subscriptions" id="emails_button"><span>Emails ({{ subscriptions.Email|length }})</span></a></li>
+        {% endif %}
+        {% if subscriptions.Indicator %}
+        <li><a href="#indicator_subscriptions" id="indicators_button"><span>Indicators ({{ subscriptions.Indicator|length }})</span></a></li>
+        {% endif %}
+        {% if subscriptions.Event %}
+        <li><a href="#event_subscriptions" id="events_button"><span>Events ({{ subscriptions.Event|length }})</span></a></li>
+        {% endif %}
+        {% if subscriptions.Domain %}
+        <li><a href="#domain_subscriptions" id="domains_button"><span>Domains ({{ subscriptions.Domain|length }})</span></a></li>
+        {% endif %}
+        {% if subscriptions.IP %}
+        <li><a href="#ip_subscriptions" id="ips_button"><span>IPs ({{ subscriptions.IP|length }})</span></a></li>
+        {% endif %}
+        {% if subscriptions.Campaign %}
+        <li><a href="#campaign_subscriptions" id="campaigns_button"><span>Campaigns ({{ subscriptions.Campaign|length }})</span></a></li>
+        {% endif %}
+    </ul>
+    {% if subscriptions.Sample %}
+    <div id="sample_subscriptions">
+        <div class='content_box' style='width: 100%;'>
+        <h3 class='titleheader'>
+            <span>Sample Subscriptions</span>
+        </h3>
+        <div class='content_body'>
+            <table class='chart tablesorter'>
+            <thead>
+                <tr>
+                    <th>Filename</th>
+                    <th>MD5</th>
+                    <th>Date Subscribed</th>
+                    <th>
+                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for sample in subscriptions.Sample %}
+                <tr>
+                    <td><a href="{% url 'crits.samples.views.detail' sample.md5 %}">{{ sample.filename }}</a></td>
+                    <td>{{ sample.md5 }}</td>
+                    <td>{{ sample.date }}</td>
+                    <td>
+                        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Sample' sample.id %}">
+                        <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
+                        </a>
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if subscriptions.PCAP %}
+    <div id="pcap_subscriptions">
+        <div class='content_box' style='width: 100%;'>
+        <h3 class='titleheader'>
+            <span>PCAP Subscriptions</span>
+        </h3>
+        <div class='content_body'>
+            <table class='chart tablesorter'>
+            <thead>
+                <tr>
+                    <th>Filename</th>
+                    <th>MD5</th>
+                    <th>Date Subscribed</th>
+                    <th>
+                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for pcap in subscriptions.PCAP %}
+                <tr>
+                    <td><a href="{% url 'crits.pcaps.views.pcap_details' pcap.md5 %}">{{ pcap.filename }}</a></td>
+                    <td>{{ pcap.md5 }}</td>
+                    <td>{{ pcap.date }}</td>
+                    <td>
+                        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'PCAP' pcap.id %}">
+                        <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
+                        </a>
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if subscriptions.Email %}
+    <div id="email_subscriptions">
+        <div class='content_box' style='width: 100%;'>
+        <h3 class='titleheader'>
+            <span>Email Subscriptions</span>
+        </h3>
+        <div class='content_body'>
+            <table class='chart tablesorter'>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>From</th>
+                    <th>Sender</th>
+                    <th>Subject</th>
+                    <th>Date Subscribed</th>
+                    <th>
+                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for email in subscriptions.Email %}
+                <tr>
+                    <td><a href="{% url 'crits.emails.views.email_detail' email.id %}">{{ email.id }}</a></td>
+                    <td>{{ email.from }}</td>
+                    <td>{{ email.sender }}</td>
+                    <td>{{ email.subject }}</td>
+                    <td>{{ email.date }}</td>
+                    <td>
+                        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Email' email.id %}">
+                        <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
+                        </a>
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if subscriptions.Indicator %}
+    <div id="indicator_subscriptions">
+        <div class='content_box' style='width: 100%;'>
+        <h3 class='titleheader'>
+            <span>Indicator Subscriptions</span>
+        </h3>
+        <div class='content_body'>
+            <table class='chart tablesorter'>
+            <thead>
+                <tr>
+                    <th>Value</th>
+                    <th>Type</th>
+                    <th>Date Subscribed</th>
+                    <th>
+                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for indicator in subscriptions.Indicator %}
+                <tr>
+                    <td><a href="{% url 'crits.indicators.views.indicator' indicator.id %}">{{ indicator.value }}</a></td>
+                    <td>{{ indicator.type }}</td>
+                    <td>{{ indicator.date }}</td>
+                    <td>
+                        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Indicator' indicator.id %}">
+                        <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
+                        </a>
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if subscriptions.Event %}
+    <div id="event_subscriptions">
+        <div class='content_box' style='width: 100%;'>
+        <h3 class='titleheader'>
+            <span>Event Subscriptions</span>
+        </h3>
+        <div class='content_body'>
+            <table class='chart tablesorter'>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Date Subscribed</th>
+                    <th>
+                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for event in subscriptions.Event %}
+                <tr>
+                    <td><a href="{% url 'crits.events.views.view_event' event.id %}">{{ event.title }}</a></td>
+                    <td>{{ event.description|truncatechars:100 }}</td>
+                    <td>{{ event.date }}</td>
+                    <td>
+                        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Event' event.id %}">
+                        <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
+                        </a>
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if subscriptions.Domain %}
+    <div id="domain_subscriptions">
+        <div class='content_box' style='width: 100%;'>
+        <h3 class='titleheader'>
+            <span>Domain Subscriptions</span>
+        </h3>
+        <div class='content_body'>
+            <table class='chart tablesorter'>
+            <thead>
+                <tr>
+                    <th>Domain</th>
+                    <th>Date Subscribed</th>
+                    <th>
+                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for domain in subscriptions.Domain %}
+                <tr>
+                    <td><a href="{% url 'crits.domains.views.domain_detail' domain.domain %}">{{ domain.domain }}</a></td>
+                    <td>{{ domain.date }}</td>
+                    <td>
+                        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Domain' domain.id %}">
+                        <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
+                        </a>
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if subscriptions.IP %}
+    <div id="ip_subscriptions">
+        <div class='content_box' style='width: 100%;'>
+        <h3 class='titleheader'>
+            <span>IP Subscriptions</span>
+        </h3>
+        <div class='content_body'>
+            <table class='chart tablesorter'>
+            <thead>
+                <tr>
+                    <th>IP</th>
+                    <th>Date Subscribed</th>
+                    <th>
+                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for ip in subscriptions.IP %}
+                <tr>
+                    <td><a href="{% url 'crits.ips.views.ip_detail' ip.ip %}">{{ ip.ip }}</a></td>
+                    <td>{{ ip.date }}</td>
+                    <td>
+                        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'IP' ip.id %}">
+                        <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
+                        </a>
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if subscriptions.Campaign %}
+    <div id="campaign_subscriptions">
+        <div class='content_box' style='width: 100%;'>
+        <h3 class='titleheader'>
+            <span>Campaign Subscriptions</span>
+        </h3>
+        <div class='content_body'>
+            <table class='chart tablesorter'>
+            <thead>
+                <tr>
+                    <th>Campaign</th>
+                    <th>Date Subscribed</th>
+                    <th>
+                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for campaign in subscriptions.Campaign %}
+                <tr>
+                    <td><a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">{{ campaign.name }}</a></td>
+                    <td>{{ campaign.date }}</td>
+                    <td>
+                        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Campaign' campaign.id %}">
+                        <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
+                        </a>
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+    </div>
+</div>
+<div id="sources_section">
+{% if user_sources %}
+<div class='content_box' style='width: 250px; margin-right: 20px;'>
+    <h3 class='titleheader'>
+    <span>Sources for {{ username }}</span>
+    </h3>
+    <div class='content_body'>
+    <table class='chart'>
+    <thead>
+        <tr>
+        <th>Source Name</th>
+        <th><span title="Subscribe to all items added to CRITs from this source.">Subscribed</span></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for source in user_sources %}
+        <tr>
+        <td>{{ source }}</td>
+        {% if source|is_in:subscriptions.Source %}
+            <td><input type="checkbox" checked="checked" class="source_subscription" data="{{source}}"></td>
+        {% else %}
+            <td><input type="checkbox" class="source_subscription" data="{{source}}"></td>
+        {% endif %}
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
+</div>
+
+<style>
+    #api_key_table tr td {
+        margin: auto;
+        text-align: center;
+    }
+</style>
+
+<div id="api_section">
+    <div class='content_box'>
+        <h3 class='titleheader'>
+        <span>API Keys for {{ username }}</span>
+        <span class="add_button" data-intro="Add an API Key" data-position="right">
+            <a style="display: inline-block;" href="#" title="Add API Key" class="ui-icon ui-icon-key" id="add_api_key"></a>
+        </span>
+        </h3>
+        <div class='content_body'>
+        <table class='chart' id="api_key_table">
+            <thead>
+                <colgroup>
+                    <col width="200px" />
+                    <col width="100px" />
+                    <col width="200px" />
+                    <col width="50px" />
+                </colgroup>
+                <tr>
+                <th>Key Name</th>
+                <th>Date Added</th>
+                <th>View Key</th>
+                <th>Revoke</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for key in user_info.api_keys %}
+                <tr>
+                    <td>{{ key.name }}</td>
+                    <td>{{ key.date }}</td>
+                    <td><button class="view_api_key" data-name="{{key.name}}">View Key</button></td>
+                    <td><button class="revoke_api_key" data-name="{{key.name}}">Revoke Key</button></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+<div id="notifications_section">
+
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+    <li><a href="{% url 'crits.core.views.clear_user_notifications' %}">Clear Notifications</a></li>
+    </ul>
+    </span>
+
+    <div class='content_box'>
+        <h3 class='titleheader'>
+        <span>Notifications</span>
+        </h3>
+        <div class='content_body'>
+            <table class='chart'>
+            <thead>
+                <tr>
+                <th>Link</th>
+                <th>Notification</th>
+                <th>Date</th>
+                <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for notification in notifications %}
+                <tr>
+                <td>{{ notification.obj_type }}</td>
+                <td><a href="{% url 'crits.core.views.details' notification.obj_type notification.id %}">View {{ notification.obj_type }}</a></td>
+                <td>{{ notification.notification }}</td>
+                <td>{{ notification.created }}</td>
+                <td><span class="delete_notification ui-icon ui-icon-close" action="{% url 'crits.core.views.delete_user_notification' notification.obj_type notification.obj_id %}"></span></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="favorites_section">
+    <div class="tabnav" style="font-size:90%;">
+        <ul style="font-size: 125%;">
+            {% for type, params in favorites.items %}
+                {% if params.count > 0 %}
+                    <li><a href="{{ params.url }}" id="{{ type|lower}}s_tab"><span>{{ type }}s ({{ params.count }})</span></a></li>
+                {% else %}
+                    <li class="empty_tab_results"><a href="{{ params.url }}" id="{{ type|lower }}"><span>{{ type }}s ({{ params.count }})</span></a></li>
+                {% endif %}
+            {%endfor%}
+        </ul>
+    </div>
+</div>
+
+{% endblock %}
