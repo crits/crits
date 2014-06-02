@@ -636,6 +636,25 @@ class Service(object):
 
         self.current_task = task
 
+    def finalize(self):
+        self._info("Analysis complete")
+        # Only add files as "results" after the analysis has completed.
+        # This will make them appear at the bottom of "results"
+        for f in self.current_task.files:
+            filename = f['filename']
+            md5 = f['md5']
+            self._add_result("file_added", filename, {'md5': md5})
+        for f in self.current_task.certificates:
+            filename = f['filename']
+            md5 = f['md5']
+            self._add_result("cert_added", filename, {'md5': md5})
+        for f in self.current_task.pcaps:
+            filename = f['filename']
+            md5 = f['md5']
+            self._add_result("pcap_added", filename, {'md5': md5})
+        logger.debug("Finishing analysis on %s" % self.current_task)
+        self.current_task.finish()
+
     def execute(self):
         """
         Execute an analysis task.
@@ -651,23 +670,7 @@ class Service(object):
             # additions, log messages, and task completion. If it is not
             # distributed, handle it for them.
             if not self.distributed:
-                self._info("Analysis complete")
-                # Only add files as "results" after the analysis has completed.
-                # This will make them appear at the bottom of "results"
-                for f in self.current_task.files:
-                    filename = f['filename']
-                    md5 = f['md5']
-                    self._add_result("file_added", filename, {'md5': md5})
-                for f in self.current_task.certificates:
-                    filename = f['filename']
-                    md5 = f['md5']
-                    self._add_result("cert_added", filename, {'md5': md5})
-                for f in self.current_task.pcaps:
-                    filename = f['filename']
-                    md5 = f['md5']
-                    self._add_result("pcap_added", filename, {'md5': md5})
-                logger.debug("Finishing analysis on %s" % self.current_task)
-                self.current_task.finish()
+                self.finalize()
         except NotImplementedError:
             error = "Service not yet implemented"
             logger.error(error)
