@@ -377,11 +377,9 @@ class DatabaseAnalysisSource(AnalysisSource):
             raise ValueError("Can not use that CRITs type.")
 
     def create_sample_context(self, identifier, username):
-        # .only() is currently broken in MongoEngine :(
-        #fields = ('size', 'filetype', 'filename', 'md5',
-        #          'mimetype', 'filedata')
-        #sample = Sample.objects(id=identifier).only(*fields).first()
-        sample = Sample.objects(id=identifier).first()
+        fields = ('size', 'filetype', 'filename', 'md5',
+                  'mimetype', 'filedata')
+        sample = Sample.objects(id=identifier).only(*fields).first()
 
         if not sample:
             raise ValueError("Sample not found in database")
@@ -430,10 +428,8 @@ class DatabaseAnalysisSource(AnalysisSource):
         return CertificateContext(username, data, cert_md5, cert.to_dict())
 
     def create_pcap_context(self, identifier, username):
-        # .only() is currently broken in MongoEngine :(
-        #fields = ('filename', 'length', 'filedata')
-        #pcap = PCAP.objects(id=identifier).only(*fields).first()
-        pcap = PCAP.objects(id=identifier).first()
+        fields = ('filename', 'length', 'filedata')
+        pcap = PCAP.objects(id=identifier).only(*fields).first()
 
         if not pcap:
             raise ValueError("PCAP not found in database")
