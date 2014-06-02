@@ -508,7 +508,6 @@ class LocalAnalysisSource(AnalysisSource):
             cert_dict = {
                 'filename': filename,
             }
-            # SampleContext will calculate the MD5
             return CertificateContext(username, data, cert_dict=cert_dict)
         elif crits_type == 'PCAP':
             filename = identifier
@@ -520,7 +519,6 @@ class LocalAnalysisSource(AnalysisSource):
             pcap_dict = {
                 'filename': filename,
             }
-            # SampleContext will calculate the MD5
             return PCAPContext(username, data, pcap_dict=pcap_dict)
         elif crits_type == 'RawData':
             from crits.services.contexts import RawDataContext
