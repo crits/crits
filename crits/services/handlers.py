@@ -1,3 +1,4 @@
+import ast
 import datetime
 
 from django.conf import settings
@@ -115,9 +116,14 @@ def add_result(object_type, object_id, analysis_id, result, type_, subtype,
         res['message'] = "Could not find an analysis task to update."
         return res
     if result and type_ and subtype:
-        result = {'result': result, 'Type': type_, 'subtype': subtype}
+        final = {}
+        final['subtype'] = subtype
+        final['result'] = result
+        tmp = ast.literal_eval(type_)
+        for k in tmp:
+            final[k] = tmp[k]
         klass.objects(id=object_id,
-                        analysis__id=analysis_id).update_one(push__analysis__S__results=result)
+                        analysis__id=analysis_id).update_one(push__analysis__S__results=final)
     else:
         res['message'] = "Need a result, type, and subtype to add a result."
         return res
