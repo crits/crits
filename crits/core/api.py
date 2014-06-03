@@ -411,7 +411,7 @@ class CRITsAPIResource(MongoEngineResource):
         # If a file was uploaded, add it to data and pass it along
         if format.startswith('multipart'):
             data = request.POST.copy()
-            if hasattr(request.FILES, 'filedata'):
+            if 'filedata' in request.FILES:
                 if hasattr(request.FILES['filedata'], 'read'):
                     data.update(request.FILES)
                 else:
