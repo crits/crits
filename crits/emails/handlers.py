@@ -1483,7 +1483,11 @@ def parse_ole_file(file):
     last_from = ''
     helo_for = ''
     all_received = headers.get_all('Received')
-    email_domain = settings.CRITS_EMAIL.split('.')[-2]
+    crits_config = CRITsConfig.objects().first()
+    if crits_config:
+        email_domain = crits_config.crits_email.split('.')[-2]
+    else:
+        email_domain = ''
 
     if all_received:
         for received in all_received:
