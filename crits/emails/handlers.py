@@ -1480,9 +1480,10 @@ def parse_ole_file(file):
     earliest_ip_date = current_datetime
     email['helo'] = ''
     originating_ip = ''
-    last_boeing_from = ''
+    last_from = ''
     helo_for = ''
     all_received = headers.get_all('Received')
+    email_domain = settings.CRITS_EMAIL.split('.')[-2]
 
     if all_received:
         for received in all_received:
@@ -1497,23 +1498,25 @@ def parse_ole_file(file):
                 # where the originating IP is. e.g. Received: from 11.12.13.14 by rms-us019 with HTTP
                 current_date = datetime.datetime.min
 
-            if 'boeing' not in received_from and ' localhost ' not in received_from and 'boeing' in received_by:
-                if(current_date < earliest_helo_date):
-                    helo_for = parseaddr(received_for.strip())[1]
-                    earliest_helo_date = current_date
-                    email['helo'] = received_from
-            elif 'boeing' in received_by:
-                last_boeing_from = received_from
-
             grp = re.search(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b', received_from)
-            if grp and not email['x_originating_ip'] and not _is_reserved_ip(grp.group()) and 'boeing' not in received_by:
+            if grp and not _is_reserved_ip(grp.group()) and ' localhost ' not in received_from:
+                if email_domain not in received_from and email_domain in received_by:
+                    if(current_date < earliest_helo_date):
+                        helo_for = parseaddr(received_for.strip())[1]
+                        earliest_helo_date = current_date
+                        email['helo'] = received_from
+                else:
+                    last_from = received_from
+
+
+            if grp and not email['x_originating_ip'] and not _is_reserved_ip(grp.group()):
                 if current_date < earliest_ip_date:
                     earliest_ip_date = current_date
                     originating_ip = grp.group()
 
-    # If no proper Helo found, just use the last Received from with 'boeing' in it
+    # If no proper Helo found, just use the last received_from without a reserved IP
     if not email['helo']:
-        email['helo'] = last_boeing_from
+        email['helo'] = last_from
 
     # Set the extracted originating ip. If not found, then just use the IP from Helo
     if not email['x_originating_ip']:
