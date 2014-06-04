@@ -315,7 +315,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
     # run pcap triage
     if is_pcap_new and data:
         pcap.reload()
-        run_triage(data, pcap, user)
+        run_triage(pcap, user)
 
     status = {
         'success':      True,

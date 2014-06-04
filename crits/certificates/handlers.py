@@ -294,7 +294,7 @@ def handle_cert_file(filename, data, source_name, user=None,
 
     # run certificate triage
     if len(cert.analysis) < 1 and data:
-        run_triage(data, cert, user)
+        run_triage(cert, user)
 
     # update parent relationship if a parent is supplied
     if parent_id or parent_md5:

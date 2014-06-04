@@ -1065,7 +1065,7 @@ def handle_file(filename, data, source, reference=None, parent_md5=None,
 
         # run sample triage:
         if len(sample.analysis) < 1 and data:
-            run_triage(data, sample, user)
+            run_triage(sample, user)
 
         if parent_md5 or parent_id:
             if parent_md5:

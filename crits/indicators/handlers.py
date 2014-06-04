@@ -622,7 +622,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     # run indicator triage
     if is_new_indicator:
         indicator.reload()
-        run_triage(None, indicator, analyst)
+        run_triage(indicator, analyst)
 
     return {'success': True, 'objectid': indicator.id,
             'is_new_indicator': is_new_indicator, 'object': indicator}

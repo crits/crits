@@ -291,7 +291,7 @@ def add_new_event(title, description, event_type, source, method, reference,
 
         # run event triage
         event.reload()
-        run_triage(None, event, analyst)
+        run_triage(event, analyst)
 
         message = ('<div>Success! Click here to view the new event: <a href='
                    '"%s">%s</a></div>' % (reverse('crits.events.views.view_event',

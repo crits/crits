@@ -402,7 +402,7 @@ def handle_raw_data_file(data, source_name, user=None,
     # run raw_data triage
     if is_rawdata_new:
         raw_data.reload()
-        run_triage(None, raw_data, user)
+        run_triage(raw_data, user)
 
     status = {
         'success':      True,

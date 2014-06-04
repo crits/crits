@@ -15,10 +15,6 @@ from crits.ips.ip import IP
 from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
 from crits.samples.sample import Sample
-from crits.services.contexts import DomainContext, IPContext
-from crits.services.contexts import SampleContext, PCAPContext
-from crits.services.contexts import EventContext, IndicatorContext
-from crits.services.contexts import CertificateContext, RawDataContext
 from crits.services.core import (AnalysisSource, AnalysisDestination, Service,
         ServiceManager, ServiceConfigError, ServiceUnavailableError)
 from crits.services.service import CRITsService
@@ -317,7 +313,7 @@ class DatabaseServiceManager(ServiceManager):
 
     def get_supported_services(self, crits_type, data_exists):
         """
-        Get the supported services for a context.
+        Get the supported services for a type.
         """
 
         #This is a temporary solution (only checks if 'data' is required).
@@ -344,133 +340,19 @@ class DatabaseAnalysisSource(AnalysisSource):
     """
     Use the CRITs MongoDB database to retrieve files to analyze.
     """
-
-    def create_context(self, crits_type, identifier, username):
-        """
-        Create a service context.
-
-        :param crits_type: The top-level object type.
-        :type crits_type: str
-        :param identifier: The identifier to find the top-level object.
-        :type identifier: str
-        :param username: The user creating the context.
-        :type username: str
-        """
-
-        if crits_type == 'Sample':
-            return self.create_sample_context(identifier, username)
-        elif crits_type == 'Domain':
-            return self.create_domain_context(identifier, username)
-        elif crits_type == 'IP':
-            return self.create_ip_context(identifier, username)
-        elif crits_type == 'Certificate':
-            return self.create_certificate_context(identifier, username)
-        elif crits_type == 'PCAP':
-            return self.create_pcap_context(identifier, username)
-        elif crits_type == 'RawData':
-            return self.create_raw_data_context(identifier, username)
-        elif crits_type == 'Event':
-            return self.create_event_context(identifier, username)
-        elif crits_type == 'Indicator':
-            return self.create_indicator_context(identifier, username)
-        else:
-            raise ValueError("Can not use that CRITs type.")
-
-    def create_sample_context(self, identifier, username):
-        fields = ('size', 'filetype', 'filename', 'md5',
-                  'mimetype', 'filedata')
-        sample = Sample.objects(id=identifier).only(*fields).first()
-
-        if not sample:
-            raise ValueError("Sample not found in database")
-
-        data = sample.filedata.read()
-        if not data:
-            raise ValueError("Sample not found in GridFS")
-
-        sample_md5 = sample.md5
-
-        self._check_length(data, getattr(sample, 'size', 0))
-
-        return SampleContext(username, data, sample_md5, sample.to_dict())
-
-    def create_domain_context(self, identifier, username):
-        domain = Domain.objects(id=identifier).first()
-        if not domain:
-            raise ValueError("Domain not found in database")
-
-        return DomainContext(username=username,
-                             _id=identifier,
-                             domain_dict=domain.to_dict())
-
-    def create_ip_context(self, identifier, username):
-        ip = IP.objects(id=identifier).first()
-        if not ip:
-            raise ValueError("IP not found in database")
-
-        return IPContext(username=username,
-                         _id=identifier,
-                         ip_dict=ip.to_dict())
-
-    def create_certificate_context(self, identifier, username):
-        cert = Certificate.objects(id=identifier).first()
-
-        if not cert:
-            raise ValueError("Certificate not found in database")
-
-        data = cert.filedata.read()
-        if not data:
-            raise ValueError("Certificate not found in GridFS")
-
-        cert_md5 = cert.md5
-        self._check_length(data, getattr(cert, 'size', 0))
-
-        return CertificateContext(username, data, cert_md5, cert.to_dict())
-
-    def create_pcap_context(self, identifier, username):
-        fields = ('filename', 'length', 'filedata')
-        pcap = PCAP.objects(id=identifier).only(*fields).first()
-
-        if not pcap:
-            raise ValueError("PCAP not found in database")
-
-        data = pcap.filedata.read()
-        if not data:
-            raise ValueError("PCAP not found in GridFS")
-
-        pcap_md5 = pcap.md5
-        self._check_length(data, getattr(pcap, 'length', 0))
-
-        return PCAPContext(username, data, pcap_md5, pcap.to_dict())
-
-    def create_raw_data_context(self, _id, username):
-        return RawDataContext(username=username, _id=_id)
-
-    def create_event_context(self, _id, username):
-        return EventContext(username=username, _id=_id)
-
-    def create_indicator_context(self, _id, username):
-        return IndicatorContext(username=username, _id=_id)
-
-    @staticmethod
-    def _check_length(data, length):
-        if data and len(data) != length:
-            error = ("Data is %d bytes, expected %d." % (len(data), length))
-            logger.error(error)
-            raise ValueError(error)
-
+    pass
 
 class DatabaseAnalysisDestination(AnalysisDestination):
     """
     Use the CRITs MongoDB database to save results.
     """
 
-    def results_exist(self, service_class, context):
+    def results_exist(self, service_class, obj):
         """
         Check to see if analysis results exist for this service.
         """
 
-        return self._analysis_exists(context,
+        return self._analysis_exists(obj,
                                      service_class.name,
                                      service_class.version)
 
@@ -498,10 +380,8 @@ class DatabaseAnalysisDestination(AnalysisDestination):
         logger.debug("Finishing task %s" % task)
         self.update_task(task)
 
-        obj = class_from_type(task.context.crits_type)
-        query = self.get_db_query(task.context)
-
-        sample = obj.objects(__raw__=query).first()
+        obj = class_from_type(task.obj._meta['crits_type'])
+        sample = obj.objects(id=task.obj.id).first()
 
         if task.files:
             logger.debug("Adding samples")
@@ -510,11 +390,11 @@ class DatabaseAnalysisDestination(AnalysisDestination):
                 #TODO: add in backdoor?, user
                 from crits.samples.handlers import handle_file
                 handle_file(f['filename'], f['data'], sample.source,
-                            parent_md5=task.context.identifier,
+                            parent_md5=task.obj.id,
                             campaign=sample.campaign,
                             method=task.service.name,
                             relationship=f['relationship'],
-                            user=task.context.username,
+                            user=task.username,
                             )
         else:
             logger.debug("No samples to add.")
@@ -527,11 +407,11 @@ class DatabaseAnalysisDestination(AnalysisDestination):
                 from crits.certificates.handlers import handle_cert_file
                 # XXX: Add campaign from source?
                 handle_cert_file(f['filename'], f['data'], sample.source,
-                            parent_md5=task.context.identifier,
-                            parent_type=task.context.crits_type,
+                            parent_md5=task.obj.id,
+                            parent_type=task.obj._meta['crits_type'],
                             method=task.service.name,
                             relationship=f['relationship'],
-                            user=task.context.username,
+                            user=task.username,
                             )
         else:
             logger.debug("No certificates to add.")
@@ -544,11 +424,11 @@ class DatabaseAnalysisDestination(AnalysisDestination):
                 from crits.pcaps.handlers import handle_pcap_file
                 # XXX: Add campaign from source?
                 handle_pcap_file(f['filename'], f['data'], sample.source,
-                            parent_md5=task.context.identifier,
-                            parent_type=task.context.crits_type,
+                            parent_md5=task.obj.identifier,
+                            parent_type=task.obj._meta['crits_type'],
                             method=task.service.name,
                             relationship=f['relationship'],
-                            user=task.context.username,
+                            user=task.username,
                             )
         else:
             logger.debug("No PCAPs to add.")
@@ -567,43 +447,12 @@ class DatabaseAnalysisDestination(AnalysisDestination):
                 c += 1
             obj.save(username=analyst)
 
-    @staticmethod
-    def get_db_query(context):
-        """
-        Get the database query to find the top-level object for this context.
-        """
-
-        return DatabaseAnalysisDestination._get_db_query(context.crits_type,
-                                                         context.identifier)
-
-    @staticmethod
-    def _get_db_query(crits_type, identifier):
-        if crits_type == 'Sample':
-            return {'md5': identifier}
-        elif crits_type == 'Certificate':
-            return {'md5': identifier}
-        elif crits_type == 'PCAP':
-            return {'md5': identifier}
-        elif crits_type == 'RawData':
-            return {'_id': ObjectId(identifier)}
-        elif crits_type == 'Event':
-            return {'_id': ObjectId(identifier)}
-        elif crits_type == 'Indicator':
-            return {'_id': ObjectId(identifier)}
-        elif crits_type == 'Domain':
-            return {'_id': ObjectId(identifier)}
-        elif crits_type == 'IP':
-            return {'_id': ObjectId(identifier)}
-        else:
-            raise ValueError("Unsupported type %s" % crits_type)
-
     def _insert_analysis_results(self, task):
         """
         Insert analysis results for this task.
         """
 
-        obj_class = class_from_type(task.context.crits_type)
-        query = self.get_db_query(task.context)
+        obj_class = class_from_type(task.obj._meta['crits_type'])
 
         ear = EmbeddedAnalysisResult()
         tdict = task.to_dict()
@@ -613,7 +462,7 @@ class DatabaseAnalysisDestination(AnalysisDestination):
         del tdict['id']
         ear.merge(arg_dict=tdict)
         ear.config = AnalysisConfig(**tdict['config'])
-        obj_class.objects(__raw__=query).update_one(push__analysis=ear)
+        obj_class.objects(id=task.obj.id).update_one(push__analysis=ear)
 
     def _update_analysis_results(self, task):
         """
@@ -623,10 +472,9 @@ class DatabaseAnalysisDestination(AnalysisDestination):
         # If the task does not currently exist for the given sample in the
         # database, add it.
 
-        obj_class = class_from_type(task.context.crits_type)
-        query = self.get_db_query(task.context)
+        obj_class = class_from_type(task.obj._meta['crits_type'])
 
-        obj = obj_class.objects(__raw__=query).first()
+        obj = obj_class.objects(id=task.obj.id).first()
         obj_id = obj.id
         found = False
         c = 0
@@ -652,45 +500,7 @@ class DatabaseAnalysisDestination(AnalysisDestination):
             obj_class.objects(id=obj_id,
                               analysis__id=task.task_id).update_one(set__analysis__S=ear)
 
-    def _delete_all_analysis_results(self, md5_digest, service_name):
-        """
-        Delete all analysis results for this service.
-        """
-
-        obj = Sample.objects(md5=md5_digest).first()
-        if obj:
-            obj.analysis[:] = [a for a in obj.analysis if a.service_name != service_name]
-            obj.save()
-        obj = PCAP.objects(md5=md5_digest).first()
-        if obj:
-            obj.analysis[:] = [a for a in obj.analysis if a.service_name != service_name]
-            obj.save()
-        obj = Certificate.objects(md5=md5_digest).first()
-        if obj:
-            obj.analysis[:] = [a for a in obj.analysis if a.service_name != service_name]
-            obj.save()
-        obj = RawData.objects(id=md5_digest).first()
-        if obj:
-            obj.analysis[:] = [a for a in obj.analysis if a.service_name != service_name]
-            obj.save()
-        obj = Event.objects(id=md5_digest).first()
-        if obj:
-            obj.analysis[:] = [a for a in obj.analysis if a.service_name != service_name]
-            obj.save()
-        obj = Indicator.objects(id=md5_digest).first()
-        if obj:
-            obj.analysis[:] = [a for a in obj.analysis if a.service_name != service_name]
-            obj.save()
-        obj = Domain.objects(id=md5_digest).first()
-        if obj:
-            obj.analysis[:] = [a for a in obj.analysis if a.service_name != service_name]
-            obj.save()
-        obj = IP.objects(id=md5_digest).first()
-        if obj:
-            obj.analysis[:] = [a for a in obj.analysis if a.service_name != service_name]
-            obj.save()
-
-    def _analysis_exists(self, context, service_name, version=None):
+    def _analysis_exists(self, obj, service_name, version=None):
         """
         Check for existing analysis results
 
@@ -700,18 +510,17 @@ class DatabaseAnalysisDestination(AnalysisDestination):
         using this version or later.
         """
 
-        obj_class = class_from_type(context.crits_type)
-        query = self.get_db_query(context)
-
-        obj = obj_class.objects(__raw__=query).first()
-        for analysis in obj.analysis:
-            if analysis.service_name == service_name:
-                if version is None:
-                    return True
-                try:
-                    result_version = StrictVersion(analysis.version)
-                except:
-                    result_version = 0
-                if result_version >= version:
-                    return True
+        obj_class = class_from_type(obj._meta['crits_type'])
+        obj = obj_class.objects(id=obj.id).first()
+        if obj:
+            for analysis in obj.analysis:
+                if analysis.service_name == service_name:
+                    if version is None:
+                        return True
+                    try:
+                        result_version = StrictVersion(analysis.version)
+                    except:
+                        result_version = 0
+                    if result_version >= version:
+                        return True
         return False

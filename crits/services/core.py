@@ -14,8 +14,6 @@ import uuid
 from django.conf import settings
 
 from crits.core.crits_mongoengine import EmbeddedAnalysisResult
-from crits.services.contexts import SampleContext, PCAPContext
-from crits.services.contexts import CertificateContext
 
 logger = logging.getLogger(__name__)
 
@@ -176,9 +174,7 @@ class ServiceManager(object):
 
 
 class AnalysisSource(object):
-    def create_context(self, crits_type, *args, **kwargs):
-        raise NotImplementedError
-
+    pass
 
 class AnalysisDestination(object):
     """
@@ -188,9 +184,9 @@ class AnalysisDestination(object):
     required.
     """
 
-    def results_exist(self, service_class, context):
+    def results_exist(self, service_class, obj):
         """
-        Determine whether a service has been run on a context.
+        Determine whether a service has been run on an object.
 
         The intent is to prevent duplicate analysis by services which have
         already been run on a given sample, so logic should probably not use
@@ -248,8 +244,8 @@ class AnalysisTask(object):
     STATUS_LIST = [STATUS_CREATED, STATUS_STARTED,
                    STATUS_ERROR, STATUS_COMPLETED]
 
-    def __init__(self, context, service):
-        self.context = context
+    def __init__(self, obj, service, analyst):
+        self.obj = obj
         # AnalysisTask.service should be an instance of a Service class.
         self.service = service
 
@@ -261,7 +257,7 @@ class AnalysisTask(object):
         self.start_date = None
         self.finish_date = None
         self.status = None
-        self.username = self.context.username
+        self.username = analyst
 
         self.log = []
         self.results = []
@@ -329,8 +325,8 @@ class AnalysisTask(object):
         }
 
     def __str__(self):
-        return "%s {Service: %s, Context: %s}" % (
-            self.task_id, self.service.name, self.context)
+        return "%s {Service: %s, Id: %s}" % (
+            self.task_id, self.service.name, self.obj.id)
 
 
 class AnalysisEnvironment(object):
@@ -343,42 +339,27 @@ class AnalysisEnvironment(object):
         self.source = source
         self.dest = dest
 
-    def create_context(self, crits_type, identifier, username):
+    def run_all(self, obj):
         """
-        Create a service context.
+        Run all services on an object.
 
-        :param crits_type: The top-level object type.
-        :type crits_type: str
-        :param identifier: The identifier of the top-level object.
-        :type identifier: str
-        :param username: The user creating the context.
-        :type username: str
-        :returns: Service context.
+        :param obj: The CRITs object.
+        :type obj: A CRITs object.
         """
 
-        return self.source.create_context(crits_type, identifier, username)
-
-    def run_all(self, context):
-        """
-        Run all services associated with a context.
-
-        :param context: The service context.
-        :type context: Service context.
-        """
-
-        logger.info("Analyzing %s" % context)
+        logger.info("Analyzing %s" % obj.id)
         for service_name in self.manager.services:
-            self.run_service(service_name, context)
+            self.run_service(service_name, obj)
 
-    def run_service(self, service_name, context, execute='local',
+    def run_service(self, service_name, obj, analyst, execute='local',
                     force=False, custom_config=None):
         """
         Run a service.
 
         :param service_name: The name of the service to run.
         :type service_name: str
-        :param context: The service context.
-        :type context: Service context.
+        :param obj: The CRITs object.
+        :type obj: CRITs object.
         :param execute: The execution type.
         :type execute: str
         :param force: Force this service to run.
@@ -389,35 +370,35 @@ class AnalysisEnvironment(object):
 
         service_class = self.manager.get_service_class(service_name)
 
-        # See if the context is a supported type for the service and that
+        # See if the object is a supported type for the service and that
         # all the required data is present. This should not be overridable by
         # a "Force" option
-        if not service_class.supported_for_context(context):
+        if not service_class.supported_for_type(obj._meta['crits_type']):
             msg = "Service '%s' not supported for type '%s'" % (service_name,
-                    context.crits_type)
+                    obj._meta['crits_type'])
             logger.info(msg)
             raise ServiceAnalysisError(msg)
 
-        if not service_class.context_has_required_data(context):
-            msg = "Context '%s' does not have all required fields '%s'" % (
-                    context, str(service_class.required_fields))
+        if not service_class.obj_has_required_data(obj):
+            msg = "Object does not have all required fields '%s'" % (
+                    str(service_class.required_fields))
             logger.info(msg)
             raise ServiceAnalysisError(msg)
 
         if not force and not service_class.rerunnable:
-            if self.dest.results_exist(service_class, context):
-                args = (service_name, service_class.version, context)
+            if self.dest.results_exist(service_class, obj):
+                args = (service_name, service_class.version, obj.id)
                 msg = ("Results for '%s' (v.%s) already exist for '%s'. Use "
                        "'force' to re-run." % args)
                 logger.info(msg)
                 raise ServiceAnalysisError(msg)
 
-            if not service_class.valid_for(context):
+            if not service_class.valid_for(obj):
                 msg = ("Service '%s' declined to run" % service_name)
                 logger.info(msg)
                 raise ServiceAnalysisError(msg)
 
-        args = (service_name, context, force, execute)
+        args = (service_name, obj.id, force, execute)
         logger.info("Running %s on %s, force=%s, execute=%s" % args)
 
         config = self.manager.get_config(service_name)
@@ -437,7 +418,7 @@ class AnalysisEnvironment(object):
                                          notify=notify_func,
                                          complete=complete_func)
 
-        task = AnalysisTask(context, service_instance)
+        task = AnalysisTask(obj, service_instance, analyst)
         task.start()
         self.dest.add_task(task)
 
@@ -454,98 +435,6 @@ class AnalysisEnvironment(object):
 
         # Return after starting thread so web request can complete.
         return
-
-
-class LocalAnalysisSource(AnalysisSource):
-    """
-    Local Analysis Source class.
-    """
-
-    def create_context(self, crits_type, identifier, username):
-        """
-        Create a service context.
-
-        :param crits_type: The top-level object type.
-        :type crits_type: str
-        :param identifier: The identifier of the top-level object.
-        :type identifier: str
-        :param username: The user creating the context.
-        :type username: str
-        :returns: Service context.
-        """
-
-        if crits_type == 'Sample':
-            filename = identifier
-            file_handle = open(filename, "rb")
-            data = file_handle.read()
-            file_handle.close()
-            filename = os.path.basename(filename)
-            # TODO: add filetype and mimetype
-            sample_dict = {
-                'filename': filename,
-            }
-            # SampleContext will calculate the MD5
-            return SampleContext(username, data, sample_dict=sample_dict)
-        elif crits_type == 'Domain':
-            from crits.services.contexts import DomainContext
-            return DomainContext(username, _id=identifier)
-        elif crits_type == 'IP':
-            from crits.services.contexts import IPContext
-            return IPContext(username, _id=identifier)
-        elif crits_type == 'Event':
-            from crits.services.contexts import EventContext
-            return EventContext(username, _id=identifier)
-        elif crits_type == 'Indicator':
-            from crits.services.contexts import IndicatorContext
-            return IndicatorContext(username, _id=identifier)
-        elif crits_type == 'Certificate':
-            filename = identifier
-            file_handle = open(filename, "rb")
-            data = file_handle.read()
-            file_handle.close()
-            filename = os.path.basename(filename)
-            # TODO: add filetype and mimetype
-            cert_dict = {
-                'filename': filename,
-            }
-            return CertificateContext(username, data, cert_dict=cert_dict)
-        elif crits_type == 'PCAP':
-            filename = identifier
-            file_handle = open(filename, "rb")
-            data = file_handle.read()
-            file_handle.close()
-            filename = os.path.basename(filename)
-            # TODO: add filetype and mimetype
-            pcap_dict = {
-                'filename': filename,
-            }
-            return PCAPContext(username, data, pcap_dict=pcap_dict)
-        elif crits_type == 'RawData':
-            from crits.services.contexts import RawDataContext
-            return RawDataContext(username, _id=identifier)
-        else:
-            # TODO: Add support for other data types
-            raise ValueError("Type %s is unsupported" % crits_type)
-
-
-class LocalAnalysisDestination(AnalysisDestination):
-    """
-    Local Analysis Destination class.
-    """
-
-    def finish_task(self, task):
-        """
-        Finish a task.
-
-        :param task: The task to finish.
-        :type task: Service task object.
-        """
-
-        import pprint
-        print "Task %s finished" % task
-        pprint.pprint(task.results)
-
-        #TODO: Dump task.files to disk
 
 
 class Service(object):
@@ -665,7 +554,7 @@ class Service(object):
 
         # Do it!
         try:
-            self._scan(self.current_task.context)
+            self._scan(self.current_task.obj)
             # If a service is distributed, we expect it to handle its own result
             # additions, log messages, and task completion. If it is not
             # distributed, handle it for them.
@@ -881,45 +770,43 @@ class Service(object):
         return new_config
 
     @staticmethod
-    def valid_for(context):
+    def valid_for(obj):
         """
         Determine whether a service is applicable to a given target.
 
         Services do not need to override this method if they want to be
-        called for every target. Otherwise, they may determine whether to run
-        based on the members of AnalysisContext(filename, filetype, or md5, or
-        the actual data).
+        called for every object type. Otherwise, they may determine whether to
+        run based on the members of the object.
 
-        Typically, services should just call methods of context, but services
-        may implement their own decision logic.
+        Typically, services should just call methods of CRITsBaseDocument, but
+        services may implement their own decision logic.
 
         This does NOT consider whether a particular item has been analyzed
         before; the logic for that is done by the AnalysisEnvironment.
 
         Arguments:
-        - context: The AnalysisContext being considered for analysis.
+        - obj: The object being considered for analysis.
         """
 
         return True
 
     @classmethod
-    def supported_for_context(cls, context):
+    def supported_for_type(cls, type_):
         """
-        Return all services which support the provided context.
+        Ensure the service can run on this type.
         """
 
-        return (cls.supported_types == 'all' or
-                context.crits_type in cls.supported_types)
+        return (cls.supported_types == 'all' or type_ in cls.supported_types)
 
     @classmethod
-    def context_has_required_data(cls, context):
+    def obj_has_required_data(cls, obj):
         """
-        Ensure the context has the required fields.
+        Ensure the object has the required fields.
         """
 
         for field in cls.required_fields:
             # Field does not exist or is "false" (0, False, None, "", etc.)
-            if not hasattr(context, field) or not getattr(context, field):
+            if not hasattr(obj, field) or not getattr(obj, field):
                 return False
         return True
 
@@ -965,7 +852,7 @@ class Service(object):
         """
 
         self.ensure_current_task()
-        return TempAnalysisFile(self.current_task.context)
+        return TempAnalysisFile(self.current_task.obj)
 
     def _notify(self):
         """
@@ -1032,9 +919,8 @@ class Service(object):
 
         # If a service does not specify a filename for this new file,
         # use a combination of the original file's name and the service name.
-        # TODO: Use context.filename explicitly.
         if not filename:
-            filename = "{0}.{1.context}.{1.service.name}".format(collection, self.current_task)
+            filename = "{0}.{1.obj.id}.{1.service.name}".format(collection, self.current_task)
         file_md5 = hashlib.md5(data).hexdigest()
         f = {'data': data,
              'filename': filename,
@@ -1063,8 +949,8 @@ class TempAnalysisFile(object):
     Temporary Analysis File class.
     """
 
-    def __init__(self, context):
-        self.context = context
+    def __init__(self, obj):
+        self.obj = obj
 
     def __enter__(self):
         """
@@ -1073,10 +959,9 @@ class TempAnalysisFile(object):
 
         tempdir = tempfile.mkdtemp()
         self.directory = tempdir
-        tfile = os.path.join(tempdir, self.context.identifier)
+        tfile = os.path.join(tempdir, self.obj.id)
         with open(tfile, "wb") as f:
-            f.write(self.context.data)
-
+            f.write(self.obj.filedata.read())
         return tfile
 
     def __exit__(self, type, value, traceback):

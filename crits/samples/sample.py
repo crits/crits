@@ -147,6 +147,24 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         except:
             self.ssdeep = None
 
+    def is_pe(self):
+        """
+        Is this a PE file.
+        """
+
+        ret = self.filedata != None and self.filedata.read(2) == "MZ"
+        self.filedata.seek(0) # Reset
+        return
+
+    def is_pdf(self):
+        """
+        Is this a PDF.
+        """
+
+        ret = self.filedata != None and "%PDF-" in self.filedata.read(1024)
+        self.filedata.seek(0)
+        return ret
+
     def to_cybox(self, exclude=None):
         if exclude == None:
             exclude = []

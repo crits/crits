@@ -748,10 +748,10 @@ def upsert_domain(sdomain, domain, source, username=None, campaign=None,
     # run domain triage
     if is_fqdn_domain_new:
         fqdn_domain.reload()
-        run_triage(None, fqdn_domain, username)
+        run_triage(fqdn_domain, username)
     if is_root_domain_new:
         root_domain.reload()
-        run_triage(None, root_domain, username)
+        run_triage(root_domain, username)
 
     # return fqdn if they added an fqdn, or root if they added a root
     if fqdn_domain:

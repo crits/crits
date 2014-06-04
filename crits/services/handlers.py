@@ -8,50 +8,12 @@ import crits.service_env
 from crits.core.class_mapper import class_from_type
 from crits.core.crits_mongoengine import EmbeddedAnalysisResult
 from crits.core.user_tools import user_sources
-from crits.services.contexts import CertificateContext, DomainContext
-from crits.services.contexts import EventContext, IndicatorContext, IPContext
-from crits.services.contexts import PCAPContext, RawDataContext, SampleContext
 
 
-def get_context(user, data, obj):
-    """
-    Create a context based on the supplied information.
-
-    :param user: The user creating the context.
-    :type user: str
-    :param data: The data to seed the context.
-    :type data: str
-    :param obj: The CRITs top-level object class.
-    :type obj: Class which inherits from
-               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-    :returns: :class:`crits.services.core.Context`
-    """
-
-    type_ = obj._meta['crits_type']
-    if type_ == 'Certificate':
-        return CertificateContext(user, data, obj.md5, obj.to_dict())
-    if type_ == 'Domain':
-        return DomainContext(user, obj.id, obj.to_dict())
-    if type_ == 'Event':
-        return EventContext(user, obj.id, obj.to_dict())
-    if type_ == 'Indicator':
-        return IndicatorContext(user, obj.id, obj.to_dict())
-    if type_ == 'IP':
-        return IPContext(user, obj.id, obj.to_dict())
-    if type_ == 'PCAP':
-        return PCAPContext(user, data, obj.md5, obj.to_dict())
-    if type_ == 'RawData':
-        return RawDataContext(user, obj.id, obj.to_dict())
-    if type_ == 'Sample':
-        return SampleContext(user, data, obj.md5, obj.to_dict())
-
-
-def run_triage(data, obj, user):
+def run_triage(obj, user):
     """
     Run all services marked as triage against this top-level object.
 
-    :param data: The data to seed the context.
-    :type data: str
     :param obj: The CRITs top-level object class.
     :type obj: Class which inherits from
                :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
@@ -60,14 +22,9 @@ def run_triage(data, obj, user):
     """
 
     env = crits.service_env.environment
-    try:
-        context = get_context(user, data, obj)
-    except:
-        return
     for service_name in env.manager.triage_services:
         try:
-            env.run_service(service_name, context,
-                            execute=settings.SERVICE_MODEL)
+            env.run_service(service_name, obj, execute=settings.SERVICE_MODEL)
         except:
             pass
     return

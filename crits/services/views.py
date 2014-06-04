@@ -464,12 +464,6 @@ def service_run(request, name, crits_type, identifier):
     if name not in env.manager.enabled_services:
         response['html'] = "Service %s is unknown or not enabled." % name
         return HttpResponse(json.dumps(response), mimetype="application/json")
-    try:
-        context = env.create_context(crits_type, identifier, username)
-    except Exception as e:
-        logger.exception("Could not build context")
-        response['html'] = "Error: %s" % e
-        return HttpResponse(json.dumps(response), mimetype="application/json")
 
     service_class = env.manager.get_service_class(name)
     ServiceRunConfigForm = make_run_config_form(service_class)
@@ -491,8 +485,13 @@ def service_run(request, name, crits_type, identifier):
         config = None
         force = False
 
+    obj = class_from_id(crits_type, identifier)
+    if not obj:
+        response['html'] = 'Could not find object!'
+        return HttpResponse(json.dumps(response), mimetype="application/json")
+
     try:
-        env.run_service(name, context, execute=settings.SERVICE_MODEL,
+        env.run_service(name, obj, username, execute=settings.SERVICE_MODEL,
                         custom_config=config, force=force)
     except ServiceAnalysisError as e:
         logger.exception("Error when running service")

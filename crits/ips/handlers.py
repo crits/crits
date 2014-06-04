@@ -433,7 +433,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
     # run ip triage
     if is_item_new and is_validate_only == False:
         ip_object.reload()
-        run_triage(None, ip_object, analyst)
+        run_triage(ip_object, analyst)
 
     retVal['success'] = True
     retVal['object'] = ip_object
