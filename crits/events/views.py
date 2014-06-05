@@ -9,13 +9,13 @@ from django.template import RequestContext
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data, user_is_admin
-from crits.emails.forms import EmailAttachForm
 from crits.events.forms import EventForm
 from crits.events.handlers import event_remove, update_event_description
 from crits.events.handlers import update_event_title, update_event_type
 from crits.events.handlers import get_event_types, get_event_details
 from crits.events.handlers import generate_event_jtable, add_sample_for_event
 from crits.events.handlers import generate_event_csv, add_new_event
+from crits.samples.forms import UploadFileForm
 
 
 @user_passes_test(user_can_view_data)
@@ -121,9 +121,7 @@ def upload_sample(request, event_id):
     """
 
     if request.method == 'POST':    # and request.is_ajax():
-        form = EmailAttachForm(request.user.username,
-                               request.POST,
-                               request.FILES)
+        form = UploadFileForm(request.user, request.POST, request.FILES)
         if form.is_valid():
             cleaned_data = form.cleaned_data
             analyst = request.user.username

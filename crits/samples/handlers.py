@@ -1167,6 +1167,7 @@ def handle_uploaded_file(f, source, reference=None, file_format=None,
     """
 
     samples = list()
+    method = method or "Upload"
     try:
         data = f.read()
     except AttributeError:
@@ -1189,7 +1190,7 @@ def handle_uploaded_file(f, source, reference=None, file_format=None,
             confidence=confidence,
             reference=reference,
             parent_md5=parent_md5,
-            method='Upload',
+            method=method,
             bucket_list=bucket_list,
             ticket=ticket)
     elif file_format == "rar" and f:
@@ -1203,7 +1204,7 @@ def handle_uploaded_file(f, source, reference=None, file_format=None,
             confidence=confidence,
             reference=reference,
             parent_md5=parent_md5,
-            method='Upload',
+            method=method,
             bucket_list=bucket_list,
             ticket=ticket)
     else:

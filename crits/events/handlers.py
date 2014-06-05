@@ -420,7 +420,8 @@ def add_sample_for_event(event_id, data, analyst, filedata=None,
     source = data['source']
     campaign = data['campaign']
     confidence = data['confidence']
-    reference = data['source_reference']
+    method = data['method']
+    reference = data['reference']
     file_format = data['file_format']
     password = data['password']
     bucket_list = data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME]
@@ -437,7 +438,8 @@ def add_sample_for_event(event_id, data, analyst, filedata=None,
                                               campaign=campaign,
                                               confidence=confidence,
                                               bucket_list=bucket_list,
-                                              ticket=ticket)
+                                              ticket=ticket,
+                                              method=method)
         else:
             if not filename or not md5:
                 error = "Need a file, or a filename and an md5"
@@ -454,7 +456,8 @@ def add_sample_for_event(event_id, data, analyst, filedata=None,
                                                   bucket_list=bucket_list,
                                                   ticket=ticket,
                                                   filename=filename.strip(),
-                                                  md5=md5.strip())
+                                                  md5=md5.strip(),
+                                                  method=method)
     except ZipFileError, zfe:
         return {'success': False, 'error': zfe.value}
 

@@ -101,6 +101,7 @@ def upload_attach(request, email_id):
                                request.FILES)
         if form.is_valid():
             cleaned_data = form.cleaned_data
+            method = cleaned_data['source_method'] or "Add to Email"
             reference = cleaned_data['source_reference']
             campaign = cleaned_data['campaign']
             confidence = cleaned_data['confidence']
@@ -120,7 +121,8 @@ def upload_attach(request, email_id):
                                                  ticket=ticket,
                                                  files=request.FILES.get('filedata',None),
                                                  filename=request.POST.get('filename', None),
-                                                 md5=request.POST.get('md5', None))
+                                                 md5=request.POST.get('md5', None),
+                                                 method=method)
                 if not result['success']:
                     return render_to_response("error.html",
                                             {"error": result['message'] },

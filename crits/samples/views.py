@@ -190,6 +190,7 @@ def upload_file(request):
             campaign = form.cleaned_data['campaign']
             confidence = form.cleaned_data['confidence']
             source = form.cleaned_data['source']
+            method = form.cleaned_data['method']
             reference = form.cleaned_data['reference']
             try:
                 if request.FILES:
@@ -204,7 +205,8 @@ def upload_file(request):
                         confidence=confidence,
                         parent_md5 = form.cleaned_data['parent_md5'],
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
-                        ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME])
+                        ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
+                        method=method)
                 else:
                     filename = request.POST['filename'].strip()
                     md5 = request.POST['md5'].strip().lower()
@@ -222,6 +224,7 @@ def upload_file(request):
                         md5=md5,
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
+                        method=method,
                         is_return_only_md5=False)
 
                 if 'email' in request.POST:
@@ -287,7 +290,7 @@ def upload_child(request, parent_md5):
 
     new_samples = []
     if request.method == "POST":
-        form = EmailAttachForm(request.user.username, request.POST, request.FILES)
+        form = UploadFileForm(request.user, request.POST, request.FILES)
         if form.is_valid():
             if request.FILES or 'filename' in request.POST and 'md5' in request.POST:
                 # Child samples inherit all of the sources of the parent.
@@ -353,8 +356,8 @@ def upload_child(request, parent_md5):
     # find the sample and add anything submitted on the form to it.
     results = add_source_to_samples(new_samples,
                                     form.cleaned_data['source'],
-                                    form.cleaned_data.get('source_method', 'Upload'),
-                                    form.cleaned_data.get('source_reference', None),
+                                    form.cleaned_data.get('method') or 'Upload',
+                                    form.cleaned_data.get('reference'),
                                     request.user.username)
     if not results['success']:
         return render_to_response('error.html',
