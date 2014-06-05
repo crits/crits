@@ -1349,42 +1349,6 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
 
     return result, errors, retVal
 
-def add_source_to_samples(samples, name, method, reference, analyst):
-    """
-    Add a source to a set of samples.
-
-    :param samples: List of MD5s of samples to add this source to.
-    :type samples: list
-    :param name: The name of the source.
-    :type name: str
-    :param method: The method of the source.
-    :type method: str
-    :param reference: The source reference.
-    :type reference: str
-    :param analyst: The user adding this source.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str)
-    """
-
-    source = create_embedded_source(name,
-                                    reference=reference,
-                                    method=method,
-                                    analyst=analyst)
-    for md5 in samples:
-        sample = Sample.objects(md5=md5).first()
-        if not sample:
-            return {'success': False,
-                    'message': 'Could not find uploaded sample.'}
-        else:
-            try:
-                sample.add_source(source)
-                sample.save(username=analyst)
-            except ValidationError, e:
-                return {'success': False,
-                        'message': e}
-    return {'success': True,
-            'message': "Adding source successful."}
-
 def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Upload"):
     """
     Parse a mass upload row into an UploadFileForm.

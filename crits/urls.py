@@ -228,7 +228,7 @@ urlpatterns = patterns('',
 
         #samples
         (r'^samples/upload/$', 'crits.samples.views.upload_file'),
-        (r'^samples/upload_child/(?P<parent_md5>\w+)/$', 'crits.samples.views.upload_child'),
+        (r'^samples/upload_related/(?P<parent_md5>\w+)/$', 'crits.samples.views.upload_related'),
         (r'^samples/upload_list/(?P<filename>[\S ]+)/(?P<md5s>.+)/$', 'crits.samples.views.view_upload_list'),
         (r'^samples/bulkadd/$', 'crits.samples.views.bulk_add_md5_sample'),
         (r'^samples/details/(?P<sample_md5>\w+)/$', 'crits.samples.views.detail'),

@@ -28,7 +28,7 @@ from crits.samples.handlers import delete_sample, handle_unzip_file
 from crits.samples.handlers import get_exploits, add_exploit_to_sample
 from crits.samples.handlers import add_backdoor_to_sample, get_source_counts
 from crits.samples.handlers import get_sample_details, generate_backdoor_jtable
-from crits.samples.handlers import generate_sample_jtable, add_source_to_samples
+from crits.samples.handlers import generate_sample_jtable
 from crits.samples.handlers import generate_sample_csv, process_bulk_add_md5_sample
 from crits.samples.sample import Sample
 from crits.stats.handlers import generate_sources
@@ -277,7 +277,7 @@ def upload_file(request):
 
 #TODO
 @user_passes_test(user_can_view_data)
-def upload_child(request, parent_md5):
+def upload_related(request, parent_md5):
     """
     Upload a new child sample.
 
@@ -293,31 +293,35 @@ def upload_child(request, parent_md5):
         form = UploadFileForm(request.user, request.POST, request.FILES)
         if form.is_valid():
             if request.FILES or 'filename' in request.POST and 'md5' in request.POST:
-                # Child samples inherit all of the sources of the parent.
+                # Related samples inherit the campaigns of the parent.
                 parent = Sample.objects(md5=parent_md5).first()
                 if not parent:
                     return render_to_response('error.html',
                                               {'error': "Unable to find parent."},
                                               RequestContext(request))
-                source = parent.source
 
                 campaign_name = request.POST['campaign']
                 confidence = request.POST['confidence']
                 parent.campaign.append(EmbeddedCampaign(name=campaign_name, confidence=confidence, analyst=request.user.username))
                 campaigns = parent.campaign
 
+                source = form.cleaned_data['source']
+                reference = form.cleaned_data['reference']
+                method = form.cleaned_data['method']
+
                 try:
                     if request.FILES:
                         new_samples = handle_uploaded_file(request.FILES["filedata"],
                                                            source,
-                                                           None,
+                                                           reference,
                                                            form.cleaned_data["file_format"],
                                                            form.cleaned_data["password"],
                                                            user=request.user.username,
                                                            campaign=campaigns,
                                                            parent_md5=parent_md5,
                                                            bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
-                                                           ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME])
+                                                           ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
+                                                           method=method)
                     else:
                         filename = request.POST['filename'].strip()
                         md5= request.POST['md5'].strip().lower()
@@ -329,7 +333,7 @@ def upload_child(request, parent_md5):
                         else:
                             new_samples = handle_uploaded_file(None,
                                                                source,
-                                                               None,
+                                                               reference,
                                                                form.cleaned_data["file_format"],
                                                                form.cleaned_data["password"],
                                                                user=request.user.username,
@@ -338,7 +342,8 @@ def upload_child(request, parent_md5):
                                                                filename=filename,
                                                                bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                                                                ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
-                                                               md5=md5)
+                                                               md5=md5,
+                                                               method=method)
                 except ZipFileError, zfe:
                     return render_to_response('error.html',
                                               {'error': zfe.value},
@@ -351,18 +356,6 @@ def upload_child(request, parent_md5):
             return render_to_response('error.html',
                                       {'error': 'form error'},
                                       RequestContext(request))
-
-    # handle_upload_file() returns a list of strings. Use those strings to
-    # find the sample and add anything submitted on the form to it.
-    results = add_source_to_samples(new_samples,
-                                    form.cleaned_data['source'],
-                                    form.cleaned_data.get('method') or 'Upload',
-                                    form.cleaned_data.get('reference'),
-                                    request.user.username)
-    if not results['success']:
-        return render_to_response('error.html',
-                                  {'error': results['message']},
-                                  RequestContext(request))
     return HttpResponseRedirect(reverse('crits.samples.views.detail',
                                         args=[parent_md5]))
 
