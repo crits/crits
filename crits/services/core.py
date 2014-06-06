@@ -474,7 +474,7 @@ class Service(object):
     supported_types = ['all']
 
     # Change to, i.e. ['md5'] if only a hash is needed.
-    required_fields = ['data']
+    required_fields = ['filedata']
 
     # Override this to add configuration options
     default_config = []
