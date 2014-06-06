@@ -350,6 +350,7 @@ def add_object(type_, oid, object_type, name, source, method,
                                                object_type,
                                                analyst,
                                                method=method,
+                                               add_domain=True,
                                                campaign=indicator_campaign,
                                                campaign_confidence=indicator_campaign_confidence,
                                                cache=cache)

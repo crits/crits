@@ -75,6 +75,11 @@ class RawDataResource(CRITsAPIResource):
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
+        if not title:
+            raise BadRequest("Must provide a title.")
+        if not data_type:
+            raise BadRequest("Must provide a data type.")
+
         status = handle_raw_data_file(data, source, analyst,
                                       description, title, data_type,
                                       tool_name, tool_version, tool_details,
