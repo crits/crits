@@ -24,7 +24,10 @@ def run_triage(obj, user):
     env = crits.service_env.environment
     for service_name in env.manager.triage_services:
         try:
-            env.run_service(service_name, obj, execute=settings.SERVICE_MODEL)
+            env.run_service(service_name,
+                            obj,
+                            user,
+                            execute=settings.SERVICE_MODEL)
         except:
             pass
     return
