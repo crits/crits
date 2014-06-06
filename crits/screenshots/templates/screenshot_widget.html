@@ -1,0 +1,33 @@
+{% load url from future %}
+
+<link rel="stylesheet" href="/css/blueimp-gallery.min.css">
+
+<div class="content_box screenshots" id="screenshots_container">
+    <h3 class="titleheader">
+        <span class="collapsible">Screenshots (<span class="count">{{ screenshots|length }}</span>)</span>
+        <span class="add_button" data-intro="Add a screenshot" data-position="right">
+            <a style="display: inline-block;" href="#" title="Add Screenshot" class="ui-icon ui-icon-image dialogClick" dialog="add-screenshot" persona="new" data-id="{{ subscription.id }}" data-uid="{{ subscription.type }}"></a>
+        </span>
+        <span style="float: right;" class="ui-icon ui-icon-triangle-1-s collapsible"></span>
+    </h3>
+        {% if screenshots%}
+            <div id="blueimp-gallery-dialog" data-show="fade" data-hide="fade">
+                <div class="blueimp-gallery blueimp-gallery-carousel blueimp-gallery-controls">
+                    <div class="slides"></div>
+                    <a class="prev">‹</a>
+                    <a class="next">›</a>
+                    <a class="play-pause"></a>
+                </div>
+            </div>
+            <div id="links" class="collapser">
+            {% for screenshot in screenshots %}
+            <a href="{% url 'crits.screenshots.views.render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %}" data-dialog>
+                    <img src="{% url 'crits.screenshots.views.render_screenshot' screenshot.id 'thumb' %}">
+                </a>
+            {% endfor %}
+            </div>
+        {% endif %}
+<script src="/js/jquery.blueimp-gallery.min.js"></script>
+<script src="/js/jquery.image-gallery.min.js"></script>
+<script src="{{ STATIC_URL }}js/screenshots.js"></script>
+</div>

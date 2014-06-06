@@ -103,6 +103,9 @@ def get_raw_data_details(_id, analyst):
         comments = {'comments': raw_data.get_comments(),
                     'url_key': _id}
 
+        #screenshots
+        screenshots = raw_data.get_screenshots(analyst)
+
         # favorites
         favorite = is_user_favorite("%s" % analyst, 'RawData', raw_data.id)
 
@@ -117,6 +120,7 @@ def get_raw_data_details(_id, analyst):
                 'favorite': favorite,
                 'relationship': relationship,
                 "subscription": subscription,
+                "screenshots": screenshots,
                 "versions": versions,
                 "raw_data": raw_data}
 

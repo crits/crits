@@ -253,6 +253,12 @@ urlpatterns = patterns('',
         (r'^samples/yarahits/list/$', 'crits.samples.views.yarahits_listing'),
         (r'^samples/yarahits/list/(?P<option>\S+)/$', 'crits.samples.views.yarahits_listing'),
 
+        # Screenshots
+        (r'^screenshots/add/$', 'crits.screenshots.views.add_new_screenshot'),
+        (r'^screenshots/find/$', 'crits.screenshots.views.find_screenshot'),
+        (r'^screenshots/render/(?P<_id>\S+)/(?P<thumb>\S+)/$', 'crits.screenshots.views.render_screenshot'),
+        (r'^screenshots/render/(?P<_id>\S+)/$', 'crits.screenshots.views.render_screenshot'),
+
         # Services
         (r'^services/', include('crits.services.urls')),
 

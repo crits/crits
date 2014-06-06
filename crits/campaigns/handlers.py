@@ -80,6 +80,9 @@ def get_campaign_details(campaign_name, analyst):
     comments = {'comments': campaign_detail.get_comments(),
                 'url_key':campaign_name}
 
+    #screenshots
+    screenshots = campaign_detail.get_screenshots(analyst)
+
     # Get item counts
     formatted_query = {'campaign.name':campaign_name}
     counts = {}
@@ -107,6 +110,7 @@ def get_campaign_details(campaign_name, analyst):
             "campaign_detail": campaign_detail,
             "counts": counts,
             "favorite": favorite,
+            "screenshots": screenshots,
             "ttp_form": ttp_form}
 
     return template, args

@@ -160,6 +160,9 @@ def get_sample_details(sample_md5, analyst, format_=None):
         comments = {'comments': sample.get_comments(),
                     'url_key': sample_md5}
 
+        #screenshots
+        screenshots = sample.get_screenshots(analyst)
+
         # favorites
         favorite = is_user_favorite("%s" % analyst, 'Sample', sample.id)
 
@@ -182,6 +185,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'unrar_sample_form': unrar_sample_form,
                 'binary_exists': binary_exists,
                 'favorite': favorite,
+                'screenshots': screenshots,
                 'service_list': service_list}
 
     return template, args

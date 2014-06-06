@@ -80,6 +80,7 @@ from crits.relationships.forms import ForgeRelationshipForm
 from crits.samples.backdoor import Backdoor
 from crits.samples.exploit import Exploit
 from crits.samples.forms import UploadFileForm, NewExploitForm, NewBackdoorForm
+from crits.screenshots.forms import AddScreenshotForm
 from crits.standards.forms import UploadStandardsForm
 from crits.targets.forms import TargetInfoForm
 
@@ -1072,6 +1073,10 @@ def base_context(request):
             base_context['releasability_form'] = AddReleasabilityForm(user)
         except Exception, e:
             logger.warning("Base Context AddReleasabilityForm Error: %s" % e)
+        try:
+            base_context['screenshots_form'] = AddScreenshotForm(user)
+        except Exception, e:
+            logger.warning("Base Context AddScreenshotForm Error: %s" % e)
         try:
             base_context['upload_raw_data'] = UploadRawDataForm(user)
         except Exception, e:
