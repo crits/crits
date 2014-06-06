@@ -1,0 +1,37 @@
+span.remove_screenshot {
+    position: absolute;
+    top: 5px;
+    right: 4px;
+    min-height: 15px;
+    min-width: 15px;
+    background-color: gray;
+    border-bottom-left-radius: 5px;
+    display: none;
+}
+
+span.copy_ss_id {
+    position: absolute;
+    top: 5px;
+    left: 0px;
+    min-height: 15px;
+    min-width: 15px;
+    background-color: gray;
+    border-bottom-right-radius: 5px;
+    display: none;
+}
+
+#links a {
+    position: relative;
+}
+
+#links a img {
+    vertical-align: top;
+    margin-top: 5px;
+    padding-right: 5px;
+}
+
+.clear_ss_cookie {
+    display: inline-block;
+    min-height: 16px;
+    max-height: 16px;
+}

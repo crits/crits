@@ -8,6 +8,17 @@ function add_screenshot_dialog(e) {
     var dialog = $("#dialog-add-screenshot").closest(".ui-dialog");
     var form = dialog.find("form");
     file_upload_dialog(e);
+    var btn = $('<button id="get_ss_ids">Copy IDs</button>');
+    if ($('#get_ss_ids').length < 1) {
+        $('#form-add-screenshot').find('#id_screenshot_ids').after(btn);
+    }
+
+    $(document).on('click', '#get_ss_ids', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var sids = readCookie('screenshot_ids');
+        $('#id_screenshot_ids').val(sids);
+    });
 
     $('.screenshot-submit-iframe').load(function(e) {
         var $curTar = $(e.currentTarget);
@@ -18,7 +29,6 @@ function add_screenshot_dialog(e) {
         try {
             response = $.parseJSON(response);
         } catch (err) {
-            alert(err);
             response = {'message': 'Error uploading file.', 'success': false}
         }
 
@@ -45,6 +55,29 @@ function add_screenshot_submit(e) {
     form.submit();
 }
 
+function check_ss_cookie() {
+    var check_ss = readCookie('screenshot_ids');
+    if (check_ss !== null) {
+        $('.clear_ss_cookie').css({'outline': 'none',
+                                  'background-image': "url('/css/images/ui-icons_70b2e1_256x240.png')"});
+    } else {
+        $('.clear_ss_cookie').css({'outline': 'none',
+                                  'background-image': "url('/css/images/ui-icons_222222_256x240.png')"});
+    }
+}
+
+function remove_ss_from_cookie(sid) {
+    var existing_ss = readCookie('screenshot_ids');
+    existing_ss = existing_ss.replace(sid, '') .replace(',,', ',');
+    while(existing_ss.charAt(0) === ',')
+            existing_ss = existing_ss.substr(1);
+    if (existing_ss.length) {
+        createCookie('screenshot_ids',existing_ss, 60);
+    } else {
+        eraseCookie('screenshot_ids');
+    }
+}
+
 $(document).ready(function() {
     var ssDialogs = {
         "add-screenshot": {title: "Add Screenshot", open: add_screenshot_dialog,
@@ -53,5 +86,89 @@ $(document).ready(function() {
 
     $.each(ssDialogs,function(id,opt) {
         stdDialog(id,opt);
+    });
+
+    check_ss_cookie();
+
+    $('.copy_ss_id').each(function(id, opt) {
+        var me = $(this);
+        var existing_ss = readCookie('screenshot_ids');
+        if (existing_ss !== null) {
+            var sid = me.attr('data-id');
+            if (existing_ss.indexOf(sid) > -1) {
+                me.removeClass('ui-icon-radio-on')
+                .addClass('ui-icon-bullet')
+                .addClass('copied')
+                .show();
+            }
+        }
+    });
+
+    $(document).on('mouseenter', '#links a', function(e) {
+        $(this).find('.remove_screenshot').show();
+        $(this).find('.copy_ss_id').show();
+    });
+
+    $(document).on('mouseleave', '#links a', function(e) {
+        $(this).find('.remove_screenshot').hide();
+        if (!$(this).find('.copy_ss_id').hasClass('copied')) {
+            $(this).find('.copy_ss_id').hide();
+        }
+    });
+
+    $(document).on('click', '.remove_screenshot', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        me = $(this);
+        var sid = me.attr('data-id');
+        var obj = me.attr('data-type');
+        var objid = me.attr('data-obj');
+        var data = {obj: obj, sid: sid, oid: objid};
+        $.ajax({
+            type: "POST",
+            url: remove_screenshot_url,
+            data: data,
+            dataType: "json",
+            success: function(data) {
+                if (data.success) {
+                    me.closest('a').remove();
+                    remove_ss_from_cookie(sid);
+                }
+            }
+        });
+    });
+
+    $(document).on('click', '.copy_ss_id', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        me = $(this);
+        var sid = me.attr('data-id');
+        if (me.hasClass('copied')) {
+            me.removeClass('ui-icon-bullet')
+            .removeClass('copied')
+            .addClass('ui-icon-radio-on');
+            remove_ss_from_cookie(sid);
+        } else {
+            me.removeClass('ui-icon-radio-on')
+            .addClass('ui-icon-bullet')
+            .addClass('copied');
+            var existing_ss = readCookie('screenshot_ids');
+            if (existing_ss !== null) {
+                sid += "," + existing_ss;
+            }
+            createCookie('screenshot_ids',sid, 60);
+        }
+        check_ss_cookie();
+    });
+
+    $(document).on('click', '.clear_ss_cookie', function(e) {
+        eraseCookie('screenshot_ids');
+        check_ss_cookie();
+        $('.copied').each(function(e) {
+            $(this).removeClass('ui-icon-bullet')
+            .removeClass('copied')
+            .addClass('ui-icon-radio-on')
+            .hide();
+        });
     });
 });

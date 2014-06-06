@@ -256,6 +256,7 @@ urlpatterns = patterns('',
         # Screenshots
         (r'^screenshots/add/$', 'crits.screenshots.views.add_new_screenshot'),
         (r'^screenshots/find/$', 'crits.screenshots.views.find_screenshot'),
+        (r'^screenshots/remove_from_object/$', 'crits.screenshots.views.remove_screenshot_from_object'),
         (r'^screenshots/render/(?P<_id>\S+)/(?P<thumb>\S+)/$', 'crits.screenshots.views.render_screenshot'),
         (r'^screenshots/render/(?P<_id>\S+)/$', 'crits.screenshots.views.render_screenshot'),
 

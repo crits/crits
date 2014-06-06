@@ -84,7 +84,7 @@ def get_screenshot(_id=None, tag=None, analyst=None, thumb=False):
     return response
 
 def add_screenshot(description, tags, source, method, reference, analyst,
-                   screenshot, screenshot_id, oid, otype):
+                   screenshot, screenshot_ids, oid, otype):
 
     result = {'success': False}
     obj = class_from_id(otype, oid)
@@ -92,18 +92,20 @@ def add_screenshot(description, tags, source, method, reference, analyst,
         result['message'] = "Could not find the top-level object."
         return result
 
-    if screenshot_id:
-        screenshot_id = screenshot_id.strip().lower()
-        s = Screenshot.objects(id=screenshot_id).first()
-        if s:
-            s.add_source(source=source, method=method, reference=reference,
-                    analyst=analyst)
-            s.save()
-            obj.screenshots.append(screenshot_id)
-            obj.save()
-        else:
-            result['message'] = "Could not find a screenshot with that ID."
-            return result
+    final_screenshots = []
+
+    if screenshot_ids:
+        screenshot_list = screenshot_ids.split(',')
+        for screenshot_id in screenshot_list:
+            screenshot_id = screenshot_id.strip().lower()
+            s = Screenshot.objects(id=screenshot_id).first()
+            if s:
+                s.add_source(source=source, method=method, reference=reference,
+                        analyst=analyst)
+                s.save()
+                obj.screenshots.append(screenshot_id)
+                obj.save()
+                final_screenshots.append(s)
     else:
         md5 = hashlib.md5(screenshot.read()).hexdigest()
         check = Screenshot.objects(md5=md5).first()
@@ -122,20 +124,53 @@ def add_screenshot(description, tags, source, method, reference, analyst,
             return result
         try:
             s.save(username=analyst)
+            final_screenshots.append(s)
         except Exception, e:
             result['message'] = str(e)
             return result
         obj.screenshots.append(str(s.id))
         obj.save(username=analyst)
 
-    result['message'] = "Screenshot successfully uploaded!"
+    result['message'] = "Screenshot(s) successfully uploaded!"
     result['id'] = str(s.id)
-    result['html'] = '<a href="%s" title="%s" data-id="%s" data-dialog><img src="%s"></a>' % \
-        (reverse('crits.screenshots.views.render_screenshot',
+    final_html = ""
+    for f in final_screenshots:
+        final_html += create_screenshot_html(f, oid, otype)
+    result['html'] = final_html
+    result['success'] = True
+    return result
+
+def create_screenshot_html(s, oid, otype):
+    html = '<a href="%s" title="%s" data-id="%s" data-dialog><img src="%s">' % \
+            (reverse('crits.screenshots.views.render_screenshot',
                     args=[s.id]),
             s.description + ": " + ','.join(s.tags),
             str(s.id),
             reverse('crits.screenshots.views.render_screenshot',
                     args=[s.id, 'thumb']))
-    result['success'] = True
-    return result
+    html += '<span class="remove_screenshot ui-icon ui-icon-trash" data-id="'
+    html += '%s" data-obj="%s" data-type="%s" title="Remove from %s">' % (str(s.id),
+                                                                          oid,
+                                                                          otype,
+                                                                          otype)
+    html += '</span><span class="copy_ss_id ui-icon ui-icon-radio-on" '
+    html += 'data-id="%s" title="Copy ID to clipboard"></span>' % str(s.id)
+
+    return html
+
+def delete_screenshot_from_object(obj, oid, sid, analyst):
+
+    result = {'success': False}
+    klass = class_from_id(obj, oid)
+    if not klass:
+        result['message'] = "Could not find Object to delete screenshot from."
+        return result
+    clean = [s for s in klass.screenshots if s != sid]
+    klass.screenshots = clean
+    try:
+        klass.save(username=analyst)
+        result['success'] = True
+        return result
+    except Exception, e:
+        result['message'] = str(e)
+        return result

@@ -8,6 +8,7 @@ from django.template import RequestContext
 from crits.core.user_tools import user_can_view_data
 from crits.screenshots.handlers import get_screenshots_for_id, get_screenshot
 from crits.screenshots.handlers import add_screenshot
+from crits.screenshots.handlers import delete_screenshot_from_object
 
 @user_passes_test(user_can_view_data)
 def get_screenshots(request):
@@ -95,11 +96,30 @@ def add_new_screenshot(request):
     source = request.POST.get('source', None)
     oid = request.POST.get('oid', None)
     otype = request.POST.get('otype', None)
-    screenshot_id = request.POST.get('screenshot_id', None)
+    screenshot_ids = request.POST.get('screenshot_ids', None)
     screenshot = request.FILES.get('screenshot', None)
 
     result = add_screenshot(description, tags, source, method, reference,
-                            analyst, screenshot, screenshot_id, oid, otype)
+                            analyst, screenshot, screenshot_ids, oid, otype)
 
+    return HttpResponse(json.dumps(result),
+                        mimetype="application/json")
+
+@user_passes_test(user_can_view_data)
+def remove_screenshot_from_object(request):
+    """
+    Removes the screenshot from being associated with a top-level object.
+
+    :param request: The Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    analyst = request.user.username
+    obj = request.POST.get('obj', None)
+    oid = request.POST.get('oid', None)
+    sid = request.POST.get('sid', None)
+
+    result = delete_screenshot_from_object(obj, oid, sid, analyst)
     return HttpResponse(json.dumps(result),
                         mimetype="application/json")

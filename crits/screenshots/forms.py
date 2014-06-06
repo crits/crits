@@ -12,12 +12,14 @@ class AddScreenshotForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     screenshot = forms.FileField(required=False)
-    screenshot_id = forms.CharField(required=False,
+    screenshot_ids = forms.CharField(required=False,
+                                     widget=forms.Textarea(attrs={'cols':'80',
+                                                               'rows':'2'}),
                                     help_text=('If it is an existing '
-                                               'screenshot, enter the '
-                                               'ID instead. All other '
-                                               'data will be copied from '
-                                               'existing screenshot.'))
+                                               'screenshot (or screenshots), '
+                                               'enter the ID(s) instead. All '
+                                               'other data <br>will be copied '
+                                               'from the existing screenshot(s).'))
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                                'rows':'2'}),
                                                                required=False)

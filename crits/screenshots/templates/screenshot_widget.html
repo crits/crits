@@ -1,6 +1,11 @@
 {% load url from future %}
 
 <link rel="stylesheet" href="/css/blueimp-gallery.min.css">
+<link rel="stylesheet" href="{{ STATIC_URL }}css/screenshots.css">
+
+<script>
+    var remove_screenshot_url = "{% url 'crits.screenshots.views.remove_screenshot_from_object' %}";
+</script>
 
 <div class="content_box screenshots" id="screenshots_container">
     <h3 class="titleheader">
@@ -8,6 +13,7 @@
         <span class="add_button" data-intro="Add a screenshot" data-position="right">
             <a style="display: inline-block;" href="#" title="Add Screenshot" class="ui-icon ui-icon-image dialogClick" dialog="add-screenshot" persona="new" data-id="{{ subscription.id }}" data-uid="{{ subscription.type }}"></a>
         </span>
+        <span class="clear_ss_cookie ui-icon ui-icon-trash" data-intro="Clear the screenshot ID cookie" data-position="right" title="Clear the screenshot ID cookie"></span>
         <span style="float: right;" class="ui-icon ui-icon-triangle-1-s collapsible"></span>
     </h3>
         {% if screenshots%}
@@ -21,8 +27,11 @@
             </div>
             <div id="links" class="collapser">
             {% for screenshot in screenshots %}
-            <a href="{% url 'crits.screenshots.views.render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %}" data-id="{{ screenshot.id }}" data-dialog>
+                <a href="{% url 'crits.screenshots.views.render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %}" data-id="{{ screenshot.id }}" data-dialog>
                     <img src="{% url 'crits.screenshots.views.render_screenshot' screenshot.id 'thumb' %}">
+                    <span class="remove_screenshot ui-icon ui-icon-trash" data-id="{{ screenshot.id }}" data-obj="{{ subscription.id }}" data-type="{{ subscription.type }}" title="Remove from {{ subscription.type }}"></span>
+                    <span class="copy_ss_id ui-icon ui-icon-radio-on" data-id="{{ screenshot.id }}" title="Copy ID to clipboard"></span>
+                    </img>
                 </a>
             {% endfor %}
             </div>
