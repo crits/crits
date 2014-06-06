@@ -30,22 +30,6 @@ class DatabaseService(Service):
     def __init__(self, config, notify=None, complete=None):
         super(DatabaseService, self).__init__(config, notify, complete)
 
-    def _fetch_meta(self, query_filter, result_filter):
-        """
-        Fetch sample metadata.
-
-        :param query_filter: The filter to use to find the sample.
-        :type query_filter: dict
-        :param result_filter: Limit the result to these fields.
-        :type result_filter: tuple
-        :returns: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-        """
-
-        self.ensure_current_task()
-
-        results = Sample.objects(__raw__=query_filter).only(*result_filter)
-        return results
-
 
 class DatabaseServiceManager(ServiceManager):
     """
