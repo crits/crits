@@ -33,6 +33,7 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
     description = StringField()
     filename = StringField()
     height = IntField()
+    md5 = StringField()
     screenshot = getFileField(collection_name=settings.COL_SCREENSHOTS,
                               required=True)
     tags = ListField(StringField())

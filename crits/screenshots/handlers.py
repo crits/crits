@@ -1,3 +1,5 @@
+import hashlib
+
 from PIL import Image
 
 from django.http import HttpResponse
@@ -94,15 +96,25 @@ def add_screenshot(description, tags, source, method, reference, analyst,
         screenshot_id = screenshot_id.strip().lower()
         s = Screenshot.objects(id=screenshot_id).first()
         if s:
+            s.add_source(source=source, method=method, reference=reference,
+                    analyst=analyst)
+            s.save()
             obj.screenshots.append(screenshot_id)
             obj.save()
         else:
             result['message'] = "Could not find a screenshot with that ID."
             return result
     else:
-        s = Screenshot()
-        s.add_screenshot(screenshot, tags)
-        s.description = description
+        md5 = hashlib.md5(screenshot.read()).hexdigest()
+        check = Screenshot.objects(md5=md5).first()
+        if check:
+            s = check
+        else:
+            s = Screenshot()
+            s.description = description
+            s.md5 = md5
+            screenshot.seek(0)
+            s.add_screenshot(screenshot, tags)
         s.add_source(source=source, method=method, reference=reference,
                     analyst=analyst)
         if not s.screenshot and not s.thumb:
@@ -125,4 +137,3 @@ def add_screenshot(description, tags, source, method, reference, analyst,
                     args=[s.id, 'thumb']))
     result['success'] = True
     return result
-
