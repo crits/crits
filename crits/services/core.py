@@ -959,7 +959,7 @@ class TempAnalysisFile(object):
 
         tempdir = tempfile.mkdtemp()
         self.directory = tempdir
-        tfile = os.path.join(tempdir, self.obj.id)
+        tfile = os.path.join(tempdir, str(self.obj.id))
         with open(tfile, "wb") as f:
             f.write(self.obj.filedata.read())
         return tfile
