@@ -3,8 +3,19 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: wxs
+Date:   2014-06-06
+
+    Services are getting a n overhaul. They no longer use the Context concept.
+    Contexts existed from a time before we had real objects to pass around.
+    Now that we have real objects Contexts are no longer needed and are a
+    layer of indirection we can do without.
+
+    If you are a service author you need to update your code to work on an
+    object.
+
 Author: mgoffin
-Date:  2014-05.15
+Date:  2014-05-15
 
     Notifications are getting an overhaul. They are now stored in their own
     separate collection instead of being mixed in with comment and embedded in a
