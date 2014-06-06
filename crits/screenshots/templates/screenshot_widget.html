@@ -21,7 +21,7 @@
             </div>
             <div id="links" class="collapser">
             {% for screenshot in screenshots %}
-            <a href="{% url 'crits.screenshots.views.render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %}" data-dialog>
+            <a href="{% url 'crits.screenshots.views.render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %}" data-id="{{ screenshot.id }}" data-dialog>
                     <img src="{% url 'crits.screenshots.views.render_screenshot' screenshot.id 'thumb' %}">
                 </a>
             {% endfor %}
@@ -29,5 +29,4 @@
         {% endif %}
 <script src="/js/jquery.blueimp-gallery.min.js"></script>
 <script src="/js/jquery.image-gallery.min.js"></script>
-<script src="{{ STATIC_URL }}js/screenshots.js"></script>
 </div>

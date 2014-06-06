@@ -70,7 +70,7 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
         self.generate_thumbnail(im)
         if isinstance(tags, basestring):
             tlist = tags.split(',')
-            self.tags = [t.strip() for t in tlist]
+            self.tags = [t.strip() for t in tlist if len(t.strip())]
         elif isinstance(tags, list):
             self.tags = tags
 

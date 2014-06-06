@@ -38,7 +38,7 @@ def get_screenshots_for_id(type_, _id, analyst, buckets=False):
 
     final_shots = []
     for s in screenshots:
-        if s.screenshot and s.thumb:
+        if s.screenshot and s.thumb and s not in final_shots:
             final_shots.append(s)
     for b in bucket_shots:
         if b not in final_shots:
@@ -129,10 +129,12 @@ def add_screenshot(description, tags, source, method, reference, analyst,
         obj.save(username=analyst)
 
     result['message'] = "Screenshot successfully uploaded!"
-    result['html'] = '<a href="%s" title="%s" data-dialog><img src="%s"></a>' % \
+    result['id'] = str(s.id)
+    result['html'] = '<a href="%s" title="%s" data-id="%s" data-dialog><img src="%s"></a>' % \
         (reverse('crits.screenshots.views.render_screenshot',
                     args=[s.id]),
-            str(s.id) + ": " + s.description + ": " + ','.join(s.tags),
+            s.description + ": " + ','.join(s.tags),
+            str(s.id),
             reverse('crits.screenshots.views.render_screenshot',
                     args=[s.id, 'thumb']))
     result['success'] = True
