@@ -152,15 +152,27 @@ class CRITsSerializer(Serializer):
                     if filedata:
                         filedata = self._format_data(filedata, file_format)
                         files.append([filename, filedata])
+                elif hasattr(data.obj, 'screenshot'):
+                    filename = "%s.png" % data.obj.md5
+                    filedata = data.obj.screenshot.read()
+                    if filedata:
+                        files.append([filename, filedata])
             elif 'objects' in data:
                 try:
                     objs = data['objects']
                     for obj_ in objs:
-                        filename = obj_.obj.md5
-                        filedata = obj_.obj.filedata.read()
-                        if filedata:
-                            filedata = self._format_data(filedata, file_format)
-                            files.append([filename, filedata])
+                        if hasattr(obj_.obj, 'filedata'):
+                            filename = obj_.obj.md5
+                            filedata = obj_.obj.filedata.read()
+                            if filedata:
+                                filedata = self._format_data(filedata,
+                                                             file_format)
+                                files.append([filename, filedata])
+                        elif hasattr(obj_.obj, 'screenshot'):
+                            filename = "%s.png" % data.obj.md5
+                            filedata = data.obj.screenshot.read()
+                            if filedata:
+                                files.append([filename, filedata])
                 except:
                     pass
             try:
@@ -193,7 +205,8 @@ class CRITsSerializer(Serializer):
         # if this is a singular object, just return our internal to_json()
         # which handles the Embedded MongoEngine classes.
         if hasattr(data, 'obj'):
-            data.obj.sanitize(username=username, rels=True)
+            if data.obj._has_method('sanitize'):
+                data.obj.sanitize(username=username, rels=True)
             return data.obj.to_json()
 
         data = self._convert_mongoengine(data, options)
@@ -238,7 +251,8 @@ class CRITsSerializer(Serializer):
         # if this is a singular object, just return our internal to_yaml()
         # which handles the Embedded MongoEngine classes.
         if hasattr(data, 'obj'):
-            data.obj.sanitize(username=username, rels=True)
+            if data.obj._has_method('sanitize'):
+                data.obj.sanitize(username=username, rels=True)
             return data.obj.to_yaml()
 
         data = self._convert_mongoengine(data, options)
@@ -333,7 +347,8 @@ class CRITsSerializer(Serializer):
             objs = data['objects']
             data['objects'] = []
             for obj_ in objs:
-                obj_.obj.sanitize(username=username, rels=True)
+                if obj_.obj._has_method('sanitize'):
+                    obj_.obj.sanitize(username=username, rels=True)
                 data['objects'].append(json.loads(obj_.obj.to_json()))
         data = self.to_simple(data, options)
         return data

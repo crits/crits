@@ -6,7 +6,9 @@ from PIL import Image
 
 from crits.core.crits_mongoengine import CritsBaseDocument, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsSchemaDocument, CritsDocument
+from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.fields import getFileField
+from crits.core.user_tools import user_sources
 
 class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
                  CritsDocument, Document):
@@ -108,3 +110,34 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
         im.save(fs, "PNG")
         fs.seek(0)
         self.thumb = fs.read()
+
+    def sanitize(self, username=None, sources=None, rels=None):
+        """
+        Sanitize the source list down to only those a user has access to see.
+        This was sniped from core/crits_mongoengine.
+
+        :param username: The user requesting this data.
+        :type username: str
+        :param sources: A list of sources the user has access to.
+        :type sources: list
+        """
+
+        if username and hasattr(self, 'source'):
+            length = len(self.source)
+            if not sources:
+                sources = user_sources(username)
+            # use slice to modify in place in case any code is referencing
+            # the source already will reflect the changes as well
+            self.source[:] = [s for s in self.source if s.name in sources]
+            # a bit of a hack but we add a poorly formatted source to the
+            # source list which has an instances length equal to the amount
+            # of sources that were sanitized out of the user's list.
+            # not tested but this has the added benefit of throwing a
+            # ValidationError if someone were to try and save() this.
+            new_length = len(self.source)
+            if length > new_length:
+                i_length = length - new_length
+                s = EmbeddedSource()
+                s.name = "Other"
+                s.instances = [0] * i_length
+                self.source.append(s)

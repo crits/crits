@@ -292,6 +292,7 @@ if settings.ENABLE_API:
     from crits.raw_data.api import RawDataResource
     from crits.relationships.api import RelationshipResource
     from crits.samples.api import SampleResource
+    from crits.screenshots.api import ScreenshotResource
     from crits.services.api import ServiceResource
     from crits.targets.api import TargetResource
 
@@ -309,6 +310,7 @@ if settings.ENABLE_API:
     v1_api.register(RawDataResource())
     v1_api.register(RelationshipResource())
     v1_api.register(SampleResource())
+    v1_api.register(ScreenshotResource())
     v1_api.register(ServiceResource())
     v1_api.register(TargetResource())
 

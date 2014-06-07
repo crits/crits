@@ -4,6 +4,7 @@ from tastypie.exceptions import BadRequest
 
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
+from crits.screenshots.handlers import add_screenshot
 from crits.screenshots.screenshot import Screenshot
 
 class ScreenshotResource(CRITsAPIResource):
@@ -16,7 +17,7 @@ class ScreenshotResource(CRITsAPIResource):
     class Meta:
         queryset = Screenshot.objects.all()
         allowed_methods = ('get', 'post')
-        resource_name = "objects"
+        resource_name = "screenshots"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()
@@ -37,4 +38,47 @@ class ScreenshotResource(CRITsAPIResource):
                                                                False)
 
     def obj_create(self, bundle, **kwargs):
-        raise BadRequest("Not working yet")
+        """
+        Handles creating Screenshots through the API.
+
+        :param bundle: Bundle containing the information to create the
+                       Screenshot.
+        :type bundle: Tastypie Bundle object.
+        :returns: Bundle object.
+        :raises BadRequest: If filedata is not provided or creation fails.
+        """
+
+        analyst = bundle.request.user.username
+        type_ = bundle.data.get('upload_type', None)
+        if not type_:
+            raise BadRequest('Must provide an upload type.')
+        if type_ not in ('ids', 'screenshot'):
+            raise BadRequest('Not a valid upload type.')
+        if type_ == 'ids':
+            screenshot_ids = bundle.data.get('screenshot_ids', None)
+            screenshot = None
+        elif type_ == 'screenshot':
+            screenshot = bundle.data.get('filedata', None)
+            screenshot_ids = None
+            if not screenshot:
+                raise BadRequest("Upload type of 'screenshot' but no file uploaded.")
+
+        description = bundle.data.get('description', None)
+        tags = bundle.data.get('tags', None)
+        source = bundle.data.get('source', None)
+        method = bundle.data.get('method', None)
+        reference = bundle.data.get('reference', None)
+        oid = bundle.data.get('oid', None)
+        otype = bundle.data.get('otype', None)
+
+        if not oid and not otype and not source and not (screenshot or screenshot_ids):
+            raise BadRequest("You must provide a valid set of information.")
+
+        result = add_screenshot(description, tags, source, method, reference,
+                                analyst, screenshot, screenshot_ids, oid, otype)
+
+        if result['success']:
+            return bundle
+        else:
+            err = result['message']
+            raise BadRequest('Unable to create screenshot from data. %s' % err)

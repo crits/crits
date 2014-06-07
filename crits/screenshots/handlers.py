@@ -90,6 +90,9 @@ def add_screenshot(description, tags, source, method, reference, analyst,
                    screenshot, screenshot_ids, oid, otype):
 
     result = {'success': False}
+    if not source:
+        result['message'] = "Must provide a source"
+        return result
     obj = class_from_id(otype, oid)
     if not obj:
         result['message'] = "Could not find the top-level object."
@@ -146,10 +149,14 @@ def add_screenshot(description, tags, source, method, reference, analyst,
     return result
 
 def create_screenshot_html(s, oid, otype):
+    if s.tags and s.description:
+        description = s.description + ": " + ','.join(s.tags)
+    else:
+        description = s.md5
     html = '<a href="%s" title="%s" data-id="%s" data-dialog><img src="%s">' % \
             (reverse('crits.screenshots.views.render_screenshot',
                     args=[s.id]),
-            s.description + ": " + ','.join(s.tags),
+            description,
             str(s.id),
             reverse('crits.screenshots.views.render_screenshot',
                     args=[s.id, 'thumb']))
