@@ -74,6 +74,22 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
         elif isinstance(tags, list):
             self.tags = tags
 
+    def add_tags(self, tags):
+        """
+        Add tags to a screenshot.
+
+        :param tags: The tags to add.
+        :type tags: str, list
+        """
+
+        if isinstance(tags, basestring):
+            tag_list = [t.strip() for t in tags.split(',') if len(t.strip())]
+        if isinstance(tags, list):
+            tag_list = [t.strip() for t in tags if len(t.strip())]
+        for t in tag_list:
+            if t not in self.tags:
+                self.tags.append(t)
+
     def generate_thumbnail(self, im=None):
         """
         Generate a thumbnail out of a screenshot. Will write the thumbnail to

@@ -17,6 +17,20 @@
         <span style="float: right;" class="ui-icon ui-icon-triangle-1-s collapsible"></span>
     </h3>
         {% if screenshots%}
+            <div id="links">
+            {% for screenshot in screenshots %}
+                <a href="{% url 'crits.screenshots.views.render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %}" data-id="{{ screenshot.id }}" data-dialog>
+                    {% if screenshot.unsupported_attrs.bucket %}
+                        <img class="ss_bucket" src="{% url 'crits.screenshots.views.render_screenshot' screenshot.id 'thumb' %}">
+                    {% else %}
+                        <img class="ss_no_bucket" src="{% url 'crits.screenshots.views.render_screenshot' screenshot.id 'thumb' %}">
+                    {% endif %}
+                        <span class="remove_screenshot ui-icon ui-icon-trash" data-id="{{ screenshot.id }}" data-obj="{{ subscription.id }}" data-type="{{ subscription.type }}" title="Remove from {{ subscription.type }}"></span>
+                        <span class="copy_ss_id ui-icon ui-icon-radio-on" data-id="{{ screenshot.id }}" title="Copy ID to clipboard"></span>
+                    </img>
+                </a>
+            {% endfor %}
+            </div>
             <div id="blueimp-gallery-dialog" data-show="fade" data-hide="fade">
                 <div class="blueimp-gallery blueimp-gallery-carousel blueimp-gallery-controls">
                     <div class="slides"></div>
@@ -24,16 +38,6 @@
                     <a class="next">›</a>
                     <a class="play-pause"></a>
                 </div>
-            </div>
-            <div id="links" class="collapser">
-            {% for screenshot in screenshots %}
-                <a href="{% url 'crits.screenshots.views.render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %}" data-id="{{ screenshot.id }}" data-dialog>
-                    <img src="{% url 'crits.screenshots.views.render_screenshot' screenshot.id 'thumb' %}">
-                    <span class="remove_screenshot ui-icon ui-icon-trash" data-id="{{ screenshot.id }}" data-obj="{{ subscription.id }}" data-type="{{ subscription.type }}" title="Remove from {{ subscription.type }}"></span>
-                    <span class="copy_ss_id ui-icon ui-icon-radio-on" data-id="{{ screenshot.id }}" title="Copy ID to clipboard"></span>
-                    </img>
-                </a>
-            {% endfor %}
             </div>
         {% endif %}
 <script src="/js/jquery.blueimp-gallery.min.js"></script>

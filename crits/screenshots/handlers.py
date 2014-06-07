@@ -42,6 +42,9 @@ def get_screenshots_for_id(type_, _id, analyst, buckets=False):
             final_shots.append(s)
     for b in bucket_shots:
         if b not in final_shots:
+            # since .bucket isn't supported, this will show up in the template
+            # under unsupported_attrs, which is ok.
+            b.bucket = True
             final_shots.append(b)
 
     result['success'] = True
@@ -102,6 +105,7 @@ def add_screenshot(description, tags, source, method, reference, analyst,
             if s:
                 s.add_source(source=source, method=method, reference=reference,
                         analyst=analyst)
+                s.add_tags(tags)
                 s.save()
                 obj.screenshots.append(screenshot_id)
                 obj.save()
@@ -111,6 +115,7 @@ def add_screenshot(description, tags, source, method, reference, analyst,
         check = Screenshot.objects(md5=md5).first()
         if check:
             s = check
+            s.add_tags(tags)
         else:
             s = Screenshot()
             s.description = description
