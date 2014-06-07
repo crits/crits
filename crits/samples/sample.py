@@ -154,7 +154,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
 
         ret = self.filedata != None and self.filedata.read(2) == "MZ"
         self.filedata.seek(0) # Reset
-        return
+        return ret
 
     def is_pdf(self):
         """
