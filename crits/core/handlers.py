@@ -48,6 +48,8 @@ from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
 from crits.emails.email import Email
 from crits.samples.sample import Sample
+from crits.screenshots.screenshot import Screenshot
+from crits.targets.target import Target
 from crits.indicators.indicator import Indicator
 
 from crits.core.totp import valid_totp
@@ -1538,6 +1540,11 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                     {'name': search_query},
                     {'aliases': search_query},
                 ]
+        elif type_ == "Screenshot":
+            search_list = [
+                    {'description': search_query},
+                    {'tags': search_query},
+                ]
         else:
             search_list = [{'name': search_query}]
         search_list.append({'source.instances.reference':search_query})
@@ -2026,6 +2033,11 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     for srcdict in doc[key]:
                         srcs.append(srcdict['name'])
                     doc[key] = "|||".join(srcs)
+                elif key == "tags":
+                    tags = []
+                    for tag in doc[key]:
+                        tags.append(tag)
+                    doc[key] = "|||".join(tags)
                 elif key == "is_active":
                     if value:
                         doc[key] = "True"
@@ -2277,6 +2289,8 @@ def build_jtable(jtopts, request):
             fdict['display'] = """function (data) { return '<div class="icon-container"><span id="'+data.record.id+'" class="id_copy ui-icon ui-icon-copy"></span></div>';}"""
         if field == "favorite":
             fdict['display'] = """function (data) { return '<div class="icon-container"><span id="'+data.record.id+'" class="favorites_icon_jtable ui-icon ui-icon-star"></span></div>';}"""
+        if field == "thumb":
+            fdict['display'] = """function (data) { return '<img src="%s'+data.record.id+'/thumb/" />';}""" % reverse('crits.screenshots.views.render_screenshot')
         if 'no_sort' in jtopts and field in jtopts['no_sort']:
             fdict['sorting'] = "false"
         if 'hidden_fields' in jtopts and field in jtopts['hidden_fields']:
@@ -3428,15 +3442,17 @@ def generate_global_search(request):
     results = []
     for col_obj,url in [[Campaign, "crits.campaigns.views.campaigns_listing"],
                     [Certificate, "crits.certificates.views.certificates_listing"],
-                    [Sample, "crits.samples.views.samples_listing"],
+                    [Comment, "crits.comments.views.comments_listing"],
+                    [Domain, "crits.domains.views.domains_listing"],
+                    [Email, "crits.emails.views.emails_listing"],
+                    [Event, "crits.events.views.events_listing"],
+                    [Indicator,"crits.indicators.views.indicators_listing"],
+                    [IP, "crits.ips.views.ips_listing"],
                     [PCAP, "crits.pcaps.views.pcaps_listing"],
                     [RawData, "crits.raw_data.views.raw_data_listing"],
-                    [Indicator,"crits.indicators.views.indicators_listing"],
-                    [Email, "crits.emails.views.emails_listing"],
-                    [Domain, "crits.domains.views.domains_listing"],
-                    [IP, "crits.ips.views.ips_listing"],
-                    [Event, "crits.events.views.events_listing"],
-                    [Comment, "crits.comments.views.comments_listing"]]:
+                    [Sample, "crits.samples.views.samples_listing"],
+                    [Screenshot, "crits.screenshots.views.screenshots_listing"],
+                    [Target, "crits.targets.views.targets_listing"]]:
         ctype = col_obj._meta['crits_type']
         resp = get_query(col_obj, request)
         if resp['Result'] == "ERROR":

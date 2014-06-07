@@ -30,6 +30,26 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
             'tags': 'List of tags about this screenshot',
             'source': 'List [] of source information about who provided the screenshot'
         },
+        "jtable_opts": {
+                         'details_url': 'crits.screenshots.views.render_screenshot',
+                         'details_url_key': 'id',
+                         'default_sort': "created DESC",
+                         'searchurl': 'crits.screenshots.views.screenshots_listing',
+                         'fields': [ "thumb", "description", "created",
+                                     "source", "id", "md5", "tags" ],
+                         'jtopts_fields': [ "details",
+                                            "thumb",
+                                            "description",
+                                            "created",
+                                            "source",
+                                            "md5",
+                                            "tags",
+                                            "favorite"],
+                         'hidden_fields': ["md5"],
+                         'linked_fields': ["source", "tags"],
+                         'details_link': 'details',
+                         'no_sort': ['details']
+                       },
     }
 
     description = StringField()

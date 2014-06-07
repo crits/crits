@@ -431,6 +431,7 @@ CRITS_TYPES = {
         'PCAP': COL_PCAPS,
         'RawData': COL_RAW_DATA,
         'Sample': COL_SAMPLES,
+        'Screenshot': COL_SCREENSHOTS,
         'Target': COL_TARGETS,
 }
 

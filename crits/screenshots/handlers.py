@@ -1,13 +1,18 @@
 import hashlib
+import json
 
 from PIL import Image
 
 from django.http import HttpResponse
+from django.shortcuts import render_to_response
+from django.template import RequestContext
 from django.core.urlresolvers import reverse
 
 from crits.core.class_mapper import class_from_id
-from crits.screenshots.screenshot import Screenshot
+from crits.core.crits_mongoengine import json_handler
+from crits.core.handlers import build_jtable, jtable_ajax_list
 from crits.core.user_tools import user_sources
+from crits.screenshots.screenshot import Screenshot
 
 def get_screenshots_for_id(type_, _id, analyst, buckets=False):
     """
@@ -186,3 +191,60 @@ def delete_screenshot_from_object(obj, oid, sid, analyst):
     except Exception, e:
         result['message'] = str(e)
         return result
+
+def generate_screenshot_jtable(request, option):
+    """
+    Generate the jtable data for rendering in the list template.
+
+    :param request: The request for this jtable.
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Action to take.
+    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    obj_type = Screenshot
+    type_ = "screenshot"
+    mapper = obj_type._meta['jtable_opts']
+    if option == "jtlist":
+        # Sets display url
+        details_url = mapper['details_url']
+        details_url_key = mapper['details_url_key']
+        fields = mapper['fields']
+        response = jtable_ajax_list(obj_type,
+                                    details_url,
+                                    details_url_key,
+                                    request,
+                                    includes=fields)
+        return HttpResponse(json.dumps(response,
+                                       default=json_handler),
+                            content_type="application/json")
+    jtopts = {
+        'title': "Screenshots",
+        'default_sort': mapper['default_sort'],
+        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+                                                            type_),
+                           args=('jtlist',)),
+        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+                                                              type_),
+                             args=('jtdelete',)),
+        'searchurl': reverse(mapper['searchurl']),
+        'fields': mapper['jtopts_fields'],
+        'hidden_fields': mapper['hidden_fields'],
+        'linked_fields': mapper['linked_fields'],
+        'details_link': mapper['details_link'],
+        'no_sort': mapper['no_sort']
+    }
+    jtable = build_jtable(jtopts,request)
+    jtable['toolbar'] = []
+    if option == "inline":
+        return render_to_response("jtable.html",
+                                  {'jtable': jtable,
+                                   'jtid': '%s_listing' % type_,
+                                   'button' : '%ss_tab' % type_},
+                                  RequestContext(request))
+    else:
+        return render_to_response("%s_listing.html" % type_,
+                                  {'jtable': jtable,
+                                   'jtid': '%s_listing' % type_},
+                                  RequestContext(request))

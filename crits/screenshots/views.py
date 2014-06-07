@@ -7,8 +7,22 @@ from django.template import RequestContext
 
 from crits.core.user_tools import user_can_view_data
 from crits.screenshots.handlers import get_screenshots_for_id, get_screenshot
-from crits.screenshots.handlers import add_screenshot
+from crits.screenshots.handlers import add_screenshot, generate_screenshot_jtable
 from crits.screenshots.handlers import delete_screenshot_from_object
+
+@user_passes_test(user_can_view_data)
+def screenshots_listing(request,option=None):
+    """
+    Generate Screenshots Listing template.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Whether or not we should generate a CSV (yes if option is "csv")
+    :type option: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    return generate_screenshot_jtable(request, option)
 
 @user_passes_test(user_can_view_data)
 def get_screenshots(request):
