@@ -93,6 +93,7 @@ def get_favorites(analyst):
         'PCAP': 'filename',
         'RawData': 'title',
         'Sample': 'filename',
+        'Screenshot': 'id',
         'Target': 'email_address'
     }
 
@@ -3643,6 +3644,7 @@ def details_from_id(type_, id_):
                 'PCAP': 'crits.pcaps.views.pcap_details',
                 'RawData': 'crits.raw_data.views.raw_data_details',
                 'Sample': 'crits.samples.views.detail',
+                'Screenshot': 'crits.screenshots.views.render_screenshot',
                 'Target': 'crits.targets.views.target_info',
                 }
     if type_ in type_map and id_:
