@@ -475,8 +475,9 @@ phrase.</p>
 <li><a class="reference internal" href="#raw-data-api" id="id89">17.16&nbsp;&nbsp;&nbsp;Raw Data API</a></li>
 <li><a class="reference internal" href="#relationship-api" id="id90">17.17&nbsp;&nbsp;&nbsp;Relationship API</a></li>
 <li><a class="reference internal" href="#sample-api" id="id91">17.18&nbsp;&nbsp;&nbsp;Sample API</a></li>
-<li><a class="reference internal" href="#service-api" id="id92">17.19&nbsp;&nbsp;&nbsp;Service API</a></li>
-<li><a class="reference internal" href="#target-api" id="id93">17.20&nbsp;&nbsp;&nbsp;Target API</a></li>
+<li><a class="reference internal" href="#screenshot-api" id="id92">17.19&nbsp;&nbsp;&nbsp;Screenshot API</a></li>
+<li><a class="reference internal" href="#service-api" id="id93">17.20&nbsp;&nbsp;&nbsp;Service API</a></li>
+<li><a class="reference internal" href="#target-api" id="id94">17.21&nbsp;&nbsp;&nbsp;Target API</a></li>
 </ul>
 </li>
 </ul>
@@ -2410,8 +2411,38 @@ only &quot;date&quot; is required:</p>
 </tbody>
 </table>
 </div>
+<div class="section" id="screenshot-api">
+<h2><a class="toc-backref" href="#id92">17.19&nbsp;&nbsp;&nbsp;Screenshot API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/screenshots/</p>
+<p>/api/v1/screenshots/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/screenshots/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">upload_type:</th><td class="field-body">One of &quot;ids&quot; or &quot;screenshot&quot;.</td>
+</tr>
+<tr class="field"><th class="field-name">filedata:</th><td class="field-body">The screenshot if the upload type is &quot;screenshot&quot;.</td>
+</tr>
+<tr class="field"><th class="field-name">screenshot_ids:</th><td class="field-body">A comma-separated list of existing screenshot ObjectIds to add to the top-level object.</td>
+</tr>
+<tr class="field"><th class="field-name">tags:</th><td class="field-body">A comma-separated list of tags for the screenshot.</td>
+</tr>
+<tr class="field"><th class="field-name">oid:</th><td class="field-body">The ObjectId of the top-level object the screenshot(s) is/are for.</td>
+</tr>
+<tr class="field"><th class="field-name">otype:</th><td class="field-body">The type of the top-level object the screenshot(s) is/are for.</td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section" id="service-api">
-<h2><a class="toc-backref" href="#id92">17.19&nbsp;&nbsp;&nbsp;Service API</a></h2>
+<h2><a class="toc-backref" href="#id93">17.20&nbsp;&nbsp;&nbsp;Service API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/services/</blockquote>
@@ -2456,7 +2487,7 @@ only &quot;date&quot; is required:</p>
 field, &quot;log_level&quot; will be set to &quot;info&quot; if it is not provided.</p>
 </div>
 <div class="section" id="target-api">
-<h2><a class="toc-backref" href="#id93">17.20&nbsp;&nbsp;&nbsp;Target API</a></h2>
+<h2><a class="toc-backref" href="#id94">17.21&nbsp;&nbsp;&nbsp;Target API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/targets/</p>
