@@ -93,6 +93,35 @@ def get_screenshot(_id=None, tag=None, analyst=None, thumb=False):
 
 def add_screenshot(description, tags, source, method, reference, analyst,
                    screenshot, screenshot_ids, oid, otype):
+    """
+    Add a screenshot or screenshots to a top-level object.
+
+    :param description: The description of the screenshot.
+    :type description: str
+    :param tags: Tags associated with this screenshot.
+    :type tags: str, list
+    :param source: The source who provided the screenshot.
+    :type source: str
+    :param method: The method of acquiring this screenshot.
+    :type method: str
+    :param reference: A reference to the source of this screenshot.
+    :type reference: str
+    :param analyst: The user adding the screenshot.
+    :type analyst: str
+    :param screenshot: The screenshot to add.
+    :type screenshot: file handle
+    :param screenshot_ids: A list of ObjectIds of existing screenshots to add.
+    :type screenshot_ids: str, list
+    :param oid: The ObjectId of the top-level object to add to.
+    :type oid: str
+    :param otype: The top-level object type.
+    :type otype: str
+    :returns: dict with keys:
+              'success' (boolean),
+              'message' (str),
+              'id' (str) if successful,
+              'html' (str) if successful,
+    """
 
     result = {'success': False}
     if not source:
@@ -106,7 +135,10 @@ def add_screenshot(description, tags, source, method, reference, analyst,
     final_screenshots = []
 
     if screenshot_ids:
-        screenshot_list = screenshot_ids.split(',')
+        if not isinstance(screenshot_ids):
+            screenshot_list = screenshot_ids.split(',')
+        else:
+            screenshot_list = screenshot_ids
         for screenshot_id in screenshot_list:
             screenshot_id = screenshot_id.strip().lower()
             s = Screenshot.objects(id=screenshot_id).first()
@@ -154,6 +186,17 @@ def add_screenshot(description, tags, source, method, reference, analyst,
     return result
 
 def create_screenshot_html(s, oid, otype):
+    """
+    Create HTML for a thumbnail view for the screenshot.
+
+    :param s: The screenshot.
+    :type s: :class:`crits.screenshots.screenshot.Screenshot`
+    :param oid: The ObjectId of the top-level object it's associating with.
+    :type oid: str
+    :param otype: The type of top-level object it's associating with.
+    :returns: str
+    """
+
     if s.tags and s.description:
         description = s.description + ": " + ','.join(s.tags)
     else:
@@ -176,6 +219,19 @@ def create_screenshot_html(s, oid, otype):
     return html
 
 def delete_screenshot_from_object(obj, oid, sid, analyst):
+    """
+    Remove a screenshot from a top-level object.
+
+    :param obj: The type of top-level object to work with.
+    :type obj: str
+    :param oid: The ObjectId of the top-level object to work with.
+    :type oid: str
+    :param sid: The ObjectId of the screenshot to remove.
+    :type sid: str
+    :param analyst: The user removing the screenshot.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str).
+    """
 
     result = {'success': False}
     klass = class_from_id(obj, oid)
