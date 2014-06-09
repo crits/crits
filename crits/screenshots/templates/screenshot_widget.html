@@ -25,8 +25,8 @@
                         <img class="ss_bucket" src="{% url 'crits.screenshots.views.render_screenshot' screenshot.id 'thumb' %}">
                     {% else %}
                         <img class="ss_no_bucket" src="{% url 'crits.screenshots.views.render_screenshot' screenshot.id 'thumb' %}">
-                    {% endif %}
                         <span class="remove_screenshot ui-icon ui-icon-trash" data-id="{{ screenshot.id }}" data-obj="{{ subscription.id }}" data-type="{{ subscription.type }}" title="Remove from {{ subscription.type }}"></span>
+                    {% endif %}
                         <span class="copy_ss_id ui-icon ui-icon-radio-on" data-id="{{ screenshot.id }}" title="Copy ID to clipboard"></span>
                     </img>
                 </a>
