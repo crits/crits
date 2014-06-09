@@ -1230,7 +1230,7 @@ def create_indicator_from_header_field(email, header_field, ind_type,
                                         '',
                                         ind_type,
                                         analyst=analyst)
-    if newindicator['objectid']:
+    if newindicator.get('objectid'):
         indicator = Indicator.objects(id=newindicator['objectid']).first()
         results = email.add_relationship(rel_item=indicator,
                                           rel_type="Related_To",
