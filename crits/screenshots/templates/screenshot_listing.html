@@ -2,5 +2,8 @@
 {% block title %}Screenshots{% endblock %}
 
 {% block content %}
+<script>
+    var update_ss_description = "{% url 'crits.screenshots.views.update_ss_description' %}";
+</script>
     {% include "jtable.html" %}
 {% endblock %}

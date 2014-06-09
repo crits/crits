@@ -171,4 +171,46 @@ $(document).ready(function() {
             .hide();
         });
     });
+
+    $(document).on('click', '.edit_ss_description', function(e) {
+        e.preventDefault();
+        $(this).editable(function(value, settings) {
+            var revert = this.revert;
+            return function(value, settings, elem) {
+                var data = {
+                    description: value,
+                    oid: $(elem).attr('data-id')
+                };
+                $.ajax({
+                    type: "POST",
+                    async: false,
+                    url: update_ss_description,
+                    data: data,
+                    success: function(data) {
+                        if (!data.success) {
+                            value = revert;
+                        }
+                    }
+                });
+                return value;
+            }(value, settings, this);
+            },
+            {
+                type: 'textarea',
+                placeholder: 'None',
+                height: "50px",
+                width: "200px",
+                tooltip: "",
+                cancel: "Cancel",
+                submit: "Ok",
+                onblur: 'ignore',
+        });
+    });
+
+    // hack to get the "Ok" button for inline description editing to actually
+    // fire the form submission.
+    $(document).on('click', '.edit_ss_description form button[type="submit"]', function(e) {
+        e.preventDefault();
+        $(this).closest('form').submit();
+    });
 });

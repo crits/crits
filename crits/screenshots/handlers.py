@@ -10,7 +10,7 @@ from django.core.urlresolvers import reverse
 
 from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import json_handler
-from crits.core.handlers import build_jtable, jtable_ajax_list
+from crits.core.handlers import build_jtable, jtable_ajax_list,jtable_ajax_delete
 from crits.core.user_tools import user_sources
 from crits.screenshots.screenshot import Screenshot
 
@@ -275,6 +275,13 @@ def generate_screenshot_jtable(request, option):
         return HttpResponse(json.dumps(response,
                                        default=json_handler),
                             content_type="application/json")
+    if option == "jtdelete":
+        response = {"Result": "ERROR"}
+        if jtable_ajax_delete(obj_type,request):
+            response = {"Result": "OK"}
+        return HttpResponse(json.dumps(response,
+                                       default=json_handler),
+                            content_type="application/json")
     jtopts = {
         'title': "Screenshots",
         'default_sort': mapper['default_sort'],
@@ -304,3 +311,29 @@ def generate_screenshot_jtable(request, option):
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
+
+def edit_ss_description(oid, description, analyst):
+    """
+    Edit the description of a Screenshot.
+
+    :param oid: The ObjectId of the Screenshot.
+    :type oid: str
+    :param description: The new description.
+    :type description: str
+    :param analyst: The user updating the Screenshot.
+    :type analyst: str
+    :returns: dict with key "success" (boolean)
+    """
+
+    result = {'success': False}
+
+    s = Screenshot.objects(id=oid).first()
+    if not s:
+        return result
+    s.description = description
+    try:
+        s.save(username=analyst)
+    except:
+        return result
+    result['success'] = True
+    return result

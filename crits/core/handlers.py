@@ -2292,6 +2292,8 @@ def build_jtable(jtopts, request):
             fdict['display'] = """function (data) { return '<div class="icon-container"><span id="'+data.record.id+'" class="favorites_icon_jtable ui-icon ui-icon-star"></span></div>';}"""
         if field == "thumb":
             fdict['display'] = """function (data) { return '<img src="%s'+data.record.id+'/thumb/" />';}""" % reverse('crits.screenshots.views.render_screenshot')
+        if field == "description" and jtable['title'] == "Screenshots":
+            fdict['display'] = """function (data) { return '<span class="edit_underline edit_ss_description" data-id="'+data.record.id+'">'+data.record.description+'</span>';}"""
         if 'no_sort' in jtopts and field in jtopts['no_sort']:
             fdict['sorting'] = "false"
         if 'hidden_fields' in jtopts and field in jtopts['hidden_fields']:
