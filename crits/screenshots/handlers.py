@@ -203,7 +203,7 @@ def create_screenshot_html(s, oid, otype):
     else:
         description = s.md5
     description += " (submitted by %s)" % s.analyst
-    html = '<a href="%s" title="%s" data-id="%s" data-dialog><img src="%s">' % \
+    html = '<a href="%s" title="%s" data-id="%s" data-dialog><img class="ss_no_bucket" src="%s">' % \
             (reverse('crits.screenshots.views.render_screenshot',
                     args=[s.id]),
             description,
