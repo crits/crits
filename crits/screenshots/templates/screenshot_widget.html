@@ -17,8 +17,8 @@
         <span class="clear_ss_cookie ui-icon ui-icon-trash" data-intro="Clear the screenshot ID cookie" data-position="right" title="Clear the screenshot ID cookie"></span>
         <span style="float: right;" class="ui-icon ui-icon-triangle-1-s collapsible"></span>
     </h3>
+        <div id="links">
         {% if screenshots%}
-            <div id="links">
             {% for screenshot in screenshots %}
             <a href="{% url 'crits.screenshots.views.render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %} (submitted by {{ screenshot.analyst }})" data-id="{{ screenshot.id }}" data-dialog>
                     {% if screenshot.unsupported_attrs.bucket %}
@@ -31,16 +31,16 @@
                     </img>
                 </a>
             {% endfor %}
-            </div>
-            <div id="blueimp-gallery-dialog" data-show="fade" data-hide="fade">
+        {% endif %}
+        </div>
+        <div id="blueimp-gallery-dialog" data-show="fade" data-hide="fade">
                 <div class="blueimp-gallery blueimp-gallery-carousel blueimp-gallery-controls">
                     <div class="slides"></div>
                     <a class="prev">‹</a>
                     <a class="next">›</a>
                     <a class="play-pause"></a>
                 </div>
-            </div>
-        {% endif %}
+        </div>
 <script src="/js/jquery.blueimp-gallery.min.js"></script>
 <script src="/js/jquery.image-gallery.min.js"></script>
 </div>
