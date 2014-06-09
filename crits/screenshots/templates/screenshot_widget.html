@@ -20,7 +20,7 @@
         {% if screenshots%}
             <div id="links">
             {% for screenshot in screenshots %}
-                <a href="{% url 'crits.screenshots.views.render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %}" data-id="{{ screenshot.id }}" data-dialog>
+            <a href="{% url 'crits.screenshots.views.render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %} (submitted by {{ screenshot.analyst }})" data-id="{{ screenshot.id }}" data-dialog>
                     {% if screenshot.unsupported_attrs.bucket %}
                         <img class="ss_bucket" src="{% url 'crits.screenshots.views.render_screenshot' screenshot.id 'thumb' %}">
                     {% else %}

@@ -158,6 +158,7 @@ def add_screenshot(description, tags, source, method, reference, analyst,
             s.add_tags(tags)
         else:
             s = Screenshot()
+            s.analyst = analyst
             s.description = description
             s.md5 = md5
             screenshot.seek(0)
@@ -201,6 +202,7 @@ def create_screenshot_html(s, oid, otype):
         description = s.description + ": " + ','.join(s.tags)
     else:
         description = s.md5
+    description += " (submitted by %s)" % s.analyst
     html = '<a href="%s" title="%s" data-id="%s" data-dialog><img src="%s">' % \
             (reverse('crits.screenshots.views.render_screenshot',
                     args=[s.id]),

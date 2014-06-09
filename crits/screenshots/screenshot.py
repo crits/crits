@@ -52,6 +52,7 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
                        },
     }
 
+    analyst = StringField()
     description = StringField()
     filename = StringField()
     height = IntField()
