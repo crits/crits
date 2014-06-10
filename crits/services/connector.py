@@ -100,5 +100,18 @@ class Connector(object):
             raise MissingConfiguration("Need an AMQP URI to connect to.")
         return Connection(uri, **kwargs)
 
+    def send_msg(self, msg, routing_key=None):
+        if not self.connection:
+            raise MissingConfiguration("Missing connection!")
+
+        from kombu import Exchange, Producer
+        exch = Exchange('woodchipper', type='topic')
+        prod = Producer(self.connection, exchange=exch)
+        prod.publish(msg, routing_key=routing_key)
+
     def release(self):
+        """
+        Release existing connection.
+        """
+
         self.connection.release()
