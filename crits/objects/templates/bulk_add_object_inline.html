@@ -12,7 +12,13 @@
     <button id="validate-{{ table_name }}-inline-table">Validate Table</button>
     <span id='custom_buttons'/>
 </div>
-<div id="{{ table_name }}_errors"></div>
+<br/>
+<div id="{{ table_name }}_errors">
+    <span>Note: Bulk Upload of "File" types is not supported.
+        You can still upload individual files (e.g. File, Artifact - File,
+        Artifact Network Traffic, and Network Flow through the single object creation form.
+    </span>
+</div>
 </div>
 
 <script type="text/javascript">
