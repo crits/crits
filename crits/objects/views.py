@@ -144,7 +144,7 @@ def bulk_add_object(request):
                             c[0],
                             {'datatype':c[1].keys()[0],
                             'datatype_value':c[1].values()[0]}
-                            ) for c in get_object_types(False)]
+                            ) for c in get_object_types(False, query={'datatype.file':{'$exists':0}})]
 
     formdict = form_to_dict(AddObjectForm(request.user, all_obj_type_choices))
 
@@ -172,7 +172,7 @@ def bulk_add_object_inline(request):
     """
     all_obj_type_choices = [(c[0], c[0], {'datatype':c[1].keys()[0],
                             'datatype_value':c[1].values()[0]}
-                            ) for c in get_object_types(False)]
+                            ) for c in get_object_types(False, query={'datatype.file':{'$exists':0}})]
 
     formdict = form_to_dict(AddObjectForm(request.user, all_obj_type_choices))
 
