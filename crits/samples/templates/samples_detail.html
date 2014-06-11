@@ -187,11 +187,6 @@
     <table class='form'> {{ exploit_form.as_table }} </table>
     </form>
 </div>
-<div id="dialog-add-child" title="Add Child">
-    <form id="form-add-child" action="" method="POST" enctype="multipart/form-data">
-    <table class="form">{{child_form.as_table}}</table>
-    </form>
-</div>
 <div id="dialog-download-sample" title="Download Sample">
     <form id="form-download-sample" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
     <table class="form">{{download_form.as_table}}</table>

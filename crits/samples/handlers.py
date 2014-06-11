@@ -32,7 +32,6 @@ from crits.core.mongo_tools import get_file
 from crits.core.source_access import SourceAccess
 from crits.core.user_tools import is_admin, user_sources, get_user_organization
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
-from crits.emails.forms import EmailAttachForm
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
 from crits.objects.handlers import validate_and_add_new_handler_object
@@ -114,7 +113,6 @@ def get_sample_details(sample_md5, analyst, format_=None):
     else:
         #create forms
         backdoor_form = BackdoorForm()
-        child_form = EmailAttachForm(analyst)
         exploit_form = ExploitForm()
         xor_search_form = XORSearchForm()
         campaign_form = CampaignForm()
@@ -173,7 +171,6 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'relationship': relationship,
                 'subscription': subscription,
                 'sample': sample, 'sources': sources,
-                'child_form': child_form,
                 'backdoor_form': backdoor_form,
                 'exploit_form': exploit_form,
                 'campaign_form': campaign_form,

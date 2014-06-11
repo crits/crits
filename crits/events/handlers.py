@@ -18,7 +18,6 @@ from crits.core.handlers import jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.emails.forms import EmailAttachForm
 from crits.events.event import Event, EventType
 from crits.notifications.handlers import remove_user_from_notification
 from crits.samples.handlers import handle_uploaded_file
@@ -78,7 +77,6 @@ def get_event_details(event_id, analyst):
     event.sanitize("%s" % analyst)
 
     campaign_form = CampaignForm()
-    upload_form = EmailAttachForm(analyst)
     download_form = DownloadFileForm(initial={"obj_type": 'Event',
                                               "obj_id": event_id})
 
@@ -124,7 +122,6 @@ def get_event_details(event_id, analyst):
             'subscription': subscription,
             'event': event,
             'campaign_form': campaign_form,
-            'upload_form': upload_form,
             'download_form': download_form}
 
     return template, args

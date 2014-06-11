@@ -10,7 +10,7 @@ from django.core.urlresolvers import reverse
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data, user_sources, user_is_admin
 from crits.emails.email import Email
-from crits.emails.forms import EmailAttachForm, EmailYAMLForm, EmailOutlookForm
+from crits.emails.forms import EmailYAMLForm, EmailOutlookForm
 from crits.emails.forms import EmailEMLForm, EmailUploadForm, EmailRawUploadForm
 from crits.emails.handlers import handle_email_fields, handle_yaml
 from crits.emails.handlers import handle_eml, generate_email_cybox, handle_msg
@@ -19,6 +19,7 @@ from crits.emails.handlers import get_email_detail, generate_email_jtable
 from crits.emails.handlers import generate_email_csv
 from crits.emails.handlers import create_email_attachment, get_email_formatted
 from crits.emails.handlers import create_indicator_from_header_field
+from crits.samples.forms import UploadFileForm
 
 
 @user_passes_test(user_can_view_data)
@@ -96,13 +97,11 @@ def upload_attach(request, email_id):
                                     {"error": error},
                                     RequestContext(request))
     if request.method == 'POST':
-        form = EmailAttachForm(request.user.username,
-                               request.POST,
-                               request.FILES)
+        form = UploadFileForm(request.user, request.POST, request.FILES)
         if form.is_valid():
             cleaned_data = form.cleaned_data
-            method = cleaned_data['source_method'] or "Add to Email"
-            reference = cleaned_data['source_reference']
+            method = cleaned_data['method'] or "Add to Email"
+            reference = cleaned_data['reference']
             campaign = cleaned_data['campaign']
             confidence = cleaned_data['confidence']
             source = cleaned_data['source']

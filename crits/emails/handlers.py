@@ -15,7 +15,7 @@ import sys
 from dateutil.parser import parse as date_parser
 from django.conf import settings
 from crits.core.forms import DownloadFileForm
-from crits.emails.forms import EmailAttachForm, EmailYAMLForm
+from crits.emails.forms import EmailYAMLForm
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -145,8 +145,6 @@ def get_email_detail(email_id, analyst):
         args = {'error': "ID does not exist or insufficient privs for source"}
     else:
         email.sanitize(username="%s" % analyst, sources=sources)
-        upload_form = EmailAttachForm(analyst,
-                                      initial={"email_id": email_id})
         update_data_form = EmailYAMLForm(analyst)
         campaign_form = CampaignForm()
         download_form = DownloadFileForm(initial={"obj_type": 'Email',
@@ -310,7 +308,6 @@ def get_email_detail(email_id, analyst):
                 'subscription': subscription,
                 'email': email,
                 'campaign_form': campaign_form,
-                'upload_form': upload_form,
                 'download_form': download_form,
                 'update_data_form': update_data_form,
                 'admin': is_admin(analyst),

@@ -16,7 +16,6 @@ from crits.core.handlers import get_object_types
 from crits.core.handsontable_tools import form_to_dict
 from crits.core.user_tools import user_can_view_data, user_is_admin
 from crits.core.user_tools import get_user_organization
-from crits.emails.forms import EmailAttachForm
 from crits.objects.forms import AddObjectForm
 from crits.samples.forms import UploadFileForm, NewExploitForm, NewBackdoorForm
 from crits.samples.forms import BackdoorForm, ExploitForm, XORSearchForm
