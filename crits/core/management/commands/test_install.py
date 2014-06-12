@@ -97,7 +97,8 @@ class Command(BaseCommand):
             mongoengine.connect(settings.MONGO_DATABASE,
                                 host=settings.MONGO_HOST,
                                 port=settings.MONGO_PORT,
-                                read_preference=settings.MONGO_READ_PREFERENCE)
+                                read_preference=settings.MONGO_READ_PREFERENCE,
+                                ssl=settings.MONGO_SSL)
         except:
             raise CE('Could not connect to Mongo Database. Is it running'
                      ' and is CRITs configured to connect to it properly?')
