@@ -179,6 +179,9 @@ def get_email_detail(email_id, analyst):
         comments = {'comments': email.get_comments(),
                     'url_key': email.id}
 
+        #screenshots
+        screenshots = email.get_screenshots(analyst)
+
         # favorites
         favorite = is_user_favorite("%s" % analyst, 'Email', email.id)
 
@@ -307,6 +310,7 @@ def get_email_detail(email_id, analyst):
                 'comments': comments,
                 'favorite': favorite,
                 'relationship': relationship,
+                'screenshots': screenshots,
                 'subscription': subscription,
                 'email': email,
                 'campaign_form': campaign_form,

@@ -1,0 +1,11 @@
+{% load url from future %}
+
+<div id="dialog-add-screenshot" title="Add New Screenshot">
+    <form id="form-add-screenshot" 
+	  action='{% url "crits.screenshots.views.add_new_screenshot" %}' 
+	  method='POST' enctype="multipart/form-data" target="screenshot-iframe"
+	  item-type="screenshot" input_clear_filter="[type!='hidden']" >
+    <table class="form">{{ screenshots_form.as_table }}</table>
+    <iframe name="screenshot-iframe" class="screenshot-submit-iframe" style="display:none;"></iframe>
+    </form>
+</div>

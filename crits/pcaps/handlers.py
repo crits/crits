@@ -82,6 +82,9 @@ def get_pcap_details(md5, analyst):
         comments = {'comments': pcap.get_comments(),
                     'url_key': md5}
 
+        #screenshots
+        screenshots = pcap.get_screenshots(analyst)
+
         # favorites
         favorite = is_user_favorite("%s" % analyst, 'PCAP', pcap.id)
 
@@ -97,6 +100,7 @@ def get_pcap_details(md5, analyst):
                 'favorite': favorite,
                 'relationship': relationship,
                 "subscription": subscription,
+                "screenshots": screenshots,
                 "pcap": pcap}
 
     return template, args

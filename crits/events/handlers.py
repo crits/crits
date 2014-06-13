@@ -108,6 +108,9 @@ def get_event_details(event_id, analyst):
     #comments
     comments = {'comments': event.get_comments(), 'url_key': event.id}
 
+    #screenshots
+    screenshots = event.get_screenshots(analyst)
+
     # favorites
     favorite = is_user_favorite("%s" % analyst, 'Event', event.id)
 
@@ -122,6 +125,7 @@ def get_event_details(event_id, analyst):
             'favorite': favorite,
             'relationship': relationship,
             'subscription': subscription,
+            'screenshots': screenshots,
             'event': event,
             'campaign_form': campaign_form,
             'upload_form': upload_form,

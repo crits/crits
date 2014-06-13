@@ -184,6 +184,9 @@ def create_indexes():
                                   ("n", pymongo.ASCENDING)],
                                  unique=True)
 
+    screenshots = mongo_connector(settings.COL_SCREENSHOTS)
+    screenshots.ensure_index("tags", background=True)
+
     targets = mongo_connector(settings.COL_TARGETS)
     targets.ensure_index("objects.value", background=True)
     targets.ensure_index("relationships.value", background=True)

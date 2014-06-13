@@ -27,6 +27,7 @@ Python Libraries:
 * lxml
 * m2crypto
 * mongoengine 0.8.7
+* pillow 2.4.0
 * pycurl
 * pydeep
 * pymongo 2.7.0

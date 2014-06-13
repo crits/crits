@@ -4,6 +4,19 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: mgoffin
+Date: 2014-06-06
+
+    Adding in the start of the Screenshot storage feature. This comes with a
+    dependency on python's pillow (v 2.4.0) library. It is also adding an index.
+    It is:
+
+    db.screenshots.ensureIndex({'tags': 1}, {'background': true})
+
+    It is possible, but not yet decided, that the GridFS portion of this
+    collection should be sharded. Going to think about that a bit while the
+    feature matures.
+
+Author: mgoffin
 Date:  2014-05.15
 
     Notifications are getting an overhaul. They are now stored in their own

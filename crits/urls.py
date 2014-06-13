@@ -253,6 +253,17 @@ urlpatterns = patterns('',
         (r'^samples/yarahits/list/$', 'crits.samples.views.yarahits_listing'),
         (r'^samples/yarahits/list/(?P<option>\S+)/$', 'crits.samples.views.yarahits_listing'),
 
+        # Screenshots
+        (r'^screenshots/list/$', 'crits.screenshots.views.screenshots_listing'),
+        (r'^screenshots/list/(?P<option>\S+)/$', 'crits.screenshots.views.screenshots_listing'),
+        (r'^screenshots/add/$', 'crits.screenshots.views.add_new_screenshot'),
+        (r'^screenshots/edit_description/$', 'crits.screenshots.views.update_ss_description'),
+        (r'^screenshots/find/$', 'crits.screenshots.views.find_screenshot'),
+        (r'^screenshots/remove_from_object/$', 'crits.screenshots.views.remove_screenshot_from_object'),
+        (r'^screenshots/render/(?P<_id>\S+)/(?P<thumb>\S+)/$', 'crits.screenshots.views.render_screenshot'),
+        (r'^screenshots/render/(?P<_id>\S+)/$', 'crits.screenshots.views.render_screenshot'),
+        (r'^screenshots/render/$', 'crits.screenshots.views.render_screenshot'),
+
         # Services
         (r'^services/', include('crits.services.urls')),
 
@@ -285,6 +296,7 @@ if settings.ENABLE_API:
     from crits.raw_data.api import RawDataResource
     from crits.relationships.api import RelationshipResource
     from crits.samples.api import SampleResource
+    from crits.screenshots.api import ScreenshotResource
     from crits.services.api import ServiceResource
     from crits.targets.api import TargetResource
 
@@ -302,6 +314,7 @@ if settings.ENABLE_API:
     v1_api.register(RawDataResource())
     v1_api.register(RelationshipResource())
     v1_api.register(SampleResource())
+    v1_api.register(ScreenshotResource())
     v1_api.register(ServiceResource())
     v1_api.register(TargetResource())
 
