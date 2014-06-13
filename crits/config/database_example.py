@@ -7,8 +7,11 @@
 MONGO_HOST = 'localhost'      # server to connect to
 MONGO_PORT = 27017            # port MongoD is running on
 MONGO_DATABASE = 'crits'      # database name to connect to
+# The following optional settings should only be changed if you specifically
+# enabled and configured them during your MongoDB installation
+# See http://docs.mongodb.org/v2.4/administration/security/ regarding implementation
 MONGO_SSL = False             # whether MongoD has SSL enabled
-MONGO_USER = ''               # username used to authenticate to mongo (normally empty)
+MONGO_USER = ''               # mongo user with "readWrite" role in the database
 MONGO_PASSWORD = ''           # password for the mongo user
 
 # Set this to a sufficiently long random string. We recommend running
