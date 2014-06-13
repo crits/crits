@@ -7,6 +7,7 @@
 MONGO_HOST = 'localhost'      # server to connect to
 MONGO_PORT = 27017            # port MongoD is running on
 MONGO_DATABASE = 'crits'      # database name to connect to
+MONGO_SSL = False             # whether MongoD has SSL enabled
 
 # Set this to a sufficiently long random string. We recommend running
 # the following code from a python shell to generate the string and pasting

@@ -33,7 +33,8 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     try:
         connection = pymongo.Connection("%s" % settings.MONGO_HOST,
                                         settings.MONGO_PORT,
-                                        read_preference=preference)
+                                        read_preference=preference,
+                                        ssl=settings.MONGO_SSL)
         db = connection[settings.MONGO_DATABASE]
         return db[collection]
     except pymongo.errors.ConnectionFailure as e:
@@ -59,7 +60,8 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     try:
         connection = pymongo.Connection("%s" % settings.MONGO_HOST,
                                         settings.MONGO_PORT,
-                                        read_preference=preference)
+                                        read_preference=preference,
+                                        ssl=settings.MONGO_SSL)
         db = connection[settings.MONGO_DATABASE]
         return gridfs.GridFS(db, collection)
     except pymongo.errors.ConnectionFailure as e:
