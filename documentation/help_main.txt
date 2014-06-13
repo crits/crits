@@ -1641,6 +1641,28 @@ Unique POST Parameters:
 
 :parent_md5: The MD5 of the parent sample if this was an embedded sample.
 
+Screenshot API
+--------------
+
+GET:
+
+        /api/v1/screenshots/
+
+        /api/v1/screenshots/<object_id>/
+
+POST:
+
+        /api/v1/screenshots/
+
+Unique POST Parameters:
+
+:upload_type: One of "ids" or "screenshot".
+:filedata: The screenshot if the upload type is "screenshot".
+:screenshot_ids: A comma-separated list of existing screenshot ObjectIds to add to the top-level object.
+:tags: A comma-separated list of tags for the screenshot.
+:oid: The ObjectId of the top-level object the screenshot(s) is/are for.
+:otype: The type of the top-level object the screenshot(s) is/are for.
+
 Service API
 -------------------------------------------
 

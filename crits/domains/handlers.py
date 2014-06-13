@@ -125,6 +125,9 @@ def get_domain_details(domain, analyst):
     comments = {'comments': dmain.get_comments(),
                 'url_key':dmain.domain}
 
+    #screenshots
+    screenshots = dmain.get_screenshots(analyst)
+
     # favorites
     favorite = is_user_favorite("%s" % analyst, 'Domain', dmain.id)
 
@@ -138,6 +141,7 @@ def get_domain_details(domain, analyst):
             'favorite': favorite,
             'relationship': relationship,
             'subscription': subscription,
+            'screenshots': screenshots,
             'domain': dmain,
             'forms': forms,
             'whois_data': whois_data,

@@ -213,6 +213,9 @@ def get_indicator_details(indicator_id, analyst):
     comments = {'comments': indicator.get_comments(),
                 'url_key':indicator_id}
 
+    #screenshots
+    screenshots = indicator.get_screenshots(analyst)
+
     # favorites
     favorite = is_user_favorite("%s" % analyst, 'Indicator', indicator.id)
 
@@ -228,6 +231,7 @@ def get_indicator_details(indicator_id, analyst):
             "indicator": indicator,
             "forms": forms,
             "indicator_id": indicator_id,
+            'screenshots': screenshots,
             'service_list': service_list,
             'favorite': favorite,
             'rt_url': settings.RT_URL}

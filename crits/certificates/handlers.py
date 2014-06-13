@@ -82,6 +82,9 @@ def get_certificate_details(md5, analyst):
         comments = {'comments': cert.get_comments(),
                     'url_key': md5}
 
+        #screenshots
+        screenshots = cert.get_screenshots(analyst)
+
         # services
         manager = crits.service_env.manager
         service_list = manager.get_supported_services('Certificate', True)
@@ -92,6 +95,7 @@ def get_certificate_details(md5, analyst):
                 'comments': comments,
                 'relationship': relationship,
                 "subscription": subscription,
+                "screenshots": screenshots,
                 "cert": cert}
 
     return template, args

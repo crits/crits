@@ -171,6 +171,9 @@ def get_target_details(email_address, analyst):
         comments = {'comments': [],
                     'url_key': email_address}
 
+    #screenshots
+    screenshots = target.get_screenshots(analyst)
+
     # favorites
     favorite = is_user_favorite("%s" % analyst, 'Target', target.id)
 
@@ -180,6 +183,7 @@ def get_target_details(email_address, analyst):
             'comments': comments,
             'favorite': favorite,
             'subscription': subscription,
+            'screenshots': screenshots,
             'email_list': email_list,
             'target_detail': target,
             'form': form}

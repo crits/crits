@@ -1100,6 +1100,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     obj = ListField(EmbeddedDocumentField(EmbeddedObject), db_field="objects")
     relationships = ListField(EmbeddedDocumentField(EmbeddedRelationship))
     releasability = ListField(EmbeddedDocumentField(Releasability))
+    screenshots = ListField(StringField())
 
     def add_campaign(self, campaign_item=None):
         """
@@ -1222,6 +1223,23 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         from crits.comments.comment import Comment
         Comment.objects(obj_id=self.id,
                         obj_type=self._meta['crits_type']).delete()
+
+    def get_screenshots(self, analyst):
+        """
+        Get the screenshots for this top-level object.
+
+        :returns: list
+        """
+
+        from crits.screenshots.handlers import get_screenshots_for_id
+        screenshots = get_screenshots_for_id(self._meta['crits_type'],
+                                             self.id,
+                                             analyst,
+                                             True)
+        if 'screenshots' in screenshots:
+            return screenshots['screenshots']
+        else:
+            return []
 
     def add_object(self, object_type, name, value, source, method, reference,
                    analyst, object_item=None):

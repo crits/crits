@@ -181,6 +181,9 @@ def get_ip_details(ip, analyst):
         comments = {'comments': ip.get_comments(),
                     'url_key':ip.ip}
 
+        #screenshots
+        screenshots = ip.get_screenshots(analyst)
+
         # favorites
         favorite = is_user_favorite("%s" % analyst, 'IP', ip.id)
 
@@ -194,6 +197,7 @@ def get_ip_details(ip, analyst):
                 'subscription': subscription,
                 'favorite': favorite,
                 'service_list': service_list,
+                'screenshots': screenshots,
                 'ip': ip,
                 'comments':comments}
     return template, args

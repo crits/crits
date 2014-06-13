@@ -28,6 +28,7 @@ def class_from_id(type_, _id):
     from crits.samples.backdoor import Backdoor
     from crits.samples.exploit import Exploit
     from crits.samples.sample import Sample
+    from crits.screenshots.screenshot import Screenshot
     from crits.targets.target import Target
 
     if not _id:
@@ -74,6 +75,8 @@ def class_from_id(type_, _id):
         return Sample.objects(id=_id).first()
     elif type_ == 'SourceAccess':
         return SourceAccess.objects(id=_id).first()
+    elif type_ == 'Screenshot':
+        return Screenshot.objects(id=_id).first()
     elif type_ == 'Target':
         return Target.objects(id=_id).first()
     elif type_ == 'UserRole':
@@ -99,13 +102,14 @@ def class_from_value(type_, value):
     from crits.comments.comment import Comment
     from crits.domains.domain import Domain
     from crits.emails.email import Email
-    from crits.targets.target import Target
     from crits.events.event import Event
     from crits.indicators.indicator import Indicator
     from crits.ips.ip import IP
     from crits.pcaps.pcap import PCAP
     from crits.raw_data.raw_data import RawData
     from crits.samples.sample import Sample
+    from crits.screenshots.screenshot import Screenshot
+    from crits.targets.target import Target
 
     if type_ == 'Campaign':
         return Campaign.objects(name=value).first()
@@ -117,8 +121,6 @@ def class_from_value(type_, value):
         return Domain.objects(domain=value).first()
     elif type_ == 'Email':
         return Email.objects(id=value).first()
-    elif type_ == 'Target':
-        return Target.objects(email_address=value).first()
     elif type_ == 'Event':
         return Event.objects(id=value).first()
     elif type_ == 'Indicator':
@@ -131,6 +133,10 @@ def class_from_value(type_, value):
         return RawData.objects(md5=value).first()
     elif type_ == 'Sample':
         return Sample.objects(md5=value).first()
+    elif type_ == 'Screenshot':
+        return Screenshot.objects(id=value).first()
+    elif type_ == 'Target':
+        return Target.objects(email_address=value).first()
     else:
         return None
 
@@ -162,6 +168,7 @@ def class_from_type(type_):
     from crits.samples.backdoor import Backdoor
     from crits.samples.exploit import Exploit
     from crits.samples.sample import Sample
+    from crits.screenshots.screenshot import Screenshot
     from crits.targets.target import Target
 
     if type_ == 'Backdoor':
@@ -202,6 +209,8 @@ def class_from_type(type_):
         return Sample
     elif type_ == 'SourceAccess':
         return SourceAccess
+    elif type_ == 'Screenshot':
+        return Screenshot
     elif type_ == 'Target':
         return Target
     elif type_ == 'UserRole':

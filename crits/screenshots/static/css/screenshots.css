@@ -1,0 +1,55 @@
+span.remove_screenshot {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    min-height: 15px;
+    min-width: 15px;
+    background-color: lightgray;
+    border-bottom: 1px solid #000;
+    border-left: 1px solid #000;
+    border-bottom-left-radius: 5px;
+    display: none;
+    box-shadow: -1px 1px 6px 0px #000;
+}
+
+span.copy_ss_id {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    min-height: 15px;
+    min-width: 15px;
+    background-color: lightgray;
+    border-bottom: 1px solid #000;
+    border-right: 1px solid #000;
+    border-bottom-right-radius: 5px;
+    display: none;
+    box-shadow: 1px 1px 6px 0px #000;
+}
+
+#links a {
+    position: relative;
+    display: inline-block;
+    width: auto;
+    height: auto;
+    margin: 5px 5px 10px 5px;
+}
+
+#links a img {
+    vertical-align: top;
+}
+
+.clear_ss_cookie {
+    display: inline-block;
+    min-height: 16px;
+    max-height: 16px;
+}
+
+img.ss_bucket {
+    outline: 1px solid #9ecaed;
+    box-shadow: 0 0 8px #9ecaed;
+}
+
+img.ss_no_bucket {
+    outline: 1px solid #000;
+    box-shadow: 0 0 8px #000;
+}

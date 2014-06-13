@@ -95,6 +95,7 @@ class EmbeddedFavorites(EmbeddedDocument, CritsDocumentFormatter):
     PCAP = ListField(StringField())
     RawData = ListField(StringField())
     Sample = ListField(StringField())
+    Screenshot = ListField(StringField())
     Target = ListField(StringField())
 
 class EmbeddedSubscriptions(EmbeddedDocument, CritsDocumentFormatter):
@@ -103,6 +104,7 @@ class EmbeddedSubscriptions(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     Campaign = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Certificate = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Domain = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Email = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Event = ListField(EmbeddedDocumentField(EmbeddedSubscription))
