@@ -94,11 +94,20 @@ class Command(BaseCommand):
         # Check database is running and can connect to it
         try:
             import mongoengine
-            mongoengine.connect(settings.MONGO_DATABASE,
-                                host=settings.MONGO_HOST,
-                                port=settings.MONGO_PORT,
-                                read_preference=settings.MONGO_READ_PREFERENCE,
-                                ssl=settings.MONGO_SSL)
+            if settings.MONGO_USER:
+                mongoengine.connect(settings.MONGO_DATABASE,
+                                    host=settings.MONGO_HOST,
+                                    port=settings.MONGO_PORT,
+                                    read_preference=settings.MONGO_READ_PREFERENCE,
+                                    ssl=settings.MONGO_SSL,
+                                    username=settings.MONGO_USER,
+                                    password=settings.MONGO_PASSWORD)
+            else:
+                mongoengine.connect(settings.MONGO_DATABASE,
+                                    host=settings.MONGO_HOST,
+                                    port=settings.MONGO_PORT,
+                                    read_preference=settings.MONGO_READ_PREFERENCE,
+                                    ssl=settings.MONGO_SSL)
         except:
             raise CE('Could not connect to Mongo Database. Is it running'
                      ' and is CRITs configured to connect to it properly?')
