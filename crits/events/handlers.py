@@ -390,7 +390,7 @@ def update_event_type(event_id, type_, analyst):
         return {'success': False, 'message': e}
 
 def add_sample_for_event(event_id, data, analyst, filedata=None,
-                         filename=None, md5=None):
+                         filename=None, md5=None, email_addr=None):
     """
     Add a sample related to this Event.
 
@@ -406,66 +406,93 @@ def add_sample_for_event(event_id, data, analyst, filedata=None,
     :type filename: str
     :param md5: The MD5 of the file.
     :type md5: str
-    :returns: dict with keys "success" (boolean) and "error" (str)
+    :param email_addr: Email address to which to email the sample
+    :type email_addr: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    sources = user_sources(analyst)
-    event = Event.objects(id=event_id, source__name__in=sources).first()
+    response = {'success': False,
+                'message': 'Unknown error; unable to upload file.'}
+    users_sources = user_sources(analyst)
+    event = Event.objects(id=event_id, source__name__in=users_sources).first()
     if not event:
-        error = "No matching event found"
-        return {'success': False, 'error': error}
+        return {'success': False,
+                'message': "No matching event found"}
     source = data['source']
-    campaign = data['campaign']
-    confidence = data['confidence']
-    method = data['method']
     reference = data['reference']
     file_format = data['file_format']
-    password = data['password']
+    campaign = data['campaign']
+    confidence = data['confidence']
     bucket_list = data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME]
     ticket = data[form_consts.Common.TICKET_VARIABLE_NAME]
+    method = data['method']
+    if filename:
+        filename = filename.strip()
 
     try:
         if filedata:
-            sample_md5 = handle_uploaded_file(filedata,
+            result = handle_uploaded_file(filedata,
                                               source,
                                               reference,
                                               file_format,
-                                              password,
+                                              data['password'],
                                               analyst,
-                                              campaign=campaign,
-                                              confidence=confidence,
+                                              campaign,
+                                              confidence,
+                                              filename=filename,
                                               bucket_list=bucket_list,
                                               ticket=ticket,
                                               method=method)
         else:
-            if not filename or not md5:
-                error = "Need a file, or a filename and an md5"
-                return {'success': False, 'error': error}
-            else:
-                sample_md5 = handle_uploaded_file(None,
-                                                  source,
-                                                  reference,
-                                                  file_format,
-                                                  password,
-                                                  analyst,
-                                                  campaign=campaign,
-                                                  confidence=confidence,
-                                                  bucket_list=bucket_list,
-                                                  ticket=ticket,
-                                                  filename=filename.strip(),
-                                                  md5=md5.strip(),
-                                                  method=method)
+            if md5:
+                md5 = md5.strip().lower()
+            result = handle_uploaded_file(None,
+                                              source,
+                                              reference,
+                                              file_format,
+                                              None,
+                                              analyst,
+                                              campaign,
+                                              confidence,
+                                              filename=filename,
+                                              md5=md5,
+                                              bucket_list=bucket_list,
+                                              ticket=ticket,
+                                              method=method,
+                                              is_return_only_md5=False)
     except ZipFileError, zfe:
-        return {'success': False, 'error': zfe.value}
+        return {'success': False, 'message': zfe.value}
+    else:
+        if len(result) > 1:
+            response = {'success': True, 'message': 'Files uploaded successfully. '}
+        elif len(result) == 1:
+            if not filedata:
+                response['success'] = result[0].get('success', False)
+                if(response['success'] == False):
+                    response['message'] = result[0].get('message', response.get('message'))
+                else:
+                    result = [result[0].get('object').md5]
+                    response['message'] = 'File uploaded successfully. '
+            else:
+                response = {'success': True, 'message': 'Files uploaded successfully. '}
+        if not response['success']:
+            return response
+        samples = Sample.objects(md5__in=result,
+                                 source__name__in=users_sources)
+        if samples:
+            for s in samples:
+                event.add_relationship(rel_item=s,
+                                       rel_type='Related_To',
+                                       analyst=analyst,
+                                       get_rels=False)
+                s.save(username=analyst)
+            event.save(username=analyst)
 
-    samples = Sample.objects(md5__in=sample_md5,
-                             source__name__in=sources)
-    if samples:
-        for s in samples:
-            event.add_relationship(rel_item=s,
-                                   rel_type='Related_To',
-                                   analyst=analyst,
-                                   get_rels=False)
-            s.save(username=analyst)
-        event.save(username=analyst)
-    return {'success': True}
+        if email_addr:
+            for s in result:
+                email_errmsg = mail_sample(s, email_addr)
+                if email_errmsg is not None:
+                    response['success'] = False
+                    msg = "<br>Error email for sample %s: %s\n" % (result, email_errmsg)
+                    response['message'] = response['message'] + msg
+    return response

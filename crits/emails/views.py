@@ -88,49 +88,52 @@ def upload_attach(request, email_id):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
-    sources = user_sources(analyst)
-    email = Email.objects(id=email_id, source__name__in=sources).first()
-    if not email:
-        error = "Could not find email."
-        return render_to_response("error.html",
-                                    {"error": error},
-                                    RequestContext(request))
     if request.method == 'POST':
         form = UploadFileForm(request.user, request.POST, request.FILES)
         if form.is_valid():
             cleaned_data = form.cleaned_data
+            analyst = request.user.username
+            users_sources = user_sources(analyst)
             method = cleaned_data['method'] or "Add to Email"
-            reference = cleaned_data['reference']
-            campaign = cleaned_data['campaign']
-            confidence = cleaned_data['confidence']
-            source = cleaned_data['source']
             bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
-
-            if request.FILES or 'filename' in request.POST and 'md5' in request.POST:
-                result = create_email_attachment(email,
-                                                 cleaned_data,
-                                                 reference,
-                                                 source,
-                                                 analyst,
-                                                 campaign=campaign,
-                                                 confidence=confidence,
-                                                 bucket_list=bucket_list,
-                                                 ticket=ticket,
-                                                 files=request.FILES.get('filedata',None),
-                                                 filename=request.POST.get('filename', None),
-                                                 md5=request.POST.get('md5', None),
-                                                 method=method)
-                if not result['success']:
-                    return render_to_response("error.html",
-                                            {"error": result['message'] },
-                                            RequestContext(request))
-            return HttpResponseRedirect(reverse('crits.emails.views.email_detail',
-                                                args=[email_id]))
+            email_addr = None
+            if request.POST.get('email'):
+                email_addr = request.user.email
+            email = Email.objects(id=email_id, source__name__in=users_sources).first()
+            if not email:
+                return render_to_response('file_upload_response.html',
+                                          {'response': json.dumps({'success': False,
+                                                                   'message': "Could not find email."})},
+                                          RequestContext(request))
+            result = create_email_attachment(email,
+                                             cleaned_data,
+                                             cleaned_data['reference'],
+                                             cleaned_data['source'],
+                                             analyst,
+                                             cleaned_data['campaign'],
+                                             cleaned_data['confidence'],
+                                             bucket_list,
+                                             ticket,
+                                             request.FILES.get('filedata',None),
+                                             request.POST.get('filename', None),
+                                             request.POST.get('md5', None),
+                                             method,
+                                             email_addr)
+            if result['success']:
+                return render_to_response('redirect.html',
+                                          {'redirect_url': reverse('crits.emails.views.email_detail', args=[email_id])},
+                                              RequestContext(request))
+            else:
+                return render_to_response('file_upload_response.html',
+                                          {'response': json.dumps({'success': False,
+                                                                   'message': result['message']})},
+                                          RequestContext(request))
         else:
-            return render_to_response("error.html",
-                                      {"error": '%s' % form.errors },
+            del form.fields['parent_md5'] #remove field so it doesn't reappear
+            return render_to_response('file_upload_response.html',
+                                      {'response': json.dumps({'success': False,
+                                                               'form': form.as_table()})},
                                       RequestContext(request))
     else:
         return HttpResponseRedirect(reverse('crits.emails.views.email_detail',

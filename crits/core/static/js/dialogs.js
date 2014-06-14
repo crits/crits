@@ -1001,8 +1001,6 @@ function new_sample_dialog() {
     // The action target takes care of passing the parent sample_id here
     if ($(this).dialog("persona") === "related") {
     $('id_parent_md5, label[for="id_parent_md5"]').closest("tr").hide();
-    $(this).find("form").removeAttr("target"); // Get rid of target to follow redirect
-                           // and refresh current details page
     }
 }
 

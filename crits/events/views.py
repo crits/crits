@@ -123,28 +123,31 @@ def upload_sample(request, event_id):
     if request.method == 'POST':    # and request.is_ajax():
         form = UploadFileForm(request.user, request.POST, request.FILES)
         if form.is_valid():
-            cleaned_data = form.cleaned_data
-            analyst = request.user.username
-            filedata = request.FILES.get('filedata', None)
-            filename = request.POST.get('filename', None)
-            md5 = request.POST.get('md5', None)
-            results = add_sample_for_event(event_id,
-                                           cleaned_data,
-                                           analyst,
-                                           filedata=filedata,
-                                           filename=filename,
-                                           md5=md5)
-            if results['success']:
-                return HttpResponseRedirect(
-                    reverse('crits.events.views.view_event', args=[event_id])
-                )
+            email = None
+            if request.POST.get('email'):
+                email = request.user.email
+
+            result = add_sample_for_event(event_id,
+                                          form.cleaned_data,
+                                          request.user.username,
+                                          request.FILES.get('filedata', None),
+                                          request.POST.get('filename', None),
+                                          request.POST.get('md5', None),
+                                          email)
+            if result['success']:
+                return render_to_response('redirect.html',
+                                          {'redirect_url': reverse('crits.events.views.view_event', args=[event_id])},
+                                              RequestContext(request))
             else:
-                return render_to_response("error.html",
-                                          {"error": results['error']},
+                return render_to_response('file_upload_response.html',
+                                          {'response': json.dumps({'success': False,
+                                                                   'message': result['message']})},
                                           RequestContext(request))
         else:
-            return render_to_response("error.html",
-                                      {"error": '%s' % form.errors},
+            del form.fields['parent_md5'] #remove field so it doesn't reappear
+            return render_to_response('file_upload_response.html',
+                                      {'response': json.dumps({'success': False,
+                                                               'form': form.as_table()})},
                                       RequestContext(request))
     else:
         return HttpResponseRedirect(reverse('crits.events.views.view_event',

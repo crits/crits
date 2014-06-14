@@ -1257,8 +1257,8 @@ def create_indicator_from_header_field(email, header_field, ind_type,
 
 def create_email_attachment(email, cleaned_data, reference, source, analyst,
                             campaign=None, confidence='low',
-                            bucket_list=None, ticket=None, files=None,
-                            filename=None, md5=None, method="Upload"):
+                            bucket_list=None, ticket=None, filedata=None,
+                            filename=None, md5=None, method="Upload", email_addr=None):
     """
     Create an attachment for an email.
 
@@ -1280,72 +1280,72 @@ def create_email_attachment(email, cleaned_data, reference, source, analyst,
     :type bucket_list: str
     :param ticket: The ticket to assign to this attachment.
     :type ticket: str
-    :param files: The attachment.
-    :type files: request file data.
+    :param filedata: The attachment.
+    :type filedata: request file data.
     :param filename: The name of the file.
     :type filename: str
     :param md5: The MD5 of the file.
     :type md5: str
     :param method: The method for this file upload.
+    :param email_addr: Email address to which to email the sample
+    :type email_addr: str
     :returns: dict with keys "success" (boolean) and "message" (str).
     """
 
-    if files:
-        try:
-            sample_md5 = handle_uploaded_file(files,
+    response = {'success': False,
+                'message': 'Unknown error; unable to upload file.'}
+    if filename:
+        filename = filename.strip()
+    try:
+        if filedata:
+            result = handle_uploaded_file(filedata,
                                               source,
                                               reference,
                                               cleaned_data['file_format'],
                                               cleaned_data['password'],
                                               analyst,
-                                              campaign=campaign,
-                                              confidence=confidence,
+                                              campaign,
+                                              confidence,
+                                              filename=filename,
                                               bucket_list=bucket_list,
                                               ticket=ticket,
                                               method=method)
-
-            samples = Sample.objects(md5__in=sample_md5)
-        except Exception, e:
-            return {'success': False,
-                    'message': str(e)}
-    else:
-        if not filename or not md5:
-            error = "Need a file, or a filename and an md5."
-            return {'success': False,
-                    'message': error}
         else:
-            try:
-                filename = filename.strip()
+            if md5:
                 md5 = md5.strip().lower()
-                sample_md5 = handle_uploaded_file(None,
-                                                  source,
-                                                  reference,
-                                                  cleaned_data['file_format'],
-                                                  cleaned_data['password'],
-                                                  analyst,
-                                                  campaign=campaign,
-                                                  confidence=confidence,
-                                                  bucket_list=bucket_list,
-                                                  ticket=ticket,
-                                                  filename=filename,
-                                                  md5=md5,
-                                                  method=method,
-                                                  is_return_only_md5=False)
-            except Exception, e:
-                return {'success': False,
-                        'message': str(e)}
-            if len(sample_md5) == 0:
-                error = "Error uploading file."
-                return {'success': False,
-                        'message': error}
-            elif not files:
-                if sample_md5[0].get('success', False) == False:
-                    error = sample_md5[0].get('message', "Error uploading file.")
-                    return {'success': False,
-                            'message': error}
+            result = handle_uploaded_file(None,
+                                              source,
+                                              reference,
+                                              cleaned_data['file_format'],
+                                              None,
+                                              analyst,
+                                              campaign,
+                                              confidence,
+                                              filename=filename,
+                                              md5=md5,
+                                              bucket_list=bucket_list,
+                                              ticket=ticket,
+                                              method=method,
+                                              is_return_only_md5=False)
+    except ZipFileError, zfe:
+        return {'success': False, 'message': zfe.value}
+    else:
+        if len(result) > 1:
+            response = {'success': True, 'message': 'Files uploaded successfully. '}
+        elif len(result) == 1:
+            if not filedata:
+                response['success'] = result[0].get('success', False)
+                if(response['success'] == False):
+                    response['message'] = result[0].get('message', response.get('message'))
                 else:
-                    sample_md5 = sample_md5[0].get('object').md5
-                    samples = Sample.objects(md5=sample_md5)
+                    result = [result[0].get('object').md5]
+                    response['message'] = 'File uploaded successfully. '
+            else:
+                response = {'success': True, 'message': 'Files uploaded successfully. '}
+        if not response['success']:
+            return response
+        samples = Sample.objects(md5__in=result,
+                                 source__name__in=user_sources(analyst))
     if samples:
         for s in samples:
             email.add_relationship(rel_item=s,
@@ -1354,7 +1354,15 @@ def create_email_attachment(email, cleaned_data, reference, source, analyst,
                                    get_rels=False)
             s.save(username=analyst)
         email.save(username=analyst)
-    return {'success': True}
+
+        if email_addr:
+            for s in result:
+                email_errmsg = mail_sample(s, email_addr)
+                if email_errmsg is not None:
+                    response['success'] = False
+                    msg = "<br>Error email for sample %s: %s\n" % (result, email_errmsg)
+                    response['message'] = response['message'] + msg
+    return response
 
 def parse_ole_file(file):
     """
