@@ -36,6 +36,8 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
                                         read_preference=preference,
                                         ssl=settings.MONGO_SSL)
         db = connection[settings.MONGO_DATABASE]
+        if settings.MONGO_USER:
+            db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
         return db[collection]
     except pymongo.errors.ConnectionFailure as e:
         raise MongoError("Error connecting to Mongo database: %s" % e)
@@ -63,6 +65,8 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
                                         read_preference=preference,
                                         ssl=settings.MONGO_SSL)
         db = connection[settings.MONGO_DATABASE]
+        if settings.MONGO_USER:
+            db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
         return gridfs.GridFS(db, collection)
     except pymongo.errors.ConnectionFailure as e:
         raise MongoError("Error connecting to Mongo database: %s" % e)

@@ -60,6 +60,8 @@ MONGO_HOST = 'localhost'                          # server to connect to
 MONGO_PORT = 27017                                # port MongoD is running on
 MONGO_DATABASE = 'crits'                          # database name to connect to
 MONGO_SSL = False                                 # whether MongoD has SSL enabled
+MONGO_USER = ''                                   # username used to authenticate to mongo (normally empty)
+MONGO_PASSWORD = ''                               # password for the mongo user
 
 # File storage backends
 S3 = "S3"
@@ -132,11 +134,17 @@ COL_USER_ROLES = "user_roles"                           # main user roles collec
 COL_YARAHITS = "yarahits"                               # yara hit counts for samples
 
 # MongoDB connection pool
-connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL)
+if MONGO_USER:
+    connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL,
+            username=MONGO_USER, password=MONGO_PASSWORD)
+else:
+    connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL)
 
 # Get config from DB
 c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL)
 db = c[MONGO_DATABASE]
+if MONGO_USER:
+    db.authenticate(MONGO_USER, MONGO_PASSWORD)
 coll = db[COL_CONFIG]
 crits_config = coll.find_one({})
 if not crits_config:
