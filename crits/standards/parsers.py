@@ -101,7 +101,10 @@ class STIXParser():
 
         if make_event:
             event = Event.from_stix(stix_package=self.package, source=[self.source])
-            event.save(username=self.source_instance.analyst)
+            try:
+                event.save(username=self.source_instance.analyst)
+            except Exception, e:
+                print e.message
             self.events.append(('Event', str(event.id)))
 
         # Walk STIX indicators and pull out CybOX observables.
