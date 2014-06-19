@@ -1,5 +1,6 @@
 import datetime
 import json, yaml
+import uuid
 import StringIO
 import csv
 
@@ -648,29 +649,110 @@ class CritsDocument(BaseDocument):
 
         return pformat(self.to_dict())
 
-    def to_stix_indicator(self):
+    def to_stix(self, rcpts, username=None, items_to_convert=[]):
         """
-        Creates a STIX Indicator object from a CybOX object.
+            Converts a CRITs object to a STIX document.
 
-        :returns: list of [<indicator>, <releasability list>]
+            The resulting document includes standardized representations
+	    of all related objects noted within items_to_convert.
+
+            Returns the STIX document and a list of objects represented therein.
         """
 
-        #We can't do anything with objects that aren't convertible to CybOX.
-        if not hasattr(self, "to_cybox"):
-            return (None, None)
 
-        from stix.indicator import Indicator as S_Ind
+        from cybox.common import Time, ToolInformationList, ToolInformation
+        from cybox.core import Observables
+        from stix.common import StructuredText, InformationSource
+        from stix.core import STIXPackage, STIXHeader
         from stix.common.identity import Identity
-        ind = S_Ind()
-        obs, releas = self.to_cybox()
-        for ob in obs:
-            ind.add_observable(ob)
-        #TODO: determine if a source wants its name shared. This will
-        #   probably have to happen on a per-source basis rather than a per-
-        #   object basis.
-        identity = Identity(name=settings.COMPANY_NAME)
-        ind.set_producer_identity(identity)
-        return (ind, releas)
+
+        from crits.domains.domain import Domain
+        from crits.emails.email import Email
+        from crits.events.event import Event
+        from crits.indicators.indicator import Indicator
+        from crits.ips.ip import IP
+        from crits.pcaps.pcap import PCAP
+        from crits.samples.sample import Sample
+        from crits.objects.object_mapper import UnsupportedCybOXObjectTypeError
+
+        # These two lists are used to determine which CRITs objects
+        # go in which part of the STIX document. As more CRITs objects
+        # are supported just add them here.
+        ind_list = [Indicator._meta['crits_type']]
+        obs_list = [Email._meta['crits_type'], Sample._meta['crits_type'], Domain._meta['crits_type'], 
+			IP._meta['crits_type'], PCAP._meta['crits_type']]
+
+        #user_source_list = user_sources(username)
+        #set_rcpts = set(rcpts)
+
+        # Store message
+        stix_msg = {
+                       'stix_indicators': [],
+                       'stix_observables': [],
+                       'final_objects': []
+                   }
+
+	# add self to the list of items to STIXify
+	items_to_convert.append({'_type': self._meta['crits_type'], '_id': self.id});
+
+        for r in items_to_convert:
+	    obj = None
+	    # OBJ = CLASS_FROM_ID
+	    if r['_type'] == Domain._meta['crits_type']:
+		obj = Domain.objects(id=r['_id']).first()
+	    elif r['_type'] == Email._meta['crits_type']:
+	        obj = Email.objects(id=r['_id']).first()
+	    elif r['_type'] == Indicator._meta['crits_type']:
+	        obj = Indicator.objects(id=r['_id']).first()
+	    elif r['_type'] == IP._meta['crits_type']:
+		obj = IP.objects(id=r['_id']).first()
+	    elif r['_type'] == PCAP._meta['crits_type']:
+		obj = PCAP.objects(id=r['_id']).first()
+	    elif r['_type'] == Sample._meta['crits_type']:
+	        obj = Sample.objects(id=r['_id']).first()
+	    elif r['_type'] == Event._meta['crits_type']:
+		# occurs if the 'parent' object is an Event. We don't need to convert
+		# but we do need to add to 'final_objects' for tracking purposes
+		stix_msg['final_objects'].append(self)
+
+	    if obj: # we have a valid crits object which can be converted to STIX/CybOX
+		if obj._meta['crits_type'] == Indicator._meta['crits_type']:
+		    # convert Indicators to STIX indicators
+		    ind, releas = obj.to_stix_indicator()
+		else:
+		    # convert other types to CybOX
+	            ind, releas = obj.to_cybox()
+                if obj._meta['crits_type'] in ind_list:
+		    # add indicator types to indicators list
+                    stix_msg['stix_indicators'].append(ind)
+                elif obj._meta['crits_type'] in obs_list:
+		    # all other supported types go into observables list
+                    stix_msg['stix_observables'].extend(ind)
+	        stix_msg['final_objects'].append(obj)
+
+        tool_list = ToolInformationList()
+        tool = ToolInformation("CRITs", "MITRE")
+        tool.version = settings.CRITS_VERSION
+        tool_list.append(tool)
+        i_s = InformationSource(
+            time=Time(produced_time= datetime.datetime.now()),
+            identity=Identity(name=settings.COMPANY_NAME),
+            tools=tool_list)
+
+        description = StructuredText(value=self.stix_description())
+        header = STIXHeader(information_source=i_s,
+                            description=description,
+                            package_intents=[self.stix_intent()],
+                            title=self.stix_title()) 
+        
+        stix_indicators = stix_msg['stix_indicators']
+        stix_observables = stix_msg['stix_observables']
+        stix_msg['stix_obj'] = STIXPackage(indicators=stix_indicators,
+                        observables=Observables(stix_observables),
+                        stix_header=header,
+                        id_=uuid.uuid4())
+
+        return stix_msg
 
 # Embedded Documents common to most classes
 
