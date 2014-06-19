@@ -233,8 +233,8 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         """
 
         indicator = cls(source=source)
-        indicator.created = obj.date
         obj = make_crits_object(cybox_object)
+        indicator.created = obj.date
         if obj.name and obj.name != obj.object_type:
             indicator.ind_type = "%s - %s" % (obj.object_type, obj.name)
         else:
