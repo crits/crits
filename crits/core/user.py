@@ -795,7 +795,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         l.set_option(ldap.OPT_REFERRALS, 0)
         l.set_option(ldap.OPT_TIMEOUT, 10)
         # setup auth for custom cn's
-        cn = "cn="
+        cn = "uid="
         if config.ldap_usercn:
             cn = config.ldap_usercn
         # setup auth for custom cn's
