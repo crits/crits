@@ -4,6 +4,9 @@ from django.conf import settings
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.ips.migrate import migrate_ip
 
+from cybox.objects.address_object import Address
+from cybox.core import Observable
+
 class IP(CritsBaseAttributes, CritsSourceDocument, Document):
     """
     IP class.
@@ -50,3 +53,47 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
 
     def migrate(self):
         migrate_ip(self)
+
+    def to_cybox(self):
+        """
+            Convert an IP to a CybOX Observables.
+            Returns a tuple of (CybOX object, releasability list).
+
+            To get the cybox object as xml or json, call to_xml() or
+            to_json(), respectively, on the resulting CybOX object.
+        """
+        obj = Address()
+	obj.address_value = self.ip
+
+	temp_type = self.ip_type.replace("-", "")
+	if temp_type.find(Address.CAT_ASN.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_ASN
+	elif temp_type.find(Address.CAT_ATM.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_ATM
+	elif temp_type.find(Address.CAT_CIDR.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_CIDR
+	elif temp_type.find(Address.CAT_MAC.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_MAC
+	elif temp_type.find(Address.CAT_IPV4.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_IPV4
+	elif temp_type.find(Address.CAT_IPV4_NET.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_IPV4_NET
+	elif temp_type.find(Address.CAT_IPV4_NETMASK.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_IPV4_NETMASK
+	elif temp_type.find(Address.CAT_IPV6.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_IPV6
+	elif temp_type.find(Address.CAT_IPV6_NET.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_IPV6_NET
+	elif temp_type.find(Address.CAT_IPV6_NETMASK.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_IPV6_NETMASK
+
+        return ([Observable(obj)], self.releasability)
+
+    def stix_description(self):
+        return "Category: %s" % self.ip_type
+
+    def stix_intent(self):
+        return "Observations"
+
+    def stix_title(self):
+        return self.ip

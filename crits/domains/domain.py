@@ -6,6 +6,9 @@ from difflib import unified_diff
 from django.conf import settings
 from whois_parser import WhoisEntry
 
+from cybox.objects.domain_name_object import DomainName
+from cybox.core import Observable
+
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, CritsSourceDocument
 from crits.domains.migrate import migrate_domain
@@ -189,3 +192,26 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
                             to_whois,
                             fromfile=from_date,
                             tofile=to_date)
+
+    def to_cybox(self):
+        """
+            Convert a Domain to a CybOX Observables.
+            Returns a tuple of (CybOX object, releasability list).
+
+            To get the cybox object as xml or json, call to_xml() or
+            to_json(), respectively, on the resulting CybOX object.
+        """
+        obj = DomainName()
+	obj.value = self.domain
+	obj.type_ = self.record_type
+        return ([Observable(obj)], self.releasability)
+
+    def stix_description(self):
+        return self.record_type
+
+    def stix_intent(self):
+        return "Observations"
+
+    def stix_title(self):
+        return self.domain
+

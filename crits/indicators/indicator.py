@@ -145,6 +145,31 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         migrate_indicator(self)
 
+    def to_stix_indicator(self):
+        """
+            Creates a STIX Indicator object from a CybOX object.
+
+            Returns the STIX Indicator and the original CRITs object's
+            releasability list.
+        """
+        #We can't do anything with objects that aren't convertible to CybOX.
+        if not hasattr(self, "to_cybox"):
+            return (None, None)
+
+        from stix.indicator import Indicator as S_Ind
+        from stix.common.identity import Identity
+        ind = S_Ind()
+        obs, releas = self.to_cybox()
+        for ob in obs:
+            ind.add_observable(ob)
+        #TODO: determine if a source wants its name shared. This will
+        #   probably have to happen on a per-source basis rather than a per-
+        #   object basis.
+        identity = Identity(name=settings.COMPANY_NAME)
+        ind.set_producer_identity(identity)
+
+        return (ind, releas)
+
     def to_cybox(self):
         """
         Convert an indicator to a CybOX Observable.
@@ -167,6 +192,13 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         observables.append(Observable(obj))
         return (observables, self.releasability)
+
+    def has_cybox_repr(self):
+	try:
+	    rep = self.to_cybox()
+	    return True
+	except Exception, e:
+	    return False
 
     def to_csv(self, fields=[],headers=False):
         """
@@ -201,8 +233,8 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         """
 
         indicator = cls(source=source)
-        obj = make_crits_object(cybox_object)
         indicator.created = obj.date
+        obj = make_crits_object(cybox_object)
         if obj.name and obj.name != obj.object_type:
             indicator.ind_type = "%s - %s" % (obj.object_type, obj.name)
         else:
@@ -211,6 +243,24 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         indicator.value = obj.value
 
         return indicator
+
+    def stix_description(self):
+        return self.ind_type
+
+    def stix_intent(self):
+        return "Indicators"
+
+    def stix_title(self):
+        return self.value
+
+    def add_activity(self, analyst, start_date, end_date, date, description, *args, **kwargs):
+        ea = EmbeddedActivity()
+        ea.analyst = analyst
+        ea.start_date = start_date
+        ea.end_date = end_date
+        ea.date = date
+        ea.description = description
+        self.activity.append(ea)
 
     def set_confidence(self, analyst, rating):
         """

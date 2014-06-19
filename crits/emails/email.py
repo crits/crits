@@ -232,3 +232,13 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
             email.raw_header = str(cybox_obj.raw_header)
 
         return email
+
+    def stix_description(self):
+        return "From: %s" % self.from_address
+
+    def stix_intent(self):
+        return "Observations"
+
+    def stix_title(self):
+        return "Email with subject: %s" % self.subject
+

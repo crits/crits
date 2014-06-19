@@ -5,6 +5,9 @@ from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocumen
 from crits.core.fields import getFileField
 from crits.pcaps.migrate import migrate_pcap
 
+from cybox.objects.artifact_object import Artifact
+from cybox.core import Observable
+
 class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
     """
     PCAP class.
@@ -118,3 +121,24 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
         if objectid:
             self.filedata.grid_id = objectid['_id']
             self.filedata._mark_as_changed()
+
+    def to_cybox(self):
+        """
+            Convert a PCAP to a CybOX Observables.
+            Returns a tuple of (CybOX object, releasability list).
+
+            To get the cybox object as xml or json, call to_xml() or
+            to_json(), respectively, on the resulting CybOX object.
+        """
+	# TODO base64 encode the filedata
+        obj = Artifact(self.filedata.read(), Artifact.TYPE_NETWORK) #TODO escape filedata content for valid xml?
+        return ([Observable(obj)], self.releasability)
+
+    def stix_description(self):
+        return self.description
+
+    def stix_intent(self):
+        return "Observations"
+
+    def stix_title(self):
+        return self.filename
