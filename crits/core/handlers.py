@@ -1,3 +1,4 @@
+import cgi
 import os
 import datetime
 import HTMLParser
@@ -2003,9 +2004,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         if response['result'] == "ERROR":
             return {'Result': "ERROR", 'Message': response['msg']}
         response['crits_type'] = col_obj._meta['crits_type']
-        # this was causing search terms to show up with &amp39; and other weird
-        # stuff in the UI, but it might expose search to XSS?
-        response['term'] = term #html_escape(term)
+        # Escape term for rendering in the UI.
+        response['term'] = cgi.escape(term)
         response['data'] = response['data'].to_dict(excludes, includes)
         # Convert data_query to jtable stuff
         response['Records'] = response.pop('data')

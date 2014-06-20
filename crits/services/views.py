@@ -378,6 +378,7 @@ def get_form(request, name, crits_type, identifier):
 
     response = {}
     response['name'] = name
+    analyst = request.user.username
 
     service = CRITsService.objects(name=name,
                                    status__ne="unavailable").first()
@@ -392,19 +393,20 @@ def get_form(request, name, crits_type, identifier):
     # format_config returns a list of tuples
     config = service_class.format_config(service.config, printable=False)
 
-    ServiceRunConfigForm = make_run_config_form(service_class)
-    if not ServiceRunConfigForm:
+    form_html = make_run_config_form(service_class,
+                                     config,
+                                     name,
+                                     request,
+                                     analyst=analyst,
+                                     crits_type=crits_type,
+                                     identifier=identifier)
+    if not form_html:
         # this should only happen if there are no config options and the
         # service is rerunnable.
         response['redirect'] = reverse('crits.services.views.service_run',
                                         args=[name, crits_type, identifier])
     else:
-        form = ServiceRunConfigForm(dict(config))
-        response['form'] = render_to_string("services_run_form.html",
-                                    {'name': name, 'form': form,
-                                    'crits_type': crits_type,
-                                    'identifier': identifier},
-                                    RequestContext(request))
+        response['form'] = form_html
 
     return HttpResponse(json.dumps(response), mimetype="application/json")
 
@@ -464,8 +466,23 @@ def service_run(request, name, crits_type, identifier):
         response['html'] = "Service %s is unknown or not enabled." % name
         return HttpResponse(json.dumps(response), mimetype="application/json")
 
+    service = CRITsService.objects(name=name,
+                                   status__ne="unavailable").first()
+    if not service:
+        msg = 'Service "%s" is unavailable. Please review error logs.' % name
+        response['error'] = msg
+        return HttpResponse(json.dumps(response), mimetype="application/json")
+
     service_class = env.manager.get_service_class(name)
-    ServiceRunConfigForm = make_run_config_form(service_class)
+    config = service_class.format_config(service.config, printable=False)
+    ServiceRunConfigForm = make_run_config_form(service_class,
+                                                config,
+                                                name,
+                                                request,
+                                                analyst=username,
+                                                crits_type=crits_type,
+                                                identifier=identifier,
+                                                return_form=True)
 
     if request.method == "POST":
         #Populate the form with values from the POST request

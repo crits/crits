@@ -1,4 +1,6 @@
 from django import forms
+from django.template import RequestContext
+from django.template.loader import render_to_string
 
 from crits.services.core import ServiceConfigOption, ServiceConfigError
 
@@ -84,24 +86,71 @@ def make_edit_config_form(service_class):
                 {'base_fields': fields})
 
 
-def make_run_config_form(service_class):
+def make_run_config_form(service_class, config, name, request,
+                         analyst=None, crits_type=None, identifier=None,
+                         return_form=False):
     """
     Return a Django form used when running a service.
 
+    If the service has a "generate_runtime_form()" method, use it. Otherwise
+    generate a generic form using the config options.
+
+    The "generate_runtime_form()" function must allow for passing in an analyst,
+    name, crits_type, and identifier, even if it doesn't plan on using all of
+    them.
+
     This is the same as make_edit_config_form, but adds a BooleanField
     (checkbox) for whether to "Force" the service to run.
+
+    :param service_class: The service class.
+    :type service_class: :class:`crits.services.core.Service`
+    :param config: Configuration options for the service.
+    :type config: dict
+    :param name: Name of the form to use.
+    :type name: str
+    :param request: The Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param analyst: The user requesting the form.
+    :type analyst: str
+    :param crits_type: The top-level object type.
+    :type crits_type: str
+    :param identifier: ObjectId of the top-level object.
+    :type identifier: str
+    :param return_form: Return a Django form object instead of HTML.
+    :type return_form: boolean
     """
 
-    # Hide private fields
-    fields = _get_config_fields(service_class, True)
-
-    if not service_class.rerunnable:
-        fields['force'] = forms.BooleanField(required=False,
-                                         help_text="Force the service to run.")
-
-    if fields:
-        return type("ServiceRunConfigForm",
-                    (forms.BaseForm,),
-                    {'base_fields': fields})
+    if hasattr(service_class, "generate_runtime_form"):
+        (form, html) = service_class().generate_runtime_form(analyst,
+                                                           name,
+                                                           crits_type,
+                                                           identifier)
+        if return_form:
+            return form
+        return html
     else:
-        return None
+        # Hide private fields
+        fields = _get_config_fields(service_class, True)
+
+        if not service_class.rerunnable:
+            fields['force'] = forms.BooleanField(required=False,
+                                            help_text="Force the service to run.")
+
+        if fields:
+            if return_form:
+                return type("ServiceRunConfigForm",
+                            (forms.BaseForm,),
+                            {'base_fields': fields})
+            SRCF = type("ServiceRunConfigForm",
+                        (forms.BaseForm,),
+                        {'base_fields': fields})
+            form_data = SRCF(dict(config))
+            html = render_to_string("services_run_form.html",
+                                    {'name': name,
+                                     'form': form_data,
+                                     'crits_type': crits_type,
+                                     'identifier': identifier},
+                                    RequestContext(request))
+            return html
+        else:
+            return None
