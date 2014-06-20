@@ -381,7 +381,6 @@ def get_form(request, name, crits_type, identifier):
 
     service = CRITsService.objects(name=name,
                                    status__ne="unavailable").first()
-    # TODO: return an AJAX error instead
     if not service:
         msg = 'Service "%s" is unavailable. Please review error logs.' % name
         response['error'] = msg
