@@ -65,9 +65,9 @@ class UploadFileForm(forms.Form):
     confidence = forms.ChoiceField(required=False, label=form_consts.Sample.CAMPAIGN_CONFIDENCE)
     email = forms.BooleanField(required=False,
                                label=form_consts.Sample.EMAIL_RESULTS)
-    parent_md5 = forms.CharField(widget=forms.TextInput,
+    related_md5 = forms.CharField(widget=forms.TextInput,
                                  required=False,
-                                 label=form_consts.Sample.PARENT_MD5)
+                                 label=form_consts.Sample.RELATED_MD5)
     source = forms.ChoiceField(required=True,
                                widget=forms.Select(attrs={'class': 'no_clear bulknoinitial'}),
                                label=form_consts.Sample.SOURCE)

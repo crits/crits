@@ -176,7 +176,7 @@ class Sample():
     FILE_FORMAT = "File Format"
     FILE_NAME = "File Name"
     MD5 = "MD5"
-    PARENT_MD5 = "Parent MD5"
+    RELATED_MD5 = "Related MD5"
     PASSWORD = "Password"
     SOURCE = Common.SOURCE
     SOURCE_METHOD = Common.SOURCE_METHOD

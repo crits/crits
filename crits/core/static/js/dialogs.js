@@ -1000,7 +1000,10 @@ function new_sample_dialog() {
     // Upload a related sample (Using the related dialog persona), used from events, samples
     // The action target takes care of passing the parent sample_id here
     if ($(this).dialog("persona") === "related") {
-    $('id_parent_md5, label[for="id_parent_md5"]').closest("tr").hide();
+    $('id_related_md5, label[for="id_related_md5"]').closest("tr").hide();
+    }
+    else {
+    $('id_related_md5, label[for="id_related_md5"]').closest("tr").show();
     }
 }
 

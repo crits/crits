@@ -12,8 +12,8 @@ $(document).ready(function(){
     // Upload a related pcap (Using the related dialog persona)
     $( "#dialog-new-pcap" ).on("dialogopen.add_related_pcap", function(e) {
         if ($(this).dialog("persona") == "related") {
-        $(this).find("form #id_parent_id").val(sample_id_escaped);
-        $(this).find("form #id_parent_type").val("Sample");
+        $(this).find("form #id_related_id").val(sample_id_escaped);
+        $(this).find("form #id_related_type").val("Sample");
         // $(this).find("form").removeAttr("target"); // Get rid of target to refresh page
 
         // Unlike new-sample below, this does not redirect us nor refresh the

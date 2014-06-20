@@ -650,7 +650,7 @@ def handle_unrar_sample(md5, user=None, password=None):
     source = sample.source
     reference = None
     return unrar_file(md5, user, password, data, source,
-                      reference=reference, parent_md5=md5, method="Unrar")
+                      reference=reference, related_md5=md5, method="Unrar")
 
 def handle_unzip_file(md5, user=None, password=None):
     """
@@ -673,13 +673,12 @@ def handle_unzip_file(md5, user=None, password=None):
     source = sample.source
     campaign = sample.campaign
     reference = None
-    parent = md5
     return unzip_file(md5, user, password, data, source, campaign,
-                      reference=reference, parent_md5=parent, method="Unzip")
+                      reference=reference, related_md5=md5, method="Unzip")
 
 def unzip_file(filename, user=None, password=None, data=None,
                source=None, campaign=None, confidence='low',
-               reference=None, parent_md5=None,
+               reference=None, related_md5=None,
                method='Zip', bucket_list=None, ticket=None):
     """
     Unzip a file.
@@ -700,8 +699,8 @@ def unzip_file(filename, user=None, password=None, data=None,
     :type confidence: str ('low', 'medium', 'high')
     :param reference: A reference to the data.
     :type reference: str
-    :param parent_md5: The MD5 of the parent sample this came from.
-    :type parent_md5: str
+    :param related_md5: The MD5 of a related sample.
+    :type related_md5: str
     :param method: The method to assign to the data.
     :type method: str
     :param bucket_list: The bucket(s) to assign to this data.
@@ -763,7 +762,7 @@ def unzip_file(filename, user=None, password=None, data=None,
                     filehandle = open(filepath, 'rb')
                     new_sample = handle_file(filename, filehandle.read(),
                                              source, reference,
-                                             parent_md5=parent_md5, backdoor='',
+                                             related_md5=related_md5, backdoor='',
                                              user=user, campaign=campaign,
                                              confidence=confidence,
                                              method=method,
@@ -790,7 +789,7 @@ def unzip_file(filename, user=None, password=None, data=None,
 
 def unrar_file(filename, user=None, password=None, data=None,
                source=None, campaign=None, confidence='low', reference=None,
-               parent_md5=None, method="Generic", bucket_list=None, ticket=None):
+               related_md5=None, method="Generic", bucket_list=None, ticket=None):
     """
     Unrar a file.
 
@@ -810,8 +809,8 @@ def unrar_file(filename, user=None, password=None, data=None,
     :type confidence: str ('low', 'medium', 'high')
     :param reference: A reference to the data.
     :type reference: str
-    :param parent_md5: The MD5 of the parent sample this came from.
-    :type parent_md5: str
+    :param related_md5: The MD5 of a related sample.
+    :type related_md5: str
     :param method: The method to assign to the data.
     :type method: str
     :param bucket_list: The bucket(s) to assign to this data.
@@ -869,7 +868,7 @@ def unrar_file(filename, user=None, password=None, data=None,
                             new_sample = handle_file(filename,
                                                        filehandle.read(),
                                                        source, reference,
-                                                       parent_md5=parent_md5,
+                                                       related_md5=related_md5,
                                                        backdoor='', user=user,
                                                        campaign=campaign,
                                                        confidence=confidence,
@@ -891,10 +890,10 @@ def unrar_file(filename, user=None, password=None, data=None,
 
     return samples
 
-def handle_file(filename, data, source, reference=None, parent_md5=None,
-                parent_id=None, backdoor=None, user='', campaign=None, confidence='low',
+def handle_file(filename, data, source, reference=None, related_md5=None,
+                related_id=None, backdoor=None, user='', campaign=None, confidence='low',
                 method='Generic', md5_digest=None, bucket_list=None, ticket=None,
-                parent_type='Sample', relationship=None, is_validate_only=False,
+                related_type='Sample', relationship=None, is_validate_only=False,
                 is_return_only_md5=True, cache={}):
     """
     Handle adding a file.
@@ -907,10 +906,10 @@ def handle_file(filename, data, source, reference=None, parent_md5=None,
     :type source: list, str, :class:`crits.core.crits_mongoengine.EmbeddedSource`
     :param reference: A reference to the data.
     :type reference: str
-    :param parent_md5: The MD5 of the parent sample this came from.
-    :type parent_md5: str
-    :param parent_id: The ObjectId of the parent.
-    :type parent_id: str
+    :param related_md5: The MD5 of a related sample.
+    :type related_md5: str
+    :param related_id: The ObjectId of a related top-level object.
+    :type related_id: str
     :param backdoor: The backdoor to assign to this sample.
     :type backdoor: str
     :param user: The user uploading this sample.
@@ -927,8 +926,8 @@ def handle_file(filename, data, source, reference=None, parent_md5=None,
     :type bucket_list: str
     :param ticket: The ticket to assign to this data.
     :type ticket: str
-    :param parent_type: The parent top-level object type.
-    :type parent_type: str
+    :param related_type: The type of the related top-level object.
+    :type related_type: str
     :param relationship: The relationship between this sample and the parent.
     :type relationship: str
     :param is_validate_only: Only validate, do not add.
@@ -1064,19 +1063,20 @@ def handle_file(filename, data, source, reference=None, parent_md5=None,
         if len(sample.analysis) < 1 and data:
             run_triage(data, sample, user)
 
-        if parent_md5 or parent_id:
-            if parent_md5:
-                parent_obj = class_from_value(parent_type, parent_md5)
+        # update relationship if a related top-level object is supplied
+        if related_id or related_md5:
+            if  related_id:
+                related_obj = class_from_id(related_type, related_id)
             else:
-                parent_obj = class_from_id(parent_type, parent_id)
-            if parent_obj and sample:
+                related_obj = class_from_value(related_type, related_md5)
+            if related_obj and sample:
                 if not relationship:
-                    relationship = 'Related_To'
-                sample.add_relationship(rel_item=parent_obj,
-                                            rel_type=relationship,
-                                            analyst=user,
-                                            get_rels=False)
-                parent_obj.save(username=user)
+                    relationship = "Related_To"
+                sample.add_relationship(rel_item=related_obj,
+                                      rel_type=relationship,
+                                      analyst=user,
+                                      get_rels=False)
+                related_obj.save(username=user)
                 sample.save(username=user)
 
     if is_sample_new == True:
@@ -1118,7 +1118,7 @@ def handle_file(filename, data, source, reference=None, parent_md5=None,
 
 def handle_uploaded_file(f, source, reference=None, file_format=None,
                          password=None, user=None, campaign=None,
-                         confidence='low', parent_md5=None,
+                         confidence='low', related_md5=None,
                          filename=None, md5=None, bucket_list=None, ticket=None,
                          is_validate_only=False, method="Upload",
                          is_return_only_md5=True, cache={}):
@@ -1141,8 +1141,8 @@ def handle_uploaded_file(f, source, reference=None, file_format=None,
     :type campaign: str
     :param confidence: The confidence level of the campaign attribution.
     :type confidence: str ('low', 'medium', 'high')
-    :param parent_md5: The MD5 of the parent sample this came from.
-    :type parent_md5: str
+    :param related_md5: The MD5 of a related sample.
+    :type related_md5: str
     :param filename: The filename of the sample.
     :type filename: str
     :param md5: The MD5 of the sample.
@@ -1186,7 +1186,7 @@ def handle_uploaded_file(f, source, reference=None, file_format=None,
             campaign=campaign,
             confidence=confidence,
             reference=reference,
-            parent_md5=parent_md5,
+            related_md5=related_md5,
             method=method,
             bucket_list=bucket_list,
             ticket=ticket)
@@ -1200,13 +1200,13 @@ def handle_uploaded_file(f, source, reference=None, file_format=None,
             campaign=campaign,
             confidence=confidence,
             reference=reference,
-            parent_md5=parent_md5,
+            related_md5=related_md5,
             method=method,
             bucket_list=bucket_list,
             ticket=ticket)
     else:
         new_sample = handle_file(filename, data, source, reference,
-                                 parent_md5=parent_md5, backdoor='', user=user,
+                                 related_md5=related_md5, backdoor='', user=user,
                                  campaign=campaign, confidence=confidence,
                                  method=method, md5_digest=md5,
                                  bucket_list=bucket_list, ticket=ticket,
@@ -1257,7 +1257,7 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     fileformat = data.get('file_format')
     password = data.get('password')
     #is_email_results = data.get('email')
-    parent_md5 = data.get('parent_md5')
+    related_md5 = data.get('related_md5')
     source = data.get('source')
     #method = data.get('method')
     reference = data.get('reference')
@@ -1270,7 +1270,7 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
                                   user=username,
                                   campaign=campaign,
                                   confidence=confidence,
-                                  parent_md5=parent_md5,
+                                  related_md5=related_md5,
                                   filename=filename,
                                   md5=md5,
                                   bucket_list=bucket_list,
@@ -1382,7 +1382,7 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
     campaign = rowData.get(form_consts.Sample.CAMPAIGN, "")
     confidence = rowData.get(form_consts.Sample.CAMPAIGN_CONFIDENCE, "")
     is_email_results = convert_string_to_bool(rowData.get(form_consts.Sample.EMAIL_RESULTS, ""))
-    parent_md5 = rowData.get(form_consts.Sample.PARENT_MD5, "")
+    related_md5 = rowData.get(form_consts.Sample.RELATED_MD5, "")
     source = rowData.get(form_consts.Sample.SOURCE, "")
     method = rowData.get(form_consts.Sample.SOURCE_METHOD, "")
     reference = rowData.get(form_consts.Sample.SOURCE_REFERENCE, "")
@@ -1399,7 +1399,7 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         'confidence': confidence,
         'password': password,
         'email': is_email_results,
-        'parent_md5': parent_md5,
+        'related_md5': related_md5,
         'source': source,
         'method': method,
         'reference': reference,

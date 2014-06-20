@@ -209,7 +209,7 @@ def upload_file(request, related_md5=None):
                 campaign = related_sample.campaign
                 related = True
             else:
-                related_md5 = form.cleaned_data['parent_md5']
+                related_md5 = form.cleaned_data['related_md5']
                 related = False
 
             try:
@@ -223,7 +223,7 @@ def upload_file(request, related_md5=None):
                         analyst,
                         campaign,
                         confidence,
-                        parent_md5 = related_md5,
+                        related_md5 = related_md5,
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
                         method=method)
@@ -237,7 +237,7 @@ def upload_file(request, related_md5=None):
                         analyst,
                         campaign,
                         confidence,
-                        parent_md5 = related_md5,
+                        related_md5 = related_md5,
                         filename=request.POST['filename'].strip(),
                         md5=request.POST['md5'].strip().lower(),
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
@@ -291,7 +291,7 @@ def upload_file(request, related_md5=None):
                                               RequestContext(request))
         else:
             if related_md5: #if this is a 'related' upload, remove field so it doesn't reappear
-                del form.fields['parent_md5']
+                del form.fields['related_md5']
             return render_to_response('file_upload_response.html',
                                       {'response': json.dumps({'success': False,
                                                                'form': form.as_table()})},

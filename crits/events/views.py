@@ -144,7 +144,7 @@ def upload_sample(request, event_id):
                                                                    'message': result['message']})},
                                           RequestContext(request))
         else:
-            del form.fields['parent_md5'] #remove field so it doesn't reappear
+            del form.fields['related_md5'] #remove field so it doesn't reappear
             return render_to_response('file_upload_response.html',
                                       {'response': json.dumps({'success': False,
                                                                'form': form.as_table()})},

@@ -329,8 +329,8 @@ def add_object(type_, oid, object_type, name, source, method,
                                      data,
                                      source,
                                      user=analyst,
-                                     parent_id=oid,
-                                     parent_type=type_)
+                                     related_id=oid,
+                                     related_type=type_)
                 else:
                     #XXX: MongoEngine provides no direct GridFS access so we
                     #     need to use pymongo directly.
