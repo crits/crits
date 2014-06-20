@@ -121,7 +121,7 @@ def make_run_config_form(service_class, config, name, request,
     """
 
     if hasattr(service_class, "generate_runtime_form"):
-        (form, html) = service_class().generate_runtime_form(analyst,
+        (form, html) = service_class.generate_runtime_form(analyst,
                                                            name,
                                                            crits_type,
                                                            identifier)
