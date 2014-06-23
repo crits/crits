@@ -194,9 +194,15 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         return (observables, self.releasability)
 
     def has_cybox_repr(self):
+	"""
+	    Determine if this indicator is of a type that can
+	    successfully be converted to a CybOX object.
+
+	    :return The CybOX representation if possible, else False.
+	"""
 	try:
 	    rep = self.to_cybox()
-	    return True
+	    return rep
 	except Exception, e:
 	    return False
 

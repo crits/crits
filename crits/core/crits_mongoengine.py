@@ -673,7 +673,7 @@ class CritsDocument(BaseDocument):
         # go in which part of the STIX document. As more CRITs objects
         # are supported just add them here.
         ind_list = ["Indicator"]
-        obs_list = ["Email", "Sample", "Domain", "IP", "PCAP"]
+        obs_list = ["Email", "Sample", "Domain", "IP", "PCAP", "Raw Data", "Certificate"]
 
         # Store message
         stix_msg = {
@@ -694,7 +694,7 @@ class CritsDocument(BaseDocument):
 
 	    supported = r['_type'] in ind_list or r['_type'] in obs_list
 	    if obj and supported: # we have a valid crits object which can be converted to STIX/CybOX
-		if obj._meta['crits_type'] == Indicator._meta['crits_type']:
+		if obj._meta['crits_type'] == "Indicator":
 		    # convert Indicators to STIX indicators
 		    ind, releas = obj.to_stix_indicator()
 		else:

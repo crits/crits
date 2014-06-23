@@ -1,3 +1,4 @@
+import base64
 import datetime
 import uuid
 
@@ -10,6 +11,9 @@ from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocumen
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.fields import CritsDateTimeField
+
+from cybox.objects.artifact_object import Artifact
+from cybox.core import Observable
 
 
 class RawDataType(CritsDocument, CritsSchemaDocument, Document):
@@ -235,3 +239,16 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
             else:
                 highlights.append(h)
         self.highlights = highlights
+
+    def to_cybox(self):
+        """
+            Convert a RawData to a CybOX Observables.
+            Returns a tuple of (CybOX object, releasability list).
+
+            To get the cybox object as xml or json, call to_xml() or
+            to_json(), respectively, on the resulting CybOX object.
+        """
+	data = base64.b64encode(self.data.read())
+	obj = Artifact(data, Artifact.TYPE_FILE)
+        return ([Observable(obj)], self.releasability)
+

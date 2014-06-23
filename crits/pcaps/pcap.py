@@ -130,8 +130,8 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
             To get the cybox object as xml or json, call to_xml() or
             to_json(), respectively, on the resulting CybOX object.
         """
-	# TODO base64 encode the filedata
-        obj = Artifact(self.filedata.read(), Artifact.TYPE_NETWORK) #TODO escape filedata content for valid xml?
+	data = base64.b64encode(self.filedata.read())
+        obj = Artifact(data, Artifact.TYPE_NETWORK)
         return ([Observable(obj)], self.releasability)
 
     def stix_description(self):

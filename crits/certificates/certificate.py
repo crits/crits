@@ -1,8 +1,14 @@
+import base64
+
 from mongoengine import Document, StringField, IntField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.fields import getFileField
+
+from cybox.objects.artifact_object import Artifact
+from cybox.objects.file_object import File
+from cybox.core import Observable
 
 class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
     """
@@ -114,3 +120,25 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
         if objectid:
             self.filedata.grid_id = objectid['_id']
             self.filedata._mark_as_changed()
+
+    def to_cybox(self):
+        """
+            Convert a Certificate to a CybOX Observables.
+            Returns a tuple of (CybOX object, releasability list).
+
+            To get the cybox object as xml or json, call to_xml() or
+            to_json(), respectively, on the resulting CybOX object.
+        """
+	obj = File() # represent cert information as file
+	obj.md5 = self.md5
+	obj.file_name = self.filename
+	obj.file_format = self.filetype
+	obj.size_in_bytes = self.size
+	obs = Observable(obj)
+	data = self.filedata.read()
+        if data: # if cert data available
+	    data = base64.b64encode(data) # encode
+	    a = Artifact(data, Artifact.TYPE_FILE) # create artifact w/data
+	    obj.add_related(a, "Child_Of") # relate artifact to file
+        return ([obs], self.releasability)
+
