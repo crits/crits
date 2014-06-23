@@ -54,7 +54,7 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
     def migrate(self):
         migrate_ip(self)
 
-    def to_cybox(self):
+    def to_cybox_observable(self):
         """
             Convert an IP to a CybOX Observables.
             Returns a tuple of (CybOX object, releasability list).

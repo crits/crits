@@ -1,3 +1,5 @@
+import base64
+
 from mongoengine import Document, StringField, IntField
 from django.conf import settings
 
@@ -122,7 +124,7 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
             self.filedata.grid_id = objectid['_id']
             self.filedata._mark_as_changed()
 
-    def to_cybox(self):
+    def to_cybox_observable(self):
         """
             Convert a PCAP to a CybOX Observables.
             Returns a tuple of (CybOX object, releasability list).

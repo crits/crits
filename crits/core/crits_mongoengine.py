@@ -659,21 +659,25 @@ class CritsDocument(BaseDocument):
             Returns the STIX document and a list of objects represented therein.
         """
 
-
         from cybox.common import Time, ToolInformationList, ToolInformation
         from cybox.core import Observables
         from stix.common import StructuredText, InformationSource
         from stix.core import STIXPackage, STIXHeader
-        from stix.common.identity import Identity
-
-        from crits.events.event import Event
-        from crits.objects.object_mapper import UnsupportedCybOXObjectTypeError
+	from stix.common.identity import Identity
 
         # These two lists are used to determine which CRITs objects
-        # go in which part of the STIX document. As more CRITs objects
-        # are supported just add them here.
-        ind_list = ["Indicator"]
-        obs_list = ["Email", "Sample", "Domain", "IP", "PCAP", "RawData", "Certificate"]
+        # go in which part of the STIX document.
+        ind_list = []
+        obs_list = []
+
+	# determine which CRITs types support standardization
+	for ctype in settings.CRITS_TYPES:
+	    cls = class_from_type(ctype)
+	    if hasattr(cls, "to_stix_indicator"):
+		ind_list.append(ctype)
+	    elif hasattr(cls, "to_cybox_observable"):
+		obs_list.append(ctype)
+		
 
         # Store message
         stix_msg = {
@@ -686,25 +690,20 @@ class CritsDocument(BaseDocument):
 	items_to_convert.append({'_type': self._meta['crits_type'], '_id': self.id});
 
         for r in items_to_convert:
-	    obj = class_from_id(r['_type'], r['_id'])
-	    if obj._meta['crits_type'] == Event._meta['crits_type']:
+	    rtype = r['_type']
+	    obj = class_from_id(rtype, r['_id'])
+	    if obj._meta['crits_type'] == class_from_type('Event')._meta['crits_type']:
 		# occurs if the 'parent' object is an Event. We don't need to convert
 		# but we do need to add to 'final_objects' for tracking purposes
 		stix_msg['final_objects'].append(self)
 
-	    supported = r['_type'] in ind_list or r['_type'] in obs_list
-	    if obj and supported: # we have a valid crits object which can be converted to STIX/CybOX
-		if obj._meta['crits_type'] == "Indicator":
-		    # convert Indicators to STIX indicators
+	    supported = rtype in ind_list or rtype in obs_list
+	    if obj and supported: # crits object can be standardized
+                if obj._meta['crits_type'] in ind_list: # convert to STIX indicators
 		    ind, releas = obj.to_stix_indicator()
-		else:
-		    # convert other types to CybOX
-	            ind, releas = obj.to_cybox()
-                if obj._meta['crits_type'] in ind_list:
-		    # add indicator types to indicators list
                     stix_msg['stix_indicators'].append(ind)
-                elif obj._meta['crits_type'] in obs_list:
-		    # all other supported types go into observables list
+                elif obj._meta['crits_type'] in obs_list: # convert to CybOX observable
+		    ind, releas = obj.to_cybox_observable()
                     stix_msg['stix_observables'].extend(ind)
 	        stix_msg['final_objects'].append(obj)
 
@@ -723,10 +722,8 @@ class CritsDocument(BaseDocument):
                             package_intents=[self.stix_intent()],
                             title=self.stix_title()) 
         
-        stix_indicators = stix_msg['stix_indicators']
-        stix_observables = stix_msg['stix_observables']
-        stix_msg['stix_obj'] = STIXPackage(indicators=stix_indicators,
-                        observables=Observables(stix_observables),
+        stix_msg['stix_obj'] = STIXPackage(indicators=stix_msg['stix_indicators'],
+                        observables=Observables(stix_msg['stix_observables']),
                         stix_header=header,
                         id_=uuid.uuid4())
 

@@ -153,7 +153,7 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
         return super(self.__class__, self)._custom_save(force_insert, validate,
             clean, write_concern, cascade, cascade_kwargs, _refs, username)
 
-    def to_cybox(self, exclude=None):
+    def to_cybox_observable(self, exclude=None):
         """
         Convert an email to a CybOX Observables.
 

@@ -240,7 +240,7 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
                 highlights.append(h)
         self.highlights = highlights
 
-    def to_cybox(self):
+    def to_cybox_observable(self):
         """
             Convert a RawData to a CybOX Observables.
             Returns a tuple of (CybOX object, releasability list).

@@ -193,7 +193,7 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
                             fromfile=from_date,
                             tofile=to_date)
 
-    def to_cybox(self):
+    def to_cybox_observable(self):
         """
             Convert a Domain to a CybOX Observables.
             Returns a tuple of (CybOX object, releasability list).

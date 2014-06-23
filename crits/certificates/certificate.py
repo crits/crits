@@ -122,7 +122,7 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
             self.filedata.grid_id = objectid['_id']
             self.filedata._mark_as_changed()
 
-    def to_cybox(self):
+    def to_cybox_observable(self):
         """
             Convert a Certificate to a CybOX Observables.
             Returns a tuple of (CybOX object, releasability list).

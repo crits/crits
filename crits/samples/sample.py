@@ -156,7 +156,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
     def stix_title(self):
         return self.md5
 
-    def to_cybox(self, exclude=None):
+    def to_cybox_observable(self, exclude=None):
         if exclude == None:
             exclude = []
 
