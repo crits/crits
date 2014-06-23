@@ -248,7 +248,7 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
             To get the cybox object as xml or json, call to_xml() or
             to_json(), respectively, on the resulting CybOX object.
         """
-	data = base64.b64encode(self.data.read())
+	data = base64.b64encode(self.data)
 	obj = Artifact(data, Artifact.TYPE_FILE)
         return ([Observable(obj)], self.releasability)
 

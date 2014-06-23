@@ -673,7 +673,7 @@ class CritsDocument(BaseDocument):
         # go in which part of the STIX document. As more CRITs objects
         # are supported just add them here.
         ind_list = ["Indicator"]
-        obs_list = ["Email", "Sample", "Domain", "IP", "PCAP", "Raw Data", "Certificate"]
+        obs_list = ["Email", "Sample", "Domain", "IP", "PCAP", "RawData", "Certificate"]
 
         # Store message
         stix_msg = {
