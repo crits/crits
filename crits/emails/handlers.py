@@ -1306,6 +1306,8 @@ def create_email_attachment(email, cleaned_data, reference, source, analyst,
                                               analyst,
                                               campaign,
                                               confidence,
+                                              related_id=email.id,
+                                              related_type='Email',
                                               filename=filename,
                                               bucket_list=bucket_list,
                                               ticket=ticket,
@@ -1321,6 +1323,8 @@ def create_email_attachment(email, cleaned_data, reference, source, analyst,
                                               analyst,
                                               campaign,
                                               confidence,
+                                              related_id=email.id,
+                                              related_type='Email',
                                               filename=filename,
                                               md5=md5,
                                               bucket_list=bucket_list,
@@ -1344,24 +1348,14 @@ def create_email_attachment(email, cleaned_data, reference, source, analyst,
                 response = {'success': True, 'message': 'Files uploaded successfully. '}
         if not response['success']:
             return response
-        samples = Sample.objects(md5__in=result,
-                                 source__name__in=user_sources(analyst))
-    if samples:
-        for s in samples:
-            email.add_relationship(rel_item=s,
-                                   rel_type="Contains",
-                                   analyst=analyst,
-                                   get_rels=False)
-            s.save(username=analyst)
-        email.save(username=analyst)
-
-        if email_addr:
-            for s in result:
-                email_errmsg = mail_sample(s, email_addr)
-                if email_errmsg is not None:
-                    response['success'] = False
-                    msg = "<br>Error email for sample %s: %s\n" % (result, email_errmsg)
-                    response['message'] = response['message'] + msg
+        else:
+            if email_addr:
+                for s in result:
+                    email_errmsg = mail_sample(s, email_addr)
+                    if email_errmsg is not None:
+                        response['success'] = False
+                        msg = "<br>Error email for sample %s: %s\n" % (result, email_errmsg)
+                        response['message'] = response['message'] + msg
     return response
 
 def parse_ole_file(file):

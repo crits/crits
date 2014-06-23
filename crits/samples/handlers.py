@@ -676,9 +676,9 @@ def handle_unzip_file(md5, user=None, password=None):
     return unzip_file(md5, user, password, data, source, campaign,
                       reference=reference, related_md5=md5, method="Unzip")
 
-def unzip_file(filename, user=None, password=None, data=None,
-               source=None, campaign=None, confidence='low',
-               reference=None, related_md5=None,
+def unzip_file(filename, user=None, password=None, data=None, source=None,
+               campaign=None, confidence='low', reference=None,
+               related_md5=None, related_id=None, related_type='Sample',
                method='Zip', bucket_list=None, ticket=None):
     """
     Unzip a file.
@@ -701,6 +701,10 @@ def unzip_file(filename, user=None, password=None, data=None,
     :type reference: str
     :param related_md5: The MD5 of a related sample.
     :type related_md5: str
+    :param related_id: The ObjectId of a related top-level object.
+    :type related_id: str
+    :param related_type: The type of the related top-level object.
+    :type related_type: str
     :param method: The method to assign to the data.
     :type method: str
     :param bucket_list: The bucket(s) to assign to this data.
@@ -762,7 +766,9 @@ def unzip_file(filename, user=None, password=None, data=None,
                     filehandle = open(filepath, 'rb')
                     new_sample = handle_file(filename, filehandle.read(),
                                              source, reference,
-                                             related_md5=related_md5, backdoor='',
+                                             related_md5=related_md5,
+                                             related_id=related_id,
+                                             related_type=related_type, backdoor='',
                                              user=user, campaign=campaign,
                                              confidence=confidence,
                                              method=method,
@@ -787,9 +793,10 @@ def unzip_file(filename, user=None, password=None, data=None,
             shutil.rmtree(extractdir)
     return samples
 
-def unrar_file(filename, user=None, password=None, data=None,
-               source=None, campaign=None, confidence='low', reference=None,
-               related_md5=None, method="Generic", bucket_list=None, ticket=None):
+def unrar_file(filename, user=None, password=None, data=None, source=None,
+               campaign=None, confidence='low', reference=None,
+               related_md5=None, related_id=None, related_type='Sample',
+               method="Generic", bucket_list=None, ticket=None):
     """
     Unrar a file.
 
@@ -811,6 +818,10 @@ def unrar_file(filename, user=None, password=None, data=None,
     :type reference: str
     :param related_md5: The MD5 of a related sample.
     :type related_md5: str
+    :param related_id: The ObjectId of a related top-level object.
+    :type related_id: str
+    :param related_type: The type of the related top-level object.
+    :type related_type: str
     :param method: The method to assign to the data.
     :type method: str
     :param bucket_list: The bucket(s) to assign to this data.
@@ -866,16 +877,18 @@ def unrar_file(filename, user=None, password=None, data=None,
                     if filepath != rarname:
                         with open(filepath, 'rb') as filehandle:
                             new_sample = handle_file(filename,
-                                                       filehandle.read(),
-                                                       source, reference,
-                                                       related_md5=related_md5,
-                                                       backdoor='', user=user,
-                                                       campaign=campaign,
-                                                       confidence=confidence,
-                                                       method=method,
-                                                       bucket_list=bucket_list,
-                                                       ticket=ticket,
-                                                       relationship="Compressed_From")
+                                                     filehandle.read(),
+                                                     source, reference,
+                                                     related_md5=related_md5,
+                                                     related_id=related_id,
+                                                     related_type=related_type,
+                                                     backdoor='', user=user,
+                                                     campaign=campaign,
+                                                     confidence=confidence,
+                                                     method=method,
+                                                     bucket_list=bucket_list,
+                                                     ticket=ticket,
+                                                     relationship="Compressed_From")
                             samples.append(new_sample)
     except ZipFileError:
         raise
@@ -951,7 +964,7 @@ def handle_file(filename, data, source, reference=None, related_md5=None,
 
     # get sample from database, or create it if one doesn't exist
     if not md5_digest and not data:
-        retVal['message'] += "Both the MD5 digest and data need to be supplied"
+        retVal['message'] += "Either the MD5 digest or data need to be supplied"
         retVal['success'] = False
     elif md5_digest:
         # validate md5
@@ -964,6 +977,17 @@ def handle_file(filename, data, source, reference=None, related_md5=None,
         validate_md5_result = validate_md5_checksum(md5_digest)
         retVal['message'] += validate_md5_result.get('message')
         retVal['success'] = validate_md5_result.get('success')
+    if related_id or related_md5:
+        if  related_id:
+            related_obj = class_from_id(related_type, related_id)
+        else:
+            related_obj = class_from_value(related_type, related_md5)
+        if not related_obj:
+            retVal['message'] += (' Related %s not found. Sample not uploaded.'
+                                  % (related_type))
+            retVal['success'] = False
+    else:
+        related_obj = None
 
     if retVal['success'] == False:
         if is_return_only_md5 == True:
@@ -1064,18 +1088,14 @@ def handle_file(filename, data, source, reference=None, related_md5=None,
             run_triage(data, sample, user)
 
         # update relationship if a related top-level object is supplied
-        if related_id or related_md5:
-            if  related_id:
-                related_obj = class_from_id(related_type, related_id)
-            else:
-                related_obj = class_from_value(related_type, related_md5)
-            if related_obj and sample:
+        if related_obj and sample:
+            if related_obj.id != sample.id: #don't form relationship to itself
                 if not relationship:
                     relationship = "Related_To"
                 sample.add_relationship(rel_item=related_obj,
-                                      rel_type=relationship,
-                                      analyst=user,
-                                      get_rels=False)
+                                        rel_type=relationship,
+                                        analyst=user,
+                                        get_rels=False)
                 related_obj.save(username=user)
                 sample.save(username=user)
 
@@ -1117,8 +1137,8 @@ def handle_file(filename, data, source, reference=None, related_md5=None,
         return retVal
 
 def handle_uploaded_file(f, source, reference=None, file_format=None,
-                         password=None, user=None, campaign=None,
-                         confidence='low', related_md5=None,
+                         password=None, user=None, campaign=None, confidence='low',
+                         related_md5=None, related_id=None, related_type='Sample',
                          filename=None, md5=None, bucket_list=None, ticket=None,
                          is_validate_only=False, method="Upload",
                          is_return_only_md5=True, cache={}):
@@ -1143,6 +1163,10 @@ def handle_uploaded_file(f, source, reference=None, file_format=None,
     :type confidence: str ('low', 'medium', 'high')
     :param related_md5: The MD5 of a related sample.
     :type related_md5: str
+    :param related_id: The ObjectId of a related top-level object.
+    :type related_id: str
+    :param related_type: The type of the related top-level object.
+    :type related_type: str
     :param filename: The filename of the sample.
     :type filename: str
     :param md5: The MD5 of the sample.
@@ -1187,6 +1211,8 @@ def handle_uploaded_file(f, source, reference=None, file_format=None,
             confidence=confidence,
             reference=reference,
             related_md5=related_md5,
+            related_id=related_id,
+            related_type=related_type,
             method=method,
             bucket_list=bucket_list,
             ticket=ticket)
@@ -1201,12 +1227,15 @@ def handle_uploaded_file(f, source, reference=None, file_format=None,
             confidence=confidence,
             reference=reference,
             related_md5=related_md5,
+            related_id=related_id,
+            related_type=related_type,
             method=method,
             bucket_list=bucket_list,
             ticket=ticket)
     else:
         new_sample = handle_file(filename, data, source, reference,
-                                 related_md5=related_md5, backdoor='', user=user,
+                                 related_md5=related_md5, related_id=related_id,
+                                 related_type=related_type, backdoor='', user=user,
                                  campaign=campaign, confidence=confidence,
                                  method=method, md5_digest=md5,
                                  bucket_list=bucket_list, ticket=ticket,

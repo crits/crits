@@ -439,6 +439,8 @@ def add_sample_for_event(event_id, data, analyst, filedata=None,
                                               analyst,
                                               campaign,
                                               confidence,
+                                              related_id=event.id,
+                                              related_type='Event',
                                               filename=filename,
                                               bucket_list=bucket_list,
                                               ticket=ticket,
@@ -454,6 +456,8 @@ def add_sample_for_event(event_id, data, analyst, filedata=None,
                                               analyst,
                                               campaign,
                                               confidence,
+                                              related_id=event.id,
+                                              related_type='Event',
                                               filename=filename,
                                               md5=md5,
                                               bucket_list=bucket_list,
@@ -477,22 +481,12 @@ def add_sample_for_event(event_id, data, analyst, filedata=None,
                 response = {'success': True, 'message': 'Files uploaded successfully. '}
         if not response['success']:
             return response
-        samples = Sample.objects(md5__in=result,
-                                 source__name__in=users_sources)
-        if samples:
-            for s in samples:
-                event.add_relationship(rel_item=s,
-                                       rel_type='Related_To',
-                                       analyst=analyst,
-                                       get_rels=False)
-                s.save(username=analyst)
-            event.save(username=analyst)
-
-        if email_addr:
-            for s in result:
-                email_errmsg = mail_sample(s, email_addr)
-                if email_errmsg is not None:
-                    response['success'] = False
-                    msg = "<br>Error email for sample %s: %s\n" % (result, email_errmsg)
-                    response['message'] = response['message'] + msg
+        else:
+            if email_addr:
+                for s in result:
+                    email_errmsg = mail_sample(s, email_addr)
+                    if email_errmsg is not None:
+                        response['success'] = False
+                        msg = "<br>Error email for sample %s: %s\n" % (result, email_errmsg)
+                        response['message'] = response['message'] + msg
     return response
