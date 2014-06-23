@@ -1001,7 +1001,7 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                                      settings.COMPANY_NAME)
         header = STIXHeader(information_source=i_s,
                             description=description,
-                            package_intent="Collective Threat Intelligence",
+                            package_intents=["Collective Threat Intelligence"],
                             title="Threat Intelligence Sharing")
 
         stix_doc = {
