@@ -666,24 +666,14 @@ class CritsDocument(BaseDocument):
         from stix.core import STIXPackage, STIXHeader
         from stix.common.identity import Identity
 
-        from crits.domains.domain import Domain
-        from crits.emails.email import Email
         from crits.events.event import Event
-        from crits.indicators.indicator import Indicator
-        from crits.ips.ip import IP
-        from crits.pcaps.pcap import PCAP
-        from crits.samples.sample import Sample
         from crits.objects.object_mapper import UnsupportedCybOXObjectTypeError
 
         # These two lists are used to determine which CRITs objects
         # go in which part of the STIX document. As more CRITs objects
         # are supported just add them here.
-        ind_list = [Indicator._meta['crits_type']]
-        obs_list = [Email._meta['crits_type'], Sample._meta['crits_type'], Domain._meta['crits_type'], 
-			IP._meta['crits_type'], PCAP._meta['crits_type']]
-
-        #user_source_list = user_sources(username)
-        #set_rcpts = set(rcpts)
+        ind_list = ["Indicator"]
+        obs_list = ["Email", "Sample", "Domain", "IP", "PCAP"]
 
         # Store message
         stix_msg = {
@@ -696,26 +686,14 @@ class CritsDocument(BaseDocument):
 	items_to_convert.append({'_type': self._meta['crits_type'], '_id': self.id});
 
         for r in items_to_convert:
-	    obj = None
-	    # OBJ = CLASS_FROM_ID
-	    if r['_type'] == Domain._meta['crits_type']:
-		obj = Domain.objects(id=r['_id']).first()
-	    elif r['_type'] == Email._meta['crits_type']:
-	        obj = Email.objects(id=r['_id']).first()
-	    elif r['_type'] == Indicator._meta['crits_type']:
-	        obj = Indicator.objects(id=r['_id']).first()
-	    elif r['_type'] == IP._meta['crits_type']:
-		obj = IP.objects(id=r['_id']).first()
-	    elif r['_type'] == PCAP._meta['crits_type']:
-		obj = PCAP.objects(id=r['_id']).first()
-	    elif r['_type'] == Sample._meta['crits_type']:
-	        obj = Sample.objects(id=r['_id']).first()
-	    elif r['_type'] == Event._meta['crits_type']:
+	    obj = class_from_id(r['_type'], r['_id'])
+	    if obj._meta['crits_type'] == Event._meta['crits_type']:
 		# occurs if the 'parent' object is an Event. We don't need to convert
 		# but we do need to add to 'final_objects' for tracking purposes
 		stix_msg['final_objects'].append(self)
 
-	    if obj: # we have a valid crits object which can be converted to STIX/CybOX
+	    supported = r['_type'] in ind_list or r['_type'] in obs_list
+	    if obj and supported: # we have a valid crits object which can be converted to STIX/CybOX
 		if obj._meta['crits_type'] == Indicator._meta['crits_type']:
 		    # convert Indicators to STIX indicators
 		    ind, releas = obj.to_stix_indicator()
