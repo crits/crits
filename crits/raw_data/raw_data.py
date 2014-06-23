@@ -252,3 +252,12 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
 	obj = Artifact(data, Artifact.TYPE_FILE)
         return ([Observable(obj)], self.releasability)
 
+    def stix_description(self):
+        return self.description
+
+    def stix_intent(self):
+        return "Observations"
+
+    def stix_title(self):
+        return self.data_type
+

@@ -6,6 +6,7 @@ from django.conf import settings
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.fields import getFileField
 
+from cybox.common.object_properties import CustomProperties, Property
 from cybox.objects.artifact_object import Artifact
 from cybox.objects.file_object import File
 from cybox.core import Observable
@@ -129,11 +130,17 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
             To get the cybox object as xml or json, call to_xml() or
             to_json(), respectively, on the resulting CybOX object.
         """
+	custom_prop = Property() # make a custom property so CRITs import can identify Certificate exports
+	custom_prop.name = "crits_type"
+	custom_prop.description = "Indicates the CRITs type of the object this CybOX object represents"
+	custom_prop._value = "Certificate"
 	obj = File() # represent cert information as file
 	obj.md5 = self.md5
 	obj.file_name = self.filename
 	obj.file_format = self.filetype
 	obj.size_in_bytes = self.size
+	obj.custom_properties = CustomProperties()
+	obj.custom_properties.append(custom_prop)
 	obs = Observable(obj)
 	data = self.filedata.read()
         if data: # if cert data available
@@ -141,4 +148,13 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
 	    a = Artifact(data, Artifact.TYPE_FILE) # create artifact w/data
 	    obj.add_related(a, "Child_Of") # relate artifact to file
         return ([obs], self.releasability)
+
+    def stix_description(self):
+        return self.description
+
+    def stix_intent(self):
+        return "Observations"
+
+    def stix_title(self):
+        return self.filename
 
