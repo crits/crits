@@ -3,6 +3,17 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: ssnow
+Date: 2014-06-23
+
+    Updating CRITs to expand the TAXII service. Within this repository, this
+    involves creating a to_stix method for crits objects within
+    crits_mongoengine.py. This method will need to be updated as more crits
+    objects can be converted into the STIX standard and potentially shared
+    via TAXII.
+
+    Related: updating STIX to v1.1.1.0 and CybOX to 2.1.0.4.
+
 Author: mgoffin
 Date: 2014-06-06
 
