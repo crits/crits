@@ -135,7 +135,7 @@ def add_screenshot(description, tags, source, method, reference, analyst,
     final_screenshots = []
 
     if screenshot_ids:
-        if not isinstance(screenshot_ids):
+        if not isinstance(screenshot_ids, list):
             screenshot_list = screenshot_ids.split(',')
         else:
             screenshot_list = screenshot_ids
