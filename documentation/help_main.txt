@@ -1302,15 +1302,17 @@ You can combine both only and exclude. The result will be all of the fields from
 only as long as they aren't in the exclude list, combined with any required
 fields.
 
-POST Examples:
+
+Examples:
 -------------------------------------------
 
 cURL:
 
         curl -F "filedata=@/path/to/file.pcap" -F "source=<your source>" http://localhost:1337/api/v1/pcaps/\?username\=<your username>\&api_key\=<your api key>
 
-Python Script:
+Python:
 
+Upload a PCAP file
         | import requests
 
         | url = 'http://localhost:8000/api/v1/pcaps/'
@@ -1324,7 +1326,70 @@ Python Script:
 
         | r = requests.post(url, data=data, files=files)
 
+Adding a Domain
 
+        | import requests
+
+        | url = 'http://localhost:8000/api/v1/domains/'
+
+        | data = {
+        |     'api_key': '<your api key>',
+        |     'username': '<your username>',
+        |     'source': '<source name>',
+        |     'domain': 'www.fakedomain.evil',
+        |     'ip': '127.0.0.2'
+        | }
+
+        | r = requests.post(url, data=data)
+        | if r.status_code == 201:
+        |     print "Successfully added "+params['domain']
+        
+Listing the Domains:
+        | import requests
+
+        | url = 'https://localhost:8443/api/v1/domains/'
+
+        | params = {
+        |     'api_key': '<your api key>',
+        |     'username': '<your username>',
+        | }
+
+        | r = requests.get(url, params=params, verify=False)
+        | r.json
+
+Ruby:
+
+Adding a Domain
+        | require 'net/http'
+        | uri= URI('http://127.0.0.1/api/v1/domains/')
+        | params = {
+        |     'username' => '<your username>',
+        |     'api_key' => '<your api key>',
+        |     'source' => '<source name>',
+        |     'domain'=>'ruby.evil.org'
+        | }
+
+        | res = Net::HTTP.post_form(uri,params)
+        | if res.code == "201" {
+        | 	print "Successfully added "+params['domain']
+        | }
+
+Listing the Domains
+        | require 'net/http'
+        | require 'json'
+        | uri= URI('http://127.0.0.1/api/v1/domains/')
+        | params = {
+        |     'username' => '<your username>',
+        |      'api_key' => '<your api key>'
+        | }
+        | uri.query = URI.encode_www_form(params)
+
+        | res=Net::HTTP.get_response(uri)
+        | result=JSON.load(res.body)
+
+
+      
+        
 Common POST Parameters
 -------------------------------------------
 
