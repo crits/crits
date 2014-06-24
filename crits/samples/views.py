@@ -198,6 +198,12 @@ def upload_file(request, related_md5=None):
             analyst = request.user.username
 
             if related_md5:
+                reload_page = True
+            else:
+                reload_page = False
+                related_md5 = form.cleaned_data['related_md5']
+
+            if related_md5:
                 # New sample inherits the campaigns of the related sample.
                 related_sample = Sample.objects(md5=related_md5).first()
                 if not related_sample:
@@ -207,10 +213,6 @@ def upload_file(request, related_md5=None):
                                               RequestContext(request))
                 related_sample.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
                 campaign = related_sample.campaign
-                related = True
-            else:
-                related_md5 = form.cleaned_data['related_md5']
-                related = False
 
             try:
                 if request.FILES:
@@ -281,7 +283,7 @@ def upload_file(request, related_md5=None):
                 if email_errmsg is not None:
                     msg = "<br>Error sending email: %s" % email_errmsg
                     response['message'] = response['message'] + msg
-                if related and response['success']:
+                if reload_page and response['success']:
                     return render_to_response('redirect.html',
                                               {'redirect_url': reverse('crits.samples.views.detail', args=[related_md5])},
                                               RequestContext(request))

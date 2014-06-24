@@ -1296,6 +1296,11 @@ def create_email_attachment(email, cleaned_data, reference, source, analyst,
                 'message': 'Unknown error; unable to upload file.'}
     if filename:
         filename = filename.strip()
+
+    # New sample inherits the campaigns of the related email.
+    email.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+    campaign = email.campaign
+
     try:
         if filedata:
             result = handle_uploaded_file(filedata,

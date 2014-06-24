@@ -11,6 +11,7 @@ from mongoengine.base import ValidationError
 from crits.core import form_consts
 from crits.campaigns.forms import CampaignForm
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
+from crits.core.crits_mongoengine import EmbeddedCampaign
 from crits.core.exceptions import ZipFileError
 from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list
@@ -428,6 +429,10 @@ def add_sample_for_event(event_id, data, analyst, filedata=None,
     method = data['method']
     if filename:
         filename = filename.strip()
+
+    # New sample inherits the campaigns of the related event.
+    event.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+    campaign = event.campaign
 
     try:
         if filedata:
