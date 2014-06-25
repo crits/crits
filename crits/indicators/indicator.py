@@ -259,15 +259,6 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
     def stix_title(self):
         return self.value
 
-    def add_activity(self, analyst, start_date, end_date, date, description, *args, **kwargs):
-        ea = EmbeddedActivity()
-        ea.analyst = analyst
-        ea.start_date = start_date
-        ea.end_date = end_date
-        ea.date = date
-        ea.description = description
-        self.activity.append(ea)
-
     def set_confidence(self, analyst, rating):
         """
         Set Indicator confidence.
