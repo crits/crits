@@ -238,7 +238,7 @@ def _get_config_error(service):
     if service['status'] == 'misconfigured':
         service_class = crits.services.manager.get_service_class(name)
         try:
-            service_class.validate(config)
+            service_class.parse_config(config.to_dict())
         except Exception as e:
             error = str(e)
     return error

@@ -124,29 +124,42 @@ class ServiceManager(object):
                 # Only register the service if it is valid.
                 logger.debug("Registering Service %s" % service_name)
                 svc_obj = CRITsService.objects(name=service_class.name).first()
+                service = service_class()
                 if not svc_obj:
                     svc_obj = CRITsService()
                     svc_obj.name = service_name
-                    if hasattr(service_class, 'get_config'):
+                    if hasattr(service, 'get_config'):
                         try:
-                            new_config = service_class().get_config({})
+                            new_config = service.get_config({})
                             svc_obj.config = AnalysisConfig(**new_config)
                         except ServiceConfigError:
                             svc_obj.status = "misconfigured"
                             msg = ("Service %s is misconfigured." %
                                    service_name)
                             logger.warning(msg)
+                        else:
+                            svc_obj.status = "available"
                 else:
-                    if hasattr(service_class, 'get_config'):
+                    if hasattr(service, 'get_config'):
                         existing_config = svc_obj.config.to_dict()
                         try:
-                            new_config = service_class().get_config(existing_config)
+                            new_config = service.get_config(existing_config)
                             svc_obj.config = AnalysisConfig(**new_config)
                         except ServiceConfigError:
                             svc_obj.status = "misconfigured"
                             msg = ("Service %s is misconfigured." %
                                    service_name)
                             logger.warning(msg)
+                        else:
+                            svc_obj.status = "available"
+                # Give the service a chance to tell us what is wrong with the
+                # config.
+                try:
+                    if hasattr(service, 'parse_config'):
+                        service.parse_config(svc_obj.config.to_dict())
+                except ServiceConfigError as e:
+                    svc_obj.status = "misconfigured"
+
                 svc_obj.description = service_description
                 svc_obj.version = service_version
                 svc_obj.supported_types = supported_types
@@ -606,183 +619,6 @@ class Service(object):
 
         raise NotImplementedError
 
-    @classmethod
-    def validate(cls, config):
-        """
-        Attempt to ensure a valid configuration for a service.
-
-        Raises a ServiceConfigError if there is anything wrong.
-        """
-
-        cls._basic_validate(config)
-        try:
-            cls._validate(config)
-        except ServiceConfigError:
-            # Re-raise any ServiceConfigErrors
-            raise
-        except Exception as e:
-            # Wrap any other Exceptions in a ServiceConfigError
-            trace = sys.exc_info()[2]
-            error = "%s: %s" % (e.__class__, e)
-            raise ServiceConfigError(error), None, trace
-
-    @classmethod
-    def _basic_validate(cls, config):
-        """
-        Attempt to ensure a valid configuration for a service.
-
-        Raises a ServiceConfigError if there is anything wrong.
-        """
-
-        default_keys = set([option.name for option in cls.default_config])
-        config_keys = set(config.keys())
-
-        missing_keys = default_keys - config_keys
-        extra_keys = config_keys - default_keys
-
-        #Ensure all settings in `default_config` are present in `config`
-        if missing_keys:
-            error = "Missing options: {%s}" % ", ".join(missing_keys)
-            raise ServiceConfigError(error)
-
-        # Ensure there are no extra settings
-        if extra_keys:
-            error = "Extra options: {%s}" % ", ".join(extra_keys)
-            raise ServiceConfigError(error)
-
-        for option in cls.default_config:
-            # Ensure all required STRING options are non-empty
-            if option.required and not config[option.name]:
-                error = "Option must not be blank: %s" % option.name
-                raise ServiceConfigError(error)
-
-    @classmethod
-    def _validate(cls, config):
-        """
-        Perform any service-specific configuration checks.
-
-        Service subclasses can override this method. It should raise
-        an Exception (either a ServiceConfigError or any other
-        Exception class) to indicate a problem with the configuration.
-        """
-
-        pass
-
-    @classmethod
-    def build_default_config(cls):
-        """
-        Return a dictionary of key/value pairs based on `default_config`
-
-        Uses the `name` and `default` value of each setting.
-        """
-
-        config = {}
-
-        for option in cls.default_config:
-            logger.debug(option)
-            config[option.name] = option.default
-
-        return config
-
-    @property
-    def public_config(self):
-        """
-        Return all the non-private config options for a service.
-        """
-
-        return self.__class__.get_public_config(self.config)
-
-    @classmethod
-    def get_public_config(cls, full_config):
-        """
-        Return a copy of full_config containting only non-private options.
-        """
-
-        config = {}
-
-        for option in cls.default_config:
-            key = option.name
-            if not option.private and not option.runtime_only:
-                config[key] = full_config[key]
-            else:
-                logger.debug("Omitting key %s" % key)
-
-        return config
-
-    @classmethod
-    def format_config(cls, config, clean=False, printable=True,
-                        private_string="[PRIVATE]"):
-        """
-        Format a config dictionary for display.
-
-        The dictionary is converted to a list of (name, value) tuples, in order
-        to preserve the intended order in a class's `default_config`.
-
-        If `clean` is `True`, all config settings which are private will have
-        their values replaced with the `private_string`.
-
-        If the config setting is runtime_only it will be left out.
-        """
-
-        config_list = []
-
-        # Preserve the ordering from cls.default_config
-        for option in cls.default_config:
-            key = option.name
-            if clean and option.private:
-                value = private_string
-                logger.debug("Hiding value for private option %s" % key)
-            elif option.runtime_only:
-                continue
-            else:
-                value = config[key]
-                value = option.format_value(value, printable=printable)
-            logger.debug("key: %s, value: %s" % (key, value))
-            config_list.append((key, value))
-
-        return config_list
-
-    @classmethod
-    def parse_config(cls, incoming_config, exclude_private=False):
-        """
-        Parse a dict containing config options.
-
-        Any necessary transformations are performed. Currently the only
-        transformation is converting a newline-delimited string into a list,
-        for config options of type ServiceConfigOption.LIST.
-        """
-
-        new_config = {}
-
-        logger.debug("Parsing %s:" % cls.name)
-        logger.debug(incoming_config)
-
-        for option in cls.default_config:
-            if option.private and exclude_private:
-                continue
-            key = option.name
-            value = incoming_config.get(key, '')
-            new_config[key] = option.parse_value(value)
-            logger.debug("key: %s, ingoing: %s, outcoming: %s" %
-                    (key,  value, new_config[key]))
-
-        logger.debug("Done parsing %s" % cls.name)
-        logger.debug(new_config)
-        return new_config
-
-    @classmethod
-    def replace_config_values(cls, config):
-        """
-        Call replace_value on each value in config dictionary.
-        """
-
-        new_config = {}
-
-        for option in cls.default_config:
-            key = option.name
-            new_config[key] = option.replace_value(config[key])
-
-        return new_config
 
     @staticmethod
     def valid_for(obj):
