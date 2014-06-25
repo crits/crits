@@ -306,7 +306,7 @@ def set_enabled(service_name, enabled=True, analyst=None):
         logger.info("Disabling: %s" % service_name)
     service = CRITsService.objects(name=service_name).first()
     service.enabled = enabled
-    
+
     try:
         service.save(username=analyst)
         if enabled:

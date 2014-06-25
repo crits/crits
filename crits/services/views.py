@@ -61,7 +61,6 @@ def detail(request, name):
     else:
         return render_to_response('error.html', {'error': results['error']},
                                   RequestContext(request))
-    
 
 
 @user_passes_test(user_is_admin)
