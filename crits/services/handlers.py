@@ -353,7 +353,7 @@ def enabled_services(status=True):
         services = CRITsService.objects(enabled=True)
     return [s.name for s in services]
 
-def get_supported_services(crits_type, data_exists):
+def get_supported_services(crits_type):
     """
     Get the supported services for a type.
     """
@@ -361,7 +361,7 @@ def get_supported_services(crits_type, data_exists):
     services = CRITsService.objects(enabled=True)
     for s in services:
         if s.supported_types == 'all' or crits_type in s.supported_types:
-            yield s
+            yield s.name
 
 def triage_services(status=True):
     """
