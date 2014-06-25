@@ -255,12 +255,14 @@ def do_edit_config(name, analyst, post_data=None):
     service_class = crits.services.manager.get_service_class(name)
 
     # This isn't a form object. It's the HTML.
-    status['form'] = make_edit_config_form(service_class, service)
+    config = service.config.to_dict()
+    status['form'] = make_edit_config_form(service_class, config, service.name)
     status['service'] = service
 
     if post_data:
         ServiceEditConfigForm = make_edit_config_form(service_class,
-                                                      service,
+                                                      config,
+                                                      service.name,
                                                       return_form=True)
         #Populate the form with values from the POST request
         form = ServiceEditConfigForm(post_data)
@@ -504,7 +506,7 @@ def update_analysis_results(task):
         obj_class.objects(id=obj_id,
                             analysis__id=task.task_id).update_one(set__analysis__S=ear)
 
-def make_edit_config_form(service_class, service, return_form=False):
+def make_edit_config_form(service_class, config, name, return_form=False):
     """
     Return a Django Form for editing a service's config.
 
@@ -513,14 +515,14 @@ def make_edit_config_form(service_class, service, return_form=False):
     """
 
     if hasattr(service_class, "generate_config_form"):
-        (form, html) = service_class.generate_config_form(service)
+        (form, html) = service_class.generate_config_form(name, config)
         if return_form:
             return form
         return html
     return None
 
-def make_run_config_form(service_class, config, name, request,
-                         analyst=None, crits_type=None, identifier=None,
+def make_run_config_form(service_class, config, name, analyst=None,
+                         crits_type=None, identifier=None,
                          return_form=False):
     """
     Return a Django form used when running a service.
@@ -541,8 +543,6 @@ def make_run_config_form(service_class, config, name, request,
     :type config: dict
     :param name: Name of the form to use.
     :type name: str
-    :param request: The Django request.
-    :type request: :class:`django.http.HttpRequest`
     :param analyst: The user requesting the form.
     :type analyst: str
     :param crits_type: The top-level object type.

@@ -142,8 +142,7 @@ def get_form(request, name, crits_type, identifier):
     response['name'] = name
     analyst = request.user.username
 
-    service = CRITsService.objects(name=name,
-                                   status__ne="unavailable").first()
+    service = CRITsService.objects(name=name, status__ne="unavailable").first()
     if not service:
         msg = 'Service "%s" is unavailable. Please review error logs.' % name
         response['error'] = msg
@@ -152,13 +151,11 @@ def get_form(request, name, crits_type, identifier):
     # Get the class that implements this service.
     service_class = crits.services.manager.get_service_class(name)
 
-    # format_config returns a list of tuples
-    config = service_class.format_config(service.config, printable=False)
+    config = service.config.to_dict()
 
     form_html = make_run_config_form(service_class,
                                      config,
                                      name,
-                                     request,
                                      analyst=analyst,
                                      crits_type=crits_type,
                                      identifier=identifier)
@@ -240,7 +237,6 @@ def service_run(request, name, crits_type, identifier):
     ServiceRunConfigForm = make_run_config_form(service_class,
                                                 config,
                                                 name,
-                                                request,
                                                 analyst=username,
                                                 crits_type=crits_type,
                                                 identifier=identifier,
