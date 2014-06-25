@@ -106,6 +106,7 @@ class ServiceManager(object):
             service_name = service_class.name
             service_version = service_class.version
             service_description = service_class.description
+            supported_types = service_class.supported_types
 
             logger.debug("Found service subclass: %s version %s" %
                             (service_name, service_version))
@@ -148,6 +149,7 @@ class ServiceManager(object):
                             logger.warning(msg)
                 svc_obj.description = service_description
                 svc_obj.version = service_version
+                svc_obj.supported_types = supported_types
                 svc_obj.save()
                 self._services[service_class.name] = service_class
 
