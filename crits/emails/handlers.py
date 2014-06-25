@@ -1127,7 +1127,7 @@ def generate_email_cybox(email_id):
 
     email = Email.objects(id=email_id).first()
     if email:
-        return email.to_cybox()[0][0]
+        return email.to_cybox_observable()[0][0]
     else:
         return None
 

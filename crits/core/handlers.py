@@ -948,7 +948,7 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
 
     for (oid, (otype, obj)) in objects.items():
         if otype == Email._meta['crits_type']:
-            (cyobj, releasability) = obj.to_cybox()
+            (cyobj, releasability) = obj.to_cybox_observable()
             observables.append(cyobj[0])
         elif otype == PCAP._meta['crits_type']:
             if obj.filedata:
@@ -966,7 +966,7 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                         (data, ext) = format_file(obj.filedata.read(), bin_fmt)
                         to_zip.append((obj.filename + ext, data))
             else:
-                (cyobj, releasability) = obj.to_cybox()
+                (cyobj, releasability) = obj.to_cybox_observable()
                 # to_cybox()[0] on a sample returns a list. If there is no
                 # backing binary the list will be one item long (the cybox
                 # FileObject). If there is a backing binary the list will be

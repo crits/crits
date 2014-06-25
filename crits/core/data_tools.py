@@ -327,7 +327,8 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
     elif data_format == "json":
         data = json.dumps(json.loads(data))
     elif data_format == "cybox":
-        data = obj_class.to_cybox()[0][0].to_xml()
+	if hasattr(obj_class, "to_cybox_observable"):
+	    data = obj_class.to_cybox_observable()[0][0].to_xml()
 
     return data
 
