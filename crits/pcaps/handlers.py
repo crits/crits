@@ -1,4 +1,4 @@
-import crits.service_env
+import crits.services
 import datetime
 import hashlib
 import json
@@ -89,7 +89,7 @@ def get_pcap_details(md5, analyst):
         favorite = is_user_favorite("%s" % analyst, 'PCAP', pcap.id)
 
         # services
-        manager = crits.service_env.manager
+        manager = crits.services.manager
         # Assume all PCAPs have the data available
         service_list = manager.get_supported_services('PCAP', True)
 

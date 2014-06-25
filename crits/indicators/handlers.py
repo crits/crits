@@ -1,4 +1,4 @@
-import crits.service_env
+import crits.services
 import csv
 import datetime
 import json
@@ -220,7 +220,7 @@ def get_indicator_details(indicator_id, analyst):
     favorite = is_user_favorite("%s" % analyst, 'Indicator', indicator.id)
 
     # services
-    manager = crits.service_env.manager
+    manager = crits.services.manager
     service_list = manager.get_supported_services('Indicator', True)
 
     args = {'objects': objects,

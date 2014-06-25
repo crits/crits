@@ -1,4 +1,4 @@
-import crits.service_env
+import crits.services
 import datetime
 import hashlib
 import json
@@ -110,7 +110,7 @@ def get_raw_data_details(_id, analyst):
         favorite = is_user_favorite("%s" % analyst, 'RawData', raw_data.id)
 
         # services
-        manager = crits.service_env.manager
+        manager = crits.services.manager
         service_list = manager.get_supported_services('RawData', True)
 
         args = {'service_list': service_list,

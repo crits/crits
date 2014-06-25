@@ -1,4 +1,3 @@
-import crits.service_env
 import datetime
 import hashlib
 import json
@@ -9,6 +8,8 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from mongoengine.base import ValidationError
+
+import crits.services
 
 from crits.core.class_mapper import class_from_id, class_from_value
 from crits.core.crits_mongoengine import EmbeddedSource
@@ -86,7 +87,7 @@ def get_certificate_details(md5, analyst):
         screenshots = cert.get_screenshots(analyst)
 
         # services
-        manager = crits.service_env.manager
+        manager = crits.services.manager
         service_list = manager.get_supported_services('Certificate', True)
 
         args = {'service_list': service_list,

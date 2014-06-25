@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-import crits.service_env
+import crits.services
 
 from crits.core import form_consts
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
@@ -188,7 +188,7 @@ def get_ip_details(ip, analyst):
         favorite = is_user_favorite("%s" % analyst, 'IP', ip.id)
 
         # services
-        manager = crits.service_env.manager
+        manager = crits.services.manager
         service_list = manager.get_supported_services('IP', True)
 
         args = {'objects': objects,

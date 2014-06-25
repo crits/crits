@@ -1,4 +1,4 @@
-import crits.service_env
+import crits.services
 import json
 import logging
 import os
@@ -167,7 +167,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
         favorite = is_user_favorite("%s" % analyst, 'Sample', sample.id)
 
         # services
-        manager = crits.service_env.manager
+        manager = crits.services.manager
         service_list = manager.get_supported_services('Sample', binary_exists)
 
         args = {'objects': objects,

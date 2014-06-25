@@ -13,7 +13,8 @@ import uuid
 
 from django.conf import settings
 
-from crits.core.crits_mongoengine import EmbeddedAnalysisResult
+from crits.core.crits_mongoengine import EmbeddedAnalysisResult, AnalysisConfig
+from crits.services.service import CRITsService
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +105,7 @@ class ServiceManager(object):
 
             service_name = service_class.name
             service_version = service_class.version
+            service_description = service_class.description
 
             logger.debug("Found service subclass: %s version %s" %
                             (service_name, service_version))
@@ -120,19 +122,34 @@ class ServiceManager(object):
             else:
                 # Only register the service if it is valid.
                 logger.debug("Registering Service %s" % service_name)
-                self._services[service_name] = service_class
-
-    def get_config(self, service_name):
-        """
-        Get a service configuration.
-
-        :param service_name: The name of the service to get the config for.
-        :type service_name: str
-        :returns: dict
-        """
-
-        #TODO: how to configure services from the command line?
-        return self.get_service_class(service_name).build_default_config()
+                svc_obj = CRITsService.objects(name=service_class.name).first()
+                if not svc_obj:
+                    svc_obj = CRITsService()
+                    svc_obj.name = service_name
+                    if hasattr(service_class, 'get_config'):
+                        try:
+                            new_config = service_class().get_config({})
+                            svc_obj.config = AnalysisConfig(**new_config)
+                        except ServiceConfigError:
+                            svc_obj.status = "misconfigured"
+                            msg = ("Service %s is misconfigured." %
+                                   service_name)
+                            logger.warning(msg)
+                else:
+                    if hasattr(service_class, 'get_config'):
+                        existing_config = svc_obj.config.to_dict()
+                        try:
+                            new_config = service_class().get_config(existing_config)
+                            svc_obj.config = AnalysisConfig(**new_config)
+                        except ServiceConfigError:
+                            svc_obj.status = "misconfigured"
+                            msg = ("Service %s is misconfigured." %
+                                   service_name)
+                            logger.warning(msg)
+                svc_obj.description = service_description
+                svc_obj.version = service_version
+                svc_obj.save()
+                self._services[service_class.name] = service_class
 
     def get_service_class(self, service_name):
         """
@@ -488,19 +505,15 @@ class Service(object):
     # whether or not this service is distributed.
     distributed = False
 
-    def __init__(self, config, notify=None, complete=None):
+    def __init__(self, notify=None, complete=None):
         """
         Create a new service.
 
-        - `config` is a dictionary containing configuration options for this
-          service.
         - `notify` is a function that should be called to report on the
           progress of the current task.
         - `complete` is a function that should be called when current_task
           is done.
         """
-
-        self.config = config
 
         # Register callback functions
         self.notify = notify
