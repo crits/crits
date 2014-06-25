@@ -4,6 +4,9 @@
 {% block title %} Services {% endblock %}
 
 {% block content %}
+<div>
+    <p><a href="{% url 'crits.services.views.list' %}">Back to Service List</a></p>     
+</div>
 {% include "services_detail_widget.html" %}
 
         {{ form }}
