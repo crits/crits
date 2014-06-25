@@ -460,7 +460,7 @@ phrase.</p>
 <li><a class="reference internal" href="#api-urls" id="id74">17.1&nbsp;&nbsp;&nbsp;API URLs</a></li>
 <li><a class="reference internal" href="#searching-using-get-parameters" id="id75">17.2&nbsp;&nbsp;&nbsp;Searching Using GET Parameters</a></li>
 <li><a class="reference internal" href="#limiting-get-request-results" id="id76">17.3&nbsp;&nbsp;&nbsp;Limiting GET Request Results</a></li>
-<li><a class="reference internal" href="#post-examples" id="id77">17.4&nbsp;&nbsp;&nbsp;POST Examples:</a></li>
+<li><a class="reference internal" href="#examples" id="id77">17.4&nbsp;&nbsp;&nbsp;API Examples:</a></li>
 <li><a class="reference internal" href="#common-post-parameters" id="id78">17.5&nbsp;&nbsp;&nbsp;Common POST Parameters</a></li>
 <li><a class="reference internal" href="#campaign-api" id="id79">17.6&nbsp;&nbsp;&nbsp;Campaign API</a></li>
 <li><a class="reference internal" href="#certificate-api" id="id80">17.7&nbsp;&nbsp;&nbsp;Certificate API</a></li>
@@ -1890,12 +1890,13 @@ so if you do not include them they will complain.</p>
 only as long as they aren't in the exclude list, combined with any required
 fields.</p>
 </div>
-<div class="section" id="post-examples">
-<h2><a class="toc-backref" href="#id77">17.4&nbsp;&nbsp;&nbsp;POST Examples:</a></h2>
-<p>cURL:</p>
+<div class="section" id="examples">
+<h2><a class="toc-backref" href="#id77">17.4&nbsp;&nbsp;&nbsp;Examples:</a></h2>
+<h3>cURL:</h3>
 <blockquote>
 curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/file.pcap">filedata=&#64;/path/to/file.pcap</a>&quot; -F &quot;source=&lt;your source&gt;&quot; <a class="reference external" href="http://localhost:1337/api/v1/pcaps/">http://localhost:1337/api/v1/pcaps/</a>?username=&lt;your username&gt;&amp;api_key=&lt;your api key&gt;</blockquote>
-<p>Python Script:</p>
+<h3>Python:</h3>
+<p><strong>Upload a PCAP file</strong></p>
 <blockquote>
 <div class="line-block">
 <div class="line">import requests</div>
@@ -1915,6 +1916,97 @@ curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/
 </div>
 <div class="line-block">
 <div class="line">r = requests.post(url, data=data, files=files)</div>
+</div>
+</blockquote>
+<p><strong>Adding a Domain</strong></p>
+<blockquote>
+<div class="line-block">
+<div class="line">import requests</div>
+</div>
+<div class="line-block">
+<div class="line">url = '<a class="reference external" href="http://localhost:8000/api/v1/domains/">http://localhost:8000/api/v1/domains/</a>'</div>
+</div>
+<div class="line-block">
+<div class="line">data = {</div>
+<div class="line-block">
+<div class="line">'api_key': '&lt;your api key&gt;',</div>
+<div class="line">'username': '&lt;your username&gt;',</div>
+<div class="line">'source': '&lt;source name&gt;',</div>
+<div class="line">'domain': 'www.fakedomain.evil',</div>
+<div class="line">'ip': '127.0.0.2'</div>
+</div>
+<div class="line">}</div>
+</div>
+<div class="line-block">
+<div class="line">r = requests.post(url, data=data)</div>
+<div class="line">if r.status_code == 201:</div>
+<div class="line-block">
+<div class="line">print "Successfully added "+params['domain']</div>
+</div>
+</div>
+</blockquote>
+<p><strong>Getting a list of the domains</strong> from a self-signed certificated instance. We forgo the certificate verification until apropriately loading it into the certificate store</p>
+<blockquote>
+<div class="line-block">
+<div class="line">import requests</div>
+</div>
+<div class="line-block">
+<div class="line">url = '<a class="reference external" href="https://localhost:8443/api/v1/domains/">https://localhost:8443/api/v1/domains/</a>'</div>
+</div>
+<div class="line-block">
+<div class="line">params = {</div>
+<div class="line-block">
+<div class="line">'api_key': '&lt;your api key&gt;',</div>
+<div class="line">'username': '&lt;your username&gt;',</div>
+</div>
+<div class="line">}</div>
+</div>
+<div class="line-block">
+<div class="line">r = requests.get(url, params=params, verify=False)</div>
+<div class="line">r.json</div>
+</div>
+</blockquote>
+<h3>Ruby:</h3>
+<strong>Adding a Domain</strong>
+<blockquote>
+<div class="line-block">
+<div class="line">require 'net/http'</div>
+<div class="line">uri= URI('http://127.0.0.1/api/v1/domains/')</div>
+<div class="line">params = { </div>
+<div class="line-block">
+<div class="line">'username' => '&lt;your username&gt;',</div>
+<div class="line">'api_key' => '&lt;your api key&gt;',</div>
+<div class="line">'source' => '&lt;source name&gt;',</div>
+<div class="line">'domain'=>'ruby.evil.org'</div>
+</div>
+<div class="line">}</div>
+</div>
+<div class="line-block">
+<div class="line">res = Net::HTTP.post_form(uri,params)</div>
+<div class="line">if res.code == "201" {</div>
+<div class="line-block">
+<div class="line">print "Successfully added "+params['domain']</div>
+</div>
+<div class="line">}</div>
+</div>
+</blockquote>
+<strong>Listing the Domains</strong>
+<blockquote>
+<div class="line-block">
+<div class="line">require 'net/http'</div>
+<div class="line">require 'json'</div>
+<div class="line">uri= URI('http://127.0.0.1/api/v1/domains/')</div>
+<div class="line">params = { </div>
+<div class="line-block">
+<div class="line">'username' => '&lt;your username&gt;',</div>
+<div class="line">'api_key' => '&lt;your api key&gt;',</div>
+</div>
+<div class="line">}</div>
+<div class="line">uri.query = URI.encode_www_form(params)</div>
+</div>
+<div class="line-block">
+<div class="line">res=Net::HTTP.get_response(uri)</div>
+<div class="line">result=JSON.load(res.body)</div>
 </div>
 </blockquote>
 </div>
