@@ -720,6 +720,8 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     zipdir = ""
     extractdir = ""
     try:
+        zip_md5 = md5(data).hexdigest()
+
         # 7z doesn't decompress archives via stdin, therefore
         # we need to write it out as a file first
         zipdir = tempfile.mkdtemp(dir=temproot)
@@ -760,6 +762,10 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
             proc.terminate()
             raise ZipFileError, "Unzip process failed to terminate"
         else:
+            if related_md5 and related_md5 == zip_md5:
+                relationship = "Compressed_Into"
+            else:
+                relationship = "Related_To"
             for root, dirs, files in os.walk(extractdir):
                 for filename in files:
                     filepath = extractdir + "/" + filename
@@ -774,7 +780,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                                              method=method,
                                              bucket_list=bucket_list,
                                              ticket=ticket,
-                                             relationship="Compressed_From")
+                                             relationship=relationship)
                     if new_sample:
                         samples.append(new_sample)
                     filehandle.close()
@@ -834,6 +840,8 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
 
     samples = []
     try:
+        rar_md5 = md5(data).hexdigest()
+
         # write the data to a file so we can read from it as a rar file
         temproot = settings.TEMP_DIR
         rardir = tempfile.mkdtemp(dir=temproot)
@@ -871,6 +879,10 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
             proc.terminate()
             raise ZipFileError, "Unrar process failed to terminate"
         else:
+            if related_md5 and related_md5 == rar_md5:
+                relationship = "Compressed_Into"
+            else:
+                relationship = "Related_To"
             for root, dirs, files in os.walk(rardir):
                 for filename in files:
                     filepath = os.path.join(rardir, filename)
@@ -888,7 +900,7 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
                                                      method=method,
                                                      bucket_list=bucket_list,
                                                      ticket=ticket,
-                                                     relationship="Compressed_From")
+                                                     relationship=relationship)
                             samples.append(new_sample)
     except ZipFileError:
         raise
