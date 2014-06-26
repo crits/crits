@@ -247,9 +247,6 @@ def upload_file(request, related_md5=None):
                         method=method,
                         is_return_only_md5=False)
 
-                if 'email' in request.POST:
-                    for s in result:
-                        email_errmsg = mail_sample(s, [request.user.email])
             except ZipFileError, zfe:
                 return render_to_response('file_upload_response.html',
                                           {'response': json.dumps({'success': False,
@@ -263,6 +260,7 @@ def upload_file(request, related_md5=None):
                                          args=[filedata.name, result]))
                     response = {'success': True,
                                 'message': message }
+                    md5_response = result
                 elif len(result) == 1:
                     md5_response = None
                     if not request.FILES:
@@ -270,27 +268,30 @@ def upload_file(request, related_md5=None):
                         if(response['success'] == False):
                             response['message'] = result[0].get('message', response.get('message'))
                         else:
-                            md5_response = result[0].get('object').md5
+                            md5_response = [result[0].get('object').md5]
                     else:
-                        md5_response = result[0]
+                        md5_response = [result[0]]
                         response['success'] = True
 
                     if md5_response != None:
                         response['message'] = ('File uploaded successfully. <a href="%s">View Sample.</a>'
                                                % reverse('crits.samples.views.detail',
-                                                         args=[md5_response]))
+                                                         args=md5_response))
 
-                if email_errmsg is not None:
-                    msg = "<br>Error sending email: %s" % email_errmsg
-                    response['message'] = response['message'] + msg
-                if reload_page and response['success']:
-                    return render_to_response('redirect.html',
-                                              {'redirect_url': reverse('crits.samples.views.detail', args=[related_md5])},
-                                              RequestContext(request))
-                else:
-                    return render_to_response("file_upload_response.html",
-                                              {'response': json.dumps(response)},
-                                              RequestContext(request))
+                if response['success']:
+                    if request.POST.get('email'):
+                        for s in md5_response:
+                            email_errmsg = mail_sample(s, [request.user.email])
+                            if email_errmsg is not None:
+                                msg = "<br>Error emailing sample %s: %s\n" % (s, email_errmsg)
+                                response['message'] = response['message'] + msg
+                    if reload_page:
+                        return render_to_response('redirect.html',
+                                                  {'redirect_url': reverse('crits.samples.views.detail', args=[related_md5])},
+                                                  RequestContext(request))
+                return render_to_response("file_upload_response.html",
+                                          {'response': json.dumps(response)},
+                                          RequestContext(request))
         else:
             if related_md5: #if this is a 'related' upload, remove field so it doesn't reappear
                 del form.fields['related_md5']
