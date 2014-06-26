@@ -212,8 +212,7 @@ def get_service_config(name):
 
     config = service.config.to_dict()
     service_class = crits.services.manager.get_service_class(name)
-    if hasattr(service_class, 'get_config_details'):
-        config = service_class.get_config_details(config)
+    config = service_class.get_config_details(config)
 
     status['config'] = config
     status['config_error'] = _get_config_error(service)
@@ -514,12 +513,10 @@ def make_edit_config_form(service_class, config, name, return_form=False):
     configuration.
     """
 
-    if hasattr(service_class, "generate_config_form"):
-        (form, html) = service_class.generate_config_form(name, config)
-        if return_form:
-            return form
-        return html
-    return None
+    (form, html) = service_class.generate_config_form(name, config)
+    if return_form:
+        return form
+    return html
 
 def make_run_config_form(service_class, config, name, analyst=None,
                          crits_type=None, identifier=None,
@@ -553,13 +550,11 @@ def make_run_config_form(service_class, config, name, analyst=None,
     :type return_form: boolean
     """
 
-    if hasattr(service_class, "generate_runtime_form"):
-        (form, html) = service_class.generate_runtime_form(analyst,
-                                                           name,
-                                                           config,
-                                                           crits_type,
-                                                           identifier)
-        if return_form:
-            return form
-        return html
-    return None
+    (form, html) = service_class.generate_runtime_form(analyst,
+                                                       name,
+                                                       config,
+                                                       crits_type,
+                                                       identifier)
+    if return_form:
+        return form
+    return html

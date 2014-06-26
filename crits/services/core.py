@@ -128,35 +128,30 @@ class ServiceManager(object):
                 if not svc_obj:
                     svc_obj = CRITsService()
                     svc_obj.name = service_name
-                    if hasattr(service, 'get_config'):
-                        try:
-                            new_config = service.get_config({})
-                            svc_obj.config = AnalysisConfig(**new_config)
-                        except ServiceConfigError:
-                            svc_obj.status = "misconfigured"
-                            msg = ("Service %s is misconfigured." %
-                                   service_name)
-                            logger.warning(msg)
-                        else:
-                            svc_obj.status = "available"
+                    try:
+                        new_config = service.get_config({})
+                        svc_obj.config = AnalysisConfig(**new_config)
+                    except ServiceConfigError:
+                        svc_obj.status = "misconfigured"
+                        msg = ("Service %s is misconfigured." % service_name)
+                        logger.warning(msg)
+                    else:
+                        svc_obj.status = "available"
                 else:
-                    if hasattr(service, 'get_config'):
-                        existing_config = svc_obj.config.to_dict()
-                        try:
-                            new_config = service.get_config(existing_config)
-                            svc_obj.config = AnalysisConfig(**new_config)
-                        except ServiceConfigError:
-                            svc_obj.status = "misconfigured"
-                            msg = ("Service %s is misconfigured." %
-                                   service_name)
-                            logger.warning(msg)
-                        else:
-                            svc_obj.status = "available"
+                    existing_config = svc_obj.config.to_dict()
+                    try:
+                        new_config = service.get_config(existing_config)
+                        svc_obj.config = AnalysisConfig(**new_config)
+                    except ServiceConfigError:
+                        svc_obj.status = "misconfigured"
+                        msg = ("Service %s is misconfigured." % service_name)
+                        logger.warning(msg)
+                    else:
+                        svc_obj.status = "available"
                 # Give the service a chance to tell us what is wrong with the
                 # config.
                 try:
-                    if hasattr(service, 'parse_config'):
-                        service.parse_config(svc_obj.config.to_dict())
+                    service.parse_config(svc_obj.config.to_dict())
                 except ServiceConfigError as e:
                     svc_obj.status = "misconfigured"
 
@@ -535,6 +530,52 @@ class Service(object):
         self.complete = complete
 
         self.current_task = None
+
+    @staticmethod
+    def parse_config(config):
+        """
+        Check a config for validity.
+
+        This should be overridden by subclasses.
+        """
+        return config
+
+    @staticmethod
+    def get_config(existing_config):
+        """
+        Get configuration for this service. It takes the existing config
+        from the database as a parameter so it can modify if necessary.
+
+        This should be overridden by subclasses.
+        """
+        return existing_config
+
+    @staticmethod
+    def get_config_details(config):
+        """
+        Convert a service configuration for presentation.
+
+        This should be overridden by subclasses.
+        """
+        return config
+
+    @staticmethod
+    def generate_config_form(name, config):
+        """
+        Generate a form and HTML for configuration.
+
+        This should be overridden by subclasses.
+        """
+        return None, None
+
+    @staticmethod
+    def generate_runtime_form(analyst, name, config, crits_type, identifier):
+        """
+        Generate a form and HTML for runtime.
+
+        This should be overridden by subclasses.
+        """
+        return None, None
 
     def set_task(self, task):
         """
