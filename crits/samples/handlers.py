@@ -643,14 +643,15 @@ def handle_unrar_sample(md5, user=None, password=None):
     :raises: ZipFileError, Exception
     """
 
-    sample = Sample.objects(md5=md5).first()
+    sample = class_from_value('Sample', md5)
     if not sample:
         return None
     data = sample.filedata.read()
-    source = sample.source
+    source = sample.source[0].name
+    campaign = sample.campaign
     reference = None
-    return unrar_file(md5, user, password, data, source,
-                      reference=reference, related_md5=md5, method="Unrar")
+    return unrar_file(md5, user, password, data, source, campaign,
+                      reference=reference, related_md5=md5, method="Unrar Existing Sample")
 
 def handle_unzip_file(md5, user=None, password=None):
     """
@@ -670,11 +671,11 @@ def handle_unzip_file(md5, user=None, password=None):
     if not sample:
         return
     data = sample.filedata.read()
-    source = sample.source
+    source = sample.source[0].name
     campaign = sample.campaign
     reference = None
     return unzip_file(md5, user, password, data, source, campaign,
-                      reference=reference, related_md5=md5, method="Unzip")
+                      reference=reference, related_md5=md5, method="Unzip Existing Sample")
 
 def unzip_file(filename, user=None, password=None, data=None, source=None,
                campaign=None, confidence='low', reference=None,
