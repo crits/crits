@@ -73,6 +73,11 @@
         {% else %}
             var subscription_type = false;
         {% endif %}
+        {% if subscription.id %}
+            var subscription_id = "{{ subscription.id }}";
+        {% else %}
+            var subscription_id = false;
+        {% endif %}
         {% if favorite %}
             var is_favorite = "{{ favorite }}";
         {% endif %}
@@ -333,6 +338,9 @@
     {% endif %}
     <li class='nav_main mmenu_item'>
       <a href="{% url 'crits.core.views.bucket_list' %}">Bucket Lists</a>
+    </li>
+    <li class='nav_main mmenu_item'>
+      <a href="{% url 'crits.core.views.sector_list' %}">Sector Lists</a>
     </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.campaigns.views.campaigns_listing' %}">Campaigns</a>

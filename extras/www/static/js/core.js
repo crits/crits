@@ -53,7 +53,7 @@ function processLogin() {
                 var timer_element = $('<span id="timer"><br />Please wait ' + count + ' seconds.</span>');
                 login_submit_button.attr('disabled', true).addClass("disabled");
                 $('#ajax_response').html(data.message);
-                $('.login_box').append(timer_element);
+                $('#login_form').append(timer_element);
                 function timer() {
                     count = count - 1;
                     if (count <= 0) {
@@ -546,8 +546,10 @@ function jtRecordsLoaded(event,data, button) {
     });
     // Light up the favorite icon for any that are favorites.
     favorites_list = user_favorites[data.serverResponse.crits_type];
-    for (var id = 0; id < favorites_list.length; id++) {
-        $('span#' + favorites_list[id] + '.favorites_icon_jtable').css('background-color', '#1AC932').addClass('favorites_icon_active');
+    if (favorites_list) {
+        for (var id = 0; id < favorites_list.length; id++) {
+            $('span#' + favorites_list[id] + '.favorites_icon_jtable').css('background-color', '#1AC932').addClass('favorites_icon_active');
+        }
     }
 
     // Also add an attribute for the data type.

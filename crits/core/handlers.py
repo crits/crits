@@ -30,6 +30,7 @@ from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.source_access import SourceAccess
 from crits.core.data_tools import create_zip, format_file
 from crits.core.mongo_tools import mongo_connector, get_file
+from crits.core.sector import Sector, SectorObject
 from crits.core.user import CRITsUser, EmbeddedSubscriptions
 from crits.core.user import EmbeddedLoginAttempt
 from crits.core.user_tools import user_sources, is_admin
@@ -1448,6 +1449,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         # slightly slow in larger collections
         'object_value': {'objects.value': search_query},
         'bucket_list': {'bucket_list': search_query},
+        'sectors': {'sectors': search_query},
         'source': {'source.name': search_query},
     }
 
@@ -1458,6 +1460,8 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         return query
     elif search_type == "bucket_list":
         query = {'bucket_list': search_query}
+    elif search_type == "sectors":
+        query = {'sectors': search_query}
     # object_ comes from the core/views.py search function.
     # It joins search_type with otype
     elif search_type.startswith("object_"):
@@ -1551,6 +1555,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             search_list = [{'name': search_query}]
         search_list.append({'source.instances.reference':search_query})
         search_list.append({'bucket_list': search_query})
+        search_list.append({'sectors': search_query})
         query = {'$or': search_list}
     else:
         if type_ == "Domain":
@@ -3924,3 +3929,163 @@ def unflatten(dictionary):
             d = d[part]
         d[parts[-1]] = value
     return resultDict
+
+def alter_sector_list(obj, sectors, val):
+    """
+    Given a list of sectors on this object, increment or decrement
+    the sectors objects accordingly. This is used when adding
+    or removing a sector list to an item, and when deleting an item.
+
+    :param obj: The top-level object instantiated class.
+    :type obj: class which inherits from
+               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`.
+    :param sectors: List of sectors.
+    :type sectors: list
+    :param val: The amount to change the count by.
+    :type val: int
+    """
+
+    # This dictionary is used to set values on insert only.
+    # I haven't found a way to get mongoengine to use the defaults
+    # when doing update_one() on the queryset.
+    soi = { k: 0 for k in Sector._meta['schema_doc'].keys() if k != 'name' and k != obj._meta['crits_type'] }
+    soi['schema_version'] = Sector._meta['latest_schema_version']
+
+    # We are using mongo_connector here because mongoengine does not have
+    # support for a setOnInsert option. If mongoengine were to gain support
+    # for this we should switch to using it instead of pymongo here.
+    sectors_col = mongo_connector(settings.COL_SECTOR_LISTS)
+    for name in sectors:
+        sectors_col.update({'name': name},
+                           {'$inc': {obj._meta['crits_type']: val},
+                            '$setOnInsert': soi},
+                           upsert=True)
+
+        # Find and remove this sector if, and only if, all counts are zero.
+        if val == -1:
+            Sector.objects(name=name,
+                           Campaign=0,
+                           Certificate=0,
+                           Domain=0,
+                           Email=0,
+                           Event=0,
+                           Indicator=0,
+                           IP=0,
+                           PCAP=0,
+                           RawData=0,
+                           Sample=0,
+                           Target=0).delete()
+
+def generate_sector_csv(request):
+    """
+    Generate CSV output for the Sector list.
+
+    :param request: The request for this CSV.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    return csv_export(request, Sector)
+
+def generate_sector_jtable(request, option):
+    """
+    Generate the jtable data for rendering in the sector list template.
+
+    :param request: The request for this jtable.
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Action to take.
+    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if option == 'jtlist':
+        details_url = 'crits.core.views.sector_list'
+        details_key = 'name'
+        response = jtable_ajax_list(Sector,
+                                    details_url,
+                                    details_key,
+                                    request,
+                                    includes=['name',
+                                              'Campaign',
+                                              'Certificate',
+                                              'Domain',
+                                              'Email',
+                                              'Event',
+                                              'Indicator',
+                                              'IP',
+                                              'PCAP',
+                                              'RawData',
+                                              'Sample',
+                                              'Target'])
+        return HttpResponse(json.dumps(response, default=json_handler),
+                            content_type='application/json')
+
+    fields = ['name', 'Campaign', 'Certificate', 'Domain', 'Email', 'Event',
+              'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target']
+    jtopts = {'title': 'Sectors',
+              'fields': fields,
+              'listurl': 'jtlist',
+              'searchurl': reverse('crits.core.views.global_search_listing'),
+              'default_sort': 'name ASC',
+              'no_sort': [],
+              'details_link': ''}
+    jtable = build_jtable(jtopts, request)
+    for ctype in fields:
+        if ctype == 'id':
+            continue
+        elif ctype == 'name':
+            url = reverse('crits.core.views.global_search_listing') + '?search_type=sectors&search=Search&force_full=1'
+        else:
+            lower = ctype.lower()
+            if lower != "rawdata":
+                url = reverse('crits.%ss.views.%ss_listing' % (lower, lower))
+            else:
+                lower = "raw_data"
+                url = reverse('crits.%s.views.%s_listing' % (lower, lower))
+
+        for field in jtable['fields']:
+            if field['fieldname'].startswith("'" + ctype):
+                if ctype == 'name':
+                    field['display'] = """ function (data) {
+                    return '<a href="%s&q='+data.record.name+'">' + data.record.name + '</a>';
+                    }
+                    """ % url
+                else:
+                    field['display'] = """ function (data) {
+                    return '<a href="%s?sectors='+data.record.name+'">'+data.record.%s+'</a>';
+                    }
+                    """ % (url, ctype)
+    return render_to_response('sector_lists.html',
+                              {'jtable': jtable,
+                               'jtid': 'sector_lists'},
+                              RequestContext(request))
+
+def modify_sector_list(itype, oid, sectors, analyst):
+    """
+    Modify the sector list for a top-level object.
+
+    :param itype: The CRITs type of the top-level object to modify.
+    :type itype: str
+    :param oid: The ObjectId to search for.
+    :type oid: str
+    :param sectors: The list of sectors.
+    :type sectors: list
+    :param analyst: The user making the modifications.
+    """
+
+    obj = class_from_id(itype, oid)
+    if not obj:
+        return
+
+    obj.add_sector_list(sectors, analyst, append=False)
+
+    try:
+        obj.save(username=analyst)
+    except ValidationError:
+        pass
+
+def get_sector_options():
+    sectors = SectorObject.objects()
+    sector_list = [s.name for s in sectors]
+    return HttpResponse(json.dumps(sector_list, default=json_handler),
+                        content_type='application/json')

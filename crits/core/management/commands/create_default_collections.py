@@ -8,6 +8,7 @@ from create_indexes import create_indexes
 from create_event_types import add_event_types
 from create_object_types import add_object_types
 from create_relationship_types import add_relationship_types
+from create_sectors import add_sector_objects
 from setconfig import create_config_if_not_exist
 
 from crits.core.user_role import UserRole
@@ -61,6 +62,7 @@ class Command(BaseCommand):
         add_relationship_types(drop)
         add_object_types(drop)
         add_event_types(drop)
+        add_sector_objects(drop)
         create_config_if_not_exist()
         create_indexes()
 
