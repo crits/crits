@@ -36,7 +36,7 @@ from crits.core.handlers import generate_sector_jtable, generate_sector_csv
 from crits.core.handlers import generate_dashboard, generate_global_search
 from crits.core.handlers import login_user, reset_user_password
 from crits.core.handlers import generate_user_profile, generate_user_preference
-from crits.core.handlers import modify_source_access
+from crits.core.handlers import modify_source_access, get_bucket_autocomplete
 from crits.core.handlers import dns_timeline, email_timeline, indicator_timeline
 from crits.core.handlers import generate_users_jtable, generate_items_jtable
 from crits.core.handlers import toggle_item_state, download_grid_file
@@ -1934,4 +1934,20 @@ def get_available_sectors(request):
 
     if request.method == "POST" and request.is_ajax():
         return get_sector_options()
+    return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def bucket_autocomplete(request):
+    """
+    Get the list of current buckets to autocomplete.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        term = request.POST.get('term', None)
+        if term:
+            return get_bucket_autocomplete(term)
     return HttpResponse({})

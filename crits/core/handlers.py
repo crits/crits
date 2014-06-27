@@ -4085,7 +4085,27 @@ def modify_sector_list(itype, oid, sectors, analyst):
         pass
 
 def get_sector_options():
+    """
+    Get available sector options.
+
+    :returns: list
+    """
+
     sectors = SectorObject.objects()
     sector_list = [s.name for s in sectors]
     return HttpResponse(json.dumps(sector_list, default=json_handler),
+                        content_type='application/json')
+
+def get_bucket_autocomplete(term):
+    """
+    Get existing buckets to autocomplete.
+
+    :param term: The current term to look for autocomplete options.
+    :type term: str
+    :returns: list
+    """
+
+    results = Bucket.objects(name__istartswith=term)
+    buckets = [b.name for b in results]
+    return HttpResponse(json.dumps(buckets, default=json_handler),
                         content_type='application/json')
