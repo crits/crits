@@ -145,10 +145,8 @@ def get_form(request, name, crits_type, identifier):
                                                     crits_type,
                                                     identifier)
     if not form_html:
-        # this should only happen if there are no config options and the
-        # service is rerunnable.
-        response['redirect'] = reverse('crits.services.views.service_run',
-                                        args=[name, crits_type, identifier])
+        return redirect(reverse('crits.services.views.service_run',
+                                args=[name, crits_type, identifier]))
     else:
         response['form'] = form_html
 

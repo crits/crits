@@ -86,16 +86,16 @@ def run_service(name, crits_type, identifier, analyst, execute='local',
         # This is because not all config options may be submitted.
         final_config.update(custom_config)
 
-    form = service_class.bind_runtime_form(analyst, final_config)
+        form = service_class.bind_runtime_form(analyst, final_config)
 
-    if not form.is_valid():
-        # TODO: return corrected form via AJAX
-        result['html'] = str(form.errors)
-        return result
+        if not form.is_valid():
+            # TODO: return corrected form via AJAX
+            result['html'] = str(form.errors)
+            return result
 
-    # If the form is valid, create the config using the cleaned data.
-    final_config = db_config
-    final_config.update(form.cleaned_data)
+        # If the form is valid, create the config using the cleaned data.
+        final_config = db_config
+        final_config.update(form.cleaned_data)
 
     logger.info("Running %s on %s, execute=%s" % (name, obj.id, execute))
     service_instance = service_class(notify=update_task, complete=finish_task)
