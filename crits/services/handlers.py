@@ -59,6 +59,14 @@ def run_service(name, crits_type, identifier, analyst, execute='local',
         result['html'] = "Unable to find service in database."
         return result
 
+    # See if the object is a supported type for the service, also
+    # give the service a chance to check for required fields.
+    if (not service_class.supported_for_type(crits_type) or
+        not service_class.valid_for(obj)):
+        msg = "Service not supported for type '%s'" % crits_type
+        result['html'] = msg
+        return result
+
     # Get the config from the database and validate the submitted options
     # exist.
     db_config = service.config.to_dict()
@@ -78,16 +86,7 @@ def run_service(name, crits_type, identifier, analyst, execute='local',
 
     if not form.is_valid():
         # TODO: return corrected form via AJAX
-        result['html'] = form.errors
-        return result
-
-    # See if the object is a supported type for the service, also
-    # give the service a chance to check for required fields.
-    # XXX: Implement valid_for() here...
-    if not service_class.supported_for_type(crits_type):
-        msg = "Service not supported for type '%s'" % crits_type
-        logger.info(msg)
-        result['html'] = msg
+        result['html'] = str(form.errors)
         return result
 
     logger.info("Running %s on %s, execute=%s" % (name, obj.id, execute))
