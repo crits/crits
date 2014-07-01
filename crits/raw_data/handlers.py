@@ -18,7 +18,7 @@ from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.raw_data.raw_data import RawData, RawDataType
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 
 def generate_raw_data_csv(request):
@@ -110,8 +110,7 @@ def get_raw_data_details(_id, analyst):
         favorite = is_user_favorite("%s" % analyst, 'RawData', raw_data.id)
 
         # services
-        manager = crits.services.manager
-        service_list = manager.get_supported_services('RawData', True)
+        service_list = get_supported_services('RawData')
 
         args = {'service_list': service_list,
                 'objects': objects,
