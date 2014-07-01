@@ -4,6 +4,24 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: mgoffin
+Date: 2014-06-26
+
+    Adding a "Sectors" feature. This will allow you to track which sector(s) a
+    top-level object pertains to. The available sectors list is based off of the
+    DHS Critical Infrastructure Sectors list and cannot be modified through the
+    interface (to allow sharing between instances).
+
+    You will need to run the following to populate the database with the sector
+    list:
+
+        python manage.py create_sectors
+
+    There is also a management command to update counts if they get out of whack
+    for some reason:
+
+        python manage.py sector_counts
+
+Author: mgoffin
 Date: 2014-06-06
 
     Adding in the start of the Screenshot storage feature. This comes with a

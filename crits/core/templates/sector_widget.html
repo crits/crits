@@ -1,0 +1,22 @@
+<script>
+    var sector_search = "{% url 'crits.core.views.global_search_listing' %}";
+    var sector_modify = "{% url 'crits.core.views.sector_modify' %}";
+    var sector_list = "{% url 'crits.core.views.get_available_sectors' %}";
+</script>
+<tr>
+    <td class="key">Sectors</td>
+    <td>
+        <ul id="sector_list">
+            {% for sector in sectors %}
+                <li>{{sector}}</li>
+            {% endfor %}
+        </ul>
+    </td>
+</tr>
+<script type="text/javascript">
+    $(document).bind('enable_sectors', function(){
+        sector_load = false;
+    });
+</script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}js/sectors.js"></script>
