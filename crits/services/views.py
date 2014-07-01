@@ -210,7 +210,7 @@ def service_run(request, name, crits_type, identifier):
                          identifier,
                          username,
                          execute=settings.SERVICE_MODEL,
-                         custom_config=request.POST)
+                         custom_config=custom_config)
     if result['success'] == True:
         return refresh_services(request, crits_type, identifier)
     else:

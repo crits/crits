@@ -89,6 +89,10 @@ def run_service(name, crits_type, identifier, analyst, execute='local',
         result['html'] = str(form.errors)
         return result
 
+    # If the form is valid, create the config using the cleaned data.
+    final_config = db_config
+    final_config.update(form.cleaned_data)
+
     logger.info("Running %s on %s, execute=%s" % (name, obj.id, execute))
     service_instance = service_class(notify=update_task, complete=finish_task)
 
@@ -110,7 +114,7 @@ def run_service(name, crits_type, identifier, analyst, execute='local',
         t = Thread(target=service_instance.execute, args=(final_config,))
         t.start()
     elif execute == 'local':
-        service_instance.execute(config)
+        service_instance.execute(final_config)
 
     # Return after starting thread so web request can complete.
     result['success'] = True
