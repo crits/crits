@@ -252,6 +252,26 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
 	obj = Artifact(data, Artifact.TYPE_FILE)
         return ([Observable(obj)], self.releasability)
 
+    @classmethod
+    def from_cybox(cls, cybox_object, source):
+        """
+        Convert a Cybox DefinedObject to a MongoEngine Indicator object.
+
+        :param cybox_object: The cybox object to create the indicator from.
+        :type cybox_object: :class:`cybox.core.Observable``
+        :param source: The source list for the Indicator.
+        :type source: list
+        :returns: :class:`crits.indicators.indicator.Indicator`
+        """
+	if cybox_object.md5:
+	    db_obj = RawData.objects(md5=cybox_object.md5).first()
+	    if db_obj:
+		return db_obj
+
+        rawdata = cls(source=source)
+	rawdata.add_file_data(cybox_object.data) # TODO base64 detect/decode
+        return rawdata
+
     def stix_description(self):
         return self.description
 

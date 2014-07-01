@@ -3,6 +3,8 @@ import datetime
 from mongoengine import Document, EmbeddedDocument
 from mongoengine import StringField, ListField
 from mongoengine import EmbeddedDocumentField
+from mongoengine.queryset import Q
+
 from django.conf import settings
 from cybox.core import Observable
 
@@ -145,6 +147,26 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         migrate_indicator(self)
 
+    def to_csv(self, fields=[],headers=False):
+        """
+        Generate a CSV row for this Indicator.
+
+        :param fields: The fields to include.
+        :type fields: list
+        :param headers: To write column headers into the CSV.
+        :type headers: boolean
+        :returns: str
+        """
+
+        # Fix some of the embedded fields
+        # confidence
+        if 'confidence' in self._data:
+            self.confidence = self.confidence.rating
+        # impact
+        if 'impact' in self._data:
+            self.impact = self.impact.rating
+        return super(self.__class__, self).to_csv(fields=fields,headers=headers)
+
     def to_stix_indicator(self):
         """
             Creates a STIX Indicator object from a CybOX object.
@@ -152,10 +174,6 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
             Returns the STIX Indicator and the original CRITs object's
             releasability list.
         """
-        #We can't do anything with objects that aren't convertible to CybOX.
-        if not hasattr(self, "to_cybox"):
-            return (None, None)
-
         from stix.indicator import Indicator as S_Ind
         from stix.common.identity import Identity
         ind = S_Ind()
@@ -193,6 +211,34 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         observables.append(Observable(obj))
         return (observables, self.releasability)
 
+    @classmethod
+    def from_cybox(cls, cybox_object, source):
+        """
+        Convert a Cybox DefinedObject to a MongoEngine Indicator object.
+
+        :param cybox_object: The cybox object to create the indicator from.
+        :type cybox_object: :class:`cybox.core.Observable``
+        :param source: The source list for the Indicator.
+        :type source: list
+        :returns: :class:`crits.indicators.indicator.Indicator`
+        """
+        obj = make_crits_object(cybox_object)
+        indicator = cls(source=source)
+        if obj.name and obj.name != obj.object_type:
+            indicator.ind_type = "%s - %s" % (obj.object_type, obj.name)
+        else:
+            indicator.ind_type = obj.object_type
+        indicator.value = obj.value
+	db_indicator = Indicator.objects(Q(ind_type=ind_type) & Q(value=value)).first()
+	if db_indicator:
+	    indicator = db_indicator
+	    indicator.add_source(self.source)
+	else:
+	    indicator.created = obj.date
+	    indicator.modified = obj.date
+
+        return indicator
+
     def has_cybox_repr(self):
 	"""
 	    Determine if this indicator is of a type that can
@@ -205,50 +251,6 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 	    return rep
 	except Exception, e:
 	    return False
-
-    def to_csv(self, fields=[],headers=False):
-        """
-        Generate a CSV row for this Indicator.
-
-        :param fields: The fields to include.
-        :type fields: list
-        :param headers: To write column headers into the CSV.
-        :type headers: boolean
-        :returns: str
-        """
-
-        # Fix some of the embedded fields
-        # confidence
-        if 'confidence' in self._data:
-            self.confidence = self.confidence.rating
-        # impact
-        if 'impact' in self._data:
-            self.impact = self.impact.rating
-        return super(self.__class__, self).to_csv(fields=fields,headers=headers)
-
-    @classmethod
-    def from_cybox(cls, cybox_object, source):
-        """
-        Convert a Cybox DefinedObject to a MongoEngine Indicator object.
-
-        :param cybox_object: The cybox object to create the indicator from.
-        :type cybox_object: :class:`cybox.core.Observable``
-        :param source: The source list for the Indicator.
-        :type source: list
-        :returns: :class:`crits.indicators.indicator.Indicator`
-        """
-
-        indicator = cls(source=source)
-        obj = make_crits_object(cybox_object)
-        indicator.created = obj.date
-        if obj.name and obj.name != obj.object_type:
-            indicator.ind_type = "%s - %s" % (obj.object_type, obj.name)
-        else:
-            indicator.ind_type = obj.object_type
-        indicator.modified = obj.date
-        indicator.value = obj.value
-
-        return indicator
 
     def stix_description(self):
         return self.ind_type

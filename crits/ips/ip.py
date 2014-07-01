@@ -74,20 +74,36 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
 	    obj.category = Address.CAT_CIDR
 	elif temp_type.find(Address.CAT_MAC.replace("-", "")) >= 0:
 	    obj.category = Address.CAT_MAC
-	elif temp_type.find(Address.CAT_IPV4.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_IPV4
-	elif temp_type.find(Address.CAT_IPV4_NET.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_IPV4_NET
 	elif temp_type.find(Address.CAT_IPV4_NETMASK.replace("-", "")) >= 0:
 	    obj.category = Address.CAT_IPV4_NETMASK
-	elif temp_type.find(Address.CAT_IPV6.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_IPV6
-	elif temp_type.find(Address.CAT_IPV6_NET.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_IPV6_NET
+	elif temp_type.find(Address.CAT_IPV4_NET.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_IPV4_NET
+	elif temp_type.find(Address.CAT_IPV4.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_IPV4
 	elif temp_type.find(Address.CAT_IPV6_NETMASK.replace("-", "")) >= 0:
 	    obj.category = Address.CAT_IPV6_NETMASK
+	elif temp_type.find(Address.CAT_IPV6_NET.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_IPV6_NET
+	elif temp_type.find(Address.CAT_IPV6.replace("-", "")) >= 0:
+	    obj.category = Address.CAT_IPV6
 
         return ([Observable(obj)], self.releasability)
+
+    @classmethod
+    def from_cybox(cls, cybox_object, source):
+        """
+        Convert a Cybox Address to a CRITs IP object.
+
+        :param cybox_object: The cybox object to create the IP from.
+        :type cybox_object: :class:`cybox.objects.address_object.Address``
+        :param source: The source list for the IP.
+        :type source: list
+        :returns: :class:`crits.ips.ip.IP`
+        """
+	ip = cls(source=source)
+	ip.ip = cybox_object.address_value
+	ip.ip_type = cybox_object.category
+        return ip
 
     def stix_description(self):
         return "Category: %s" % self.ip_type

@@ -136,6 +136,26 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
         obj = Artifact(data, Artifact.TYPE_NETWORK)
         return ([Observable(obj)], self.releasability)
 
+    @classmethod
+    def from_cybox(cls, cybox_object, source):
+        """
+        Convert a Cybox Artifact to a CRITs PCAP object.
+
+        :param cybox_object: The cybox object to create the PCAP from.
+        :type cybox_object: :class:`cybox.object.artifact_object.Artifact``
+        :param source: The source list for the PCAP.
+        :type source: list
+        :returns: :class:`crits.pcaps.pcap.PCAP`
+        """
+	pcap = cls(source=source)
+	pcap.add_file_data(cybox_object.data)
+
+	db_obj = PCAP.objects(md5=pcap.md5).first()
+	if db_obj:
+	    return db_obj
+	else:
+	    return pcap
+
     def stix_description(self):
         return self.description
 

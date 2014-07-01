@@ -149,6 +149,32 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
 	    obj.add_related(a, "Child_Of") # relate artifact to file
         return ([obs], self.releasability)
 
+    @classmethod
+    def from_cybox(cls, cybox_object, source):
+        """
+        Convert a Cybox DefinedObject to a MongoEngine Indicator object.
+
+        :param cybox_object: The cybox object to create the indicator from.
+        :type cybox_object: :class:`cybox.core.Observable``
+        :param source: The source list for the Indicator.
+        :type source: list
+        :returns: :class:`crits.indicators.indicator.Indicator`
+        """
+	if cybox_object.md5:
+	    db_obj = Certificate.objects(md5=cybox_object.md5).first()
+	    if db_obj:
+		return db_obj
+	
+        cert = cls(source=source)
+	cert.md5 = cybox_object.md5
+	cert.filename = cybox_object.file_name
+	cert.filetype = cybox_object.file_format
+	cert.size = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
+	for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
+	    if isinstance(obj.properties, Artifact):
+		cert.add_file_data(base64.b64decode(obj.properties.data))
+        return cert
+
     def stix_description(self):
         return self.description
 
