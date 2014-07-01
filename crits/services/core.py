@@ -552,14 +552,11 @@ class Service(object):
         Typically, services should just call methods of CRITsBaseDocument, but
         services may implement their own decision logic.
 
-        This does NOT consider whether a particular item has been analyzed
-        before; the logic for that is done by the AnalysisEnvironment.
-
         Arguments:
         - obj: The object being considered for analysis.
         """
 
-        return True
+        pass
 
     @classmethod
     def supported_for_type(cls, type_):

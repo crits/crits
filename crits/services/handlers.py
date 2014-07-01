@@ -59,12 +59,16 @@ def run_service(name, crits_type, identifier, analyst, execute='local',
         result['html'] = "Unable to find service in database."
         return result
 
-    # See if the object is a supported type for the service, also
-    # give the service a chance to check for required fields.
-    if (not service_class.supported_for_type(crits_type) or
-        not service_class.valid_for(obj)):
-        msg = "Service not supported for type '%s'" % crits_type
-        result['html'] = msg
+    # See if the object is a supported type for the service.
+    if not service_class.supported_for_type(crits_type):
+        result['html'] = "Service not supported for type '%s'" % crits_type
+        return result
+
+    # Give the service a chance to check for required fields.
+    try:
+        service_class.valid_for(obj)
+    except ServiceConfigError as e:
+        result['html'] = str(e)
         return result
 
     # Get the config from the database and validate the submitted options
