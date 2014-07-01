@@ -433,7 +433,7 @@ class Service(object):
         """
         Validate runtime configuration.
 
-        this shoul dbe overridden by subclasses.
+        This should be overridden by subclasses.
         """
         pass
 
