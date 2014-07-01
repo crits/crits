@@ -19,14 +19,11 @@ from crits.services.service import CRITsService
 logger = logging.getLogger(__name__)
 
 
-class ServiceUnavailableError(Exception):
-    pass
-
-
 class ServiceConfigError(Exception):
     pass
 
 
+#XXX: This can be removed when service_cli is not using it.
 class ServiceAnalysisError(Exception):
     pass
 
@@ -170,10 +167,7 @@ class ServiceManager(object):
         :returns: Service class.
         """
 
-        try:
-            return self._services[service_name]
-        except KeyError:
-            raise ServiceUnavailableError("Service is not available")
+        return self._services.get(service_name, None)
 
     @property
     def enabled_services(self):
@@ -198,62 +192,6 @@ class ServiceManager(object):
 
         # Return all services, since there's no concept of "triage" services.
         return self.enabled_services
-
-
-class AnalysisSource(object):
-    pass
-
-class AnalysisDestination(object):
-    """
-    Defines a location for handling the results of an analysis.
-
-    There are four functions a subclass may override. Only `finish_task` is
-    required.
-    """
-
-    def results_exist(self, service_class, obj):
-        """
-        Determine whether a service has been run on an object.
-
-        The intent is to prevent duplicate analysis by services which have
-        already been run on a given sample, so logic should probably not use
-        the task_id for any comparisons.
-
-        Unless overridden, the default return value is False, meaning that
-        the analysis should be run.
-        """
-
-        return False
-
-    def add_task(self, task):
-        """
-        Record the creation of a task, before it has actually started.
-
-        The intent is for this to be used in applications which queue tasks
-        or run them in the background. By default this function does nothing.
-        """
-
-        pass
-
-    def update_task(self, task):
-        """
-        Called whenever a service wants to report an update.
-
-        This can be used by long-running services to provide feedback to
-        users (through an application that supports it). The default behavior
-        is to do nothing.
-        """
-
-        pass
-
-    def finish_task(self, task):
-        """
-        Called when a task has been finished.
-
-        Subclasses must override this function.
-        """
-
-        raise NotImplementedError
 
 
 class AnalysisTask(object):
@@ -336,17 +274,15 @@ class AnalysisTask(object):
         return {
             'service_name':         self.service.name,
             'template':             self.service.template,
-            'rerunnable':           self.service.rerunnable,
             'distributed':          self.service.distributed,
             'version':              self.service.version,
-            'type':                 self.service.type_,
-            'config':               self.service.public_config,
             'analyst':              self.username,
             'id':                   self.task_id,
             'source':               self.source,
             'start_date':           self.start_date,
             'finish_date':          self.finish_date,
             'status':               self.status,
+            'config':               self.config,
             'log':                  self.log,
             'results':              self.results,
         }
@@ -378,91 +314,6 @@ class AnalysisEnvironment(object):
         for service_name in self.manager.services:
             self.run_service(service_name, obj)
 
-    def run_service(self, service_name, obj, analyst, execute='local',
-                    force=False, custom_config=None):
-        """
-        Run a service.
-
-        :param service_name: The name of the service to run.
-        :type service_name: str
-        :param obj: The CRITs object.
-        :type obj: CRITs object.
-        :param execute: The execution type.
-        :type execute: str
-        :param force: Force this service to run.
-        :type force: bool
-        :param custom_config: Use a custom configuration for this run.
-        :type custom_config: dict
-        """
-
-        service_class = self.manager.get_service_class(service_name)
-
-        # See if the object is a supported type for the service and that
-        # all the required data is present. This should not be overridable by
-        # a "Force" option
-        if not service_class.supported_for_type(obj._meta['crits_type']):
-            msg = "Service '%s' not supported for type '%s'" % (service_name,
-                    obj._meta['crits_type'])
-            logger.info(msg)
-            raise ServiceAnalysisError(msg)
-
-        if not service_class.obj_has_required_data(obj):
-            msg = "Object does not have all required fields '%s'" % (
-                    str(service_class.required_fields))
-            logger.info(msg)
-            raise ServiceAnalysisError(msg)
-
-        if not force and not service_class.rerunnable:
-            if self.dest.results_exist(service_class, obj):
-                args = (service_name, service_class.version, obj.id)
-                msg = ("Results for '%s' (v.%s) already exist for '%s'. Use "
-                       "'force' to re-run." % args)
-                logger.info(msg)
-                raise ServiceAnalysisError(msg)
-
-            if not service_class.valid_for(obj):
-                msg = ("Service '%s' declined to run" % service_name)
-                logger.info(msg)
-                raise ServiceAnalysisError(msg)
-
-        args = (service_name, obj.id, force, execute)
-        logger.info("Running %s on %s, force=%s, execute=%s" % args)
-
-        config = self.manager.get_config(service_name)
-        config = config.to_dict()
-
-        # Overwrite defaults with custom settings
-        if custom_config:
-            for key in custom_config:
-                config[key] = custom_config[key]
-
-        config = service_class.replace_config_values(config)
-
-        notify_func = self.dest.update_task
-        complete_func = self.dest.finish_task
-
-        service_instance = service_class(config=config,
-                                         notify=notify_func,
-                                         complete=complete_func)
-
-        task = AnalysisTask(obj, service_instance, analyst)
-        task.start()
-        self.dest.add_task(task)
-
-        service_instance.set_task(task)
-
-        if execute == 'process':
-            p = Process(target=service_instance.execute)
-            p.start()
-        elif execute == 'thread':
-            t = Thread(target=service_instance.execute)
-            t.start()
-        elif execute == 'local':
-            service_instance.execute()
-
-        # Return after starting thread so web request can complete.
-        return
-
 
 class Service(object):
     """
@@ -471,7 +322,6 @@ class Service(object):
     Subclasses must define the following class-level fields:
     - name
     - version
-    - type_
 
     If needed, subclasses SHOULD define a class-level `default_config` list
     of `ServiceConfigOption`s. These options may be overridden for a particular
@@ -480,7 +330,7 @@ class Service(object):
     The service class's docstring is used as a description for the service.
 
     Subclasses must define a function:
-        def _scan(self, data, sample_dict):
+        def _scan(self, obj, config):
     This function should:
     - call `_add_result` with any dict or other object convertible to a dict,
     - call `_add_file` with new files to be added.
@@ -560,6 +410,16 @@ class Service(object):
         return config
 
     @staticmethod
+    def save_runtime_config(config):
+        """
+        Modify the configuration that is saved in the database for a run
+        of the service.
+
+        This should be overridden by subclasses.
+        """
+        pass
+
+    @staticmethod
     def generate_config_form(name, config):
         """
         Generate a form and HTML for configuration.
@@ -569,13 +429,31 @@ class Service(object):
         return None, None
 
     @staticmethod
-    def generate_runtime_form(analyst, name, config, crits_type, identifier):
+    def validate_runtime(config, db_config):
         """
-        Generate a form and HTML for runtime.
+        Validate runtime configuration.
+
+        this shoul dbe overridden by subclasses.
+        """
+        pass
+
+    @classmethod
+    def generate_runtime_form(self, analyst, config, crits_type, identifier):
+        """
+        Generate a form as HTML for runtime.
 
         This should be overridden by subclasses.
         """
-        return None, None
+        return None
+
+    @staticmethod
+    def bind_runtime_form(analyst, config, data):
+        """
+        Generate a form and bind it.
+
+        This should be overridden by subclasses.
+        """
+        return None
 
     def set_task(self, task):
         """
@@ -613,17 +491,18 @@ class Service(object):
         logger.debug("Finishing analysis on %s" % self.current_task)
         self.current_task.finish()
 
-    def execute(self):
+    def execute(self, config):
         """
         Execute an analysis task.
         """
 
+        self.config = config
         self.ensure_current_task()
         self._info("Starting Analysis")
 
         # Do it!
         try:
-            self._scan(self.current_task.obj)
+            self.scan(self.current_task.obj, config)
             # If a service is distributed, we expect it to handle its own result
             # additions, log messages, and task completion. If it is not
             # distributed, handle it for them.
@@ -651,7 +530,7 @@ class Service(object):
         if self.current_task is None:
             raise Exception("No current task")
 
-    def _scan(self, data, sample_dict):
+    def scan(self, obj, config):
         """
         Perform the actual work of the service.
 
@@ -689,18 +568,6 @@ class Service(object):
         """
 
         return (cls.supported_types == 'all' or type_ in cls.supported_types)
-
-    @classmethod
-    def obj_has_required_data(cls, obj):
-        """
-        Ensure the object has the required fields.
-        """
-
-        for field in cls.required_fields:
-            # Field does not exist or is "false" (0, False, None, "", etc.)
-            if not hasattr(obj, field) or not getattr(obj, field):
-                return False
-        return True
 
     def _debug(self, msg):
         self._log('debug', msg)
@@ -865,6 +732,7 @@ class TempAnalysisFile(object):
             shutil.rmtree(self.directory)
 
 
+# XXX: ALL THIS CAN BE REMOVED!
 class ServiceConfigOption(object):
     """
     A configurable option for services.

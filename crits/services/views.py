@@ -11,27 +11,14 @@ from django.template.loader import render_to_string
 
 from crits.core.class_mapper import class_from_id
 from crits.core.user_tools import user_can_view_data, user_is_admin
-from crits.services.core import ServiceAnalysisError
-from crits.services.handlers import make_edit_config_form, make_run_config_form
 from crits.services.handlers import update_config, do_edit_config
-from crits.services.handlers import get_service_config
-from crits.services.handlers import set_enabled, set_triage
+from crits.services.handlers import get_service_config, set_enabled, set_triage
+from crits.services.handlers import run_service, get_supported_services
+from crits.services.handlers import delete_analysis
 from crits.services.service import CRITsService
 import crits.services
 
 logger = logging.getLogger(__name__)
-
-
-DETAIL_VIEWS = {
-                'Certificate': 'crits.certificates.views.certificate_details',
-                'Sample': 'crits.samples.views.detail',
-                'PCAP': 'crits.pcaps.views.pcap_details',
-                'RawData': 'crits.raw_data.views.raw_data_details',
-                'Event': 'crits.events.views.view_event',
-                'Indicator': 'crits.indicators.views.indicator',
-                'Domain': 'crits.domains.views.domain_detail',
-                'IP': 'crits.ips.views.ip_detail',
-               }
 
 
 @user_passes_test(user_is_admin)
@@ -153,12 +140,10 @@ def get_form(request, name, crits_type, identifier):
 
     config = service.config.to_dict()
 
-    form_html = make_run_config_form(service_class,
-                                     config,
-                                     name,
-                                     analyst=analyst,
-                                     crits_type=crits_type,
-                                     identifier=identifier)
+    form_html = service_class.generate_runtime_form(analyst,
+                                                    config,
+                                                    crits_type,
+                                                    identifier)
     if not form_html:
         # this should only happen if there are no config options and the
         # service is rerunnable.
@@ -168,6 +153,7 @@ def get_form(request, name, crits_type, identifier):
         response['form'] = form_html
 
     return HttpResponse(json.dumps(response), mimetype="application/json")
+
 
 @user_passes_test(user_can_view_data)
 def refresh_services(request, crits_type, identifier):
@@ -190,8 +176,7 @@ def refresh_services(request, crits_type, identifier):
     subscription = {'type': crits_type,
                     'id': identifier}
 
-    manager = crits.services.manager
-    service_list = manager.get_supported_services(crits_type, True)
+    service_list = get_supported_services(crits_type)
 
     response['success'] = True
     response['html'] = render_to_string("services_analysis_listing.html",
@@ -212,67 +197,25 @@ def service_run(request, name, crits_type, identifier):
     Run a service.
     """
 
-    response = {'success': False}
-    if crits_type not in DETAIL_VIEWS:
-        response['html'] = "Unknown CRITs type."
-        return HttpResponse(json.dumps(response), mimetype="application/json")
-
-    env = crits.services.environment
     username = str(request.user.username)
 
-    # We can assume this is a DatabaseAnalysisEnvironment
-    if name not in env.manager.enabled_services:
-        response['html'] = "Service %s is unknown or not enabled." % name
-        return HttpResponse(json.dumps(response), mimetype="application/json")
+    if request.method == 'POST':
+        custom_config = request.POST
+    elif request.method == "GET":
+        # Run with no config...
+        custom_config = {}
 
-    service = CRITsService.objects(name=name,
-                                   status__ne="unavailable").first()
-    if not service:
-        msg = 'Service "%s" is unavailable. Please review error logs.' % name
-        response['error'] = msg
-        return HttpResponse(json.dumps(response), mimetype="application/json")
-
-    service_class = env.manager.get_service_class(name)
-    config = service_class.format_config(service.config, printable=False)
-    ServiceRunConfigForm = make_run_config_form(service_class,
-                                                config,
-                                                name,
-                                                analyst=username,
-                                                crits_type=crits_type,
-                                                identifier=identifier,
-                                                return_form=True)
-
-    if request.method == "POST":
-        #Populate the form with values from the POST request
-        form = ServiceRunConfigForm(request.POST)
-        if form.is_valid():
-            # parse_config will remove the "force" option from cleaned_data
-            config = service_class.parse_config(form.cleaned_data,
-                                                exclude_private=True)
-            force = form.cleaned_data.get("force")
-        else:
-            # TODO: return corrected form via AJAX
-            response['html'] = "Invalid configuration, please try again :-("
-            return HttpResponse(json.dumps(response), mimetype="application/json")
+    result = run_service(name,
+                         crits_type,
+                         identifier,
+                         username,
+                         execute=settings.SERVICE_MODEL,
+                         custom_config=request.POST)
+    if result['success'] == True:
+        return refresh_services(request, crits_type, identifier)
     else:
-        # If not a POST, don't use any custom options.
-        config = None
-        force = False
+        return HttpResponse(json.dumps(result), mimetype="application/json")
 
-    obj = class_from_id(crits_type, identifier)
-    if not obj:
-        response['html'] = 'Could not find object!'
-        return HttpResponse(json.dumps(response), mimetype="application/json")
-
-    try:
-        env.run_service(name, obj, username, execute=settings.SERVICE_MODEL,
-                        custom_config=config, force=force)
-    except ServiceAnalysisError as e:
-        logger.exception("Error when running service")
-        response['html'] = "Error when running service: %s" % e
-        return HttpResponse(json.dumps(response), mimetype="application/json")
-
-    return refresh_services(request, crits_type, identifier)
 
 @user_passes_test(user_is_admin)
 def delete_task(request, crits_type, identifier, task_id):
@@ -280,15 +223,8 @@ def delete_task(request, crits_type, identifier, task_id):
     Delete a service task.
     """
 
-    # XXX: THIS USES DB_DEST FROM envrionment, which no longer exists
-    #db_dest = crits.service_env.environment.dest
-    #analyst = request.user.username
+    analyst = request.user.username
 
-    #if crits_type in DETAIL_VIEWS:
-    #    # Identifier is used since there's not currently an index on task_id
-    #    db_dest.delete_analysis(crits_type, identifier, task_id, analyst)
-    #    return refresh_services(request, crits_type, identifier)
-    #else:
-    #    error = 'Deleting tasks from type %s is not supported.' % crits_type
-    #    return render_to_response('error.html', {'error': error},
-    #                       RequestContext(request))
+    # Identifier is used since there's not currently an index on task_id
+    delete_analysis(crits_type, identifier, task_id, analyst)
+    return refresh_services(request, crits_type, identifier)

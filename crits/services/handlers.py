@@ -2,18 +2,136 @@ import ast
 import datetime
 import logging
 
+from multiprocessing import Process
+from threading import Thread
+
 from mongoengine.base import ValidationError
 
 from django.core.urlresolvers import reverse
+from django.conf import settings
+
+import crits.services
 
 from crits.core.class_mapper import class_from_type, class_from_id
 from crits.core.crits_mongoengine import EmbeddedAnalysisResult, AnalysisConfig
 from crits.core.user_tools import user_sources
-from crits.services.core import ServiceConfigError
+from crits.services.core import ServiceConfigError, AnalysisTask
 from crits.services.service import CRITsService
-import crits.services
 
 logger = logging.getLogger(__name__)
+
+def run_service(name, crits_type, identifier, analyst, execute='local',
+                custom_config={}):
+    """
+    Run a service.
+
+    :param name: The name of the service to run.
+    :type name: str
+    :param obj: The CRITs object.
+    :type obj: CRITs object.
+    :param execute: The execution type.
+    :type execute: str
+    :param custom_config: Use a custom configuration for this run.
+    :type custom_config: dict
+    """
+
+    result = {'success': False}
+    if crits_type not in settings.CRITS_TYPES:
+        result['html'] = "Unknown CRITs type."
+        return result
+
+    if name not in crits.services.manager.enabled_services:
+        result['html'] = "Service %s is unknown or not enabled." % name
+        return result
+
+    service_class = crits.services.manager.get_service_class(name)
+    if not service_class:
+        result['html'] = "Unable to get service class."
+        return result
+
+    obj = class_from_id(crits_type, identifier)
+    if not obj:
+        result['html'] = 'Could not find object.'
+        return result
+
+    service = CRITsService.objects(name=name).first()
+    if not service:
+        result['html'] = "Unable to find service in database."
+        return result
+
+    # Get the config from the database and validate the submitted options
+    # exist.
+    db_config = service.config.to_dict()
+    try:
+        service_class.validate_runtime(custom_config, db_config)
+    except ServiceConfigError as e:
+        result['html'] = str(e)
+        return result
+
+    final_config = db_config
+    if custom_config:
+        # Merge the submitted config with the one from the database.
+        # This is because not all config options may be submitted.
+        final_config.update(custom_config)
+
+    form = service_class.bind_runtime_form(analyst, final_config)
+
+    if not form.is_valid():
+        # TODO: return corrected form via AJAX
+        result['html'] = form.errors
+        return result
+
+    # See if the object is a supported type for the service, also
+    # give the service a chance to check for required fields.
+    # XXX: Implement valid_for() here...
+    if not service_class.supported_for_type(crits_type):
+        msg = "Service not supported for type '%s'" % crits_type
+        logger.info(msg)
+        result['html'] = msg
+        return result
+
+    logger.info("Running %s on %s, execute=%s" % (name, obj.id, execute))
+    service_instance = service_class(notify=update_task, complete=finish_task)
+
+    # Give the service a chance to modify the config that gets saved to the DB.
+    saved_config = dict(final_config)
+    service_class.save_runtime_config(saved_config)
+
+    task = AnalysisTask(obj, service_instance, analyst)
+    task.config = AnalysisConfig(**saved_config)
+    task.start()
+    add_task(task)
+
+    service_instance.set_task(task)
+
+    if execute == 'process':
+        p = Process(target=service_instance.execute, args=(final_config,))
+        p.start()
+    elif execute == 'thread':
+        t = Thread(target=service_instance.execute, args=(final_config,))
+        t.start()
+    elif execute == 'local':
+        service_instance.execute(config)
+
+    # Return after starting thread so web request can complete.
+    result['success'] = True
+    return result
+
+def add_task(task):
+    """
+    Add a new task.
+    """
+
+    logger.debug("Adding task %s" % task)
+    insert_analysis_results(task)
+
+def update_task(task):
+    """
+    Update an existing task.
+    """
+
+    logger.debug("Updating task %s" % task)
+    self._update_analysis_results(task)
 
 def run_triage(obj, user):
     """
@@ -147,7 +265,7 @@ def add_log(object_type, object_id, analysis_id, log_message, level, analyst):
     return results
 
 
-def finish_task(object_type, object_id, analysis_id, status, analyst):
+def finish_task_new(object_type, object_id, analysis_id, status, analyst):
     """
     Finish a task by setting its status to "completed" and setting the finish
     date.
@@ -212,9 +330,9 @@ def get_service_config(name):
 
     config = service.config.to_dict()
     service_class = crits.services.manager.get_service_class(name)
-    config = service_class.get_config_details(config)
+    display_config = service_class.get_config_details(config)
 
-    status['config'] = config
+    status['config'] = display_config
     status['config_error'] = _get_config_error(service)
 
     # TODO: fix code so we don't have to do this
@@ -253,18 +371,15 @@ def do_edit_config(name, analyst, post_data=None):
     # Get the class that implements this service.
     service_class = crits.services.manager.get_service_class(name)
 
-    # This isn't a form object. It's the HTML.
     config = service.config.to_dict()
-    status['form'] = make_edit_config_form(service_class, config, service.name)
+    cfg_form, html = service_class.generate_config_form(config)
+    # This isn't a form object. It's the HTML.
+    status['form'] = html
     status['service'] = service
 
     if post_data:
-        ServiceEditConfigForm = make_edit_config_form(service_class,
-                                                      config,
-                                                      service.name,
-                                                      return_form=True)
         #Populate the form with values from the POST request
-        form = ServiceEditConfigForm(post_data)
+        form = cfg_form(post_data)
         if form.is_valid():
             try:
                 new_config = service_class.parse_config(form.cleaned_data)
@@ -377,7 +492,7 @@ def triage_services(status=True):
     return [s.name for s in services]
 
 #TODO: rename?
-def finish_task_(task):
+def finish_task(task):
     """
     Finish a task.
     """
@@ -461,12 +576,9 @@ def insert_analysis_results(task):
 
     ear = EmbeddedAnalysisResult()
     tdict = task.to_dict()
-    tdict['analysis_type'] = tdict['type']
     tdict['analysis_id'] = tdict['id']
-    del tdict['type']
     del tdict['id']
     ear.merge(arg_dict=tdict)
-    ear.config = AnalysisConfig(**tdict['config'])
     obj_class.objects(id=task.obj.id).update_one(push__analysis=ear)
 
 def update_analysis_results(task):
@@ -496,65 +608,8 @@ def update_analysis_results(task):
         # Otherwise, update it.
         ear = EmbeddedAnalysisResult()
         tdict = task.to_dict()
-        tdict['analysis_type'] = tdict['type']
         tdict['analysis_id'] = tdict['id']
-        del tdict['type']
         del tdict['id']
         ear.merge(arg_dict=tdict)
-        ear.config = AnalysisConfig(**tdict['config'])
         obj_class.objects(id=obj_id,
                             analysis__id=task.task_id).update_one(set__analysis__S=ear)
-
-def make_edit_config_form(service_class, config, name, return_form=False):
-    """
-    Return a Django Form for editing a service's config.
-
-    This should be used when the administrator is editing a service
-    configuration.
-    """
-
-    (form, html) = service_class.generate_config_form(name, config)
-    if return_form:
-        return form
-    return html
-
-def make_run_config_form(service_class, config, name, analyst=None,
-                         crits_type=None, identifier=None,
-                         return_form=False):
-    """
-    Return a Django form used when running a service.
-
-    If the service has a "generate_runtime_form()" method, use it. Otherwise
-    generate a generic form using the config options.
-
-    The "generate_runtime_form()" function must allow for passing in an analyst,
-    name, crits_type, and identifier, even if it doesn't plan on using all of
-    them.
-
-    This is the same as make_edit_config_form, but adds a BooleanField
-    (checkbox) for whether to "Force" the service to run.
-
-    :param service_class: The service class.
-    :type service_class: :class:`crits.services.core.Service`
-    :param config: Configuration options for the service.
-    :type config: dict
-    :param name: Name of the form to use.
-    :type name: str
-    :param analyst: The user requesting the form.
-    :type analyst: str
-    :param crits_type: The top-level object type.
-    :type crits_type: str
-    :param identifier: ObjectId of the top-level object.
-    :type identifier: str
-    :param return_form: Return a Django form object instead of HTML.
-    :type return_form: boolean
-    """
-
-    (form, html) = service_class.generate_runtime_form(analyst,
-                                                       name,
-                                                       config,
-                                                       crits_type,
-                                                       identifier)
-    if return_form:
-        return form
-    return html
