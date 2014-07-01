@@ -416,6 +416,9 @@ def get_config(service_name):
     """
 
     service = CRITsService.objects(name=service_name).first()
+    if not service:
+        return None
+
     return service.config
 
 def set_enabled(service_name, enabled=True, analyst=None):
