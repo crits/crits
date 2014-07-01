@@ -447,7 +447,7 @@ class Service(object):
         return None
 
     @staticmethod
-    def bind_runtime_form(analyst, config, data):
+    def bind_runtime_form(analyst, config):
         """
         Generate a form and bind it.
 
