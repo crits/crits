@@ -19,7 +19,7 @@ from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.pcaps.pcap import PCAP
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 
 def generate_pcap_csv(request):
@@ -91,7 +91,7 @@ def get_pcap_details(md5, analyst):
         # services
         manager = crits.services.manager
         # Assume all PCAPs have the data available
-        service_list = manager.get_supported_services('PCAP', True)
+        service_list = get_supported_services('PCAP')
 
         args = {'service_list': service_list,
                 'objects': objects,
