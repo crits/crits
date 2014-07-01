@@ -389,14 +389,14 @@ def do_edit_config(name, analyst, post_data=None):
         form = cfg_form(post_data)
         if form.is_valid():
             try:
-                new_config = service_class.parse_config(form.cleaned_data)
+                service_class.parse_config(form.cleaned_data)
             except ServiceConfigError as e:
-                #service.status = 'misconfigured'
-                #service.save()
+                service.status = 'misconfigured'
+                service.save()
                 status['config_error'] = str(e)
                 return status
 
-            result = update_config(name, new_config, analyst)
+            result = update_config(name, form.cleaned_data, analyst)
             if not result['success']:
                 return status
 
