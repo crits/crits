@@ -37,6 +37,7 @@ from cybox.objects.win_service_object import WinService
 from cybox.objects.win_system_object import WinSystem
 from cybox.objects.win_task_object import WinTask
 from cybox.objects.win_volume_object import WinVolume
+from cybox.objects.x509_certificate_object import X509Certificate
 
 class UnsupportedCybOXObjectTypeError(Exception):
     """

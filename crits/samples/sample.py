@@ -209,7 +209,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
                 Hash.TYPE_SHA256, Hash.TYPE_SSDEEP]:
                 setattr(sample, hash_.type_.value.lower(),
                     str(hash_.simple_hash_value).strip().lower())
-        if filedata: # TODO if related artifact
+        if False:#filedata: # TODO if related artifact
             if isinstance(filedata, file):
                 sample.filedata = filedata.read()
             else:

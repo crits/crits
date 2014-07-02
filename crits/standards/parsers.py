@@ -7,12 +7,14 @@ from crits.samples.sample import Sample
 from crits.emails.email import Email
 from crits.indicators.indicator import Indicator
 from crits.core.crits_mongoengine import EmbeddedSource
-from crits.core.class_mapper import class_from_value
+from crits.core.class_mapper import class_from_value, class_from_type
 from crits.core.handlers import does_source_exist
 
+from cybox.objects.artifact_object import Artifact
 from cybox.objects.address_object import Address
 from cybox.objects.domain_name_object import DomainName
 from cybox.objects.email_message_object import EmailMessage
+from cybox.objects.file_object import File
 
 from stix.core import STIXPackage
 
@@ -122,7 +124,7 @@ class STIXParser():
 	for indicator in indicators: # for each STIX indicator
 	    for observable in indicator.observables: # get each observable from indicator (expecting only 1)
 		try: # create CRITs Indicator from observable
-		    self.imported.append(Indicator.from_cybox(observable, [self.source]))
+		    self.imported.append((Indicator._meta['crits_type'], Indicator.from_cybox(observable, [self.source])))
 		except Exception, e: # probably caused by cybox object we don't handle
 		    self.failed.append(observable) # note for display in UI
 
@@ -134,16 +136,16 @@ class STIXParser():
 	:type observables: List of STIX observables.
 	"""
 	for obs in observables: # for each STIX observable
-	    if not obs.object_: # does CRITs have a good way to handle logical composition of observables?
-		self.failed.append(observable) # note for display in UI
+	    if not obs.object_ or not obs.object_.properties: # does CRITs have a good way to handle logical composition of observables?
+		self.failed.append(obs) # note for display in UI
 		continue # TODO handle observable_composition if we answer this question
+	    cls = self.get_crits_type(obs.object_.properties) # determine which CRITs class matches
 	    try: # try to create CRITs object from observable
-		cls = self.get_crits_type(obs.object_) # determine which CRITs class matches
-		obj = cls.from_cybox(obs.object_, [self.source])
+		obj = cls.from_cybox(obs.object_.properties, [self.source])
 		obj.save(username=self.source_instance.analyst)
-		self.imported.append(obj) # use class to parse object
+		self.imported.append((cls._meta['crits_type'], obj)) # use class to parse object
 	    except Exception, e: # probably caused by cybox object we don't handle
-		self.failed.append(observable) # note for display in UI
+		self.failed.append((e.message, obs.object_.properties)) # note for display in UI
 
     def get_crits_type(self, c_obj):
 	"""
@@ -154,21 +156,22 @@ class STIXParser():
 	:returns: The CRITs class to use to import the given CybOX object.
 	"""
 	if isinstance(c_obj, Address):
-	    return IP
+	    imp_type = "IP"
 	elif isinstance(c_obj, DomainName):
-	    return Domain
+	    imp_type = "Domain"
 	elif isinstance(c_obj, Artifact) and c_obj.type_ == Artifact.TYPE_NETWORK:
-	    return PCAP
+	    imp_type = "PCAP"
 	elif isinstance(c_obj, Artifact):
-	    return RawData
-	elif isinstance(c_obj, File) and c_obj.custom_properties and c_obj.custom_properties[0].name == "crits_object" and c_obj.custom_properties[0].value_ == "Certificate":
-	    return Certificate
+	    imp_type = "RawData"
+	elif isinstance(c_obj, File) and c_obj.custom_properties and c_obj.custom_properties[0].name == "crits_type" and c_obj.custom_properties[0]._value == "Certificate":
+	    imp_type = "Certificate"
 	elif isinstance(c_obj, File):
-	    return Sample
+	    imp_type = "Sample"
 	elif isinstance(c_obj, EmailMessage):
-	    return Email
+	    imp_type = "Email"
 	else: # try to parse all other possibilities as Indicator
-	    return Indicator
+	    imp_type = "Indicator"
+	return class_from_type(imp_type)
 
     def relate_objects(self):
         """
@@ -183,10 +186,10 @@ class STIXParser():
 		continue
 
 	    for right in finished_objects:
-		obj.add_relationship(right,
+		obj[1].add_relationship(right,
 				     rel_type="Related_To",
 				     analyst=self.source_instance.analyst)
-	    finished_objects.append(obj)
+	    finished_objects.append(obj[1])
 
 	for f in finished_objects:
 	    f.save(username=self.source_instance.analyst)

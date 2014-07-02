@@ -263,14 +263,13 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
         :type source: list
         :returns: :class:`crits.indicators.indicator.Indicator`
         """
-	if cybox_object.md5:
-	    db_obj = RawData.objects(md5=cybox_object.md5).first()
-	    if db_obj:
-		return db_obj
-
         rawdata = cls(source=source)
 	rawdata.add_file_data(cybox_object.data) # TODO base64 detect/decode
-        return rawdata
+	db_obj = RawData.objects(md5=rawdata.md5).first()
+	if db_obj:
+	    return db_obj
+	else:
+            return rawdata
 
     def stix_description(self):
         return self.description

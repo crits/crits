@@ -217,13 +217,13 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
         :type source: list
         :returns: :class:`crits.indicators.indicator.Indicator`
         """
-	db_obj = Domain.objects(domain=cybox_object.value).first()
+	db_obj = Domain.objects(domain=str(cybox_object.value)).first()
 	if db_obj:
 	    return db_obj
 	else:
 	    domain = cls(source=source)
-	    domain.domain = cybox_object.value
-	    domain.record_type = cybox_object.type_
+	    domain.domain = str(cybox_object.value)
+	    domain.record_type = str(cybox_object.type_)
 	    return domain
 
     def stix_description(self):

@@ -124,8 +124,8 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
             if isinstance(stix_header, STIXHeader):
                 if stix_header.title:
                     event.title = stix_header.title
-                if stix_header.package_intent:
-                    event.event_type = str(stix_header.package_intent)
+                if stix_header.package_intents:
+                    event.event_type = str(stix_header.package_intents[0])
                 description = stix_header.description
                 if isinstance(description, StructuredText):
                     try:

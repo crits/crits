@@ -101,7 +101,7 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
         :returns: :class:`crits.ips.ip.IP`
         """
 	ip = cls(source=source)
-	ip.ip = cybox_object.address_value
+	ip.ip = str(cybox_object.address_value)
 	ip.ip_type = cybox_object.category
         return ip
 

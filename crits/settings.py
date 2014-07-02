@@ -297,6 +297,7 @@ TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, 'samples/templates'),
     os.path.join(SITE_ROOT, 'screenshots/templates'),
     os.path.join(SITE_ROOT, 'services/templates'),
+    os.path.join(SITE_ROOT, 'standards/templates'),
     os.path.join(SITE_ROOT, 'stats/templates'),
     os.path.join(SITE_ROOT, 'targets/templates'),
 )
