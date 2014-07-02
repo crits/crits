@@ -1153,7 +1153,7 @@ def handle_uploaded_file(f, source, reference=None, file_format=None,
                          password=None, user=None, campaign=None, confidence='low',
                          related_md5=None, related_id=None, related_type='Sample',
                          filename=None, md5=None, bucket_list=None, ticket=None,
-                         is_validate_only=False, method="Upload",
+                         is_validate_only=False, method="",
                          is_return_only_md5=True, cache={}):
     """
     Handle an uploaded file.
@@ -1201,7 +1201,14 @@ def handle_uploaded_file(f, source, reference=None, file_format=None,
     """
 
     samples = list()
-    method = method or "Upload"
+    if method:
+        method = " - " + method
+    if f:
+        method = "File Upload" + method
+    elif md5:
+        method = "Metadata Upload" + method
+    else:
+        method = "Upload" + method
     try:
         data = f.read()
     except AttributeError:
