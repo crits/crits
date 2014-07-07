@@ -23,6 +23,7 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 
 from crits.campaigns.forms import CampaignForm
+from crits.config.config import CRITsConfig
 from crits.core.crits_mongoengine import json_handler, create_embedded_source
 from crits.core.crits_mongoengine import EmbeddedCampaign
 from crits.core.data_tools import clean_dict
