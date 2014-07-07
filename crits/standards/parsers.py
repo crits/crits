@@ -124,7 +124,10 @@ class STIXParser():
 	for indicator in indicators: # for each STIX indicator
 	    for observable in indicator.observables: # get each observable from indicator (expecting only 1)
 		try: # create CRITs Indicator from observable
-		    self.imported.append((Indicator._meta['crits_type'], Indicator.from_cybox(observable.object_.properties, [self.source])))
+		    obj = Indicator.from_cybox(observable.object_.properties, [self.source])
+		    obj.add_source(self.source)
+		    obj.save(username=self.source_instance.analyst)
+		    self.imported.append((Indicator._meta['crits_type'], obj))
 		except Exception, e: # probably caused by cybox object we don't handle
 		    self.failed.append((e.message, observable)) # note for display in UI
 
