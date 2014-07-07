@@ -222,18 +222,19 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         :type source: list
         :returns: :class:`crits.indicators.indicator.Indicator`
         """
+
         obj = make_crits_object(cybox_object)
-        indicator = cls(source=source)
         if obj.name and obj.name != obj.object_type:
-            indicator.ind_type = "%s - %s" % (obj.object_type, obj.name)
+            ind_type = "%s - %s" % (obj.object_type, obj.name)
         else:
-            indicator.ind_type = obj.object_type
-        indicator.value = obj.value
-	db_indicator = Indicator.objects(Q(ind_type=ind_type) & Q(value=value)).first()
+            ind_type = obj.object_type
+	db_indicator = Indicator.objects(Q(ind_type=ind_type) & Q(value=obj.value)).first()
 	if db_indicator:
 	    indicator = db_indicator
-	    indicator.add_source(self.source)
+	    indicator.add_source(source)
 	else:
+	    indicator = cls(source=source)
+	    indicator.value = obj.value
 	    indicator.created = obj.date
 	    indicator.modified = obj.date
 

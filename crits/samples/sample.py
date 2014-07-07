@@ -175,11 +175,11 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
             f.file_name = self.filename
         # create an Artifact object for the binary if it exists
         if 'filedata' not in exclude:
-            data = self.filedata.read()
-            if data:
-                data = base64.b64encode(data)
-                a = Artifact(data=data, type_=Artifact.TYPE_FILE)
-                observables.append(Observable(a))
+	    data = self.filedata.read()
+            if data: # if sample data available
+		data = base64.b64encode(data) # encode
+		a = Artifact(data, Artifact.TYPE_FILE) # create artifact w/data
+		f.add_related(a, "Child_Of") # relate artifact to file
         if 'filetype' not in exclude and 'file_format' not in exclude:
             #NOTE: this doesn't work because the CybOX File object does not
             #   have any support built in for setting the filetype to a
@@ -209,11 +209,10 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
                 Hash.TYPE_SHA256, Hash.TYPE_SSDEEP]:
                 setattr(sample, hash_.type_.value.lower(),
                     str(hash_.simple_hash_value).strip().lower())
-        if False:#filedata: # TODO if related artifact
-            if isinstance(filedata, file):
-                sample.filedata = filedata.read()
-            else:
-                sample.filedata = filedata
+	for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
+	    if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_FILE:
+		sample.add_file_data(base64.b64decode(obj.properties.data))
+		break
 
         return sample
 

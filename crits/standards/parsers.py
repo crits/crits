@@ -103,7 +103,7 @@ class STIXParser():
             event = Event.from_stix(stix_package=self.package, source=[self.source])
             try:
                 event.save(username=self.source_instance.analyst)
-		self.imported.append(event)
+		self.imported.append((Event._meta['crits_type'], event))
             except Exception, e:
                 print e.message
 
@@ -124,9 +124,9 @@ class STIXParser():
 	for indicator in indicators: # for each STIX indicator
 	    for observable in indicator.observables: # get each observable from indicator (expecting only 1)
 		try: # create CRITs Indicator from observable
-		    self.imported.append((Indicator._meta['crits_type'], Indicator.from_cybox(observable, [self.source])))
+		    self.imported.append((Indicator._meta['crits_type'], Indicator.from_cybox(observable.object_.properties, [self.source])))
 		except Exception, e: # probably caused by cybox object we don't handle
-		    self.failed.append(observable) # note for display in UI
+		    self.failed.append((e.message, observable)) # note for display in UI
 
     def parse_observables(self, observables):
 	"""
@@ -159,12 +159,12 @@ class STIXParser():
 	    imp_type = "IP"
 	elif isinstance(c_obj, DomainName):
 	    imp_type = "Domain"
-	elif isinstance(c_obj, Artifact) and c_obj.type_ == Artifact.TYPE_NETWORK:
-	    imp_type = "PCAP"
 	elif isinstance(c_obj, Artifact):
 	    imp_type = "RawData"
 	elif isinstance(c_obj, File) and c_obj.custom_properties and c_obj.custom_properties[0].name == "crits_type" and c_obj.custom_properties[0]._value == "Certificate":
 	    imp_type = "Certificate"
+	elif isinstance(c_obj, File) and self.has_network_artifact(c_obj):
+	    imp_type = "PCAP"
 	elif isinstance(c_obj, File):
 	    imp_type = "Sample"
 	elif isinstance(c_obj, EmailMessage):
@@ -172,6 +172,21 @@ class STIXParser():
 	else: # try to parse all other possibilities as Indicator
 	    imp_type = "Indicator"
 	return class_from_type(imp_type)
+
+    def has_network_artifact(self, file_obj):
+	"""
+	Determine if the CybOX File object has a related Artifact of 
+	'Network' type.
+
+	:param file_obj: A CybOX File object
+	:return: True if the File has a Network Traffic Artifact
+	"""
+	if not file_obj or not file_obj.parent or not file_obj.parent.related_objects:
+	    return False
+	for obj in file_obj.parent.related_objects: # attempt to find data in cybox
+	    if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_NETWORK:
+		return True
+	return False
 
     def relate_objects(self):
         """
@@ -182,7 +197,7 @@ class STIXParser():
 	finished_objects = []
 	for obj in self.imported:
 	    if not finished_objects: # Prime the list...
-		finished_objects.append(obj)
+		finished_objects.append(obj[1])
 		continue
 
 	    for right in finished_objects:
