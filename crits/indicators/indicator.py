@@ -231,7 +231,6 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 	db_indicator = Indicator.objects(Q(ind_type=ind_type) & Q(value=obj.value)).first()
 	if db_indicator:
 	    indicator = db_indicator
-	    indicator.add_source(source)
 	else:
 	    indicator = cls(source=source)
 	    indicator.value = obj.value

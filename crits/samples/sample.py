@@ -201,7 +201,6 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
 		return db_obj # don't modify, just return
 
         sample = cls(source=source) # else, start creating new sample record
-
         sample.filename = str(cybox_object.file_name)
 	sample.size = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
         for hash_ in cybox_object.hashes:

@@ -142,6 +142,7 @@ class STIXParser():
 	    cls = self.get_crits_type(obs.object_.properties) # determine which CRITs class matches
 	    try: # try to create CRITs object from observable
 		obj = cls.from_cybox(obs.object_.properties, [self.source])
+		obj.add_source(self.source)
 		obj.save(username=self.source_instance.analyst)
 		self.imported.append((cls._meta['crits_type'], obj)) # use class to parse object
 	    except Exception, e: # probably caused by cybox object we don't handle

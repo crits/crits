@@ -100,9 +100,14 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
         :type source: list
         :returns: :class:`crits.ips.ip.IP`
         """
+	ipstr = str(cybox_object.address_value)
+	db_obj = IP.objects(ip=ipstr).first()
+	if db_obj:
+	    return db_obj
+
 	ip = cls(source=source)
 	ip.ip = str(cybox_object.address_value)
-	ip.ip_type = cybox_object.category
+	ip.ip_type = "Address - %s" % cybox_object.category
         return ip
 
     def stix_description(self):
