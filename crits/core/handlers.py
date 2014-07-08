@@ -837,7 +837,7 @@ def generate_bucket_jtable(request, option):
                     # has a bucket parameter that is for the name of the
                     # to operate on.
                     field['display'] = """ function (data) {
-		    return '<div class="icon-container"><span class="add_button" data-intro="Add a campaign" data-position="right"><a href="#" action="%s?name='+data.record.name+'" class="ui-icon ui-icon-plusthick dialogClick" dialog="campaign-add" persona="promote" title="Promote to campaign"></a></span></div>'
+            return '<div class="icon-container"><span class="add_button" data-intro="Add a campaign" data-position="right"><a href="#" action="%s?name='+data.record.name+'" class="ui-icon ui-icon-plusthick dialogClick" dialog="campaign-add" persona="promote" title="Promote to campaign"></a></span></div>'
                     }
                     """ % url
                 else:

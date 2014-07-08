@@ -175,11 +175,11 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
             f.file_name = self.filename
         # create an Artifact object for the binary if it exists
         if 'filedata' not in exclude:
-	    data = self.filedata.read()
+        data = self.filedata.read()
             if data: # if sample data available
-		data = base64.b64encode(data) # encode
-		a = Artifact(data, Artifact.TYPE_FILE) # create artifact w/data
-		f.add_related(a, "Child_Of") # relate artifact to file
+        data = base64.b64encode(data) # encode
+        a = Artifact(data, Artifact.TYPE_FILE) # create artifact w/data
+        f.add_related(a, "Child_Of") # relate artifact to file
         if 'filetype' not in exclude and 'file_format' not in exclude:
             #NOTE: this doesn't work because the CybOX File object does not
             #   have any support built in for setting the filetype to a
@@ -195,23 +195,23 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
             Convert a Cybox DefinedObject to a MongoEngine Sample object.
         """
 
-	if cybox_object.md5:
-	    db_obj = Sample.objects(md5=cybox_object.md5).first()
-	    if db_obj: # if a sample with md5 already exists
-		return db_obj # don't modify, just return
+    if cybox_object.md5:
+        db_obj = Sample.objects(md5=cybox_object.md5).first()
+        if db_obj: # if a sample with md5 already exists
+        return db_obj # don't modify, just return
 
         sample = cls(source=source) # else, start creating new sample record
         sample.filename = str(cybox_object.file_name)
-	sample.size = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
+    sample.size = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
         for hash_ in cybox_object.hashes:
             if hash_.type_.value.upper() in [Hash.TYPE_MD5, Hash.TYPE_SHA1,
                 Hash.TYPE_SHA256, Hash.TYPE_SSDEEP]:
                 setattr(sample, hash_.type_.value.lower(),
                     str(hash_.simple_hash_value).strip().lower())
-	for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
-	    if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_FILE:
-		sample.add_file_data(base64.b64decode(obj.properties.data))
-		break
+    for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
+        if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_FILE:
+        sample.add_file_data(base64.b64decode(obj.properties.data))
+        break
 
         return sample
 

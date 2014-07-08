@@ -88,13 +88,13 @@ def make_cybox_object(type_, name=None, value=None):
         r.value = value
         return r
     elif type_ == "Account":
-	acct = Account()
-	acct.description = value
+    acct = Account()
+    acct.description = value
         return acct
     elif type_ == "API":
-	api = API()
-	api.description = value
-	api.function_name = name
+    api = API()
+    api.description = value
+    api.function_name = name
         return api
     elif type_ == "Artifact":
         if name == "Data Region":
@@ -107,15 +107,15 @@ def make_cybox_object(type_, name=None, value=None):
             raise UnsupportedCybOXObjectTypeError(type_, name)
         return Artifact(value, atype)
     elif type_ == "Disk":
-	disk = Disk()
-	disk.disk_name = name
-	disk.type = type_
-	return disk
+    disk = Disk()
+    disk.disk_name = name
+    disk.type = type_
+    return disk
     elif type_ == "Disk Partition":
-	disk = DiskPartition()
-	disk.device_name = name
-	disk.type = type_
-	return disk
+    disk = DiskPartition()
+    disk.device_name = name
+    disk.type = type_
+    return disk
     elif type_ == "DNS Query":
         r = URI()
         r.value = value
@@ -135,28 +135,28 @@ def make_cybox_object(type_, name=None, value=None):
         return dr
     elif type_ == "GUI Dialogbox":
         obj = GUIDialogbox()
-	obj.box_caption = name
-	obj.box_text = value
-	return obj
+    obj.box_caption = name
+    obj.box_text = value
+    return obj
     elif type_ == "GUI": # TODO REPR
-	obj = GUI()
-	obj.width = name
-	obj.height = value
-	return obj
+    obj = GUI()
+    obj.width = name
+    obj.height = value
+    return obj
     elif type_ == "GUI Window":
-	obj = GUIWindow()
-	obj.window_display_name = name
-	return obj
+    obj = GUIWindow()
+    obj.window_display_name = name
+    return obj
     elif type_ == "Library":
         obj = Library()
-	obj.name = name
-	obj.type = value
-	return obj
+    obj.name = name
+    obj.type = value
+    return obj
     elif type_ == "Memory":
         obj = Memory()
-	obj.name = name
-	obj.memory_source = value
-	return obj
+    obj.name = name
+    obj.memory_source = value
+    return obj
     elif type_ == "Mutex":
         m = Mutex()
         m.named = True
@@ -164,8 +164,8 @@ def make_cybox_object(type_, name=None, value=None):
         return m
     elif type_ == "Network Connection":
         obj = NetworkConnection()
-	obj.layer7_protocol = name
-	return obj
+    obj.layer7_protocol = name
+    return obj
     elif type_ == "Pipe":
         p = Pipe()
         p.named = True
@@ -184,7 +184,7 @@ def make_cybox_object(type_, name=None, value=None):
         p.name = String(value)
         return p
     elif type_ == "String":
-	return String(value)
+    return String(value)
     elif type_ == "System":
         # Another place where there are lots of attributes to a System.
         # I'm picking hostname and sticking to it.
@@ -193,69 +193,69 @@ def make_cybox_object(type_, name=None, value=None):
         return s
     elif type_ == "User Account":
         obj = UserAccount()
-	obj.username = value
-	return obj
+    obj.username = value
+    return obj
     elif type_ == "Volume":
-	obj = Volume()
-	obj.name = name
-	obj.file_system_type = value
-	return obj
+    obj = Volume()
+    obj.name = name
+    obj.file_system_type = value
+    return obj
     elif type_ == "Win Driver":
         w = WinDriver()
         w.driver_name = String(value)
         return w
     elif type_ == "Win Event Log":
-	obj = WinEventLog()
-	obj.log = value
-	return obj
+    obj = WinEventLog()
+    obj.log = value
+    return obj
     elif type_ == "Win Event":
         w = WinEvent()
         w.name = String(value)
         return w
     elif type_ == "Win Handle":
-	obj = WinHandle()
-	obj.name = value
-	return obj
+    obj = WinHandle()
+    obj.name = value
+    return obj
     elif type_ == "Win Kernel Hook":
-	obj = WinKernelHook()
-	obj.description = value
-	return obj
+    obj = WinKernelHook()
+    obj.description = value
+    return obj
     elif type_ == "Win Mailslot":
-	obj = WinMailslot()
-	obj.name = value
-	return obj
+    obj = WinMailslot()
+    obj.name = value
+    return obj
     elif type_ == "Win Network Share":
-	obj = WinNetworkShare()
-	obj.local_path = value
-	return obj
+    obj = WinNetworkShare()
+    obj.local_path = value
+    return obj
     elif type_ == "Win Process":
-	obj = WinProcess()
-	obj.window_title = value
-	return obj
+    obj = WinProcess()
+    obj.window_title = value
+    return obj
     elif type_ == "Win Registry Key":
-	obj = WinRegistryKey()
-	obj.key = value
-	return obj
+    obj = WinRegistryKey()
+    obj.key = value
+    return obj
     elif type_ == "Win Service":
-	obj = WinService()
-	obj.service_name = value
-	return obj
+    obj = WinService()
+    obj.service_name = value
+    return obj
     elif type_ == "Win System":
-	obj = WinSystem()
-	obj.product_name = value
-	return obj
+    obj = WinSystem()
+    obj.product_name = value
+    return obj
     elif type_ == "Win Task":
-	obj = WinTask()
-	obj.name = value
-	return obj
+    obj = WinTask()
+    obj.name = value
+    return obj
     elif type_ == "Win Volume":
-	obj = WinVolume()
-	obj.drive_letter = value
-	return obj
+    obj = WinVolume()
+    obj.drive_letter = value
+    return obj
     elif type_ == "X509 Certificate":
-	obj = X509Certificate()
-	obj.raw_certificate = value
-	return obj
+    obj = X509Certificate()
+    obj.raw_certificate = value
+    return obj
     elif type_ == "Code": # TODO cybox-unavailable
         pass
     elif type_ == "Device": # TODO cybox-unavailable
@@ -409,16 +409,16 @@ def make_crits_object(cybox_obj):
     elif isinstance(cybox_obj, Artifact):
         o.datatype = "string"
         o.object_type = "Artifact"
-	o.value = str(cybox_obj.data)
+    o.value = str(cybox_obj.data)
         if cybox_obj.type_ == Artifact.TYPE_GENERIC:
-	    o.name = "Data Region"
-	    return o
+        o.name = "Data Region"
+        return o
         elif cybox_obj.type_ == Artifact.TYPE_FILE_SYSTEM:
-	    o.name = "FileSystem Fragment"
-	    return o
+        o.name = "FileSystem Fragment"
+        return o
         elif cybox_obj.type_ == Artifact.TYPE_MEMORY:
-	    o.name = "Memory Region"
-	    return o
+        o.name = "Memory Region"
+        return o
     elif isinstance(cybox_obj, Disk):
         o.datatype = "string"
         o.object_type = "Disk"

@@ -133,14 +133,14 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
             To get the cybox object as xml or json, call to_xml() or
             to_json(), respectively, on the resulting CybOX object.
         """
-	obj = File()
-	obj.md5 = self.md5
-	obj.file_name = self.filename
-	obj.file_format = self.contentType
-	obj.size_in_bytes = self.length
-	data = base64.b64encode(self.filedata.read())
+    obj = File()
+    obj.md5 = self.md5
+    obj.file_name = self.filename
+    obj.file_format = self.contentType
+    obj.size_in_bytes = self.length
+    data = base64.b64encode(self.filedata.read())
         art = Artifact(data, Artifact.TYPE_NETWORK)
-	obj.add_related(art, "Child_Of") # relate artifact to file
+    obj.add_related(art, "Child_Of") # relate artifact to file
         return ([Observable(obj)], self.releasability)
 
     @classmethod
@@ -154,20 +154,20 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
         :type source: list
         :returns: :class:`crits.pcaps.pcap.PCAP`
         """
-	if cybox_object.md5:
-	    db_obj = PCAP.objects(md5=cybox_object.md5).first()
-	    if db_obj:
-		return db_obj
-	pcap = cls(source=source)
-	pcap.md5 = cybox_object.md5
-	pcap.filename = cybox_object.file_name
-	pcap.contentType = cybox_object.file_format
-	pcap.length = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
-	for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
-	    if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_NETWORK:
-		cert.add_file_data(base64.b64decode(obj.properties.data))
-		break
-	return pcap
+    if cybox_object.md5:
+        db_obj = PCAP.objects(md5=cybox_object.md5).first()
+        if db_obj:
+        return db_obj
+    pcap = cls(source=source)
+    pcap.md5 = cybox_object.md5
+    pcap.filename = cybox_object.file_name
+    pcap.contentType = cybox_object.file_format
+    pcap.length = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
+    for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
+        if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_NETWORK:
+        cert.add_file_data(base64.b64decode(obj.properties.data))
+        break
+    return pcap
 
     def stix_description(self):
         return self.description

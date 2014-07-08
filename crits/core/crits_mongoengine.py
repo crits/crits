@@ -654,7 +654,7 @@ class CritsDocument(BaseDocument):
             Converts a CRITs object to a STIX document.
 
             The resulting document includes standardized representations
-	    of all related objects noted within items_to_convert.
+        of all related objects noted within items_to_convert.
 
             Returns the STIX document and a list of objects represented therein.
         """
@@ -663,21 +663,21 @@ class CritsDocument(BaseDocument):
         from cybox.core import Observables
         from stix.common import StructuredText, InformationSource
         from stix.core import STIXPackage, STIXHeader
-	from stix.common.identity import Identity
+    from stix.common.identity import Identity
 
         # These two lists are used to determine which CRITs objects
         # go in which part of the STIX document.
         ind_list = []
         obs_list = []
 
-	# determine which CRITs types support standardization
-	for ctype in settings.CRITS_TYPES:
-	    cls = class_from_type(ctype)
-	    if hasattr(cls, "to_stix_indicator"):
-		ind_list.append(ctype)
-	    elif hasattr(cls, "to_cybox_observable"):
-		obs_list.append(ctype)
-		
+    # determine which CRITs types support standardization
+    for ctype in settings.CRITS_TYPES:
+        cls = class_from_type(ctype)
+        if hasattr(cls, "to_stix_indicator"):
+        ind_list.append(ctype)
+        elif hasattr(cls, "to_cybox_observable"):
+        obs_list.append(ctype)
+        
 
         # Store message
         stix_msg = {
@@ -686,26 +686,26 @@ class CritsDocument(BaseDocument):
                        'final_objects': []
                    }
 
-	# add self to the list of items to STIXify
-	items_to_convert.append({'_type': self._meta['crits_type'], '_id': self.id});
+    # add self to the list of items to STIXify
+    items_to_convert.append({'_type': self._meta['crits_type'], '_id': self.id});
 
         for r in items_to_convert:
-	    rtype = r['_type']
-	    obj = class_from_id(rtype, r['_id'])
-	    if obj._meta['crits_type'] == class_from_type('Event')._meta['crits_type']:
-		# occurs if the 'parent' object is an Event. We don't need to convert
-		# but we do need to add to 'final_objects' for tracking purposes
-		stix_msg['final_objects'].append(self)
+        rtype = r['_type']
+        obj = class_from_id(rtype, r['_id'])
+        if obj._meta['crits_type'] == class_from_type('Event')._meta['crits_type']:
+        # occurs if the 'parent' object is an Event. We don't need to convert
+        # but we do need to add to 'final_objects' for tracking purposes
+        stix_msg['final_objects'].append(self)
 
-	    supported = rtype in ind_list or rtype in obs_list
-	    if obj and supported: # crits object can be standardized
+        supported = rtype in ind_list or rtype in obs_list
+        if obj and supported: # crits object can be standardized
                 if obj._meta['crits_type'] in ind_list: # convert to STIX indicators
-		    ind, releas = obj.to_stix_indicator()
+            ind, releas = obj.to_stix_indicator()
                     stix_msg['stix_indicators'].append(ind)
                 elif obj._meta['crits_type'] in obs_list: # convert to CybOX observable
-		    ind, releas = obj.to_cybox_observable()
+            ind, releas = obj.to_cybox_observable()
                     stix_msg['stix_observables'].extend(ind)
-	        stix_msg['final_objects'].append(obj)
+            stix_msg['final_objects'].append(obj)
 
         tool_list = ToolInformationList()
         tool = ToolInformation("CRITs", "MITRE")
@@ -797,13 +797,13 @@ class CritsSourceDocument(BaseDocument):
         if not isinstance(source_item, EmbeddedSource):
             source_item = s
         if isinstance(source_item, EmbeddedSource):
-	    match = None
+        match = None
             for c, s in enumerate(self.source):
                 if s.name == source_item.name: # find index of matching source
-		    match = c
+            match = c
                     break
-	    if match: # if source exists, add instances to that source
-		self.source[match].instances.extend(source_item.instances)
+        if match: # if source exists, add instances to that source
+        self.source[match].instances.extend(source_item.instances)
             else: # else, add as new source
                 self.source.append(source_item)
 

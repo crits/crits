@@ -202,8 +202,8 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
             to_json(), respectively, on the resulting CybOX object.
         """
         obj = DomainName()
-	obj.value = self.domain
-	obj.type_ = self.record_type
+    obj.value = self.domain
+    obj.type_ = self.record_type
         return ([Observable(obj)], self.releasability)
 
     @classmethod
@@ -217,14 +217,14 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
         :type source: list
         :returns: :class:`crits.indicators.indicator.Indicator`
         """
-	db_obj = Domain.objects(domain=str(cybox_object.value)).first()
-	if db_obj:
-	    return db_obj
-	else:
-	    domain = cls(source=source)
-	    domain.domain = str(cybox_object.value)
-	    domain.record_type = str(cybox_object.type_)
-	    return domain
+    db_obj = Domain.objects(domain=str(cybox_object.value)).first()
+    if db_obj:
+        return db_obj
+    else:
+        domain = cls(source=source)
+        domain.domain = str(cybox_object.value)
+        domain.record_type = str(cybox_object.type_)
+        return domain
 
     def stix_description(self):
         return self.record_type

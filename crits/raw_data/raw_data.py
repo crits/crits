@@ -248,8 +248,8 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
             To get the cybox object as xml or json, call to_xml() or
             to_json(), respectively, on the resulting CybOX object.
         """
-	data = base64.b64encode(self.data)
-	obj = Artifact(data, Artifact.TYPE_FILE)
+    data = base64.b64encode(self.data)
+    obj = Artifact(data, Artifact.TYPE_FILE)
         return ([Observable(obj)], self.releasability)
 
     @classmethod
@@ -264,11 +264,11 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
         :returns: :class:`crits.indicators.indicator.Indicator`
         """
         rawdata = cls(source=source)
-	rawdata.add_file_data(cybox_object.data) # TODO base64 detect/decode
-	db_obj = RawData.objects(md5=rawdata.md5).first()
-	if db_obj:
-	    return db_obj
-	else:
+    rawdata.add_file_data(cybox_object.data) # TODO base64 detect/decode
+    db_obj = RawData.objects(md5=rawdata.md5).first()
+    if db_obj:
+        return db_obj
+    else:
             return rawdata
 
     def stix_description(self):

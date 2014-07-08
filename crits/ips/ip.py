@@ -63,29 +63,29 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
             to_json(), respectively, on the resulting CybOX object.
         """
         obj = Address()
-	obj.address_value = self.ip
+        obj.address_value = self.ip
 
-	temp_type = self.ip_type.replace("-", "")
-	if temp_type.find(Address.CAT_ASN.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_ASN
-	elif temp_type.find(Address.CAT_ATM.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_ATM
-	elif temp_type.find(Address.CAT_CIDR.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_CIDR
-	elif temp_type.find(Address.CAT_MAC.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_MAC
-	elif temp_type.find(Address.CAT_IPV4_NETMASK.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_IPV4_NETMASK
-	elif temp_type.find(Address.CAT_IPV4_NET.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_IPV4_NET
-	elif temp_type.find(Address.CAT_IPV4.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_IPV4
-	elif temp_type.find(Address.CAT_IPV6_NETMASK.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_IPV6_NETMASK
-	elif temp_type.find(Address.CAT_IPV6_NET.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_IPV6_NET
-	elif temp_type.find(Address.CAT_IPV6.replace("-", "")) >= 0:
-	    obj.category = Address.CAT_IPV6
+        temp_type = self.ip_type.replace("-", "")
+        if temp_type.find(Address.CAT_ASN.replace("-", "")) >= 0:
+            obj.category = Address.CAT_ASN
+        elif temp_type.find(Address.CAT_ATM.replace("-", "")) >= 0:
+            obj.category = Address.CAT_ATM
+        elif temp_type.find(Address.CAT_CIDR.replace("-", "")) >= 0:
+            obj.category = Address.CAT_CIDR
+        elif temp_type.find(Address.CAT_MAC.replace("-", "")) >= 0:
+            obj.category = Address.CAT_MAC
+        elif temp_type.find(Address.CAT_IPV4_NETMASK.replace("-", "")) >= 0:
+            obj.category = Address.CAT_IPV4_NETMASK
+        elif temp_type.find(Address.CAT_IPV4_NET.replace("-", "")) >= 0:
+            obj.category = Address.CAT_IPV4_NET
+        elif temp_type.find(Address.CAT_IPV4.replace("-", "")) >= 0:
+            obj.category = Address.CAT_IPV4
+        elif temp_type.find(Address.CAT_IPV6_NETMASK.replace("-", "")) >= 0:
+            obj.category = Address.CAT_IPV6_NETMASK
+        elif temp_type.find(Address.CAT_IPV6_NET.replace("-", "")) >= 0:
+            obj.category = Address.CAT_IPV6_NET
+        elif temp_type.find(Address.CAT_IPV6.replace("-", "")) >= 0:
+            obj.category = Address.CAT_IPV6
 
         return ([Observable(obj)], self.releasability)
 
@@ -100,15 +100,15 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
         :type source: list
         :returns: :class:`crits.ips.ip.IP`
         """
-	ipstr = str(cybox_object.address_value)
-	iptype = "Address - %s" % cybox_object.category
-	db_obj = IP.objects(ip=ipstr, ip_type=iptype).first()
-	if db_obj:
-	    return db_obj
+        ipstr = str(cybox_object.address_value)
+        iptype = "Address - %s" % cybox_object.category
+        db_obj = IP.objects(ip=ipstr, ip_type=iptype).first()
+        if db_obj:
+            return db_obj
 
-	ip = cls(source=source)
-	ip.ip = str(cybox_object.address_value)
-	ip.ip_type = iptype
+        ip = cls(source=source)
+        ip.ip = str(cybox_object.address_value)
+        ip.ip_type = iptype
         return ip
 
     def stix_description(self):

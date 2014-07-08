@@ -228,29 +228,29 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
             ind_type = "%s - %s" % (obj.object_type, obj.name)
         else:
             ind_type = obj.object_type
-	db_indicator = Indicator.objects(Q(ind_type=ind_type) & Q(value=obj.value)).first()
-	if db_indicator:
-	    indicator = db_indicator
-	else:
-	    indicator = cls(source=source)
-	    indicator.value = obj.value
-	    indicator.created = obj.date
-	    indicator.modified = obj.date
+    db_indicator = Indicator.objects(Q(ind_type=ind_type) & Q(value=obj.value)).first()
+    if db_indicator:
+        indicator = db_indicator
+    else:
+        indicator = cls(source=source)
+        indicator.value = obj.value
+        indicator.created = obj.date
+        indicator.modified = obj.date
 
         return indicator
 
     def has_cybox_repr(self):
-	"""
-	    Determine if this indicator is of a type that can
-	    successfully be converted to a CybOX object.
+    """
+        Determine if this indicator is of a type that can
+        successfully be converted to a CybOX object.
 
-	    :return The CybOX representation if possible, else False.
-	"""
-	try:
-	    rep = self.to_cybox()
-	    return rep
-	except Exception, e:
-	    return False
+        :return The CybOX representation if possible, else False.
+    """
+    try:
+        rep = self.to_cybox()
+        return rep
+    except Exception, e:
+        return False
 
     def stix_description(self):
         return self.ind_type
