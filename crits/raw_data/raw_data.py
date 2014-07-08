@@ -248,35 +248,28 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
             To get the cybox object as xml or json, call to_xml() or
             to_json(), respectively, on the resulting CybOX object.
         """
-    data = base64.b64encode(self.data)
-    obj = Artifact(data, Artifact.TYPE_FILE)
-        return ([Observable(obj)], self.releasability)
+        data = base64.b64encode(self.data)
+        obj = Artifact(data, Artifact.TYPE_FILE)
+        obs = Observable(obj)
+        obs.description = self.description
+        return ([obs], self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_object, source):
+    def from_cybox(cls, cybox_obs, source):
         """
         Convert a Cybox DefinedObject to a MongoEngine Indicator object.
 
-        :param cybox_object: The cybox object to create the indicator from.
-        :type cybox_object: :class:`cybox.core.Observable``
+        :param cybox_obs: The cybox object to create the indicator from.
+        :type cybox_obs: :class:`cybox.core.Observable``
         :param source: The source list for the Indicator.
         :type source: list
         :returns: :class:`crits.indicators.indicator.Indicator`
         """
+        cybox_object = cybox_obs.object_.properties
         rawdata = cls(source=source)
-    rawdata.add_file_data(cybox_object.data) # TODO base64 detect/decode
-    db_obj = RawData.objects(md5=rawdata.md5).first()
-    if db_obj:
-        return db_obj
-    else:
-            return rawdata
-
-    def stix_description(self):
-        return self.description
-
-    def stix_intent(self):
-        return "Observations"
-
-    def stix_title(self):
-        return self.data_type
+        rawdata.add_file_data(cybox_object.data) # TODO b64 detection
+        db_obj = RawData.objects(md5=rawdata.md5).first()
+        if db_obj:
+            return db_obj
+        return rawdata
 

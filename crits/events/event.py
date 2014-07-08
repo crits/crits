@@ -84,7 +84,6 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
     def stix_description(self):
         return self.description
 
-
     def stix_intent(self):
         return self.event_type
 

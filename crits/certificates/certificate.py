@@ -142,6 +142,7 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
         obj.custom_properties = CustomProperties()
         obj.custom_properties.append(custom_prop)
         obs = Observable(obj)
+        obs.description = self.description
         data = self.filedata.read()
         if data: # if cert data available
             data = base64.b64encode(data) # encode
@@ -150,16 +151,17 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
         return ([obs], self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_object, source):
+    def from_cybox(cls, cybox_obs, source):
         """
         Convert a Cybox DefinedObject to a MongoEngine Indicator object.
 
-        :param cybox_object: The cybox object to create the indicator from.
-        :type cybox_object: :class:`cybox.core.Observable``
+        :param cybox_obs: The cybox object to create the indicator from.
+        :type cybox_obs: :class:`cybox.core.Observable``
         :param source: The source list for the Indicator.
         :type source: list
         :returns: :class:`crits.indicators.indicator.Indicator`
         """
+        cybox_object = cybox_obs.object_.properties
         if cybox_object.md5:
             db_obj = Certificate.objects(md5=cybox_object.md5).first()
             if db_obj:
@@ -170,17 +172,9 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
         cert.filename = cybox_object.file_name
         cert.filetype = cybox_object.file_format
         cert.size = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
+        cert.description = cybox_obs.description
         for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
             if isinstance(obj.properties, Artifact):
                 cert.add_file_data(base64.b64decode(obj.properties.data))
         return cert
-
-    def stix_description(self):
-        return self.description
-
-    def stix_intent(self):
-        return "Observations"
-
-    def stix_title(self):
-        return self.filename
 

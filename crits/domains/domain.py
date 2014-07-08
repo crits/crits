@@ -202,36 +202,28 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
             to_json(), respectively, on the resulting CybOX object.
         """
         obj = DomainName()
-    obj.value = self.domain
-    obj.type_ = self.record_type
+        obj.value = self.domain
+        obj.type_ = self.record_type
         return ([Observable(obj)], self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_object, source):
+    def from_cybox(cls, cybox_obs, source):
         """
         Convert a Cybox DefinedObject to a MongoEngine Indicator object.
 
-        :param cybox_object: The cybox object to create the indicator from.
-        :type cybox_object: :class:`cybox.core.Observable``
+        :param cybox_obs: The cybox observable to create the indicator from.
+        :type cybox_obs: :class:`cybox.core.Observable``
         :param source: The source list for the Indicator.
         :type source: list
         :returns: :class:`crits.indicators.indicator.Indicator`
         """
-    db_obj = Domain.objects(domain=str(cybox_object.value)).first()
-    if db_obj:
-        return db_obj
-    else:
-        domain = cls(source=source)
-        domain.domain = str(cybox_object.value)
-        domain.record_type = str(cybox_object.type_)
-        return domain
-
-    def stix_description(self):
-        return self.record_type
-
-    def stix_intent(self):
-        return "Observations"
-
-    def stix_title(self):
-        return self.domain
+        cybox_object = cybox_obs.object_.properties
+        db_obj = Domain.objects(domain=str(cybox_object.value)).first()
+        if db_obj:
+            return db_obj
+        else:
+            domain = cls(source=source)
+            domain.domain = str(cybox_object.value)
+            domain.record_type = str(cybox_object.type_)
+            return domain
 
