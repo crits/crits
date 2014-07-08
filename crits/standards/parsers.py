@@ -139,11 +139,11 @@ class STIXParser():
 	:type observables: List of STIX observables.
 	"""
 	for obs in observables: # for each STIX observable
-	    if not obs.object_ or not obs.object_.properties: # does CRITs have a good way to handle logical composition of observables?
-		self.failed.append(obs) # note for display in UI
-		continue # TODO handle observable_composition if we answer this question
-	    cls = self.get_crits_type(obs.object_.properties) # determine which CRITs class matches
+	    if not obs.object_ or not obs.object_.properties: 
+		self.failed.append(("Item", obs)) # note for display in UI
+		continue
 	    try: # try to create CRITs object from observable
+		cls = self.get_crits_type(obs.object_.properties) # determine which CRITs class matches
 		obj = cls.from_cybox(obs.object_.properties, [self.source])
 		obj.add_source(self.source)
 		obj.save(username=self.source_instance.analyst)
