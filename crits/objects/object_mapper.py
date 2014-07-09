@@ -8,6 +8,7 @@ from cybox.objects.api_object import API
 from cybox.objects.artifact_object import Artifact
 from cybox.objects.disk_object import Disk
 from cybox.objects.disk_partition_object import DiskPartition
+from cybox.objects.domain_name_object import DomainName
 from cybox.objects.dns_query_object import DNSQuery, DNSQuestion, DNSRecord
 from cybox.objects.email_message_object import EmailMessage
 from cybox.objects.gui_dialogbox_object import GUIDialogbox
@@ -345,7 +346,7 @@ def make_cybox_object(type_, name=None, value=None):
     elif type_ == "Win File": # TODO REPR
         pass
     elif type_ == "Win Kernel": # TODO cybox-unavailable
-        pass 
+        pass
     elif type_ == "Win Mutex": # TODO REPR
         pass
     elif type_ == "Win Network Route Entry": # TODO cybox-unavailable
@@ -538,6 +539,12 @@ def make_crits_object(cybox_obj):
         o.datatype = "string"
         o.object_type = "Win Network Share"
         o.value = str(cybox_obj.local_path)
+        return o
+    elif isinstance(cybox_obj, DomainName):
+        o.datatype = "string"
+        o.object_type = "Domain Name"
+        o.value = str(cybox_obj.value)
+        print o.value
         return o
     elif isinstance(cybox_obj, WinProcess):
         o.datatype = "string"
