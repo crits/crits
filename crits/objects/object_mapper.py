@@ -1,6 +1,6 @@
 from crits.core.crits_mongoengine import EmbeddedObject
 
-from cybox.common import String, PositiveInteger
+from cybox.common import String, PositiveInteger, StructuredText
 
 from cybox.objects.account_object import Account
 from cybox.objects.address_object import Address
