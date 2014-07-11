@@ -44,7 +44,7 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
                          'details_url': 'crits.events.views.view_event',
                          'details_url_key': 'id',
                          'default_sort': "created DESC",
-                         'searchurl': 'crits.emails.views.emails_listing',
+                         'searchurl': 'crits.events.views.events_listing',
                          'fields': [ "title", "event_type", "created",
                                      "source", "campaign", "status", "id"],
                          'jtopts_fields': [ "details",

@@ -1101,6 +1101,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     relationships = ListField(EmbeddedDocumentField(EmbeddedRelationship))
     releasability = ListField(EmbeddedDocumentField(Releasability))
     screenshots = ListField(StringField())
+    sectors = ListField(StringField())
 
     def add_campaign(self, campaign_item=None):
         """
@@ -1203,6 +1204,58 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         return ','.join(str(x) for x in self.bucket_list)
+
+    def add_sector_list(self, sectors, analyst, append=True):
+        """
+        Add sectors to this top-level object.
+
+        :param sectors: The sectors to be added.
+        :type tags: list, str
+        :param analyst: The analyst adding these sectors.
+        :type analyst: str
+        :param append: Whether or not to replace or append these sectors.
+        :type append: boolean
+        """
+
+        from crits.core.handlers import alter_sector_list
+        # Track the addition or subtraction of tags.
+        # Get the sectors for the object, find out if this is an addition
+        # or subtraction of a sector.
+        if isinstance(sectors, list) and len(sectors) == 1 and sectors[0] == '':
+            parsed_sectors = []
+        elif isinstance(sectors, (str, unicode)):
+            parsed_sectors = sectors.split(',')
+        else:
+            parsed_sectors = sectors
+
+        parsed_sectors = [s.strip() for s in parsed_sectors]
+
+        names = None
+        if len(self.sectors) >= len(parsed_sectors):
+            names = [x for x in self.sectors if x not in parsed_sectors and x != '']
+            val = -1
+        else:
+            names = [x for x in parsed_sectors if x not in self.sectors and x != '']
+            val = 1
+
+        if names:
+            alter_sector_list(self, names, val)
+
+        if append:
+            for t in parsed_sectors:
+                if t not in self.sectors:
+                    self.sectors.append(t)
+        else:
+            self.sectors = parsed_sectors
+
+    def get_sectors_list_string(self):
+        """
+        Collapse the list of sectors into a single comma-separated string.
+
+        :returns: str
+        """
+
+        return ','.join(str(x) for x in self.sectors)
 
     def get_comments(self):
         """

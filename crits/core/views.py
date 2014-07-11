@@ -30,11 +30,13 @@ from crits.core.handlers import add_new_source, generate_counts_jtable
 from crits.core.handlers import source_add_update, source_remove, source_remove_all
 from crits.core.handlers import modify_bucket_list, promote_bucket_list
 from crits.core.handlers import download_object_handler, unflatten
+from crits.core.handlers import modify_sector_list, get_sector_options
 from crits.core.handlers import generate_bucket_jtable, generate_bucket_csv
+from crits.core.handlers import generate_sector_jtable, generate_sector_csv
 from crits.core.handlers import generate_dashboard, generate_global_search
 from crits.core.handlers import login_user, reset_user_password
 from crits.core.handlers import generate_user_profile, generate_user_preference
-from crits.core.handlers import modify_source_access
+from crits.core.handlers import modify_source_access, get_bucket_autocomplete
 from crits.core.handlers import dns_timeline, email_timeline, indicator_timeline
 from crits.core.handlers import generate_users_jtable, generate_items_jtable
 from crits.core.handlers import toggle_item_state, download_grid_file
@@ -1886,3 +1888,66 @@ def revoke_api_key(request):
         return render_to_response("error.html",
                                   {"error" : error },
                                   RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def sector_modify(request):
+    """
+    Modify a sectors list for a top-level object. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        sectors = request.POST['sectors'].split(",")
+        oid = request.POST['oid']
+        itype = request.POST['itype']
+        modify_sector_list(itype, oid, sectors, request.user.username)
+    return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def sector_list(request, option=None):
+    """
+    Generate the jtable data for rendering in the list template.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Action to take.
+    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if option == "csv":
+        return generate_sector_csv(request)
+    return generate_sector_jtable(request, option)
+
+@user_passes_test(user_can_view_data)
+def get_available_sectors(request):
+    """
+    Get the available sectors to use.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        return get_sector_options()
+    return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def bucket_autocomplete(request):
+    """
+    Get the list of current buckets to autocomplete.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        term = request.POST.get('term', None)
+        if term:
+            return get_bucket_autocomplete(term)
+    return HttpResponse({})
