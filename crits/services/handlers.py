@@ -88,13 +88,12 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
         return result
 
     final_config = db_config
-    if custom_config:
-        # Merge the submitted config with the one from the database.
-        # This is because not all config options may be submitted.
-        final_config.update(custom_config)
+    # Merge the submitted config with the one from the database.
+    # This is because not all config options may be submitted.
+    final_config.update(custom_config)
 
-        form = service_class.bind_runtime_form(analyst, final_config)
-
+    form = service_class.bind_runtime_form(analyst, final_config)
+    if form:
         if not form.is_valid():
             # TODO: return corrected form via AJAX
             result['html'] = str(form.errors)
