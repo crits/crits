@@ -25,7 +25,7 @@ from crits.domains.forms import AddDomainForm, UpdateWhoisForm, DiffWhoisForm
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict, validate_and_add_new_handler_object
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 def get_domain(domain):
     """
@@ -132,8 +132,7 @@ def get_domain_details(domain, analyst):
     favorite = is_user_favorite("%s" % analyst, 'Domain', dmain.id)
 
     # services
-    manager = crits.services.manager
-    service_list = manager.get_supported_services('Domain', True)
+    service_list = get_supported_services('Domain')
 
     args = {'objects': objects,
             'relationships': relationships,

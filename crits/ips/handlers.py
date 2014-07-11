@@ -20,7 +20,7 @@ from crits.ips.forms import AddIPForm
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict, validate_and_add_new_handler_object
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 def generate_ip_csv(request):
     """
@@ -188,8 +188,7 @@ def get_ip_details(ip, analyst):
         favorite = is_user_favorite("%s" % analyst, 'IP', ip.id)
 
         # services
-        manager = crits.services.manager
-        service_list = manager.get_supported_services('IP', True)
+        service_list = get_supported_services('IP')
 
         args = {'objects': objects,
                 'relationships': relationships,
