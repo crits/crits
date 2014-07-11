@@ -20,15 +20,21 @@ from crits.services.service import CRITsService
 
 logger = logging.getLogger(__name__)
 
-def run_service(name, crits_type, identifier, analyst, execute='local',
-                custom_config={}):
+def run_service(name, crits_type, identifier, analyst, obj=None,
+                execute='local', custom_config={}):
     """
     Run a service.
 
     :param name: The name of the service to run.
     :type name: str
-    :param obj: The CRITs object.
+    :param crits_type: The type of the object.
+    :type name: str
+    :param identifier: The identifier of the object.
+    :type name: str
+    :param obj: The CRITs object, if given this overrides crits_type and identifier.
     :type obj: CRITs object.
+    :param analyst: The user updating the results.
+    :type analyst: str
     :param execute: The execution type.
     :type execute: str
     :param custom_config: Use a custom configuration for this run.
@@ -49,10 +55,11 @@ def run_service(name, crits_type, identifier, analyst, execute='local',
         result['html'] = "Unable to get service class."
         return result
 
-    obj = class_from_id(crits_type, identifier)
     if not obj:
-        result['html'] = 'Could not find object.'
-        return result
+        obj = class_from_id(crits_type, identifier)
+        if not obj:
+            result['html'] = 'Could not find object.'
+            return result
 
     service = CRITsService.objects(name=name).first()
     if not service:
