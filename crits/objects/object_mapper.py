@@ -6,6 +6,7 @@ from cybox.objects.account_object import Account
 from cybox.objects.address_object import Address
 from cybox.objects.api_object import API
 from cybox.objects.artifact_object import Artifact
+from cybox.objects.code_object import Code
 from cybox.objects.disk_object import Disk
 from cybox.objects.disk_partition_object import DiskPartition
 from cybox.objects.domain_name_object import DomainName
@@ -14,6 +15,7 @@ from cybox.objects.email_message_object import EmailMessage
 from cybox.objects.gui_dialogbox_object import GUIDialogbox
 from cybox.objects.gui_object import GUI
 from cybox.objects.gui_window_object import GUIWindow
+from cybox.objects.http_session_object import HTTPRequestHeaderFields
 from cybox.objects.library_object import Library
 from cybox.objects.memory_object import Memory
 from cybox.objects.mutex_object import Mutex
@@ -37,6 +39,7 @@ from cybox.objects.win_registry_key_object import WinRegistryKey
 from cybox.objects.win_service_object import WinService
 from cybox.objects.win_system_object import WinSystem
 from cybox.objects.win_task_object import WinTask
+from cybox.objects.win_user_object import WinUser
 from cybox.objects.win_volume_object import WinVolume
 from cybox.objects.x509_certificate_object import X509Certificate
 
@@ -77,21 +80,16 @@ def make_cybox_object(type_, name=None, value=None):
     :returns: CybOX object
     """
 
-    if type_ == "Address":
+    if type_ == "Account":
+        acct = Account()
+        acct.description = value
+        return acct
+    elif type_ == "Address":
         return Address(category=name, address_value=value)
     elif type_ == "Email Message":
         e = EmailMessage()
         e.raw_body = value
         return e
-    elif type_ == "URI":
-        r = URI()
-        r.type_ = name
-        r.value = value
-        return r
-    elif type_ == "Account":
-        acct = Account()
-        acct.description = value
-        return acct
     elif type_ == "API":
         api = API()
         api.description = value
@@ -107,6 +105,11 @@ def make_cybox_object(type_, name=None, value=None):
         else:
             raise UnsupportedCybOXObjectTypeError(type_, name)
         return Artifact(value, atype)
+    elif type_ == "Code":
+        obj = Code()
+        obj.code_segment = value
+        obj.type = name
+        return obj
     elif type_ == "Disk":
         disk = Disk()
         disk.disk_name = name
@@ -139,14 +142,15 @@ def make_cybox_object(type_, name=None, value=None):
         obj.box_caption = name
         obj.box_text = value
         return obj
-    elif type_ == "GUI": # TODO REPR
-        obj = GUI()
-        obj.width = name
-        obj.height = value
-        return obj
     elif type_ == "GUI Window":
         obj = GUIWindow()
         obj.window_display_name = name
+        return obj
+    elif type_ == "HTTP Request Header Fields" and name and name == "User-Agent":
+        # TODO/NOTE: HTTPRequestHeaderFields has a ton of fields for info.
+        #    we should revisit this as UI is reworked or CybOX is improved.
+        obj = HTTPRequestHeaderFields()
+        obj.user_agent = value
         return obj
     elif type_ == "Library":
         obj = Library()
@@ -180,18 +184,20 @@ def make_cybox_object(type_, name=None, value=None):
             raise UnsupportedCybOXObjectTypeError(type_, name)
         return p
     elif type_ == "Process":
-        # There are lots of attributes to a Process, let's use "name".
         p = Process()
         p.name = String(value)
         return p
     elif type_ == "String":
         return String(value)
     elif type_ == "System":
-        # Another place where there are lots of attributes to a System.
-        # I'm picking hostname and sticking to it.
         s = System()
         s.hostname = String(value)
         return s
+    elif type_ == "URI":
+        r = URI()
+        r.type_ = name
+        r.value = value
+        return r
     elif type_ == "User Account":
         obj = UserAccount()
         obj.username = value
@@ -215,7 +221,8 @@ def make_cybox_object(type_, name=None, value=None):
         return w
     elif type_ == "Win Handle":
         obj = WinHandle()
-        obj.name = value
+        obj.type_ = name
+        obj.object_address = value
         return obj
     elif type_ == "Win Kernel Hook":
         obj = WinKernelHook()
@@ -249,6 +256,10 @@ def make_cybox_object(type_, name=None, value=None):
         obj = WinTask()
         obj.name = value
         return obj
+    elif type_ == "Win User Account":
+        obj = WinUser()
+        obj.security_id = value
+        return obj
     elif type_ == "Win Volume":
         obj = WinVolume()
         obj.drive_letter = value
@@ -257,114 +268,47 @@ def make_cybox_object(type_, name=None, value=None):
         obj = X509Certificate()
         obj.raw_certificate = value
         return obj
-    elif type_ == "Code": # TODO cybox-unavailable
-        pass
-    elif type_ == "Device": # TODO cybox-unavailable
-        pass
-    elif type_ == "DNS Cache": # TODO cybox-unavailable
-        pass
-    elif type_ == "File": # TODO REPR
-        pass
-    elif type_ == "HTTP Session": #TODO REPR
-        # HTTPSession.http_request_response is a list of HTTPRequestResponse
-        # objects.
+    """
+    The following are types that are listed in the 'Indicator Type' box of
+    the 'New Indicator' dialog in CRITs. These types, unlike those handled
+    above, cannot be written to or read from CybOX at this point.
 
-        # HTTPRequestResponse objects have two attributes:
-        # http_client_request (type: HTTPClientRequest)
-        # http_server_response (type: HTTPServerResponse)
-
-        # HTTPClientRequest objects have three attributes:
-        # http_request_line (type: HTTPRequestLine)
-        # http_request_header (type: HTTPRequestHeader)
-        # http_message_body (type: HTTPMessage)
-
-        # HTTPRequestLine objects have three attributes:
-        # http_method (type: String (the cybox kind))
-        # value (type: String (the cybox kind))
-        # version (type: String (the cybox kind))
-
-        # HTTPRequestHeader has two attributes:
-        # raw_header (type: String (the cybox kind))
-        # parsed_header (type: HTTPRequestHeaderFields)
-
-        # HTTPMessage has two attributes:
-        # length (type: PositiveInteger)
-        # message_body (type: String (the cybox kind))
-
-        # HTTPRequestHeaderFields have a crap-ton of attributes. All of which
-        # are just random HTTP header names. Most are of type String (the
-        # cybox kind) but some (content_length) are of type Integer (the
-        # cybox kind), from_ (Address), date (DateTime (probably a cybox thing)
-        # host (HostField), referer (URI), dnt (URI, WTF?) and random other
-        # things.
-
-        # As near as I can tell HTTPServerResponse objects are the same
-        # structure as an HTTPClientRequest with minor differences. For
-        # example, an HTTPServerResponse has an HTTPStatusLine in place of
-        # the HTTPRequestLine.
-        pass # XXX: We shouldn't support this.
-    elif type_ == "HTTP Request Header Fields": # TODO REPR
-        pass
-    elif type_ == "Linux Package": # TODO cybox-unavailable
-        pass
-    elif type_ == "Network Flow": # TODO cybox-unavailable
-        pass
-    elif type_ == "Network Packet": # TODO REPR
-        pass
-    elif type_ == "Network Route Entry": # TODO cybox-unavailable
-        pass
-    elif type_ == "Network Route": # TODO cybox-unavailable
-        pass
-    elif type_ == "Network Subnet": # TODO cybox-unavailable
-        pass
-    elif type_ == "Semaphore": # TODO cybox-unavailable
-        pass
-    elif type_ == "Socket": # TODO REPR
-        pass
-    elif type_ == "UNIX File": # TODO cybox-unavailable
-        pass
-    elif type_ == "UNIX Network Route Entry": # TODO cybox-unavailable
-        pass
-    elif type_ == "UNIX Pipe": # TODO cybox-unavailable
-        pass
-    elif type_ == "UNIX Process": # TODO cybox-unavailable
-        pass
-    elif type_ == "UNIX User Account": # TODO cybox-unavailable
-        pass
-    elif type_ == "UNIX Volume": # TODO cybox-unavailable
-        pass
-    elif type_ == "User Session": # TODO cybox-unavailable
-        pass
-    elif type_ == "Whois": # TODO REPR
-        pass
-    elif type_ == "Win Computer Account": # TODO cybox-unavailable
-        pass
-    elif type_ == "Win Critical Section": # TODO cybox-unavailable
-        pass
-    elif type_ == "Win Executable File": # TODO REPR
-        pass
-    elif type_ == "Win File": # TODO REPR
-        pass
-    elif type_ == "Win Kernel": # TODO cybox-unavailable
-        pass
-    elif type_ == "Win Mutex": # TODO REPR
-        pass
-    elif type_ == "Win Network Route Entry": # TODO cybox-unavailable
-        pass
-    elif type_ == "Win Pipe": # TODO REPR
-        pass
-    elif type_ == "Win Prefetch": # TODO cybox-unavailable
-        pass
-    elif type_ == "Win Semaphore": # TODO cybox-unavailable
-        pass
-    elif type_ == "Win System Restore": # TODO cybox-unavailable
-        pass
-    elif type_ == "Win Thread": # TODO REPR
-        pass
-    elif type_ == "Win User Account": # TODO REPR
-        pass
-    elif type_ == "Win Waitable Timer": # TODO cybox-unavailable
-        pass
+    The reason for the type being omitted is written as a comment inline.
+    This can (and should) be revisited as new versions of CybOX are released.
+    In the mean time, these types will raise unsupported errors.
+    """
+    #elif type_ == "Device": # No CybOX API
+    #elif type_ == "DNS Cache": # No CybOX API
+    #elif type_ == "GUI": # revisit when CRITs supports width & height specification
+    #elif type_ == "HTTP Session": # No good mapping between CybOX/CRITs
+    #elif type_ == "Linux Package": # No CybOX API
+    #elif type_ == "Network Packet": # No good mapping between CybOX/CRITs
+    #elif type_ == "Network Route Entry": # No CybOX API
+    #elif type_ == "Network Route": # No CybOX API
+    #elif type_ == "Network Subnet": # No CybOX API
+    #elif type_ == "Semaphore": # No CybOX API
+    #elif type_ == "Socket": # No good mapping between CybOX/CRITs
+    #elif type_ == "UNIX File": # No CybOX API
+    #elif type_ == "UNIX Network Route Entry": # No CybOX API
+    #elif type_ == "UNIX Pipe": # No CybOX API
+    #elif type_ == "UNIX Process": # No CybOX API
+    #elif type_ == "UNIX User Account": # No CybOX API
+    #elif type_ == "UNIX Volume": # No CybOX API
+    #elif type_ == "User Session": # No CybOX API
+    #elif type_ == "Whois": # No good mapping between CybOX/CRITs
+    #elif type_ == "Win Computer Account": # No CybOX API
+    #elif type_ == "Win Critical Section": # No CybOX API
+    #elif type_ == "Win Executable File": # No good mapping between CybOX/CRITs
+    #elif type_ == "Win File": # No good mapping between CybOX/CRITs
+    #elif type_ == "Win Kernel": # No CybOX API
+    #elif type_ == "Win Mutex": # No good mapping between CybOX/CRITs
+    #elif type_ == "Win Network Route Entry": # No CybOX API
+    #elif type_ == "Win Pipe": # No good mapping between CybOX/CRITs
+    #elif type_ == "Win Prefetch": # No CybOX API
+    #elif type_ == "Win Semaphore": # No CybOX API
+    #elif type_ == "Win System Restore": # No CybOX API
+    #elif type_ == "Win Thread": # No good mapping between CybOX/CRITs
+    #elif type_ == "Win Waitable Timer": # No CybOX API
     raise UnsupportedCybOXObjectTypeError(type_, name)
 
 def make_crits_object(cybox_obj):
@@ -377,38 +321,33 @@ def make_crits_object(cybox_obj):
     """
 
     o = EmbeddedObject()
+    o.datatype = "string"
     if isinstance(cybox_obj, Address):
-        o.datatype = "string"
         o.object_type = "Address"
         o.name = str(cybox_obj.category)
         o.value = str(cybox_obj.address_value)
         return o
     elif isinstance(cybox_obj, URI):
-        o.datatype = "string"
         o.object_type = "URI"
         o.name = str(cybox_obj.type_)
         o.value = str(cybox_obj.value)
         return o
     elif isinstance(cybox_obj, EmailMessage):
-        o.datatype = "string"
         o.object_type = "Email Message"
         o.name = str(cybox_obj.type_)
         o.value = str(cybox_obj.value)
         return o
     elif isinstance(cybox_obj, Account):
-        o.datatype = "string"
         o.object_type = "Account"
         o.name = str(cybox_obj.type_)
         o.value = str(cybox_obj.description)
         return o
     elif isinstance(cybox_obj, API):
-        o.datatype = "string"
         o.object_type = "API"
         o.name = str(cybox_obj.function_name)
         o.value = str(cybox_obj.description)
         return o
     elif isinstance(cybox_obj, Artifact):
-        o.datatype = "string"
         o.object_type = "Artifact"
         o.value = str(cybox_obj.data)
         if cybox_obj.type_ == Artifact.TYPE_GENERIC:
@@ -421,164 +360,133 @@ def make_crits_object(cybox_obj):
             o.name = "Memory Region"
             return o
     elif isinstance(cybox_obj, Disk):
-        o.datatype = "string"
         o.object_type = "Disk"
         o.name = str(cybox_obj.disk_name)
         return o
     elif isinstance(cybox_obj, DiskPartition):
-        o.datatype = "string"
         o.object_type = "Disk Partition"
         o.name = str(cybox_obj.device_name)
         return o
     elif isinstance(cybox_obj, DNSQuery):
-        o.datatype = "string"
         o.object_type = "DNS Query"
         o.value = str(cybox_obj.question.qname.value)
         return o
     elif isinstance(cybox_obj, DNSRecord):
-        o.datatype = "string"
         o.object_type = "DNS Record"
         o.value = str(cybox_obj.description)
         return o
     elif isinstance(cybox_obj, GUIDialogbox):
-        o.datatype = "string"
         o.object_type = "GUI Dialogbox"
         o.value = str(cybox_obj.box_text)
         return o
     elif isinstance(cybox_obj, GUIWindow):
-        o.datatype = "string"
         o.object_type = "GUI Window"
         o.value = str(cybox_obj.display_name)
         return o
     elif isinstance(cybox_obj, Library):
-        o.datatype = "string"
         o.object_type = "Library"
         o.value = str(cybox_obj.type)
         return o
     elif isinstance(cybox_obj, Memory):
-        o.datatype = "string"
         o.object_type = "Memory"
         o.value = str(cybox_obj.memory_source)
         return o
     elif isinstance(cybox_obj, Mutex):
-        o.datatype = "string"
         o.object_type = "Mutex"
         o.value = str(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, NetworkConnection):
-        o.datatype = "string"
         o.object_type = "Network Connection"
         o.value = str(cybox_obj.layer7_protocol)
         return o
     elif isinstance(cybox_obj, Pipe):
-        o.datatype = "string"
         o.object_type = "Pipe"
         o.value = str(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, Port):
-        o.datatype = "string"
         o.object_type = "Port"
         o.value = str(cybox_obj.port_value)
         return o
     elif isinstance(cybox_obj, Process):
-        o.datatype = "string"
         o.object_type = "Process"
         o.value = str(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, String):
-        o.datatype = "string"
         o.object_type = "String"
         o.value = str(cybox_obj.value)
         return o
     elif isinstance(cybox_obj, System):
-        o.datatype = "string"
         o.object_type = "System"
         o.value = str(cybox_obj.hostname)
         return o
     elif isinstance(cybox_obj, UserAccount):
-        o.datatype = "string"
         o.object_type = "User Account"
         o.value = str(cybox_obj.username)
         return o
     elif isinstance(cybox_obj, Volume):
-        o.datatype = "string"
         o.object_type = "Volume"
         o.value = str(cybox_obj.file_system_type)
         return o
     elif isinstance(cybox_obj, WinDriver):
-        o.datatype = "string"
         o.object_type = "Win Driver"
         o.value = str(cybox_obj.driver_name)
         return o
     elif isinstance(cybox_obj, WinEventLog):
-        o.datatype = "string"
         o.object_type = "Win Event Log"
         o.value = str(cybox_obj.log)
         return o
     elif isinstance(cybox_obj, WinEvent):
-        o.datatype = "string"
         o.object_type = "Win Event"
         o.value = str(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, WinHandle):
-        o.datatype = "string"
         o.object_type = "Win Handle"
         o.value = str(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, WinKernelHook):
-        o.datatype = "string"
         o.object_type = "Win Kernel Hook"
         o.value = str(cybox_obj.description)
         return o
     elif isinstance(cybox_obj, WinMailslot):
-        o.datatype = "string"
         o.object_type = "Win Mailslot"
         o.value = str(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, WinNetworkShare):
-        o.datatype = "string"
         o.object_type = "Win Network Share"
         o.value = str(cybox_obj.local_path)
         return o
     elif isinstance(cybox_obj, DomainName):
-        o.datatype = "string"
         o.object_type = "Domain Name"
         o.value = str(cybox_obj.value)
         print o.value
         return o
     elif isinstance(cybox_obj, WinProcess):
-        o.datatype = "string"
         o.object_type = "Win Process"
         o.value = str(cybox_obj.window_title)
         return o
     elif isinstance(cybox_obj, WinRegistryKey):
-        o.datatype = "string"
         o.object_type = "Win Registry Key"
         o.value = str(cybox_obj.key)
         return o
     elif isinstance(cybox_obj, WinService):
-        o.datatype = "string"
         o.object_type = "Win Service"
         o.value = str(cybox_obj.service_name)
         return o
     elif isinstance(cybox_obj, WinSystem):
-        o.datatype = "string"
         o.object_type = "Win System"
         o.value = str(cybox_obj.product_name)
         return o
     elif isinstance(cybox_obj, WinTask):
-        o.datatype = "string"
         o.object_type = "Win Task"
         o.value = str(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, WinVolume):
-        o.datatype = "string"
         o.object_type = "Win Volume"
         o.value = str(cybox_obj.drive_letter)
         return o
     elif isinstance(cybox_obj, X509Certificate):
-        o.datatype = "string"
         o.object_type = "X509 Certificate"
         o.value = str(cybox_obj.raw_certificate)
         return o
     raise UnsupportedCRITsObjectTypeError(cybox_obj)
+
