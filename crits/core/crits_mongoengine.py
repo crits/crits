@@ -804,15 +804,15 @@ class CritsSourceDocument(BaseDocument):
         if not isinstance(source_item, EmbeddedSource):
             source_item = s
         if isinstance(source_item, EmbeddedSource):
-        match = None
+            match = None
             for c, s in enumerate(self.source):
                 if s.name == source_item.name: # find index of matching source
-            match = c
+                    match = c
                     break
         if match: # if source exists, add instances to that source
-        self.source[match].instances.extend(source_item.instances)
-            else: # else, add as new source
-                self.source.append(source_item)
+            self.source[match].instances.extend(source_item.instances)
+        else: # else, add as new source
+            self.source.append(source_item)
 
     def edit_source(self, source=None, date=None, method=None,
                     reference=None, analyst=None):
