@@ -93,7 +93,6 @@ def make_cybox_object(type_, name=None, value=None):
     elif type_ == "API":
         api = API()
         api.description = value
-        api.function_name = name
         return api
     elif type_ == "Artifact":
         if name == "Data Region":
@@ -112,13 +111,13 @@ def make_cybox_object(type_, name=None, value=None):
         return obj
     elif type_ == "Disk":
         disk = Disk()
-        disk.disk_name = name
-        disk.type = type_
+        disk.disk_name = type_
+        disk.type = name
         return disk
     elif type_ == "Disk Partition":
         disk = DiskPartition()
-        disk.device_name = name
-        disk.type = type_
+        disk.device_name = type_
+        disk.type = name
         return disk
     elif type_ == "DNS Query":
         r = URI()
@@ -139,12 +138,11 @@ def make_cybox_object(type_, name=None, value=None):
         return dr
     elif type_ == "GUI Dialogbox":
         obj = GUIDialogbox()
-        obj.box_caption = name
         obj.box_text = value
         return obj
     elif type_ == "GUI Window":
         obj = GUIWindow()
-        obj.window_display_name = name
+        obj.window_display_name = value
         return obj
     elif type_ == "HTTP Request Header Fields" and name and name == "User-Agent":
         # TODO/NOTE: HTTPRequestHeaderFields has a ton of fields for info.
@@ -154,12 +152,11 @@ def make_cybox_object(type_, name=None, value=None):
         return obj
     elif type_ == "Library":
         obj = Library()
-        obj.name = name
-        obj.type = value
+        obj.name = value
+        obj.type = name
         return obj
     elif type_ == "Memory":
         obj = Memory()
-        obj.name = name
         obj.memory_source = value
         return obj
     elif type_ == "Mutex":
@@ -169,7 +166,7 @@ def make_cybox_object(type_, name=None, value=None):
         return m
     elif type_ == "Network Connection":
         obj = NetworkConnection()
-        obj.layer7_protocol = name
+        obj.layer7_protocol = value
         return obj
     elif type_ == "Pipe":
         p = Pipe()
@@ -204,8 +201,7 @@ def make_cybox_object(type_, name=None, value=None):
         return obj
     elif type_ == "Volume":
         obj = Volume()
-        obj.name = name
-        obj.file_system_type = value
+        obj.name = value
         return obj
     elif type_ == "Win Driver":
         w = WinDriver()
@@ -275,6 +271,9 @@ def make_cybox_object(type_, name=None, value=None):
 
     The reason for the type being omitted is written as a comment inline.
     This can (and should) be revisited as new versions of CybOX are released.
+    NOTE: You will have to update the corresponding make_crits_object function
+    with handling for the reverse direction.
+
     In the mean time, these types will raise unsupported errors.
     """
     #elif type_ == "Device": # No CybOX API
@@ -322,29 +321,17 @@ def make_crits_object(cybox_obj):
 
     o = EmbeddedObject()
     o.datatype = "string"
-    if isinstance(cybox_obj, Address):
+    if isinstance(cybox_obj, Account):
+        o.object_type = "Account"
+        o.value = str(cybox_obj.description)
+        return o
+    elif isinstance(cybox_obj, Address):
         o.object_type = "Address"
         o.name = str(cybox_obj.category)
         o.value = str(cybox_obj.address_value)
         return o
-    elif isinstance(cybox_obj, URI):
-        o.object_type = "URI"
-        o.name = str(cybox_obj.type_)
-        o.value = str(cybox_obj.value)
-        return o
-    elif isinstance(cybox_obj, EmailMessage):
-        o.object_type = "Email Message"
-        o.name = str(cybox_obj.type_)
-        o.value = str(cybox_obj.value)
-        return o
-    elif isinstance(cybox_obj, Account):
-        o.object_type = "Account"
-        o.name = str(cybox_obj.type_)
-        o.value = str(cybox_obj.description)
-        return o
     elif isinstance(cybox_obj, API):
         o.object_type = "API"
-        o.name = str(cybox_obj.function_name)
         o.value = str(cybox_obj.description)
         return o
     elif isinstance(cybox_obj, Artifact):
@@ -359,13 +346,20 @@ def make_crits_object(cybox_obj):
         elif cybox_obj.type_ == Artifact.TYPE_MEMORY:
             o.name = "Memory Region"
             return o
+    elif isinstance(cybox_obj, Code):
+        o.object_type = "Code"
+        o.value = str(cybox_obj.code_segment)
+        o.name = str(cybox_obj.type)
+        return o
     elif isinstance(cybox_obj, Disk):
         o.object_type = "Disk"
-        o.name = str(cybox_obj.disk_name)
+        o.name = str(cybox_obj.type)
+        o.value = str(cybox_obj.disk_name)
         return o
     elif isinstance(cybox_obj, DiskPartition):
         o.object_type = "Disk Partition"
-        o.name = str(cybox_obj.device_name)
+        o.name = str(cybox_obj.type)
+        o.value = str(cybox_obj.device_name)
         return o
     elif isinstance(cybox_obj, DNSQuery):
         o.object_type = "DNS Query"
@@ -375,17 +369,26 @@ def make_crits_object(cybox_obj):
         o.object_type = "DNS Record"
         o.value = str(cybox_obj.description)
         return o
+    elif isinstance(cybox_obj, DomainName):
+        o.object_type = "Domain Name"
+        o.value = str(cybox_obj.value)
+        return o
+    elif isinstance(cybox_obj, EmailMessage):
+        o.object_type = "Email Message"
+        o.value = str(cybox_obj.raw_body)
+        return o
     elif isinstance(cybox_obj, GUIDialogbox):
         o.object_type = "GUI Dialogbox"
         o.value = str(cybox_obj.box_text)
         return o
     elif isinstance(cybox_obj, GUIWindow):
         o.object_type = "GUI Window"
-        o.value = str(cybox_obj.display_name)
+        o.value = str(cybox_obj.window_display_name)
         return o
     elif isinstance(cybox_obj, Library):
         o.object_type = "Library"
-        o.value = str(cybox_obj.type)
+        o.name = str(cybox_obj.type)
+        o.value = str(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, Memory):
         o.object_type = "Memory"
@@ -419,13 +422,18 @@ def make_crits_object(cybox_obj):
         o.object_type = "System"
         o.value = str(cybox_obj.hostname)
         return o
+    elif isinstance(cybox_obj, URI):
+        o.object_type = "URI"
+        o.name = str(cybox_obj.type_)
+        o.value = str(cybox_obj.value)
+        return o
     elif isinstance(cybox_obj, UserAccount):
         o.object_type = "User Account"
         o.value = str(cybox_obj.username)
         return o
     elif isinstance(cybox_obj, Volume):
         o.object_type = "Volume"
-        o.value = str(cybox_obj.file_system_type)
+        o.value = str(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, WinDriver):
         o.object_type = "Win Driver"
@@ -441,7 +449,8 @@ def make_crits_object(cybox_obj):
         return o
     elif isinstance(cybox_obj, WinHandle):
         o.object_type = "Win Handle"
-        o.value = str(cybox_obj.name)
+        o.name = str(cybox_obj.type_)
+        o.value = str(cybox_obj.object_address)
         return o
     elif isinstance(cybox_obj, WinKernelHook):
         o.object_type = "Win Kernel Hook"
@@ -454,11 +463,6 @@ def make_crits_object(cybox_obj):
     elif isinstance(cybox_obj, WinNetworkShare):
         o.object_type = "Win Network Share"
         o.value = str(cybox_obj.local_path)
-        return o
-    elif isinstance(cybox_obj, DomainName):
-        o.object_type = "Domain Name"
-        o.value = str(cybox_obj.value)
-        print o.value
         return o
     elif isinstance(cybox_obj, WinProcess):
         o.object_type = "Win Process"
@@ -479,6 +483,10 @@ def make_crits_object(cybox_obj):
     elif isinstance(cybox_obj, WinTask):
         o.object_type = "Win Task"
         o.value = str(cybox_obj.name)
+        return o
+    elif isinstance(cybox_obj, WinUser):
+        o.object_type = "Win User Account"
+        o.value = str(cybox_obj.security_id)
         return o
     elif isinstance(cybox_obj, WinVolume):
         o.object_type = "Win Volume"
