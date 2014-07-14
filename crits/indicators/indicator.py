@@ -253,15 +253,6 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         except Exception, e:
             return False
 
-    def stix_description(self):
-        return self.ind_type
-
-    def stix_intent(self):
-        return "Indicators"
-
-    def stix_title(self):
-        return self.value
-
     def set_confidence(self, analyst, rating):
         """
         Set Indicator confidence.

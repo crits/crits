@@ -147,15 +147,6 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         except:
             self.ssdeep = None
 
-    def stix_description(self):
-        return self.md5
-
-    def stix_intent(self):
-        return "Malware Samples"
-
-    def stix_title(self):
-        return self.md5
-
     def to_cybox_observable(self, exclude=None):
         if exclude == None:
             exclude = []

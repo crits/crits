@@ -651,12 +651,12 @@ class CritsDocument(BaseDocument):
 
     def to_stix(self, rcpts, username=None, items_to_convert=[]):
         """
-            Converts a CRITs object to a STIX document.
+        Converts a CRITs object to a STIX document.
 
-            The resulting document includes standardized representations
+        The resulting document includes standardized representations
         of all related objects noted within items_to_convert.
 
-            Returns the STIX document and a list of objects represented therein.
+        Returns the STIX document and a list of objects represented therein.
         """
 
         from cybox.common import Time, ToolInformationList, ToolInformation
