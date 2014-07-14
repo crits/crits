@@ -20,7 +20,7 @@ from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed
 from crits.certificates.certificate import Certificate
 from crits.notifications.handlers import remove_user_from_notification
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 
 def generate_cert_csv(request):
@@ -87,8 +87,7 @@ def get_certificate_details(md5, analyst):
         screenshots = cert.get_screenshots(analyst)
 
         # services
-        manager = crits.services.manager
-        service_list = manager.get_supported_services('Certificate', True)
+        service_list = get_supported_services('Certificate')
 
         args = {'service_list': service_list,
                 'objects': objects,

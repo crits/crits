@@ -35,7 +35,7 @@ from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.object_type import ObjectType
 from crits.raw_data.raw_data import RawData
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 logger = logging.getLogger(__name__)
 
@@ -220,8 +220,7 @@ def get_indicator_details(indicator_id, analyst):
     favorite = is_user_favorite("%s" % analyst, 'Indicator', indicator.id)
 
     # services
-    manager = crits.services.manager
-    service_list = manager.get_supported_services('Indicator', True)
+    service_list = get_supported_services('Indicator')
 
     args = {'objects': objects,
             'relationships': relationships,
