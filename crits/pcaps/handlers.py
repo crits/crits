@@ -89,7 +89,6 @@ def get_pcap_details(md5, analyst):
         favorite = is_user_favorite("%s" % analyst, 'PCAP', pcap.id)
 
         # services
-        manager = crits.services.manager
         # Assume all PCAPs have the data available
         service_list = get_supported_services('PCAP')
 
