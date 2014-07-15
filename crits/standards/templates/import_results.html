@@ -2,12 +2,10 @@
     <thead>
     </thead>
     <tbody>
-        {% if imported %}
-            <tr>
-                <td colspan="2">
-                    <strong>Imported</strong>
-                </td>
-            </tr>
+    {% if imported %}
+    <tr>
+        <td colspan="2" style="text-align: center"><b>Imported</b></td>
+    </tr>
             {% for item in imported %}
                 <tr>
                     <td class="key">
@@ -18,20 +16,25 @@
                     </td>
                 </tr>
             {% endfor %}
-        {% endif %}
-        {% if failed %}
-            <tr>
-                <td colspan="2">
-                    <strong>Failed</strong>
-                </td>
-            </tr>
-            <tr>
-                {% for item in failed %}
-                <td colspan="2">
-                    {{item.1}} - {{item.0}}
-                </td
-                {% endfor %}>
-            </tr>
-        {% endif %}
+    {% endif %}
+{% if failed %}
+    {% if imported %}
+        <tr><td colspan="2">&nbsp;</td></tr>
+    {% endif %}
+    <tr>
+        <td colspan="2" style="text-align: center"><b>Failed</b></td>
+    </tr>
+            {% for item in failed %}
+                <tr>
+                    <td class="key">
+                        {{item.1}}
+                    </td>
+                    <td>
+                        <b>ID: {{item.2}}</b><br/><br/>
+                        {{item.0}}
+                    </td>
+                </tr>
+            {% endfor %}
+{% endif %}
     </tbody>
 </table>

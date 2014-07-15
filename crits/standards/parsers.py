@@ -125,12 +125,13 @@ class STIXParser():
         for indicator in indicators: # for each STIX indicator
             for observable in indicator.observables: # get each observable from indicator (expecting only 1)
                 try: # create CRITs Indicator from observable
-                    obj = Indicator.from_cybox(observable.object_.properties, [self.source])
+                    item = observable.object_.properties
+                    obj = Indicator.from_cybox(item, [self.source])
                     obj.add_source(self.source)
                     obj.save(username=self.source_instance.analyst)
                     self.imported.append((Indicator._meta['crits_type'], obj))
                 except Exception, e: # probably caused by cybox object we don't handle
-                    self.failed.append((e.message, observable)) # note for display in UI
+                    self.failed.append((e.message, type(item).__name__, item.parent.id_)) # note for display in UI
 
     def parse_observables(self, observables):
         """
@@ -141,16 +142,17 @@ class STIXParser():
         """
         for obs in observables: # for each STIX observable
             if not obs.object_ or not obs.object_.properties:
-                self.failed.append(("Item", obs)) # note for display in UI
+                self.failed.append(("No valid object_properties was found!", type(obs).__name__, obs.id_)) # note for display in UI
                 continue
             try: # try to create CRITs object from observable
-                cls = self.get_crits_type(obs.object_.properties) # determine which CRITs class matches
+                item = obs.object_.properties
+                cls = self.get_crits_type(item) # determine which CRITs class matches
                 obj = cls.from_cybox(obs, [self.source])
                 obj.add_source(self.source)
                 obj.save(username=self.source_instance.analyst)
                 self.imported.append((cls._meta['crits_type'], obj)) # use class to parse object
             except Exception, e: # probably caused by cybox object we don't handle
-                self.failed.append((e.message, obs.object_.properties)) # note for display in UI
+                self.failed.append((e.message, type(item).__name__, item.parent.id_)) # note for display in UI
 
     def get_crits_type(self, c_obj):
         """
