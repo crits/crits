@@ -1,13 +1,9 @@
-import base64
-from hashlib import md5
 from StringIO import StringIO
 
 from crits.events.event import Event
-from crits.samples.sample import Sample
-from crits.emails.email import Email
 from crits.indicators.indicator import Indicator
 from crits.core.crits_mongoengine import EmbeddedSource
-from crits.core.class_mapper import class_from_value, class_from_type
+from crits.core.class_mapper import class_from_type
 from crits.core.handlers import does_source_exist
 
 from cybox.objects.artifact_object import Artifact
@@ -95,6 +91,11 @@ class STIXParser():
                 reference += info_src
         if does_source_exist(source):
             self.source.name = source
+        elif does_source_exist(self.information_source):
+            self.source.name = self.information_source
+        else:
+            #TODO: this should do something useful
+            return
 
         self.source_instance.reference = reference
         self.source.instances.append(self.source_instance)
@@ -105,6 +106,7 @@ class STIXParser():
                 event.save(username=self.source_instance.analyst)
                 self.imported.append((Event._meta['crits_type'], event))
             except Exception, e:
+                #TODO this should not be printing
                 print e.message
 
         if self.package.indicators:
@@ -138,7 +140,7 @@ class STIXParser():
         :type observables: List of STIX observables.
         """
         for obs in observables: # for each STIX observable
-            if not obs.object_ or not obs.object_.properties: 
+            if not obs.object_ or not obs.object_.properties:
                 self.failed.append(("Item", obs)) # note for display in UI
                 continue
             try: # try to create CRITs object from observable
@@ -178,7 +180,7 @@ class STIXParser():
 
     def has_network_artifact(self, file_obj):
         """
-        Determine if the CybOX File object has a related Artifact of 
+        Determine if the CybOX File object has a related Artifact of
         'Network' type.
 
         :param file_obj: A CybOX File object
