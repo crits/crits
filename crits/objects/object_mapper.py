@@ -62,7 +62,7 @@ class UnsupportedCRITsObjectTypeError(Exception):
 
     def __init__(self, cybox_obj, **kwargs):
         self.message = ('"%s" is currently unsupported'
-                   " for input into CRITs." % (cybox_obj))
+                   " for input into CRITs." % (type(cybox_obj).__name__))
 
     def __str__(self):
         return repr(self.message)
