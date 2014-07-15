@@ -227,9 +227,9 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
                 setattr(email, field, str(getattr(cybox_obj.header, field)))
 
         email.helo = str(cybox_obj.email_server)
-        if email.raw_body:
+        if cybox_obj.raw_body:
             email.raw_body = str(cybox_obj.raw_body)
-        if email.raw_header:
+        if cybox_obj.raw_header:
             email.raw_header = str(cybox_obj.raw_header)
 
         return email
