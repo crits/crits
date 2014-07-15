@@ -100,7 +100,7 @@ class STIXParser():
         self.source_instance.reference = reference
         self.source.instances.append(self.source_instance)
 
-        if make_event: # TODO update appropriately?
+        if make_event:
             event = Event.from_stix(stix_package=self.package, source=[self.source])
             try:
                 event.save(username=self.source_instance.analyst)
