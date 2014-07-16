@@ -75,8 +75,8 @@ supported operating system.
     cp database_example.py database.py
     - default values should work fine, but you can modify them if needed.
 
-15. Add an admin user to your CRITs instance using adduser
-    python manage.py adduser -h
+15. Add an admin user to your CRITs instance using users management command
+    python manage.py users -h
 
 16. Setup MongoDB Collections
     python manage.py create_default_collections

@@ -4,14 +4,6 @@ crits.core.management.commands package
 Submodules
 ----------
 
-crits.core.management.commands.adduser module
----------------------------------------------
-
-.. automodule:: crits.core.management.commands.adduser
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 crits.core.management.commands.create_buckets module
 ----------------------------------------------------
 
@@ -112,6 +104,14 @@ crits.core.management.commands.upgrade module
 ---------------------------------------------
 
 .. automodule:: crits.core.management.commands.upgrade
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+crits.core.management.commands.users module
+---------------------------------------------
+
+.. automodule:: crits.core.management.commands.users
     :members:
     :undoc-members:
     :show-inheritance:
