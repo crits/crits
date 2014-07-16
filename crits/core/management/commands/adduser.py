@@ -52,6 +52,12 @@ class Command(BaseCommand):
                     dest='organization',
                     default='',
                     help='Assign user to an organization/source.'),
+        make_option('--reset',
+                    '-r',
+                    dest='reset',
+                    action='store_true',
+                    default=False,
+                    help='Assign a new temporary password to a user.'),
     )
     help = 'Add a CRITs user.'
 
@@ -68,14 +74,24 @@ class Command(BaseCommand):
         admin = options.get('admin')
         organization = options.get('organization')
         password = self.temp_password()
+        reset = options.get('reset')
 
         if not username:
             raise CommandError("Must provide a username.")
-        if not email:
+        if not email and not reset:
             raise CommandError("Must provide an email address.")
         user = CRITsUser.objects(username=username).first()
         if user:
-            raise CommandError("User '%s' exists in CRITs!" % username)
+            if reset:
+                user.set_password(password)
+                try:
+                    user.save()
+                    print "New temporary password for %s: %s" % (username,
+                                                                 password)
+                except Exception, e:
+                    raise CommandError("Error setting password: %s" % str(e))
+            else:
+                raise CommandError("User '%s' exists in CRITs!" % username)
         else:
             user = CRITsUser.create_user(username, password, email)
             user.first_name = firstname
