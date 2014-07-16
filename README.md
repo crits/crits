@@ -6,6 +6,8 @@
 
 CRITs is a web-based tool which combines an analytic engine with a cyber threat database that not only serves as a repository for attack data and malware, but also provides analysts with a powerful platform for conducting malware analyses, correlating malware, and for targeting data. These analyses and correlations can also be saved and exploited within CRITs. CRITs employs a simple but very useful hierarchy to structure cyber threat information. This structure gives analyst the power to 'pivot' on metadata to discover previously unknown related content.
 
+Visit our [website](https://crits.github.io) for more information, documentation, and links to community content such as our mailing lists and IRC channel.
+
 # Installation
 
 CRITs is designed to work on a 64-bit architecture of Ubuntu or RHEL6 using Python 2.7. It is also possible to install CRITs on CentOS and OSX. There is more information in the 'documentation' folder if you would like to see how you can install CRITs on OSX. These instructions are mainly for developers as OSX is not a supported operating system.

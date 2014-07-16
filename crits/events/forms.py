@@ -25,8 +25,8 @@ class EventForm(forms.Form):
                                                                   'id':'id_occurrence_ip_date'}),
                                           input_formats=settings.PY_FORM_DATETIME_FORMATS)
     source = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
-    reference = forms.CharField(widget=forms.TextInput, required=False)
     method = forms.CharField(widget=forms.TextInput, required=False)
+    reference = forms.CharField(widget=forms.TextInput, required=False)
 
     def __init__(self, username, *args, **kwargs):
         super(EventForm, self).__init__(*args, **kwargs)
