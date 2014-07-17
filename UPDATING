@@ -4,6 +4,15 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: mgoffin
+Date:   2014-07-16
+
+    The "adduser" management command has been renamed to the "users" management
+    command. It's been expanded past just adding users. You can now add and edit
+    users. The only thing this doesn't allow you to do is assign sources,
+    subscriptions, favorites, or alter user preferences. Please review the new
+    list of arguments.
+
+Author: mgoffin
 Date: 2014-06-26
 
     Adding a "Sectors" feature. This will allow you to track which sector(s) a
