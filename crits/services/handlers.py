@@ -104,7 +104,8 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
         final_config.update(form.cleaned_data)
 
     logger.info("Running %s on %s, execute=%s" % (name, obj.id, execute))
-    service_instance = service_class(notify=update_task, complete=finish_task)
+    service_instance = service_class(notify=update_analysis_results,
+                                     complete=finish_task)
 
     # Give the service a chance to modify the config that gets saved to the DB.
     saved_config = dict(final_config)
@@ -137,14 +138,6 @@ def add_task(task):
 
     logger.debug("Adding task %s" % task)
     insert_analysis_results(task)
-
-def update_task(task):
-    """
-    Update an existing task.
-    """
-
-    logger.debug("Updating task %s" % task)
-    self._update_analysis_results(task)
 
 def run_triage(obj, user):
     """
@@ -385,7 +378,7 @@ def do_edit_config(name, analyst, post_data=None):
     service_class = crits.services.manager.get_service_class(name)
 
     config = service.config.to_dict()
-    cfg_form, html = service_class.generate_config_form(config)
+    cfg_form, html = service_class.generate_config_form(name, config)
     # This isn't a form object. It's the HTML.
     status['form'] = html
     status['service'] = service

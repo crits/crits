@@ -292,29 +292,6 @@ class AnalysisTask(object):
             self.task_id, self.service.name, self.obj.id)
 
 
-class AnalysisEnvironment(object):
-    """
-    AnalysisEnvironment class.
-    """
-
-    def __init__(self, manager, source, dest):
-        self.manager = manager
-        self.source = source
-        self.dest = dest
-
-    def run_all(self, obj):
-        """
-        Run all services on an object.
-
-        :param obj: The CRITs object.
-        :type obj: A CRITs object.
-        """
-
-        logger.info("Analyzing %s" % obj.id)
-        for service_name in self.manager.services:
-            self.run_service(service_name, obj)
-
-
 class Service(object):
     """
     An abstract class to perform analysis on a sample.
@@ -322,30 +299,17 @@ class Service(object):
     Subclasses must define the following class-level fields:
     - name
     - version
-
-    If needed, subclasses SHOULD define a class-level `default_config` list
-    of `ServiceConfigOption`s. These options may be overridden for a particular
-    instance of a service when it is instantiated.
-
-    The service class's docstring is used as a description for the service.
+    - description
 
     Subclasses must define a function:
-        def _scan(self, obj, config):
+        def scan(self, obj, config):
     This function should:
     - call `_add_result` with any dict or other object convertible to a dict,
     - call `_add_file` with new files to be added.
     - call `_debug`, `_info`, `_warning`, `_error`, `_critical` as appropriate.
     """
 
-    TYPE_UNARCHIVER = "unarchiver"
-    TYPE_UNPACKER = "unpacker"
-    TYPE_CUSTOM = "custom_tool"
-    TYPE_AV = "antivirus"
-
     source = settings.COMPANY_NAME
-
-    # Can override and set to (i.e.) "comparison"
-    purpose = "analysis"
 
     # Set to a list of 'Sample', 'PCAP', etc.
     supported_types = ['all']
@@ -353,14 +317,8 @@ class Service(object):
     # Change to, i.e. ['md5'] if only a hash is needed.
     required_fields = ['filedata']
 
-    # Override this to add configuration options
-    default_config = []
-
     # use a custom template for results
     template = None
-
-    # whether or not this service can be rerun by default (without force)
-    rerunnable = False
 
     # whether or not this service is distributed.
     distributed = False
@@ -727,127 +685,3 @@ class TempAnalysisFile(object):
 
         if os.path.isdir(self.directory):
             shutil.rmtree(self.directory)
-
-
-# XXX: ALL THIS CAN BE REMOVED!
-class ServiceConfigOption(object):
-    """
-    A configurable option for services.
-    """
-
-    STRING = "string"
-    INT = "integer"
-    BOOL = "boolean"
-    LIST = "list"
-    SELECT = "select"
-    MULTI_SELECT = "multi_select"
-    PASSWORD = "password"
-
-    def __init__(self, name, type_, description="", default=None,
-                    required=False, private=False, choices=None,
-                    runtime_only=False):
-        self.name = name
-        self.type_ = type_
-        self.runtime_only = runtime_only
-        self.description = description.strip()
-        if default is None:
-            if type_ == ServiceConfigOption.STRING:
-                self.default = ""
-            elif type_ == ServiceConfigOption.INT:
-                self.default = 0
-            elif type_ == ServiceConfigOption.BOOL:
-                self.default = True
-            elif type_ == ServiceConfigOption.LIST:
-                self.default = []
-            elif type_ == ServiceConfigOption.SELECT:
-                self.default = ""
-            elif type_ == ServiceConfigOption.MULTI_SELECT:
-                self.default = []
-            elif type_ == ServiceConfigOption.PASSWORD:
-                self.default = ""
-
-            else:
-                msg = "Unknown Config Option Type: {0}".format(type_)
-                raise ValueError(msg)
-        else:
-            self.default = default
-
-        if type_ in (ServiceConfigOption.SELECT,
-                     ServiceConfigOption.MULTI_SELECT):
-            if not choices:
-                raise ServiceConfigError("Must provide choices")
-            self.choices = choices
-
-        if type_ == ServiceConfigOption.SELECT:
-            # SELECT options are automatically required.
-            self.required = True
-        else:
-            self.required = required
-        self.private = private
-
-    def format_value(self, value, printable=True):
-        """
-        Formats an option value for output.
-
-        - INT, BOOL, and STRING values are left as is.
-        - LIST values are converted to a newline-delimited string.
-        - If `printable` is False, then SELECT and MULTI_SELECT are left as
-          their indicies, otherwise they are converted to printable strings.
-        """
-
-        if self.type_ == ServiceConfigOption.LIST and isinstance(value, list):
-            return "\n".join(value)
-        elif self.type_ == ServiceConfigOption.SELECT and printable:
-            if not value:
-                return ""
-            return self.choices[int(value) - 1]
-        elif self.type_ == ServiceConfigOption.MULTI_SELECT and printable:
-            if not value:
-                return ""
-            try:
-                return "\n".join([self.choices[int(x) - 1] for x in value])
-            except:
-                return "\n".join(x for x in value)
-        else:
-            return value
-
-    def parse_value(self, value):
-        """
-        Parse a config value from a form into the correct representation.
-        """
-
-        if (self.type_ == ServiceConfigOption.LIST and not
-                isinstance(value, list)):
-            # Remove empty lines.
-            return [x.strip() for x in value.split("\n") if x.strip()]
-        elif self.type_ == ServiceConfigOption.SELECT:
-            if not value:
-                return ""
-            return int(value)
-        elif self.type_ == ServiceConfigOption.MULTI_SELECT:
-            if not value:
-                return []
-            return [int(x) for x in value]
-        else:
-            return value
-
-    def replace_value(self, value):
-        """
-        Replace an index-based value with its true value.
-        """
-
-        if self.type_ == ServiceConfigOption.SELECT:
-            return self.choices[int(value) - 1]
-        elif self.type_ == ServiceConfigOption.MULTI_SELECT:
-            return list([self.choices[int(x) - 1] for x in value])
-        else:
-            return value
-
-    def enumerate_choices(self):
-        return list(enumerate(self.choices, start=1))
-
-    def __repr__(self):
-        return ("%s('%s', '%s', description='%s', default='%s', "
-                "required=%s, private=%s)" %
-                (self.__class__.__name__, self.name, self.type_,
-                 self.description, self.default, self.required, self.private))
