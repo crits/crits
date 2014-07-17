@@ -29,9 +29,11 @@
     <h4>Configuration</h4>
 {% if analysis.config %}
     <ul>
-    {% for key, value in analysis.config.items %}
+    {% with config=analysis.config|to_dict %}
+        {% for key, value in config.items %}
         <li><b> {{ key }} </b>: {{ value }}</li>
-    {% endfor %}
+        {% endfor %}
+    {% endwith %}
     </ul>
 {% else %}
     No configuration information available.
