@@ -378,7 +378,7 @@ def do_edit_config(name, analyst, post_data=None):
     service_class = crits.services.manager.get_service_class(name)
 
     config = service.config.to_dict()
-    cfg_form, html = service_class.generate_config_form(name, config)
+    cfg_form, html = service_class.generate_config_form(config)
     # This isn't a form object. It's the HTML.
     status['form'] = html
     status['service'] = service
