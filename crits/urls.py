@@ -332,8 +332,8 @@ if settings.ENABLE_API:
                 abs_path = os.path.join(service_directory, d, 'urls.py')
                 if os.path.isfile(abs_path):
                     try:
-                        foo = imp.load_source('urls', abs_path)
-                        foo.register_api(v1_api)
+                        rdef = imp.load_source('urls', abs_path)
+                        rdef.register_api(v1_api)
                     except Exception, e:
                         pass
 
