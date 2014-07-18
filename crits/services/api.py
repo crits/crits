@@ -2,7 +2,7 @@ from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 
-from crits.services.handlers import add_result, add_log, finish_task_new
+from crits.services.handlers import add_result, add_log, finish_task
 from crits.services.service import CRITsService
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
@@ -80,7 +80,7 @@ class ServiceResource(CRITsAPIResource):
                 message += ", %s" % result['message']
                 success = False
         if finish:
-            result = finish_task_new(object_type, object_id, analysis_id,
+            result = finish_task(object_type, object_id, analysis_id,
                                      status, analyst)
             if not result['success']:
                 message += ", %s" % result['message']

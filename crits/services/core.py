@@ -305,7 +305,6 @@ class Service(object):
         def scan(self, obj, config):
     This function should:
     - call `_add_result` with any dict or other object convertible to a dict,
-    - call `_add_file` with new files to be added.
     - call `_debug`, `_info`, `_warning`, `_error`, `_critical` as appropriate.
     """
 
@@ -430,25 +429,6 @@ class Service(object):
 
         self.current_task = task
 
-    def finalize(self):
-        self._info("Analysis complete")
-        # Only add files as "results" after the analysis has completed.
-        # This will make them appear at the bottom of "results"
-        for f in self.current_task.files:
-            filename = f['filename']
-            md5 = f['md5']
-            self._add_result("file_added", filename, {'md5': md5})
-        for f in self.current_task.certificates:
-            filename = f['filename']
-            md5 = f['md5']
-            self._add_result("cert_added", filename, {'md5': md5})
-        for f in self.current_task.pcaps:
-            filename = f['filename']
-            md5 = f['md5']
-            self._add_result("pcap_added", filename, {'md5': md5})
-        logger.debug("Finishing analysis on %s" % self.current_task)
-        self.current_task.finish()
-
     def execute(self, config):
         """
         Execute an analysis task.
@@ -465,7 +445,7 @@ class Service(object):
             # additions, log messages, and task completion. If it is not
             # distributed, handle it for them.
             if not self.distributed:
-                self.finalize()
+                self.current_task.finish()
         except NotImplementedError:
             error = "Service not yet implemented"
             logger.error(error)
@@ -476,7 +456,15 @@ class Service(object):
             self._error(error)
         finally:
             if self.complete:
-                self.complete(self.current_task)
+                self._info("Analysis complete")
+                from crits.services.handlers import update_analysis_results
+                update_analysis_results(self.current_task)
+                self.complete(self.current_task.obj._meta['crits_type'],
+                              str(self.current_task.obj.id),
+                              self.current_task.task_id,
+                              self.current_task.STATUS_COMPLETED,
+                              self.current_task.username)
+                logger.debug("Finished analysis %s" % self.current_task.task_id)
             # Reset current_task so another task can be assigned.
             self.current_task = None
 
@@ -609,53 +597,6 @@ class Service(object):
         for key in data:
             r[key] = data[key]
         self.current_task.results.append(r)
-
-    def _add_file(self, data, filename=None, log_msg=None, relationship=None,
-                  collection='Sample'):
-        """
-        Adds a new sample to the result set.
-
-        These are not processed immediately, but instead queued until the rest
-        of the analysis is done. This prevents an infinite recursion of new
-        samples blocking completion of an analysis task. Instead, it creates a
-        log entry.
-
-        Services should not call `_add_result()` to indicate that they added a
-        file. This is handled after the service has completed analysis.
-
-        Also, services should not separately log that they have added a file.
-        The `log_msg` is automatically logged at the INFO level (self._info()).
-        `log_msg` may contain a single "{0}", which is replaced by the MD5 hash
-        of `data`.
-        """
-
-        self.ensure_current_task()
-
-        # If a service does not specify a filename for this new file,
-        # use a combination of the original file's name and the service name.
-        if not filename:
-            filename = "{0}.{1.obj.id}.{1.service.name}".format(collection, self.current_task)
-        file_md5 = hashlib.md5(data).hexdigest()
-        f = {'data': data,
-             'filename': filename,
-             'md5': file_md5,
-             'relationship': relationship}
-        if collection == 'Sample':
-            self.current_task.files.append(f)
-        elif collection == 'Certificate':
-            self.current_task.certificates.append(f)
-        elif collection == 'PCAP':
-            self.current_task.pcaps.append(f)
-        else:
-            return
-
-        if not log_msg:
-            log_msg = "Added new %s with MD5 {0}" % collection
-
-        if '{0}' in log_msg:
-            log_msg = log_msg.format(file_md5)
-
-        self._info(log_msg)
 
 
 class TempAnalysisFile(object):

@@ -271,7 +271,7 @@ def add_log(object_type, object_id, analysis_id, log_message, level, analyst):
     return results
 
 
-def finish_task_new(object_type, object_id, analysis_id, status, analyst):
+def finish_task(object_type, object_id, analysis_id, status, analyst):
     """
     Finish a task by setting its status to "completed" and setting the finish
     date.
@@ -500,68 +500,6 @@ def triage_services(status=True):
         services = CRITsService.objects(run_on_triage=True)
     return [s.name for s in services]
 
-#TODO: rename?
-def finish_task(task):
-    """
-    Finish a task.
-    """
-
-    logger.debug("Finishing task %s" % task)
-    update_analysis_results(task)
-
-    obj = class_from_type(task.obj._meta['crits_type'])
-    sample = obj.objects(id=task.obj.id).first()
-
-    if task.files:
-        logger.debug("Adding samples")
-        for f in task.files:
-            logger.debug("Adding %s" % f['filename'])
-            #TODO: add in backdoor?, user
-            from crits.samples.handlers import handle_file
-            handle_file(f['filename'], f['data'], sample.source,
-                        parent_id=task.obj.id,
-                        campaign=sample.campaign,
-                        method=task.service.name,
-                        relationship=f['relationship'],
-                        user=task.username,
-                        )
-    else:
-        logger.debug("No samples to add.")
-
-    if task.certificates:
-        logger.debug("Adding certificates")
-
-        for f in task.certificates:
-            logger.debug("Adding %s" % f['filename'])
-            from crits.certificates.handlers import handle_cert_file
-            # XXX: Add campaign from source?
-            handle_cert_file(f['filename'], f['data'], sample.source,
-                        parent_id=task.obj.id,
-                        parent_type=task.obj._meta['crits_type'],
-                        method=task.service.name,
-                        relationship=f['relationship'],
-                        user=task.username,
-                        )
-    else:
-        logger.debug("No certificates to add.")
-
-    if task.pcaps:
-        logger.debug("Adding PCAPs")
-
-        for f in task.pcaps:
-            logger.debug("Adding %s" % f['filename'])
-            from crits.pcaps.handlers import handle_pcap_file
-            # XXX: Add campaign from source?
-            handle_pcap_file(f['filename'], f['data'], sample.source,
-                        parent_id=task.obj.id,
-                        parent_type=task.obj._meta['crits_type'],
-                        method=task.service.name,
-                        relationship=f['relationship'],
-                        user=task.username,
-                        )
-    else:
-        logger.debug("No PCAPs to add.")
-
 def delete_analysis(crits_type, identifier, task_id, analyst):
     """
     Delete analysis results.
@@ -603,12 +541,10 @@ def update_analysis_results(task):
     obj = obj_class.objects(id=task.obj.id).first()
     obj_id = obj.id
     found = False
-    c = 0
     for a in obj.analysis:
         if str(a.analysis_id) == task.task_id:
             found = True
             break
-        c += 1
 
     if not found:
         logger.warning("Tried to update a task that didn't exist.")
@@ -621,4 +557,4 @@ def update_analysis_results(task):
         del tdict['id']
         ear.merge(arg_dict=tdict)
         obj_class.objects(id=obj_id,
-                            analysis__id=task.task_id).update_one(set__analysis__S=ear)
+                          analysis__id=task.task_id).update_one(set__analysis__S=ear)
