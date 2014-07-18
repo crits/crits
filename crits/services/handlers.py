@@ -519,7 +519,7 @@ def finish_task(task):
             #TODO: add in backdoor?, user
             from crits.samples.handlers import handle_file
             handle_file(f['filename'], f['data'], sample.source,
-                        parent_md5=task.obj.id,
+                        parent_id=task.obj.id,
                         campaign=sample.campaign,
                         method=task.service.name,
                         relationship=f['relationship'],
@@ -536,7 +536,7 @@ def finish_task(task):
             from crits.certificates.handlers import handle_cert_file
             # XXX: Add campaign from source?
             handle_cert_file(f['filename'], f['data'], sample.source,
-                        parent_md5=task.obj.id,
+                        parent_id=task.obj.id,
                         parent_type=task.obj._meta['crits_type'],
                         method=task.service.name,
                         relationship=f['relationship'],
@@ -553,7 +553,7 @@ def finish_task(task):
             from crits.pcaps.handlers import handle_pcap_file
             # XXX: Add campaign from source?
             handle_pcap_file(f['filename'], f['data'], sample.source,
-                        parent_md5=task.obj.identifier,
+                        parent_id=task.obj.id,
                         parent_type=task.obj._meta['crits_type'],
                         method=task.service.name,
                         relationship=f['relationship'],
