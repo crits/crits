@@ -600,6 +600,9 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value, analyst,
         result = {'success':  False,
                   'message':  "Can't create indicator with an empty type field"}
     else:
+        value = value.lower().strip()
+        ind_type = ind_type.strip()
+        
         create_indicator_result = {}
         ind_tlist = ind_type.split(" - ")
         if ind_tlist[0] == ind_tlist[1]:

@@ -1,3 +1,6 @@
+import imp
+import os
+
 from django.contrib.auth.views import logout_then_login
 from django.conf import settings
 from django.conf.urls import include, patterns
@@ -322,6 +325,17 @@ if settings.ENABLE_API:
     v1_api.register(ScreenshotResource())
     v1_api.register(ServiceResource())
     v1_api.register(TargetResource())
+
+    for service_directory in settings.SERVICE_DIRS:
+        if os.path.isdir(service_directory):
+            for d in os.listdir(service_directory):
+                abs_path = os.path.join(service_directory, d, 'urls.py')
+                if os.path.isfile(abs_path):
+                    try:
+                        rdef = imp.load_source('urls', abs_path)
+                        rdef.register_api(v1_api)
+                    except Exception, e:
+                        pass
 
     urlpatterns += patterns('',
         (r'^api/', include(v1_api.urls)),
