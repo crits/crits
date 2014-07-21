@@ -700,7 +700,8 @@ class CritsDocument(BaseDocument):
                                     for item in items_to_convert]
         
         # add self to the list of items to STIXify
-        items_to_convert.append(self);
+	if self not in items_to_convert:
+            items_to_convert.append(self);
 
         for obj in items_to_convert:
             obj_type = obj._meta['crits_type']
