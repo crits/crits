@@ -824,8 +824,9 @@ class CritsSourceDocument(BaseDocument):
             s.instances = [i]
         if not isinstance(source_item, EmbeddedSource):
             source_item = s
+
+        match = None
         if isinstance(source_item, EmbeddedSource):
-            match = None
             for c, s in enumerate(self.source):
                 if s.name == source_item.name: # find index of matching source
                     match = c
