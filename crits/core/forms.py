@@ -192,8 +192,7 @@ class DownloadFileForm(forms.Form):
 
     bin_fmt = forms.ChoiceField(choices=[("raw", "raw"),
                                          ("base64", "base64"),
-                                         ("zlib", "zlib"),
-                                         ("invert", "invert")],
+                                         ("zlib", "zlib")],
                                          label="Binary format")
 
     def __init__(self, *args, **kwargs):

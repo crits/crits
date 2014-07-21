@@ -679,6 +679,7 @@ class CritsDocument(BaseDocument):
         from stix.core import STIXPackage, STIXHeader
         from stix.common.identity import Identity
 
+	print bin_fmt
         # These two lists are used to determine which CRITs objects
         # go in which part of the STIX document.
         ind_list = []
@@ -721,7 +722,7 @@ class CritsDocument(BaseDocument):
                 stix_msg['final_objects'].append(obj)
             elif obj_type in obs_list: # convert to CybOX observable
                 if obj_type == class_from_type('Sample')._meta['crits_type']:
-                    ind, releas = obj.to_cybox_observable(bin_fmt)
+                    ind, releas = obj.to_cybox_observable(bin_fmt=bin_fmt)
                 else:
                     ind, releas = obj.to_cybox_observable()
                 stix_msg['stix_observables'].extend(ind)
