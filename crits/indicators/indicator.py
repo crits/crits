@@ -3,6 +3,8 @@ import datetime
 from mongoengine import Document, EmbeddedDocument
 from mongoengine import StringField, ListField
 from mongoengine import EmbeddedDocumentField
+from mongoengine.queryset import Q
+
 from django.conf import settings
 from cybox.core import Observable
 
@@ -145,6 +147,47 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         migrate_indicator(self)
 
+    def to_csv(self, fields=[],headers=False):
+        """
+        Generate a CSV row for this Indicator.
+
+        :param fields: The fields to include.
+        :type fields: list
+        :param headers: To write column headers into the CSV.
+        :type headers: boolean
+        :returns: str
+        """
+
+        # Fix some of the embedded fields
+        # confidence
+        if 'confidence' in self._data:
+            self.confidence = self.confidence.rating
+        # impact
+        if 'impact' in self._data:
+            self.impact = self.impact.rating
+        return super(self.__class__, self).to_csv(fields=fields,headers=headers)
+
+    def to_stix_indicator(self):
+        """
+            Creates a STIX Indicator object from a CybOX object.
+
+            Returns the STIX Indicator and the original CRITs object's
+            releasability list.
+        """
+        from stix.indicator import Indicator as S_Ind
+        from stix.common.identity import Identity
+        ind = S_Ind()
+        obs, releas = self.to_cybox()
+        for ob in obs:
+            ind.add_observable(ob)
+        #TODO: determine if a source wants its name shared. This will
+        #   probably have to happen on a per-source basis rather than a per-
+        #   object basis.
+        identity = Identity(name=settings.COMPANY_NAME)
+        ind.set_producer_identity(identity)
+
+        return (ind, releas)
+
     def to_cybox(self):
         """
         Convert an indicator to a CybOX Observable.
@@ -168,26 +211,6 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         observables.append(Observable(obj))
         return (observables, self.releasability)
 
-    def to_csv(self, fields=[],headers=False):
-        """
-        Generate a CSV row for this Indicator.
-
-        :param fields: The fields to include.
-        :type fields: list
-        :param headers: To write column headers into the CSV.
-        :type headers: boolean
-        :returns: str
-        """
-
-        # Fix some of the embedded fields
-        # confidence
-        if 'confidence' in self._data:
-            self.confidence = self.confidence.rating
-        # impact
-        if 'impact' in self._data:
-            self.impact = self.impact.rating
-        return super(self.__class__, self).to_csv(fields=fields,headers=headers)
-
     @classmethod
     def from_cybox(cls, cybox_object, source):
         """
@@ -200,17 +223,35 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         :returns: :class:`crits.indicators.indicator.Indicator`
         """
 
-        indicator = cls(source=source)
         obj = make_crits_object(cybox_object)
-        indicator.created = obj.date
         if obj.name and obj.name != obj.object_type:
-            indicator.ind_type = "%s - %s" % (obj.object_type, obj.name)
+            ind_type = "%s - %s" % (obj.object_type, obj.name)
         else:
-            indicator.ind_type = obj.object_type
-        indicator.modified = obj.date
-        indicator.value = obj.value
+            ind_type = obj.object_type
+        
+        db_indicator = Indicator.objects(Q(ind_type=ind_type) & Q(value=obj.value)).first()
+        if db_indicator:
+            indicator = db_indicator
+        else:
+            indicator = cls(source=source)
+            indicator.value = obj.value
+            indicator.created = obj.date
+            indicator.modified = obj.date
 
         return indicator
+
+    def has_cybox_repr(self):
+        """
+        Determine if this indicator is of a type that can
+        successfully be converted to a CybOX object.
+
+        :return The CybOX representation if possible, else False.
+        """
+        try:
+            rep = self.to_cybox()
+            return rep
+        except Exception, e:
+            return False
 
     def set_confidence(self, analyst, rating):
         """

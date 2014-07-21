@@ -81,115 +81,14 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
         if e:
             self.event_type = event_type
 
-    def to_stix(self, username=None):
-        """
-        Converts a CRITs event to a STIX document.
+    def stix_description(self):
+        return self.description
 
-        The resulting document includes all related emails, samples, and
-        indicators converted to CybOX Observable objects.
-        Returns the STIX document and releasability constraints.
+    def stix_intent(self):
+        return self.event_type
 
-        (NOTE: the following statement is untrue until the
-        releasability checking is finished, which includes setting
-        releasability on all CRITs objects.)
-        Raises UnreleasableEventError if the releasability on the
-        relationships and the event do not share any common releasability
-        sources.
-        """
-
-        from crits.emails.email import Email
-        from crits.samples.sample import Sample
-        from crits.indicators.indicator import Indicator
-
-        from cybox.common import Time, ToolInformationList, ToolInformation
-        from cybox.core import Observables
-        from stix.common import StructuredText
-        from stix.core import STIXPackage, STIXHeader
-        from stix.common import InformationSource
-        from stix.common.identity import Identity
-
-        stix_indicators = []
-        stix_observables = []
-        final_objects = []
-
-        # create a list of sources to send as part of the results.
-        # list should be limited to the sources this user is allowed to use.
-        # this list should be used along with the list of objects to set the
-        # appropriate source's 'released' key to True for each object.
-        final_sources = []
-        user_source_list = user_sources(username)
-        for f in self.releasability:
-            if f.name in user_source_list:
-                final_sources.append(f.name)
-        final_sources = set(final_sources)
-
-        # TODO: eventually we can use class_from_id instead of the if block
-        #       but only once we support all CRITs types.
-        for r in self.relationships:
-            obj = None
-            if r.rel_type == Email._meta['crits_type']:
-                obj = Email.objects(id=r.object_id,
-                                    source__name__in=user_source_list).first()
-                if obj:
-                    ind, releas = obj.to_cybox()
-                    stix_observables.append(ind[0])
-            elif r.rel_type == Sample._meta['crits_type']:
-                obj = Sample.objects(id=r.object_id,
-                                    source__name__in=user_source_list).first()
-                if obj:
-                    ind, releas = obj.to_cybox()
-                    for i in ind:
-                        stix_observables.append(i)
-            elif r.rel_type == Indicator._meta['crits_type']:
-                #NOTE: Currently this will raise an exception if there
-                #   are multiple indicators with the same value.
-                #   Should be fixed automatically once we transition
-                #   indicators to be related based on ObjectId rather
-                #   than value.
-                obj = Indicator.objects(id=r.object_id,
-                                    source__name__in=user_source_list).first()
-                if obj:
-                    ind, releas = obj.to_stix_indicator()
-                    stix_indicators.append(ind)
-            else:
-                continue
-            #Create a releasability list that is the intersection of
-            #   each related item's releasability with the event's
-            #   releasability. If the resulting set is empty, raise exception
-            #TODO: Set releasability on all objects so that we actually
-            #   get results here instead of always raising an exception.
-            if obj:
-                releas_sources = set([rel.name for rel in releas])
-                final_sources = final_sources.intersection(releas_sources)
-                #TODO: uncomment the following lines when objects have
-                #   releasability set.
-                #if not final_sources:
-                #    raise UnreleasableEventError(r.value)
-
-                # add to the final_objects list to send as part of the results
-                final_objects.append(obj)
-
-        tool_list = ToolInformationList()
-        tool = ToolInformation("CRITs", "MITRE")
-        tool.version = settings.CRITS_VERSION
-        tool_list.append(tool)
-        i_s = InformationSource(
-                time=Time(produced_time= datetime.datetime.now()),
-                identity = Identity(name=settings.COMPANY_NAME),
-                tools = tool_list
-        )
-        description = StructuredText(value=self.description)
-        header = STIXHeader(information_source=i_s,
-                            description=description,
-                            package_intent=self.event_type,
-                            title=self.title)
-
-        return (STIXPackage(indicators=stix_indicators,
-                            observables=Observables(stix_observables),
-                            stix_header=header,
-                            id_=self.event_id),
-                final_sources,
-                final_objects)
+    def stix_title(self):
+        return self.title
 
     @classmethod
     def from_stix(cls, stix_package, source):
@@ -213,18 +112,19 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
             event.title = "STIX Document %s" % stix_id
             event.event_type = "Collective Threat Intelligence"
             event.description = str(datetime.datetime.now())
+            eid = stix_package.id_
             try:
-                event.event_id = uuid.UUID(stix_id)
-            except:
-                if event.source[0].instances[0].reference:
-                    event.source[0].instances[0].reference += ", STIX ID: %s" % stix_id
-                else:
-                    event.source[0].instances[0].reference = "STIX ID: %s" % stix_id
+                uuid.UUID(eid)
+            except ValueError:
+                # The STIX package ID attribute is not a valid UUID
+                # so make one up.
+                eid = uuid.uuid4() # XXX: Log this somewhere?
+            event.event_id = eid
             if isinstance(stix_header, STIXHeader):
                 if stix_header.title:
                     event.title = stix_header.title
-                if stix_header.package_intent:
-                    event.event_type = str(stix_header.package_intent)
+                if stix_header.package_intents:
+                    event.event_type = str(stix_header.package_intents[0])
                 description = stix_header.description
                 if isinstance(description, StructuredText):
                     try:
