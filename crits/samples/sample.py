@@ -6,7 +6,7 @@ from mongoengine import StringField, ListField
 from mongoengine import EmbeddedDocumentField, IntField
 from django.conf import settings
 from cybox.objects.file_object import File
-from cybox.objects.artifact_object import Artifact
+from cybox.objects.artifact_object import Artifact, Base64Encoding, ZlibCompression
 from cybox.core import Observable
 from cybox.common import UnsignedLong, Hash
 
@@ -147,7 +147,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         except:
             self.ssdeep = None
 
-    def to_cybox_observable(self, exclude=None):
+    def to_cybox_observable(self, exclude=None, bin_fmt="raw"):
         if exclude == None:
             exclude = []
 
@@ -165,11 +165,15 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         if 'filename' not in exclude and 'file_name' not in exclude:
             f.file_name = self.filename
         # create an Artifact object for the binary if it exists
-        if 'filedata' not in exclude:
+        if 'filedata' not in exclude and bin_fmt:
             data = self.filedata.read()
             if data: # if sample data available
-                data = base64.b64encode(data) # encode
                 a = Artifact(data, Artifact.TYPE_FILE) # create artifact w/data
+                if bin_fmt == "zlib":
+                    a.packaging.append(ZlibCompression())
+                    a.packaging.append(Base64Encoding())
+                elif bin_fmt == "base64":
+                    a.packaging.append(Base64Encoding())
                 f.add_related(a, "Child_Of") # relate artifact to file
         if 'filetype' not in exclude and 'file_format' not in exclude:
             #NOTE: this doesn't work because the CybOX File object does not
@@ -201,7 +205,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
                     str(hash_.simple_hash_value).strip().lower())
         for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
             if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_FILE:
-                sample.add_file_data(base64.b64decode(obj.properties.data))
+                sample.add_file_data(obj.properties.data)
                 break
 
         return sample

@@ -649,7 +649,7 @@ class CritsDocument(BaseDocument):
 
         return pformat(self.to_dict())
 
-    def to_stix(self, items_to_convert=[], loaded=False):
+    def to_stix(self, items_to_convert=[], loaded=False, bin_fmt="raw"):
         """
         Converts a CRITs object to a STIX document.
 
@@ -662,6 +662,11 @@ class CritsDocument(BaseDocument):
         :param loaded: Set to True if you've passed a list of CRITs objects as
                        the value for items_to_convert, else leave False.
         :type loaded: bool
+        :param bin_fmt: Specifies the format for Sample data encoding. 
+                        Options: None (don't include binary data in STIX output),
+                                 "raw" (include binary data as is),
+                                 "base64" (base64 encode binary data)
+
         :returns: A dict indicating which items mapped to STIX indicators, ['stix_indicators']
                   which items mapped to STIX observables, ['stix_observables']
                   which items are included in the resulting STIX doc, ['final_objects']
@@ -715,7 +720,10 @@ class CritsDocument(BaseDocument):
                 stix_msg['stix_indicators'].append(ind)
                 stix_msg['final_objects'].append(obj)
             elif obj_type in obs_list: # convert to CybOX observable
-                ind, releas = obj.to_cybox_observable()
+                if obj_type == class_from_type('Sample')._meta['crits_type']:
+                    ind, releas = obj.to_cybox_observable(bin_fmt)
+                else:
+                    ind, releas = obj.to_cybox_observable()
                 stix_msg['stix_observables'].extend(ind)
                 stix_msg['final_objects'].append(obj)
 

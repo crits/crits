@@ -7,7 +7,7 @@ from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocumen
 from crits.core.fields import getFileField
 from crits.pcaps.migrate import migrate_pcap
 
-from cybox.objects.artifact_object import Artifact
+from cybox.objects.artifact_object import Artifact, Base64Encoding
 from cybox.objects.file_object import File
 from cybox.core import Observable
 
@@ -140,8 +140,8 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
         obj.size_in_bytes = self.length
         obs = Observable(obj)
         obs.description = self.description
-        data = base64.b64encode(self.filedata.read())
-        art = Artifact(data, Artifact.TYPE_NETWORK)
+        art = Artifact(self.filedata.read(), Artifact.TYPE_NETWORK)
+        art.packaging.append(Base64Encoding())
         obj.add_related(art, "Child_Of") # relate artifact to file
         return ([obs], self.releasability)
 
@@ -169,7 +169,7 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
         pcap.length = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
         for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
             if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_NETWORK:
-                cert.add_file_data(base64.b64decode(obj.properties.data))
+                cert.add_file_data(obj.properties.data)
                 break
         return pcap
 

@@ -12,7 +12,7 @@ from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.fields import CritsDateTimeField
 
-from cybox.objects.artifact_object import Artifact
+from cybox.objects.artifact_object import Artifact, Base64Encoding
 from cybox.core import Observable
 
 
@@ -248,8 +248,8 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
             To get the cybox object as xml or json, call to_xml() or
             to_json(), respectively, on the resulting CybOX object.
         """
-        data = base64.b64encode(self.data)
-        obj = Artifact(data, Artifact.TYPE_FILE)
+        obj = Artifact(self.data, Artifact.TYPE_FILE)
+        obj.packaging.append(Base64Encoding())
         obs = Observable(obj)
         obs.description = self.description
         return ([obs], self.releasability)
@@ -267,7 +267,7 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
         """
         cybox_object = cybox_obs.object_.properties
         rawdata = cls(source=source)
-        rawdata.add_file_data(cybox_object.data) # TODO b64 detection
+        rawdata.add_file_data(cybox_object.data)
         db_obj = RawData.objects(md5=rawdata.md5).first()
         if db_obj:
             return db_obj

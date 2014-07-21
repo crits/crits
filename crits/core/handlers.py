@@ -914,6 +914,8 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
     stix_docs = []
     to_zip = []
     need_filedata = rst_fmt != 'stix_no_bin'
+    if not need_filedata:
+        bin_fmt = None
 
     for (obj_type, obj_id) in objs:
         # get related objects
@@ -939,7 +941,9 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                         to_zip.append((obj.filename + ext, data))
 
         obj = class_from_id(obj_type, obj_id) # get the CRITs object
-        stix_docs.append(obj.to_stix([new_objects[item][1] for item in new_objects], True)) # get its STIX doc rep
+        stix_docs.append(obj.to_stix([new_objects[item][1] for item in new_objects], 
+                                     True,
+                                     bin_fmt)) # get its STIX doc rep
 
     # Set the filename to be based upon the first item in the list passed
     # to this function. This means if you go to download a sample but select
@@ -956,7 +960,7 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
         result['filename'] = filename + '.xml'
         result['mimetype'] = 'text/xml'
     elif doc_count + zip_count > 1: # we have multiple or mixed items to return
-        zip_data = create_zip(to_zip + [(filename, doc['stix_obj'].to_xml()) for doc in stix_docs], True)
+        zip_data = create_zip(to_zip + [("%s.xml" % filename, doc['stix_obj'].to_xml()) for doc in stix_docs], True)
         result['success'] = True
         result['data'] = zip_data
         result['filename'] = filename + '.zip'
