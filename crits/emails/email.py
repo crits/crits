@@ -182,7 +182,7 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
             obj.header.subject = String(self.subject)
 
         if 'sender' not in exclude:
-            obj.header.sender = Address(self.reply_to, Address.CAT_EMAIL)
+            obj.header.sender = Address(self.sender, Address.CAT_EMAIL)
 
         if 'reply_to' not in exclude:
             obj.header.reply_to = Address(self.reply_to, Address.CAT_EMAIL)
@@ -190,6 +190,12 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
         if 'x_originating_ip' not in exclude:
             obj.header.x_originating_ip = Address(self.x_originating_ip,
                                                   Address.CAT_IPV4)
+
+        if 'x_mailer' not in exclude:
+            obj.header.x_mailer = String(self.x_mailer)
+
+        if 'boundary' not in exclude:
+            obj.header.boundary = String(self.boundary)
 
         if 'raw_body' not in exclude:
             obj.raw_body = self.raw_body
