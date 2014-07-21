@@ -228,8 +228,8 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
             email.from_address = str(cybox_obj.header.from_)
             if cybox_obj.header.to:
                 email.to = [str(recpt) for recpt in cybox_obj.header.to.to_list()]
-            for field in ['message_id', 'sender', 'reply_to',
-                          'x_originating_ip', 'subject', 'date']:
+            for field in ['message_id', 'sender', 'reply_to', 'x_originating_ip',
+                          'subject', 'date', 'x_mailer', 'boundary']:
                 setattr(email, field, str(getattr(cybox_obj.header, field)))
 
         email.helo = str(cybox_obj.email_server)
