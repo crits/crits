@@ -228,7 +228,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
             ind_type = "%s - %s" % (obj.object_type, obj.name)
         else:
             ind_type = obj.object_type
-        
+
         db_indicator = Indicator.objects(Q(ind_type=ind_type) & Q(value=obj.value)).first()
         if db_indicator:
             indicator = db_indicator
@@ -250,7 +250,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         try:
             rep = self.to_cybox()
             return rep
-        except Exception, e:
+        except:
             return False
 
     def set_confidence(self, analyst, rating):

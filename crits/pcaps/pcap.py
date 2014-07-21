@@ -1,5 +1,3 @@
-import base64
-
 from mongoengine import Document, StringField, IntField
 from django.conf import settings
 
@@ -169,7 +167,7 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
         pcap.length = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
         for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
             if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_NETWORK:
-                cert.add_file_data(obj.properties.data)
+                pcap.add_file_data(obj.properties.data)
                 break
         return pcap
 

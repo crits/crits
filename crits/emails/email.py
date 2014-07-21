@@ -214,7 +214,7 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
         """
         Convert a Cybox DefinedObject to a MongoEngine Email object.
         """
-        
+
         cybox_obj = cybox_obs.object_.properties
         email = cls(source=source)
 

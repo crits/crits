@@ -94,8 +94,7 @@ class STIXParser():
         elif does_source_exist(self.information_source):
             self.source.name = self.information_source
         else:
-            #TODO: this should do something useful
-            return
+            raise STIXParserException("No source to attribute data to.")
 
         self.source_instance.reference = reference
         self.source.instances.append(self.source_instance)
@@ -106,8 +105,7 @@ class STIXParser():
                 event.save(username=self.source_instance.analyst)
                 self.imported.append((Event._meta['crits_type'], event))
             except Exception, e:
-                #TODO this should not be printing
-                print e.message
+                self.failed.append((e.message, type(event).__name__, event.id_))
 
         if self.package.indicators:
             self.parse_indicators(self.package.indicators)

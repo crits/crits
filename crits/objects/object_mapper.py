@@ -13,7 +13,6 @@ from cybox.objects.domain_name_object import DomainName
 from cybox.objects.dns_query_object import DNSQuery, DNSQuestion, DNSRecord
 from cybox.objects.email_message_object import EmailMessage
 from cybox.objects.gui_dialogbox_object import GUIDialogbox
-from cybox.objects.gui_object import GUI
 from cybox.objects.gui_window_object import GUIWindow
 from cybox.objects.http_session_object import HTTPRequestHeaderFields
 from cybox.objects.library_object import Library

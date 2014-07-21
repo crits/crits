@@ -7,7 +7,6 @@ import logging
 import re
 import shlex
 import urllib
-import uuid
 
 from bson.objectid import ObjectId
 from django.conf import settings
@@ -45,7 +44,6 @@ from crits.events.event import Event
 from crits.ips.ip import IP
 from crits.notifications.notification import Notification
 from crits.notifications.handlers import get_user_notifications
-from crits.objects.object_mapper import UnsupportedCybOXObjectTypeError
 from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
 from crits.emails.email import Email
@@ -55,14 +53,6 @@ from crits.targets.target import Target
 from crits.indicators.indicator import Indicator
 
 from crits.core.totp import valid_totp
-
-from cybox.common import Time, ToolInformationList, ToolInformation
-from cybox.core import Observables
-
-from stix.common import StructuredText
-from stix.core import STIXPackage, STIXHeader
-from stix.common import InformationSource
-from stix.common.identity import Identity
 
 logger = logging.getLogger(__name__)
 
@@ -933,7 +923,7 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                     conv_data = obj.filedata
                 else:
                     continue
- 
+
                 if conv_data: # if data is available
                     if bin_fmt == 'raw':
                         to_zip.append((obj.filename, conv_data.read()))
@@ -943,7 +933,7 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                     conv_data.seek(0)
 
         obj = class_from_id(obj_type, obj_id) # get the CRITs object
-        stix_docs.append(obj.to_stix([new_objects[item][1] for item in new_objects], 
+        stix_docs.append(obj.to_stix([new_objects[item][1] for item in new_objects],
                                      True,
                                      bin_fmt)) # get its STIX doc rep
 

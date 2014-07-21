@@ -662,7 +662,7 @@ class CritsDocument(BaseDocument):
         :param loaded: Set to True if you've passed a list of CRITs objects as
                        the value for items_to_convert, else leave False.
         :type loaded: bool
-        :param bin_fmt: Specifies the format for Sample data encoding. 
+        :param bin_fmt: Specifies the format for Sample data encoding.
                         Options: None (don't include binary data in STIX output),
                                  "raw" (include binary data as is),
                                  "base64" (base64 encode binary data)
@@ -691,7 +691,7 @@ class CritsDocument(BaseDocument):
                 ind_list.append(ctype)
             elif hasattr(cls, "to_cybox_observable"):
                 obs_list.append(ctype)
-        
+
 
         # Store message
         stix_msg = {
@@ -701,11 +701,11 @@ class CritsDocument(BaseDocument):
                    }
 
         if not loaded: # if we have a list of object metadata, load it before processing
-            items_to_convert = [class_from_id(item['_type'], item['_id']) 
+            items_to_convert = [class_from_id(item['_type'], item['_id'])
                                     for item in items_to_convert]
-        
+
         # add self to the list of items to STIXify
-	if self not in items_to_convert:
+        if self not in items_to_convert:
             items_to_convert.append(self);
 
         for obj in items_to_convert:
@@ -747,8 +747,8 @@ class CritsDocument(BaseDocument):
         header = STIXHeader(information_source=i_s,
                             description=StructuredText(value=stix_desc),
                             package_intents=[stix_int],
-                            title=stix_title) 
-        
+                            title=stix_title)
+
         stix_msg['stix_obj'] = STIXPackage(indicators=stix_msg['stix_indicators'],
                         observables=Observables(stix_msg['stix_observables']),
                         stix_header=header,

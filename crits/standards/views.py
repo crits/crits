@@ -1,7 +1,6 @@
 import json
 
 from django.template import RequestContext
-from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import user_passes_test

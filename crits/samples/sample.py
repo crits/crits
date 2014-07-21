@@ -1,5 +1,4 @@
 import datetime
-import base64
 
 from mongoengine import Document, EmbeddedDocument
 from mongoengine import StringField, ListField
@@ -189,7 +188,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         """
             Convert a Cybox DefinedObject to a MongoEngine Sample object.
         """
-        cybox_object = cybox_obs.object_.properties 
+        cybox_object = cybox_obs.object_.properties
         if cybox_object.md5:
             db_obj = Sample.objects(md5=cybox_object.md5).first()
             if db_obj: # if a sample with md5 already exists

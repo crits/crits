@@ -166,7 +166,7 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
             db_obj = Certificate.objects(md5=cybox_object.md5).first()
             if db_obj:
                 return db_obj
-        
+
         cert = cls(source=source)
         cert.md5 = cybox_object.md5
         cert.filename = cybox_object.file_name
