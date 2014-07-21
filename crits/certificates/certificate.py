@@ -7,7 +7,7 @@ from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocumen
 from crits.core.fields import getFileField
 
 from cybox.common.object_properties import CustomProperties, Property
-from cybox.objects.artifact_object import Artifact
+from cybox.objects.artifact_object import Artifact, Base64Encoding
 from cybox.objects.file_object import File
 from cybox.core import Observable
 
@@ -145,8 +145,8 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
         obs.description = self.description
         data = self.filedata.read()
         if data: # if cert data available
-            data = base64.b64encode(data) # encode
             a = Artifact(data, Artifact.TYPE_FILE) # create artifact w/data
+            a.packaging.append(Base64Encoding())
             obj.add_related(a, "Child_Of") # relate artifact to file
         return ([obs], self.releasability)
 
