@@ -810,6 +810,15 @@ def download_object(request):
                                   {"error" : "Expecting POST."},
                                   RequestContext(request))
 
+    # if the STIX format is chosen, force binary to be base64
+    # we force this in the UI as well, but because we disable the select box it
+    # winds up not including it in the POST data. we get a two-fer here by
+    # making the form valid again and also ensuring people can't submit bad
+    # requests and forcing a format they shouldn't be.
+    request.POST = request.POST.copy()
+    if request.POST['rst_fmt'] == 'stix':
+        request.POST['bin_fmt'] = 'base64'
+
     form = DownloadFileForm(request.POST)
     if form.is_valid():
         total_limit = form.cleaned_data['total_limit']
