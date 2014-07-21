@@ -125,7 +125,6 @@ class STIXParser():
                 try: # create CRITs Indicator from observable
                     item = observable.object_.properties
                     obj = Indicator.from_cybox(item, [self.source])
-                    obj.add_source(self.source)
                     obj.save(username=self.source_instance.analyst)
                     self.imported.append((Indicator._meta['crits_type'], obj))
                 except Exception, e: # probably caused by cybox object we don't handle
@@ -146,7 +145,6 @@ class STIXParser():
                 item = obs.object_.properties
                 cls = self.get_crits_type(item) # determine which CRITs class matches
                 obj = cls.from_cybox(obs, [self.source])
-                obj.add_source(self.source)
                 obj.save(username=self.source_instance.analyst)
                 self.imported.append((cls._meta['crits_type'], obj)) # use class to parse object
             except Exception, e: # probably caused by cybox object we don't handle
