@@ -928,7 +928,9 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
         # list of data to zip up
         if rst_fmt == 'zip':
             for (oid, (otype, obj)) in new_objects.items():
-                if otype == PCAP._meta['crits_type'] or otype == Sample._meta['crits_type']:
+                if otype == PCAP._meta['crits_type'] 
+                            or otype == Sample._meta['crits_type']
+                            or otype == Certificate._meta['crits_type']:
                     conv_data = obj.filedata
                 else:
                     continue
