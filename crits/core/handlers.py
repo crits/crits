@@ -911,34 +911,36 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
 
     result = {'success': False}
 
-    objects = {}
-
-    if rst_fmt == 'stix_no_bin':
-        need_filedata = False
-    else:
-        need_filedata = True
+    stix_docs = []
+    to_zip = []
+    need_filedata = rst_fmt != 'stix_no_bin'
 
     for (obj_type, obj_id) in objs:
+        # get related objects
         new_objects = collect_objects(obj_type, obj_id, depth_limit,
                                       total_limit, rel_limit, object_types,
                                       sources, need_filedata=need_filedata)
-        objects.update(new_objects)
 
-    if not len(objects):
-        return result
+        # if result format calls for binary data to be zipped, loop over collected
+        # objects and convert binary data to bin_fmt specified, then add to the
+        # list of data to zip up
+        if rst_fmt == 'zip':
+            for (oid, (otype, obj)) in new_objects.items():
+                if otype == PCAP._meta['crits_type'] or otype == Sample._meta['crits_type']:
+                    conv_data = obj.filedata
+                else:
+                    continue
+ 
+                if conv_data: # if data is available
+                    if bin_fmt == 'raw':
+                        to_zip.append((obj.filename, conv_data.read()))
+                    else:
+                        (data, ext) = format_file(conv_data.read(), bin_fmt)
+                        to_zip.append((obj.filename + ext, data))
 
-    # Objects is a dictionary. The key is the object ID. The value is a tuple
-    # The first item in the tuple is the object type. The second item is the
-    # object itself.
-    # These are useful for debugging what is collected.
-    #print len(objects)
-    #for (id, (otype, obj)) in objects.iteritems():
-    #    print otype, obj.id
+        obj = class_from_id(obj_type, obj_id) # get the CRITs object
+        stix_docs.append(obj.to_stix([new_objects[item][1] for item in new_objects], True)) # get its STIX doc rep
 
-    stix_doc = None
-    indicators = []
-    observables = []
-    to_zip = []
     # Set the filename to be based upon the first item in the list passed
     # to this function. This means if you go to download a sample but select
     # emails only then the filename will tell you it came from a sample and
@@ -946,93 +948,19 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
     filename = "%s_%s_%s" % (datetime.datetime.today().strftime("%Y-%m-%d"),
                              objs[0][0], objs[0][1])
 
-    for (oid, (otype, obj)) in objects.items():
-        if otype == Email._meta['crits_type']:
-            (cyobj, releasability) = obj.to_cybox_observable()
-            observables.append(cyobj[0])
-        elif otype == PCAP._meta['crits_type']:
-            if obj.filedata:
-                if bin_fmt == 'raw':
-                    to_zip.append((obj.filename, obj.filedata.read()))
-                else:
-                    (data, ext) = format_file(obj.filedata.read(), bin_fmt)
-                    to_zip.append((obj.filename + ext, data))
-        elif otype == Sample._meta['crits_type']:
-            if rst_fmt == 'zip':
-                if obj.filedata:
-                    if bin_fmt == 'raw':
-                        to_zip.append((obj.filename, obj.filedata.read()))
-                    else:
-                        (data, ext) = format_file(obj.filedata.read(), bin_fmt)
-                        to_zip.append((obj.filename + ext, data))
-            else:
-                (cyobj, releasability) = obj.to_cybox_observable()
-                # to_cybox()[0] on a sample returns a list. If there is no
-                # backing binary the list will be one item long (the cybox
-                # FileObject). If there is a backing binary the list will be
-                # two items long. The first will be an ArtifactObject and the
-                # second will be the FileObject. Either way, we want the last
-                # one when rst_fmt is 'stix_no_bin'.
-                if rst_fmt == 'stix_no_bin':
-                    observables.append(cyobj[-1])
-                else:
-                    for i in cyobj:
-                        observables.append(i)
-        elif otype == Indicator._meta['crits_type']:
-            try:
-                (ind, releasability) = obj.to_stix_indicator()
-                indicators.append(ind)
-            except UnsupportedCybOXObjectTypeError:
-                # Ignore indicators we can not turn into standards yet.
-                pass
-        else:
-            continue
-
-    if indicators or observables:
-        # Take all the indicators and observables and generate a STIX document.
-        tool_list = ToolInformationList()
-        tool = ToolInformation("CRITs", "MITRE")
-        tool.version = settings.CRITS_VERSION
-        tool_list.append(tool)
-        i_s = InformationSource(time=Time(produced_time=datetime.datetime.now()),
-                                identity=Identity(name=settings.COMPANY_NAME),
-                                tools=tool_list)
-        description = StructuredText(value="STIX from %s" %
-                                     settings.COMPANY_NAME)
-        header = STIXHeader(information_source=i_s,
-                            description=description,
-                            package_intents=["Collective Threat Intelligence"],
-                            title="Threat Intelligence Sharing")
-
-        stix_doc = {
-                     'doc': STIXPackage(indicators=indicators,
-                                        observables=Observables(observables),
-                                        stix_header=header,
-                                        id_=uuid.uuid4()),
-                     'filename': filename + '.xml'
-                   }
-
-    # If nothing to zip up and we have a STIX doc, return that.
-    # If there is nothing to zip up and no STIX doc it's likely that
-    # we got one sample with no backing binary, so return the empty result.
-    if not to_zip:
-        if not stix_doc:
-            return result
+    doc_count = len(stix_docs)
+    zip_count = len(to_zip)
+    if doc_count == 1 and zip_count <= 0: # we have a single STIX doc to return
+        result['success'] = True
+        result['data'] = stix_docs[0]['stix_obj'].to_xml()
         result['filename'] = filename + '.xml'
-        result['data'] = stix_doc['doc'].to_xml()
         result['mimetype'] = 'text/xml'
+    elif doc_count + zip_count > 1: # we have multiple or mixed items to return
+        zip_data = create_zip(to_zip + [(filename, doc['stix_obj'].to_xml()) for doc in stix_docs], True)
         result['success'] = True
-    else:
-        # We have something to zip up. If we have a stix_doc include that too.
-        if stix_doc:
-           to_zip.append((stix_doc['filename'], stix_doc['doc'].to_xml()))
-
-        zip_data = create_zip(to_zip, True)
-
-        result['filename'] = filename + '.zip'
         result['data'] = zip_data
+        result['filename'] = filename + '.zip'
         result['mimetype'] = 'application/zip'
-        result['success'] = True
     return result
 
 def collect_objects(obj_type, obj_id, depth_limit, total_limit, rel_limit,

@@ -649,14 +649,23 @@ class CritsDocument(BaseDocument):
 
         return pformat(self.to_dict())
 
-    def to_stix(self, rcpts, username=None, items_to_convert=[]):
+    def to_stix(self, items_to_convert=[], loaded=False):
         """
         Converts a CRITs object to a STIX document.
 
         The resulting document includes standardized representations
         of all related objects noted within items_to_convert.
 
-        Returns the STIX document and a list of objects represented therein.
+        :param items_to_convert: The list of items to convert to STIX/CybOX
+        :type items_to_convert: Either a list of CRITs objects OR
+                                a list of {'_type': CRITS_TYPE, '_id': CRITS_ID} dicts
+        :param loaded: Set to True if you've passed a list of CRITs objects as
+                       the value for items_to_convert, else leave False.
+        :type loaded: bool
+        :returns: A dict indicating which items mapped to STIX indicators, ['stix_indicators']
+                  which items mapped to STIX observables, ['stix_observables']
+                  which items are included in the resulting STIX doc, ['final_objects']
+                  and the STIX doc itself ['stix_obj'].
         """
 
         from cybox.common import Time, ToolInformationList, ToolInformation
@@ -686,25 +695,27 @@ class CritsDocument(BaseDocument):
                        'final_objects': []
                    }
 
+        if not loaded: # if we have a list of object metadata, load it before processing
+            items_to_convert = [class_from_id(item['_type'], item['_id']) 
+                                    for item in items_to_convert]
+        
         # add self to the list of items to STIXify
-        items_to_convert.append({'_type': self._meta['crits_type'], '_id': self.id});
+        items_to_convert.append(self);
 
-        for r in items_to_convert:
-            rtype = r['_type']
-            obj = class_from_id(rtype, r['_id'])
-            if obj._meta['crits_type'] == class_from_type('Event')._meta['crits_type']:
+        for obj in items_to_convert:
+            obj_type = obj._meta['crits_type']
+            if obj_type == class_from_type('Event')._meta['crits_type']:
                 # occurs if the 'parent' object is an Event. We don't need to convert
                 # but we do need to add to 'final_objects' for tracking purposes
                 stix_msg['final_objects'].append(self)
 
-            supported = rtype in ind_list or rtype in obs_list
-            if obj and supported: # crits object can be standardized
-                if obj._meta['crits_type'] in ind_list: # convert to STIX indicators
-                    ind, releas = obj.to_stix_indicator()
-                    stix_msg['stix_indicators'].append(ind)
-                elif obj._meta['crits_type'] in obs_list: # convert to CybOX observable
-                    ind, releas = obj.to_cybox_observable()
-                    stix_msg['stix_observables'].extend(ind)
+            if obj_type in ind_list: # convert to STIX indicators
+                ind, releas = obj.to_stix_indicator()
+                stix_msg['stix_indicators'].append(ind)
+                stix_msg['final_objects'].append(obj)
+            elif obj_type in obs_list: # convert to CybOX observable
+                ind, releas = obj.to_cybox_observable()
+                stix_msg['stix_observables'].extend(ind)
                 stix_msg['final_objects'].append(obj)
 
         tool_list = ToolInformationList()
