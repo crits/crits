@@ -153,7 +153,7 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
         return super(self.__class__, self)._custom_save(force_insert, validate,
             clean, write_concern, cascade, cascade_kwargs, _refs, username)
 
-    def to_cybox(self, exclude=None):
+    def to_cybox_observable(self, exclude=None):
         """
         Convert an email to a CybOX Observables.
 
@@ -210,11 +210,12 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
         return (observables, self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_obj, source):
+    def from_cybox(cls, cybox_obs, source):
         """
         Convert a Cybox DefinedObject to a MongoEngine Email object.
         """
-
+        
+        cybox_obj = cybox_obs.object_.properties
         email = cls(source=source)
 
         if cybox_obj.header:
@@ -226,9 +227,10 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
                 setattr(email, field, str(getattr(cybox_obj.header, field)))
 
         email.helo = str(cybox_obj.email_server)
-        if email.raw_body:
+        if cybox_obj.raw_body:
             email.raw_body = str(cybox_obj.raw_body)
-        if email.raw_header:
+        if cybox_obj.raw_header:
             email.raw_header = str(cybox_obj.raw_header)
 
         return email
+

@@ -6,7 +6,7 @@ from mongoengine import StringField, ListField
 from mongoengine import EmbeddedDocumentField, IntField
 from django.conf import settings
 from cybox.objects.file_object import File
-from cybox.objects.artifact_object import Artifact
+from cybox.objects.artifact_object import Artifact, Base64Encoding, ZlibCompression
 from cybox.core import Observable
 from cybox.common import UnsignedLong, Hash
 
@@ -147,7 +147,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         except:
             self.ssdeep = None
 
-    def to_cybox(self, exclude=None):
+    def to_cybox_observable(self, exclude=None, bin_fmt="raw"):
         if exclude == None:
             exclude = []
 
@@ -165,46 +165,48 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         if 'filename' not in exclude and 'file_name' not in exclude:
             f.file_name = self.filename
         # create an Artifact object for the binary if it exists
-        if 'filedata' not in exclude:
+        if 'filedata' not in exclude and bin_fmt:
             data = self.filedata.read()
-            if data:
-                data = base64.b64encode(data)
-                a = Artifact(data=data, type_=Artifact.TYPE_FILE)
-                observables.append(Observable(a))
-        #if 'filetype' not in exclude and 'file_format' not in exclude:
+            if data: # if sample data available
+                a = Artifact(data, Artifact.TYPE_FILE) # create artifact w/data
+                if bin_fmt == "zlib":
+                    a.packaging.append(ZlibCompression())
+                    a.packaging.append(Base64Encoding())
+                elif bin_fmt == "base64":
+                    a.packaging.append(Base64Encoding())
+                f.add_related(a, "Child_Of") # relate artifact to file
+        if 'filetype' not in exclude and 'file_format' not in exclude:
             #NOTE: this doesn't work because the CybOX File object does not
             #   have any support built in for setting the filetype to a
             #   CybOX-binding friendly object (e.g., calling .to_dict() on
             #   the resulting CybOX object fails on this field.
-            #f.file_format = self.filetype
+            f.file_format = self.filetype
         observables.append(Observable(f))
         return (observables, self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_object, source, filedata=None):
+    def from_cybox(cls, cybox_obs, source):
         """
             Convert a Cybox DefinedObject to a MongoEngine Sample object.
         """
+        cybox_object = cybox_obs.object_.properties 
+        if cybox_object.md5:
+            db_obj = Sample.objects(md5=cybox_object.md5).first()
+            if db_obj: # if a sample with md5 already exists
+                return db_obj # don't modify, just return
 
-        sample = cls(source=source)
-
-        #TODO: we need to find all *required* fields and check for them
-        # and handle optional fields accordingly.
-        if cybox_object.size_in_bytes:
-            sample.size = cybox_object.size_in_bytes.value
-        else:
-            sample.size = 0
+        sample = cls(source=source) # else, start creating new sample record
         sample.filename = str(cybox_object.file_name)
+        sample.size = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
         for hash_ in cybox_object.hashes:
             if hash_.type_.value.upper() in [Hash.TYPE_MD5, Hash.TYPE_SHA1,
                 Hash.TYPE_SHA256, Hash.TYPE_SSDEEP]:
                 setattr(sample, hash_.type_.value.lower(),
                     str(hash_.simple_hash_value).strip().lower())
-        if filedata:
-            if isinstance(filedata, file):
-                sample.filedata = filedata.read()
-            else:
-                sample.filedata = filedata
+        for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
+            if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_FILE:
+                sample.add_file_data(obj.properties.data)
+                break
 
         return sample
 
