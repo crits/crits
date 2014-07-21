@@ -939,6 +939,7 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                     else:
                         (data, ext) = format_file(conv_data.read(), bin_fmt)
                         to_zip.append((obj.filename + ext, data))
+                    conv_data.seek(0)
 
         obj = class_from_id(obj_type, obj_id) # get the CRITs object
         stix_docs.append(obj.to_stix([new_objects[item][1] for item in new_objects], 

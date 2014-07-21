@@ -679,7 +679,6 @@ class CritsDocument(BaseDocument):
         from stix.core import STIXPackage, STIXHeader
         from stix.common.identity import Identity
 
-	print bin_fmt
         # These two lists are used to determine which CRITs objects
         # go in which part of the STIX document.
         ind_list = []
