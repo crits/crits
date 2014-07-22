@@ -17,7 +17,7 @@ class RelationshipResource(CRITsAPIResource):
 
     class Meta:
         queryset = RelationshipType.objects.all()
-        allowed_methods = ('post')
+        allowed_methods = ('post',)
         resource_name = "relationships"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
