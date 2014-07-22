@@ -1125,6 +1125,16 @@ var stdDialogs = {
 
   $("#dialog-new-indicator").on("dialogcreate", new_indicator_dialog);
 
+  $(document).on('change', "#id_rst_fmt", function(e) {
+      if (this.value == 'stix') {
+          console.log("disable");
+          $("#id_bin_fmt").val("base64").prop("disabled", true);
+      } else {
+          console.log("enable");
+          $("#id_bin_fmt").prop("disabled", false);
+      }
+  });
+
   // Releasability has plus instance and delete buttons that use same callback
   $(document).on('click', '.add_releasability_instance_button',
          releasability_add_submit);

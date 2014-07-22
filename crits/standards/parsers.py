@@ -1,15 +1,16 @@
-import base64
-from hashlib import md5
 from StringIO import StringIO
-from mongoengine.queryset import Q
 
 from crits.events.event import Event
-from crits.samples.sample import Sample
-from crits.emails.email import Email
 from crits.indicators.indicator import Indicator
 from crits.core.crits_mongoengine import EmbeddedSource
-from crits.core.class_mapper import class_from_value
+from crits.core.class_mapper import class_from_type
 from crits.core.handlers import does_source_exist
+
+from cybox.objects.artifact_object import Artifact
+from cybox.objects.address_object import Address
+from cybox.objects.domain_name_object import DomainName
+from cybox.objects.email_message_object import EmailMessage
+from cybox.objects.file_object import File
 
 from stix.core import STIXPackage
 
@@ -42,23 +43,18 @@ class STIXParser():
         self.data = data
 
         self.package = None
-        self.binding = None
 
-        self.events = []
-        self.samples = []
-        self.emails = []
-        self.indicators = []
-
-        self.saved_artifacts = {}
-
-        self.source = EmbeddedSource()
-        # source.name comes from the stix header.
+        self.source = EmbeddedSource() # source.name comes from the stix header.
         self.source_instance = EmbeddedSource.SourceInstance()
         # The reference attribute and appending it to the source is
         # done after the TAXII message ID is determined.
         self.source_instance.analyst = analyst
         self.source_instance.method = method
         self.information_source = None
+
+        self.imported = [] # track items that are imported
+        self.failed = [] # track STIX/CybOX items that failed import
+        self.saved_artifacts = {}
 
     def parse_stix(self, reference=None, make_event=False, source=''):
         """
@@ -78,9 +74,9 @@ class STIXParser():
         """
 
         f = StringIO(self.data)
-        (self.package, self.binding) = STIXPackage.from_xml(f)
+        self.package = STIXPackage.from_xml(f)
         f.close()
-        if not self.package and not self.binding:
+        if not self.package:
             raise STIXParserException("STIX package failure")
 
         stix_header = self.package.stix_header
@@ -95,208 +91,125 @@ class STIXParser():
                 reference += info_src
         if does_source_exist(source):
             self.source.name = source
+        elif does_source_exist(self.information_source):
+            self.source.name = self.information_source
+        else:
+            raise STIXParserException("No source to attribute data to.")
 
         self.source_instance.reference = reference
         self.source.instances.append(self.source_instance)
 
         if make_event:
             event = Event.from_stix(stix_package=self.package, source=[self.source])
-            event.save(username=self.source_instance.analyst)
-            self.events.append(('Event', str(event.id)))
+            try:
+                event.save(username=self.source_instance.analyst)
+                self.imported.append((Event._meta['crits_type'], event))
+            except Exception, e:
+                self.failed.append((e.message, type(event).__name__, event.id_))
 
-        # Walk STIX indicators and pull out CybOX observables.
-        # stix.(indicators|observables) is a list of CybOX observables
         if self.package.indicators:
-            for indicator in self.package.indicators:
-                if not indicator:
-                    continue
-                for observable in indicator.observables:
-                    self.__parse_observable(observable)
+            self.parse_indicators(self.package.indicators)
 
-        # Also walk STIX observables and pull out CybOX observables.
-        # At some point the standard will allow stix_package.observables to be
-        # an iterable object and we can collapse this with indicators.
-        if self.package.observables:
-            if self.package.observables.observables:
-                for observable in self.package.observables.observables:
-                    if not observable:
-                        continue
-                    self.__parse_observable(observable)
+        if self.package.observables and self.package.observables.observables:
+            self.parse_observables(self.package.observables.observables)
 
-    def __parse_observable(self, observable):
+    def parse_indicators(self, indicators):
         """
-        Parse observable.
+        Parse list of indicators.
 
-        :param observable: The observable to parse.
-        :type observable: STIX observable
+        :param indicators: List of STIX indicators.
+        :type indicators: List of STIX indicators.
         """
+        for indicator in indicators: # for each STIX indicator
+            for observable in indicator.observables: # get each observable from indicator (expecting only 1)
+                try: # create CRITs Indicator from observable
+                    item = observable.object_.properties
+                    obj = Indicator.from_cybox(item, [self.source])
+                    obj.save(username=self.source_instance.analyst)
+                    self.imported.append((Indicator._meta['crits_type'], obj))
+                except Exception, e: # probably caused by cybox object we don't handle
+                    self.failed.append((e.message, type(item).__name__, item.parent.id_)) # note for display in UI
 
-        if observable.observable_composition:
-            for obs in observable.observable_composition.observables:
-                #print "observable composition"
-                self.__parse_observable(obs)
-        elif observable.object_:
-            #print "stateful measure"
-            self.__parse_object(observable.object_)
-        elif observable.event:
-            pass
-
-    def __parse_object(self, obs_obj):
+    def parse_observables(self, observables):
         """
-        Parse an observable object.
+        Parse list of observables in STIX doc.
 
-        :param obs_obj: The observable object to parse.
-        :type obs_obj: CybOX object type.
+        :param observables: List of STIX observables.
+        :type observables: List of STIX observables.
         """
+        for obs in observables: # for each STIX observable
+            if not obs.object_ or not obs.object_.properties:
+                self.failed.append(("No valid object_properties was found!", type(obs).__name__, obs.id_)) # note for display in UI
+                continue
+            try: # try to create CRITs object from observable
+                item = obs.object_.properties
+                cls = self.get_crits_type(item) # determine which CRITs class matches
+                obj = cls.from_cybox(obs, [self.source])
+                obj.save(username=self.source_instance.analyst)
+                self.imported.append((cls._meta['crits_type'], obj)) # use class to parse object
+            except Exception, e: # probably caused by cybox object we don't handle
+                self.failed.append((e.message, type(item).__name__, item.parent.id_)) # note for display in UI
 
-        properties = obs_obj.properties
-        type_ = properties._XSI_TYPE
-
-        #would isinstance be preferable?
-        #elif isinstance(defined_obj,
-        #   cybox.objects.email_message_object.EmailMessage):
-        #XXX: Need to check the database for an existing Sample or Indicator
-        # and handle accordingly, or risk blowing it away!!!!
-        if type_ == 'FileObjectType':
-            sample = Sample.from_cybox(properties, [self.source])
-            md5_ = sample.md5
-            # do we already have this sample?
-            db_sample = Sample.objects(md5=md5_).first()
-            if db_sample:
-                # flat out replacing cybox sample object with one from db.
-                # we add the source to track we got a copy from TAXII.
-                # if we have a metadata only doc, the add_file_data below
-                # will generate metadata for us.
-                sample = db_sample
-                sample.add_source(self.source)
-            if md5_ in self.saved_artifacts:
-                (saved_obj, data) = self.saved_artifacts[md5_]
-                if saved_obj._XSI_TYPE == 'FileObjectType':
-                    #print "Only File found in SA"
-                    return
-                elif saved_obj._XSI_TYPE == 'ArtifactObjectType':
-                    #print "Found matching Artifact in SA"
-                    sample.add_file_data(data)
-                    sample.save(username=self.source_instance.analyst)
-                    self.samples.append(('Sample', sample.md5))
-                    del self.saved_artifacts[md5_]
-            else:
-                #print "Saving File to SA"
-                self.saved_artifacts[md5_] = (properties, None)
-        elif type_ == 'EmailMessageObjectType':
-            # we assume all emails coming in from TAXII are new emails.
-            # there is no way to guarantee we found a dupe in the db.
-            email = Email.from_cybox(properties, [self.source])
-            email.save(username=self.source_instance.analyst)
-            self.emails.append(('Email', str(email.id)))
-        elif type_ in ['URIObjectType', 'AddressObjectType']:
-            indicator = Indicator.from_cybox(properties, [self.source])
-            ind_type = indicator.ind_type
-            value = indicator.value
-            db_indicator = Indicator.objects(Q(ind_type=ind_type) & Q(value=value)).first()
-            if db_indicator:
-                # flat out replacing cybox indicator object with one from db.
-                # we add the source to track we got a copy from TAXII.
-                indicator = db_indicator
-                indicator.add_source(self.source)
-            indicator.save(username=self.source_instance.analyst)
-            self.indicators.append(('Indicator', str(indicator.id)))
-        elif type_ == 'ArtifactObjectType':
-            # XXX: Check properties.type_ to see if it is TYPE_FILE,
-            # TYPE_MEMORY, from CybOX definitions. This isn't implemented
-            # yet in Greg's code. Just parse the file blindly for now.
-            #if properties.type_ == 'File':
-            #    sample = Sample.from_cybox(properties, [self.source])
-            #else:
-            #    print "XXX: got unknown artifact type %s" % properties.type_
-            data = base64.b64decode(properties.data)
-            md5_ = md5(data).hexdigest()
-            #print "Found Artifact"
-            if md5_ in self.saved_artifacts:
-                (saved_obj, data) = self.saved_artifacts[md5_]
-                if saved_obj._XSI_TYPE == 'ArtifactObjectType':
-                    #print "Only Artifact found in SA"
-                    return
-                elif saved_obj._XSI_TYPE == 'FileObjectType':
-                    #print "Found matching File in SA"
-                    sample = Sample.from_cybox(saved_obj, [self.source])
-                    db_sample = Sample.objects(md5=md5_).first()
-                    if db_sample:
-                        # flat out replacing cybox sample object with one from db.
-                        # we add the source to track we got a copy from TAXII.
-                        # if we have a metadata only doc, the add_file_data below
-                        # will generate metadata for us.
-                        sample = db_sample
-                        sample.add_source(self.source)
-                    sample.add_file_data(data)
-                    sample.save(username=self.source_instance.analyst)
-                    self.samples.append(('Sample', sample.md5))
-                    del self.saved_artifacts[md5_]
-            else:
-                #print "Saving Artifact to SA"
-                self.saved_artifacts[md5_] = (properties, data)
-
-    def process_saved_artifacts(self):
+    def get_crits_type(self, c_obj):
         """
-        Process anything in saved_artifacts that didn't have a match.
-        """
+        Get the class that the given cybox object should be interpreted as during import.
 
-        for md5_, value in self.saved_artifacts.iteritems():
-            (saved_obj, data) = value
-            if saved_obj._XSI_TYPE == 'FileObjectType':
-                #print "Only File found in SA"
-                sample = Sample.from_cybox(saved_obj, [self.source])
-                db_sample = Sample.objects(md5=md5_).first()
-                if db_sample:
-                    # flat out replacing cybox sample object with one from db.
-                    # we add the source to track we got a copy from TAXII.
-                    # if we have a metadata only doc, the add_file_data below
-                    # will generate metadata for us.
-                    sample = db_sample
-                    sample.add_source(self.source)
-                if data:
-                    sample.add_file_data(data)
-                sample.save(username=self.source_instance.analyst)
-                self.samples.append(('Sample', sample.md5))
-            # currently not adding random artifacts with no metadata
-            #elif saved_obj._XSI_TYPE == 'ArtifactObjectType':
-            #    print "Found matching Artifact in SA"
+        :param c_obj: A CybOX object.
+        :type c_obj: An instance of one of the various CybOX object classes.
+        :returns: The CRITs class to use to import the given CybOX object.
+        """
+        if isinstance(c_obj, Address):
+            imp_type = "IP"
+        elif isinstance(c_obj, DomainName):
+            imp_type = "Domain"
+        elif isinstance(c_obj, Artifact):
+            imp_type = "RawData"
+        elif isinstance(c_obj, File) and c_obj.custom_properties and c_obj.custom_properties[0].name == "crits_type" and c_obj.custom_properties[0]._value == "Certificate":
+            imp_type = "Certificate"
+        elif isinstance(c_obj, File) and self.has_network_artifact(c_obj):
+            imp_type = "PCAP"
+        elif isinstance(c_obj, File):
+            imp_type = "Sample"
+        elif isinstance(c_obj, EmailMessage):
+            imp_type = "Email"
+        else: # try to parse all other possibilities as Indicator
+            imp_type = "Indicator"
+        return class_from_type(imp_type)
+
+    def has_network_artifact(self, file_obj):
+        """
+        Determine if the CybOX File object has a related Artifact of
+        'Network' type.
+
+        :param file_obj: A CybOX File object
+        :return: True if the File has a Network Traffic Artifact
+        """
+        if not file_obj or not file_obj.parent or not file_obj.parent.related_objects:
+            return False
+        for obj in file_obj.parent.related_objects: # attempt to find data in cybox
+            if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_NETWORK:
+                return True
+        return False
 
     def relate_objects(self):
         """
-        for now we are relating all objects to the event with a common
+        for now we are relating all objects to each other with a common
         relationship type that is most likely inaccurate. Need to get actual
         relationship out of the cybox document once we are storing it there.
         """
+        finished_objects = []
+        for obj in self.imported:
+            if not finished_objects: # Prime the list...
+                finished_objects.append(obj[1])
+                continue
 
-        for (type_, event_id) in self.events:
-            event_obj = class_from_value(type_, event_id)
-            finished_objects = [event_obj]
-            for (t, v) in self.samples + self.emails + self.indicators:
-                obj = class_from_value(t, v)
-                obj.add_relationship(event_obj,
+            for right in finished_objects:
+                obj[1].add_relationship(right,
                                      rel_type="Related_To",
                                      analyst=self.source_instance.analyst)
-                finished_objects.append(obj)
+            finished_objects.append(obj[1])
 
-            for f in finished_objects:
-                f.save(username=self.source_instance.analyst)
+        for f in finished_objects:
+            f.save(username=self.source_instance.analyst)
 
-        # If we have no event relate every object to every other object.
-        if not self.events:
-            finished_objects = []
-            for (t, v) in self.samples + self.emails + self.indicators:
-                obj = class_from_value(t, v)
-                # Prime the list...
-                if not finished_objects:
-                    finished_objects.append(obj)
-                    continue
 
-                for right in finished_objects:
-                    obj.add_relationship(right,
-                                         rel_type="Related_To",
-                                         analyst=self.source_instance.analyst)
-                finished_objects.append(obj)
-
-            for f in finished_objects:
-                f.save(username=self.source_instance.analyst)

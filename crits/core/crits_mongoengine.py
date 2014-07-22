@@ -1,5 +1,6 @@
 import datetime
 import json, yaml
+import uuid
 import StringIO
 import csv
 
@@ -648,29 +649,112 @@ class CritsDocument(BaseDocument):
 
         return pformat(self.to_dict())
 
-    def to_stix_indicator(self):
+    def to_stix(self, items_to_convert=[], loaded=False, bin_fmt="raw"):
         """
-        Creates a STIX Indicator object from a CybOX object.
+        Converts a CRITs object to a STIX document.
 
-        :returns: list of [<indicator>, <releasability list>]
+        The resulting document includes standardized representations
+        of all related objects noted within items_to_convert.
+
+        :param items_to_convert: The list of items to convert to STIX/CybOX
+        :type items_to_convert: Either a list of CRITs objects OR
+                                a list of {'_type': CRITS_TYPE, '_id': CRITS_ID} dicts
+        :param loaded: Set to True if you've passed a list of CRITs objects as
+                       the value for items_to_convert, else leave False.
+        :type loaded: bool
+        :param bin_fmt: Specifies the format for Sample data encoding.
+                        Options: None (don't include binary data in STIX output),
+                                 "raw" (include binary data as is),
+                                 "base64" (base64 encode binary data)
+
+        :returns: A dict indicating which items mapped to STIX indicators, ['stix_indicators']
+                  which items mapped to STIX observables, ['stix_observables']
+                  which items are included in the resulting STIX doc, ['final_objects']
+                  and the STIX doc itself ['stix_obj'].
         """
 
-        #We can't do anything with objects that aren't convertible to CybOX.
-        if not hasattr(self, "to_cybox"):
-            return (None, None)
-
-        from stix.indicator import Indicator as S_Ind
+        from cybox.common import Time, ToolInformationList, ToolInformation
+        from cybox.core import Observables
+        from stix.common import StructuredText, InformationSource
+        from stix.core import STIXPackage, STIXHeader
         from stix.common.identity import Identity
-        ind = S_Ind()
-        obs, releas = self.to_cybox()
-        for ob in obs:
-            ind.add_observable(ob)
-        #TODO: determine if a source wants its name shared. This will
-        #   probably have to happen on a per-source basis rather than a per-
-        #   object basis.
-        identity = Identity(name=settings.COMPANY_NAME)
-        ind.set_producer_identity(identity)
-        return (ind, releas)
+
+        # These two lists are used to determine which CRITs objects
+        # go in which part of the STIX document.
+        ind_list = []
+        obs_list = []
+
+        # determine which CRITs types support standardization
+        for ctype in settings.CRITS_TYPES:
+            cls = class_from_type(ctype)
+            if hasattr(cls, "to_stix_indicator"):
+                ind_list.append(ctype)
+            elif hasattr(cls, "to_cybox_observable"):
+                obs_list.append(ctype)
+
+
+        # Store message
+        stix_msg = {
+                       'stix_indicators': [],
+                       'stix_observables': [],
+                       'final_objects': []
+                   }
+
+        if not loaded: # if we have a list of object metadata, load it before processing
+            items_to_convert = [class_from_id(item['_type'], item['_id'])
+                                    for item in items_to_convert]
+
+        # add self to the list of items to STIXify
+        if self not in items_to_convert:
+            items_to_convert.append(self);
+
+        for obj in items_to_convert:
+            obj_type = obj._meta['crits_type']
+            if obj_type == class_from_type('Event')._meta['crits_type']:
+                # occurs if the 'parent' object is an Event. We don't need to convert
+                # but we do need to add to 'final_objects' for tracking purposes
+                stix_msg['final_objects'].append(self)
+
+            if obj_type in ind_list: # convert to STIX indicators
+                ind, releas = obj.to_stix_indicator()
+                stix_msg['stix_indicators'].append(ind)
+                stix_msg['final_objects'].append(obj)
+            elif obj_type in obs_list: # convert to CybOX observable
+                if obj_type == class_from_type('Sample')._meta['crits_type']:
+                    ind, releas = obj.to_cybox_observable(bin_fmt=bin_fmt)
+                else:
+                    ind, releas = obj.to_cybox_observable()
+                stix_msg['stix_observables'].extend(ind)
+                stix_msg['final_objects'].append(obj)
+
+        tool_list = ToolInformationList()
+        tool = ToolInformation("CRITs", "MITRE")
+        tool.version = settings.CRITS_VERSION
+        tool_list.append(tool)
+        i_s = InformationSource(
+            time=Time(produced_time= datetime.datetime.now()),
+            identity=Identity(name=settings.COMPANY_NAME),
+            tools=tool_list)
+
+        if self._meta['crits_type'] == "Event":
+            stix_desc = self.stix_description()
+            stix_int = self.stix_intent()
+            stix_title = self.stix_title()
+        else:
+            stix_desc = "STIX from %s" % settings.COMPANY_NAME
+            stix_int = "Collective Threat Intelligence"
+            stix_title = "Threat Intelligence Sharing"
+        header = STIXHeader(information_source=i_s,
+                            description=StructuredText(value=stix_desc),
+                            package_intents=[stix_int],
+                            title=stix_title)
+
+        stix_msg['stix_obj'] = STIXPackage(indicators=stix_msg['stix_indicators'],
+                        observables=Observables(stix_msg['stix_observables']),
+                        stix_header=header,
+                        id_=uuid.uuid4())
+
+        return stix_msg
 
 # Embedded Documents common to most classes
 
@@ -739,13 +823,16 @@ class CritsSourceDocument(BaseDocument):
             s.instances = [i]
         if not isinstance(source_item, EmbeddedSource):
             source_item = s
+
         if isinstance(source_item, EmbeddedSource):
+            match = None
             for c, s in enumerate(self.source):
-                if s.name == source_item.name:
-                    for i in source_item.instances:
-                        self.source[c].instances.append(i)
+                if s.name == source_item.name: # find index of matching source
+                    match = c
                     break
-            else:
+            if match is not None: # if source exists, add instances to that source
+                self.source[match].instances.extend(source_item.instances)
+            else: # else, add as new source
                 self.source.append(source_item)
 
     def edit_source(self, source=None, date=None, method=None,

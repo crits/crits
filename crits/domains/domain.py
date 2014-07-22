@@ -6,6 +6,9 @@ from difflib import unified_diff
 from django.conf import settings
 from whois_parser import WhoisEntry
 
+from cybox.objects.domain_name_object import DomainName
+from cybox.core import Observable
+
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, CritsSourceDocument
 from crits.domains.migrate import migrate_domain
@@ -189,3 +192,38 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
                             to_whois,
                             fromfile=from_date,
                             tofile=to_date)
+
+    def to_cybox_observable(self):
+        """
+            Convert a Domain to a CybOX Observables.
+            Returns a tuple of (CybOX object, releasability list).
+
+            To get the cybox object as xml or json, call to_xml() or
+            to_json(), respectively, on the resulting CybOX object.
+        """
+        obj = DomainName()
+        obj.value = self.domain
+        obj.type_ = self.record_type
+        return ([Observable(obj)], self.releasability)
+
+    @classmethod
+    def from_cybox(cls, cybox_obs, source):
+        """
+        Convert a Cybox DefinedObject to a MongoEngine Indicator object.
+
+        :param cybox_obs: The cybox observable to create the indicator from.
+        :type cybox_obs: :class:`cybox.core.Observable``
+        :param source: The source list for the Indicator.
+        :type source: list
+        :returns: :class:`crits.indicators.indicator.Indicator`
+        """
+        cybox_object = cybox_obs.object_.properties
+        db_obj = Domain.objects(domain=str(cybox_object.value)).first()
+        if db_obj:
+            return db_obj
+        else:
+            domain = cls(source=source)
+            domain.domain = str(cybox_object.value)
+            domain.record_type = str(cybox_object.type_)
+            return domain
+
