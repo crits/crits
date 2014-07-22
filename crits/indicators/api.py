@@ -96,7 +96,7 @@ class IndicatorActivityResource(CRITsAPIResource):
 
     class Meta:
         queryset = Indicator.objects.all()
-        allowed_methods = ('post')
+        allowed_methods = ('post',)
         resource_name = "indicator_activity"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

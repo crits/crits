@@ -17,7 +17,7 @@ for these services may cause CRITs to break!
 
 Python Libraries:
 * anyjson
-* cybox 2.0.0b6
+* cybox 2.1.0.5
 * dateutil
 * defusedxml 0.4.1
 * django 1.6.2
@@ -37,5 +37,5 @@ Python Libraries:
 * python-mimeparse 0.1.4.1
 * setuptools
 * simlejson
-* stix 1.0.0a7
+* stix 1.1.1.0
 * yaml

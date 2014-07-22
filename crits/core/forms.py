@@ -192,8 +192,7 @@ class DownloadFileForm(forms.Form):
 
     bin_fmt = forms.ChoiceField(choices=[("raw", "raw"),
                                          ("base64", "base64"),
-                                         ("zlib", "zlib"),
-                                         ("invert", "invert")],
+                                         ("zlib", "zlib")],
                                          label="Binary format")
 
     def __init__(self, *args, **kwargs):
@@ -202,13 +201,13 @@ class DownloadFileForm(forms.Form):
         total_max = getattr(crits_config, 'total_max', settings.TOTAL_MAX)
         rel_max = getattr(crits_config, 'rel_max', settings.REL_MAX)
         super(DownloadFileForm, self).__init__(*args, **kwargs)
-        self.fields['objects'].choices = [('Sample', 'Samples'),
+        self.fields['objects'].choices = [('Certificate', 'Certificates'),
+                                          ('Domain', 'Domains'),
                                           ('Email', 'Emails'),
                                           ('Indicator', 'Indicators'),
-                                          ('Domain', 'Domains'),
-                                          ('Certificate', 'Certificates'),
+                                          ('PCAP', 'PCAPs'),
                                           ('RawData', 'Raw Data'),
-                                          ('PCAP', 'PCAPs')]
+                                          ('Sample', 'Samples')]
         self.fields['total_limit'].initial = total_max
         self.fields['rel_limit'].initial = rel_max
         self.fields['depth_limit'].help_text = self.fields['depth_limit'].help_text % depth_max

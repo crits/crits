@@ -153,7 +153,7 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
         return super(self.__class__, self)._custom_save(force_insert, validate,
             clean, write_concern, cascade, cascade_kwargs, _refs, username)
 
-    def to_cybox(self, exclude=None):
+    def to_cybox_observable(self, exclude=None):
         """
         Convert an email to a CybOX Observables.
 
@@ -182,7 +182,7 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
             obj.header.subject = String(self.subject)
 
         if 'sender' not in exclude:
-            obj.header.sender = Address(self.reply_to, Address.CAT_EMAIL)
+            obj.header.sender = Address(self.sender, Address.CAT_EMAIL)
 
         if 'reply_to' not in exclude:
             obj.header.reply_to = Address(self.reply_to, Address.CAT_EMAIL)
@@ -190,6 +190,12 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
         if 'x_originating_ip' not in exclude:
             obj.header.x_originating_ip = Address(self.x_originating_ip,
                                                   Address.CAT_IPV4)
+
+        if 'x_mailer' not in exclude:
+            obj.header.x_mailer = String(self.x_mailer)
+
+        if 'boundary' not in exclude:
+            obj.header.boundary = String(self.boundary)
 
         if 'raw_body' not in exclude:
             obj.raw_body = self.raw_body
@@ -210,25 +216,27 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
         return (observables, self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_obj, source):
+    def from_cybox(cls, cybox_obs, source):
         """
         Convert a Cybox DefinedObject to a MongoEngine Email object.
         """
 
+        cybox_obj = cybox_obs.object_.properties
         email = cls(source=source)
 
         if cybox_obj.header:
             email.from_address = str(cybox_obj.header.from_)
             if cybox_obj.header.to:
                 email.to = [str(recpt) for recpt in cybox_obj.header.to.to_list()]
-            for field in ['message_id', 'sender', 'reply_to',
-                          'x_originating_ip', 'subject', 'date']:
+            for field in ['message_id', 'sender', 'reply_to', 'x_originating_ip',
+                          'subject', 'date', 'x_mailer', 'boundary']:
                 setattr(email, field, str(getattr(cybox_obj.header, field)))
 
         email.helo = str(cybox_obj.email_server)
-        if email.raw_body:
+        if cybox_obj.raw_body:
             email.raw_body = str(cybox_obj.raw_body)
-        if email.raw_header:
+        if cybox_obj.raw_header:
             email.raw_header = str(cybox_obj.raw_header)
 
         return email
+

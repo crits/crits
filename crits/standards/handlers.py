@@ -21,25 +21,20 @@ def import_standards_doc(data, analyst, method, ref=None, make_event=False,
     :returns: dict with keys:
               "success" (boolean),
               "reason" (str),
-              "events" (list),
-              "samples" (list),
-              "emails" (list),
-              "indicators" (list)
+              "imported" (list),
+              "failed" (list)
     """
 
     ret = {
             'success': False,
             'reason': '',
-            'events': [],
-            'samples': [],
-            'emails': [],
-            'indicators': []
+            'imported': [],
+            'failed': []
           }
 
     try:
         parser = STIXParser(data, analyst, method)
         parser.parse_stix(reference=ref, make_event=make_event, source=source)
-        parser.process_saved_artifacts()
         parser.relate_objects()
     except STIXParserException, e:
         ret['reason'] = str(e.message)
@@ -48,17 +43,7 @@ def import_standards_doc(data, analyst, method, ref=None, make_event=False,
         ret['reason'] = str(e)
         return ret
 
-    for (type_, i) in parser.events:
-        ret['events'].append(i)
-
-    for (type_, i) in parser.samples:
-        ret['samples'].append(i)
-
-    for (type_, i) in parser.emails:
-        ret['emails'].append(i)
-
-    for (type_, i) in parser.indicators:
-        ret['indicators'].append(i)
-
+    ret['imported'] = parser.imported
+    ret['failed'] = parser.failed
     ret['success'] = True
     return ret

@@ -1,8 +1,8 @@
 import json
 
 from django.template import RequestContext
-from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
+from django.template.loader import render_to_string
 from django.contrib.auth.decorators import user_passes_test
 
 from crits.core.user_tools import user_can_view_data
@@ -56,33 +56,7 @@ def upload_standards(request):
                                   RequestContext(request))
 
     response['success'] = True
-
-    msg = '<table class="vertical" width="353px">\n\t<thead></thead>\n\t<tbody>'
-    msg += '<tr><td class="key">%s (%i)</td><td>' % ("Events", len(status['events']))
-    for id_ in status['events']:
-        msg += "<a href=\"%s\">%s</a><br />" % (reverse('crits.events.views.view_event',
-                                                        args=[id_]), id_)
-    msg += '</td></tr>'
-
-    msg += '<tr><td class="key">%s (%i)</td><td>' % ("Samples", len(status['samples']))
-    for id_ in status['samples']:
-        msg += "<a href=\"%s\">%s</a><br />" % (reverse('crits.samples.views.detail',
-                                                        args=[id_]), id_)
-    msg += '</td></tr>'
-
-    msg += '<tr><td class="key">%s (%i)</td><td>' % ("Emails", len(status['emails']))
-    for id_ in status['emails']:
-        msg += "<a href=\"%s\">%s</a><br />" % (reverse('crits.emails.views.email_detail',
-                                                        args=[id_]), id_)
-    msg += '</td></tr>'
-
-    msg += '<tr><td class="key">%s (%i)</td><td>' % ("Indicators", len(status['indicators']))
-    for id_ in status['indicators']:
-        msg += "<a href=\"%s\">%s</a><br />" % (reverse('crits.indicators.views.indicator',
-                                                        args=[id_]), id_)
-    msg += '</td></tr>'
-
-    response['message'] = msg
+    response['message'] = render_to_string("import_results.html", {'failed' : status['failed'], 'imported' : status['imported']})
     return render_to_response('file_upload_response.html',
                               {'response': json.dumps(response)},
                               RequestContext(request))
