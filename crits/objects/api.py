@@ -16,7 +16,7 @@ class ObjectResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = ObjectType.objects.all()
+        object_class = ObjectType
         allowed_methods = ('post',)
         resource_name = "objects"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),

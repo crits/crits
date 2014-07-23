@@ -16,7 +16,7 @@ class SampleResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = Sample.objects.all()
+        object_class = Sample
         allowed_methods = ('get', 'post')
         resource_name = "samples"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),

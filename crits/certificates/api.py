@@ -16,7 +16,7 @@ class CertificateResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = Certificate.objects.all()
+        object_class = Certificate
         allowed_methods = ('get', 'post')
         resource_name = "certificates"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),

@@ -16,7 +16,7 @@ class EventResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = Event.objects.all()
+        object_class = Event
         allowed_methods = ('get', 'post')
         resource_name = "events"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),

@@ -16,7 +16,7 @@ class RawDataResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = RawData.objects.all()
+        object_class = RawData
         allowed_methods = ('get', 'post')
         resource_name = "raw_data"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
