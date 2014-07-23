@@ -4,7 +4,7 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: ssnow
-Date: 2014-06-23
+Date: 2014-07-23
 
     Updating CRITs to expand the TAXII service. Within this repository, this
     involves creating a to_stix method for crits objects within
