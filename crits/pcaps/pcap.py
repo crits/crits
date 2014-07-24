@@ -160,9 +160,9 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
             if db_obj:
                 return db_obj
         pcap = cls(source=source)
-        pcap.description = cybox_obs.description
+        pcap.description = str(cybox_obs.description)
         pcap.md5 = cybox_object.md5
-        pcap.filename = cybox_object.file_name
+        pcap.filename = str(cybox_object.file_name)
         pcap.contentType = cybox_object.file_format
         pcap.length = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
         for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
