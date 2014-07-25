@@ -14,6 +14,9 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
+from crits.actors.actor import ActorIntendedEffect, ActorMotivation
+from crits.actors.actor import ActorSophistication, ActorThreatType
+from crits.actors.actor import ActorThreatIdentifier
 from crits.campaigns.campaign import Campaign
 from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
@@ -1611,7 +1614,12 @@ def item_editor(request):
     """
 
     counts = {}
-    obj_list = [Backdoor,
+    obj_list = [ActorThreatIdentifier,
+                ActorThreatType,
+                ActorMotivation,
+                ActorSophistication,
+                ActorIntendedEffect,
+                Backdoor,
                 Campaign,
                 EventType,
                 Exploit,

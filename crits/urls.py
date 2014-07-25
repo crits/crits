@@ -83,6 +83,13 @@ urlpatterns = patterns('',
         (r'^favorites/view/$', 'crits.core.views.favorites'),
         (r'^favorites/list/(?P<ctype>\S+)/(?P<option>\S+)/$', 'crits.core.views.favorites_list'),
 
+        #actors
+        (r'^actors/add/$', 'crits.actors.views.add_actor'),
+        (r'^actors/search/$', 'crits.actors.views.actor_search'),
+        (r'^actors/details/(?P<id_>\S+)/$', 'crits.actors.views.actor_detail'),
+        (r'^actors/remove/$', 'crits.actors.views.remove_actor'),
+        (r'^actors/list/$', 'crits.actors.views.actors_listing'),
+        (r'^actors/list/(?P<option>\S+)/$', 'crits.actors.views.actors_listing'),
 
         #campaigns
         (r'^campaigns/stats/$', 'crits.campaigns.views.campaign_stats'),

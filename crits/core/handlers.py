@@ -2305,7 +2305,18 @@ def generate_items_jtable(request, itype, option):
 
     obj_type = class_from_type(itype)
 
-    if itype == 'Backdoor':
+    if itype == 'ActorThreatIdentifier':
+        fields = ['name', 'active', 'id']
+        click = "function () {window.parent.$('#actor_threat_identifier_add').click();}"
+    elif itype == 'ActorThreatType':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorMotivation':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorSophistication':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorIntendedEffect':
+        fields = ['name', 'active', 'id']
+    elif itype == 'Backdoor':
         fields = ['name', 'sample_count', 'active', 'id']
         click = "function () {window.parent.$('#backdoor_add').click();}"
     elif itype == 'Campaign':
@@ -2359,7 +2370,9 @@ def generate_items_jtable(request, itype, option):
         'details_link': '',
     }
     jtable = build_jtable(jtopts, request)
-    if itype not in ('EventType', 'ObjectType', 'RelationshipType'):
+    if itype not in ('ActorThreatType', 'ActorMotivation',
+                     'ActorSophistication', 'ActorIntendedEffect',
+                     'EventType', 'ObjectType', 'RelationshipType'):
         jtable['toolbar'] = [
             {
                 'tooltip': "'Add %s'" % itype,
