@@ -376,8 +376,8 @@ class Service(object):
         """
         pass
 
-    @staticmethod
-    def generate_config_form(name, config):
+    @classmethod
+    def generate_config_form(self, config):
         """
         Generate a form and HTML for configuration.
 
