@@ -302,7 +302,7 @@ class Service(object):
     - description
 
     Subclasses must define a function:
-        def scan(self, obj, config):
+        def run(self, obj, config):
     This function should:
     - call `_add_result` with any dict or other object convertible to a dict,
     - call `_debug`, `_info`, `_warning`, `_error`, `_critical` as appropriate.
@@ -440,7 +440,7 @@ class Service(object):
 
         # Do it!
         try:
-            self.scan(self.current_task.obj, config)
+            self.run(self.current_task.obj, config)
             # If a service is distributed, we expect it to handle its own result
             # additions, log messages, and task completion. If it is not
             # distributed, handle it for them.
@@ -476,7 +476,7 @@ class Service(object):
         if self.current_task is None:
             raise Exception("No current task")
 
-    def scan(self, obj, config):
+    def run(self, obj, config):
         """
         Perform the actual work of the service.
 
