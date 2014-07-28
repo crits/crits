@@ -25,8 +25,9 @@ def is_user_favorite(analyst, type_, id_):
         if not user:
             return False
 
-        if str(id_) in user.favorites[type_]:
-            return True
+        if type_ in user.favorites:
+            if str(id_) in user.favorites[type_]:
+                return True
     return False
 
 

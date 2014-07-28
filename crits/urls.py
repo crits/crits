@@ -85,6 +85,7 @@ urlpatterns = patterns('',
 
         #actors
         (r'^actors/add/$', 'crits.actors.views.add_actor'),
+        (r'^actors/add_identifier_type/$', 'crits.actors.views.new_actor_identifier_type'),
         (r'^actors/search/$', 'crits.actors.views.actor_search'),
         (r'^actors/details/(?P<id_>\S+)/$', 'crits.actors.views.actor_detail'),
         (r'^actors/remove/$', 'crits.actors.views.remove_actor'),

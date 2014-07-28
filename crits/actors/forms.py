@@ -33,7 +33,7 @@ class AddActorForm(forms.Form):
                                        required=False,
                                        label=form_consts.Actor.SOURCE_REFERENCE)
 
-    def __init__(self, username, choices, *args, **kwargs):
+    def __init__(self, username, *args, **kwargs):
         super(AddActorForm, self).__init__(*args, **kwargs)
 
         self.fields['campaign'].choices = [('', '')] + [

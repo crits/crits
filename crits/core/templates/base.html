@@ -343,6 +343,10 @@
       <a href="{% url 'crits.core.views.sector_list' %}">Sector Lists</a>
     </li>
     <li class='nav_objects mmenu_item'>
+        <a href="{% url 'crits.actors.views.actors_listing' %}">Actors</a>
+        <a href id="new-actor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor" persona="new" title="New Actor"></a>
+    </li>
+    <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.campaigns.views.campaigns_listing' %}">Campaigns</a>
       <a href id="new-campaign" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-campaign" persona="new" title="New Campaign"></a>
     </li>
@@ -482,6 +486,9 @@
     <li class='nav_admin mmenu_item'>
       <a href class="noclick">Add New Item</a>
       <ul class='sub-mmenu'>
+        <li class='mmenu_item'>
+          <a href class="dialogClick" persona="new" dialog="actor_identifier_type_add" id="actor_identifier_type_add">Actor Identifier Type</a>
+        </li>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="backdoor_add" id="backdoor_add">Backdoor</a>
         </li>

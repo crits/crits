@@ -7,7 +7,7 @@ from django.template import RequestContext
 
 import crits.service_env
 
-from crits.actors.actor import Actor
+from crits.actors.actor import Actor, ActorThreatIdentifier
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import create_embedded_source
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
@@ -222,6 +222,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     if not actor:
         actor = Actor()
         actor.name = name
+        actor.description = description.strip()
         is_item_new = True
 
     if isinstance(source, basestring):
@@ -242,6 +243,13 @@ def add_new_actor(name, aliases=None, description=None, source=None,
         for s in source:
             actor.add_source(s)
 
+    if not isinstance(aliases, list):
+        aliases = aliases.split(',')
+        for alias in aliases:
+            alias = alias.strip()
+            if alias not in actor.aliases:
+                actor.aliases.append(alias)
+
     if bucket_list:
         actor.add_bucket_list(bucket_list, analyst)
 
@@ -252,13 +260,13 @@ def add_new_actor(name, aliases=None, description=None, source=None,
 
     actor.save(username=analyst)
 
-    retVal['message'] = ('Success! Click here to view the new Actor: '
-                            '<a href="%s">%s</a>' % (resp_url, actor.id))
-
     # run actor triage
     if is_item_new:
         actor.reload()
         run_triage(None, actor, analyst)
+
+    retVal['message'] = ('Success! Click here to view the new Actor: '
+                            '<a href="%s">%s</a>' % (resp_url, actor.id))
 
     retVal['success'] = True
     retVal['object'] = actor
@@ -285,3 +293,27 @@ def actor_remove(id_, username):
             return {'success':False, 'message':'Could not find Actor.'}
     else:
         return {'success':False, 'message': 'Must be an admin to remove'}
+
+def create_actor_identifier_type(username, identifier_type):
+    """
+    Add a new Actor Identifier Type.
+
+    :param username: The CRITs user adding the identifier type.
+    :type username: str
+    :param identifier_type: The Identifier Type.
+    :type identifier_type: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str) if failed.
+    """
+
+    identifier = ActorThreatIdentifier.objects(name=identifier_type).first()
+    if identifier:
+        return {'success': False,
+                'message': 'Identifier Type already exists!'}
+    else:
+        identifier = ActorThreatIdentifier()
+        identifier.name = identifier_type
+        identifier.save(username=username)
+        return {'success': True,
+                'message': 'Identifier Type added successfully!'}

@@ -1986,16 +1986,17 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 doc[key] = html_escape(doc[key])
             if col_obj._meta['crits_type'] == "Comment":
                 mapper = {
-                    "Indicator": 'crits.indicators.views.indicator',
-                    "Sample": 'crits.samples.views.detail',
+                    "Actor": 'crits.actors.views.actor_detail',
+                    "Campaign": 'crits.campaigns.views.campaign_details',
+                    "Certificate": 'crits.certificates.views.certificate_details',
                     "Domain": 'crits.domains.views.domain_detail',
-                    "Event": 'crits.events.views.view_event',
                     "Email": 'crits.emails.views.email_detail',
+                    "Event": 'crits.events.views.view_event',
+                    "Indicator": 'crits.indicators.views.indicator',
                     "IP": 'crits.ips.views.ip_detail',
                     "PCAP": 'crits.pcaps.views.pcap_details',
-                    "Certificate": 'crits.certificates.views.certificate_details',
                     "RawData": 'crits.raw_data.views.raw_data_details',
-                    "Campaign": 'crits.campaigns.views.campaign_details',
+                    "Sample": 'crits.samples.views.detail',
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
                                      args=(doc['url_key'],))
