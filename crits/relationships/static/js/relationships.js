@@ -304,6 +304,7 @@ $(document).ready(function() {
   		},
     	style:'display:inline',
         onblur:'submit',
+        
  	});	
  	$(this).trigger('reason_edit');
   });
