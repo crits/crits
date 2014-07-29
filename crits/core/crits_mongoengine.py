@@ -1901,6 +1901,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             return {}
         rel_dict = dict((r.rel_type,[]) for r in self.relationships)
         query_dict = {
+            'Actor': ('id', 'name', 'campaign'),
             'Campaign': ('id', 'name'),
             'Certificate': ('id', 'md5', 'filename', 'description', 'campaign'),
             'Domain': ('id', 'domain'),

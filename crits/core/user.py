@@ -85,6 +85,7 @@ class EmbeddedFavorites(EmbeddedDocument, CritsDocumentFormatter):
     Embedded Favorites
     """
 
+    Actor = ListField(StringField())
     Campaign = ListField(StringField())
     Certificate = ListField(StringField())
     Domain = ListField(StringField())
@@ -103,6 +104,7 @@ class EmbeddedSubscriptions(EmbeddedDocument, CritsDocumentFormatter):
     Embedded Subscriptions
     """
 
+    Actor = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Campaign = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Certificate = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Domain = ListField(EmbeddedDocumentField(EmbeddedSubscription))

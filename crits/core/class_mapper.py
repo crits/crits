@@ -13,7 +13,7 @@ def class_from_id(type_, _id):
     # doing this to avoid circular imports
     from crits.actors.actor import ActorThreatType, ActorMotivation
     from crits.actors.actor import ActorSophistication, ActorIntendedEffect
-    from crits.actors.actor import ActorThreatIdentifier
+    from crits.actors.actor import ActorThreatIdentifier, Actor
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
@@ -40,6 +40,8 @@ def class_from_id(type_, _id):
     # make sure it's a string
     _id = str(_id)
 
+    if type_ == 'Actor':
+        return Actor.objects(id=_id).first()
     if type_ == 'ActorThreatIdentifier':
         return ActorThreatIdentifier.objects(id=_id).first()
     elif type_ == 'ActorThreatType':
@@ -112,7 +114,7 @@ def class_from_value(type_, value):
     # doing this to avoid circular imports
     from crits.actors.actor import ActorThreatType, ActorMotivation
     from crits.actors.actor import ActorSophistication, ActorIntendedEffect
-    from crits.actors.actor import ActorThreatIdentifier
+    from crits.actors.actor import ActorThreatIdentifier, Actor
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
@@ -127,7 +129,9 @@ def class_from_value(type_, value):
     from crits.screenshots.screenshot import Screenshot
     from crits.targets.target import Target
 
-    if type_ == 'ActorThreatIdentifier':
+    if type_ == 'Actor':
+        return Actor.objects(name=value).first()
+    elif type_ == 'ActorThreatIdentifier':
         return ActorThreatIdentifier.objects(name=value).first()
     elif type_ == 'ActorThreatType':
         return ActorThreatType.objects(name=value).first()
@@ -179,7 +183,7 @@ def class_from_type(type_):
     # doing this to avoid circular imports
     from crits.actors.actor import ActorThreatType, ActorMotivation
     from crits.actors.actor import ActorSophistication, ActorIntendedEffect
-    from crits.actors.actor import ActorThreatIdentifier
+    from crits.actors.actor import ActorThreatIdentifier, Actor
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
@@ -200,7 +204,9 @@ def class_from_type(type_):
     from crits.screenshots.screenshot import Screenshot
     from crits.targets.target import Target
 
-    if type_ == 'ActorThreatIdentifier':
+    if type_ == 'Actor':
+        return Actor
+    elif type_ == 'ActorThreatIdentifier':
         return ActorThreatIdentifier
     elif type_ == 'ActorThreatType':
         return ActorThreatType

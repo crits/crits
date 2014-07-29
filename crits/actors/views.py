@@ -11,6 +11,7 @@ from crits.actors.forms import AddActorForm
 from crits.actors.handlers import generate_actor_csv, generate_actor_jtable
 from crits.actors.handlers import get_actor_details, add_new_actor, actor_remove
 from crits.actors.handlers import create_actor_identifier_type
+from crits.actors.handlers import get_actor_tags_by_type, update_actor_tags
 from crits.core import form_consts
 from crits.core.data_tools import json_handler
 from crits.core.user_tools import user_can_view_data, is_admin
@@ -166,3 +167,76 @@ def new_actor_identifier_type(request):
         return render_to_response("error.html",
                                   {"error" : error },
                                   RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def actor_tags_modify(request):
+    """
+    Update tags for Actors based on a type of tag.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        tag_type = request.POST.get('tag_type', None)
+        actor_id = request.POST.get('oid', None)
+        tags = request.POST.get('tags', None)
+        username = request.user.username
+        if not tag_type:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': 'Need a tag type.'}),
+                                mimetype="application/json")
+        result = update_actor_tags(actor_id, tag_type, tags, username)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def get_actor_tags(request):
+    """
+    Get available tags for Actors based on a type of tag.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        tag_type = request.POST.get('type', None)
+        if not tag_type:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': 'Need a tag type.'}),
+                                mimetype="application/json")
+        result = get_actor_tags_by_type(tag_type)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+#TODO
+@user_passes_test(user_can_view_data)
+def add_identifier(request):
+    return
+
+#TODO
+@user_passes_test(user_can_view_data)
+def edit_identifier(request):
+    return
+
+#TODO
+@user_passes_test(user_can_view_data)
+def remove_identifier(request):
+    return
+
+#TODO:
+# - edit name
+# - edit description
+# - edit aliases

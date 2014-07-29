@@ -1,0 +1,20 @@
+{% load url from future %}
+{% if identifier.name %}
+    <tr>
+    <td data-field="type">{{identifier.type}}</td>
+    <td data-field="identifier">{{identifier.name}}</td>
+    <td data-field="confidence">{{identifier.confidence}}</td>
+    <td data-field="analyst">{{identifier.analyst}}</td>
+    <td data-field="date">{{identifier.date}}</td>
+    <td>
+        {% if admin %}
+        <a href="#" title="Delete Identifier" class="ui-icon ui-icon-close deleteClick" 
+	   type="actor_identifier" value="{{identifier.id}}" 
+	   data-del-type="Actor Identifier Attribution" 
+	   data-del-key="{{ identifier.id }}"
+	   action="{% url 'crits.actors.views.remove_identifier' %}" key="{{identifier.id}}"></a>
+        {% endif %}
+        <a href="#" title="Edit Identifier" class="ui-icon ui-icon-pencil dialogClick" dialog="actor-identifier-add" persona="update" action="{% url 'crits.actors.views.edit_identifier' %}"></a>
+    </td>
+    </tr>
+{% endif %}

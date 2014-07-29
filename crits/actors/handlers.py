@@ -8,6 +8,7 @@ from django.template import RequestContext
 import crits.service_env
 
 from crits.actors.actor import Actor, ActorThreatIdentifier
+from crits.core.class_mapper import class_from_type
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import create_embedded_source
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
@@ -123,6 +124,9 @@ def get_actor_details(id_, analyst):
         # remove pending notifications for user
         remove_user_from_notification("%s" % analyst, actor.id, 'Actor')
 
+        # generate identifiers
+        actor_identifiers = actor.generate_identifiers_list()
+
         # subscription
         subscription = {
                 'type': 'Actor',
@@ -156,7 +160,8 @@ def get_actor_details(id_, analyst):
         manager = crits.service_env.manager
         service_list = manager.get_supported_services('Actor', True)
 
-        args = {'objects': objects,
+        args = {'actor_identifiers': actor_identifiers,
+                'objects': objects,
                 'relationships': relationships,
                 'relationship': relationship,
                 'subscription': subscription,
@@ -317,3 +322,45 @@ def create_actor_identifier_type(username, identifier_type):
         identifier.save(username=username)
         return {'success': True,
                 'message': 'Identifier Type added successfully!'}
+
+def get_actor_tags_by_type(tag_type):
+    """
+    Get Actor tags based on type. These are tags that could be used for
+    attribution.
+
+    :param tag_type: The type of tags to get.
+    :type tag_type: str
+    :return: list
+    """
+
+    tags = []
+    if tag_type in ('ActorIntendedEffect',
+                    'ActorMotivation',
+                    'ActorSophistication',
+                    'ActorThreatType'):
+        obj = class_from_type(tag_type)
+        results = obj.objects()
+        tags = [t.name for t in results]
+    return tags
+
+def update_actor_tags(actor_id, tag_type, tags, username):
+    """
+    Update a subset of tags for an Actor.
+
+    :param actor_id: The ObjectId of the Actor to update.
+    :type actor_id: str
+    :param tag_type: The type of tag we are updating.
+    :type tag_type: str
+    :param tags: The tags we are setting.
+    :type tags: list
+    :returns: dict
+    """
+
+    actor = Actor.objects(id=actor_id).first()
+    if not actor:
+        return {'success': False,
+                'message': 'No actor could be found.'}
+    else:
+        actor.update_tags(tag_type, tags)
+        actor.save(username=username)
+        return {'success': True}

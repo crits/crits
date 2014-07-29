@@ -30,6 +30,11 @@
                 <th>Last Name</th>
                 <th>Email Address</th>
                 <th>Email Count</th>
+            {% elif rel_type == 'Actor' %}
+            <tr style="border-top: 0px;">
+                <th width="120px">Relationship</th>
+                <th>Name</th>
+                <th>Campaign</th>
             {% elif rel_type == 'Event' %}
             <tr style="border-top: 0px;">
                 <th width="120px">Relationship</th>
@@ -92,6 +97,20 @@
                             <td>{{ rel.lastname }}</td>
                             <td>{{ rel.email_address }}</td>
                             <td>{{ rel.email_count }}</td>
+                    {% elif rel_type == 'Actor' %}
+                            <td class="relationship_type_edit tooltip_edit" action="{% url 'crits.relationships.views.update_relationship_type' %}">{{ rel.relationship }}</td>
+                            <td>{{ rel.name }}</td>
+                            <td>
+                                {% for campaign in rel.campaign %}
+                                    {% if campaign.confidence == 'low' %}
+                                        <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}"><font color="green">{{ campaign.name }}</font></a><br />
+                                    {% elif campaign.confidence == 'medium' %}
+                                        <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}"><font color="orange">{{ campaign.name }}</font></a><br />
+                                    {% elif campaign.confidence == 'high' %}
+                                        <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}"><font color="red">{{ campaign.name }}</font></a><br />
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                     {% elif rel_type == 'Event' %}
                             <td class="relationship_type_edit tooltip_edit" action="{% url 'crits.relationships.views.update_relationship_type' %}">{{ rel.relationship }}</td>
                             <td>{{ rel.title }}</td>
@@ -204,6 +223,8 @@
                         <a href="{% url 'crits.domains.views.domain_detail' rel.domain %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
                     {% elif rel_type == 'Target' %}
                         <a href="{% url 'crits.targets.views.target_info' rel.email_address %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
+                    {% elif rel_type == 'Actor' %}
+                        <a href="{% url 'crits.actors.views.actor_detail' rel.value %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
                     {% elif rel_type == 'Event' %}
                         <a href="{% url 'crits.events.views.view_event' rel.value %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
                     {% elif rel_type == 'Indicator' %}

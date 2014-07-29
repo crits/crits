@@ -1,0 +1,33 @@
+<div>
+<div class="content_box">
+    <h3 class="titleheader">
+    <span>Actor Identifiers</span>
+    <span class="add_button" data-intro="Add an Identifier" data-position="right">
+      <a href="#" action="{% url 'crits.actors.views.add_identifier' %}" class="ui-icon ui-icon-plusthick dialogClick" dialog="actor-identifier-add" persona="new" title="Add Identifier"></a>
+    </span>
+    </h3>
+    <div class="content_body">
+        <table class='chart' id="actor_identifier_listing">
+            <thead>
+                {% if not actor_identifiers  %}
+                <tr style="display:none;">
+                {% else %}
+                <tr>
+                {% endif %}
+                    <th>Type</th>
+                    <th>Identifier</th>
+                    <th>Confidence</th>
+                    <th>Analyst</th>
+                    <th>Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for identifier in actor_identifiers %}
+                {% include "actor_identifiers_row_widget.html" %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
