@@ -17,7 +17,7 @@ class EmailResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = Email.objects.all()
+        object_class = Email
         allowed_methods = ('get', 'post')
         resource_name = "emails"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),

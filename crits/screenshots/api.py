@@ -15,7 +15,7 @@ class ScreenshotResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = Screenshot.objects.all()
+        object_class = Screenshot
         allowed_methods = ('get', 'post')
         resource_name = "screenshots"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),

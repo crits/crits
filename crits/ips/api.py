@@ -16,7 +16,7 @@ class IPResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = IP.objects.all()
+        object_class = IP
         allowed_methods = ('get', 'post')
         resource_name = "ips"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),

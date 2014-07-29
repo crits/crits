@@ -14,7 +14,7 @@ class DomainResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = Domain.objects.all()
+        object_class = Domain
         allowed_methods = ('get', 'post')
         resource_name = "domains"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),

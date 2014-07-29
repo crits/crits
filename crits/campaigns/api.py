@@ -16,7 +16,7 @@ class CampaignResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = Campaign.objects.all()
+        object_class = Campaign
         allowed_methods = ('get', 'post')
         resource_name = "campaigns"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),

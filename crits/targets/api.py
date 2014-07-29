@@ -16,7 +16,7 @@ class TargetResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = Target.objects.all()
+        object_class = Target
         allowed_methods = ('get', 'post')
         resource_name = "targets"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),

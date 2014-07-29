@@ -16,7 +16,7 @@ class ServiceResource(CRITsAPIResource):
     """
 
     class Meta:
-        queryset = CRITsService.objects.all()
+        object_class = CRITsService
         allowed_methods = ('post',)
         resource_name = "services"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
