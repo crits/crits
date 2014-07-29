@@ -118,6 +118,8 @@ $(document).ready(function() {
             datatype: 'json',
             success: function(data) {
                 if (data.success) {
+            	 	$("#form-forge-relationship #id_rel_weight").prop('selectedIndex',4);
+            	 	$("#form-forge-relationship #id_rel_reason").val('');	
                     $("#form-forge-relationship #id_dest_id").val('');
                     $("#form-forge-relationship #id_relationship_date").val('');
                     $('#relationship_box_container').parent().html(data.message);
@@ -149,7 +151,6 @@ $(document).ready(function() {
   }
   function confirm_breakup_submit(e) {
       var dialog = $(this);
-
       var form = $("#form-confirm-breakup");
       var widget = dialog.dialog("activatedBy");  // dialog-persona saves the element that opened the dialog
       var trow = widget.closest("[rtype]");
@@ -212,6 +213,101 @@ $(document).ready(function() {
   $('#relationship_type').click(function(e) {
     e.stopPropagation();
   });
+  
+  $(document).on('click', '.relationship_weight_edit', function(e) {
+  	e.preventDefault();
+  	//this is to set the inital value of the select
+  	if($.isNumeric($(this).html())) 
+  		var currentWeight = $(this).html();
+  		
+ 	$(this).editable(function(value, settings) {
+          return function(value, settings, elem) {
+              var guardian = $(elem).parent();
+              var data = {
+              reverse_type: guardian.attr('rtype'),
+              dest_id: guardian.attr('rvalue'),
+              my_type: guardian.attr('mtype'),
+              my_value: guardian.attr('mvalue'),
+              forward_relationship: guardian.attr('frel'),
+              relationship_date: guardian.attr('rdate'),
+              forge_date: guardian.attr('fdate'),
+              new_weight: value,
+      		};
+      		$.ajax({
+                type: "POST",
+                async: false,
+                url: $(elem).attr('action'),
+                data: data,
+                success: function(data) {
+                    if (data.success) {
+                        guardian.attr('new_weight', value);
+                        currentWeight = value;
+                    }
+                },
+  			});
+            return value; 
+  		}(value, settings, this);
+  	}, 
+  	{ 
+  		event:'weight_edit',
+    	type: 'select',
+    	width: '50px',
+    	data: function() {
+  			var dataValues = "{1:'1 (Low)',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10 (High)', 'selected':"+currentWeight+"}";
+  			return dataValues;
+  		},
+    	style:'display:inline',
+        onblur:'submit'
+ 	});	
+ 	$(this).trigger('weight_edit');
+  });
+
+  $(document).on('click', '.relationship_reason_edit', function(e) {
+  	e.preventDefault();
+
+  	var element = $(this);
+  	var currentReason = element.html().trim();
+  	
+ 	$(this).editable(function(value, settings) {
+          return function(value, settings, elem) {
+        	  var guardian = $(elem).parent();
+              var data = {
+              reverse_type: guardian.attr('rtype'),
+              dest_id: guardian.attr('rvalue'),
+              my_type: guardian.attr('mtype'),
+              my_value: guardian.attr('mvalue'),
+              forward_relationship: guardian.attr('frel'),
+              relationship_date: guardian.attr('rdate'),
+              forge_date: guardian.attr('fdate'),
+              new_reason: value,
+      		};
+      		$.ajax({
+                type: "POST",
+                async: false,
+                url: $(elem).attr('action'),
+                data: data,
+                success: function(data) {
+                    if (data.success) {
+                        guardian.attr('new_reason', value);
+                        currentReason = value;
+                    }
+                },
+  			});
+            return value; 
+  		}(value, settings, this);
+  	}, 
+  	{ 
+  		event:'reason_edit',
+    	type: 'textarea',
+    	data: function() {
+  			return currentReason;
+  		},
+    	style:'display:inline',
+        onblur:'submit',
+ 	});	
+ 	$(this).trigger('reason_edit');
+  });
+
 
   $(document).on('click', '.relationship_type_edit', function(e) {
       e.preventDefault();

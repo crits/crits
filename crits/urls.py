@@ -232,6 +232,8 @@ urlpatterns = patterns('',
         (r'^relationships/breakup/$', 'crits.relationships.views.break_relationship'),
         (r'^relationships/get_dropdown/$', 'crits.relationships.views.get_relationship_type_dropdown'),
         (r'^relationships/update_relationship_type/$', 'crits.relationships.views.update_relationship_type'),
+        (r'^relationships/update_relationship_weight/$', 'crits.relationships.views.update_relationship_weight'),
+        (r'^relationships/update_relationship_reason/$', 'crits.relationships.views.update_relationship_reason'),
         (r'^relationships/update_relationship_date/$', 'crits.relationships.views.update_relationship_date'),
 
         #samples

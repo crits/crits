@@ -55,7 +55,8 @@ def forge_relationship(left_class=None, right_class=None,
                        left_type=None, left_id=None,
                        right_type=None, right_id=None,
                        rel_type=None, rel_date=None,
-                       analyst=None, get_rels=True):
+                       analyst=None, rel_reason="N/A",
+                       rel_weight=5, get_rels=False):
     """
     Forge a relationship between two top-level objects.
 
@@ -77,6 +78,10 @@ def forge_relationship(left_class=None, right_class=None,
     :type rel_date: datetime.datetime
     :param analyst: The user forging this relationship.
     :type analyst: str
+    :param rel_reason: The reason for the relationship.
+    :type rel_reason: str
+    :param rel_weight: The importance of the relationship.
+    :type rel_weight: int
     :param get_rels: Return the relationships after forging.
     :type get_rels: boolean
     :returns: dict with keys "success" (boolean) and "message" (str if
@@ -102,7 +107,9 @@ def forge_relationship(left_class=None, right_class=None,
             results = left_class.add_relationship(rel_item=right_class,
                                         rel_type=rel_type,
                                         rel_date=rel_date,
-                                        analyst=analyst)
+                                        analyst=analyst, 
+                                        rel_weight=rel_weight,
+                                        rel_reason=rel_reason)
             right_class.save(username=analyst)
         else:
             if right_type and right_id:
@@ -110,7 +117,9 @@ def forge_relationship(left_class=None, right_class=None,
                                             rel_id=right_id,
                                             rel_type=rel_type,
                                             rel_date=rel_date,
-                                            analyst=analyst)
+                                            analyst=analyst,
+                                            rel_weight=rel_weight,
+                                       		rel_reason=rel_reason)
             else:
                 return {'success': False,
                         'message': "Need a valid right type and id"}
@@ -278,6 +287,139 @@ def update_relationship_types(left_class=None, right_class=None,
                                                         rel_type=rel_type,
                                                         rel_date=rel_date,
                                                         new_type=new_type,
+                                                        analyst=analyst)
+            left_class.save(username=analyst)
+        else:
+            return {'success': False,
+                    'message': "Need a valid right type and id"}
+
+    return results
+    
+    
+def update_relationship_weights(left_class=None, right_class=None,
+                              left_type=None, left_id=None,
+                              right_type=None, right_id=None,
+                              rel_type=None, rel_date=None,
+                              new_type=None,analyst=None, new_weight=5):
+    """
+    Update the relationship type between two top-level objects.
+
+    :param left_class: The first top-level object.
+    :type left_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :param right_class: The second top-level object.
+    :type right_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :param left_type: The type of first top-level object.
+    :type left_type: str
+    :param left_id: The ObjectId of the first top-level object.
+    :type left_id: str
+    :param right_type: The type of second top-level object.
+    :type right_type: str
+    :param right_id: The ObjectId of the second top-level object.
+    :type right_id: str
+    :param rel_type: The type of relationship.
+    :type rel_type: str
+    :param rel_date: The date this relationship applies.
+    :type rel_date: datetime.datetime
+    :param analyst: The user updating this relationship.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+    if rel_date is None or rel_date == 'None':
+        rel_date = None
+    elif isinstance(rel_date, basestring) and rel_date != '':
+        rel_date = parse(rel_date, fuzzy=True)
+    elif not isinstance(rel_date, datetime.datetime):
+        rel_date = None
+
+    if not left_class:
+        if left_type and left_id:
+            left_class = class_from_id(left_type, left_id)
+        else:
+            return {'success': False,
+                    'message': "Need a valid left type and id"}
+
+    # update relationship
+    if right_class:
+        results = left_class.edit_relationship_weight(rel_item=right_class,
+                                                    rel_type=rel_type,
+                                                    rel_date=rel_date,
+                                                    new_weight=new_weight,
+                                                    analyst=analyst)
+        left_class.save(username=analyst)
+        right_class.save(username=analyst)
+    else:
+        if right_type and right_id:
+            results = left_class.edit_relationship_weight(type_=right_type,
+                                                        rel_id=right_id,
+                                                        rel_type=rel_type,
+                                                        rel_date=rel_date,
+                                                        new_weight=new_weight,
+                                                        analyst=analyst)
+            left_class.save(username=analyst)
+        else:
+            return {'success': False,
+                    'message': "Need a valid right type and id"}
+
+    return results
+
+def update_relationship_reasons(left_class=None, right_class=None,
+                              left_type=None, left_id=None,
+                              right_type=None, right_id=None,
+                              rel_type=None, rel_date=None,
+                              new_type=None,analyst=None, new_reason="N/A"):
+    """
+    Update the relationship type between two top-level objects.
+
+    :param left_class: The first top-level object.
+    :type left_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :param right_class: The second top-level object.
+    :type right_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :param left_type: The type of first top-level object.
+    :type left_type: str
+    :param left_id: The ObjectId of the first top-level object.
+    :type left_id: str
+    :param right_type: The type of second top-level object.
+    :type right_type: str
+    :param right_id: The ObjectId of the second top-level object.
+    :type right_id: str
+    :param rel_type: The type of relationship.
+    :type rel_type: str
+    :param rel_date: The date this relationship applies.
+    :type rel_date: datetime.datetime
+    :param analyst: The user updating this relationship.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+    if rel_date is None or rel_date == 'None':
+        rel_date = None
+    elif isinstance(rel_date, basestring) and rel_date != '':
+        rel_date = parse(rel_date, fuzzy=True)
+    elif not isinstance(rel_date, datetime.datetime):
+        rel_date = None
+
+    if not left_class:
+        if left_type and left_id:
+            left_class = class_from_id(left_type, left_id)
+        else:
+            return {'success': False,
+                    'message': "Need a valid left type and id"}
+
+    # update relationship
+    if right_class:
+        results = left_class.edit_relationship_reason(rel_item=right_class,
+                                                    rel_type=rel_type,
+                                                    rel_date=rel_date,
+                                                    new_reason=new_reason,
+                                                    analyst=analyst)
+        left_class.save(username=analyst)
+        right_class.save(username=analyst)
+    else:
+        if right_type and right_id:
+            results = left_class.edit_relationship_reason(type_=right_type,
+                                                        rel_id=right_id,
+                                                        rel_type=rel_type,
+                                                        rel_date=rel_date,
+                                                        new_reason=new_reason,
                                                         analyst=analyst)
             left_class.save(username=analyst)
         else:
