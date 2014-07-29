@@ -459,10 +459,15 @@ class Service(object):
                 self._info("Analysis complete")
                 from crits.services.handlers import update_analysis_results
                 update_analysis_results(self.current_task)
+                # Check status, if it is ERROR, don't change it.
+                if self.current_task.status == self.current_task.STATUS_ERROR:
+                    status = self.current_task.STATUS_ERROR
+                else:
+                    status = self.current_task.STATUS_COMPLETED
                 self.complete(self.current_task.obj._meta['crits_type'],
                               str(self.current_task.obj.id),
                               self.current_task.task_id,
-                              self.current_task.STATUS_COMPLETED,
+                              status,
                               self.current_task.username)
                 logger.debug("Finished analysis %s" % self.current_task.task_id)
             # Reset current_task so another task can be assigned.
