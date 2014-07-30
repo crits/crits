@@ -31,7 +31,7 @@ class StandardsResource(CRITsAPIResource):
         """
         Handles creating STIX documents through the API.
 
-        :param bundle: Bundle containing the information to create the Campaign.
+        :param bundle: Bundle containing the information to create the records associated with this STIX document.
         :type bundle: Tastypie Bundle object.
         :returns: Bundle object.
         :raises BadRequest: If a type_ is not provided or creation fails.
@@ -73,6 +73,6 @@ class StandardsResource(CRITsAPIResource):
         if not result:
             raise BadRequest('No upload type found.')
         if not result['success']:
-            raise BadRequest(result['reason']+"SAB HA HA")
+            raise BadRequest(result['reason'])
         else:
             return bundle
