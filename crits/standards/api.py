@@ -1,4 +1,4 @@
-from tastypie import authorization
+jfrom tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 
@@ -66,7 +66,6 @@ class StandardsResource(CRITsAPIResource):
                     analyst, 
                     "Upload",
                     make_event = makeevent,
-                    ref = reference,
                     source = source)
 
 
