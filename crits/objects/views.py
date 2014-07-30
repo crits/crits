@@ -440,11 +440,17 @@ def indicator_from_object(request):
         rel_id = request.POST.get('rel_id', None)
         ind_type = request.POST.get('ind_type', None)
         value = request.POST.get('value', None)
+        source = request.POST.get('source', None)
+        method = request.POST.get('method', None)
+        reference = request.POST.get('reference', None)
         analyst = "%s" % request.user.username
         result = create_indicator_from_object(rel_type,
                                               rel_id,
                                               ind_type,
                                               value,
+                                              source,
+                                              method,
+                                              reference,
                                               analyst,
                                               request)
         return HttpResponse(json.dumps(result),

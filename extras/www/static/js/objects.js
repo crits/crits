@@ -278,6 +278,9 @@ $(document).ready(function() {
         var me = $(this);
         var guardian = me.closest("tr");
         var value = $(guardian).attr('vvalue');
+        var source = $(guardian).find("span[name='source_name']").attr('sname');
+        var method = $(guardian).find("span[name='source_method']").attr('method');
+        var reference = $(guardian).find("span[name='source_reference']").attr('reference');
 
         // Might be nicer if this was a spinning icon, but working with what we have handy
         me.removeClass('ui-icon-plus');
@@ -290,6 +293,9 @@ $(document).ready(function() {
             'value': value,
             'rel_type': my_type,
             'rel_id': my_id,
+            'source': source,
+            'method': method,
+            'reference': reference,
         };
         $.ajax({
             type: "POST",
