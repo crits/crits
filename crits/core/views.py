@@ -973,6 +973,18 @@ def base_context(request):
     crits_version = getattr(crits_config,
                             'crits_version',
                             settings.CRITS_VERSION)
+    git_hash = getattr(crits_config,
+                            'git_hash',
+                            settings.GIT_HASH)
+    git_hash_long = getattr(crits_config,
+                            'git_hash',
+                            settings.GIT_HASH_LONG)
+    is_prod = getattr(crits_config,
+                      'is_prod',
+                      settings.ISPROD)
+    hide_git_hash = getattr(crits_config,
+                      'hide_git_hash',
+                      settings.HIDE_GIT_HASH)
     splunk_url = getattr(crits_config,
                          'splunk_search_url',
                          settings.SPLUNK_SEARCH_URL)
@@ -986,6 +998,10 @@ def base_context(request):
     base_context['instance_name'] = instance_name
     base_context['company_name'] = company_name
     base_context['crits_version'] = crits_version
+    base_context['git_hash'] = git_hash
+    base_context['git_hash_long'] = git_hash_long
+    base_context['is_prod'] = is_prod
+    base_context['hide_git_hash'] = hide_git_hash
     base_context['splunk_search_url'] = splunk_url
     base_context['mongo_database'] = mongo_database
     base_context['secure_cookie'] = secure_cookie

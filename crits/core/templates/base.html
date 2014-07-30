@@ -85,6 +85,30 @@
     var login_user = "{% url 'crits.core.views.login' %}";
     var get_item_data_url = "{% url 'crits.core.views.get_item_data' %}";
     var get_dialog_url = "{% url 'crits.core.views.get_dialog' %}";
+    
+    //only activates the qtip if in production
+    {% if is_prod and not hide_git_hash%}
+	    $(document).ready(function(){
+	    	$("#versionNum").qtip({
+	    		content: "Git Hash #<a href=''>{{ git_hash }}</a>",
+	    		show: "mouseover",
+	    		hide: "mouseout",
+	    		position: {
+	    			 my: 'bottom left',
+	                 at: 'top right',
+	                 adjust: {
+	                     x: -5
+	                 }
+	    	    },
+	   		    hide: {
+	   		    	delay: 2000 
+	   		    },  
+	   		    style: {
+	   		    	classes: 'customQtip'
+	   		    }
+	    	});
+	    });
+    {% endif %}  
     </script>
 </head>
 <body>
@@ -155,9 +179,14 @@
       <span class="right" data-intro="Data Classification" data-position="top">
 	<b>{{ classification }}</b>
       </span>
-      <span class="left" data-intro="CRITs DB Version" data-position="top">
-	<b>Version:</b> {{ crits_version }}
+      <span class="left" data-intro="CRITs DB Version" {% if is_prod and not hide_git_hash%}id='versionNum' {% endif %} data-position="top" >
+        <b>Version:</b> {{ crits_version }}
       </span>
+      {% if not is_prod and not hide_git_hash%}
+	      <span class="left" data-intro="Git Hash" data-position="top">
+	        <b>Git #</b> <a href=''>{{ git_hash }}</a>
+	      </span>
+	  {% endif %}
       <span class="left" data-intro="Hosting Organization" data-position="top">
 	<b>Hosted by:</b> {{ company_name }}
       </span>
