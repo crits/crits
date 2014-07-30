@@ -6,6 +6,7 @@ import os
 import sys
 import django
 import subprocess
+import urllib2
 
 from pymongo import ReadPreference, MongoClient
 from mongoengine import connect
@@ -23,12 +24,25 @@ CRITS_VERSION = '3.0.0'
 #the following gets the current git hash to be displayed in the footer and 
 #hides it if it is not a current git repo
 try:
-    GIT_HASH=subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
-    GIT_HASH_LONG=subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
     HIDE_GIT_HASH = False
+    #get the short hand of current git hash
+    GIT_HASH=subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
+    #get the long hand of the current git hash
+    GIT_HASH_LONG=subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
+    #Base URL to gitlab repo
+    GITLAB_URL = ""
+    #check to see if the link is broken
+    response = urllib2.urlopen(GITLAB_URL+GIT_HASH_LONG)
+    #if link is not broken, set an anchor tag to it
+    GIT_HASH_LINK = "<a href='"+GITLAB_URL+GIT_HASH_LONG+"'>"+GIT_HASH+"</a>"
+except urllib2.HTTPError:
+    #if link is broken but it is a valid git repo, set the link to just the hash
+    GIT_HASH_LINK = GIT_HASH 
 except:
+    #if it is not a git repo, clear out all values and hide them
     GIT_HASH=''
     GIT_HASH_LONG=''
+    GIT_HASH_LINK = ''
     HIDE_GIT_HASH = True
 
 APPEND_SLASH = True

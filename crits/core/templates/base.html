@@ -90,7 +90,11 @@
     {% if is_prod and not hide_git_hash%}
 	    $(document).ready(function(){
 	    	$("#versionNum").qtip({
+<<<<<<< HEAD
 	    		content: "Git Hash #<a href=''>{{ git_hash }}</a>",
+=======
+	    		content: "Git Hash #{{git_hash_link|safe}}",
+>>>>>>> 4abdd3d... Made display of current git hash more efficiently done.
 	    		show: "mouseover",
 	    		hide: "mouseout",
 	    		position: {
@@ -184,7 +188,11 @@
       </span>
       {% if not is_prod and not hide_git_hash%}
 	      <span class="left" data-intro="Git Hash" data-position="top">
+<<<<<<< HEAD
 	        <b>Git #</b> <a href=''>{{ git_hash }}</a>
+=======
+	        <b>Git #</b> {{git_hash_link|safe}}
+>>>>>>> 4abdd3d... Made display of current git hash more efficiently done.
 	      </span>
 	  {% endif %}
       <span class="left" data-intro="Hosting Organization" data-position="top">
