@@ -593,7 +593,10 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                             '%s' % analyst, None,
                                             bucket_list=bucket_list, cache=cache)
                     if not success['success']:
-                        return {'success':False, 'message':success['message']}
+                        indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
+                                         % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
+                        message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
+                        return {'success':False, 'message':message + success['message']}
 
                 if not success or not 'object' in success:
                     dmain = Domain.objects(domain=domain_or_ip).first()
@@ -622,7 +625,10 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                         indicator_reference=reference,
                                         cache=cache)
                 if not success['success']:
-                    return {'success':False, 'message':success['message']}
+                    indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
+                                     % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
+                    message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
+                    return {'success':False, 'message':message + success['message']}
 
             if not success or not 'object' in success:
                 ip = IP.objects(ip=indicator.value).first()
