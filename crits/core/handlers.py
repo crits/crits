@@ -1127,8 +1127,10 @@ def modify_source_access(analyst, data):
     user.secret = data['secret']
     if len(data.get('password', '')) > 1:
         if user.set_password(data['password']) == False:
+            config = CRITsConfig.objects().first()
+            pc = config.password_complexity_desc
             return {'success': False,
-                    'message': 'Password does not meet complexity policy'}
+                    'message': 'Password does not meet complexity policy: %s' % pc}
     if data['subscriptions'] == '':
         user.subscriptions = EmbeddedSubscriptions()
     try:
