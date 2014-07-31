@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.12: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.11: http://docutils.sourceforge.net/" />
 <title>CRITs User Manual</title>
 <style type="text/css">
 
@@ -2594,11 +2594,11 @@ field, &quot;log_level&quot; will be set to &quot;info&quot; if it is not provid
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">upload_type:</th><td class="field-body">must be stix (lower case)</td>
+<tr class="field"><th class="field-name">upload_type:</th><td class="field-body">must be 'file' or 'xml' (lower case)</td>
 </tr>
-<tr class="field"><th class="field-name">filedata:</th><td class="field-body">The STIX document .</td>
+<tr class="field"><th class="field-name">filedata:</th><td class="field-body">The STIX document if uploading as a file using the 'file' upload_type.</td>
 </tr>
-<tr class="field"><th class="field-name">source:</th><td class="field-body">The source of the STIX document</td>
+<tr class="field"><th class="field-name">xml:</th><td class="field-body">The STIX document if uploading as 'xml' using the 'xml' upload_type.</td>
 </tr>
 <tr class="field"><th class="field-name">make_event:</th><td class="field-body">Wether to create an event within CRITS.  False if not present.  Set to True</td>
 </tr>

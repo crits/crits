@@ -1765,9 +1765,9 @@ POST:
 
 Unique POST Parameters:
 
-:upload_type: must be stix (lower case)
-:filedata: The STIX document .
-:source: The source of the STIX document 
+:upload_type: must be 'file' or 'xml' (lower case)
+:filedata: The STIX document if uploading as a file using the 'file' upload_type.
+:xml: The STIX document if uploading as 'xml' using the 'xml' upload_type.
 :make_event: Wether to create an event within CRITS.  False if not present.  Set to True
 
 
