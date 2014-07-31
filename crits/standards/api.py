@@ -1,4 +1,4 @@
-jfrom tastypie import authorization
+from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 
@@ -53,7 +53,12 @@ class StandardsResource(CRITsAPIResource):
         # Extract common information
 
         source = bundle.data.get('source', None)
-        makeevent = bundle.data.get('make_event',False)
+        makeevent = bundle.data.get('make_event',None)
+        if makeevent is not None:
+            if makeevent == 'True':
+                me = True
+            else :
+                me = False
 
         if not source:
             raise BadRequest('No Source was specified')
@@ -65,7 +70,8 @@ class StandardsResource(CRITsAPIResource):
         result = import_standards_doc(filedata,
                     analyst, 
                     "Upload",
-                    make_event = makeevent,
+                    make_event = me,
+                    ref = None,
                     source = source)
 
 
