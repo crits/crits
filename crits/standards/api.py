@@ -53,12 +53,7 @@ class StandardsResource(CRITsAPIResource):
         # Extract common information
 
         source = bundle.data.get('source', None)
-        makeevent = bundle.data.get('make_event',None)
-        if makeevent is not None:
-            if makeevent == 'True':
-                me = True
-            else :
-                me = False
+        me = bundle.data.get('make_event',False)  # default to False for the event
 
         if not source:
             raise BadRequest('No Source was specified')
