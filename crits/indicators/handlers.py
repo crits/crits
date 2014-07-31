@@ -3,6 +3,7 @@ import csv
 import datetime
 import json
 import logging
+import urlparse
 
 from cStringIO import StringIO
 from django.conf import settings
@@ -574,15 +575,14 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         url_contains_ip = False
         if ind_type in ("URI - Domain Name", "URI - URL"):
             if ind_type == "URI - URL":
-                domain = ind_value.split("/")[2]
+                domain_or_ip = urlparse.urlparse(ind_value).hostname
             elif ind_type == "URI - Domain Name":
-                domain = ind_value
+                domain_or_ip = ind_value
             #try:
-            (sdomain, fqdn) = get_domain(domain)
+            (sdomain, fqdn) = get_domain(domain_or_ip)
             if sdomain == "no_tld_found_error" and ind_type == "URI - URL":
                 try:
-                    test_ip = domain.split(":")[0].split("/")[0]
-                    validate_ipv46_address(test_ip)
+                    validate_ipv46_address(domain_or_ip)
                     url_contains_ip = True
                 except DjangoValidationError, e:
                     pass
@@ -596,7 +596,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                         return {'success':False, 'message':success['message']}
 
                 if not success or not 'object' in success:
-                    dmain = Domain.objects(domain=domain).first()
+                    dmain = Domain.objects(domain=domain_or_ip).first()
                 else:
                     dmain = success['object']
                 if dmain:
@@ -609,7 +609,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
 
         if ind_type.startswith("Address - ip") or ind_type == "Address - cidr" or url_contains_ip:
             if url_contains_ip:
-                ind_value = test_ip
+                ind_value = domain_or_ip
             success = None
             if add_domain:
                 success = ip_add_update(ind_value,
