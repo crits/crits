@@ -460,7 +460,7 @@ phrase.</p>
 <li><a class="reference internal" href="#api-urls" id="id74">17.1&nbsp;&nbsp;&nbsp;API URLs</a></li>
 <li><a class="reference internal" href="#searching-using-get-parameters" id="id75">17.2&nbsp;&nbsp;&nbsp;Searching Using GET Parameters</a></li>
 <li><a class="reference internal" href="#limiting-get-request-results" id="id76">17.3&nbsp;&nbsp;&nbsp;Limiting GET Request Results</a></li>
-<li><a class="reference internal" href="#examples" id="id77">17.4&nbsp;&nbsp;&nbsp;API Examples:</a></li>
+<li><a class="reference internal" href="#examples" id="id77">17.4&nbsp;&nbsp;&nbsp;Examples:</a></li>
 <li><a class="reference internal" href="#common-post-parameters" id="id78">17.5&nbsp;&nbsp;&nbsp;Common POST Parameters</a></li>
 <li><a class="reference internal" href="#campaign-api" id="id79">17.6&nbsp;&nbsp;&nbsp;Campaign API</a></li>
 <li><a class="reference internal" href="#certificate-api" id="id80">17.7&nbsp;&nbsp;&nbsp;Certificate API</a></li>
@@ -477,7 +477,8 @@ phrase.</p>
 <li><a class="reference internal" href="#sample-api" id="id91">17.18&nbsp;&nbsp;&nbsp;Sample API</a></li>
 <li><a class="reference internal" href="#screenshot-api" id="id92">17.19&nbsp;&nbsp;&nbsp;Screenshot API</a></li>
 <li><a class="reference internal" href="#service-api" id="id93">17.20&nbsp;&nbsp;&nbsp;Service API</a></li>
-<li><a class="reference internal" href="#target-api" id="id94">17.21&nbsp;&nbsp;&nbsp;Target API</a></li>
+<li><a class="reference internal" href="#standards-api" id="id94">17.21&nbsp;&nbsp;&nbsp;Standards API</a></li>
+<li><a class="reference internal" href="#target-api" id="id95">17.22&nbsp;&nbsp;&nbsp;Target API</a></li>
 </ul>
 </li>
 </ul>
@@ -1794,6 +1795,7 @@ Currently the available resources are:</p>
 <li>raw_data</li>
 <li>samples</li>
 <li>targets</li>
+<li>standards</li>
 </ul>
 <p>For example, if you wanted to get a list of campaigns, you would use:</p>
 <blockquote>
@@ -1892,13 +1894,13 @@ fields.</p>
 </div>
 <div class="section" id="examples">
 <h2><a class="toc-backref" href="#id77">17.4&nbsp;&nbsp;&nbsp;Examples:</a></h2>
-<h3>cURL:</h3>
+<p>cURL:</p>
 <blockquote>
 curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/file.pcap">filedata=&#64;/path/to/file.pcap</a>&quot; -F &quot;source=&lt;your source&gt;&quot; <a class="reference external" href="http://localhost:1337/api/v1/pcaps/">http://localhost:1337/api/v1/pcaps/</a>?username=&lt;your username&gt;&amp;api_key=&lt;your api key&gt;</blockquote>
-<h3>Python:</h3>
-<p><strong>Upload a PCAP file</strong></p>
-<blockquote>
-<div class="line-block">
+<p>Python:</p>
+<dl class="docutils">
+<dt>Upload a PCAP file</dt>
+<dd><div class="first line-block">
 <div class="line">import requests</div>
 </div>
 <div class="line-block">
@@ -1914,11 +1916,12 @@ curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/
 </div>
 <div class="line">}</div>
 </div>
-<div class="line-block">
+<div class="last line-block">
 <div class="line">r = requests.post(url, data=data, files=files)</div>
 </div>
-</blockquote>
-<p><strong>Adding a Domain</strong></p>
+</dd>
+</dl>
+<p>Adding a Domain</p>
 <blockquote>
 <div class="line-block">
 <div class="line">import requests</div>
@@ -1941,13 +1944,13 @@ curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/
 <div class="line">r = requests.post(url, data=data)</div>
 <div class="line">if r.status_code == 201:</div>
 <div class="line-block">
-<div class="line">print "Successfully added "+params['domain']</div>
+<div class="line">print &quot;Successfully added &quot;+params['domain']</div>
 </div>
 </div>
 </blockquote>
-<p><strong>Getting a list of the domains</strong> from a self-signed certificated instance. We forgo the certificate verification until apropriately loading it into the certificate store</p>
-<blockquote>
-<div class="line-block">
+<dl class="docutils">
+<dt>Listing the Domains:</dt>
+<dd><div class="first line-block">
 <div class="line">import requests</div>
 </div>
 <div class="line-block">
@@ -1961,54 +1964,57 @@ curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/
 </div>
 <div class="line">}</div>
 </div>
-<div class="line-block">
+<div class="last line-block">
 <div class="line">r = requests.get(url, params=params, verify=False)</div>
 <div class="line">r.json</div>
 </div>
-</blockquote>
-<h3>Ruby:</h3>
-<strong>Adding a Domain</strong>
-<blockquote>
-<div class="line-block">
+</dd>
+</dl>
+<p>Ruby:</p>
+<dl class="docutils">
+<dt>Adding a Domain</dt>
+<dd><div class="first line-block">
 <div class="line">require 'net/http'</div>
-<div class="line">uri= URI('http://127.0.0.1/api/v1/domains/')</div>
-<div class="line">params = { </div>
+<div class="line">uri= URI('<a class="reference external" href="http://127.0.0.1/api/v1/domains/">http://127.0.0.1/api/v1/domains/</a>')</div>
+<div class="line">params = {</div>
 <div class="line-block">
-<div class="line">'username' => '&lt;your username&gt;',</div>
-<div class="line">'api_key' => '&lt;your api key&gt;',</div>
-<div class="line">'source' => '&lt;source name&gt;',</div>
-<div class="line">'domain'=>'ruby.evil.org'</div>
+<div class="line">'username' =&gt; '&lt;your username&gt;',</div>
+<div class="line">'api_key' =&gt; '&lt;your api key&gt;',</div>
+<div class="line">'source' =&gt; '&lt;source name&gt;',</div>
+<div class="line">'domain'=&gt;'ruby.evil.org'</div>
 </div>
 <div class="line">}</div>
 </div>
-<div class="line-block">
+<div class="last line-block">
 <div class="line">res = Net::HTTP.post_form(uri,params)</div>
-<div class="line">if res.code == "201" {</div>
+<div class="line">if res.code == &quot;201&quot; {</div>
 <div class="line-block">
-<div class="line">print "Successfully added "+params['domain']</div>
+<div class="line">print &quot;Successfully added &quot;+params['domain']</div>
 </div>
 <div class="line">}</div>
 </div>
-</blockquote>
-<strong>Listing the Domains</strong>
-<blockquote>
-<div class="line-block">
+</dd>
+<dt>Listing the Domains</dt>
+<dd><div class="first line-block">
 <div class="line">require 'net/http'</div>
 <div class="line">require 'json'</div>
-<div class="line">uri= URI('http://127.0.0.1/api/v1/domains/')</div>
-<div class="line">params = { </div>
+<div class="line">uri= URI('<a class="reference external" href="http://127.0.0.1/api/v1/domains/">http://127.0.0.1/api/v1/domains/</a>')</div>
+<div class="line">params = {</div>
 <div class="line-block">
-<div class="line">'username' => '&lt;your username&gt;',</div>
-<div class="line">'api_key' => '&lt;your api key&gt;',</div>
+<div class="line">'username' =&gt; '&lt;your username&gt;',</div>
+<div class="line-block">
+<div class="line">'api_key' =&gt; '&lt;your api key&gt;'</div>
+</div>
 </div>
 <div class="line">}</div>
 <div class="line">uri.query = URI.encode_www_form(params)</div>
 </div>
-<div class="line-block">
+<div class="last line-block">
 <div class="line">res=Net::HTTP.get_response(uri)</div>
 <div class="line">result=JSON.load(res.body)</div>
 </div>
-</blockquote>
+</dd>
+</dl>
 </div>
 <div class="section" id="common-post-parameters">
 <h2><a class="toc-backref" href="#id78">17.5&nbsp;&nbsp;&nbsp;Common POST Parameters</a></h2>
@@ -2578,8 +2584,29 @@ only &quot;date&quot; is required:</p>
 &quot;result_type&quot; and &quot;result_subtype&quot;. Also, if you include the &quot;log_message&quot;
 field, &quot;log_level&quot; will be set to &quot;info&quot; if it is not provided.</p>
 </div>
+<div class="section" id="standards-api">
+<h2><a class="toc-backref" href="#id94">17.21&nbsp;&nbsp;&nbsp;Standards API</a></h2>
+<p>POST:</p>
+<blockquote>
+/api/v1/standards/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">upload_type:</th><td class="field-body">must be 'file' or 'xml' (lower case)</td>
+</tr>
+<tr class="field"><th class="field-name">filedata:</th><td class="field-body">The STIX document if uploading as a file using the 'file' upload_type.</td>
+</tr>
+<tr class="field"><th class="field-name">xml:</th><td class="field-body">The STIX document if uploading as 'xml' using the 'xml' upload_type.</td>
+</tr>
+<tr class="field"><th class="field-name">make_event:</th><td class="field-body">Wether to create an event within CRITS.  False if not present.  Set to True</td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section" id="target-api">
-<h2><a class="toc-backref" href="#id94">17.21&nbsp;&nbsp;&nbsp;Target API</a></h2>
+<h2><a class="toc-backref" href="#id95">17.22&nbsp;&nbsp;&nbsp;Target API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/targets/</p>

@@ -1324,7 +1324,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
     query = {}
     # Some terms, regardless of the query, will want to be full search terms and
     # not regex terms.
-    force_full_terms = ['detectexact']
+    force_full_terms = ['detectexact', 'ssdeephash']
     force = False
     # Exclude searches for 'source' or 'releasability'
     # This is required because the check_query function doesn't handle

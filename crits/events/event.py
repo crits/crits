@@ -122,7 +122,10 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
             if isinstance(stix_header, STIXHeader):
                 if stix_header.title:
                     event.title = stix_header.title
-                if stix_header.package_intents:
+                #if stix_header.package_intents:
+                # package_intents are optional in the STIX Spec.. So we check for the attribute being present
+                # rather than the original check which causes an exception
+                if hasattr(stix_header,'package_intents'):
                     event.event_type = str(stix_header.package_intents[0])
                 description = stix_header.description
                 if isinstance(description, StructuredText):

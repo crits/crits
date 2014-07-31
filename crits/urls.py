@@ -320,6 +320,7 @@ if settings.ENABLE_API:
     from crits.screenshots.api import ScreenshotResource
     from crits.services.api import ServiceResource
     from crits.targets.api import TargetResource
+    from crits.standards.api import StandardsResource
 
     v1_api = Api(api_name='v1')
     v1_api.register(CampaignResource())
@@ -338,6 +339,7 @@ if settings.ENABLE_API:
     v1_api.register(ScreenshotResource())
     v1_api.register(ServiceResource())
     v1_api.register(TargetResource())
+    v1_api.register(StandardsResource())
 
     for service_directory in settings.SERVICE_DIRS:
         if os.path.isdir(service_directory):
