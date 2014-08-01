@@ -569,8 +569,8 @@ def update_object_source(type_, oid, object_type, name, value, new_source,
     except ValidationError, e:
         return {'success': False, 'message': e}
 
-def create_indicator_from_object(rel_type, rel_id, ind_type, value, analyst,
-                                 request):
+def create_indicator_from_object(rel_type, rel_id, ind_type, value,
+                                 source_name, method, reference, analyst, request):
     """
     Create an indicator out of this object.
 
@@ -581,6 +581,12 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value, analyst,
     :type ind_type: str
     :param value: The indicator value.
     :type value: str
+    :param source_name: The source name for the indicator.
+    :type source_name: str
+    :param method: The source method for the indicator.
+    :type method: str
+    :param reference: The source reference for the indicator.
+    :type reference: str
     :param analyst: The user creating this indicator.
     :type analyst: str
     :param request: The Django request.
@@ -599,9 +605,13 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value, analyst,
     elif ind_type == None or ind_type.strip() == "":
         result = {'success':  False,
                   'message':  "Can't create indicator with an empty type field"}
+    elif source_name == None or source_name.strip() == "":
+        result = {'success':  False,
+                  'message':  "Can't create indicator with an empty source field"}
     else:
         value = value.lower().strip()
         ind_type = ind_type.strip()
+        source_name = source_name.strip()
         
         create_indicator_result = {}
         ind_tlist = ind_type.split(" - ")
@@ -609,22 +619,13 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value, analyst,
             ind_type = ind_tlist[0]
         from crits.indicators.handlers import handle_indicator_ind
 
-        if hasattr(me, 'source'):
-            create_indicator_result = handle_indicator_ind(value,
-                                          me.source,
-                                          '',
-                                          ind_type,
-                                          analyst=analyst,
-                                          add_domain=True)
-        else:
-            # In case the top level item doesn't have sources (such as campaign)...
-            # then just default to the user's organization
-            create_indicator_result = handle_indicator_ind(value,
-                                          get_user_organization(analyst),
-                                          '',
-                                          ind_type,
-                                          analyst=analyst,
-                                          add_domain=True)
+        create_indicator_result = handle_indicator_ind(value,
+                                                       source_name,
+                                                       reference,
+                                                       ind_type,
+                                                       analyst,
+                                                       method,
+                                                       add_domain=True)
 
         # Check if an error occurred, if it did then return the error result
         if create_indicator_result.get('success', True) == False:
