@@ -207,3 +207,6 @@ A.noclick {
 	border-color: #464646;
 	border-radius:5px;
 }
+.customQtip a{
+    color:white;
+}

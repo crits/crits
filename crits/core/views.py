@@ -976,12 +976,12 @@ def base_context(request):
     git_hash = getattr(crits_config,
                        'git_hash',
                         settings.GIT_HASH)
+    git_hash_long = getattr(crits_config,
+                       'git_hash_long',
+                        settings.GIT_HASH_LONG)
     git_repo_url = getattr(crits_config,
                             'git_repo_url',
                             settings.GIT_REPO_URL)
-    is_prod = getattr(crits_config,
-                      'is_prod',
-                      settings.ISPROD)
     hide_git_hash = getattr(crits_config,
                       'hide_git_hash',
                       settings.HIDE_GIT_HASH)
@@ -999,10 +999,9 @@ def base_context(request):
     base_context['company_name'] = company_name
     base_context['crits_version'] = crits_version
     if git_repo_url:
-        base_context['git_repo_link'] = "<a href='"+git_repo_url+"'>"+git_hash+"</a>"
+        base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long+"'>"+git_hash+"</a>"
     else:
         base_context['git_repo_link'] = git_hash
-    base_context['is_prod'] = is_prod
     base_context['hide_git_hash'] = hide_git_hash
     base_context['splunk_search_url'] = splunk_url
     base_context['mongo_database'] = mongo_database

@@ -87,7 +87,7 @@
     var get_dialog_url = "{% url 'crits.core.views.get_dialog' %}";
     
     //only activates the qtip if in production
-    {% if is_prod and not hide_git_hash%}
+    {% if not hide_git_hash%}
 	    $(document).ready(function(){
 	    	$("#versionNum").qtip({
 	    		content: "{{git_repo_link|safe}}",
@@ -179,8 +179,8 @@
       <span class="right" data-intro="Data Classification" data-position="top">
 	<b>{{ classification }}</b>
       </span>
-      <span class="left" data-intro="CRITs DB Version" {% if is_prod and not hide_git_hash%}id='versionNum' {% endif %} data-position="top" >
-        <b>Version:</b> {{ crits_version }}{% if not is_prod and not hide_git_hash%}{{git_repo_link|safe}}{% endif %}
+      <span class="left" data-intro="CRITs DB Version" {% if not hide_git_hash%}id='versionNum' {% endif %} data-position="top" >
+        <b>Version:</b> {{ crits_version }}
       </span>
       <span class="left" data-intro="Hosting Organization" data-position="top">
 	<b>Hosted by:</b> {{ company_name }}

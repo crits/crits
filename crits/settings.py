@@ -36,7 +36,6 @@ except:
 
 APPEND_SLASH = True
 TEST_RUN = False
-ISPROD = False  #used for displaying git_hash
 
 # Set to DENY|SAMEORIGIN|ALLOW-FROM uri
 # Default: SAMEORIGIN
@@ -63,7 +62,6 @@ else:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     LOGIN_URL = "/crits/login/"
-    ISPROD = True
 
 DATABASES = {
     'default': {
