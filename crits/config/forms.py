@@ -42,6 +42,10 @@ class ConfigForm(forms.Form):
                                     required=True,
                                     initial=settings.CRITS_VERSION,
                                     label="CRITs Version")
+    git_repo_url = forms.CharField(widget=forms.TextInput,
+                                   required=False,
+                                   initial=settings.CRITS_VERSION,
+                                   label="Git Repo URL")
     debug = forms.BooleanField(initial=False,
                                required=False,
                                help_text='*Requires a web server restart.')
