@@ -182,11 +182,6 @@
       <span class="left" data-intro="CRITs DB Version" {% if is_prod and not hide_git_hash%}id='versionNum' {% endif %} data-position="top" >
         <b>Version:</b> {{ crits_version }}{% if not is_prod and not hide_git_hash%}{{git_repo_link|safe}}{% endif %}
       </span>
-      {% if not is_prod and not hide_git_hash%}
-	      <span class="left" data-intro="Git Hash" data-position="top">
-	        <b>Git #</b> {{git_hash_link|safe}}
-	      </span>
-	  {% endif %}
       <span class="left" data-intro="Hosting Organization" data-position="top">
 	<b>Hosted by:</b> {{ company_name }}
       </span>
