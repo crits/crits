@@ -49,17 +49,20 @@ class IPResource(CRITsAPIResource):
 
         analyst = bundle.request.user.username
         data = bundle.data
-        ip = data['ip']
-        name = data['source']
-        reference = data['reference']
-        method = data['method']
-        campaign = data['campaign']
-        confidence = data['confidence']
-        ip_type = data['ip_type']
+        ip = data.get('ip', None)
+        name = data.get('source', None)
+        reference = data.get('reference', None)
+        method = data.get('method', None)
+        campaign = data.get('campaign', None)
+        confidence = data.get('confidence', None)
+        ip_type = data.get('ip_type', None)
         add_indicator = data.get('add_indicator', False)
-        indicator_reference = data.get('indicator_reference')
+        indicator_reference = data.get('indicator_reference', None)
         bucket_list = data.get('bucket_list', None)
         ticket = data.get('ticket', None)
+
+        if not ip or not name or not ip_type:
+            raise BadRequest("Must provide an IP, IP Type, and Source.")
 
         result = ip_add_update(ip,
                                ip_type,
@@ -73,7 +76,7 @@ class IPResource(CRITsAPIResource):
                                ticket=ticket,
                                is_add_indicator=add_indicator,
                                indicator_reference=indicator_reference)
-        if 'message' in result:
+        if not result['success']:
             raise BadRequest(result['message'])
         else:
             return bundle

@@ -3,10 +3,13 @@ import csv
 import datetime
 import json
 import logging
+import urlparse
 
 from cStringIO import StringIO
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.urlresolvers import reverse
+from django.core.validators import validate_ipv46_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -568,37 +571,50 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     if add_domain or add_relationship:
         ind_type = indicator.ind_type
         ind_value = indicator.value
+        url_contains_ip = False
         if ind_type in ("URI - Domain Name", "URI - URL"):
             if ind_type == "URI - URL":
-                domain = ind_value.split("/")[2]
+                domain_or_ip = urlparse.urlparse(ind_value).hostname
             elif ind_type == "URI - Domain Name":
-                domain = ind_value
+                domain_or_ip = ind_value
             #try:
-            (sdomain, fqdn) = get_domain(domain)
+            (sdomain, fqdn) = get_domain(domain_or_ip)
+            if sdomain == "no_tld_found_error" and ind_type == "URI - URL":
+                try:
+                    validate_ipv46_address(domain_or_ip)
+                    url_contains_ip = True
+                except DjangoValidationError, e:
+                    pass
+            if not url_contains_ip:
+                success = None
+                if add_domain:
+                    success = upsert_domain(sdomain, fqdn, indicator.source,
+                                            '%s' % analyst, None,
+                                            bucket_list=bucket_list, cache=cache)
+                    if not success['success']:
+                        indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
+                                         % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
+                        message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
+                        return {'success':False, 'message':message + success['message']}
+
+                if not success or not 'object' in success:
+                    dmain = Domain.objects(domain=domain_or_ip).first()
+                else:
+                    dmain = success['object']
+                if dmain:
+                    dmain.add_relationship(rel_item=indicator,
+                                           rel_type='Related_To',
+                                           analyst="%s" % analyst,
+                                           get_rels=False)
+                    dmain.save(username=analyst)
+                    indicator.save(username=analyst)
+
+        if ind_type.startswith("Address - ip") or ind_type == "Address - cidr" or url_contains_ip:
+            if url_contains_ip:
+                ind_value = domain_or_ip
             success = None
             if add_domain:
-                success = upsert_domain(sdomain, fqdn, indicator.source,
-                                        '%s' % analyst, None,
-                                        bucket_list=bucket_list, cache=cache)
-                if not success['success']:
-                    return {'success':False, 'message':success['message']}
-
-            if not success or not 'object' in success:
-                dmain = Domain.objects(domain=domain).first()
-            else:
-                dmain = success['object']
-            if dmain:
-                dmain.add_relationship(rel_item=indicator,
-                                       rel_type='Related_To',
-                                       analyst="%s" % analyst,
-                                       get_rels=False)
-                dmain.save(username=analyst)
-                indicator.save(username=analyst)
-
-        elif ind_type.startswith("Address - ip") or ind_type == "Address - cidr":
-            success = None
-            if add_domain:
-                success = ip_add_update(indicator.value,
+                success = ip_add_update(ind_value,
                                         ind_type,
                                         source=indicator.source,
                                         campaign=indicator.campaign,
@@ -608,7 +624,10 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                         indicator_reference=reference,
                                         cache=cache)
                 if not success['success']:
-                    return {'success':False, 'message':success['message']}
+                    indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
+                                     % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
+                    message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
+                    return {'success':False, 'message':message + success['message']}
 
             if not success or not 'object' in success:
                 ip = IP.objects(ip=indicator.value).first()
