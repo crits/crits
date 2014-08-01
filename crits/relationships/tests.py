@@ -2,7 +2,7 @@ from django.test import SimpleTestCase
 from django.test.client import RequestFactory
 
 import crits.domains.views as views
-from crits.relationships.handlers import forge_relationship, update_relationship_reasons, update_relationship_weights
+from crits.relationships.handlers import forge_relationship, update_relationship_reasons, update_relationship_confidences
 from crits.core.user import CRITsUser
 from crits.campaigns.campaign import Campaign
 
@@ -15,8 +15,8 @@ TUSER2_EMAIL = "asdfsaser@example.com"
 TCAMPAIGN1 = "Test_Campain1"
 TCAMPAIGN2 = "Test_Campain2"
 TRELATIONSHIP_TYPE = "Allocated"
-TRELATIONSHIP_WEIGHT = 8
-TRELATIONSHIP_NEW_WEIGHT = 2
+TRELATIONSHIP_CONFIDENCE = 8
+TRELATIONSHIP_NEW_CONFIDENCE = 2
 TRELATIONSHIP_NEW_REASON = "Because I Said So"
 
 def prep_db():
@@ -62,7 +62,7 @@ def clean_db():
         campaign2.delete()
 
 
-class RelationshipWeightAndReasonTests(SimpleTestCase):
+class RelationshipConfidenceAndReasonTests(SimpleTestCase):
     """
     Test Domain Handlers
     """
@@ -77,7 +77,7 @@ class RelationshipWeightAndReasonTests(SimpleTestCase):
                                           right_class=self.campaign2,
                                           rel_type=TRELATIONSHIP_TYPE,
                                           analyst=self.user.username, 
-                                          rel_weight=TRELATIONSHIP_WEIGHT)
+                                          rel_confidence=TRELATIONSHIP_CONFIDENCE)
 
     def tearDown(self):
         clean_db()
@@ -85,8 +85,8 @@ class RelationshipWeightAndReasonTests(SimpleTestCase):
     def testCreateRelationship(self):
         relationship1 = self.campaign1.relationships[0]
         relationship2 = self.campaign2.relationships[0]
-        self.assertEqual(relationship1.rel_weight, TRELATIONSHIP_WEIGHT)
-        self.assertEqual(relationship2.rel_weight, TRELATIONSHIP_WEIGHT)
+        self.assertEqual(relationship1.rel_confidence, TRELATIONSHIP_CONFIDENCE)
+        self.assertEqual(relationship2.rel_confidence, TRELATIONSHIP_CONFIDENCE)
         self.assertEqual(relationship1.analyst, self.user.username)
         self.assertEqual(relationship2.analyst, self.user.username)
 
@@ -111,18 +111,18 @@ class RelationshipWeightAndReasonTests(SimpleTestCase):
         self.assertEqual(relationship1.rel_reason, TRELATIONSHIP_NEW_REASON)
         self.assertEqual(relationship2.rel_reason, TRELATIONSHIP_NEW_REASON)
         
-    def testChangingWeight(self):
+    def testChangingConfidence(self):
         relationship1 = self.campaign1.relationships[0]
         relationship2 = self.campaign2.relationships[0]
         
-        self.assertEqual(relationship1.rel_weight, TRELATIONSHIP_WEIGHT)
-        self.assertEqual(relationship2.rel_weight, TRELATIONSHIP_WEIGHT)
+        self.assertEqual(relationship1.rel_confidence, TRELATIONSHIP_CONFIDENCE)
+        self.assertEqual(relationship2.rel_confidence, TRELATIONSHIP_CONFIDENCE)
         
-        update_relationship_weights(left_class=self.campaign1,
+        update_relationship_confidences(left_class=self.campaign1,
                                     right_class=self.campaign2,
                                     rel_type=TRELATIONSHIP_TYPE,
                                     analyst=self.user2.username, 
-                                    new_weight=TRELATIONSHIP_NEW_WEIGHT)
+                                    new_confidence=TRELATIONSHIP_NEW_CONFIDENCE)
         
-        self.assertEqual(relationship1.rel_weight, TRELATIONSHIP_NEW_WEIGHT)
-        self.assertEqual(relationship2.rel_weight, TRELATIONSHIP_NEW_WEIGHT)
+        self.assertEqual(relationship1.rel_confidence, TRELATIONSHIP_NEW_CONFIDENCE)
+        self.assertEqual(relationship2.rel_confidence, TRELATIONSHIP_NEW_CONFIDENCE)

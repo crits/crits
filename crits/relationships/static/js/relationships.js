@@ -118,7 +118,7 @@ $(document).ready(function() {
             datatype: 'json',
             success: function(data) {
                 if (data.success) {
-            	 	$("#form-forge-relationship #id_rel_weight").prop('selectedIndex',4);
+            	 	$("#form-forge-relationship #id_rel_confidence").prop('selectedIndex',8);
             	 	$("#form-forge-relationship #id_rel_reason").val('');	
                     $("#form-forge-relationship #id_dest_id").val('');
                     $("#form-forge-relationship #id_relationship_date").val('');
@@ -214,11 +214,12 @@ $(document).ready(function() {
     e.stopPropagation();
   });
   
-  $(document).on('click', '.relationship_weight_edit', function(e) {
+  $(document).on('click', '.relationship_confidence_edit', function(e) {
   	e.preventDefault();
+  	
   	//this is to set the inital value of the select
   	if($.isNumeric($(this).html())) 
-  		var currentWeight = $(this).html();
+  		var currentConfidence = $(this).html();
   		
  	$(this).editable(function(value, settings) {
           return function(value, settings, elem) {
@@ -231,35 +232,46 @@ $(document).ready(function() {
               forward_relationship: guardian.attr('frel'),
               relationship_date: guardian.attr('rdate'),
               forge_date: guardian.attr('fdate'),
-              new_weight: value,
+              new_confidence: value,
       		};
-      		$.ajax({
-                type: "POST",
-                async: false,
-                url: $(elem).attr('action'),
-                data: data,
-                success: function(data) {
-                    if (data.success) {
-                        guardian.attr('new_weight', value);
-                        currentWeight = value;
+            if (value <1) 
+            	return currentConfidence;
+            else
+          		$.ajax({
+                    type: "POST",
+                    async: false,
+                    url: $(elem).attr('action'),
+                    data: data,
+                    success: function(data) {
+                        if (data.success) {
+                            guardian.attr('new_confidence', value);
+                            currentConfidence = value;
+                        } else {
+                            alert(data.message);
+                        }
+                    },
+                    error: function(data) {
+                    	alert(data.message);
                     }
-                },
-  			});
+      			});
             return value; 
   		}(value, settings, this);
   	}, 
   	{ 
-  		event:'weight_edit',
+  		event:'confidence_edit',
     	type: 'select',
     	width: '50px',
     	data: function() {
-  			var dataValues = "{1:'1 (Low)',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10 (High)', 'selected':"+currentWeight+"}";
+  			if (currentConfidence < 1)
+  				currentConfidence = '';
+  			var dataValues = "{0: '', 1:'1 (Low)', 2:'2', 3:'3', 4:'4', 5:'5 (High)', 'selected': '"+currentConfidence+"'}";
   			return dataValues;
   		},
+  		placeholder: currentConfidence,
     	style:'display:inline',
         onblur:'submit'
  	});	
- 	$(this).trigger('weight_edit');
+ 	$(this).trigger('confidence_edit');
   });
 
   $(document).on('click', '.relationship_reason_edit', function(e) {

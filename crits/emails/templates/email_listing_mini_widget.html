@@ -25,7 +25,9 @@
                 <th>Sender</th>
                 <th>Subject</th>
                 <th>Campaign</th>
-                <th width="75px">Weight</th>
+                <th>Analyst</th>
+                <th>Date</th>
+                <th width="75px">Confidence</th>
                 <th>Reason</th> 
                 <th width="50px"></th>
             </tr>
@@ -58,7 +60,9 @@
                         <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">{{ campaign.name }}</a><br />
                     {% endfor %}
                 </td>
-                <td width="75px" class='relationship_weight_edit' action="{% url 'crits.relationships.views.update_relationship_weight' %}">{{ rel.rel_weight }}</td>
+                <td>{{rel.analyst}}</td>
+                <td>{{rel.date|date:"g:i A m/d/y"}}</td>
+                <td width="75px" class='relationship_confidence_edit' action="{% url 'crits.relationships.views.update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
 		        <td width="150px" style="max-width: 150px;" class='relationship_reason_edit' action="{% url 'crits.relationships.views.update_relationship_reason' %}">
 		            {% if rel.rel_reason != null and rel.rel_reason != '' %}
 		                {{ rel.rel_reason }}

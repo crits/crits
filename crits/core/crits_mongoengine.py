@@ -1171,7 +1171,7 @@ class EmbeddedRelationship(EmbeddedDocument, CritsDocumentFormatter):
     rel_type = StringField(db_field="type", required=True)
     analyst = StringField()
     rel_reason = StringField()
-    rel_weight = IntField(default=5, min_value=1, max_value=10, required=True)
+    rel_confidence = IntField(default=3, min_value=-5, max_value=5, required=True)
  
 class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                           CritsSchemaDocument, CritsStatusDocument, EmbeddedTickets):
@@ -1557,7 +1557,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         return o_dict
 
     def add_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                         rel_date=None, analyst=None, rel_weight=5, 
+                         rel_date=None, analyst=None, rel_confidence=3, 
                          rel_reason='N/A', get_rels=False):
         """
         Add a relationship to this top-level object. If rel_item is provided it
@@ -1576,8 +1576,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type rel_date: datetime.datetime
         :param analyst: The user forging this relationship.
         :type analyst: str
-        :param rel_weight: The importance of the relationship.
-        :type rel_weight: int
+        :param rel_confidence: The confidence of the relationship.
+        :type rel_confidence: int
         :param rel_reason: The reason for the relationship.
         :type rel_reason: str
         :param get_rels: Return the relationships after forging.
@@ -1615,7 +1615,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             my_rel.date = date
             my_rel.relationship_date = rel_date
             my_rel.object_id = rel_item.id
-            my_rel.rel_weight = rel_weight
+            my_rel.rel_confidence = rel_confidence
             my_rel.rel_reason = rel_reason
 
             # setup the relationship for them
@@ -1626,7 +1626,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             their_rel.date = date
             their_rel.relationship_date = rel_date
             their_rel.object_id = self.id
-            their_rel.rel_weight = rel_weight
+            their_rel.rel_confidence = rel_confidence
             their_rel.rel_reason = rel_reason
 
             # check for existing relationship before
@@ -1674,7 +1674,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                     'message': 'Need valid object and relationship type'}
 
     def _modify_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                             rel_date=None, new_type=None, new_date=None, new_weight=5,
+                             rel_date=None, new_type=None, new_date=None, new_confidence=3,
                              new_reason="N/A", modification=None, analyst=None):
         """
         Modify a relationship to this top-level object. If rel_item is provided it
@@ -1696,7 +1696,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :param new_date: The new relationship date.
         :type new_date: datetime.datetime
         :param modification: What type of modification this is ("type",
-                             "delete", "date", "weight").
+                             "delete", "date", "confidence").
         :type modification: str
         :param analyst: The user forging this relationship.
         :type analyst: str
@@ -1740,8 +1740,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             self.relationships[c].relationship = new_type
                         elif modification == "date":
                             self.relationships[c].relationship_date = new_date
-                        elif modification == "weight":
-                            self.relationships[c].rel_weight = new_weight
+                        elif modification == "confidence":
+                            self.relationships[c].rel_confidence = new_confidence
                         elif modification == "reason":
                             self.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
@@ -1754,8 +1754,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             self.relationships[c].relationship = new_type
                         elif modification == "date":
                             self.relationships[c].relationship_date = new_date
-                        elif modification == "weight":
-                            self.relationships[c].rel_weight = new_weight
+                        elif modification == "confidence":
+                            self.relationships[c].rel_confidence = new_confidence
                         elif modification == "reason":
                             self.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
@@ -1770,8 +1770,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             rel_item.relationships[c].relationship = new_rev_type
                         elif modification == "date":
                             rel_item.relationships[c].relationship_date = new_date
-                        elif modification == "weight":
-                            rel_item.relationships[c].rel_weight = new_weight
+                        elif modification == "confidence":
+                            rel_item.relationships[c].rel_confidence = new_confidence
                         elif modification == "reason":
                             rel_item.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
@@ -1784,8 +1784,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             rel_item.relationships[c].relationship = new_rev_type
                         elif modification == "date":
                             rel_item.relationships[c].relationship_date = new_date
-                        elif modification == "weight":
-                            rel_item.relationships[c].rel_weight = new_weight
+                        elif modification == "confidence":
+                            rel_item.relationships[c].rel_confidence = new_confidence
                         elif modification == "reason":
                             rel_item.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
@@ -1862,8 +1862,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                              rel_date=rel_date, new_type=new_type,
                              modification="type", analyst=analyst)
 
-    def edit_relationship_weight(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                               rel_date=None, new_weight=5, analyst=None):
+    def edit_relationship_confidence(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
+                               rel_date=None, new_confidence=5, analyst=None):
         """
         Modify a relationship type for a relationship to this top-level object.
         If rel_item is provided it will be used, otherwise rel_id and type_ must
@@ -1880,16 +1880,16 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type rel_type: str
         :param rel_date: The date this relationship applies.
         :type rel_date: datetime.datetime
-        :param new_weight: The new weight of the relationship.
-        :type new_weight: int
+        :param new_confidence: The new confidence of the relationship.
+        :type new_confidence: int
         :param analyst: The user editing this relationship.
         :type analyst: str
         :returns: dict with keys "success" (boolean) and "message" (str)
         """
         return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
                              type_=type_, rel_type=rel_type,
-                             rel_date=rel_date, new_weight=new_weight,
-                             modification="weight", analyst=analyst)
+                             rel_date=rel_date, new_confidence=new_confidence,
+                             modification="confidence", analyst=analyst)
         
     def edit_relationship_reason(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
                                rel_date=None, new_reason="N/A", analyst=None):
@@ -1909,8 +1909,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type rel_type: str
         :param rel_date: The date this relationship applies.
         :type rel_date: datetime.datetime
-        :param new_weight: The new weight of the relationship.
-        :type new_weight: int
+        :param new_confidence: The new confidence of the relationship.
+        :type new_confidence: int
         :param analyst: The user editing this relationship.
         :type analyst: str
         :returns: dict with keys "success" (boolean) and "message" (str)

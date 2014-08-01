@@ -56,7 +56,7 @@ def forge_relationship(left_class=None, right_class=None,
                        right_type=None, right_id=None,
                        rel_type=None, rel_date=None,
                        analyst=None, rel_reason="N/A",
-                       rel_weight=5, get_rels=False):
+                       rel_confidence=5, get_rels=False):
     """
     Forge a relationship between two top-level objects.
 
@@ -80,8 +80,8 @@ def forge_relationship(left_class=None, right_class=None,
     :type analyst: str
     :param rel_reason: The reason for the relationship.
     :type rel_reason: str
-    :param rel_weight: The importance of the relationship.
-    :type rel_weight: int
+    :param rel_confidence: The importance of the relationship.
+    :type rel_confidence: int
     :param get_rels: Return the relationships after forging.
     :type get_rels: boolean
     :returns: dict with keys "success" (boolean) and "message" (str if
@@ -108,7 +108,7 @@ def forge_relationship(left_class=None, right_class=None,
                                         rel_type=rel_type,
                                         rel_date=rel_date,
                                         analyst=analyst, 
-                                        rel_weight=rel_weight,
+                                        rel_confidence=rel_confidence,
                                         rel_reason=rel_reason)
             right_class.save(username=analyst)
         else:
@@ -118,7 +118,7 @@ def forge_relationship(left_class=None, right_class=None,
                                             rel_type=rel_type,
                                             rel_date=rel_date,
                                             analyst=analyst,
-                                            rel_weight=rel_weight,
+                                            rel_confidence=rel_confidence,
                                        		rel_reason=rel_reason)
             else:
                 return {'success': False,
@@ -296,11 +296,11 @@ def update_relationship_types(left_class=None, right_class=None,
     return results
     
     
-def update_relationship_weights(left_class=None, right_class=None,
+def update_relationship_confidences(left_class=None, right_class=None,
                               left_type=None, left_id=None,
                               right_type=None, right_id=None,
                               rel_type=None, rel_date=None,
-                              new_type=None,analyst=None, new_weight=5):
+                              new_type=None,analyst=None, new_confidence=5):
     """
     Update the relationship type between two top-level objects.
 
@@ -340,20 +340,20 @@ def update_relationship_weights(left_class=None, right_class=None,
 
     # update relationship
     if right_class:
-        results = left_class.edit_relationship_weight(rel_item=right_class,
+        results = left_class.edit_relationship_confidence(rel_item=right_class,
                                                     rel_type=rel_type,
                                                     rel_date=rel_date,
-                                                    new_weight=new_weight,
+                                                    new_confidence=new_confidence,
                                                     analyst=analyst)
         left_class.save(username=analyst)
         right_class.save(username=analyst)
     else:
         if right_type and right_id:
-            results = left_class.edit_relationship_weight(type_=right_type,
+            results = left_class.edit_relationship_confidence(type_=right_type,
                                                         rel_id=right_id,
                                                         rel_type=rel_type,
                                                         rel_date=rel_date,
-                                                        new_weight=new_weight,
+                                                        new_confidence=new_confidence,
                                                         analyst=analyst)
             left_class.save(username=analyst)
         else:
