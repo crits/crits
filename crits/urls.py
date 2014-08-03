@@ -96,6 +96,8 @@ urlpatterns = patterns('',
         (r'^actors/remove/$', 'crits.actors.views.remove_actor'),
         (r'^actors/list/$', 'crits.actors.views.actors_listing'),
         (r'^actors/list/(?P<option>\S+)/$', 'crits.actors.views.actors_listing'),
+        (r'^actors/identifiers/list/$', 'crits.actors.views.actor_identifiers_listing'),
+        (r'^actors/identifiers/list/(?P<option>\S+)/$', 'crits.actors.views.actor_identifiers_listing'),
 
         #campaigns
         (r'^campaigns/stats/$', 'crits.campaigns.views.campaign_stats'),

@@ -7,7 +7,8 @@ from django.template import RequestContext
 
 import crits.service_env
 
-from crits.actors.actor import Actor, ActorThreatIdentifier
+from crits.actors.actor import Actor, ActorIdentifier, ActorThreatIdentifier
+from crits.actors.forms import AttributeIdentifierForm
 from crits.core.class_mapper import class_from_type
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import create_embedded_source
@@ -17,6 +18,18 @@ from crits.core.user_tools import is_admin, is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage
+
+def generate_actor_identifier_csv(request):
+    """
+    Generate a CSV file of the Actor Identifier information
+
+    :param request: The request for this CSV.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    response = csv_export(request,ActorIdentifier)
+    return response
 
 def generate_actor_csv(request):
     """
@@ -29,6 +42,79 @@ def generate_actor_csv(request):
 
     response = csv_export(request,Actor)
     return response
+
+def generate_actor_identifier_jtable(request, option):
+    """
+    Generate the jtable data for rendering in the list template.
+
+    :param request: The request for this jtable.
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Action to take.
+    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    obj_type = ActorIdentifier
+    type_ = "actor_identifier"
+    mapper = obj_type._meta['jtable_opts']
+    if option == "jtlist":
+        # Sets display url
+        details_url = mapper['details_url']
+        details_url_key = mapper['details_url_key']
+        fields = mapper['fields']
+        response = jtable_ajax_list(obj_type,
+                                    details_url,
+                                    details_url_key,
+                                    request,
+                                    includes=fields)
+        return HttpResponse(json.dumps(response,
+                                       default=json_handler),
+                            content_type="application/json")
+    if option == "jtdelete":
+        response = {"Result": "ERROR"}
+        if jtable_ajax_delete(obj_type,request):
+            obj_id = request.POST.get('id', None)
+            if obj_id:
+                # Remove this identifier from any Actors who reference it.
+                Actor.objects(identifiers__identifier_id=obj_id)\
+                    .update(pull__identifiers__identifier_id=obj_id)
+            response = {"Result": "OK"}
+        return HttpResponse(json.dumps(response,
+                                       default=json_handler),
+                            content_type="application/json")
+    jtopts = {
+        'title': "Actor Identifiers",
+        'default_sort': mapper['default_sort'],
+        'listurl': reverse('crits.actors.views.%ss_listing' %
+                           (type_), args=('jtlist',)),
+        'deleteurl': reverse('crits.actors.views.%ss_listing' %
+                             (type_), args=('jtdelete',)),
+        'searchurl': reverse(mapper['searchurl']),
+        'fields': mapper['jtopts_fields'],
+        'hidden_fields': mapper['hidden_fields'],
+        'linked_fields': mapper['linked_fields'],
+        'details_link': mapper['details_link'],
+        'no_sort': mapper['no_sort']
+    }
+    jtable = build_jtable(jtopts,request)
+    jtable['toolbar'] = [
+        {
+            'tooltip': "'Add Actor Identifier'",
+            'text': "'Add Actor Identifier'",
+            'click': "function () {$('#new-actor-identifier').click()}",
+        },
+    ]
+    if option == "inline":
+        return render_to_response("jtable.html",
+                                  {'jtable': jtable,
+                                   'jtid': '%s_listing' % type_,
+                                   'button' : '%ss_tab' % type_},
+                                  RequestContext(request))
+    else:
+        return render_to_response("%s_listing.html" % type_,
+                                  {'jtable': jtable,
+                                   'jtid': '%s_listing' % type_},
+                                  RequestContext(request))
 
 def generate_actor_jtable(request, option):
     """
@@ -160,6 +246,9 @@ def get_actor_details(id_, analyst):
         manager = crits.service_env.manager
         service_list = manager.get_supported_services('Actor', True)
 
+        # identifier attribution form
+        identifier_attribution = AttributeIdentifierForm()
+
         args = {'actor_identifiers': actor_identifiers,
                 'objects': objects,
                 'relationships': relationships,
@@ -169,7 +258,8 @@ def get_actor_details(id_, analyst):
                 'service_list': service_list,
                 'screenshots': screenshots,
                 'actor': actor,
-                'comments':comments}
+                'comments':comments,
+                'identifier_attribution': identifier_attribution}
     return template, args
 
 def get_actor_by_name(allowed_sources, actor):
@@ -364,3 +454,55 @@ def update_actor_tags(actor_id, tag_type, tags, username):
         actor.update_tags(tag_type, tags)
         actor.save(username=username)
         return {'success': True}
+
+def add_new_actor_identifier(identifier_type, identifier=None, source=None,
+                             source_method=None, source_reference=None,
+                             analyst=None):
+    """
+    Add an Actor Identifier to CRITs.
+
+    :param identifier_type: The Actor Identifier Type.
+    :type identifier_type: str
+    :param identifier: The Actor Identifier.
+    :type identifier: str
+    :param source: Name of the source which provided this information.
+    :type source: str
+    :param source_method: Method of acquiring this data.
+    :type source_method: str
+    :param source_reference: A reference to this data.
+    :type source_reference: str
+    :param analyst: The user adding this actor.
+    :type analyst: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str),
+    """
+
+    actor_identifier = ActorIdentifier.objects(identifier_type=identifier_type,
+                                               name=identifier).first()
+
+    if not actor_identifier:
+        actor_identifier = ActorIdentifier()
+        actor_identifier.set_identifier_type(identifier_type)
+        if not actor_identifier.identifier_type:
+            return {'success': False,
+                    'message': "Unknown Identifier Type"}
+        if not identifier:
+            return {'success': False,
+                    'message': "Missing Identifier"}
+        actor_identifier.name = identifier.strip()
+
+    if isinstance(source, basestring):
+        source = [create_embedded_source(source,
+                                         reference=source_reference,
+                                         method=source_method,
+                                         analyst=analyst)]
+
+    if source:
+        for s in source:
+            actor_identifier.add_source(s)
+
+    actor_identifier.save(username=analyst)
+
+    return {'success': True,
+            'message': "Actor Identifier added successfully!"}

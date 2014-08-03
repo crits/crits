@@ -1,6 +1,7 @@
 from django import forms
 from django.forms.util import ErrorList
 
+from crits.actors.actor import ActorIdentifier
 from crits.campaigns.campaign import Campaign
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_item_names, get_source_names
@@ -69,10 +70,26 @@ class AddActorIdentifierForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    identifier_type = forms.ChoiceField(required=False,
+    identifier_type = forms.ChoiceField(required=True,
                                         label="Identifier Type")
     identifier = forms.CharField(widget=forms.TextInput, required=True)
-    #TODO: Populate identifier types
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'bulknoinitial'}),
+                               label=form_consts.Actor.SOURCE)
+    source_method = forms.CharField(required=False,
+                                    label=form_consts.Actor.SOURCE_METHOD)
+    source_reference = forms.CharField(widget=forms.TextInput(attrs={'size':'90'}),
+                                       required=False,
+                                       label=form_consts.Actor.SOURCE_REFERENCE)
+
+
+    def __init__(self, username, *args, **kwargs):
+        super(AddActorIdentifierForm, self).__init__(*args, **kwargs)
+
+        self.fields['identifier_type'].choices = [
+                (c.identifier_type, c.identifier_type) for c in get_item_names(ActorIdentifier, True)]
+        self.fields['source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]
+        self.fields['source'].initial = get_user_organization(username)
 
 
 class AddActorIdentifierTypeForm(forms.Form):
@@ -83,3 +100,17 @@ class AddActorIdentifierTypeForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     identifier_type = forms.CharField(widget=forms.TextInput, required=True)
+
+class AttributeIdentifierForm(forms.Form):
+    """
+    Django form for adding a new Actor Identifier Type.
+    """
+
+    error_css_class = 'error'
+    required_css_class = 'required'
+    # The fields will be populated on-the-fly when the form is
+    # rendered so we won't populate them here.
+    identifier_type = forms.ChoiceField(required=True,
+                                        label="Identifier Type")
+    identifier = forms.ChoiceField(required=True,
+                                   label="Identifier Type")

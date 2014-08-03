@@ -18,6 +18,7 @@ from crits.actors.actor import ActorIntendedEffect, ActorMotivation
 from crits.actors.actor import ActorSophistication, ActorThreatType
 from crits.actors.actor import ActorThreatIdentifier
 from crits.actors.forms import AddActorForm, AddActorIdentifierTypeForm
+from crits.actors.forms import AddActorIdentifierForm
 from crits.campaigns.campaign import Campaign
 from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
@@ -1020,6 +1021,10 @@ def base_context(request):
             base_context['actor_add'] = AddActorForm(user)
         except Exception, e:
             logger.warning("Base Context AddActorForm Error: %s" % e)
+        try:
+            base_context['add_actor_identifier'] = AddActorIdentifierForm(user)
+        except Exception, e:
+            logger.warning("Base Context AddActorIdentifierForm Error: %s" % e)
         try:
             base_context['add_domain'] = AddDomainForm(user)
         except Exception, e:

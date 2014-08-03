@@ -1009,6 +1009,7 @@ function new_sample_dialog() {
 
 var stdDialogs = {
       "new-actor": {title: "Actor"},
+      "new-actor-identifier": {title: "Actor Identifier"},
       "actor_identifier_type_add": {title: "Actor Identifier Type"},
       "new-email-raw": {title: "Email (Raw)"},
       "new-email-fields": {title: "Email"},

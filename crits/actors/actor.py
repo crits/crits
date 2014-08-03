@@ -132,16 +132,14 @@ class ActorIdentifier(CritsDocument, CritsSchemaDocument, CritsSourceDocument,
         "jtable_opts": {
                          'details_url': '',
                          'details_url_key': '',
-                         'default_sort': "date DESC",
+                         'default_sort': "created DESC",
                          'searchurl': 'crits.actors.views.actor_identifiers_listing',
                          'fields': [ "name", "created", "source",
                                     "identifier_type", "id"],
                          'jtopts_fields': [ "name",
                                             "identifier_type",
                                             "created",
-                                            "source",
-                                            "favorite",
-                                            "id"],
+                                            "source"],
                          'hidden_fields': [],
                          'linked_fields': ["source"],
                          'details_link': '',
@@ -157,6 +155,11 @@ class ActorIdentifier(CritsDocument, CritsSchemaDocument, CritsSourceDocument,
     # changing active state.
     name = StringField(required=True)
 
+    def set_identifier_type(self, identifier_type):
+        identifier_type = identifier_type.strip()
+        it = ActorThreatIdentifier.objects(name=identifier_type).first()
+        if it:
+            self.identifier_type = identifier_type
 
 class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
     """

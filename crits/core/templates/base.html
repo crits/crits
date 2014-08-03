@@ -345,6 +345,12 @@
     <li class='nav_objects mmenu_item'>
         <a href="{% url 'crits.actors.views.actors_listing' %}">Actors</a>
         <a href id="new-actor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor" persona="new" title="New Actor"></a>
+      <ul class='sub-mmenu'>
+        <li class='mmenu_item'>
+          <a href="{% url 'crits.actors.views.actor_identifiers_listing' %}">Actor Identifiers</a>
+        <a href id="new-actor-identifier" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor-identifier" persona="new" title="New Actor Identifier"></a>
+        </li>
+      </ul>
     </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.campaigns.views.campaigns_listing' %}">Campaigns</a>
