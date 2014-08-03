@@ -639,7 +639,7 @@ def upsert_domain(sdomain, domain, source, username=None, campaign=None,
     """
 
     if sdomain == "no_tld_found_error": #oops...
-        return {'success':False, 'message':["Invalid domain: %s"%sdomain]}
+        return {'success':False, 'message':"Invalid domain: %s "%sdomain}
 
     is_fqdn_domain_new = False
     is_root_domain_new = False

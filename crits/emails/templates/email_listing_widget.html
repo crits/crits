@@ -33,7 +33,7 @@
         <td>
         {% for s in email.source %}
             {% if s.name %}
-            <a href="{% url 'crits.emails.views.emails_listing' s.name %}">{{s.name}}</a><br />
+            <a href="{% url 'crits.emails.views.emails_listing' %}?source={{s.name|urlencode}}&force_full=1">{{s.name}}</a><br />
             {%endif%}
         {%endfor%}
         </td>
