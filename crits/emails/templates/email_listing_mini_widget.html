@@ -55,15 +55,26 @@
                 </td>
                 <td><a href="{% url 'crits.emails.views.emails_listing' %}?subject={{rel.subject|urlencode}}&force_full=1">{{ rel.subject }}</a>
                 </td>
-                <td>
+                <td class='campaignWidth'>
                     {% for campaign in rel.campaign %}
-                        <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">{{ campaign.name }}</a><br />
-                    {% endfor %}
+                        <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
+                            {% if campaign.confidence == 'low' %}
+                                <font color="green">
+                            {% elif campaign.confidence == 'medium' %}
+                                 <font color="orange">
+                            {% elif campaign.confidence == 'high' %}
+                                 <font color="red">
+                            {% endif %}
+                                 {{ campaign.name }}
+                            </font>
+                         </a>
+                         <br />
+                     {% endfor %}
                 </td>
-                <td>{{rel.analyst}}</td>
-                <td>{{rel.date|date:"g:i A m/d/y"}}</td>
-                <td width="75px" class='relationship_confidence_edit' action="{% url 'crits.relationships.views.update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
-		        <td width="150px" style="max-width: 150px;" class='relationship_reason_edit' action="{% url 'crits.relationships.views.update_relationship_reason' %}">
+                <td width="125px">{{rel.analyst}}</td>
+                <td width="125px">{{rel.relationship_date|date:"Y-m-d H:i:s"}}</td>
+                <td class='relationship_confidence_edit' action="{% url 'crits.relationships.views.update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
+		        <td class='relationship_reason_edit' action="{% url 'crits.relationships.views.update_relationship_reason' %}">
 		            {% if rel.rel_reason != null and rel.rel_reason != '' %}
 		                {{ rel.rel_reason }}
 		            {% else %}

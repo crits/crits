@@ -82,21 +82,6 @@
 	                        <td>{{ rel.title }}</td>
 	                        <td>{{ rel.event_type }}</td>
 	                        <td>{{ rel.description|truncatechars:100 }}</td>
-	                        <td>
-	                            {% for campaign in rel.campaign %}
-	                               <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
-	                                   {% if campaign.confidence == 'low' %}
-	                                       <font color="green">
-	                                   {% elif campaign.confidence == 'medium' %}
-	                                       <font color="orange">
-	                                   {% elif campaign.confidence == 'high' %}
-	                                       <font color="red">
-	                                   {% endif %}
-                                               {{ campaign.name }}
-                                           </font>
-                                   </a><br />
-	                            {% endfor %}
-	                        </td>
 	                    {% elif rel_type == 'Indicator' %}
 	                        <td>
 	                            {{ rel.ind_value }}
@@ -107,86 +92,45 @@
 	                            {% endif%}
 	                        </td>
 	                        <td><a href="{% url 'crits.indicators.views.indicators_listing' %}?type={{ rel.ind_type }}">{{ rel.ind_type }}</a></td>
-	                        <td>
-                                {% for campaign in rel.campaign %}
-	                               <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
-	                                   {% if campaign.confidence == 'low' %}
-	                                       <font color="green">
-	                                   {% elif campaign.confidence == 'medium' %}
-	                                       <font color="orange">
-	                                   {% elif campaign.confidence == 'high' %}
-	                                       <font color="red">
-	                                   {% endif %}
-	                                           {{ campaign.name }}
-	                                       </font>
-	                               </a><br />
-	                            {% endfor %}
-	                        </td>
 	                    {% elif rel_type == 'IP' %}
 	                        <td>{{ rel.ip }}</td>
 	                    {% elif rel_type == 'Certificate' %}
 	                        <td><a href="{% url 'crits.certificates.views.certificate_details' rel.md5 %}">{{ rel.filename }}</a></td>
 	                        <td>{{ rel.filetype }}</td>
 	                        <td>{{ rel.description }}</td>
-	                        <td>
-	                            {% for campaign in rel.campaign %}
-	                                <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
-	                                    {% if campaign.confidence == 'low' %}
-	                                        <font color="green">
-	                                    {% elif campaign.confidence == 'medium' %}
-	                                        <font color="orange">
-	                                    {% elif campaign.confidence == 'high' %}
-	                                        <font color="red">
-	                                    {% endif %}
-	                                            {{ campaign.name }}
-	                                        </font>
-	                                </a><br />
-	                            {% endfor %}
-	                        </td>
 	                    {% elif rel_type == 'PCAP' %}
 	                        <td><a href="{% url 'crits.pcaps.views.pcap_details' rel.md5 %}">{{ rel.filename }}</a></td>
 	                        <td>{{ rel.description }}</td>
-	                        <td>
-                                {% for campaign in rel.campaign %}
-                                    <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
-		                                {% if campaign.confidence == 'low' %}
-		                                    <font color="green">
-		                                {% elif campaign.confidence == 'medium' %}
-		                                    <font color="orange">
-		                                {% elif campaign.confidence == 'high' %}
-		                                    <font color="red">
-		                                {% endif %}
-                                            {{ campaign.name }}
-                                        </font>
-                                    </a><br />
-	                            {% endfor %}
-	                        </td>
 	                    {% elif rel_type == 'RawData' %}
 	                        <td>{{ rel.title }}</td>
 	                        <td>{{ rel.data_type }}</td>
 	                        <td>{{ rel.tool.name }}</td>
 	                        <td>{{ rel.description|truncatechars:100 }}</td>
 	                        <td>{{ rel.version }}</td>
-	                        <td>
-	                            {% for campaign in rel.campaign %}
+	                    {% endif %}
+	                    
+                        {% if rel.campaign %}
+                            <td class='campaignWidth'>
+                                {% for campaign in rel.campaign %}
                                     <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
                                         {% if campaign.confidence == 'low' %}
                                             <font color="green">
                                         {% elif campaign.confidence == 'medium' %}
                                             <font color="orange">
-		                                {% elif campaign.confidence == 'high' %}
-		                                    <font color="red">
-		                                {% endif %}
-		                                    {{ campaign.name }}
-		                                </font>
-		                            </a><br />
-	                            {% endfor %}
-	                        </td>
+                                        {% elif campaign.confidence == 'high' %}
+                                            <font color="red">
+                                        {% endif %}
+                                            {{ campaign.name }}
+                                        </font>
+                                    </a><br />
+                                {% endfor %}
+                            </td>
 	                    {% endif %}
-	                    <td>{{rel.analyst}}</td>
-	                    <td>{{rel.date|date:"g:i A m/d/y"}}</td>
-						<td width="75px" class='relationship_confidence_edit' action="{% url 'crits.relationships.views.update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
-						<td width="150px" style="max-width: 150px;" class='relationship_reason_edit' action="{% url 'crits.relationships.views.update_relationship_reason' %}">
+	                    
+	                    <td width="125px">{{rel.analyst}}</td>
+	                    <td width="125px">{{rel.relationship_date|date:"Y-m-d H:i:s"}}</td>
+						<td class='relationship_confidence_edit' action="{% url 'crits.relationships.views.update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
+						<td class='relationship_reason_edit' action="{% url 'crits.relationships.views.update_relationship_reason' %}">
 						    {% if rel.rel_reason != null and rel.rel_reason != '' %}
 								{{ rel.rel_reason }}
 							{% else %}
