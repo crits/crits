@@ -85,6 +85,7 @@
     var login_user = "{% url 'crits.core.views.login' %}";
     var get_item_data_url = "{% url 'crits.core.views.get_item_data' %}";
     var get_dialog_url = "{% url 'crits.core.views.get_dialog' %}";
+    
     </script>
 </head>
 <body>
@@ -155,8 +156,8 @@
       <span class="right" data-intro="Data Classification" data-position="top">
 	<b>{{ classification }}</b>
       </span>
-      <span class="left" data-intro="CRITs DB Version" data-position="top">
-	<b>Version:</b> {{ crits_version }}
+      <span class="left" data-intro="CRITs DB Version" data-position="top" >
+        <b>Version:</b> {{ crits_version }}
       </span>
       <span class="left" data-intro="Hosting Organization" data-position="top">
 	<b>Hosted by:</b> {{ company_name }}
@@ -509,9 +510,26 @@
     </li>
     {% endif %}
     {% if user_role == 'Administrator' %}
-    <li class='nav_admin mmenu_item'>
-      <a id="control_panel" href="{% url 'crits.core.views.control_panel' %}">CRITs Control Panel</a>
-    </li>
+	    <li class='nav_admin mmenu_item'>
+	        <a class='noclick'>CRITs Control Panel</a>
+	        <ul class='sub-mmenu'>
+	            <li class='mmenu_item'>
+	                <a href="{% url 'crits.config.views.crits_config' %}">System</a>
+		        </li>
+		        <li class='mmenu_item'>
+	               <a href="{% url 'crits.core.views.item_editor' %}">Items</a>
+		        </li>
+		        <li class='mmenu_item'>
+	                <a href="{% url 'crits.core.views.users_listing' %}">Users</a>
+		        </li>
+		        <li class='mmenu_item'>
+	                <a href="{% url 'crits.services.views.list' %}">Services</a>
+		        </li>
+		        <li class='mmenu_item'>
+	                <a href="{% url 'crits.core.views.audit_listing' %}">Audit Log</a>
+	            </li>
+	        </ul>
+	    </li>
     {% endif %}
     <li class='nav_help mmenu_item'>
       <a href="{% url 'crits.core.views.about' %}">About CRITs</a>

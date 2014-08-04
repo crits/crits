@@ -1,4 +1,4 @@
-{% extends "containment.html" %}
+{% extends "base.html" %}
 {% load url from future %}
 
 {% block title %} Users {% endblock %}
@@ -10,7 +10,6 @@
 </script>
 
 {% include "jtable.html" %}
-
 <div id="add-new-user-form" title="Add/Edit User">
     <select class="selectbox" name="user" onchange="getUserSources(this);">
         {% for user in user_list %}
