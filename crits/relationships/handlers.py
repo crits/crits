@@ -107,7 +107,7 @@ def forge_relationship(left_class=None, right_class=None,
             results = left_class.add_relationship(rel_item=right_class,
                                         rel_type=rel_type,
                                         rel_date=rel_date,
-                                        analyst=analyst, 
+                                        analyst=analyst,
                                         rel_confidence=rel_confidence,
                                         rel_reason=rel_reason)
             right_class.save(username=analyst)
@@ -119,7 +119,7 @@ def forge_relationship(left_class=None, right_class=None,
                                             rel_date=rel_date,
                                             analyst=analyst,
                                             rel_confidence=rel_confidence,
-                                       		rel_reason=rel_reason)
+                                            rel_reason=rel_reason)
             else:
                 return {'success': False,
                         'message': "Need a valid right type and id"}
@@ -294,8 +294,8 @@ def update_relationship_types(left_class=None, right_class=None,
                     'message': "Need a valid right type and id"}
 
     return results
-    
-    
+
+
 def update_relationship_confidences(left_class=None, right_class=None,
                               left_type=None, left_id=None,
                               right_type=None, right_id=None,

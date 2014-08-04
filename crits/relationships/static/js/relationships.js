@@ -118,8 +118,8 @@ $(document).ready(function() {
             datatype: 'json',
             success: function(data) {
                 if (data.success) {
-            	 	$("#form-forge-relationship #id_rel_confidence").prop('selectedIndex',8);
-            	 	$("#form-forge-relationship #id_rel_reason").val('');	
+                    $("#form-forge-relationship #id_rel_confidence").prop('selectedIndex',8);
+                    $("#form-forge-relationship #id_rel_reason").val('');
                     $("#form-forge-relationship #id_dest_id").val('');
                     $("#form-forge-relationship #id_relationship_date").val('');
                     $('#relationship_box_container').parent().html(data.message);
@@ -213,31 +213,31 @@ $(document).ready(function() {
   $('#relationship_type').click(function(e) {
     e.stopPropagation();
   });
-  
+
   $(document).on('click', '.relationship_confidence_edit', function(e) {
-  	e.preventDefault();
-  	
-  	//this is to set the inital value of the select
-  	if($.isNumeric($(this).html())) 
-  		var currentConfidence = $(this).html();
-  		
- 	$(this).editable(function(value, settings) {
-          return function(value, settings, elem) {
-              var guardian = $(elem).parent();
-              var data = {
-              reverse_type: guardian.attr('rtype'),
-              dest_id: guardian.attr('rvalue'),
-              my_type: guardian.attr('mtype'),
-              my_value: guardian.attr('mvalue'),
-              forward_relationship: guardian.attr('frel'),
-              relationship_date: guardian.attr('rdate'),
-              forge_date: guardian.attr('fdate'),
-              new_confidence: value,
-      		};
-            if (value <1) 
-            	return currentConfidence;
+    e.preventDefault();
+
+    //this is to set the inital value of the select
+    if($.isNumeric($(this).html()))
+        var currentConfidence = $(this).html();
+
+    $(this).editable(function(value, settings) {
+        return function(value, settings, elem) {
+            var guardian = $(elem).parent();
+            var data = {
+                reverse_type: guardian.attr('rtype'),
+                dest_id: guardian.attr('rvalue'),
+                my_type: guardian.attr('mtype'),
+                my_value: guardian.attr('mvalue'),
+                forward_relationship: guardian.attr('frel'),
+                relationship_date: guardian.attr('rdate'),
+                forge_date: guardian.attr('fdate'),
+                new_confidence: value,
+            };
+            if (value <1)
+                return currentConfidence;
             else
-          		$.ajax({
+                $.ajax({
                     type: "POST",
                     async: false,
                     url: $(elem).attr('action'),
@@ -251,49 +251,49 @@ $(document).ready(function() {
                         }
                     },
                     error: function(data) {
-                    	alert(data.message);
+                        alert(data.message);
                     }
-      			});
-            return value; 
-  		}(value, settings, this);
-  	}, 
-  	{ 
-  		event:'confidence_edit',
-    	type: 'select',
-    	width: '50px',
-    	data: function() {
-  			if (currentConfidence < 1)
-  				currentConfidence = '';
-  			var dataValues = "{0: '', 1:'1 (Low)', 2:'2', 3:'3', 4:'4', 5:'5 (High)', 'selected': '"+currentConfidence+"'}";
-  			return dataValues;
-  		},
-  		placeholder: currentConfidence,
-    	style:'display:inline',
+                });
+            return value;
+        }(value, settings, this);
+    },
+    {
+        event:'confidence_edit',
+        type: 'select',
+        width: '50px',
+        data: function() {
+            if (currentConfidence < 1)
+                currentConfidence = '';
+            var dataValues = "{0: '', 1:'1 (Low)', 2:'2', 3:'3', 4:'4', 5:'5 (High)', 'selected': '"+currentConfidence+"'}";
+            return dataValues;
+        },
+        placeholder: currentConfidence,
+        style:'display:inline',
         onblur:'submit'
- 	});	
- 	$(this).trigger('confidence_edit');
+    });
+    $(this).trigger('confidence_edit');
   });
 
   $(document).on('click', '.relationship_reason_edit', function(e) {
-  	e.preventDefault();
+    e.preventDefault();
 
-  	var element = $(this);
-  	var currentReason = element.html().trim();
-  	
- 	$(this).editable(function(value, settings) {
-          return function(value, settings, elem) {
-        	  var guardian = $(elem).parent();
-              var data = {
-              reverse_type: guardian.attr('rtype'),
-              dest_id: guardian.attr('rvalue'),
-              my_type: guardian.attr('mtype'),
-              my_value: guardian.attr('mvalue'),
-              forward_relationship: guardian.attr('frel'),
-              relationship_date: guardian.attr('rdate'),
-              forge_date: guardian.attr('fdate'),
-              new_reason: value,
-      		};
-      		$.ajax({
+    var element = $(this);
+    var currentReason = element.html().trim();
+
+    $(this).editable(function(value, settings) {
+        return function(value, settings, elem) {
+            var guardian = $(elem).parent();
+            var data = {
+                reverse_type: guardian.attr('rtype'),
+                dest_id: guardian.attr('rvalue'),
+                my_type: guardian.attr('mtype'),
+                my_value: guardian.attr('mvalue'),
+                forward_relationship: guardian.attr('frel'),
+                relationship_date: guardian.attr('rdate'),
+                forge_date: guardian.attr('fdate'),
+                new_reason: value,
+            };
+            $.ajax({
                 type: "POST",
                 async: false,
                 url: $(elem).attr('action'),
@@ -304,79 +304,79 @@ $(document).ready(function() {
                         currentReason = value;
                     }
                 },
-  			});
-            return value; 
-  		}(value, settings, this);
-  	}, 
-  	{ 
-  		event:'reason_edit',
-    	type: 'textarea',
-    	data: function() {
-  			return currentReason;
-  		},
-    	style:'display:inline',
+            });
+            return value;
+        }(value, settings, this);
+    },
+    {
+        event:'reason_edit',
+        type: 'textarea',
+        data: function() {
+            return currentReason;
+        },
+        style:'display:inline',
         onblur:'submit',
- 	});	
- 	$(this).trigger('reason_edit');
+    });
+    $(this).trigger('reason_edit');
   });
 
 
   $(document).on('click', '.relationship_type_edit', function(e) {
       e.preventDefault();
       $(this).editable(function(value, settings) {
-          return function(value, settings, elem) {
-              var guardian = $(elem).parent();
-              var data = {
-              reverse_type: guardian.attr('rtype'),
-              dest_id: guardian.attr('rvalue'),
-              my_type: guardian.attr('mtype'),
-              my_value: guardian.attr('mvalue'),
-              forward_relationship: guardian.attr('frel'),
-              relationship_date: guardian.attr('rdate'),
-              forge_date: guardian.attr('fdate'),
-              new_relationship: value,
-              };
-              $.ajax({
-                  type: "POST",
-                  async: false,
-                  url: $(elem).attr('action'),
-                  data: data,
-                  success: function(data) {
-                  if (data.success) {
-                      guardian.attr('frel', value);
-                  }
-                  },
-                  });
-              return value;
-          }(value, settings, this);
-          },
-          {
-          event:'type_edit',
-          type:'select',
-          data: function() {
-              var dtypes = {};
-              var sorted = [];
-              $.ajax({
-                  type: "POST",
-                  async: false,
-                  url: get_relationship_type_dropdown,
-                  data: {'all': true},
-                  success: function(data) {
-                  $.each(data.types, function(key, value) {
-                      sorted.push(key);
-                      });
-                  sorted.sort();
-                  len = sorted.length
-                      for (var i=0; i < len; i++) {
-                      dtypes[sorted[i]] = sorted[i];
-                      }
-                  }
-              });
-              return dtypes;
-          },
-          style:'display:inline',
-          onblur:'submit'
-          });
+            return function(value, settings, elem) {
+                var guardian = $(elem).parent();
+                var data = {
+                    reverse_type: guardian.attr('rtype'),
+                    dest_id: guardian.attr('rvalue'),
+                    my_type: guardian.attr('mtype'),
+                    my_value: guardian.attr('mvalue'),
+                    forward_relationship: guardian.attr('frel'),
+                    relationship_date: guardian.attr('rdate'),
+                    forge_date: guardian.attr('fdate'),
+                    new_relationship: value,
+                };
+                $.ajax({
+                    type: "POST",
+                    async: false,
+                    url: $(elem).attr('action'),
+                    data: data,
+                    success: function(data) {
+                        if (data.success) {
+                            guardian.attr('frel', value);
+                        }
+                    },
+                });
+                return value;
+            }(value, settings, this);
+        },
+        {
+            event:'type_edit',
+            type:'select',
+            data: function() {
+                var dtypes = {};
+                var sorted = [];
+                $.ajax({
+                    type: "POST",
+                    async: false,
+                    url: get_relationship_type_dropdown,
+                    data: {'all': true},
+                    success: function(data) {
+                    $.each(data.types, function(key, value) {
+                        sorted.push(key);
+                        });
+                    sorted.sort();
+                    len = sorted.length
+                        for (var i=0; i < len; i++) {
+                        dtypes[sorted[i]] = sorted[i];
+                        }
+                    }
+                });
+                return dtypes;
+            },
+            style:'display:inline',
+            onblur:'submit'
+        });
       $(this).trigger('type_edit');
       });
   $(document).on('click', '.relationship_date_edit', function(e) {
