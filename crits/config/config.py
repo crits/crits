@@ -44,6 +44,9 @@ class CRITsConfig(CritsDocument, Document):
     ldap_tls = BooleanField(default=False)
     ldap_server = StringField(default='')
     ldap_usercn = StringField(default='')
+    #SAB Add for ldap searching
+    ldap_special = StringField(default='')
+    #SAB End Add
     ldap_userdn = StringField(default='')
     ldap_update_on_login = BooleanField(default=False)
     log_directory = StringField(default=os.path.join(settings.SITE_ROOT, 'logs'))

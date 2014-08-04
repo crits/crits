@@ -917,14 +917,57 @@ class CRITsAuthBackend(object):
                     l.set_option(ldap.OPT_REFERRALS, 0)
                     l.set_option(ldap.OPT_TIMEOUT, 10)
                     # setup auth for custom cn's
+
+                    #SAB New code
                     if len(config.ldap_usercn) > 0:
-                        un = "%s%s,%s" % (config.ldap_usercn,
+                        import re  # bring in the regular expression functions
+                        logger.info("SAB XXX  test ldap cn = %s" % config.ldap_usercn)
+                        if "fetch" in config.ldap_usercn:
+                            logger.info("SAB XXX Matched special")
+                            me = re.search('me',config.ldap_usercn)
+                            if re is not None:
+                                logger.info("SAB regex result %s" % str(me))
+                            else:
+                                logger.info("SAB regex result did not mach %s" % str(me))
+
+                            scope = ldap.SCOPE_SUBTREE
+                            rattr = ['uid']
+                            sfilter = "mail="+fusername
+                            lresultid = l.search(config.ldap_userdn,scope,sfilter,rattr)
+                            if lresultid:
+                                rtype,rdata = l.result(lresultid,0)
+                                if rtype == ldap.RES_SEARCH_ENTRY:
+                                    logger.info("SAB XXX RES_SEARCH_ENTRY")
+                                    (rdtag,r_data) = rdata[0]
+                                    logger.info("SAB XXX rdtag is the DN %s" % rdtag)
+                                    un = rdtag
+                                else:
+                                    logger.info("SAB XXX NOT RES_SEARCH_ENTRY")
+                                    un = fusername  # set to the username so that ldap login will fail
+
+                            else:
+                                un = fusername  # default, the LDAP login will die and local auth will take over.
+                        else:
+                            logger.info("SAB XXX did not match special")
+                            un = "%s%s,%s" % (config.ldap_usercn,
                                           fusername,
                                           config.ldap_userdn)
                     elif "@" in config.ldap_userdn:
                         un = "%s%s" % (fusername, config.ldap_userdn)
                     else:
                         un = fusername
+
+                    # SAB Original Code
+                    #if len(config.ldap_usercn) > 0:
+                    #    un = "%s%s,%s" % (config.ldap_usercn,
+                    #                      fusername,
+                    #                      config.ldap_userdn)
+                    #elif "@" in config.ldap_userdn:
+                    #    un = "%s%s" % (fusername, config.ldap_userdn)
+                    #else:
+                    #    un = fusername
+
+
                     logger.info("Logging in user: %s" % un)
                     l.simple_bind_s(un, password)
                     user = self._successful_settings(user, e, totp_enabled)
