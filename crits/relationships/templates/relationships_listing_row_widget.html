@@ -26,27 +26,22 @@
 		                <th>Title</th>
 		                <th>Event Type</th>
 		                <th>Description</th>
-		                <th>Campaign</th>
 		            {% elif rel_type == 'Indicator' %}
 		                <th>Value</th>
 		                <th>Type</th>
-		                <th>Campaign</th>
 		            {% elif rel_type == 'Certificate' %}
 		                <th>Filename</th>
 		                <th>Filetype</th>
 		                <th>Description</th>
-		                <th>Campaign</th>
 		            {% elif rel_type == 'PCAP' %}
 		                <th>Filename</th>
 		                <th>Description</th>
-		                <th>Campaign</th>
 		            {% elif rel_type == 'RawData' %}
 		                <th>Title</th>
 		                <th>Data Type</th>
 		                <th>Tool</th>
 		                <th>Description</th>
 		                <th>Version</th>
-		                <th>Campaign</th>
 		            {% elif rel_type == 'IP' %}
 		                <th>IP Address</th>
 		            {% elif rel_type == 'Domain' %}
@@ -55,6 +50,9 @@
 		                <th>Name</th>
 		            {% else %}
 		                <th>Details</th>
+		            {% endif %}
+		            {% if rel_type in "RawDataPCAPCertificateIndicatorEvent" %}
+		              <th>Campaign</th>
 		            {% endif %}
 		            <th>Analyst</th>
 		            <th>Date</th>
@@ -109,7 +107,7 @@
 	                        <td>{{ rel.version }}</td>
 	                    {% endif %}
 	                    
-                        {% if rel.campaign %}
+                        {% if rel_type in "RawDataPCAPCertificateIndicatorEvent" %}
                             <td class='campaignWidth'>
                                 {% for campaign in rel.campaign %}
                                     <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
