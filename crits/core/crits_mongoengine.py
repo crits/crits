@@ -1863,7 +1863,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                              modification="type", analyst=analyst)
 
     def edit_relationship_confidence(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                               rel_date=None, new_confidence=5, analyst=None):
+                               rel_date=None, new_confidence=3, analyst=None):
         """
         Modify a relationship type for a relationship to this top-level object.
         If rel_item is provided it will be used, otherwise rel_id and type_ must

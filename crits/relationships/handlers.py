@@ -56,7 +56,7 @@ def forge_relationship(left_class=None, right_class=None,
                        right_type=None, right_id=None,
                        rel_type=None, rel_date=None,
                        analyst=None, rel_reason="N/A",
-                       rel_confidence=5, get_rels=False):
+                       rel_confidence=3, get_rels=False):
     """
     Forge a relationship between two top-level objects.
 
@@ -300,7 +300,7 @@ def update_relationship_confidences(left_class=None, right_class=None,
                               left_type=None, left_id=None,
                               right_type=None, right_id=None,
                               rel_type=None, rel_date=None,
-                              new_type=None,analyst=None, new_confidence=5):
+                              new_type=None,analyst=None, new_confidence=3):
     """
     Update the relationship type between two top-level objects.
 
