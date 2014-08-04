@@ -919,32 +919,42 @@ class CRITsAuthBackend(object):
                     # setup auth for custom cn's
 
                     #SAB New code
-                    if len(config.ldap_usercn) > 0:
+                    if len(config.ldap_special) > 0:
                         import re  # bring in the regular expression functions
-                        logger.info("SAB XXX  test ldap cn = %s" % config.ldap_usercn)
-                        if "fetch" in config.ldap_usercn:
-                            logger.info("SAB XXX Matched special")
-                            me = re.search('me',config.ldap_usercn)
-                            if re is not None:
-                                logger.info("SAB regex result %s" % str(me))
-                            else:
-                                logger.info("SAB regex result did not mach %s" % str(me))
-
+                        if "fetch" in config.ldap_special:
+                            rattr = []  # empty list of retrieve attributes
+                            sfilter=''  # empty search filter
+                            istring = config.ldap_special   # get the string
+                            pstr = istring.split(':')  # break the string into its tokens - separated by :
+                            for tken in pstr:
+                                #tken = str(pstr[tk])
+                                if re.search('fetch',tken):
+                                    continue
+                                if re.search('attr',tken):   # process the attributes to be returned
+                                    tval = tken.split('=')  # split the token into value and assignments
+                                    # expect a comma separated list of attributes 
+                                    attlist = str(tval[1]).split(',')
+                                    for sattr in attlist:
+                                        rattr.append(sattr)
+                                elif re.search("filter",tken):  # is this a filter specification 
+                                    #SAB Improve to take a comma separated list of filters to build
+                                    # a more dynamic filter
+                                    tval = tken.split('=')  # split the token into value and assignments
+                                    flist = tval[1].split('+')
+                                    sfilter = flist[0]+"="
+                                    if re.search('\$email',flist[1]):
+                                        sfilter = sfilter+fusername
+                            
                             scope = ldap.SCOPE_SUBTREE
-                            rattr = ['uid']
-                            sfilter = "mail="+fusername
                             lresultid = l.search(config.ldap_userdn,scope,sfilter,rattr)
                             if lresultid:
                                 rtype,rdata = l.result(lresultid,0)
                                 if rtype == ldap.RES_SEARCH_ENTRY:
-                                    logger.info("SAB XXX RES_SEARCH_ENTRY")
-                                    (rdtag,r_data) = rdata[0]
-                                    logger.info("SAB XXX rdtag is the DN %s" % rdtag)
+                                    (rdtag,r_data) = rdata[0] # since we want the DN for this particular user for login the first part of the tuple returned is 
+                                                              # the full DN for that user.
                                     un = rdtag
                                 else:
-                                    logger.info("SAB XXX NOT RES_SEARCH_ENTRY")
                                     un = fusername  # set to the username so that ldap login will fail
-
                             else:
                                 un = fusername  # default, the LDAP login will die and local auth will take over.
                         else:
@@ -952,20 +962,15 @@ class CRITsAuthBackend(object):
                             un = "%s%s,%s" % (config.ldap_usercn,
                                           fusername,
                                           config.ldap_userdn)
-                    elif "@" in config.ldap_userdn:
-                        un = "%s%s" % (fusername, config.ldap_userdn)
                     else:
-                        un = fusername
-
-                    # SAB Original Code
-                    #if len(config.ldap_usercn) > 0:
-                    #    un = "%s%s,%s" % (config.ldap_usercn,
-                    #                      fusername,
-                    #                      config.ldap_userdn)
-                    #elif "@" in config.ldap_userdn:
-                    #    un = "%s%s" % (fusername, config.ldap_userdn)
-                    #else:
-                    #    un = fusername
+                        if len(config.ldap_usercn) > 0:
+                            un = "%s%s,%s" % (config.ldap_usercn,
+                                              fusername,
+                                              config.ldap_userdn)
+                        elif "@" in config.ldap_userdn:
+                            un = "%s%s" % (fusername, config.ldap_userdn)
+                        else:
+                            un = fusername
 
 
                     logger.info("Logging in user: %s" % un)
