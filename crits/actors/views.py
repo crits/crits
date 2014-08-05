@@ -14,7 +14,12 @@ from crits.actors.handlers import generate_actor_identifier_csv
 from crits.actors.handlers import get_actor_details, add_new_actor, actor_remove
 from crits.actors.handlers import create_actor_identifier_type
 from crits.actors.handlers import get_actor_tags_by_type, update_actor_tags
-from crits.actors.handlers import add_new_actor_identifier
+from crits.actors.handlers import add_new_actor_identifier, actor_identifier_types
+from crits.actors.handlers import actor_identifier_type_values
+from crits.actors.handlers import attribute_actor_identifier
+from crits.actors.handlers import set_identifier_confidence, remove_attribution
+from crits.actors.handlers import set_actor_name, set_actor_description
+from crits.actors.handlers import update_actor_aliases
 from crits.core import form_consts
 from crits.core.data_tools import json_handler
 from crits.core.user_tools import user_can_view_data, is_admin
@@ -162,6 +167,48 @@ def remove_actor(request):
                               RequestContext(request))
 
 @user_passes_test(user_can_view_data)
+def get_actor_identifier_types(request):
+    """
+    Get Actor Identifier types. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        result = actor_identifier_types(True)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def get_actor_identifier_type_values(request):
+    """
+    Get Actor Identifier type values. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        type_ = request.POST.get('type', None)
+        username = request.user.username
+        result = actor_identifier_type_values(type_, username)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
 def new_actor_identifier_type(request):
     """
     Create an Actor Identifier type. Should be an AJAX POST.
@@ -240,7 +287,6 @@ def get_actor_tags(request):
                                   {"error" : error },
                                   RequestContext(request))
 
-#TODO
 @user_passes_test(user_can_view_data)
 def add_identifier(request):
     """
@@ -282,17 +328,179 @@ def add_identifier(request):
                                   {"error" : error },
                                   RequestContext(request))
 
-#TODO
 @user_passes_test(user_can_view_data)
-def edit_identifier(request):
-    return
+def attribute_identifier(request):
+    """
+    Attribute an Actor Identifier. Should be an AJAX POST.
 
-#TODO
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        username = request.user.username
+        id_ = request.POST.get('id', None)
+        identifier_type = request.POST.get('identifier_type', None)
+        identifier = request.POST.get('identifier', None)
+        confidence = request.POST.get('confidence', 'low')
+        if not identifier_type or not identifier:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': 'Not all info provided.'}),
+                                mimetype="application/json")
+        result = attribute_actor_identifier(id_,
+                                            identifier_type,
+                                            identifier,
+                                            confidence,
+                                            username)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
 @user_passes_test(user_can_view_data)
-def remove_identifier(request):
-    return
+def edit_attributed_identifier(request):
+    """
+    Edit an attributed Identifier (change confidence). Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        username = request.user.username
+        id_ = request.POST.get('id', None)
+        identifier = request.POST.get('identifier_id', None)
+        confidence = request.POST.get('confidence', 'low')
+        if not identifier:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': 'Not all info provided.'}),
+                                mimetype="application/json")
+        result = set_identifier_confidence(id_,
+                                           identifier,
+                                           confidence,
+                                           username)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def remove_attributed_identifier(request):
+    """
+    Remove an Identifier attribution. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        username = request.user.username
+        id_ = request.POST.get('object_type', None)
+        identifier = request.POST.get('key', None)
+        if not identifier:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': 'Not all info provided.'}),
+                                mimetype="application/json")
+        result = remove_attribution(id_,
+                                    identifier,
+                                    username)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def edit_actor_name(request, id_):
+    """
+    Set actor name. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param id_: The ObjectId of the Actor.
+    :type id_: str
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        username = request.user.username
+        name = request.POST.get('name', None)
+        if not name:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': 'Not all info provided.'}),
+                                mimetype="application/json")
+        result = set_actor_name(id_,
+                                name,
+                                username)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def edit_actor_description(request, id_):
+    """
+    Set actor description. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param id_: The ObjectId of the Actor.
+    :type id_: str
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        username = request.user.username
+        description = request.POST.get('description', None)
+        if not description:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': 'Not all info provided.'}),
+                                mimetype="application/json")
+        result = set_actor_description(id_,
+                                       description,
+                                       username)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
 
 #TODO:
-# - edit name
-# - edit description
-# - edit aliases
+@user_passes_test(user_can_view_data)
+def edit_actor_aliases(request):
+    """
+    Update aliases for an Actor.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        aliases = request.POST.get('aliases', None)
+        actor_id = request.POST.get('oid', None)
+        username = request.user.username
+        result = update_actor_aliases(actor_id, aliases, username)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))

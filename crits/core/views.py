@@ -18,7 +18,7 @@ from crits.actors.actor import ActorIntendedEffect, ActorMotivation
 from crits.actors.actor import ActorSophistication, ActorThreatType
 from crits.actors.actor import ActorThreatIdentifier
 from crits.actors.forms import AddActorForm, AddActorIdentifierTypeForm
-from crits.actors.forms import AddActorIdentifierForm
+from crits.actors.forms import AddActorIdentifierForm, AttributeIdentifierForm
 from crits.campaigns.campaign import Campaign
 from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
@@ -1015,6 +1015,7 @@ def base_context(request):
         base_context['user_role_add'] = AddUserRoleForm()
         base_context['new_ticket'] = TicketForm(initial={'date': datetime.datetime.now()})
         base_context['add_actor_identifier_type'] = AddActorIdentifierTypeForm()
+        base_context['attribute_actor_identifier'] = AttributeIdentifierForm()
 
         # Forms that require a user
         try:

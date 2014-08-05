@@ -1,15 +1,50 @@
-$(document).ready(function() {
-    details_copy_id('Actor');
-    toggle_favorite('Actor');
-});
-
-
 var actor_tags = true;
 var available_intended_effects = [];
 var available_motivations = [];
 var available_sophistications = [];
 var available_threat_types = [];
+
 $(document).ready(function() {
+
+    details_copy_id('Actor');
+    toggle_favorite('Actor');
+
+    window.add_actor_aliases = false;
+    $("#actor_aliases").tagit({
+        allowSpaces: true,
+        allowDuplicates: false,
+        removeCOnfirmation: true,
+        afterTagAdded: function(event, ui) {
+            var my_aliases = $("#actor_aliases").tagit("assignedTags");
+            update_aliases(my_aliases);
+        },
+        afterTagRemoved: function(event, ui) {
+            var my_aliases = $("#actor_aliases").tagit("assignedTags");
+            update_aliases(my_aliases);
+        },
+    });
+
+    $(document).trigger('enable_actor_aliases');
+
+    function update_aliases(my_aliases) {
+        if (window.add_actor_aliases) {
+            var data = {
+                        'oid': subscription_id,
+                        'aliases': my_aliases.toString(),
+            };
+            $.ajax({
+                type: "POST",
+                url: update_actor_aliases,
+                data: data,
+                datatype: 'json',
+                success: function(data) {
+                    if (!data.success) {
+                        alert("Failed to update aliases!");
+                    }
+                }
+            });
+        }
+    }
 
     $("#intended_effects_list").tagit({
         allowSpaces: true,
@@ -192,4 +227,181 @@ $(document).ready(function() {
         }
     }
     $(document).trigger('enable_actor_tags');
+
+
+    function identifier_attribution_dialog(e) {
+        var dialog = $(this).find("form").find("table");
+        $('<input>').attr({
+            type: 'hidden',
+            id: 'id',
+            name: 'id',
+            value: subscription_id
+        }).appendTo(dialog);
+        get_identifier_types();
+    }
+
+    function get_identifier_types() {
+        if (typeof get_actor_identifier_types !== 'undefined') {
+            $.ajax({
+                type: "POST",
+                url: get_actor_identifier_types,
+                async: true,
+                success: function(data) {
+                    var it_drop = $('#id_identifier_type');
+                    it_drop.find('option').remove()
+                    $.each(data.items, function(index, value) {
+                        it_drop.append($('<option/>', {
+                            value: value,
+                            text : value
+                        }));
+                    });
+                },
+            });
+            get_identifier_values($('#id_identifier_type').val());
+        }
+    }
+
+        $(document).on('change', "#id_identifier_type", function(e) {
+            var type = this.value;
+            get_identifier_values(type);
+        });
+
+    function get_identifier_values(type) {
+        if (typeof get_actor_identifier_type_values !== 'undefined') {
+            $.ajax({
+                type: "POST",
+                data: {'type': type},
+                datatype: 'json',
+                url: get_actor_identifier_type_values,
+                success: function(data) {
+                    var id_drop = $('#id_identifier');
+                    id_drop.find('option').remove()
+                    $.each(data.items, function(index, value) {
+                        id_drop.append($('<option/>', {
+                            value: value[0],
+                            text : value[1],
+                        }));
+                    });
+                },
+            });
+        }
+    }
+
+    function identifier_attribution_submit(e) {
+        var dialog = $(this).closest(".ui-dialog").find(".ui-dialog-content");
+        var form = $(this).find("form");
+        var data = form.serialize();
+        $.ajax({
+            type: "POST",
+            url: form.attr('action'),
+            data: data,
+            datatype: 'json',
+            success: function(data) {
+                if (data.success) {
+                    $('#actor_identifier_widget_container').html(data.message);
+                    dialog.dialog("close");
+                } else {
+                    if (data.message) {
+                        var message = form.find(".message");
+                        message.show().css('display', 'table');
+                        message.html(data.message);
+                    }
+                }
+            }
+        });
+    }
+
+    var localDialogs = {
+      "attribute_actor_identifier": {title: "Attribute Actor Identifier",
+                                     open: identifier_attribution_dialog,
+                                     new: { submit: identifier_attribution_submit },
+      },
+    };
+
+    $.each(localDialogs, function(id,opt) { stdDialog(id, opt) });
+
+
+    $('#edit_attribution_confidence').editable(function(value, settings) {
+        var revert = this.revert;
+        return function(value, settings, elem) {
+            var id = $(elem).attr('data-id');
+            var data = {
+                confidence: value,
+                identifier_id: id,
+                id: subscription_id
+            };
+            $.ajax({
+                type: "POST",
+                async: false,
+                url: edit_identifier_attribution,
+                data: data,
+                success: function(data) {
+                }
+            });
+            return value;
+        }(value, settings, this);
+        },
+        {
+            type: 'select',
+            data: {'low': 'low', 'medium': 'medium', 'high': 'high'},
+            tooltip: "Edit Confidence",
+            cancel: "Cancel",
+            submit: "Ok",
+            style: 'display:inline',
+    });
+
+    $('#edit_actor_name').editable(function(value, settings) {
+        var revert = this.revert;
+        return function(value, settings, elem) {
+            var data = {
+                name: value
+            };
+            $.ajax({
+                type: "POST",
+                async: false,
+                url: edit_actor_name,
+                data: data,
+                success: function(data) {
+                }
+            });
+            return value;
+        }(value, settings, this);
+        },
+        {
+            type: 'textarea',
+            width: "400px",
+            tooltip: "",
+            cancel: "Cancel",
+            submit: "Ok",
+            onblur: 'ignore',
+    });
+
+    $('#edit_actor_description').editable(function(value, settings) {
+        var revert = this.revert;
+        return function(value, settings, elem) {
+            var data = {
+                description: value
+            };
+            $.ajax({
+                type: "POST",
+                async: false,
+                url: edit_actor_description,
+                data: data,
+                success: function(data) {
+                }
+            });
+            return value;
+        }(value, settings, this);
+        },
+        {
+            type: 'textarea',
+            height: "50px",
+            width: "400px",
+            tooltip: "",
+            cancel: "Cancel",
+            submit: "Ok",
+            onblur: 'ignore',
+    });
+
+
 }); //document.ready

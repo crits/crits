@@ -113,4 +113,13 @@ class AttributeIdentifierForm(forms.Form):
     identifier_type = forms.ChoiceField(required=True,
                                         label="Identifier Type")
     identifier = forms.ChoiceField(required=True,
-                                   label="Identifier Type")
+                                   label="Identifier")
+    confidence = forms.ChoiceField(required=True,
+                                   label="Confidence")
+
+    def __init__(self, *args, **kwargs):
+        super(AttributeIdentifierForm, self).__init__(*args, **kwargs)
+
+        self.fields['confidence'].choices = [('low', 'low'),
+                                             ('medium', 'medium'),
+                                             ('high', 'high')]

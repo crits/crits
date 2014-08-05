@@ -4,11 +4,11 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.template.loader import render_to_string
 
 import crits.service_env
 
 from crits.actors.actor import Actor, ActorIdentifier, ActorThreatIdentifier
-from crits.actors.forms import AttributeIdentifierForm
 from crits.core.class_mapper import class_from_type
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import create_embedded_source
@@ -211,7 +211,7 @@ def get_actor_details(id_, analyst):
         remove_user_from_notification("%s" % analyst, actor.id, 'Actor')
 
         # generate identifiers
-        actor_identifiers = actor.generate_identifiers_list()
+        actor_identifiers = actor.generate_identifiers_list(analyst)
 
         # subscription
         subscription = {
@@ -246,9 +246,6 @@ def get_actor_details(id_, analyst):
         manager = crits.service_env.manager
         service_list = manager.get_supported_services('Actor', True)
 
-        # identifier attribution form
-        identifier_attribution = AttributeIdentifierForm()
-
         args = {'actor_identifiers': actor_identifiers,
                 'objects': objects,
                 'relationships': relationships,
@@ -258,8 +255,8 @@ def get_actor_details(id_, analyst):
                 'service_list': service_list,
                 'screenshots': screenshots,
                 'actor': actor,
-                'comments':comments,
-                'identifier_attribution': identifier_attribution}
+                'actor_id': id_,
+                'comments':comments}
     return template, args
 
 def get_actor_by_name(allowed_sources, actor):
@@ -506,3 +503,222 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
 
     return {'success': True,
             'message': "Actor Identifier added successfully!"}
+
+def actor_identifier_types(active=True):
+    """
+    Get the available Actor Identifier Types.
+
+    :param active: Only get active ones.
+    :type active: boolean
+    :returns: list
+    """
+
+    if active:
+        its = ActorThreatIdentifier.objects(active="on").order_by('+name')
+    else:
+        its = ActorThreatIdentifier.objects(active="off").order_by('+name')
+    it_list = [i.name for i in its]
+    return {'items': it_list}
+
+def actor_identifier_type_values(type_=None, username=None):
+    """
+    Get the available Actor Identifier Type values.
+
+    :param active: Only get active ones.
+    :type active: boolean
+    :returns: list
+    """
+
+    result = {}
+
+    if username and type_:
+        sources = user_sources(username)
+        ids = ActorIdentifier.objects(active="on",
+                                      identifier_type=type_,
+                                      source__name__in=sources).order_by('+name')
+        result['items'] = [(i.name, str(i.id)) for i in ids]
+    else:
+        result['items'] = []
+    return result
+
+def attribute_actor_identifier(id_, identifier_type, identifier=None,
+                               confidence="low", analyst=None):
+    """
+    Attribute an Actor Identifier to an Actor in CRITs.
+
+    :param identifier_type: The Actor Identifier Type.
+    :type identifier_type: str
+    :param identifier: The Actor Identifier.
+    :type identifier: str
+    :param analyst: The user attributing this identifier.
+    :type analyst: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str),
+    """
+
+    sources = user_sources(analyst)
+    admin = is_admin(analyst)
+    actor = Actor.objects(id=id_,
+                          source__name__in=sources).first()
+    if not actor:
+        return {'success': False,
+                'message': "Could not find actor"}
+
+    c = len(actor.identifiers)
+    actor.attribute_identifier(identifier_type, identifier, confidence, analyst)
+    actor.save(username=analyst)
+    actor.reload()
+    actor_identifiers = actor.generate_identifiers_list(analyst)
+
+    if len(actor.identifiers) <= c:
+        return {'success': False,
+                'message': "Invalid data submitted or identifier is already attributed."}
+
+    html = render_to_string('actor_identifiers_widget.html',
+                            {'actor_identifiers': actor_identifiers,
+                             'admin': admin,
+                             'actor_id': str(actor.id)})
+
+    return {'success': True,
+            'message': html}
+
+def set_identifier_confidence(id_, identifier=None, confidence="low",
+                              analyst=None):
+    """
+    Set the Identifier attribution confidence.
+
+    :param id_: The ObjectId of the Actor.
+    :param identifier: The Actor Identifier ObjectId.
+    :type identifier: str
+    :param confidence: The confidence level.
+    :type confidence: str
+    :param analyst: The user editing this identifier.
+    :type analyst: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str),
+    """
+
+    sources = user_sources(analyst)
+    actor = Actor.objects(id=id_,
+                          source__name__in=sources).first()
+    if not actor:
+        return {'success': False,
+                'message': "Could not find actor"}
+
+    actor.set_identifier_confidence(identifier, confidence)
+    actor.save(username=analyst)
+
+    return {'success': True}
+
+def remove_attribution(id_, identifier=None, analyst=None):
+    """
+    Remove an attributed identifier.
+
+    :param id_: The ObjectId of the Actor.
+    :param identifier: The Actor Identifier ObjectId.
+    :type identifier: str
+    :param analyst: The user removing this attribution.
+    :type analyst: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str),
+    """
+
+    sources = user_sources(analyst)
+    admin = is_admin(analyst)
+    actor = Actor.objects(id=id_,
+                          source__name__in=sources).first()
+    if not actor:
+        return {'success': False,
+                'message': "Could not find actor"}
+
+    actor.remove_attribution(identifier)
+    actor.save(username=analyst)
+    actor.reload()
+    actor_identifiers = actor.generate_identifiers_list(analyst)
+
+    html = render_to_string('actor_identifiers_widget.html',
+                            {'actor_identifiers': actor_identifiers,
+                             'admin': admin,
+                             'actor_id': str(actor.id)})
+
+    return {'success': True,
+            'message': html}
+
+def set_actor_name(id_, name, analyst):
+    """
+    Set an Actor name.
+
+    :param id_: Actor ObjectId.
+    :type id_: str
+    :param name: The new name.
+    :type name: str
+    :param analyst: The user updating the name.
+    :type analyst: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str),
+    """
+
+    sources = user_sources(analyst)
+    actor = Actor.objects(id=id_,
+                          source__name__in=sources).first()
+    if not actor:
+        return {'success': False,
+                'message': "Could not find actor"}
+
+    actor.name = name.strip()
+    actor.save(username=analyst)
+    return {'success': True}
+
+def set_actor_description(id_, description, analyst):
+    """
+    Set an Actor description.
+
+    :param id_: Actor ObjectId.
+    :type id_: str
+    :param description: The new description.
+    :type description: str
+    :param analyst: The user updating the description.
+    :type analyst: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str),
+    """
+
+    sources = user_sources(analyst)
+    actor = Actor.objects(id=id_,
+                          source__name__in=sources).first()
+    if not actor:
+        return {'success': False,
+                'message': "Could not find actor"}
+
+    actor.description = description.strip()
+    actor.save(username=analyst)
+    return {'success': True}
+
+def update_actor_aliases(actor_id, aliases, analyst):
+    """
+    Update aliases for an Actor.
+
+    :param actor_id: The ObjectId of the Actor to update.
+    :type actor_id: str
+    :param aliases: The aliases we are setting.
+    :type aliases: list
+    :param analyst: The user updating the aliases.
+    :type analyst: str
+    :returns: dict
+    """
+
+    sources = user_sources(analyst)
+    actor = Actor.objects(id=actor_id,
+                          source__name__in=sources).first()
+    if not actor:
+        return {'success': False,
+                'message': 'No actor could be found.'}
+    else:
+        actor.update_aliases(aliases)
+        actor.save(username=analyst)
+        return {'success': True}

@@ -4,6 +4,12 @@
 
 {% block content %}
 
+<script>
+    var edit_actor_name = "{% url 'crits.actors.views.edit_actor_name' actor.id|urlencode %}";
+    var edit_actor_description = "{% url 'crits.actors.views.edit_actor_description' actor.id %}";
+    var update_actor_aliases = "{% url 'crits.actors.views.edit_actor_aliases' %}";
+</script>
+
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
@@ -27,15 +33,24 @@
                     </tr>
                     <tr>
                         <td class="key">Name</td>
-                        <td>{{actor.name}}</td>
+                        <td>
+                            <span class="edit_underline" id="edit_actor_name">{{actor.name}}</span>
+                        </td>
                     </tr>
                     <tr>
                         <td class="key">Aliases</td>
-                        <td>{{actor.aliases}}</td>
+                        <td>
+                            <ul id="actor_aliases">
+                                {% for alias in actor.aliases %}
+                                    <li>{{ alias }}</li>
+                                {% endfor %}
+                        </td>
                     </tr>
                     <tr>
                         <td class="key">Description</td>
-                        <td>{{actor.description}}</td>
+                        <td class="longtext">
+                            <span class="edit_underline" id="edit_actor_description">{{actor.description}}</span>
+                        </td>
                     </tr>
                     <tr>
                         <td class="key">Created</td>
@@ -77,7 +92,9 @@
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
      </div>
-     {% include "actor_identifiers_widget.html" %}
+     <div id="actor_identifier_widget_container">
+         {% include "actor_identifiers_widget.html" %}
+     </div>
      <div>
 	    {% with obj=actor obj_type=subscription.type %}
                 {% include 'tickets_listing_widget.html' %}
@@ -108,6 +125,12 @@
 
 {% include 'services_tab_tabs_widget.html' %}
 </div>
+
+<script type="text/javascript">
+    $(document).bind('enable_actor_aliases', function(){
+        window.add_actor_aliases = true;
+    });
+</script>
 
 {% endblock %}
 

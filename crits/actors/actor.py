@@ -8,6 +8,7 @@ from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocumen
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsSchemaDocument, CritsDocument
 from crits.core.fields import CritsDateTimeField
+from crits.core.user_tools import user_sources, get_user_organization
 
 class ActorThreatType(CritsDocument, CritsSchemaDocument, Document):
     """
@@ -141,7 +142,7 @@ class ActorIdentifier(CritsDocument, CritsSchemaDocument, CritsSourceDocument,
                                             "created",
                                             "source"],
                          'hidden_fields': [],
-                         'linked_fields': ["source"],
+                         'linked_fields': ["name", "source"],
                          'details_link': '',
                          'no_sort': ['']
                        }
@@ -208,7 +209,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
     def migrate(self):
         pass
 
-    def generate_identifiers_list(self):
+    def generate_identifiers_list(self, username=None):
         """
         Create a list of dictionaries with Identifier information which can be
         used for rendering in a template.
@@ -217,8 +218,12 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
         """
 
         result = []
+        if not username:
+            return result
+        sources = user_sources(username)
         for i in self.identifiers:
-            it = ActorIdentifier.objects(id=i.identifier_id).first()
+            it = ActorIdentifier.objects(id=i.identifier_id,
+                                         source__name__in=sources).first()
             if it:
                 d = {}
                 d['analyst'] = i.analyst
@@ -230,7 +235,89 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
                 result.append(d)
         return result
 
+    def attribute_identifier(self, identifier_type=None, identifier=None,
+                             confidence='low', analyst=None):
+        """
+        Attribute an identifier.
+
+        :param identifier_type: The type of Identifier.
+        :type identifier_type: str
+        :param identifier: The identifier value.
+        :type identifier: str
+        :param confidence: The confidence level of the attribution.
+        :type confidence: str
+        :param analyst: The analyst attributing this identifier.
+        :type analyst: str
+        """
+
+        if analyst and identifier_type and identifier:
+            # We don't use source restriction because if they are adding this on
+            # their own, we would just append their org as a new source
+            identifier = ActorIdentifier.objects(name=identifier).first()
+
+            if not identifier:
+                identifier = ActorIdentifier()
+                identifier.identifier_type = identifier_type
+                identifier.name = identifier
+
+            # Add the source if it doesn't already exist
+            org = get_user_organization(analyst)
+            found = False
+            for source in identifier.source:
+                if source.name == org:
+                    found = True
+                    break
+            if not found:
+                identifier.add_source(source=org, analyst=analyst)
+
+            identifier.save()
+            identifier.reload()
+
+            found = False
+            for ident in self.identifiers:
+                if str(identifier.id) == str(ident.identifier_id):
+                    found = True
+                    break
+
+            # Only add if it's not already there
+            if not found:
+                e = EmbeddedActorIdentifier()
+                e.analyst = analyst
+                e.confidence = confidence
+                e.identifier_id = str(identifier.id)
+                self.identifiers.append(e)
+
+    def update_aliases(self, aliases):
+        """
+        Update the aliases on an Actor.
+
+        :param aliases: The aliases we are setting.
+        :type aliases: list
+        """
+
+        if isinstance(aliases, basestring):
+            aliases = aliases.split(',')
+        aliases = [a.strip() for a in aliases]
+        existing_aliases = None
+        if len(aliases) < len(self.aliases):
+            self.aliases = aliases
+        else:
+            existing_aliases = self.aliases
+        if existing_aliases:
+            for a in aliases:
+                if a not in existing_aliases:
+                    existing_aliases.append(a)
+
     def update_tags(self, tag_type, tags):
+        """
+        Update the tags on an Actor.
+
+        :param tag_type: The type of tag we are updating.
+        :type tag_type: str
+        :param tags: The tags we are setting.
+        :type tags: list
+        """
+
         if isinstance(tags, basestring):
             tags = tags.split(',')
         tags = [t.strip() for t in tags]
@@ -261,3 +348,36 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
             for t in tags:
                 if t not in existing_tags:
                     existing_tags.append(t)
+
+    def set_identifier_confidence(self, identifier_id, confidence):
+        """
+        Set the confidence level on an attribution.
+
+        :param identifier_id: The ObjectId of the identifier.
+        :type identifier_id: str
+        :param confidence: The confidence to set.
+        :type confidence: str
+        """
+
+        if identifier_id and confidence:
+            c = 0
+            for i in self.identifiers:
+                if i.identifier_id == identifier_id:
+                    self.identifiers[c].confidence = confidence
+                    break
+                c += 1
+
+    def remove_attribution(self, identifier_id):
+        """
+        Remove attribution from this Actor.
+
+        :param identifier_id: The ObjectId of the identifier to remove.
+        """
+
+        if identifier_id:
+            c = 0
+            for i in self.identifiers:
+                if i.identifier_id == identifier_id:
+                    del self.identifiers[c]
+                    break
+                c += 1
