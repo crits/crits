@@ -6,42 +6,43 @@
 {% block content %}
 
 <style>
-    #config_sections {
-        border-right: 1px solid #bbb;
-        width: 100px;
-        min-height: 575px;
-        max-height: 575px;
-        overflow-x: auto;
-        display: inline-block;
-        vertical-align: top;
-        padding-right: 10px;
-        margin-left: 25%;
-    }
-    #config_form_input {
-        width: 500px;
-        min-height: 100%;
-        max-height: 100%;
-        overflow-x: auto;
-        display: inline-block;
-        vertical-align: top;
-    }
     #config_results {
         color: #ff0000;
     }
 </style>
 
+<script>
+    $(function() {
+        $( "#systemTabs" ).tabs();
+    });
+
+</script>
+
+
 <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
+    <div id="systemTabs">
+        <ul>
+            <li><a href="#CRITsTab">CRITs Configuration</a></li>
+            <li><a href="#generalTab">General</a></li>        
+            <li><a href="#LDAP">LDAP Settings</a></li>
+            <li><a href="#downloadTab">Downloading</a></li>
+            <li><a href="#securityTab">Security</a></li>
+            <li><a href="#servicesTab">Services</a></li>
+            <li><a href="#loggingTab">Logging</a></li>
+        </ul>
+        <div id="generalTab"><table>{{ config_general_form.as_table }}</table></div>
+        <div id="CRITsTab"><table>{{ config_CRITs_form.as_table }}</table></div>
+        <div id="LDAP"><table>{{ config_LDAP_form.as_table }}</table></div>
+        <div id="securityTab"><table>{{ config_security_form.as_table }}</table></div>
+        <div id="loggingTab"><table>{{ config_logging_form.as_table }}</table></div>
+        <div id="servicesTab"><table>{{ config_services_form.as_table }}</table></div>
+        <div id="downloadTab"><table>{{ config_download_form.as_table }}</table></div>
+    </div>
+    
     <div id="config_sections">
         <input id="config_form_submit" class="form_submit_button" type="submit" name="submit" value="Submit"></input>
         <br /><br />
         <div id="config_results"></div>
-    </div>
-    <div id="config_form_input">
-        <div id="info_section">
-            <table class="form">
-                {{ config_form.as_table }}
-            </table>
-        </div>
     </div>
 </form>
 
