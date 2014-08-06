@@ -97,6 +97,14 @@ def generate_actor_identifier_jtable(request, option):
         'no_sort': mapper['no_sort']
     }
     jtable = build_jtable(jtopts,request)
+    for field in jtable['fields']:
+        if field['fieldname'] == "'name'":
+            url = reverse('crits.actors.views.actors_listing')
+            field['display'] = """ function (data) {
+            return '<a href="%s?q='+data.record.id+'&search_type=actor_identifier&force_full=1">'+data.record.name+'</a>';
+            }
+            """ % url
+        break
     jtable['toolbar'] = [
         {
             'tooltip': "'Add Actor Identifier'",

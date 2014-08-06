@@ -1392,6 +1392,8 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         query = {'bucket_list': search_query}
     elif search_type == "sectors":
         query = {'sectors': search_query}
+    elif search_type == "actor_identifier":
+        query = {'identifiers.identifier_id': search_query}
     # object_ comes from the core/views.py search function.
     # It joins search_type with otype
     elif search_type.startswith("object_"):
@@ -1803,6 +1805,7 @@ def get_query(col_obj,request):
     """
 
     keymaps = {
+            "actor_identifier": "identifiers.identifier_id",
             "campaign": "campaign.name",
             "source": "source.name",
             "confidence": "confidence.rating",
@@ -1914,6 +1917,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         multisort = []
 
         keymaps = {
+            "actor_identifier": "identifiers.identifier_id",
             "campaign": "campaign.name",
             "source": "source.name",
             "confidence": "confidence.rating",
