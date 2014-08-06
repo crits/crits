@@ -231,6 +231,10 @@ $(document).ready(function() {
 
     function identifier_attribution_dialog(e) {
         var dialog = $(this).find("form").find("table");
+        var it_drop = $('#id_identifier_type');
+        var id_drop = $('#id_identifier');
+        it_drop.find('option').remove()
+        id_drop.find('option').remove()
         $('<input>').attr({
             type: 'hidden',
             id: 'id',
@@ -255,9 +259,10 @@ $(document).ready(function() {
                             text : value
                         }));
                     });
+                    $("#id_identifier_type :first-child").attr('selected', 'selected');
+                    get_identifier_values($('#id_identifier_type').val());
                 },
             });
-            get_identifier_values($('#id_identifier_type').val());
         }
     }
 
