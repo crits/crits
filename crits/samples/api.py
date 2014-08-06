@@ -69,6 +69,7 @@ class SampleResource(CRITsAPIResource):
         campaign = bundle.data.get('campaign', None)
         confidence = bundle.data.get('confidence', None)
         source = bundle.data.get('source', None)
+        method = bundle.data.get('method', None)
         reference = bundle.data.get('reference', None)
         file_format = bundle.data.get('file_format', None)
         parent_md5 = bundle.data.get('parent_md5', None)
@@ -77,6 +78,7 @@ class SampleResource(CRITsAPIResource):
 
         sample_md5 = handle_uploaded_file(filedata,
                                           source,
+                                          method,
                                           reference,
                                           file_format,
                                           password,

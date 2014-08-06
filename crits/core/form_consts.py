@@ -175,6 +175,7 @@ class Sample():
     FILE_DATA = "File Data"
     FILE_FORMAT = "File Format"
     FILE_NAME = "File Name"
+    INHERIT_SOURCES = "Inherit Sources?"
     MD5 = "MD5"
     RELATED_MD5 = "Related MD5"
     PASSWORD = "Password"

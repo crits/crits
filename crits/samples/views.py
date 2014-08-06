@@ -190,6 +190,7 @@ def upload_file(request, related_md5=None):
         if form.is_valid():
             response = {'success': False,
                         'message': 'Unknown error; unable to upload file.'}
+            inherited_source = None
             campaign = form.cleaned_data['campaign']
             confidence = form.cleaned_data['confidence']
             source = form.cleaned_data['source']
@@ -213,26 +214,31 @@ def upload_file(request, related_md5=None):
                                               RequestContext(request))
                 related_sample.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
                 campaign = related_sample.campaign
+                # If selected, new sample inherits the sources of the related sample
+                if form.cleaned_data['inherit_sources']:
+                    inherited_source = related_sample.source
 
             try:
                 if request.FILES:
                     result = handle_uploaded_file(
                         request.FILES['filedata'],
                         source,
+                        method,
                         reference,
                         form.cleaned_data['file_format'],
                         form.cleaned_data['password'],
                         analyst,
                         campaign,
                         confidence,
-                        related_md5 = related_md5,
+                        related_md5,
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
-                        method=method)
+                        inherited_source=inherited_source)
                 else:
                     result = handle_uploaded_file(
                         None,
                         source,
+                        method,
                         reference,
                         form.cleaned_data['file_format'],
                         None,
@@ -244,7 +250,7 @@ def upload_file(request, related_md5=None):
                         md5=request.POST['md5'].strip().lower(),
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
-                        method=method,
+                        inherited_source=inherited_source,
                         is_return_only_md5=False)
 
             except ZipFileError, zfe:

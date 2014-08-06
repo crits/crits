@@ -133,7 +133,8 @@ def upload_sample(request, event_id):
                                           request.FILES.get('filedata', None),
                                           request.POST.get('filename', None),
                                           request.POST.get('md5', None),
-                                          email)
+                                          email,
+                                          form.cleaned_data['inherit_sources'])
             if result['success']:
                 return render_to_response('redirect.html',
                                           {'redirect_url': reverse('crits.events.views.view_event', args=[event_id])},

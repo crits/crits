@@ -390,8 +390,8 @@ def update_event_type(event_id, type_, analyst):
     except ValidationError, e:
         return {'success': False, 'message': e}
 
-def add_sample_for_event(event_id, data, analyst, filedata=None,
-                         filename=None, md5=None, email_addr=None):
+def add_sample_for_event(event_id, data, analyst, filedata=None, filename=None,
+                         md5=None, email_addr=None, inherit_sources=False):
     """
     Add a sample related to this Event.
 
@@ -409,6 +409,8 @@ def add_sample_for_event(event_id, data, analyst, filedata=None,
     :type md5: str
     :param email_addr: Email address to which to email the sample
     :type email_addr: str
+    :param inherit_sources: 'True' if Sample should inherit Event's Source(s)
+    :type inherit_sources: bool
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -434,41 +436,45 @@ def add_sample_for_event(event_id, data, analyst, filedata=None,
     event.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
     campaign = event.campaign
 
+    inherited_source = event.source if inherit_sources else None
+
     try:
         if filedata:
             result = handle_uploaded_file(filedata,
-                                              source,
-                                              reference,
-                                              file_format,
-                                              data['password'],
-                                              analyst,
-                                              campaign,
-                                              confidence,
-                                              related_id=event.id,
-                                              related_type='Event',
-                                              filename=filename,
-                                              bucket_list=bucket_list,
-                                              ticket=ticket,
-                                              method=method)
+                                          source,
+                                          method,
+                                          reference,
+                                          file_format,
+                                          data['password'],
+                                          analyst,
+                                          campaign,
+                                          confidence,
+                                          related_id=event.id,
+                                          related_type='Event',
+                                          filename=filename,
+                                          bucket_list=bucket_list,
+                                          ticket=ticket,
+                                          inherited_source=inherited_source)
         else:
             if md5:
                 md5 = md5.strip().lower()
             result = handle_uploaded_file(None,
-                                              source,
-                                              reference,
-                                              file_format,
-                                              None,
-                                              analyst,
-                                              campaign,
-                                              confidence,
-                                              related_id=event.id,
-                                              related_type='Event',
-                                              filename=filename,
-                                              md5=md5,
-                                              bucket_list=bucket_list,
-                                              ticket=ticket,
-                                              method=method,
-                                              is_return_only_md5=False)
+                                          source,
+                                          method,
+                                          reference,
+                                          file_format,
+                                          None,
+                                          analyst,
+                                          campaign,
+                                          confidence,
+                                          related_id=event.id,
+                                          related_type='Event',
+                                          filename=filename,
+                                          md5=md5,
+                                          bucket_list=bucket_list,
+                                          ticket=ticket,
+                                          inherited_source=inherited_source,
+                                          is_return_only_md5=False)
     except ZipFileError, zfe:
         return {'success': False, 'message': zfe.value}
     else:

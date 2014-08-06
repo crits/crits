@@ -108,9 +108,10 @@ def upload_attach(request, email_id):
                                           RequestContext(request))
             result = create_email_attachment(email,
                                              cleaned_data,
-                                             cleaned_data['reference'],
-                                             cleaned_data['source'],
                                              analyst,
+                                             cleaned_data['source'],
+                                             method,
+                                             cleaned_data['reference'],
                                              cleaned_data['campaign'],
                                              cleaned_data['confidence'],
                                              bucket_list,
@@ -118,8 +119,8 @@ def upload_attach(request, email_id):
                                              request.FILES.get('filedata',None),
                                              request.POST.get('filename', None),
                                              request.POST.get('md5', None),
-                                             method,
-                                             email_addr)
+                                             email_addr,
+                                             cleaned_data['inherit_sources'])
             if result['success']:
                 return render_to_response('redirect.html',
                                           {'redirect_url': reverse('crits.emails.views.email_detail', args=[email_id])},
