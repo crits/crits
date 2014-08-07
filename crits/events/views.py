@@ -1,6 +1,7 @@
 import json
 import urllib
 
+from django import forms
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
@@ -145,7 +146,7 @@ def upload_sample(request, event_id):
                                                                    'message': result['message']})},
                                           RequestContext(request))
         else:
-            del form.fields['related_md5'] #remove field so it doesn't reappear
+            form.fields['related_md5'].widget = forms.HiddenInput() #hide field so it doesn't reappear
             return render_to_response('file_upload_response.html',
                                       {'response': json.dumps({'success': False,
                                                                'form': form.as_table()})},

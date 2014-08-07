@@ -1,5 +1,6 @@
 import json
 
+from django import forms
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
@@ -205,15 +206,17 @@ def upload_file(request, related_md5=None):
                 related_md5 = form.cleaned_data['related_md5']
 
             if related_md5:
-                # New sample inherits the campaigns of the related sample.
                 related_sample = Sample.objects(md5=related_md5).first()
                 if not related_sample:
                     response['message'] = "Upload Failed. Unable to locate related sample."
                     return render_to_response("file_upload_response.html",
                                               {'response': json.dumps(response)},
                                               RequestContext(request))
-                related_sample.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
-                campaign = related_sample.campaign
+                # If selected, new sample inherits the campaigns of the related sample.
+                if form.cleaned_data['inherit_campaigns']:
+                    if campaign:
+                        related_sample.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+                    campaign = related_sample.campaign
                 # If selected, new sample inherits the sources of the related sample
                 if form.cleaned_data['inherit_sources']:
                     inherited_source = related_sample.source
@@ -299,8 +302,8 @@ def upload_file(request, related_md5=None):
                                           {'response': json.dumps(response)},
                                           RequestContext(request))
         else:
-            if related_md5: #if this is a 'related' upload, remove field so it doesn't reappear
-                del form.fields['related_md5']
+            if related_md5: #if this is a 'related' upload, hide field so it doesn't reappear
+                form.fields['related_md5'].widget = forms.HiddenInput()
             return render_to_response('file_upload_response.html',
                                       {'response': json.dumps({'success': False,
                                                                'form': form.as_table()})},

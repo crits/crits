@@ -432,9 +432,11 @@ def add_sample_for_event(event_id, data, analyst, filedata=None, filename=None,
     if filename:
         filename = filename.strip()
 
-    # New sample inherits the campaigns of the related event.
-    event.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
-    campaign = event.campaign
+    # If selected, new sample inherits the campaigns of the related event.
+    if data['inherit_campaigns']:
+        if campaign:
+            event.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+        campaign = event.campaign
 
     inherited_source = event.source if inherit_sources else None
 

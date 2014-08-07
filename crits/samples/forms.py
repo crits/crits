@@ -63,6 +63,9 @@ class UploadFileForm(forms.Form):
     campaign = forms.ChoiceField(widget=forms.Select, required=False,
                                  label=form_consts.Sample.CAMPAIGN)
     confidence = forms.ChoiceField(required=False, label=form_consts.Sample.CAMPAIGN_CONFIDENCE)
+    inherit_campaigns = forms.BooleanField(initial=True,
+                                           required=False,
+                                           label=form_consts.Sample.INHERIT_CAMPAIGNS)
     source = forms.ChoiceField(required=True,
                                widget=forms.Select(attrs={'class': 'no_clear bulknoinitial'}),
                                label=form_consts.Sample.SOURCE)
@@ -141,12 +144,20 @@ class UploadFileForm(forms.Form):
             if not confidence or confidence == '':
                 self._errors.setdefault('confidence', ErrorList())
                 self._errors['confidence'].append(u'This field is required if campaign is specified.')
+
+        inherit_campaigns = cleaned_data.get('inherit_campaigns')
         inherit_sources = cleaned_data.get('inherit_sources')
-        if inherit_sources:
+        if inherit_campaigns or inherit_sources:
             related_md5 = cleaned_data.get('related_md5')
             if not related_md5:
-                self._errors.setdefault('inherit_sources', ErrorList())
-                self._errors['inherit_sources'].append(u'Need a Related MD5 from which to inherit.')
+                if inherit_campaigns:
+                    self._errors.setdefault('inherit_campaigns', ErrorList())
+                    self._errors['inherit_campaigns'].append(u'Nothing to inherit from.')
+                if inherit_sources:
+                    self._errors.setdefault('inherit_sources', ErrorList())
+                    self._errors['inherit_sources'].append(u'Nothing to inherit from.')
+                self._errors.setdefault('related_md5', ErrorList())
+                self._errors['related_md5'].append(u'Need a Related MD5 from which to inherit.')
 
         return cleaned_data
 

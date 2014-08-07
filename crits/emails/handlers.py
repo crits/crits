@@ -1299,9 +1299,11 @@ def create_email_attachment(email, cleaned_data, analyst, source, method="Upload
     if filename:
         filename = filename.strip()
 
-    # New sample inherits the campaigns of the related email.
-    email.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
-    campaign = email.campaign
+    # If selected, new sample inherits the campaigns of the related email.
+    if cleaned_data['inherit_campaigns']:
+        if campaign:
+            email.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+        campaign = email.campaign
 
     inherited_source = email.source if inherit_sources else None
 
