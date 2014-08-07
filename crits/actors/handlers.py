@@ -549,7 +549,7 @@ def actor_identifier_type_values(type_=None, username=None):
         ids = ActorIdentifier.objects(active="on",
                                       identifier_type=type_,
                                       source__name__in=sources).order_by('+name')
-        result['items'] = [(str(i.id), i.name) for i in ids]
+        result['items'] = [(i.name, i.name) for i in ids]
     else:
         result['items'] = []
     return result
