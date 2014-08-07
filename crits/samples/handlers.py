@@ -990,6 +990,9 @@ def handle_file(filename, data, source, reference=None, parent_md5=None,
         sample = Sample()
         sample.filename = filename or md5_digest
         sample.md5 = md5_digest
+    else:
+        if filename not in sample.filenames and filename != sample.filename:
+            sample.filenames.append(filename)
 
         if cached_results != None:
             cached_results[md5_digest] = sample
@@ -1506,3 +1509,52 @@ def process_bulk_add_md5_sample(request, formdict):
     response = parse_bulk_upload(request, parse_row_to_bound_md5_sample_form, add_new_sample_via_bulk, formdict, cache)
 
     return response
+
+def update_sample_filename(id_, filename, analyst):
+    """
+    Update a Sample filename.
+
+    :param id_: ObjectId of the Sample.
+    :type id_: str
+    :param filename: The new filename.
+    :type filename: str
+    :param analyst: The user setting the new filename.
+    :type analyst: str
+    :returns: dict with key 'success' (boolean) and 'message' (str) if failed.
+    """
+
+    if not filename:
+        return {'success': False, 'message': "No filename to change"}
+    sample = Sample.objects(id=id_).first()
+    if not sample:
+        return {'success': False, 'message': "No sample to change"}
+    sample.filename = filename.strip()
+    try:
+        sample.save(username=analyst)
+        return {'success': True}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
+def modify_sample_filenames(id_, tags, analyst):
+    """
+    Modify the filenames for a Sample.
+
+    :param id_: ObjectId of the Sample.
+    :type id_: str
+    :param tags: The new filenames.
+    :type tags: list
+    :param analyst: The user setting the new filenames.
+    :type analyst: str
+    :returns: dict with key 'success' (boolean) and 'message' (str) if failed.
+    """
+
+    sample = Sample.objects(id=id_).first()
+    if sample:
+        sample.set_filenames(tags)
+        try:
+            sample.save(username=analyst)
+            return {'success': True}
+        except ValidationError, e:
+            return {'success': False, 'message': "Invalid value: %s" % e}
+    else:
+        return {'success': False}

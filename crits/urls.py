@@ -260,6 +260,8 @@ urlpatterns = patterns('',
         (r'^samples/backdoors/list/(?P<option>\S+)/$', 'crits.samples.views.backdoors_listing'),
         (r'^samples/yarahits/list/$', 'crits.samples.views.yarahits_listing'),
         (r'^samples/yarahits/list/(?P<option>\S+)/$', 'crits.samples.views.yarahits_listing'),
+        (r'^samples/set_filename/$', 'crits.samples.views.set_sample_filename'),
+        (r'^samples/filenames/$', 'crits.samples.views.set_sample_filenames'),
 
         # Screenshots
         (r'^screenshots/list/$', 'crits.screenshots.views.screenshots_listing'),

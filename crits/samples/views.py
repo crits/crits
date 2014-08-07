@@ -30,6 +30,7 @@ from crits.samples.handlers import add_backdoor_to_sample, get_source_counts
 from crits.samples.handlers import get_sample_details, generate_backdoor_jtable
 from crits.samples.handlers import generate_sample_jtable, add_source_to_samples
 from crits.samples.handlers import generate_sample_csv, process_bulk_add_md5_sample
+from crits.samples.handlers import update_sample_filename, modify_sample_filenames
 from crits.samples.sample import Sample
 from crits.stats.handlers import generate_sources
 from crits.stats.handlers import generate_exploits
@@ -731,4 +732,50 @@ def remove_sample(request, md5):
     else:
         return render_to_response('error.html',
                                   {'error': "Could not delete sample"},
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def set_sample_filename(request):
+    """
+    Set a Sample filename. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST':
+        filename = request.POST.get('filename', None)
+        id_ = request.POST.get('id', None)
+        analyst = request.user.username
+        return HttpResponse(json.dumps(update_sample_filename(id_,
+                                                              filename,
+                                                              analyst)),
+                            mimetype="application/json")
+    else:
+        error = "Expected POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def set_sample_filenames(request):
+    """
+    Set Sample filenames. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        tags = request.POST.get('tags', "").split(",")
+        id_ = request.POST.get('id', None)
+        return HttpResponse(json.dumps(modify_sample_filenames(id_,
+                                                               tags,
+                                                               request.user.username)),
+                            mimetype="application/json")
+    else:
+        error = "Expected POST"
+        return render_to_response("error.html", {"error" : error },
                                   RequestContext(request))

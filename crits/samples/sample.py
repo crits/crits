@@ -39,6 +39,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         "schema_doc": {
             'filename': 'The name of the last file that was uploaded with this'\
                 'MD5',
+            'filenames': 'A list of filenames this binary has gone by.',
             'filetype': 'The filetype of the file',
             'mimetype': 'The mimetype of the file',
             'size': 'The size of the file',
@@ -97,6 +98,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
     exploit = ListField(EmbeddedDocumentField(EmbeddedExploit))
     filedata = getFileField(collection_name=settings.COL_SAMPLES)
     filename = StringField(required=True)
+    filenames = ListField(StringField())
     filetype = StringField()
     md5 = StringField(required=True)
     mimetype = StringField()
@@ -270,3 +272,15 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
             if e.cve == cve:
                 del self.exploit[c]
             c += 0
+
+    def set_filenames(self, filenames):
+        """
+        Set the Sample filenames to a specified list.
+
+        :param filenames: The filenames to set.
+        :type filenames: list
+
+        """
+
+        if isinstance(filenames, list):
+            self.filenames = filenames

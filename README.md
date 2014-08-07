@@ -1,6 +1,6 @@
 # Welcome to CRITs
 
-![Image](https://github.com/MITRECND/crits/raw/master/extras/www/new_images/crits_logo.png)
+![Image](https://github.com/crits/crits/raw/master/extras/www/new_images/crits_logo.png)
 
 ## What Is CRITs?
 
@@ -171,7 +171,7 @@ Take a look at the options for the **users** management command:
     python manage.py users -h
 ```
 
-Use that command to setup your first admin user for CRITs. Be sure to use **-a** to set them as an admin. **Make note of the temporary password provided in the output!!**
+Use that command to setup your first admin user for CRITs. Be sure to use **-A** to set them as an admin. **Make note of the temporary password provided in the output!!**
 
 ### Set your allowed hosts:
 
