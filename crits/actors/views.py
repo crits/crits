@@ -143,21 +143,21 @@ def add_actor(request):
                               RequestContext(request))
 
 @user_passes_test(user_can_view_data)
-def remove_actor(request):
+def remove_actor(request, id_):
     """
-    Remove an Actor. Should be an AJAX POST.
+    Remove an Actor.
 
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
+    :param id_: The ObjectId of the Actor to remove.
+    :type id_: str
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == "POST" and request.is_ajax():
+    if request.method == "POST":
         if is_admin(request.user):
-            result = actor_remove(request.POST['key'],
-                               request.user.username)
-            return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+            actor_remove(id_, request.user.username)
+            return HttpResponseRedirect(reverse('crits.actors.views.actors_listing'))
         error = 'You do not have permission to remove this item.'
         return render_to_response("error.html",
                                   {'error': error},

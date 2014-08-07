@@ -13,14 +13,23 @@
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ ip.analysis|length }})</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ actor.analysis|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     </ul>
 
 <div id="details_section">
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        <li><a href="#" class="dialogClick" dialog="download-actor">Download Actor</a></li>
+        {% if admin %}
+        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="actor" action='{% url "crits.actors.views.remove_actor" actor.id %}'>Delete Actor</a></li>
+        {% endif %}
+    </ul>
+    </span>
+
     <div class="content_box content_details">
         <h3 class="titleheader">
-            <span>Details for {{actor.name}}</span><!-- TODO: add in-place IP editing here -->
+            <span>Details for {{actor.name}}</span>
         </h3>
         <div class="content_body">
             <table class="vertical" width="100%">
@@ -124,6 +133,16 @@
 {% endwith %}
 
 {% include 'services_tab_tabs_widget.html' %}
+</div>
+
+<div style="display: none;">
+
+<div id="dialog-download-actor">
+    <form id="form-download-actor" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
+    <table class="form">{{download_form.as_table}}</table>
+    </form>
+</div>
+
 </div>
 
 <script type="text/javascript">

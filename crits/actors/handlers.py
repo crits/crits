@@ -12,6 +12,7 @@ from crits.actors.actor import Actor, ActorIdentifier, ActorThreatIdentifier
 from crits.core.class_mapper import class_from_type
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import create_embedded_source
+from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_admin, is_user_subscribed, user_sources
@@ -218,6 +219,9 @@ def get_actor_details(id_, analyst):
         # remove pending notifications for user
         remove_user_from_notification("%s" % analyst, actor.id, 'Actor')
 
+        download_form = DownloadFileForm(initial={"obj_type":'Actor',
+                                                    "obj_id": actor.id})
+
         # generate identifiers
         actor_identifiers = actor.generate_identifiers_list(analyst)
 
@@ -256,6 +260,7 @@ def get_actor_details(id_, analyst):
 
         args = {'actor_identifiers': actor_identifiers,
                 'objects': objects,
+                'download_form': download_form,
                 'relationships': relationships,
                 'relationship': relationship,
                 'subscription': subscription,

@@ -3611,11 +3611,7 @@ def details_from_id(type_, id_):
                 'Target': 'crits.targets.views.target_info',
                 }
     if type_ in type_map and id_:
-        if type_ == 'Actor':
-            arg = class_from_id(type_, id_)
-            if arg:
-                arg = arg.name
-        elif type_ == 'Campaign':
+        if type_ == 'Campaign':
             arg = class_from_id(type_, id_)
             if arg:
                 arg = arg.name

@@ -321,6 +321,7 @@ $(document).ready(function() {
                                      open: identifier_attribution_dialog,
                                      new: { submit: identifier_attribution_submit },
       },
+      "download-actor": {title: "Download Actor", submit: defaultSubmit, href:"" },
     };
 
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt) });

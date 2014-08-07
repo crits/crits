@@ -679,10 +679,11 @@ class CritsDocument(BaseDocument):
         from stix.core import STIXPackage, STIXHeader
         from stix.common.identity import Identity
 
-        # These two lists are used to determine which CRITs objects
+        # These lists are used to determine which CRITs objects
         # go in which part of the STIX document.
         ind_list = []
         obs_list = []
+        actor_list = []
 
         # determine which CRITs types support standardization
         for ctype in settings.CRITS_TYPES:
@@ -691,12 +692,15 @@ class CritsDocument(BaseDocument):
                 ind_list.append(ctype)
             elif hasattr(cls, "to_cybox_observable"):
                 obs_list.append(ctype)
+            elif hasattr(cls, "to_stix_actor"):
+                actor_list.append(ctype)
 
 
         # Store message
         stix_msg = {
                        'stix_indicators': [],
                        'stix_observables': [],
+                       'stix_actors': [],
                        'final_objects': []
                    }
 
@@ -726,6 +730,11 @@ class CritsDocument(BaseDocument):
                     ind, releas = obj.to_cybox_observable()
                 stix_msg['stix_observables'].extend(ind)
                 stix_msg['final_objects'].append(obj)
+            elif obj_type in actor_list: # cover to STIX actor
+                act, releas = obj.to_stix_actor()
+                stix_msg['stix_actors'].append(act)
+                stix_msg['final_objects'].append(obj)
+
 
         tool_list = ToolInformationList()
         tool = ToolInformation("CRITs", "MITRE")
@@ -751,6 +760,7 @@ class CritsDocument(BaseDocument):
 
         stix_msg['stix_obj'] = STIXPackage(indicators=stix_msg['stix_indicators'],
                         observables=Observables(stix_msg['stix_observables']),
+                        threat_actors=stix_msg['stix_actors'],
                         stix_header=header,
                         id_=uuid.uuid4())
 
