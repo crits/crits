@@ -2324,7 +2324,7 @@ def generate_items_jtable(request, itype, option):
 
     if itype == 'ActorThreatIdentifier':
         fields = ['name', 'active', 'id']
-        click = "function () {window.parent.$('#actor_threat_identifier_add').click();}"
+        click = "function () {window.parent.$('#actor_identifier_type_add').click();}"
     elif itype == 'ActorThreatType':
         fields = ['name', 'active', 'id']
     elif itype == 'ActorMotivation':
