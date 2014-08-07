@@ -361,14 +361,14 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     if ticket:
         actor.add_ticket(ticket, analyst)
 
-    resp_url = reverse('crits.actors.views.actor_detail', args=[actor.id])
-
     actor.save(username=analyst)
 
     # run actor triage
     if is_item_new:
         actor.reload()
         run_triage(None, actor, analyst)
+
+    resp_url = reverse('crits.actors.views.actor_detail', args=[actor.id])
 
     retVal['message'] = ('Success! Click here to view the new Actor: '
                             '<a href="%s">%s</a>' % (resp_url, actor.id))
