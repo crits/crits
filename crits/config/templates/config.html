@@ -4,48 +4,28 @@
 {% block javascript_includes %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/config.js"></script>
     <script type="text/javascript">
-		var config = {
-			    tabs: {
-			        name: 'tabs',
-			        active: 'tab1',
-			        tabs: [
-                        { id: 'CRITsTab', caption: 'CRITs Configuration' },
-			            { id: 'generalTab', caption: 'General' },
-			            { id: 'LDAP', caption: 'LDAP Settings' },
-			            { id: 'downloadTab', caption: 'Downloading' },
-			            { id: 'securityTab', caption: 'Security' },
-                        { id: 'servicesTab', caption: 'Services' },
-                        { id: 'loggingTab', caption: 'Logging' }
-			        ],
-			        onClick: function (event) {
-			            $('#tabsWrapper .tab').hide();
-			            $('#tabsWrapper #' + event.target).show();
-			        }
-			    }
-			}
-		$(function () {
-            $('#tabs').w2tabs(config.tabs);
-            if(document.location.hash)
-            	$(document.location.hash).show();
-            else
-                $('#CRITsTab').show();
-        });
-		//above is for tabbing
+		//$(function () {
+        //    $('#tabs').w2tabs(config.tabs);
+        //    if(document.location.hash)
+        //    	$(document.location.hash).show();
+        //    else
+        //        $('#CRITsTab').show();
+        //});
 		
-		//below is for side bar
-		var currentTab = "generalTab2";
+		
+	$(document).ready(function() {
 		$(function () {
 		    $('#sidebar').w2sidebar({
 		        name: 'sidebar',
 		        nodes: [ 
-		            { id: 'system', text: 'System', img: 'icon-folder', expanded: true, group: true,
-		              nodes: [ { id: 'generalTab2', text: 'General'},
-		                       { id: 'CRITsTab2', text: 'CRITs'},
-		                       { id: 'LDAP2', text: 'LDAP Settings'},
-		                       { id: 'securityTab2', text: 'Security'},
-                               { id: 'downloadTab2', text: 'Downloading'},
-                               { id: 'servicesTab2', text: 'Services'},
-                               { id: 'loggingTab2', text: 'Logging'}
+		            { id: 'system', class:'dontChange', text: 'System', img: 'icon-folder', expanded: true, group: true,
+		              nodes: [ { id: 'generalTab', text: 'General'},
+		                       { id: 'CRITsTab', text: 'CRITs'},
+		                       { id: 'LDAP', text: 'LDAP Settings'},
+		                       { id: 'securityTab', text: 'Security'},
+                               { id: 'downloadTab', text: 'Downloading'},
+                               { id: 'servicesTab', text: 'Services'},
+                               { id: 'loggingTab', text: 'Logging'}
 		                     ]
 		            },
 		            { id: 'items', text: 'Items', img: 'icon-folder', group: true},
@@ -56,125 +36,150 @@
 		    });
 		    
 		    w2ui.sidebar.on('*', function (event) {
-		        console.log('Event: ' + event.type + ' Target: ' + event.target);
-		        console.log(event);
-		        var target = event.target;
-		        var targetElem = $('#'+target)[0];
-		        if(target != currentTab && targetElem != null) {
-		            w2utils.transition($('#'+currentTab)[0], targetElem, "pop-in");
-		            currentTab = target;
-		        }
-		        
+		    	if(event.type == 'click') {
+			        var target = "#"+event.target;
+			        var targetElem = $(target);
+			        
+			        if(target != currentTab && targetElem != null) {
+			        	targetElem.show();
+			        	$(currentTab).hide();
+			            currentTab = target;
+			        }
+		    	}
+		    	else
+		    		console.log("NOT A CLICK!");
 		    });
 		});
+		//display general tab by default
+		var currentTab = "#generalTab";
+		$(function () {
+			//if they link to a specific tag, reset current tag
+	        if(document.location.hash) 
+	        	currentTab = document.location.hash;
+            $(currentTab).show();
+            //show the correct node in the sidebar corresponding to shown tab
+            var currentNode = "#node_"+currentTab.substring(1);
+            $(currentNode).addClass("w2ui-selected");
+        });
+		
+        
+        	
+        	
+        	
+       	$("table").each(function() {
+               var tableRows = $(this).find('tr');
+               if(tableRows.length > 12) { 
+                   var firstRows = [];
+                   tableRows.each(function(index) {
+                       if(index < 12)
+                           firstRows.push($(this));
+                       else {
+                           var content = $(this).html();
+                           firstRows[index%12].append(content);
+                           $(this).remove();
+                       }
+                   });
+               }
+           });
+        	
+       
+		
+		$("#reset_button").click(function() {
+			$("#config_form")[0].reset();
+		});
+		
+	 });
+		
 	</script>
+		
 {% endblock %}
 {% block content %}
     <style>
 	    #config_results {
 	        color: #ff0000;
-	    }
-	    .tab {
-	        width: 100%;
-	        border: 1px solid silver;
-	        border-top: 0px;
-	        display: none;
-	        padding: 10px;
-	        overflow: auto;
-	    }
-	    #break {
-	       height:1200px;
-	       width:100%;
-	    }
-	    .container {
-		    padding: 10px; 
-		    overflow: hidden;
-		}
-		.box {
-		    background-color: #fafafa; 
-		    padding: 4px; 
-		    width: 89%;
-		    height:800px;
-		    position: absolute; 
+	        position:absolute;
+	        text-align:center;
+	        top:20px;
+	        left:0;
 		    right:0;
-		    border: 1px solid silver;
-		}
+		    margin-left:auto;
+		    margin-right:auto;
+	    }
+	    #submitWrapper {
+            text-align: center;
+            margin-right:100px;
+        }
 		#sidebar {
-            position:absolute;
-            height: 800px;
-            left:0;
-            width: 10%;
+           width: 200px;
+		   height:625px;
+		   float:left;
+		   border-right:1px solid grey;
+		}
+		#container {
+		}
+		.systemTable {
+		  padding-top: 20px;
+		  padding-left: 20px;
+		}
+		.systemTable th {
+		  width:175px;
+		  text-align: left;
 		}
 		#wrapper {
 		  width:100%;
+		  border:1px solid grey;
+		  height:625px;
+		  display:inline-block;
+		}
+		.box {
+		  display:none;
+		  height:550px;
+		}
+		#reset_button {
+            padding: 4px;
+			border: 1px solid #BBB;
+			border-radius: 3px;
+			color: #000;
+			background-color: #FFF;
 		}
 	</style>
 	
 	
-	<form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
-        <div id='tabsWrapper'>
-            <div id="tabs" style="width: 100%;"></div>
-            <div id="generalTab" class='tab'>
-               <table>{{ config_general_form.as_table }}</table>
-            </div>
-            <div id="CRITsTab" class='tab'>
-               <table>{{ config_CRITs_form.as_table }}</table>
-            </div>
-            <div id="LDAP" class='tab'>
-               <table>{{ config_LDAP_form.as_table }}</table>
-            </div>
-            <div id="securityTab" class='tab'>
-               <table>{{ config_security_form.as_table }}</table>
-            </div>
-            <div id="downloadTab" class='tab'>
-               <table>{{ config_download_form.as_table }}</table>
-            </div>
-            <div id="servicesTab" class='tab'>
-               <table>{{ config_services_form.as_table }}</table>
-            </div>
-            <div id="loggingTab" class='tab'>
-               <table>{{ config_logging_form.as_table }}</table>
-            </div>
-         </div>   
-         <div id="config_sections">
-            <input id="config_form_submit" class="form_submit_button" type="submit" name="submit" value="Submit"></input>
-            <br /><br />
+    <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
+        <div id="wrapper">
+        
             <div id="config_results"></div>
+            
+            <div id="sidebar" ></div>
+            <div id='container'>
+                <div id='CRITsTab' class='box'>
+                   <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
+                </div>  
+                <div id='generalTab' class='box'>
+                   <table class="systemTable">{{ config_general_form.as_table }}</table>
+                </div>
+                <div id="LDAP" class='box'>
+                   <table class="systemTable">{{ config_LDAP_form.as_table }}</table>
+                </div>
+                <div id="securityTab" class='box'>
+                   <table class="systemTable">{{ config_security_form.as_table }}</table>
+                </div>
+                <div id="downloadTab" class='box'>
+                   <table class="systemTable">{{ config_download_form.as_table }}</table>
+                </div>
+                <div id="servicesTab" class='box'>
+                   <table class="systemTable">{{ config_services_form.as_table }}</table>
+                </div>
+                <div id="loggingTab" class='box'>
+                   <table class="systemTable">{{ config_logging_form.as_table }}</table>
+                </div>
+                <div id="submitWrapper">
+	                <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
+	                <input id="reset_button" type="button" value="Reset"></input>
+	            </div>
+            </div>
         </div>
     </form>
-	
-	<div id='break'></div>
-	
-    <div id='wrapper'>
-        <div id="sidebar" ></div>
-        <div class='container'>
-            <div id='CRITsTab2' class='box'>
-               <table>{{ config_CRITs_form.as_table }}</table>
-            </div>  
-            <div id='generalTab2' class='box'>
-               <table>{{ config_general_form.as_table }}</table>
-            </div>
-            <div id="LDAP2" class='box'>
-               <table>{{ config_LDAP_form.as_table }}</table>
-            </div>
-            <div id="securityTab2" class='box'>
-               <table>{{ config_security_form.as_table }}</table>
-            </div>
-            <div id="downloadTab2" class='box'>
-               <table>{{ config_download_form.as_table }}</table>
-            </div>
-            <div id="servicesTab2" class='box'>
-               <table>{{ config_services_form.as_table }}</table>
-            </div>
-            <div id="loggingTab2" class='box'>
-               <table>{{ config_logging_form.as_table }}</table>
-            </div
-        </div>
-    </div>
-	
-	
-	
-	
 	
 	
 {% endblock %}
