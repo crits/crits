@@ -12,6 +12,8 @@
     var get_hex = "{% url 'crits.samples.views.hex' sample.md5 %}";
     var xor_search = "{% url 'crits.samples.views.xor_searcher' sample.md5 %}";
     var get_xor = "{% url 'crits.samples.views.xor' sample.md5 %}?key=";
+    var update_sample_filename = "{% url 'crits.samples.views.set_sample_filename' %}";
+    var update_sample_filenames = "{% url 'crits.samples.views.set_sample_filenames' %}";
 </script>
 
 {% if sample %}
@@ -51,7 +53,20 @@
             </tr>
             <tr>
                 <td class="key">Filename</td>
-                <td>{{ sample.filename }}</td>
+                <td>
+                    <span class="edit_underline" id="sample_filename">{{ sample.filename }}</span>
+                    <span id="sample_filename_error"></span>
+                </td>
+            </tr>
+            <tr>
+                <td class="key">Filenames</td>
+                <td>
+                    <ul id="sample_filenames">
+                        {% for filename in sample.filenames %}
+                            <li>{{ filename }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
             </tr>
             <tr>
                 <td class="key">Filetype</td>
@@ -221,6 +236,13 @@
 </div>
 
 </div>
+
+
+<script>
+    $(document).bind('enable_filenames', function(){
+        window.add_filenames = true;
+    });
+</script>
 
 {% else %}
 <h1>Missing sample.</h1>

@@ -1368,7 +1368,10 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         'ssdeephash': {'ssdeep': search_query},
         'sha256hash': {'sha256': search_query},
         # slow in larger collections
-        'filename': {'filename': search_query},
+        'filename': {'$or': [
+            {'filename': search_query},
+            {'filenames': search_query},
+        ]},
         'exploit': {'exploit.cve': search_query},
         'campaign': {'campaign.name': search_query},
         # slightly slow in larger collections
