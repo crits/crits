@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="/css/jquery.tagit.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/chardinjs.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/jquery.mmenu.all.css" type="text/css" media="screen" />
-
+    <link rel="stylesheet" href="/css/w2ui-1.4.min.css" type="text/css"/>
     <link rel="stylesheet" href="/js/jtable/themes/jqueryui/jtable_jqueryui.min.css" type="text/css" />
     <link rel="stylesheet" href="{{ STATIC_URL }}css/core.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="{{ STATIC_URL }}css/jtable-custom.css" type="text/css" media="screen" />
@@ -29,7 +29,7 @@
 
     <script type="text/javascript" src="/js/jquery-1.10.2.min.js"></script>
     <script type="text/javascript" src="/js/jquery-ui-1.10.3.custom.min.js"></script>
-
+    <script type="text/javascript" src="/js/w2ui-1.4.min.js"></script>
     <script type="text/javascript" src="/js/jquery.highlight-3.js"></script>
     <script type="text/javascript" src="/js/datetimewidget.js"></script>
     <script type="text/javascript" src="/js/jquery.tablesorter.min.js"></script>
@@ -513,8 +513,31 @@
 	    <li class='nav_admin mmenu_item'>
 	        <a class='noclick'>CRITs Control Panel</a>
 	        <ul class='sub-mmenu'>
-	            <li class='mmenu_item'>
-	                <a href="{% url 'crits.config.views.crits_config' %}">System</a>
+                <li class='mmenu_item'>
+                    <a href="{% url 'crits.config.views.crits_config' %}">System</a>
+	                <ul class='sub-mmenu'>
+                        <li class='mmenu_item'>
+                            <a href="{% url 'crits.config.views.crits_config' %}#CRITsTab">CRITs Configuration</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a href="{% url 'crits.config.views.crits_config' %}#generalTab">General</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a href="{% url 'crits.config.views.crits_config' %}#LDAP">LDAP Settings</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a href="{% url 'crits.config.views.crits_config' %}#securityTab">Downloading</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a href="{% url 'crits.config.views.crits_config' %}#downloadTab">Security</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a href="{% url 'crits.config.views.crits_config' %}#servicesTab">Services</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a href="{% url 'crits.config.views.crits_config' %}#loggingTab">Logging</a>
+                        </li>
+	                </ul>
 		        </li>
 		        <li class='mmenu_item'>
 	               <a href="{% url 'crits.core.views.item_editor' %}">Items</a>

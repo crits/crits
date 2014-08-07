@@ -99,6 +99,9 @@ def modify_config(request):
         if not errorStringDict:
             result = modify_configuration(forms, analyst)
             message = result['message']
+        elif len(errorStringDict) == 2:
+            formsWithErrors = " and ".join(errorStringDict.values())
+            message ="Invalid Form: The " + formsWithErrors + " tabs have errors."
         elif len(errorStringDict) > 1:      #if there are multiple tabs with errors, pluralize the error message
             formsWithErrors = ", ".join(errorStringDict.values())
             lastWhiteSpace = formsWithErrors.rfind(" ")
