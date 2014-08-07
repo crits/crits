@@ -371,7 +371,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     resp_url = reverse('crits.actors.views.actor_detail', args=[actor.id])
 
     retVal['message'] = ('Success! Click here to view the new Actor: '
-                            '<a href="%s">%s</a>' % (resp_url, actor.id))
+                            '<a href="%s">%s</a>' % (resp_url, actor.name))
 
     retVal['success'] = True
     retVal['object'] = actor
