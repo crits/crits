@@ -231,8 +231,8 @@ $(document).ready(function() {
 
     function identifier_attribution_dialog(e) {
         var dialog = $(this).find("form").find("table");
-        var it_drop = $('#id_identifier_type');
-        var id_drop = $('#id_identifier');
+        var it_drop = $('#form-attribute_actor_identifier select#id_identifier_type');
+        var id_drop = $('#form-attribute_actor_identifier select#id_identifier');
         it_drop.find('option').remove()
         id_drop.find('option').remove()
         $('<input>').attr({
@@ -251,7 +251,7 @@ $(document).ready(function() {
                 url: get_actor_identifier_types,
                 async: true,
                 success: function(data) {
-                    var it_drop = $('#id_identifier_type');
+                    var it_drop = $('#form-attribute_actor_identifier select#id_identifier_type');
                     it_drop.find('option').remove()
                     $.each(data.items, function(index, value) {
                         it_drop.append($('<option/>', {
@@ -259,14 +259,14 @@ $(document).ready(function() {
                             text : value
                         }));
                     });
-                    $("#id_identifier_type :first-child").attr('selected', 'selected');
+                    $("#form-attribute_actor_identifier select#id_identifier_type :first-child").attr('selected', 'selected');
                     get_identifier_values($('#id_identifier_type').val());
                 },
             });
         }
     }
 
-        $(document).on('change', "#id_identifier_type", function(e) {
+        $(document).on('change', "#form-attribute_actor_identifier select#id_identifier_type", function(e) {
             var type = this.value;
             get_identifier_values(type);
         });
@@ -279,7 +279,7 @@ $(document).ready(function() {
                 datatype: 'json',
                 url: get_actor_identifier_type_values,
                 success: function(data) {
-                    var id_drop = $('#id_identifier');
+                    var id_drop = $('#form-attribute_actor_identifier select#id_identifier');
                     id_drop.find('option').remove()
                     $.each(data.items, function(index, value) {
                         id_drop.append($('<option/>', {
