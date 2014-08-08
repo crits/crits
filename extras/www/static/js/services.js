@@ -90,21 +90,38 @@ $(document).ready(function() {
                 if (data.success) {
                     $('#analysis_section').html(data.html);
                 } else {
-                    $('.service_run_form').html(data.form);
-                    $('#run-service-form').dialog({
-                        autoOpen: true,
-                        modal: true,
-                        width: "auto",
-                        height: "auto",
-                        buttons: {
-                            "Run Service": function(e) {
-                                $('#form-run-service').submit();
+                    if (data.form) {
+                        $('.service_run_form').html(data.form);
+                        $('#run-service-form').dialog({
+                            autoOpen: true,
+                            modal: true,
+                            width: "auto",
+                            height: "auto",
+                            buttons: {
+                                "Run Service": function(e) {
+                                    $('#form-run-service').submit();
+                                },
+                                "Cancel": function() {
+                                    $(this).dialog("close");
+                                },
                             },
-                            "Cancel": function() {
-                                $(this).dialog( "close" );
+                        });
+                    }
+                    if (data.html) {
+                        $('.service_run_form').html("Failed: " + data.html);
+                        $('.service_run_form').dialog({
+                            autoOpen: true,
+                            modal: true,
+                            width: "auto",
+                            height: "auto",
+                            title: "Failure",
+                            buttons: {
+                                "OK": function() {
+                                    $(this).dialog("close");
+                                },
                             },
-                        },
-                    });
+                        });
+                    }
                 }
             }
         });
