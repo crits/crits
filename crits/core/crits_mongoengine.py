@@ -1203,7 +1203,9 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 for c, campaign in enumerate(self.campaign):
                     if campaign.name == campaign_item.name:
                         con = {'low': 1, 'medium': 2, 'high': 3}
-                        if con[campaign.confidence] < con[campaign_item.confidence]:
+                        if not con.get(campaign_item.confidence):
+                            campaign_item.confidence = 'low'
+                        if con.get(campaign.confidence, 0) < con[campaign_item.confidence]:
                             self.campaign[c].confidence = campaign_item.confidence
                             self.campaign[c].analyst = campaign_item.analyst
                         break
