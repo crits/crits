@@ -96,13 +96,13 @@ def upload_pcap(request):
             source = cleaned_data.get('source')
             user = request.user.username
             description = cleaned_data.get('description', '')
-            parent = cleaned_data.get('parent_id', '')
-            parent_type = cleaned_data.get('parent_type', '')
+            related = cleaned_data.get('related_id', '')
+            related_type = cleaned_data.get('related_type', '')
             method = 'Upload'
             bucket_list=cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket=cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
             status = handle_pcap_file(filename, data, source, user, description,
-                                      parent_id=parent, parent_type=parent_type,
+                                      related_id=related, related_type=related_type,
                                       method=method, bucket_list=bucket_list,
                                       ticket=ticket)
             if status['success']:

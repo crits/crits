@@ -1,5 +1,6 @@
 import json
 
+from django import forms
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
@@ -16,7 +17,6 @@ from crits.core.handlers import get_object_types
 from crits.core.handsontable_tools import form_to_dict
 from crits.core.user_tools import user_can_view_data, user_is_admin
 from crits.core.user_tools import get_user_organization
-from crits.emails.forms import EmailAttachForm
 from crits.objects.forms import AddObjectForm
 from crits.samples.forms import UploadFileForm, NewExploitForm, NewBackdoorForm
 from crits.samples.forms import BackdoorForm, ExploitForm, XORSearchForm
@@ -28,7 +28,7 @@ from crits.samples.handlers import delete_sample, handle_unzip_file
 from crits.samples.handlers import get_exploits, add_exploit_to_sample
 from crits.samples.handlers import add_backdoor_to_sample, get_source_counts
 from crits.samples.handlers import get_sample_details, generate_backdoor_jtable
-from crits.samples.handlers import generate_sample_jtable, add_source_to_samples
+from crits.samples.handlers import generate_sample_jtable
 from crits.samples.handlers import generate_sample_csv, process_bulk_add_md5_sample
 from crits.samples.handlers import update_sample_filename, modify_sample_filenames
 from crits.samples.sample import Sample
@@ -175,12 +175,14 @@ def bulk_add_md5_sample(request):
                                   RequestContext(request));
 
 @user_passes_test(user_can_view_data)
-def upload_file(request):
+def upload_file(request, related_md5=None):
     """
     Upload a new sample.
 
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
+    :param related_md5: The MD5 of a related sample.
+    :type related_md5: str
     :returns: :class:`django.http.HttpResponse`
     """
 
@@ -188,181 +190,125 @@ def upload_file(request):
         form = UploadFileForm(request.user, request.POST, request.FILES)
         email_errmsg = None
         if form.is_valid():
+            response = {'success': False,
+                        'message': 'Unknown error; unable to upload file.'}
+            inherited_source = None
             campaign = form.cleaned_data['campaign']
             confidence = form.cleaned_data['confidence']
             source = form.cleaned_data['source']
+            method = form.cleaned_data['method']
             reference = form.cleaned_data['reference']
+            analyst = request.user.username
+
+            if related_md5:
+                reload_page = True
+            else:
+                reload_page = False
+                related_md5 = form.cleaned_data['related_md5']
+
+            if related_md5:
+                related_sample = Sample.objects(md5=related_md5).first()
+                if not related_sample:
+                    response['message'] = "Upload Failed. Unable to locate related sample."
+                    return render_to_response("file_upload_response.html",
+                                              {'response': json.dumps(response)},
+                                              RequestContext(request))
+                # If selected, new sample inherits the campaigns of the related sample.
+                if form.cleaned_data['inherit_campaigns']:
+                    if campaign:
+                        related_sample.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+                    campaign = related_sample.campaign
+                # If selected, new sample inherits the sources of the related sample
+                if form.cleaned_data['inherit_sources']:
+                    inherited_source = related_sample.source
+
             try:
                 if request.FILES:
-                    sample_md5 = handle_uploaded_file(
+                    result = handle_uploaded_file(
                         request.FILES['filedata'],
                         source,
+                        method,
                         reference,
                         form.cleaned_data['file_format'],
                         form.cleaned_data['password'],
-                        user=request.user.username,
-                        campaign=campaign,
-                        confidence=confidence,
-                        parent_md5 = form.cleaned_data['parent_md5'],
+                        analyst,
+                        campaign,
+                        confidence,
+                        related_md5,
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
-                        ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME])
+                        ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
+                        inherited_source=inherited_source)
                 else:
-                    filename = request.POST['filename'].strip()
-                    md5 = request.POST['md5'].strip().lower()
-                    sample_md5 = handle_uploaded_file(
+                    result = handle_uploaded_file(
                         None,
                         source,
+                        method,
                         reference,
                         form.cleaned_data['file_format'],
                         None,
-                        user=request.user.username,
-                        campaign=campaign,
-                        confidence=confidence,
-                        parent_md5 = form.cleaned_data['parent_md5'],
-                        filename=filename,
-                        md5=md5,
+                        analyst,
+                        campaign,
+                        confidence,
+                        related_md5 = related_md5,
+                        filename=request.POST['filename'].strip(),
+                        md5=request.POST['md5'].strip().lower(),
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
+                        inherited_source=inherited_source,
                         is_return_only_md5=False)
 
-                if 'email' in request.POST:
-                    for s in sample_md5:
-                        email_errmsg = mail_sample(s, [request.user.email])
             except ZipFileError, zfe:
                 return render_to_response('file_upload_response.html',
                                           {'response': json.dumps({'success': False,
                                                                    'message': zfe.value})},
                                           RequestContext(request))
             else:
-                response = {'success': False,
-                            'message': 'Unknown error; unable to upload file.'}
-                if len(sample_md5) > 1:
+                if len(result) > 1:
                     filedata = request.FILES['filedata']
                     message = ('<a href="%s">View Uploaded Samples.</a>'
                                % reverse('crits.samples.views.view_upload_list',
-                                         args=[filedata.name, sample_md5]))
+                                         args=[filedata.name, result]))
                     response = {'success': True,
                                 'message': message }
-                elif len(sample_md5) == 1:
+                    md5_response = result
+                elif len(result) == 1:
                     md5_response = None
                     if not request.FILES:
-                        response['success'] = sample_md5[0].get('success', False)
+                        response['success'] = result[0].get('success', False)
                         if(response['success'] == False):
-                            response['message'] = sample_md5[0].get('message', response.get('message'))
+                            response['message'] = result[0].get('message', response.get('message'))
                         else:
-                            md5_response = sample_md5[0].get('object').md5
+                            md5_response = [result[0].get('object').md5]
                     else:
-                        md5_response = sample_md5[0]
+                        md5_response = [result[0]]
                         response['success'] = True
 
                     if md5_response != None:
                         response['message'] = ('File uploaded successfully. <a href="%s">View Sample.</a>'
                                                % reverse('crits.samples.views.detail',
-                                                         args=[md5_response]))
+                                                         args=md5_response))
 
-                if email_errmsg is not None:
-                    msg = "<br>Error sending email: %s" % email_errmsg
-                    response['message'] = response['message'] + msg
-
+                if response['success']:
+                    if request.POST.get('email'):
+                        for s in md5_response:
+                            email_errmsg = mail_sample(s, [request.user.email])
+                            if email_errmsg is not None:
+                                msg = "<br>Error emailing sample %s: %s\n" % (s, email_errmsg)
+                                response['message'] = response['message'] + msg
+                    if reload_page:
+                        response['redirect_url'] = reverse('crits.samples.views.detail', args=[related_md5])
                 return render_to_response("file_upload_response.html",
                                           {'response': json.dumps(response)},
                                           RequestContext(request))
         else:
+            if related_md5: #if this is a 'related' upload, hide field so it doesn't reappear
+                form.fields['related_md5'].widget = forms.HiddenInput()
             return render_to_response('file_upload_response.html',
                                       {'response': json.dumps({'success': False,
                                                                'form': form.as_table()})},
                                       RequestContext(request))
-
-#TODO
-@user_passes_test(user_can_view_data)
-def upload_child(request, parent_md5):
-    """
-    Upload a new child sample.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param parent_md5: The MD5 of the parent sample.
-    :type parent_md5: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    new_samples = []
-    if request.method == "POST":
-        form = EmailAttachForm(request.user.username, request.POST, request.FILES)
-        if form.is_valid():
-            if request.FILES or 'filename' in request.POST and 'md5' in request.POST:
-                # Child samples inherit all of the sources of the parent.
-                parent = Sample.objects(md5=parent_md5).first()
-                if not parent:
-                    return render_to_response('error.html',
-                                              {'error': "Unable to find parent."},
-                                              RequestContext(request))
-                source = parent.source
-
-                campaign_name = request.POST['campaign']
-                confidence = request.POST['confidence']
-                parent.campaign.append(EmbeddedCampaign(name=campaign_name, confidence=confidence, analyst=request.user.username))
-                campaigns = parent.campaign
-
-                try:
-                    if request.FILES:
-                        new_samples = handle_uploaded_file(request.FILES["filedata"],
-                                                           source,
-                                                           None,
-                                                           form.cleaned_data["file_format"],
-                                                           form.cleaned_data["password"],
-                                                           user=request.user.username,
-                                                           campaign=campaigns,
-                                                           parent_md5=parent_md5,
-                                                           bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
-                                                           ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME])
-                    else:
-                        filename = request.POST['filename'].strip()
-                        md5= request.POST['md5'].strip().lower()
-                        if not filename or not md5:
-                            error = "Need a file, or a filename and an md5."
-                            return render_to_response('error.html',
-                                                      {'error': error},
-                                                      RequestContext(request))
-                        else:
-                            new_samples = handle_uploaded_file(None,
-                                                               source,
-                                                               None,
-                                                               form.cleaned_data["file_format"],
-                                                               form.cleaned_data["password"],
-                                                               user=request.user.username,
-                                                               campaign=campaigns,
-                                                               parent_md5=parent_md5,
-                                                               filename=filename,
-                                                               bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
-                                                               ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
-                                                               md5=md5)
-                except ZipFileError, zfe:
-                    return render_to_response('error.html',
-                                              {'error': zfe.value},
-                                              RequestContext(request))
-            else:
-                return render_to_response('error.html',
-                                          {'error': "Need a file, or a filename and an md5."},
-                                          RequestContext(request))
-        else:
-            return render_to_response('error.html',
-                                      {'error': 'form error'},
-                                      RequestContext(request))
-
-    # handle_upload_file() returns a list of strings. Use those strings to
-    # find the sample and add anything submitted on the form to it.
-    results = add_source_to_samples(new_samples,
-                                    form.cleaned_data['source'],
-                                    form.cleaned_data.get('source_method', 'Upload'),
-                                    form.cleaned_data.get('source_reference', None),
-                                    request.user.username)
-    if not results['success']:
-        return render_to_response('error.html',
-                                  {'error': results['message']},
-                                  RequestContext(request))
-    return HttpResponseRedirect(reverse('crits.samples.views.detail',
-                                        args=[parent_md5]))
+    else:
+        return HttpResponseRedirect(reverse('crits.samples.views.samples_listing'))
 
 @user_passes_test(user_can_view_data)
 def new_exploit(request):

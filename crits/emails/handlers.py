@@ -15,7 +15,7 @@ import sys
 from dateutil.parser import parse as date_parser
 from django.conf import settings
 from crits.core.forms import DownloadFileForm
-from crits.emails.forms import EmailAttachForm, EmailYAMLForm
+from crits.emails.forms import EmailYAMLForm
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -38,7 +38,7 @@ from crits.emails.email import Email
 from crits.indicators.handlers import handle_indicator_ind
 from crits.indicators.indicator import Indicator
 from crits.notifications.handlers import remove_user_from_notification
-from crits.samples.handlers import handle_file, handle_uploaded_file
+from crits.samples.handlers import handle_file, handle_uploaded_file, mail_sample
 from crits.samples.sample import Sample
 
 def create_email_field_dict(field_name,
@@ -147,8 +147,6 @@ def get_email_detail(email_id, analyst):
         args = {'error': "ID does not exist or insufficient privs for source"}
     else:
         email.sanitize(username="%s" % analyst, sources=sources)
-        upload_form = EmailAttachForm(analyst,
-                                      initial={"email_id": email_id})
         update_data_form = EmailYAMLForm(analyst)
         campaign_form = CampaignForm()
         download_form = DownloadFileForm(initial={"obj_type": 'Email',
@@ -316,7 +314,6 @@ def get_email_detail(email_id, analyst):
                 'subscription': subscription,
                 'email': email,
                 'campaign_form': campaign_form,
-                'upload_form': upload_form,
                 'download_form': download_form,
                 'update_data_form': update_data_form,
                 'admin': is_admin(analyst),
@@ -756,10 +753,9 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
             try:
                 cleaned_data = {'file_format': file_format,
                                 'password': password}
-                r = create_email_attachment(email, cleaned_data, reference,
-                                        sourcename, analyst, campaign,
-                                        confidence, "", "", file['data'],
-                                        file['name'], method=method)
+                r = create_email_attachment(email, cleaned_data, analyst, sourcename,
+                                        method, reference, campaign, confidence,
+                                        "", "", file['data'], file['name'])
                 if 'success' in r:
                     if not r['success']:
                         attach_messages.append("%s: %s" % (file['name'],
@@ -1039,12 +1035,12 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
         if handle_file(attachment['filename'],
                        attachment['blob'],
                        sourcename,
-                       reference=reference,
-                       parent_id=result['object'].id,
-                       user=analyst,
                        method='eml_processor',
+                       reference=reference,
+                       related_id=result['object'].id,
+                       user=analyst,
                        md5_digest=md5_,
-                       parent_type='Email',
+                       related_type='Email',
                        campaign=campaign,
                        confidence=confidence,
                        relationship='Extracted_From') == None:
@@ -1264,10 +1260,10 @@ def create_indicator_from_header_field(email, header_field, ind_type,
 
     return result
 
-def create_email_attachment(email, cleaned_data, reference, source, analyst,
-                            campaign=None, confidence='low',
-                            bucket_list=None, ticket=None, files=None,
-                            filename=None, md5=None, method="Upload"):
+def create_email_attachment(email, cleaned_data, analyst, source, method="Upload",
+                            reference="", campaign=None, confidence='low',
+                            bucket_list=None, ticket=None, filedata=None,
+                            filename=None, md5=None, email_addr=None, inherit_sources=False):
     """
     Create an attachment for an email.
 
@@ -1275,12 +1271,14 @@ def create_email_attachment(email, cleaned_data, reference, source, analyst,
     :type email: :class:`crits.emails.email.Email`
     :param cleaned_data: Cleaned form information about the email.
     :type cleaned_data: dict
-    :param reference: The source reference.
-    :type reference: str
-    :param source: The name of the source.
-    :type source: str
     :param analyst: The user creating this attachment.
     :type analyst: str
+    :param source: The name of the source.
+    :type source: str
+    :param method: The method for this file upload.
+    :type method: str
+    :param reference: The source reference.
+    :type reference: str
     :param campaign: The campaign to attribute to this attachment.
     :type campaign: str
     :param confidence: The campaign confidence.
@@ -1289,81 +1287,95 @@ def create_email_attachment(email, cleaned_data, reference, source, analyst,
     :type bucket_list: str
     :param ticket: The ticket to assign to this attachment.
     :type ticket: str
-    :param files: The attachment.
-    :type files: request file data.
+    :param filedata: The attachment.
+    :type filedata: request file data.
     :param filename: The name of the file.
     :type filename: str
     :param md5: The MD5 of the file.
     :type md5: str
-    :param method: The method for this file upload.
+    :param email_addr: Email address to which to email the sample
+    :type email_addr: str
+    :param inherit_sources: 'True' if attachment should inherit Email's Source(s)
+    :type inherit_sources: bool
     :returns: dict with keys "success" (boolean) and "message" (str).
     """
 
-    if files:
-        try:
-            sample_md5 = handle_uploaded_file(files,
-                                              source,
-                                              reference,
-                                              cleaned_data['file_format'],
-                                              cleaned_data['password'],
-                                              analyst,
-                                              campaign=campaign,
-                                              confidence=confidence,
-                                              bucket_list=bucket_list,
-                                              ticket=ticket,
-                                              method=method)
+    response = {'success': False,
+                'message': 'Unknown error; unable to upload file.'}
+    if filename:
+        filename = filename.strip()
 
-            samples = Sample.objects(md5__in=sample_md5)
-        except Exception, e:
-            return {'success': False,
-                    'message': str(e)}
-    else:
-        if not filename or not md5:
-            error = "Need a file, or a filename and an md5."
-            return {'success': False,
-                    'message': error}
+    # If selected, new sample inherits the campaigns of the related email.
+    if cleaned_data['inherit_campaigns']:
+        if campaign:
+            email.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+        campaign = email.campaign
+
+    inherited_source = email.source if inherit_sources else None
+
+    try:
+        if filedata:
+            result = handle_uploaded_file(filedata,
+                                          source,
+                                          method,
+                                          reference,
+                                          cleaned_data['file_format'],
+                                          cleaned_data['password'],
+                                          analyst,
+                                          campaign,
+                                          confidence,
+                                          related_id=email.id,
+                                          related_type='Email',
+                                          filename=filename,
+                                          bucket_list=bucket_list,
+                                          ticket=ticket,
+                                          inherited_source=inherited_source)
         else:
-            try:
-                filename = filename.strip()
+            if md5:
                 md5 = md5.strip().lower()
-                sample_md5 = handle_uploaded_file(None,
-                                                  source,
-                                                  reference,
-                                                  cleaned_data['file_format'],
-                                                  cleaned_data['password'],
-                                                  analyst,
-                                                  campaign=campaign,
-                                                  confidence=confidence,
-                                                  bucket_list=bucket_list,
-                                                  ticket=ticket,
-                                                  filename=filename,
-                                                  md5=md5,
-                                                  method=method,
-                                                  is_return_only_md5=False)
-            except Exception, e:
-                return {'success': False,
-                        'message': str(e)}
-            if len(sample_md5) == 0:
-                error = "Error uploading file."
-                return {'success': False,
-                        'message': error}
-            elif not files:
-                if sample_md5[0].get('success', False) == False:
-                    error = sample_md5[0].get('message', "Error uploading file.")
-                    return {'success': False,
-                            'message': error}
+            result = handle_uploaded_file(None,
+                                          source,
+                                          method,
+                                          reference,
+                                          cleaned_data['file_format'],
+                                          None,
+                                          analyst,
+                                          campaign,
+                                          confidence,
+                                          related_id=email.id,
+                                          related_type='Email',
+                                          filename=filename,
+                                          md5=md5,
+                                          bucket_list=bucket_list,
+                                          ticket=ticket,
+                                          inherited_source=inherited_source,
+                                          is_return_only_md5=False)
+    except ZipFileError, zfe:
+        return {'success': False, 'message': zfe.value}
+    else:
+        if len(result) > 1:
+            response = {'success': True, 'message': 'Files uploaded successfully. '}
+        elif len(result) == 1:
+            if not filedata:
+                response['success'] = result[0].get('success', False)
+                if(response['success'] == False):
+                    response['message'] = result[0].get('message', response.get('message'))
                 else:
-                    sample_md5 = sample_md5[0].get('object').md5
-                    samples = Sample.objects(md5=sample_md5)
-    if samples:
-        for s in samples:
-            email.add_relationship(rel_item=s,
-                                   rel_type="Contains",
-                                   analyst=analyst,
-                                   get_rels=False)
-            s.save(username=analyst)
-        email.save(username=analyst)
-    return {'success': True}
+                    result = [result[0].get('object').md5]
+                    response['message'] = 'File uploaded successfully. '
+            else:
+                response = {'success': True, 'message': 'Files uploaded successfully. '}
+        if not response['success']:
+            return response
+        else:
+            if email_addr:
+                for s in result:
+                    email_errmsg = mail_sample(s, [email_addr])
+                    if email_errmsg is not None:
+                        response['success'] = False
+                        msg = "<br>Error emailing sample %s: %s\n" % (s, email_errmsg)
+                        response['message'] = response['message'] + msg
+    return response
 
 def parse_ole_file(file):
     """

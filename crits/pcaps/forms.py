@@ -14,8 +14,8 @@ class UploadPcapForm(forms.Form):
     filedata = forms.FileField()
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80', 'rows':'2'}), required=False)
     source = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
-    parent_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    parent_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     def __init__(self, username, *args, **kwargs):
         super(UploadPcapForm, self).__init__(*args, **kwargs)
