@@ -122,15 +122,13 @@ def upload_attach(request, email_id):
                                              request.POST.get('md5', None),
                                              email_addr,
                                              cleaned_data['inherit_sources'])
+
+            # If successful, tell the browser to redirect back to this email.
             if result['success']:
-                return render_to_response('redirect.html',
-                                          {'redirect_url': reverse('crits.emails.views.email_detail', args=[email_id])},
-                                              RequestContext(request))
-            else:
-                return render_to_response('file_upload_response.html',
-                                          {'response': json.dumps({'success': False,
-                                                                   'message': result['message']})},
-                                          RequestContext(request))
+                result['redirect_url'] = reverse('crits.emails.views.email_detail', args=[email_id])
+            return render_to_response('file_upload_response.html',
+                                      {'response': json.dumps(result)},
+                                      RequestContext(request))
         else:
             form.fields['related_md5'].widget = forms.HiddenInput() #hide field so it doesn't reappear
             return render_to_response('file_upload_response.html',

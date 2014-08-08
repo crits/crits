@@ -137,14 +137,10 @@ def upload_sample(request, event_id):
                                           email,
                                           form.cleaned_data['inherit_sources'])
             if result['success']:
-                return render_to_response('redirect.html',
-                                          {'redirect_url': reverse('crits.events.views.view_event', args=[event_id])},
-                                              RequestContext(request))
-            else:
-                return render_to_response('file_upload_response.html',
-                                          {'response': json.dumps({'success': False,
-                                                                   'message': result['message']})},
-                                          RequestContext(request))
+                result['redirect_url'] = reverse('crits.events.views.view_event', args=[event_id])
+            return render_to_response('file_upload_response.html',
+                                      {'response': json.dumps(result)},
+                                      RequestContext(request))
         else:
             form.fields['related_md5'].widget = forms.HiddenInput() #hide field so it doesn't reappear
             return render_to_response('file_upload_response.html',

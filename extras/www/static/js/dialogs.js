@@ -773,6 +773,11 @@ function file_upload_dialog(e) {
             clear_server_msg(dialog);
         }
 
+        // If we are being told to redirect, do so.
+        if (response.redirect_url) {
+            document.location = response.redirect_url;
+        }
+
     // XXX TODO: Make this more general for special dialog callbacks, etc..
         if (item_type == "object" || item_type == "object-static") {
             $curTar.parent('form').find('.object-types').change();

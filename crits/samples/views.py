@@ -295,9 +295,7 @@ def upload_file(request, related_md5=None):
                                 msg = "<br>Error emailing sample %s: %s\n" % (s, email_errmsg)
                                 response['message'] = response['message'] + msg
                     if reload_page:
-                        return render_to_response('redirect.html',
-                                                  {'redirect_url': reverse('crits.samples.views.detail', args=[related_md5])},
-                                                  RequestContext(request))
+                        response['redirect_url'] = reverse('crits.samples.views.detail', args=[related_md5])
                 return render_to_response("file_upload_response.html",
                                           {'response': json.dumps(response)},
                                           RequestContext(request))
