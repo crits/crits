@@ -95,8 +95,8 @@ class ServiceManager(object):
             # TODO: replace this with a proper check for a valid service
             if not (hasattr(service_class, "name") and
                     hasattr(service_class, "version")):
-                # If this is a subclass of Service but not an actual service,
-                # (i.e. DatabaseService), call this function recursively.
+                # If this is a subclass of Service but not an actual service
+                # call this function recursively.
                 self._register_services(service_class)
                 continue
 
@@ -113,7 +113,7 @@ class ServiceManager(object):
             except ValueError as e:
                 # Unable to parse the service version
                 msg = ("Service %s is invalid, and will not be available." %
-                            service_name)
+                       service_name)
                 logger.warning(msg)
                 logger.warning(e)
                 continue
@@ -141,6 +141,7 @@ class ServiceManager(object):
                         svc_obj.config = AnalysisConfig(**new_config)
                     except ServiceConfigError:
                         svc_obj.status = "misconfigured"
+                        svc_obj.enabled = False
                         msg = ("Service %s is misconfigured." % service_name)
                         logger.warning(msg)
                     else:
@@ -157,6 +158,14 @@ class ServiceManager(object):
                 svc_obj.supported_types = supported_types
                 svc_obj.save()
                 self._services[service_class.name] = service_class
+        # For anything in the database that did not import properly, mark the
+        # status to unavailable.
+        svcs = CRITsService.objects()
+        for svc in svcs:
+            if svc.name not in self._services:
+                svc.status = 'unavailable'
+                svc.enabled = False
+                svc.save()
 
     def get_service_class(self, service_name):
         """

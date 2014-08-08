@@ -324,8 +324,7 @@ def update_config(service_name, config, analyst):
         service.save(username=analyst)
         return {'success': True}
     except ValidationError, e:
-        return {'success': False,
-                'message': e}
+        return {'success': False, 'message': e}
 
 def get_service_config(name):
     status = {'success': False}
@@ -336,6 +335,9 @@ def get_service_config(name):
 
     config = service.config.to_dict()
     service_class = crits.services.manager.get_service_class(name)
+    if not service_class:
+        status['error'] = 'Service "%s" is unavilable. Please review error logs.' % name
+        return status
     display_config = service_class.get_config_details(config)
 
     status['config'] = display_config
