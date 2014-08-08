@@ -25,12 +25,7 @@
 <div id="details_section">
     <span class="horizontal_menu">
     <ul class="hmenu">
-      {% comment %} 
-      XXX add-attachment is very similar to new-sample, in fact it adds a sample, but seems to have some different required
-      fileds, like source_date, and excludes a few fields new-sample uses..  Otherwise we could use the related persona here as well
-      dialog="new-sample" persona="related" action="{% url 'crits.emails.views.upload_attach' email.id %}"
-      {% endcomment %}
-        <li><a href="#" class="dialogClick" dialog="add-attachment">Add Attachment</a></li>
+        <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.emails.views.upload_attach' email.id %}">Add Attachment</a></li>
         <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
         {% if admin %}
         <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
@@ -203,13 +198,6 @@
 </div>
 
 <div style="display: none;">
-
-<div id="dialog-add-attachment">
-  <form id="form-add-attachment" action="{% url 'crits.emails.views.upload_attach' email.id %}" method="POST" enctype="multipart/form-data">
-    <table class="form">{{upload_form.as_table}}</table>
-  </form>
-  <div id="form-add-attachment-results" class="form_results"></div>
-</div>
 
 <div id="dialog-download-email">
     <form id="form-download-email" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">

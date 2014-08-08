@@ -1,6 +1,7 @@
 import json
 import urllib
 
+from django import forms
 from django.shortcuts import render_to_response, render
 from django.template import RequestContext
 from django.http import HttpResponse, HttpResponseRedirect
@@ -10,7 +11,7 @@ from django.core.urlresolvers import reverse
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data, user_sources, user_is_admin
 from crits.emails.email import Email
-from crits.emails.forms import EmailAttachForm, EmailYAMLForm, EmailOutlookForm
+from crits.emails.forms import EmailYAMLForm, EmailOutlookForm
 from crits.emails.forms import EmailEMLForm, EmailUploadForm, EmailRawUploadForm
 from crits.emails.handlers import handle_email_fields, handle_yaml
 from crits.emails.handlers import handle_eml, generate_email_cybox, handle_msg
@@ -19,6 +20,7 @@ from crits.emails.handlers import get_email_detail, generate_email_jtable
 from crits.emails.handlers import generate_email_csv
 from crits.emails.handlers import create_email_attachment, get_email_formatted
 from crits.emails.handlers import create_indicator_from_header_field
+from crits.samples.forms import UploadFileForm
 
 
 @user_passes_test(user_can_view_data)
@@ -87,49 +89,51 @@ def upload_attach(request, email_id):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
-    sources = user_sources(analyst)
-    email = Email.objects(id=email_id, source__name__in=sources).first()
-    if not email:
-        error = "Could not find email."
-        return render_to_response("error.html",
-                                    {"error": error},
-                                    RequestContext(request))
     if request.method == 'POST':
-        form = EmailAttachForm(request.user.username,
-                               request.POST,
-                               request.FILES)
+        form = UploadFileForm(request.user, request.POST, request.FILES)
         if form.is_valid():
             cleaned_data = form.cleaned_data
-            reference = cleaned_data['source_reference']
-            campaign = cleaned_data['campaign']
-            confidence = cleaned_data['confidence']
-            source = cleaned_data['source']
+            analyst = request.user.username
+            users_sources = user_sources(analyst)
+            method = cleaned_data['method'] or "Add to Email"
             bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+            email_addr = None
+            if request.POST.get('email'):
+                email_addr = request.user.email
+            email = Email.objects(id=email_id, source__name__in=users_sources).first()
+            if not email:
+                return render_to_response('file_upload_response.html',
+                                          {'response': json.dumps({'success': False,
+                                                                   'message': "Could not find email."})},
+                                          RequestContext(request))
+            result = create_email_attachment(email,
+                                             cleaned_data,
+                                             analyst,
+                                             cleaned_data['source'],
+                                             method,
+                                             cleaned_data['reference'],
+                                             cleaned_data['campaign'],
+                                             cleaned_data['confidence'],
+                                             bucket_list,
+                                             ticket,
+                                             request.FILES.get('filedata',None),
+                                             request.POST.get('filename', None),
+                                             request.POST.get('md5', None),
+                                             email_addr,
+                                             cleaned_data['inherit_sources'])
 
-            if request.FILES or 'filename' in request.POST and 'md5' in request.POST:
-                result = create_email_attachment(email,
-                                                 cleaned_data,
-                                                 reference,
-                                                 source,
-                                                 analyst,
-                                                 campaign=campaign,
-                                                 confidence=confidence,
-                                                 bucket_list=bucket_list,
-                                                 ticket=ticket,
-                                                 files=request.FILES.get('filedata',None),
-                                                 filename=request.POST.get('filename', None),
-                                                 md5=request.POST.get('md5', None))
-                if not result['success']:
-                    return render_to_response("error.html",
-                                            {"error": result['message'] },
-                                            RequestContext(request))
-            return HttpResponseRedirect(reverse('crits.emails.views.email_detail',
-                                                args=[email_id]))
+            # If successful, tell the browser to redirect back to this email.
+            if result['success']:
+                result['redirect_url'] = reverse('crits.emails.views.email_detail', args=[email_id])
+            return render_to_response('file_upload_response.html',
+                                      {'response': json.dumps(result)},
+                                      RequestContext(request))
         else:
-            return render_to_response("error.html",
-                                      {"error": '%s' % form.errors },
+            form.fields['related_md5'].widget = forms.HiddenInput() #hide field so it doesn't reappear
+            return render_to_response('file_upload_response.html',
+                                      {'response': json.dumps({'success': False,
+                                                               'form': form.as_table()})},
                                       RequestContext(request))
     else:
         return HttpResponseRedirect(reverse('crits.emails.views.email_detail',

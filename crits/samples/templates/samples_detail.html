@@ -28,7 +28,7 @@
     <span class="horizontal_menu">
     <ul class="hmenu">
         <li><a href="#" class="dialogClick" dialog="download-sample">Download Sample</a></li>
-        <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.samples.views.upload_child' sample.md5 %}">Upload Related Sample</a></li>
+        <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.samples.views.upload_file' sample.md5 %}">Upload Related Sample</a></li>
         <li><a href="#" class="dialogClick" dialog="new-pcap" persona="related">Upload Related PCAP</a></li>
         <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=text">Text</a></li>
         <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=yaml">YAML</a></li>
@@ -206,11 +206,6 @@
 <div id="dialog-add-exploit" title="Add Exploit">
     <form id="form-add-exploit" action='{% url "crits.samples.views.add_exploit" sample.md5 %}' method='POST'>
     <table class='form'> {{ exploit_form.as_table }} </table>
-    </form>
-</div>
-<div id="dialog-add-child" title="Add Child">
-    <form id="form-add-child" action="" method="POST" enctype="multipart/form-data">
-    <table class="form">{{child_form.as_table}}</table>
     </form>
 </div>
 <div id="dialog-download-sample" title="Download Sample">

@@ -1,6 +1,7 @@
 import json
 import urllib
 
+from django import forms
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
@@ -9,13 +10,13 @@ from django.template import RequestContext
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data, user_is_admin
-from crits.emails.forms import EmailAttachForm
 from crits.events.forms import EventForm
 from crits.events.handlers import event_remove, update_event_description
 from crits.events.handlers import update_event_title, update_event_type
 from crits.events.handlers import get_event_types, get_event_details
 from crits.events.handlers import generate_event_jtable, add_sample_for_event
 from crits.events.handlers import generate_event_csv, add_new_event
+from crits.samples.forms import UploadFileForm
 
 
 @user_passes_test(user_can_view_data)
@@ -121,32 +122,30 @@ def upload_sample(request, event_id):
     """
 
     if request.method == 'POST':    # and request.is_ajax():
-        form = EmailAttachForm(request.user.username,
-                               request.POST,
-                               request.FILES)
+        form = UploadFileForm(request.user, request.POST, request.FILES)
         if form.is_valid():
-            cleaned_data = form.cleaned_data
-            analyst = request.user.username
-            filedata = request.FILES.get('filedata', None)
-            filename = request.POST.get('filename', None)
-            md5 = request.POST.get('md5', None)
-            results = add_sample_for_event(event_id,
-                                           cleaned_data,
-                                           analyst,
-                                           filedata=filedata,
-                                           filename=filename,
-                                           md5=md5)
-            if results['success']:
-                return HttpResponseRedirect(
-                    reverse('crits.events.views.view_event', args=[event_id])
-                )
-            else:
-                return render_to_response("error.html",
-                                          {"error": results['error']},
-                                          RequestContext(request))
+            email = None
+            if request.POST.get('email'):
+                email = request.user.email
+
+            result = add_sample_for_event(event_id,
+                                          form.cleaned_data,
+                                          request.user.username,
+                                          request.FILES.get('filedata', None),
+                                          request.POST.get('filename', None),
+                                          request.POST.get('md5', None),
+                                          email,
+                                          form.cleaned_data['inherit_sources'])
+            if result['success']:
+                result['redirect_url'] = reverse('crits.events.views.view_event', args=[event_id])
+            return render_to_response('file_upload_response.html',
+                                      {'response': json.dumps(result)},
+                                      RequestContext(request))
         else:
-            return render_to_response("error.html",
-                                      {"error": '%s' % form.errors},
+            form.fields['related_md5'].widget = forms.HiddenInput() #hide field so it doesn't reappear
+            return render_to_response('file_upload_response.html',
+                                      {'response': json.dumps({'success': False,
+                                                               'form': form.as_table()})},
                                       RequestContext(request))
     else:
         return HttpResponseRedirect(reverse('crits.events.views.view_event',
