@@ -4,14 +4,7 @@
 {% block javascript_includes %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/config.js"></script>
     <script type="text/javascript">
-		//$(function () {
-        //    $('#tabs').w2tabs(config.tabs);
-        //    if(document.location.hash)
-        //    	$(document.location.hash).show();
-        //    else
-        //        $('#CRITsTab').show();
-        //});
-		
+    var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
 		
 	$(document).ready(function() {
 		$(function () {
@@ -31,9 +24,21 @@
 		            { id: 'items', text: 'Items', img: 'icon-folder', group: true},
 		            { id: 'users', text: 'Users', img: 'icon-folder', group: true},
 		            { id: 'services', text: 'Services', img: 'icon-folder', group: true},
-		            { id: 'Audit Log', text: 'Audit Log', img: 'icon-folder', group: true}
+		            { id: 'audit_log', text: 'Audit Log', img: 'icon-folder', group: true}
 		        ]
 		    });
+		    
+		    $("#node_items").removeAttr('onmouseover');
+		    $("#node_users").removeAttr('onmouseover');
+		    $("#node_services").removeAttr('onmouseover');
+		    $("#node_audit_log").removeAttr('onmouseover');
+		    
+		    
+		    
+		    $("#node_items").click(function() {
+		    	
+		    });
+		    
 		    
 		    w2ui.sidebar.on('*', function (event) {
 		    	if(event.type == 'click') {
@@ -95,6 +100,11 @@
 {% endblock %}
 {% block content %}
     <style>
+        .error {
+		    border: 1px red solid !important;
+		    background-color: rgba(255, 0, 0, 0.1) !important;
+		}
+    
 	    #config_results {
 	        color: #ff0000;
 	        position:absolute;
@@ -142,44 +152,54 @@
 			color: #000;
 			background-color: #FFF;
 		}
+		
+		#systemContainer{
+		  //display:none;
+		}
+		#itemsContainer {
+		  height:100px;
+		}
 	</style>
 	
 	
-    <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
         <div id="wrapper">
         
             <div id="config_results"></div>
             
             <div id="sidebar" ></div>
             <div id='container'>
-                <div id='CRITsTab' class='box'>
-                   <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
-                </div>  
-                <div id='generalTab' class='box'>
-                   <table class="systemTable">{{ config_general_form.as_table }}</table>
-                </div>
-                <div id="LDAP" class='box'>
-                   <table class="systemTable">{{ config_LDAP_form.as_table }}</table>
-                </div>
-                <div id="securityTab" class='box'>
-                   <table class="systemTable">{{ config_security_form.as_table }}</table>
-                </div>
-                <div id="downloadTab" class='box'>
-                   <table class="systemTable">{{ config_download_form.as_table }}</table>
-                </div>
-                <div id="servicesTab" class='box'>
-                   <table class="systemTable">{{ config_services_form.as_table }}</table>
-                </div>
-                <div id="loggingTab" class='box'>
-                   <table class="systemTable">{{ config_logging_form.as_table }}</table>
-                </div>
-                <div id="submitWrapper">
-	                <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
-	                <input id="reset_button" type="button" value="Reset"></input>
-	            </div>
+                <div id='systemContainer'>
+                    <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
+		                <div id='CRITsTab' class='box'>
+		                   <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
+		                </div>  
+		                <div id='generalTab' class='box'>
+		                   <table class="systemTable">{{ config_general_form.as_table }}</table>
+		                </div>
+		                <div id="LDAP" class='box'>
+		                   <table class="systemTable">{{ config_LDAP_form.as_table }}</table>
+		                </div>
+		                <div id="securityTab" class='box'>
+		                   <table class="systemTable">{{ config_security_form.as_table }}</table>
+		                </div>
+		                <div id="downloadTab" class='box'>
+		                   <table class="systemTable">{{ config_download_form.as_table }}</table>
+		                </div>
+		                <div id="servicesTab" class='box'>
+		                   <table class="systemTable">{{ config_services_form.as_table }}</table>
+		                </div>
+		                <div id="loggingTab" class='box'>
+		                   <table class="systemTable">{{ config_logging_form.as_table }}</table>
+		                </div>
+		                <div id="submitWrapper">
+			                <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
+			                <input id="reset_button" type="button" value="Reset"></input>
+			            </div>
+	                </form>   
+                </div> 
             </div>
         </div>
-    </form>
+   
 	
 	
 {% endblock %}

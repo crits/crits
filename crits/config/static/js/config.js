@@ -3,6 +3,11 @@ $(document).ready(function() {
         e.preventDefault();
         $('#config_form').submit();
     });
+    
+    $(document).on("keypress", ".error", function(){
+    	$(this).removeClass("error"); 
+    });
+
     $('#config_form').off().submit(function(e) {
         e.preventDefault();
         $.ajax({
@@ -12,8 +17,13 @@ $(document).ready(function() {
             datatype: 'json',
             success: function(data) {
                 $("#config_results").text(data.message);
+                if(data.errors.length > 0)
+                	for(index in data.errors) 
+                		$("#id_"+data.errors[index]).addClass("error");
             },
         });
     });
+    
+   
 }); //document.ready
 

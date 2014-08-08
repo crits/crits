@@ -74,7 +74,6 @@ class ConfigGeneralForm(forms.Form):
                                   widget=forms.Select(),
                                   required=False,
                                   initial='Disabled')
-
     def __init__(self, *args, **kwargs):
         super(ConfigGeneralForm, self).__init__(*args, **kwargs)
         

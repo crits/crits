@@ -88,12 +88,15 @@ def modify_config(request):
                        }
         
         analyst = request.user.username
+        errors = []
         #iterate over all the forms, checking if they're valid
         #if the form is valid, remove it from the errorStringDict
         for form in forms:
             if form.is_valid():
                 formName = type(form).__name__
                 errorStringDict.pop(formName, None)
+            else:
+                errors.extend(form.errors)
 
         #submit if the errorStringDict is empty
         if not errorStringDict:
@@ -111,7 +114,10 @@ def modify_config(request):
             formsWithErrors = errorStringDict.values()[0]
             message ="Invalid Form: The " + formsWithErrors + " tab has errors."
         
-        message = {'message': message}
+        
+        
+        message = {'message': message,
+                   'errors' : errors}
         return HttpResponse(json.dumps(message), mimetype="application/json")
     else:
         return render_to_response('error.html',
