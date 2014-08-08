@@ -458,7 +458,7 @@ def handle_indicator_ind(value, source, reference, ctype, analyst,
             return handle_indicator_insert(ind, source, reference, analyst,
                                            method, add_domain, add_relationship, cache=cache)
         except Exception, e:
-            return {'success': False, 'message': [e]}
+            return {'success': False, 'message': repr(e)}
 
     return result
 

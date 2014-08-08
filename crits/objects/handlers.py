@@ -376,6 +376,9 @@ def add_object(type_, oid, object_type, name, source, method,
                                        rel_type="Related_To",
                                        analyst=analyst,
                                        get_rels=is_sort_relationships)
+                else:
+                    results['message'] = "Object was added, but failed to add Indicator." \
+                                         "<br>Error: " + ind_res.get('message')
 
             if is_sort_relationships == True:
                 if file_ or add_indicator:
@@ -629,7 +632,7 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
 
         # Check if an error occurred, if it did then return the error result
         if create_indicator_result.get('success', True) == False:
-            return result
+            return create_indicator_result
 
         indicator = Indicator.objects(ind_type=ind_type,
                                       value=value).first()
