@@ -102,7 +102,8 @@ $(document).ready(function() {
                                     $('#form-run-service').submit();
                                 },
                                 "Cancel": function() {
-                                    $(this).dialog("close");
+                                    $('#run-service-form').html('');
+                                    $('#run-service-form').dialog("destroy");
                                 },
                             },
                         });
@@ -117,7 +118,8 @@ $(document).ready(function() {
                             title: "Failure",
                             buttons: {
                                 "OK": function() {
-                                    $(this).dialog("close");
+                                    $(this).html('');
+                                    $(this).dialog("destroy");
                                 },
                             },
                         });
