@@ -13,6 +13,9 @@ $(document).ready(function() {
         var msg = $(this).attr('msg');
         e.preventDefault();
         $('<div title="Delete Analysis" id="tmp_delete">' + msg + '</div>').dialog({
+            close: function() {
+                    $(this).dialog("destroy");
+                },
             buttons: {
                 "Delete": function() {
                     $.ajax({
@@ -32,7 +35,7 @@ $(document).ready(function() {
                     });
                 },
                 "Cancel": function() {
-                    $(this).dialog("close");
+                    $(this).dialog("destroy");
                 }
             }
         });
@@ -97,6 +100,10 @@ $(document).ready(function() {
                             modal: true,
                             width: "auto",
                             height: "auto",
+                            close: function() {
+                                    $(this).html('');
+                                    $(this).dialog("destroy");
+                                },
                             buttons: {
                                 "Run Service": function(e) {
                                     $('#form-run-service').submit();
@@ -116,6 +123,10 @@ $(document).ready(function() {
                             width: "auto",
                             height: "auto",
                             title: "Failure",
+                            close: function() {
+                                    $(this).html('');
+                                    $(this).dialog("destroy");
+                                },
                             buttons: {
                                 "OK": function() {
                                     $(this).html('');
