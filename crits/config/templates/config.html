@@ -1,59 +1,116 @@
 {% extends "base.html" %}
 {% load url from future %}
 {% block title %}CRITs Configuration{% endblock %}
+
 {% block javascript_includes %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/config.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/services.js"></script>
     <script type="text/javascript">
+    //used in item_editor
     var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
-		
+    //used in user_editor
+    var user_source_access = "{% url 'crits.core.views.user_source_access' %}";
+    var toggle_user_active = "{% url 'crits.core.views.toggle_user_active' %}";
 	$(document).ready(function() {
-		$(function () {
-		    $('#sidebar').w2sidebar({
-		        name: 'sidebar',
+	    $(function () {
+	    	var hasGottenUserContent = false;
+	    	var hasGottenServicesContent = false;
+	    	var hasGottenAuditLogContent = false;
+	        $('#sidebar').w2sidebar({
+	            name: 'sidebar',
 		        nodes: [ 
-		            { id: 'system', class:'dontChange', text: 'System', img: 'icon-folder', expanded: true, group: true,
-		              nodes: [ { id: 'generalTab', text: 'General'},
-		                       { id: 'CRITsTab', text: 'CRITs'},
-		                       { id: 'LDAP', text: 'LDAP Settings'},
-		                       { id: 'securityTab', text: 'Security'},
-                               { id: 'downloadTab', text: 'Downloading'},
-                               { id: 'servicesTab', text: 'Services'},
-                               { id: 'loggingTab', text: 'Logging'}
-		                     ]
+                    { id: 'system', class:'dontChange', text: 'System', expanded: true, group: true,
+                        nodes: [ { id: 'generalTab', text: 'General'},
+                                 { id: 'CRITsTab', text: 'CRITs'},
+                                 { id: 'LDAP', text: 'LDAP Settings'},
+                                 { id: 'securityTab', text: 'Security'},
+                                 { id: 'downloadTab', text: 'Downloading'},
+                                 { id: 'servicesTab', text: 'Services'},
+                                 { id: 'loggingTab', text: 'Logging'}
+                               ]
 		            },
-		            { id: 'items', text: 'Items', img: 'icon-folder', group: true},
-		            { id: 'users', text: 'Users', img: 'icon-folder', group: true},
-		            { id: 'services', text: 'Services', img: 'icon-folder', group: true},
-		            { id: 'audit_log', text: 'Audit Log', img: 'icon-folder', group: true}
+		            { id: 'items', text: 'Items', group: true},
+		            { id: 'users', text: 'Users', group: true},
+		            { id: 'services', text: 'Services', group: true},
+		            { id: 'audit_log', text: 'Audit Log', group: true}
 		        ]
 		    });
-		    
+		    //remove the show/hide label on the nodes that don't expand
 		    $("#node_items").removeAttr('onmouseover');
 		    $("#node_users").removeAttr('onmouseover');
 		    $("#node_services").removeAttr('onmouseover');
 		    $("#node_audit_log").removeAttr('onmouseover');
-		    
-		    
-		    
+		    //action for clicking the items node
+		    //content already on page with django include tag
 		    $("#node_items").click(function() {
-		    	
+		    	toggleRightContent($("#itemsContainer"));
 		    });
-		    
-		    
+		    //call to get the content for the users tab
+		    $("#node_users").click(function() {
+		    	//only do the ajax call once
+		    	if(!hasGottenUserContent) {
+			    	$.ajax({
+			            type:"POST",
+			            url: "{% url 'crits.core.views.users_listing' %}",
+			            data: $(this).serialize(),
+			            datatype: 'json',
+			            success: function(data) {
+			            	$("#usersContainer").append(data);
+			            },
+			        });
+			    	hasGottenUserContent = true;
+		    	}
+		    	toggleRightContent($("#usersContainer"));
+            });
+		    //call to get the content for the services tab
+            $("#node_services").click(function() {
+            	//only do the ajax call once
+                if(!hasGottenServicesContent) {
+                    $.ajax({
+                        type:"POST",
+                        url: "{% url 'crits.services.views.list' %}",
+                        data: $(this).serialize(),
+                        datatype: 'json',
+                        success: function(data) {
+                            $("#servicesContainer").append(data);
+                        },
+                    });
+                    hasGottenServicesContent = true;
+                }
+                toggleRightContent($("#servicesContainer"));
+            });
+            //call to get content for the audit log tab
+            $("#node_audit_log").click(function() {
+            	//only do the ajax call once
+                if(!hasGottenAuditLogContent) {
+                    $.ajax({
+                        type:"POST",
+                        url: "{% url 'crits.core.views.audit_listing' %}",
+                        data: $(this).serialize(),
+                        datatype: 'json',
+                        success: function(data) {
+                            $("#audit_logContainer").append(data);
+                        },
+                    });
+                    hasGottenAuditLogContent = true;
+                }
+                toggleRightContent($("#audit_logContainer"));
+                
+            });
+		    //action for the INNER NODES ONLY
 		    w2ui.sidebar.on('*', function (event) {
 		    	if(event.type == 'click') {
 			        var target = "#"+event.target;
 			        var targetElem = $(target);
-			        
-			        if(target != currentTab && targetElem != null) {
-			        	targetElem.show();
+			        if((target != currentTab && targetElem != null) || $("#systemContainer").is(':hidden')) {
 			        	$(currentTab).hide();
+	                    toggleRightContent(targetElem, true);
 			            currentTab = target;
 			        }
-		    	}
-		    	else
-		    		console.log("NOT A CLICK!");
-		    });
+		    	}//else if was necessary in order to maintain the currently highlighted node
+		    	else if(event.type == 'refresh' || event.type=='dblClick')
+                    event.preventDefault();
+	        });
 		});
 		//display general tab by default
 		var currentTab = "#generalTab";
@@ -61,146 +118,112 @@
 			//if they link to a specific tag, reset current tag
 	        if(document.location.hash) 
 	        	currentTab = document.location.hash;
-            $(currentTab).show();
+            toggleRightContent($(currentTab), true);
             //show the correct node in the sidebar corresponding to shown tab
             var currentNode = "#node_"+currentTab.substring(1);
             $(currentNode).addClass("w2ui-selected");
         });
-		
-        
-        	
-        	
-        	
-       	$("table").each(function() {
-               var tableRows = $(this).find('tr');
-               if(tableRows.length > 12) { 
-                   var firstRows = [];
-                   tableRows.each(function(index) {
-                       if(index < 12)
-                           firstRows.push($(this));
-                       else {
-                           var content = $(this).html();
-                           firstRows[index%12].append(content);
-                           $(this).remove();
-                       }
-                   });
-               }
-           });
-        	
-       
-		
+	    //shortens the system tab forms to be only 12 rows long to fit in container		
+	    $("table").each(function() {
+	        var tableRows = $(this).find('tr');
+	        if(tableRows.length > 12) { 
+	            var firstRows = [];
+	            tableRows.each(function(index) {
+	                if(index < 12)
+	                    firstRows.push($(this));
+	                else {
+	                    var content = $(this).html();
+	                    firstRows[index%12].append(content);
+	                    $(this).remove();
+                    }
+                });
+            }
+        });
+	    //hiding and showing action for the right side
+	    function toggleRightContent(element, showSystemContainer) {
+	    	$(".rightContent").hide();
+            if(element.hasClass("forceInvisible")) 
+                element.removeClass("forceInvisible");
+            if(showSystemContainer) {
+            	$("#systemContainer").show();
+            	$(".highlighted").removeClass("highlighted");
+            }
+            else {
+            	 var highlightedElement = "#node_"+element.attr("id").replace("Container", "");
+                 highlightLeftSide($(highlightedElement));
+            }
+            element.show();
+        }
+	    //adds light blue highlight to selected node in sidebar
+	    //(this was necessary for the outer nodes)
+	    function highlightLeftSide(element) {
+	    	$(".w2ui-selected").removeClass("w2ui-selected");
+	    	$(".highlighted").removeClass("highlighted");
+	    	element.addClass("highlighted");
+	    }
+		//resets the systems form to its original values
 		$("#reset_button").click(function() {
 			$("#config_form")[0].reset();
 		});
-		
 	 });
-		
 	</script>
-		
 {% endblock %}
 {% block content %}
-    <style>
-        .error {
-		    border: 1px red solid !important;
-		    background-color: rgba(255, 0, 0, 0.1) !important;
-		}
-    
-	    #config_results {
-	        color: #ff0000;
-	        position:absolute;
-	        text-align:center;
-	        top:20px;
-	        left:0;
-		    right:0;
-		    margin-left:auto;
-		    margin-right:auto;
-	    }
-	    #submitWrapper {
-            text-align: center;
-            margin-right:100px;
-        }
-		#sidebar {
-           width: 200px;
-		   height:625px;
-		   float:left;
-		   border-right:1px solid grey;
-		}
-		#container {
-		}
-		.systemTable {
-		  padding-top: 20px;
-		  padding-left: 20px;
-		}
-		.systemTable th {
-		  width:175px;
-		  text-align: left;
-		}
-		#wrapper {
-		  width:100%;
-		  border:1px solid grey;
-		  height:625px;
-		  display:inline-block;
-		}
-		.box {
-		  display:none;
-		  height:550px;
-		}
-		#reset_button {
-            padding: 4px;
-			border: 1px solid #BBB;
-			border-radius: 3px;
-			color: #000;
-			background-color: #FFF;
-		}
-		
-		#systemContainer{
-		  //display:none;
-		}
-		#itemsContainer {
-		  height:100px;
-		}
-	</style>
-	
-	
-        <div id="wrapper">
-        
-            <div id="config_results"></div>
-            
-            <div id="sidebar" ></div>
-            <div id='container'>
-                <div id='systemContainer'>
-                    <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
-		                <div id='CRITsTab' class='box'>
-		                   <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
-		                </div>  
-		                <div id='generalTab' class='box'>
-		                   <table class="systemTable">{{ config_general_form.as_table }}</table>
-		                </div>
-		                <div id="LDAP" class='box'>
-		                   <table class="systemTable">{{ config_LDAP_form.as_table }}</table>
-		                </div>
-		                <div id="securityTab" class='box'>
-		                   <table class="systemTable">{{ config_security_form.as_table }}</table>
-		                </div>
-		                <div id="downloadTab" class='box'>
-		                   <table class="systemTable">{{ config_download_form.as_table }}</table>
-		                </div>
-		                <div id="servicesTab" class='box'>
-		                   <table class="systemTable">{{ config_services_form.as_table }}</table>
-		                </div>
-		                <div id="loggingTab" class='box'>
-		                   <table class="systemTable">{{ config_logging_form.as_table }}</table>
-		                </div>
-		                <div id="submitWrapper">
-			                <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
-			                <input id="reset_button" type="button" value="Reset"></input>
-			            </div>
-	                </form>   
-                </div> 
-            </div>
-        </div>
-   
-	
-	
+	<link rel="stylesheet" href="{{ STATIC_URL }}css/config.css" type="text/css" media="screen" />
+	<div id="wrapper">
+	    <div id='container'>
+	        <div id="sidebar" ></div>
+	        <div id='systemContainer' class='rightContent'>
+                <div id="config_results"></div>
+	            <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
+		            <div id='CRITsTab' class='box forceInvisible'>
+		                <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
+		            </div>  
+		            <div id='generalTab' class='box forceInvisible'>
+		                <table class="systemTable">{{ config_general_form.as_table }}</table>
+		            </div>
+		            <div id="LDAP" class='box forceInvisible'>
+		                <table class="systemTable">{{ config_LDAP_form.as_table }}</table>
+		            </div>
+		            <div id="securityTab" class='box forceInvisible'>
+		                <table class="systemTable">{{ config_security_form.as_table }}</table>
+		            </div>
+		            <div id="downloadTab" class='box forceInvisible'>
+		                <table class="systemTable">{{ config_download_form.as_table }}</table>
+		            </div>
+		            <div id="servicesTab" class='box forceInvisible'>
+		                <table class="systemTable">{{ config_services_form.as_table }}</table>
+		            </div>
+		            <div id="loggingTab" class='box forceInvisible'>
+		                <table class="systemTable">{{ config_logging_form.as_table }}</table>
+		            </div>
+		            <div id="submitWrapper">
+		                <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
+		                <input id="reset_button" type="button" value="Reset"></input>
+		            </div>
+	            </form>   
+	        </div> 
+	        <div id="itemsContainer" class="tabnav rightContent forceInvisible" style="font-size: 90%;">
+	            {% include "item_editor.html" %}
+	        </div>
+	        <div id="usersContainer" class="rightContent forceInvisible">
+	            <div id="add-new-user-form" title="Add/Edit User">
+	                <select class="selectbox" name="user" onchange="getUserSources(this);">
+	                    {% for user in user_list %}
+	                        <option value="{{ user.username }}">{{ user.username }}</option>
+	                    {% endfor %}
+	                </select>
+	                <br />
+	                <br />
+	                <form id="form-add-new-user" action='{% url "crits.core.views.source_access" %}' method='POST' enctype="multipart/form-data">
+	                    <table class="form">{{ source_access.as_table }}</table>
+	                    <div id="form-add-new-user-results" class="form_results"></div>
+	                </form>
+	            </div>
+	        </div>
+	        <div id='servicesContainer' class="rightContent forceInvisible"></div>
+	        <div id="audit_logContainer" class="rightContent forceInvisible"></div>
+	    </div>
+	</div>
 {% endblock %}
 

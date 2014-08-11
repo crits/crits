@@ -1,31 +1,5 @@
-{% extends "base.html" %}
-{% load url from future %}
-
-{% block title %} Users {% endblock %}
-{% block content %}
-
-<script>
-    var user_source_access = "{% url 'crits.core.views.user_source_access' %}";
-    var toggle_user_active = "{% url 'crits.core.views.toggle_user_active' %}";
-</script>
 
 {% include "jtable.html" %}
-<div id="add-new-user-form" title="Add/Edit User">
-    <select class="selectbox" name="user" onchange="getUserSources(this);">
-        {% for user in user_list %}
-            <option value="{{ user.username }}">{{ user.username }}</option>
-        {% endfor %}
-    </select>
-    <br />
-    <br />
-    <form id="form-add-new-user" action='{% url "crits.core.views.source_access" %}' method='POST' enctype="multipart/form-data">
-        <table class="form">{{ source_access.as_table }}</table>
-        <div id="form-add-new-user-results" class="form_results"></div>
-    </form>
-</div>
 
-{% endblock %}
 
-{% block javascript_includes %}
-{% endblock %}
 
