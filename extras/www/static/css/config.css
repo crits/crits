@@ -60,7 +60,6 @@
 .forceInvisible {
   display:none !important;
 }
-
 .highlighted {
     background-image: linear-gradient(#69B1E0, #4A96D3);
     border-top: 1px solid #5295CD;
