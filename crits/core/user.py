@@ -870,8 +870,10 @@ class CRITsAuthBackend(object):
         fusername = username
         if '\\' in username:
             username = username.split("\\")[1]
-        elif "@" in username:
-            username = username.split("@")[0]
+        # Comment out to allow email addresses to be specified
+        #elif "@" in username:
+        #    username = username.split("@")[0]
+
         user = CRITsUser.objects(username=username).first()
         if user:
             # If the user needs TOTP and it is not disabled system-wide, and
@@ -915,14 +917,62 @@ class CRITsAuthBackend(object):
                     l.set_option(ldap.OPT_REFERRALS, 0)
                     l.set_option(ldap.OPT_TIMEOUT, 10)
                     # setup auth for custom cn's
-                    if len(config.ldap_usercn) > 0:
-                        un = "%s%s,%s" % (config.ldap_usercn,
+
+                    #SAB New code
+                    if len(config.ldap_special) > 0:
+                        import re  # bring in the regular expression functions
+                        if "fetch" in config.ldap_special:
+                            rattr = []  # empty list of retrieve attributes
+                            sfilter=''  # empty search filter
+                            istring = config.ldap_special   # get the string
+                            pstr = istring.split(':')  # break the string into its tokens - separated by :
+                            for tken in pstr:
+                                #tken = str(pstr[tk])
+                                if re.search('fetch',tken):
+                                    continue
+                                if re.search('attr',tken):   # process the attributes to be returned
+                                    tval = tken.split('=')  # split the token into value and assignments
+                                    # expect a comma separated list of attributes 
+                                    attlist = str(tval[1]).split(',')
+                                    for sattr in attlist:
+                                        rattr.append(sattr)
+                                elif re.search("filter",tken):  # is this a filter specification 
+                                    #SAB Improve to take a comma separated list of filters to build
+                                    # a more dynamic filter
+                                    tval = tken.split('=')  # split the token into value and assignments
+                                    flist = tval[1].split('+')
+                                    sfilter = flist[0]+"="
+                                    if re.search('\$email',flist[1]):
+                                        sfilter = sfilter+fusername
+                            
+                            scope = ldap.SCOPE_SUBTREE
+                            lresultid = l.search(config.ldap_userdn,scope,sfilter,rattr)
+                            if lresultid:
+                                rtype,rdata = l.result(lresultid,0)
+                                if rtype == ldap.RES_SEARCH_ENTRY:
+                                    (rdtag,r_data) = rdata[0] # since we want the DN for this particular user for login the first part of the tuple returned is 
+                                                              # the full DN for that user.
+                                    un = rdtag
+                                else:
+                                    un = fusername  # set to the username so that ldap login will fail
+                            else:
+                                un = fusername  # default, the LDAP login will die and local auth will take over.
+                        else:
+                            logger.info("SAB XXX did not match special")
+                            un = "%s%s,%s" % (config.ldap_usercn,
                                           fusername,
                                           config.ldap_userdn)
-                    elif "@" in config.ldap_userdn:
-                        un = "%s%s" % (fusername, config.ldap_userdn)
                     else:
-                        un = fusername
+                        if len(config.ldap_usercn) > 0:
+                            un = "%s%s,%s" % (config.ldap_usercn,
+                                              fusername,
+                                              config.ldap_userdn)
+                        elif "@" in config.ldap_userdn:
+                            un = "%s%s" % (fusername, config.ldap_userdn)
+                        else:
+                            un = fusername
+
+
                     logger.info("Logging in user: %s" % un)
                     l.simple_bind_s(un, password)
                     user = self._successful_settings(user, e, totp_enabled)
