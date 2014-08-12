@@ -82,6 +82,11 @@ class ConfigForm(forms.Form):
                                   required=False)
     ldap_server = forms.CharField(widget=forms.TextInput, required=False,
                                   help_text=('Include :port if not 389.'))
+
+    ldap_special = forms.CharField(widget=forms.TextInput, required=False,
+                                  help_text =('Optional seardh for uid lookup .'
+                                              '<br> fetch:attr=<list of LDAP attributes to fetch>:filter=<filterobject>+$email - $email means put email in as search value'))
+
     ldap_usercn = forms.CharField(widget=forms.TextInput, required=False,
                                   help_text=('Optional cn for user lookup.'
                                              '<br />E.g. "uid=" or "cn="'))
