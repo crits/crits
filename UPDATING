@@ -3,6 +3,14 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: mgoffin
+Date:   2014-08-12
+
+    Updated DEPENDENCIES. We are now supporting Django 1.6.5 (in preparation for
+    their 1.7 release), MongoDB 2.6.4, and PyMongo 2.7.2. I also bumped Yara to
+    2.1.0 so people using the service push to upgrade and stay on the latest
+    code base (new features which will help us enhance the service).
+
 Author: ssnow
 Date: 2014-06-23
 
