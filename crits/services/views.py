@@ -397,8 +397,8 @@ def get_form(request, name, crits_type, identifier):
     if not ServiceRunConfigForm:
         # this should only happen if there are no config options and the
         # service is rerunnable.
-        response['redirect'] = reverse('crits.services.views.service_run',
-                                        args=[name, crits_type, identifier])
+        return redirect(reverse('crits.services.views.service_run',
+                                args=[name, crits_type, identifier]))
     else:
         form = ServiceRunConfigForm(dict(config))
         response['form'] = render_to_string("services_run_form.html",
