@@ -1,6 +1,6 @@
 from django.conf.urls import patterns
 
-urlpatterns = patterns('crits.samples.viiews',
+urlpatterns = patterns('crits.samples.views',
         (r'^upload/$', 'upload_file'),
         (r'^upload/(?P<related_md5>\w+)/$', 'upload_file'),
         (r'^upload_list/(?P<filename>[\S ]+)/(?P<md5s>.+)/$', 'view_upload_list'),
