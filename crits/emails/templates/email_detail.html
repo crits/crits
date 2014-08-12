@@ -84,7 +84,7 @@
                     {%endfor%}
                 </span>
                 {% elif email_field.is_href %}
-                    <a class="header_search" href="{% url 'crits.emails.views.emails_listing' %}?{{ email_field.href_search_field }}={{ email_field.field_value }}"><span class="header_value" data-type="{{ email_field.field_name }}">{{ email_field.field_value }}</span></a>
+                    <a class="header_search" href="{% url 'crits.emails.views.emails_listing' %}?{{ email_field.href_search_field }}={{ email_field.field_value|urlencode }}"><span class="header_value" data-type="{{ email_field.field_name }}">{{ email_field.field_value }}</span></a>
                 {% else %}
                     <span class="header_value" data-type="{{ email_field.field_name }}">{{ email_field.field_value }}</span>
                 {% endif %}
