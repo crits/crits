@@ -12,6 +12,7 @@ class UploadStandardsForm(forms.Form):
     required_css_class = 'required'
     filedata = forms.FileField()
     source = forms.ChoiceField(required=True)
+    reference = forms.ChoiceField(required=False)
     make_event = forms.BooleanField(required=False, label="Create event", initial=True)
 
     def __init__(self, username, *args, **kwargs):
