@@ -514,7 +514,7 @@ class DatabaseAnalysisDestination(AnalysisDestination):
                 #TODO: add in backdoor?, user
                 from crits.samples.handlers import handle_file
                 handle_file(f['filename'], f['data'], sample.source,
-                            parent_md5=task.context.identifier,
+                            related_md5=task.context.identifier,
                             campaign=sample.campaign,
                             method=task.service.name,
                             relationship=f['relationship'],
@@ -531,8 +531,8 @@ class DatabaseAnalysisDestination(AnalysisDestination):
                 from crits.certificates.handlers import handle_cert_file
                 # XXX: Add campaign from source?
                 handle_cert_file(f['filename'], f['data'], sample.source,
-                            parent_md5=task.context.identifier,
-                            parent_type=task.context.crits_type,
+                            related_md5=task.context.identifier,
+                            related_type=task.context.crits_type,
                             method=task.service.name,
                             relationship=f['relationship'],
                             user=task.context.username,
@@ -548,8 +548,8 @@ class DatabaseAnalysisDestination(AnalysisDestination):
                 from crits.pcaps.handlers import handle_pcap_file
                 # XXX: Add campaign from source?
                 handle_pcap_file(f['filename'], f['data'], sample.source,
-                            parent_md5=task.context.identifier,
-                            parent_type=task.context.crits_type,
+                            related_md5=task.context.identifier,
+                            related_type=task.context.crits_type,
                             method=task.service.name,
                             relationship=f['relationship'],
                             user=task.context.username,

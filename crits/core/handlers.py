@@ -913,54 +913,54 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
     if not need_filedata:
         bin_fmt = None
 
+    # If bin_fmt is not zlib or base64, force it to base64.
+    if rst_fmt == 'stix' and bin_fmt not in ['zlib', 'base64']:
+        bin_fmt = 'base64'
+
     for (obj_type, obj_id) in objs:
         # get related objects
         new_objects = collect_objects(obj_type, obj_id, depth_limit,
                                       total_limit, rel_limit, object_types,
                                       sources, need_filedata=need_filedata)
 
-        # if result format calls for binary data to be zipped, loop over collected
-        # objects and convert binary data to bin_fmt specified, then add to the
-        # list of data to zip up
-        if rst_fmt == 'zip':
-            for (oid, (otype, obj)) in new_objects.items():
-                if otype == PCAP._meta['crits_type'] or otype == Sample._meta['crits_type'] or otype == Certificate._meta['crits_type']:
-                    conv_data = obj.filedata
-                else:
-                    continue
-
-                if conv_data: # if data is available
+        # if result format calls for binary data to be zipped, loop over
+        # collected objects and convert binary data to bin_fmt specified, then
+        # add to the list of data to zip up
+        for (oid, (otype, obj)) in new_objects.items():
+            if ((otype == PCAP._meta['crits_type'] or
+                 otype == Sample._meta['crits_type'] or
+                 otype == Certificate._meta['crits_type']) and
+               rst_fmt == 'zip'):
+                if obj.filedata: # if data is available
                     if bin_fmt == 'raw':
-                        to_zip.append((obj.filename, conv_data.read()))
+                        to_zip.append((obj.filename, obj.filedata.read()))
                     else:
-                        (data, ext) = format_file(conv_data.read(), bin_fmt)
+                        (data, ext) = format_file(obj.filedata.read(),
+                                                  bin_fmt)
                         to_zip.append((obj.filename + ext, data))
-                    conv_data.seek(0)
-
-        obj = class_from_id(obj_type, obj_id) # get the CRITs object
-        stix_docs.append(obj.to_stix([new_objects[item][1] for item in new_objects],
-                                     True,
-                                     bin_fmt)) # get its STIX doc rep
-
-    # Set the filename to be based upon the first item in the list passed
-    # to this function. This means if you go to download a sample but select
-    # emails only then the filename will tell you it came from a sample and
-    # the id of that sample.
-    filename = "%s_%s_%s" % (datetime.datetime.today().strftime("%Y-%m-%d"),
-                             objs[0][0], objs[0][1])
+                    obj.filedata.seek(0)
+            else:
+                stix_docs.append(obj.to_stix(items_to_convert=[obj],
+                                             loaded=True,
+                                             bin_fmt=bin_fmt))
 
     doc_count = len(stix_docs)
     zip_count = len(to_zip)
     if doc_count == 1 and zip_count <= 0: # we have a single STIX doc to return
         result['success'] = True
         result['data'] = stix_docs[0]['stix_obj'].to_xml()
-        result['filename'] = filename + '.xml'
+        result['filename'] = "%s_%s.xml" % (stix_docs[0]['final_objects'][0]._meta['crits_type'],
+                                            stix_docs[0]['final_objects'][0].id)
         result['mimetype'] = 'text/xml'
-    elif doc_count + zip_count > 1: # we have multiple or mixed items to return
-        zip_data = create_zip(to_zip + [("%s.xml" % filename, doc['stix_obj'].to_xml()) for doc in stix_docs], True)
+    elif doc_count + zip_count >= 1: # we have multiple or mixed items to return
+        zip_data = to_zip
+        for doc in stix_docs:
+            inner_filename = "%s_%s.xml" % (doc['final_objects'][0]._meta['crits_type'],
+                                            doc['final_objects'][0].id)
+            zip_data.append((inner_filename, doc['stix_obj'].to_xml()))
         result['success'] = True
-        result['data'] = zip_data
-        result['filename'] = filename + '.zip'
+        result['data'] = create_zip(zip_data, True)
+        result['filename'] = "CRITS_%s.zip" % datetime.datetime.today().strftime("%Y-%m-%d")
         result['mimetype'] = 'application/zip'
     return result
 
@@ -1373,7 +1373,10 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         'ssdeephash': {'ssdeep': search_query},
         'sha256hash': {'sha256': search_query},
         # slow in larger collections
-        'filename': {'filename': search_query},
+        'filename': {'$or': [
+            {'filename': search_query},
+            {'filenames': search_query},
+        ]},
         'exploit': {'exploit.cve': search_query},
         'campaign': {'campaign.name': search_query},
         # slightly slow in larger collections

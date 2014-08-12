@@ -1,9 +1,10 @@
+from dateutil.parser import parse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 
 from crits.domains.domain import Domain
-from crits.domains.handlers import add_new_domain
+from crits.domains.handlers import add_new_domain, add_whois
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
@@ -104,3 +105,51 @@ class DomainResource(CRITsAPIResource):
                 return bundle
         else:
             raise BadRequest('You must be an authenticated user!')
+
+
+class WhoIsResource(CRITsAPIResource):
+    """
+    Domain Whois API Resource Class.
+    """
+
+    class Meta:
+        object_class = Domain
+        allowed_methods = ('post',)
+        resource_name = "whois"
+        authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
+                                             CRITsSessionAuthentication())
+        authorization = authorization.Authorization()
+        serializer = CRITsSerializer()
+
+    def obj_create(self, bundle, **kwargs):
+        """
+        Handles adding WhoIs entries to domains through the API.
+
+        :param bundle: Bundle containing the information to create the Domain.
+        :type bundle: Tastypie Bundle object.
+        :returns: Bundle object.
+        :raises BadRequest: If a domain name is not provided or creation fails.
+        """
+
+        analyst = bundle.request.user.username
+        domain = bundle.data.get('domain', None)
+        date = bundle.data.get('date', None)
+        whois = bundle.data.get('whois', None)
+
+        if not domain:
+            raise BadRequest('Need a Domain Name.')
+        if not date:
+            raise BadRequest('Need a date for this entry.')
+        if not whois:
+            raise BadRequest('Need whois data.')
+
+        try:
+            date = parse(date, fuzzy=True)
+        except Exception, e:
+            raise BadRequest('Cannot parse date: %s' % str(e))
+
+        result = add_whois(domain, whois, date, analyst, True)
+        if not result['success']:
+            raise BadRequest('Could not add whois: %s' % str(result['message']))
+        else:
+            return bundle

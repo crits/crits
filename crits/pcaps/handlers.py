@@ -206,8 +206,8 @@ def generate_pcap_jtable(request, option):
                                   RequestContext(request))
 
 def handle_pcap_file(filename, data, source_name, user=None,
-                     description=None, parent_id=None, parent_md5=None,
-                     parent_type=None, method=None, relationship=None,
+                     description=None, related_id=None, related_md5=None,
+                     related_type=None, method=None, relationship=None,
                      bucket_list=None, ticket=None):
     """
     Add a PCAP.
@@ -224,12 +224,12 @@ def handle_pcap_file(filename, data, source_name, user=None,
     :type user: str
     :param description: Description of the PCAP.
     :type description: str
-    :param parent_id: ObjectId of the top-level object where this PCAP came from.
-    :type parent_id: str
-    :param parent_md5: MD5 of the top-level object where this PCAP came from.
-    :type parent_md5: str
-    :param parent_type: The CRITs type of the parent.
-    :type parent_type: str
+    :param related_id: ObjectId of a top-level object related to this PCAP.
+    :type related_id: str
+    :param related_md5: MD5 of a top-level object related to this PCAP.
+    :type related_md5: str
+    :param related_type: The CRITs type of the related top-level object.
+    :type related_type: str
     :param method: The method of acquiring this PCAP.
     :type method: str
     :param relationship: The relationship between the parent and the PCAP.
@@ -300,20 +300,20 @@ def handle_pcap_file(filename, data, source_name, user=None,
     # save pcap
     pcap.save(username=user)
 
-    # update parent relationship if a parent is supplied
-    if parent_id or parent_md5:
-        if not relationship:
-            relationship = "Related_To"
-        if  parent_id:
-            parent_obj = class_from_id(parent_type, parent_id)
+    # update relationship if a related top-level object is supplied
+    if related_id or related_md5:
+        if  related_id:
+            related_obj = class_from_id(related_type, related_id)
         else:
-            parent_obj = class_from_value(parent_type, parent_md5)
-        if parent_obj and pcap:
-            pcap.add_relationship(rel_item=parent_obj,
+            related_obj = class_from_value(related_type, related_md5)
+        if related_obj and pcap:
+            if not relationship:
+                relationship = "Related_To"
+            pcap.add_relationship(rel_item=related_obj,
                                   rel_type=relationship,
                                   analyst=user,
                                   get_rels=False)
-            parent_obj.save(username=user)
+            related_obj.save(username=user)
             pcap.save(username=user)
 
     # run pcap triage

@@ -395,7 +395,6 @@ $(document).ready(function(){
     // });
 
     var localDialogs = {
-    	"add-attachment": {title: "Add Attachment", open: file_upload_dialog, submit: defaultSubmit, href:""},
     	"download-email": {title: "Download Email", submit: defaultSubmit, href:""},
     };
 

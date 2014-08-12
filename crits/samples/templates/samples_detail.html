@@ -12,6 +12,8 @@
     var get_hex = "{% url 'crits.samples.views.hex' sample.md5 %}";
     var xor_search = "{% url 'crits.samples.views.xor_searcher' sample.md5 %}";
     var get_xor = "{% url 'crits.samples.views.xor' sample.md5 %}?key=";
+    var update_sample_filename = "{% url 'crits.samples.views.set_sample_filename' %}";
+    var update_sample_filenames = "{% url 'crits.samples.views.set_sample_filenames' %}";
 </script>
 
 {% if sample %}
@@ -26,7 +28,7 @@
     <span class="horizontal_menu">
     <ul class="hmenu">
         <li><a href="#" class="dialogClick" dialog="download-sample">Download Sample</a></li>
-        <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.samples.views.upload_child' sample.md5 %}">Upload Related Sample</a></li>
+        <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.samples.views.upload_file' sample.md5 %}">Upload Related Sample</a></li>
         <li><a href="#" class="dialogClick" dialog="new-pcap" persona="related">Upload Related PCAP</a></li>
         <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=text">Text</a></li>
         <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=yaml">YAML</a></li>
@@ -51,7 +53,20 @@
             </tr>
             <tr>
                 <td class="key">Filename</td>
-                <td>{{ sample.filename }}</td>
+                <td>
+                    <span class="edit_underline" id="sample_filename">{{ sample.filename }}</span>
+                    <span id="sample_filename_error"></span>
+                </td>
+            </tr>
+            <tr>
+                <td class="key">Filenames</td>
+                <td>
+                    <ul id="sample_filenames">
+                        {% for filename in sample.filenames %}
+                            <li>{{ filename }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
             </tr>
             <tr>
                 <td class="key">Filetype</td>
@@ -193,11 +208,6 @@
     <table class='form'> {{ exploit_form.as_table }} </table>
     </form>
 </div>
-<div id="dialog-add-child" title="Add Child">
-    <form id="form-add-child" action="" method="POST" enctype="multipart/form-data">
-    <table class="form">{{child_form.as_table}}</table>
-    </form>
-</div>
 <div id="dialog-download-sample" title="Download Sample">
     <form id="form-download-sample" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
     <table class="form">{{download_form.as_table}}</table>
@@ -221,6 +231,13 @@
 </div>
 
 </div>
+
+
+<script>
+    $(document).bind('enable_filenames', function(){
+        window.add_filenames = true;
+    });
+</script>
 
 {% else %}
 <h1>Missing sample.</h1>

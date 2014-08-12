@@ -95,13 +95,13 @@ def upload_certificate(request):
             source = form.cleaned_data.get('source')
             user = request.user.username
             description = form.cleaned_data.get('description', '')
-            parent = form.cleaned_data.get('parent_id', '')
-            parent_type = form.cleaned_data.get('parent_type', '')
+            related = form.cleaned_data.get('related_id', '')
+            related_type = form.cleaned_data.get('related_type', '')
             bucket_list = form.cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = form.cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
             method = 'Upload'
             status = handle_cert_file(filename, data, source, user, description,
-                                      parent_id=parent, parent_type=parent_type,
+                                      related_id=parent, related_type=related_type,
                                       method=method, bucket_list=bucket_list,
                                       ticket=ticket)
             if status['success']:
