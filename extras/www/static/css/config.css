@@ -54,12 +54,13 @@
   padding:20px;
   overflow:hidden;
   border:none;
-  overflow-y:scroll;
-  height:550px;
+  overflow-y:auto;
+  height:585px;     /* 585 to compensate for the padding ! */
 }
 .forceInvisible {
   display:none !important;
 }
+
 .highlighted {
     background-image: linear-gradient(#69B1E0, #4A96D3);
     border-top: 1px solid #5295CD;

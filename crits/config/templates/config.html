@@ -7,15 +7,129 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/services.js"></script>
     <script type="text/javascript">
     //used in item_editor
-    var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
-    //used in user_editor
+	var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
+	//used in user_editor
     var user_source_access = "{% url 'crits.core.views.user_source_access' %}";
     var toggle_user_active = "{% url 'crits.core.views.toggle_user_active' %}";
+    
+    //below hash variables are used in selecting the correct tab on load    
+    var itemHashTabs = ["#backdoor_button",
+                        "#campaign_button",
+                        "#eventtype_button",
+                        "#exploit_button",
+                        "#indicatoraction_button",
+                        "#objecttype_button",
+                        "#rawdatatype_button",
+                        "#relationshiptype_button",
+                        "#sourceaccess_button"
+                        ]
+    var usersHash = "#users";
+    var servicesHash = "#services";
+    var auditLogHash = "#auditLog"
+    
+    
+    var hasGottenItemContent = false;
+    var hasGottenUserContent = false;
+    var hasGottenServicesContent = false;
+    var hasGottenAuditLogContent = false;
+    
+    function showItemsContent() {
+    	 //only do the ajax call once
+        if(!hasGottenItemContent) {
+            $.ajax({
+                type:"POST",
+                url: "{% url 'crits.core.views.item_editor' %}",
+                data: $(this).serialize(),
+                datatype: 'json',
+                success: function(data) {
+                    $("#itemsContainer").append(data);
+                    initTabNav();
+                },
+            });
+            hasGottenItemContent = true;
+        }
+    	//show content
+        toggleRightContent($("#itemsContainer"));
+    }
+    
+    function showUsersContent() {
+    	//only do the ajax call once
+        if(!hasGottenUserContent) {
+            $.ajax({
+                type:"POST",
+                url: "{% url 'crits.core.views.users_listing' %}",
+                data: $(this).serialize(),
+                datatype: 'json',
+                success: function(data) {
+                    $("#usersContainer").append(data);
+                },
+            });
+            hasGottenUserContent = true;
+        }
+        toggleRightContent($("#usersContainer"));
+    }
+    
+    function showServicesContent() {
+    	//only do the ajax call once
+        if(!hasGottenServicesContent) {
+            $.ajax({
+                type:"POST",
+                url: "{% url 'crits.services.views.list' %}",
+                data: $(this).serialize(),
+                datatype: 'json',
+                success: function(data) {
+                    $("#servicesContainer").append(data);
+                },
+            });
+            hasGottenServicesContent = true;
+        }
+        toggleRightContent($("#servicesContainer"));
+    }
+    
+	function showAuditLogContent() {
+		//only do the ajax call once
+        if(!hasGottenAuditLogContent) {
+            $.ajax({
+                type:"POST",
+                url: "{% url 'crits.core.views.audit_listing' %}",
+                data: $(this).serialize(),
+                datatype: 'json',
+                success: function(data) {
+                    $("#audit_logContainer").append(data);
+                },
+            });
+            hasGottenAuditLogContent = true;
+        }
+        toggleRightContent($("#audit_logContainer"));
+	}
+    
+    //hiding and showing action for the right side
+    function toggleRightContent(element, showSystemContainer) {
+        $(".rightContent").hide();
+        if(element.hasClass("forceInvisible")) 
+            element.removeClass("forceInvisible");
+        if(showSystemContainer) {
+            $("#systemContainer").show();
+            $(".highlighted").removeClass("highlighted");   //remove custom class for outer nodes
+        }
+        else {  //add custom highlight class for outer nodes only
+             var highlightedElement = "#node_"+element.attr("id").replace("Container", "");
+             highlightLeftSide($(highlightedElement));
+        }
+        element.show();
+    }
+    
+    //adds light blue highlight to selected node in sidebar
+    //(this was necessary for the outer nodes)
+    function highlightLeftSide(element) {
+        $(".w2ui-selected").removeClass("w2ui-selected");
+        $(".highlighted").removeClass("highlighted");
+        element.addClass("highlighted");
+    }
+    
 	$(document).ready(function() {
 	    $(function () {
-	    	var hasGottenUserContent = false;
-	    	var hasGottenServicesContent = false;
-	    	var hasGottenAuditLogContent = false;
+	    	
 	        $('#sidebar').w2sidebar({
 	            name: 'sidebar',
 		        nodes: [ 
@@ -40,64 +154,28 @@
 		    $("#node_users").removeAttr('onmouseover');
 		    $("#node_services").removeAttr('onmouseover');
 		    $("#node_audit_log").removeAttr('onmouseover');
-		    //action for clicking the items node
-		    //content already on page with django include tag
-		    $("#node_items").click(function() {
-		    	toggleRightContent($("#itemsContainer"));
-		    });
+		    
+		    //call to get the content for the users tab
+            $("#node_items").click(function() {
+            	showItemsContent();
+            });
+		    
 		    //call to get the content for the users tab
 		    $("#node_users").click(function() {
-		    	//only do the ajax call once
-		    	if(!hasGottenUserContent) {
-			    	$.ajax({
-			            type:"POST",
-			            url: "{% url 'crits.core.views.users_listing' %}",
-			            data: $(this).serialize(),
-			            datatype: 'json',
-			            success: function(data) {
-			            	$("#usersContainer").append(data);
-			            },
-			        });
-			    	hasGottenUserContent = true;
-		    	}
-		    	toggleRightContent($("#usersContainer"));
+		    	showUsersContent()
             });
+		    
 		    //call to get the content for the services tab
             $("#node_services").click(function() {
-            	//only do the ajax call once
-                if(!hasGottenServicesContent) {
-                    $.ajax({
-                        type:"POST",
-                        url: "{% url 'crits.services.views.list' %}",
-                        data: $(this).serialize(),
-                        datatype: 'json',
-                        success: function(data) {
-                            $("#servicesContainer").append(data);
-                        },
-                    });
-                    hasGottenServicesContent = true;
-                }
-                toggleRightContent($("#servicesContainer"));
+            	showServicesContent();
             });
+		    
             //call to get content for the audit log tab
             $("#node_audit_log").click(function() {
-            	//only do the ajax call once
-                if(!hasGottenAuditLogContent) {
-                    $.ajax({
-                        type:"POST",
-                        url: "{% url 'crits.core.views.audit_listing' %}",
-                        data: $(this).serialize(),
-                        datatype: 'json',
-                        success: function(data) {
-                            $("#audit_logContainer").append(data);
-                        },
-                    });
-                    hasGottenAuditLogContent = true;
-                }
-                toggleRightContent($("#audit_logContainer"));
-                
+            	showAuditLogContent();
             });
-		    //action for the INNER NODES ONLY
+            
+		    //action for the INNER NODES ONLY (aka under systems tab)
 		    w2ui.sidebar.on('*', function (event) {
 		    	if(event.type == 'click') {
 			        var target = "#"+event.target;
@@ -116,15 +194,30 @@
 		var currentTab = "#generalTab";
 		$(function () {
 			//if they link to a specific tag, reset current tag
-	        if(document.location.hash) 
-	        	currentTab = document.location.hash;
-            toggleRightContent($(currentTab), true);
-            //show the correct node in the sidebar corresponding to shown tab
-            var currentNode = "#node_"+currentTab.substring(1);
-            $(currentNode).addClass("w2ui-selected");
+	        if(document.location.hash) {
+	        	var hash = document.location.hash;
+	        	if(itemHashTabs.indexOf(hash) != -1)
+	        		showItemsContent();
+	        	else if(hash == servicesHash)
+	        		showServicesContent();
+	        	else if(hash == usersHash)
+	        		showUsersContent();
+	        	else if(hash == auditLogHash)
+	        		showAuditLogContent();
+	        	else {
+	        		if($(hash).length > 0)
+	        		    currentTab = hash;
+        			
+        			toggleRightContent($(currentTab), true);
+                    //show the correct node in the sidebar corresponding to shown tab
+                    var currentNode = "#node_"+currentTab.substring(1);
+                    $(currentNode).addClass("w2ui-selected");
+        		}
+	        }
+            
         });
 	    //shortens the system tab forms to be only 12 rows long to fit in container		
-	    $("table").each(function() {
+	    $(".systemTable").each(function() {
 	        var tableRows = $(this).find('tr');
 	        if(tableRows.length > 12) { 
 	            var firstRows = [];
@@ -139,28 +232,6 @@
                 });
             }
         });
-	    //hiding and showing action for the right side
-	    function toggleRightContent(element, showSystemContainer) {
-	    	$(".rightContent").hide();
-            if(element.hasClass("forceInvisible")) 
-                element.removeClass("forceInvisible");
-            if(showSystemContainer) {
-            	$("#systemContainer").show();
-            	$(".highlighted").removeClass("highlighted");
-            }
-            else {
-            	 var highlightedElement = "#node_"+element.attr("id").replace("Container", "");
-                 highlightLeftSide($(highlightedElement));
-            }
-            element.show();
-        }
-	    //adds light blue highlight to selected node in sidebar
-	    //(this was necessary for the outer nodes)
-	    function highlightLeftSide(element) {
-	    	$(".w2ui-selected").removeClass("w2ui-selected");
-	    	$(".highlighted").removeClass("highlighted");
-	    	element.addClass("highlighted");
-	    }
 		//resets the systems form to its original values
 		$("#reset_button").click(function() {
 			$("#config_form")[0].reset();
@@ -203,9 +274,7 @@
 		            </div>
 	            </form>   
 	        </div> 
-	        <div id="itemsContainer" class="tabnav rightContent forceInvisible" style="font-size: 90%;">
-	            {% include "item_editor.html" %}
-	        </div>
+	        <div id="itemsContainer" class='rightContent forceInvisible'></div>
 	        <div id="usersContainer" class="rightContent forceInvisible">
 	            <div id="add-new-user-form" title="Add/Edit User">
 	                <select class="selectbox" name="user" onchange="getUserSources(this);">
