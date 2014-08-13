@@ -39,6 +39,7 @@ from crits.core.user_tools import get_user_email_notification
 from crits.campaigns.campaign import Campaign
 from crits.certificates.certificate import Certificate
 from crits.comments.comment import Comment
+from crits.disassembly.disassembly import Disassembly
 from crits.domains.domain import Domain
 from crits.events.event import Event
 from crits.ips.ip import IP
