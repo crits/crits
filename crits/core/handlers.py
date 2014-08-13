@@ -2017,7 +2017,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 mapper = {
                     "Indicator": 'crits.indicators.views.indicator',
                     "Sample": 'crits.samples.views.detail',
-                    "Disassembly": 'crits.disassembly.views.disassembly_detail',
+                    "Disassembly": 'crits.disassembly.views.disassembly_details',
                     "Domain": 'crits.domains.views.domain_detail',
                     "Event": 'crits.events.views.view_event',
                     "Email": 'crits.emails.views.email_detail',
@@ -3600,7 +3600,7 @@ def details_from_id(type_, id_):
 
     type_map = {'Campaign': 'crits.campaigns.views.campaign_details',
                 'Certificate': 'crits.certificates.views.certificate_details',
-                'Disassembly': 'crits.disassembly.views.disassembly_detail',
+                'Disassembly': 'crits.disassembly.views.disassembly_details',
                 'Domain': 'crits.domains.views.domain_detail',
                 'Email': 'crits.emails.views.email_detail',
                 'Event': 'crits.events.views.view_event',
