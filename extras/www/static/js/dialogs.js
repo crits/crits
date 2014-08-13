@@ -1027,6 +1027,7 @@ var stdDialogs = {
 
       "new-campaign": {title: "Campaign"},
 
+      "disassembly_type_add": {title: "Disassembly Type"},
       "new-domain": {title: "Domain", open: new_domain_dialog},
       "new-indicator": {title: "Indicator", open: new_indicator_dialog},
       "indicator_action_add": {title: "Indicator Action"},
