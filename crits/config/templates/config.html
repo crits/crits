@@ -5,6 +5,10 @@
 {% block javascript_includes %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/config.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/services.js"></script>
+    {% comment %}
+        All the javascript on this page is pertaining to the sidebar and the way the content is
+        shown. For javascript involving form submission and error placement, look in config.js
+    {% endcomment %}
     <script type="text/javascript">
 	    //used in item_editor
 		var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
@@ -88,7 +92,6 @@
 	    	 if(element.hasClass("forceInvisible")) 
 	    		    element.removeClass("forceInvisible");
 	    }
-	    
 	    //adds light blue highlight to selected node in sidebar
 	    //(this was necessary for the outer nodes)
 	    function highlightLeftSide(element) {
@@ -117,11 +120,11 @@
 			            { id: 'audit_log', text: 'Audit Log', group: true}
 			        ]
 			    });
-			    //remove the show/hide label on the nodes that don't expand
-			    $("#node_items").removeAttr('onmouseover');
-			    $("#node_users").removeAttr('onmouseover');
-			    $("#node_services").removeAttr('onmouseover');
-			    $("#node_audit_log").removeAttr('onmouseover');
+		        //remove the show/hide label on the nodes that don't expand
+		        $("#node_items span:first").empty();
+		        $("#node_users span:first").empty();
+                $("#node_services span:first").empty();
+                $("#node_audit_log span:first").empty();
 			    //call to get the content for the items tab
 	            $("#node_items").click(function() {
 	            	getRightContent(itemsObject);
@@ -178,83 +181,61 @@
 	                    $(currentNode).addClass("w2ui-selected");
 	        		}
 	        });
-		    //shortens the system tab forms to be only 12 rows long to fit in container		
-		    $(".systemTable").each(function() {
-		        var tableRows = $(this).find('tr');
-		        if(tableRows.length > 12) { 
-		            var firstRows = [];
-		            tableRows.each(function(index) {
-		                if(index < 12)
-		                    firstRows.push($(this));
-		                else {
-		                    var content = $(this).html();
-		                    firstRows[index%12].append(content);
-		                    $(this).remove();
-	                    }
-	                });
-	            }
-	        });
-			//resets the systems form to its original values
-			$("#reset_button").click(function() {
-				$("#config_form")[0].reset();
-			});
 		 });  //end document.ready
 	</script>
 {% endblock %}
 {% block content %}
 	<link rel="stylesheet" href="{{ STATIC_URL }}css/config.css" type="text/css" media="screen" />
 	<div id="wrapper">
-	    <div id='container'>
-	        <div id="sidebar" ></div>
-	        <div id='systemContainer' class='rightContent forceInvisible'>
-                <div id="config_results"></div>
-	            <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
-		            <div id='CRITsTab' class='box forceInvisible'>
-		                <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
-		            </div>  
-		            <div id='generalTab' class='box forceInvisible'>
-		                <table class="systemTable">{{ config_general_form.as_table }}</table>
-		            </div>
-		            <div id="LDAP" class='box forceInvisible'>
-		                <table class="systemTable">{{ config_LDAP_form.as_table }}</table>
-		            </div>
-		            <div id="securityTab" class='box forceInvisible'>
-		                <table class="systemTable">{{ config_security_form.as_table }}</table>
-		            </div>
-		            <div id="downloadTab" class='box forceInvisible'>
-		                <table class="systemTable">{{ config_download_form.as_table }}</table>
-		            </div>
-		            <div id="servicesTab" class='box forceInvisible'>
-		                <table class="systemTable">{{ config_services_form.as_table }}</table>
-		            </div>
-		            <div id="loggingTab" class='box forceInvisible'>
-		                <table class="systemTable">{{ config_logging_form.as_table }}</table>
-		            </div>
-		            <div id="submitWrapper">
-		                <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
-		                <input id="reset_button" type="button" value="Reset"></input>
-		            </div>
-	            </form>   
-	        </div> 
-	        <div id="itemsContainer" class='rightContent forceInvisible'></div>
-	        <div id="usersContainer" class="rightContent forceInvisible">
-	            <div id="add-new-user-form" title="Add/Edit User">
-	                <select class="selectbox" name="user" onchange="getUserSources(this);">
-	                    {% for user in user_list %}
-	                        <option value="{{ user.username }}">{{ user.username }}</option>
-	                    {% endfor %}
-	                </select>
-	                <br />
-	                <br />
-	                <form id="form-add-new-user" action='{% url "crits.core.views.source_access" %}' method='POST' enctype="multipart/form-data">
-	                    <table class="form">{{ source_access.as_table }}</table>
-	                    <div id="form-add-new-user-results" class="form_results"></div>
-	                </form>
+        <div id="sidebar" ></div>
+        <div id='systemContainer' class='rightContent forceInvisible'>
+               <div id="config_results"></div>
+            <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
+	            <div id='CRITsTab' class='box forceInvisible'>
+	                <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
+	            </div>  
+	            <div id='generalTab' class='box forceInvisible'>
+	                <table class="systemTable">{{ config_general_form.as_table }}</table>
 	            </div>
-	        </div>
-	        <div id='servicesContainer' class="rightContent forceInvisible"></div>
-	        <div id="audit_logContainer" class="rightContent forceInvisible"></div>
-	    </div>
-	</div>
+	            <div id="LDAP" class='box forceInvisible'>
+	                <table class="systemTable">{{ config_LDAP_form.as_table }}</table>
+	            </div>
+	            <div id="securityTab" class='box forceInvisible'>
+	                <table class="systemTable">{{ config_security_form.as_table }}</table>
+	            </div>
+	            <div id="downloadTab" class='box forceInvisible'>
+	                <table class="systemTable">{{ config_download_form.as_table }}</table>
+	            </div>
+	            <div id="servicesTab" class='box forceInvisible'>
+	                <table class="systemTable">{{ config_services_form.as_table }}</table>
+	            </div>
+	            <div id="loggingTab" class='box forceInvisible'>
+	                <table class="systemTable">{{ config_logging_form.as_table }}</table>
+	            </div>
+	            <div id="submitWrapper">
+	                <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
+	                <input id="reset_button" type="button" value="Reset"></input>
+	            </div>
+            </form>   
+        </div> 
+        <div id="itemsContainer" class='rightContent forceInvisible'></div>
+        <div id="usersContainer" class="rightContent forceInvisible">
+            <div id="add-new-user-form" title="Add/Edit User">
+                <select class="selectbox" name="user" onchange="getUserSources(this);">
+                    {% for user in user_list %}
+                        <option value="{{ user.username }}">{{ user.username }}</option>
+                    {% endfor %}
+                </select>
+                <br />
+                <br />
+                <form id="form-add-new-user" action='{% url "crits.core.views.source_access" %}' method='POST' enctype="multipart/form-data">
+                    <table class="form">{{ source_access.as_table }}</table>
+                    <div id="form-add-new-user-results" class="form_results"></div>
+                </form>
+            </div>
+        </div>
+        <div id='servicesContainer' class="rightContent forceInvisible"></div>
+        <div id="audit_logContainer" class="rightContent forceInvisible"></div>
+</div>
 {% endblock %}
 

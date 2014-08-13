@@ -511,7 +511,7 @@
     {% endif %}
     {% if user_role == 'Administrator' %}
 	    <li class='nav_admin mmenu_item'>
-	        <a class='noclick'>CRITs Control Panel</a>
+	        <a href="{% url 'crits.config.views.crits_config' %}">CRITs Control Panel</a>
 	        <ul class='sub-mmenu'>
                 <li class='mmenu_item'>
                     <a href="{% url 'crits.config.views.crits_config' %}">System</a>
