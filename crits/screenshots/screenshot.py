@@ -2,7 +2,7 @@ import StringIO
 
 from mongoengine import Document, StringField, ListField, IntField
 from django.conf import settings
-from PIL import Image
+import Image
 
 from crits.core.crits_mongoengine import CritsBaseDocument, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsSchemaDocument, CritsDocument
