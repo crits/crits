@@ -141,15 +141,13 @@ def generate_disassembly_versions(_id):
     else:
         versions = []
         dvs = Disassembly.objects(link_id=dis.link_id).only('id',
-                                                             'title',
-                                                             'version',
-                                                             'data')
+                                                            'title',
+                                                            'version')
         for dv in dvs:
             link = reverse('crits.disassembly.views.disassembly_details',
                            args=(dv.id,))
             versions.append({'title': dv.title,
                              'version': dv.version,
-                             'data': dv.data,
                              'link': link})
         return versions
 
