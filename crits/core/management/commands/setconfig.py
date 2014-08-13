@@ -96,7 +96,8 @@ class Command(BaseCommand):
            temp_dir:\t\t\t<full directory path>
            timezone:\t\t\t<string> (ex: "America/New_York")
            total_max:\t\t\t<integer>
-           totp:\t\t\t<boolean> (ex: True, true, yes, or 1)
+           totp_cli:\t\t\t<string> (ex: Disabled, Required, Optional)
+           totp_web:\t\t\t<string> (ex: Disabled, Required, Optional)
            zip7_path:\t\t\t<full file path>"""
     help = 'Set a CRITs configuration option.'
 
@@ -209,7 +210,7 @@ def set_config_attribute(crits_config, attr, value):
     if hasattr(crits_config, attr):
         if attr in ("enable_api", "create_unknown_user", "debug", "ldap_auth",
                     "ldap_tls", "remote_user", "secure_cookie",
-                    "ldap_update_on_login", "query_caching", "totp",
+                    "ldap_update_on_login", "query_caching",
                     "crits_email_end_tag"):
             if value in ('True', 'true', 'yes', '1'):
                 value = True
@@ -241,6 +242,9 @@ def set_config_attribute(crits_config, attr, value):
         if attr == "service_model":
             if value not in ('process', 'thread', 'local'):
                 raise CE('service_model must be process, thread, or local')
+        if attr in ('totp_web', 'totp_cli'):
+            if value not in ('Optional', 'Disabled', 'Required'):
+                raise CE('totp_web/cli must be Optional, Required, or Disabled')
 
         print "Setting [" + str(attr) + "] to a value of [" + str(value) + "]"
         setattr(crits_config, attr, value)

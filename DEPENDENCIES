@@ -6,7 +6,7 @@ for these services may cause CRITs to break!
 * Apache
 * curl
 * mod-wsgi
-* MongoDB 2.6.1
+* MongoDB 2.6.4
 * PCRE3
 * Python 2.7.x
 * ssdeep
@@ -18,9 +18,9 @@ for these services may cause CRITs to break!
 Python Libraries:
 * anyjson
 * cybox 2.1.0.5
-* dateutil
+* dateutil 2.2
 * defusedxml 0.4.1
-* django 1.6.2
+* django 1.6.5
 * django-tastypie-0.11.0
 * django-tastypie-mongoengine-0.4.5
 * importlib
@@ -30,12 +30,12 @@ Python Libraries:
 * pillow 2.4.0
 * pycurl
 * pydeep
-* pymongo 2.7.0
+* pymongo 2.7.2
 * pyparsing
 * python-ldap 2.4.15
 * python-magic
 * python-mimeparse 0.1.4.1
 * setuptools
-* simlejson
+* simplejson
 * stix 1.1.1.0
 * yaml

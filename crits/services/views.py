@@ -145,8 +145,7 @@ def get_form(request, name, crits_type, identifier):
                                                     crits_type,
                                                     identifier)
     if not form_html:
-        return redirect(reverse('crits.services.views.service_run',
-                                args=[name, crits_type, identifier]))
+        return service_run(request, name, crits_type, identifier)
     else:
         response['form'] = form_html
 
