@@ -397,8 +397,7 @@ def get_form(request, name, crits_type, identifier):
     if not ServiceRunConfigForm:
         # this should only happen if there are no config options and the
         # service is rerunnable.
-        response['redirect'] = reverse('crits.services.views.service_run',
-                                        args=[name, crits_type, identifier])
+        return service_run(request, name, crits_type, identifier)
     else:
         form = ServiceRunConfigForm(dict(config))
         response['form'] = render_to_string("services_run_form.html",
@@ -474,22 +473,24 @@ def service_run(request, name, crits_type, identifier):
     service_class = env.manager.get_service_class(name)
     ServiceRunConfigForm = make_run_config_form(service_class)
 
-    if request.method == "POST":
-        #Populate the form with values from the POST request
-        form = ServiceRunConfigForm(request.POST)
-        if form.is_valid():
-            # parse_config will remove the "force" option from cleaned_data
-            config = service_class.parse_config(form.cleaned_data,
-                                                exclude_private=True)
-            force = form.cleaned_data.get("force")
-        else:
-            # TODO: return corrected form via AJAX
-            response['html'] = "Invalid configuration, please try again :-("
-            return HttpResponse(json.dumps(response), mimetype="application/json")
-    else:
-        # If not a POST, don't use any custom options.
-        config = None
-        force = False
+    # Set defaults
+    config = None
+    force = False
+
+    if ServiceRunConfigForm:
+        if request.method == "POST":
+            #Populate the form with values from the POST request
+            form = ServiceRunConfigForm(request.POST)
+            if form.is_valid():
+                # parse_config will remove the "force" option from cleaned_data
+                config = service_class.parse_config(form.cleaned_data,
+                                                    exclude_private=True)
+                force = form.cleaned_data.get("force")
+            else:
+                # TODO: return corrected form via AJAX
+                response['html'] = "Invalid configuration, please try again :-("
+                return HttpResponse(json.dumps(response),
+                                    mimetype="application/json")
 
     try:
         env.run_service(name, context, execute=settings.SERVICE_MODEL,
