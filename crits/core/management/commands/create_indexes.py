@@ -84,6 +84,14 @@ def create_indexes():
     comments.ensure_index("tags", background=True)
     comments.ensure_index("status", background=True)
 
+    disassembly = mongo_connector(settings.COL_DISASSEMBLY)
+    disassembly.ensure_index("link_id", background=True)
+    disassembly.ensure_index("md5", background=True)
+    disassembly.ensure_index("objects.value", background=True)
+    disassembly.ensure_index("relationships.value", background=True)
+    disassembly.ensure_index("campaign.name", background=True)
+    disassembly.ensure_index("bucket_list", background=True)
+
     domains = mongo_connector(settings.COL_DOMAINS)
     domains.ensure_index("domain", background=True)
     domains.ensure_index("objects.value", background=True)

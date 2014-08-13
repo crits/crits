@@ -12,6 +12,7 @@ from create_sectors import add_sector_objects
 from setconfig import create_config_if_not_exist
 
 from crits.core.user_role import UserRole
+from crits.disassembly.disassembly import DisassemblyType
 from crits.domains.domain import TLD
 from crits.samples.exploit import Exploit
 from crits.samples.backdoor import Backdoor
@@ -47,6 +48,7 @@ class Command(BaseCommand):
         populate_exploits(drop)
         populate_backdoors(drop)
         populate_indicator_actions(drop)
+        populate_disassembly_types(drop)
         populate_raw_data_types(drop)
         # The following will always occur with every run of this script:
         #   - tlds are based off of a Mozilla TLD list so it should never
@@ -152,6 +154,7 @@ def populate_indicator_actions(drop):
     else:
         print "Indicator Actions: existing documents detected. skipping!"
 
+
 def populate_raw_data_types(drop):
     """
     Populate default set of raw data types into the system.
@@ -163,7 +166,7 @@ def populate_raw_data_types(drop):
     # define your raw data types here
     data_types = ['Text', 'JSON']
     if drop:
-        RawDataType.drop_collection()
+        DisassemblyType.drop_collection()
     if len(RawDataType.objects()) < 1:
         for data_type in data_types:
             dt = RawDataType()
@@ -172,6 +175,29 @@ def populate_raw_data_types(drop):
         print "Raw Data Types: added %s types!" % len(data_types)
     else:
         print "Raw Data Types: existing documents detected. skipping!"
+
+
+def populate_disassembly_types(drop):
+    """
+    Populate default set of disassembly types into the system.
+
+    :param drop: Drop the existing collection before trying to populate.
+    :type: boolean
+    """
+
+    # define your disassembly types here
+    data_types = ['IDA', 'Hopper']
+    if drop:
+        DisassemblyType.drop_collection()
+    if len(DisassemblyType.objects()) < 1:
+        for data_type in data_types:
+            dt = DisassemblyType()
+            dt.name = data_type
+            dt.save()
+        print "Disassembly Types: added %s types!" % len(data_types)
+    else:
+        print "Disassembly Types: existing documents detected. skipping!"
+
 
 def populate_tlds(drop):
     """

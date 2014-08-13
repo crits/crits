@@ -202,6 +202,7 @@ class DownloadFileForm(forms.Form):
         rel_max = getattr(crits_config, 'rel_max', settings.REL_MAX)
         super(DownloadFileForm, self).__init__(*args, **kwargs)
         self.fields['objects'].choices = [('Certificate', 'Certificates'),
+                                          ('Disassembly', 'Disassemblies'),
                                           ('Domain', 'Domains'),
                                           ('Email', 'Emails'),
                                           ('Indicator', 'Indicators'),

@@ -1082,6 +1082,7 @@ var stdDialogs = {
                                                                      {open: file_upload_dialog},
                                      defaultSubmit) } },
       "new-certificate": {title: "Certificate" },
+      "new-disassembly": {title: "New Disassembly" },
       "new-raw-data-file": {title: "Raw Data File" },
       "new-indicator-csv": {title: "New Indicator CSV" },
   };

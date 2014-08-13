@@ -102,6 +102,8 @@ COL_CERTIFICATES = "certificates"                       # certificates list
 COL_COMMENTS = "comments"                               # comments collection
 COL_CONFIG = "config"                                   # config collection
 COL_COUNTS = "counts"                                   # general counts for dashboard
+COL_DISASSEMBLY = "disassembly"                         # main disassembly collection
+COL_DISASSEMBLY_TYPES = "disassembly_types"             # list of available disassembly types
 COL_DIVISION_DATA = "division_data"                     # information on divisions within company
 COL_DOMAINS = "domains"                                 # root domains with FQDNs and IP information
 COL_EFFECTIVE_TLDS = "effective_tlds"                   # list of effective TLDs from Mozilla to determine root domains
@@ -287,6 +289,7 @@ TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, 'certificates/templates'),
     os.path.join(SITE_ROOT, 'comments/templates'),
     os.path.join(SITE_ROOT, 'config/templates'),
+    os.path.join(SITE_ROOT, 'disassembly/templates'),
     os.path.join(SITE_ROOT, 'domains/templates'),
     os.path.join(SITE_ROOT, 'emails/templates'),
     os.path.join(SITE_ROOT, 'events/templates'),
@@ -309,6 +312,7 @@ STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'campaigns/static'),
     os.path.join(SITE_ROOT, 'certificates/static'),
     os.path.join(SITE_ROOT, 'comments/static'),
+    os.path.join(SITE_ROOT, 'disassembly/static'),
     os.path.join(SITE_ROOT, 'domains/static'),
     os.path.join(SITE_ROOT, 'emails/static'),
     os.path.join(SITE_ROOT, 'events/static'),
@@ -434,6 +438,7 @@ CRITS_TYPES = {
         'Campaign': COL_CAMPAIGNS,
         'Certificate': COL_CERTIFICATES,
         'Comment': COL_COMMENTS,
+        'Disassembly': COL_DISASSEMBLY,
         'Domain': COL_DOMAINS,
         'Email': COL_EMAIL,
         'Event': COL_EVENTS,

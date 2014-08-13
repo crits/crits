@@ -87,6 +87,7 @@ class EmbeddedFavorites(EmbeddedDocument, CritsDocumentFormatter):
 
     Campaign = ListField(StringField())
     Certificate = ListField(StringField())
+    Disassembly = ListField(StringField())
     Domain = ListField(StringField())
     Email = ListField(StringField())
     Event = ListField(StringField())
@@ -105,6 +106,7 @@ class EmbeddedSubscriptions(EmbeddedDocument, CritsDocumentFormatter):
 
     Campaign = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Certificate = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Disassembly = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Domain = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Email = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Event = ListField(EmbeddedDocumentField(EmbeddedSubscription))

@@ -22,6 +22,7 @@ class Bucket(CritsDocument, CritsSchemaDocument, Document):
             'name': 'Bucketlist name',
             'Campaign': 'Integer',
             'Certificate': 'Integer',
+            'Disassembly': 'Integer',
             'Domain': 'Integer',
             'Email': 'Integer',
             'Target': 'Integer',
@@ -37,6 +38,7 @@ class Bucket(CritsDocument, CritsSchemaDocument, Document):
     name = StringField(required=True)
     Campaign = IntField(default=0)
     Certificate = IntField(default=0)
+    Disassembly = IntField(default=0)
     Domain = IntField(default=0)
     Email = IntField(default=0)
     Event = IntField(default=0)

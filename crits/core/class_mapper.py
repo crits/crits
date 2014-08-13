@@ -17,6 +17,7 @@ def class_from_id(type_, _id):
     from crits.core.crits_mongoengine import RelationshipType
     from crits.core.source_access import SourceAccess
     from crits.core.user_role import UserRole
+    from crits.disassembly.disassembly import Disassembly, DisassemblyType
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event, EventType
@@ -45,6 +46,10 @@ def class_from_id(type_, _id):
         return Certificate.objects(id=_id).first()
     elif type_ == 'Comment':
         return Comment.objects(id=_id).first()
+    elif type_ == 'Disassembly':
+        return Disassembly.objects(id=_id).first()
+    elif type_ == 'DisassemblyType':
+        return DisassemblyType.objects(id=_id).first()
     elif type_ == 'Domain':
         return Domain.objects(id=_id).first()
     elif type_ == 'Email':
@@ -100,6 +105,7 @@ def class_from_value(type_, value):
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
+    from crits.disassembly.disassembly import Disassembly
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event
@@ -117,6 +123,8 @@ def class_from_value(type_, value):
         return Certificate.objects(md5=value).first()
     elif type_ == 'Comment':
         return Comment.objects(id=value).first()
+    elif type_ == 'Disassembly':
+        return Disassembly.objects(md5=value).first()
     elif type_ == 'Domain':
         return Domain.objects(domain=value).first()
     elif type_ == 'Email':
@@ -157,6 +165,7 @@ def class_from_type(type_):
     from crits.core.crits_mongoengine import RelationshipType
     from crits.core.source_access import SourceAccess
     from crits.core.user_role import UserRole
+    from crits.disassembly.disassembly import Disassembly, DisassemblyType
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event, EventType
@@ -179,6 +188,10 @@ def class_from_type(type_):
         return Certificate
     elif type_ == 'Comment':
         return Comment
+    elif type_ == 'Disassembly':
+        return Disassembly
+    elif type_ == 'DisassemblyType':
+        return DisassemblyType
     elif type_ == 'Domain':
         return Domain
     elif type_ == 'Email':

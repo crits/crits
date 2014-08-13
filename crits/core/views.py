@@ -61,6 +61,9 @@ from crits.core.user_tools import toggle_user_preference, update_user_preference
 from crits.core.user_tools import get_api_key_by_name, create_api_key_by_name
 from crits.core.user_tools import revoke_api_key_by_name
 from crits.core.class_mapper import class_from_id
+from crits.disassembly.disassembly import DisassemblyType
+from crits.disassembly.forms import UploadDisassemblyFileForm
+from crits.disassembly.forms import NewDisassemblyTypeForm
 from crits.domains.forms import TLDUpdateForm, AddDomainForm
 from crits.emails.forms import EmailUploadForm, EmailEMLForm, EmailYAMLForm, EmailRawUploadForm, EmailOutlookForm
 from crits.events.event import EventType
@@ -1003,6 +1006,7 @@ def base_context(request):
         base_context['comment_add'] = AddCommentForm()
         base_context['inline_comment_add'] = InlineCommentForm()
         base_context['campaign_form'] = CampaignForm()
+        base_context['add_disassembly_type'] = NewDisassemblyTypeForm()
         base_context['add_raw_data_type'] = NewRawDataTypeForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
         base_context['source_access'] = SourceAccessForm()
@@ -1096,6 +1100,10 @@ def base_context(request):
             base_context['upload_raw_data_file'] = UploadRawDataFileForm(user)
         except Exception, e:
             logger.warning("Base Context UploadRawDataFileForm Error: %s" % e)
+        try:
+            base_context['upload_disassembly'] = UploadDisassemblyFileForm(user)
+        except Exception, e:
+            logger.warning("Base Context UploadDisassemblyFileForm Error: %s" % e)
 
         # Other info acquired from functions
         try:
@@ -1144,6 +1152,8 @@ def base_context(request):
                                             'name': 'Backdoors'},
                                         {'collection': settings.COL_CAMPAIGNS,
                                             'name': 'Campaigns'},
+                                        {'collection': settings.COL_DISASSEMBLY_TYPES,
+                                            'name': 'Disassembly Types'},
                                         {'collection': settings.COL_EVENT_TYPES,
                                             'name': 'Event Types'},
                                         {'collection': settings.COL_EXPLOIT_DETAILS,
@@ -1613,6 +1623,7 @@ def item_editor(request):
     counts = {}
     obj_list = [Backdoor,
                 Campaign,
+                DisassemblyType,
                 EventType,
                 Exploit,
                 IndicatorAction,
