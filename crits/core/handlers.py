@@ -813,11 +813,13 @@ def generate_bucket_jtable(request, option):
             url = reverse('crits.core.views.bucket_promote')
         else:
             lower = ctype.lower()
-            if lower != "rawdata":
-                url = reverse('crits.%ss.views.%ss_listing' % (lower, lower))
-            else:
+            if lower == "rawdata":
                 lower = "raw_data"
                 url = reverse('crits.%s.views.%s_listing' % (lower, lower))
+            elif lower == "disassembly":
+                url = reverse('crits.%s.views.%s_listing' % (lower, lower))
+            else:
+                url = reverse('crits.%ss.views.%ss_listing' % (lower, lower))
 
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
