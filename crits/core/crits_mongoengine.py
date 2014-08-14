@@ -1190,18 +1190,24 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     screenshots = ListField(StringField())
     sectors = ListField(StringField())
 
-    def add_campaign(self, campaign_item=None):
+    def add_campaign(self, campaign_item=None, update=True):
         """
         Add a campaign to this top-level object.
 
         :param campaign_item: The campaign to add.
         :type campaign_item: :class:`crits.core.crits_mongoengine.EmbeddedCampaign`
+        :param update: If True, allow merge with pre-existing campaigns
+        :              If False, do not change any pre-existing campaigns
+        :type update:  boolean
+        :returns: dict with keys "success" (boolean) and "message" (str)
         """
 
         if isinstance(campaign_item, EmbeddedCampaign):
             if campaign_item.name != None and campaign_item.name.strip() != '':
                 for c, campaign in enumerate(self.campaign):
                     if campaign.name == campaign_item.name:
+                        if not update:
+                            return {'success': False, 'message': 'This Campaign is already assigned.'}
                         con = {'low': 1, 'medium': 2, 'high': 3}
                         if not con.get(campaign_item.confidence):
                             campaign_item.confidence = 'low'
@@ -1211,6 +1217,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                         break
                 else:
                     self.campaign.append(campaign_item)
+                return {'success': True, 'message': 'Campaign assigned successfully!'}
+        return {'success': False, 'message': 'Campaign is invalid'}
 
     def remove_campaign(self, campaign_name=None, campaign_date=None):
         """
