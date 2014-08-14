@@ -88,12 +88,12 @@ $(document).ready(function() {				//document.ready
         $('#config_form').submit();
     });
 	//remove error class on keypress
-    $(document).on("keypress", ".error", function(){
+    $(document).on("keyup", ".error", function(){
     	$(this).removeClass("error"); 
     	toggleErrorOnNode($(this), false);
     });
     //add isChanged asterick(*) to the outer node
-    $(document).on("keypress", ".box input,.box textarea", function(){
+    $(document).on("keyup", ".box input,.box textarea", function(){
     	addChangedSymbol($(this));
     });
   //add isChanged asterick(*) to the outer node
