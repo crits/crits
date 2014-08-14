@@ -148,3 +148,15 @@ def cgi_escape(value):
     """
 
     return cgi.escape(value)
+
+@register.filter
+def absVal(value):
+    """
+    return absolute value
+    
+    :param value: the int to get the absolute value of
+    :type value: int
+    :returns: int
+    """
+    return abs(value)
+    

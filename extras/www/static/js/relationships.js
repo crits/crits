@@ -213,6 +213,145 @@ $(document).ready(function() {
   $('#relationship_type').click(function(e) {
     e.stopPropagation();
   });
+  
+  
+
+
+$(".scripted_relationship").click(function() {
+	  var guardian = $(this).closest("tr");
+	  var td = $(this).closest("td");
+	  var new_confidence = Math.abs(guardian.attr('rConfidence'));
+	  var data = {
+	              reverse_type: guardian.attr('rtype'),
+	              dest_id: guardian.attr('rvalue'),
+	              my_type: guardian.attr('mtype'),
+	              my_value: guardian.attr('mvalue'),
+	              forward_relationship: guardian.attr('frel'),
+	              relationship_date: guardian.attr('rdate'),
+	              forge_date: guardian.attr('fdate'),
+	              new_confidence: new_confidence,
+	      		};
+	  $.ajax({
+        type:"POST",
+        url: td.attr('action'),
+        data: data,
+        datatype: 'json',
+        success: function(data) {
+            $("#config_results").text(data.message);
+           	td.find(".scripted_relationship").remove();
+           	new_confidence = new_confidence.toString().trim();
+           	td.html(new_confidence);
+            td.addClass("relationship_confidence_edit");            
+        },
+    });
+});
+
+  $(document).on('click', '.relationship_confidence_edit', function(e) {
+  	e.preventDefault();
+  	
+  	//this is to set the inital value of the select
+  	if($.isNumeric($(this).html())) 
+  		var currentConfidence = $(this).html();
+  		
+ 	$(this).editable(function(value, settings) {
+          return function(value, settings, elem) {
+              var guardian = $(elem).parent();
+              var data = {
+              reverse_type: guardian.attr('rtype'),
+              dest_id: guardian.attr('rvalue'),
+              my_type: guardian.attr('mtype'),
+              my_value: guardian.attr('mvalue'),
+              forward_relationship: guardian.attr('frel'),
+              relationship_date: guardian.attr('rdate'),
+              forge_date: guardian.attr('fdate'),
+              new_confidence: value,
+      		};
+            if (value <1) 
+            	return currentConfidence;
+            else
+          		$.ajax({
+                    type: "POST",
+                    async: false,
+                    url: $(elem).attr('action'),
+                    data: data,
+                    success: function(data) {
+                        if (data.success) {
+                            guardian.attr('rConfidence', value);
+                            currentConfidence = value;
+                        } else {
+                            alert(data.message);
+                        }
+                    },
+                    error: function(data) {
+                    	alert(data.message);
+                    }
+      			});
+            return value; 
+  		}(value, settings, this);
+  	}, 
+  	{ 
+  		event:'confidence_edit',
+    	type: 'select',
+    	width: '50px',
+    	data: function() {
+  			if (currentConfidence < 1)
+  				currentConfidence = '';
+  			var dataValues = "{0: '', 1:'1 (Low)', 2:'2', 3:'3', 4:'4', 5:'5 (High)', 'selected': '"+currentConfidence+"'}";
+  			return dataValues;
+  		},
+  		placeholder: currentConfidence,
+    	style:'display:inline',
+        onblur:'submit'
+ 	});	
+ 	$(this).trigger('confidence_edit');
+  });
+
+  $(document).on('click', '.relationship_reason_edit', function(e) {
+  	e.preventDefault();
+
+  	var element = $(this);
+  	var currentReason = element.html().trim();
+  	
+ 	$(this).editable(function(value, settings) {
+          return function(value, settings, elem) {
+        	  var guardian = $(elem).parent();
+              var data = {
+              reverse_type: guardian.attr('rtype'),
+              dest_id: guardian.attr('rvalue'),
+              my_type: guardian.attr('mtype'),
+              my_value: guardian.attr('mvalue'),
+              forward_relationship: guardian.attr('frel'),
+              relationship_date: guardian.attr('rdate'),
+              forge_date: guardian.attr('fdate'),
+              new_reason: value,
+      		};
+      		$.ajax({
+                type: "POST",
+                async: false,
+                url: $(elem).attr('action'),
+                data: data,
+                success: function(data) {
+                    if (data.success) {
+                        guardian.attr('new_reason', value);
+                        currentReason = value;
+                    }
+                },
+  			});
+            return value; 
+  		}(value, settings, this);
+  	}, 
+  	{ 
+  		event:'reason_edit',
+    	type: 'textarea',
+    	data: function() {
+  			return currentReason;
+  		},
+    	style:'display:inline',
+        onblur:'submit',
+ 	});	
+ 	$(this).trigger('reason_edit');
+  });
+
 
   $(document).on('click', '.relationship_confidence_edit', function(e) {
     e.preventDefault();

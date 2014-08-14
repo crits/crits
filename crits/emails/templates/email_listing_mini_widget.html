@@ -1,4 +1,5 @@
 {% load url from future %}
+{% load absVal from filters %}
 <tr>
     <td colspan="2" class="relationship_spacer"></td>
 </tr>
@@ -34,7 +35,7 @@
         </thead>
         <tbody>
             {% for rel in rel_list %}
-            <tr mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue  ="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}">
+            <tr mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rConfidence="{{ rel.rel_confidence }}" rvalue  ="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}">
                 <td class="relationship_type_edit tooltip_edit" action="{% url 'crits.relationships.views.update_relationship_type' %}">{{ rel.relationship }}</td>
                 <td><a href="{% url 'crits.emails.views.emails_listing' %}?search_type=from&q={{rel.from}}&force_full=1">{{ rel.from }}</a>
                 {% if splunk_search_url %}
@@ -73,7 +74,13 @@
                 </td>
                 <td width="125px">{{rel.analyst}}</td>
                 <td width="125px">{{rel.relationship_date|date:"Y-m-d H:i:s"}}</td>
-                <td class='relationship_confidence_edit' action="{% url 'crits.relationships.views.update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
+                {% if rel.rel_confidence > 0 %}
+                    <td class='relationship_confidence_edit' action="{% url 'crits.relationships.views.update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
+                {% else %}
+	                <td action="{% url 'crits.relationships.views.update_relationship_confidence' %}">
+	                  {{ rel.rel_confidence|absVal }}<span title="This relationship was produced by a script. Click to confirm" class="scripted_relationship ui-icon ui-icon-script"></span>
+	                </td>
+                {% endif %}
 		        <td class='relationship_reason_edit' action="{% url 'crits.relationships.views.update_relationship_reason' %}">
 		            {% if rel.rel_reason != null and rel.rel_reason != '' %}
 		                {{ rel.rel_reason }}

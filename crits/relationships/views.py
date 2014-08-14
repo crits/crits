@@ -128,7 +128,10 @@ def update_relationship_confidence(request):
         error = "Expected AJAX POST"
         return render_to_response("error.html",
                                   {"error" : error },
-                                  RequestContext(request))          
+                                  RequestContext(request))  
+        
+        
+                
         
 @user_passes_test(user_can_view_data)
 def update_relationship_reason(request):

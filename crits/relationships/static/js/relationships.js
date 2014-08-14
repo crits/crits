@@ -214,6 +214,35 @@ $(document).ready(function() {
     e.stopPropagation();
   });
 
+$(".scripted_relationship").click(function() {
+	  var guardian = $(this).closest("tr");
+	  var td = $(this).closest("td");
+	  var new_confidence = Math.abs(guardian.attr('rConfidence'));
+	  var data = {
+	              reverse_type: guardian.attr('rtype'),
+	              dest_id: guardian.attr('rvalue'),
+	              my_type: guardian.attr('mtype'),
+	              my_value: guardian.attr('mvalue'),
+	              forward_relationship: guardian.attr('frel'),
+	              relationship_date: guardian.attr('rdate'),
+	              forge_date: guardian.attr('fdate'),
+	              new_confidence: new_confidence,
+	      		};
+	  $.ajax({
+        type:"POST",
+        url: td.attr('action'),
+        data: data,
+        datatype: 'json',
+        success: function(data) {
+            $("#config_results").text(data.message);
+           	td.find(".scripted_relationship").remove();
+           	new_confidence = new_confidence.toString().trim();
+           	td.html(new_confidence);
+            td.addClass("relationship_confidence_edit");            
+        },
+    });
+});
+
   $(document).on('click', '.relationship_confidence_edit', function(e) {
     e.preventDefault();
 
@@ -244,7 +273,7 @@ $(document).ready(function() {
                     data: data,
                     success: function(data) {
                         if (data.success) {
-                            guardian.attr('new_confidence', value);
+                            guardian.attr('rConfidence', value);
                             currentConfidence = value;
                         } else {
                             alert(data.message);
