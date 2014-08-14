@@ -23,7 +23,6 @@ def prep_db():
     """
     Prep database for test.
     """
-
     clean_db()
     # Add User
     user = CRITsUser.create_user(
@@ -42,12 +41,10 @@ def prep_db():
     campaign1.save(username=user.username)
     campaign2 = Campaign(name=TCAMPAIGN2)
     campaign2.save(username=user.username)
-
 def clean_db():
     """
     Clean database for test.
     """
-
     user = CRITsUser.objects(username=TUSER_NAME).first()
     if user:
         user.delete()
@@ -60,13 +57,10 @@ def clean_db():
     campaign2 = Campaign.objects(name=TCAMPAIGN2).first()
     if campaign2:
         campaign2.delete()
-
-
 class RelationshipConfidenceAndReasonTests(SimpleTestCase):
     """
     Test Domain Handlers
     """
-
     def setUp(self):
         prep_db()
         self.user = CRITsUser.objects(username=TUSER_NAME).first()
@@ -76,12 +70,10 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
         relationship = forge_relationship(left_class=self.campaign1,
                                           right_class=self.campaign2,
                                           rel_type=TRELATIONSHIP_TYPE,
-                                          analyst=self.user.username,
+                                          analyst=self.user.username, 
                                           rel_confidence=TRELATIONSHIP_CONFIDENCE)
-
     def tearDown(self):
         clean_db()
-
     def testCreateRelationship(self):
         relationship1 = self.campaign1.relationships[0]
         relationship2 = self.campaign2.relationships[0]
@@ -89,40 +81,31 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
         self.assertEqual(relationship2.rel_confidence, TRELATIONSHIP_CONFIDENCE)
         self.assertEqual(relationship1.analyst, self.user.username)
         self.assertEqual(relationship2.analyst, self.user.username)
-
     def testChangingReason(self):
         relationship1 = self.campaign1.relationships[0]
         relationship2 = self.campaign2.relationships[0]
-
         self.assertEqual(relationship1.rel_reason, "N/A")
         self.assertEqual(relationship2.rel_reason, "N/A")
-
         update_relationship_reasons(left_class=self.campaign1,
                                     right_class=self.campaign2,
                                     rel_type=TRELATIONSHIP_TYPE,
-                                    analyst=self.user2.username,
+                                    analyst=self.user2.username, 
                                     new_reason=TRELATIONSHIP_NEW_REASON)
-
         campaign1 = Campaign.objects.get(id=self.campaign1.id)
         campaign2 = Campaign.objects.get(id=self.campaign2.id)
         relationship1 = campaign1.relationships[0]
         relationship2 = campaign2.relationships[0]
-
         self.assertEqual(relationship1.rel_reason, TRELATIONSHIP_NEW_REASON)
         self.assertEqual(relationship2.rel_reason, TRELATIONSHIP_NEW_REASON)
-
     def testChangingConfidence(self):
         relationship1 = self.campaign1.relationships[0]
         relationship2 = self.campaign2.relationships[0]
-
         self.assertEqual(relationship1.rel_confidence, TRELATIONSHIP_CONFIDENCE)
         self.assertEqual(relationship2.rel_confidence, TRELATIONSHIP_CONFIDENCE)
-
         update_relationship_confidences(left_class=self.campaign1,
                                     right_class=self.campaign2,
                                     rel_type=TRELATIONSHIP_TYPE,
-                                    analyst=self.user2.username,
+                                    analyst=self.user2.username, 
                                     new_confidence=TRELATIONSHIP_NEW_CONFIDENCE)
-
         self.assertEqual(relationship1.rel_confidence, TRELATIONSHIP_NEW_CONFIDENCE)
         self.assertEqual(relationship2.rel_confidence, TRELATIONSHIP_NEW_CONFIDENCE)
