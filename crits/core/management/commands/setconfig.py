@@ -78,6 +78,7 @@ class Command(BaseCommand):
            ldap_server:\t\t\t<string>
            ldap_usercn:\t\t\t<string>
            ldap_userdn:\t\t\t<string>
+           ldap_special:\t\t\t<string>
            ldap_update_on_login:\t<boolean> (ex: True, true, yes, or 1)
            log_directory:\t\t<full directory path>
            log_level:\t\t\t<INFO/DEBUG/WARN>
