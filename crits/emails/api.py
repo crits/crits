@@ -3,6 +3,7 @@ from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 
 from crits.emails.email import Email
+from crits.emails.forms import EmailUploadForm
 from crits.emails.handlers import handle_pasted_eml, handle_yaml, handle_eml
 from crits.emails.handlers import handle_email_fields, handle_msg
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
@@ -106,10 +107,18 @@ class EmailResource(CRITsAPIResource):
                                  campaign,
                                  confidence)
         if type_ == 'fields':
-            fields = bundle.data
-            result = handle_email_fields(fields,
-                                         analyst,
-                                         'Upload')
+            # Use the form to ensure we have the required fields and optional
+            # fields have a default. If we just pass bundle.data to
+            # handle_email_fields() it assumes all the optional fields have
+            # default values.
+            analyst = bundle.request.user.username
+            form = EmailUploadForm(analyst, bundle.data)
+            if form.is_valid():
+                result = handle_email_fields(form.cleaned_data,
+                                             analyst,
+                                             'Upload')
+            else:
+                result = {'status': False, 'reason': form.errors}
         if not result:
             raise BadRequest('No upload type found.')
         if not result['status']:
