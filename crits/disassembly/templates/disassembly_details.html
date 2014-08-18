@@ -21,7 +21,6 @@
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ disassembly.analysis|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
 </ul>
@@ -162,7 +161,6 @@
         {% include "comments_listing_widget.html" %}
     </div>
 </div>
-{% include 'disassembly_versions.html' %}
 {% with item=disassembly %}
     {% include "services_analysis_section.html" with crits_type="Disassembly" identifier=disassembly.id %}
 {% endwith %}
@@ -178,7 +176,5 @@
 
 {% block javascript_includes %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/disassembly.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/diffview.js"></script><script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/jsdiff.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/difflib.js"></script>
 {% endblock %}
 
