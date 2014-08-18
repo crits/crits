@@ -448,18 +448,36 @@ def handle_email_fields(data, analyst, method):
             'data': None
           }
 
-    sourcename = data['source']
+    # Date and source are the only required ones.
+    # If there is no campaign confidence, default it to low.
+    # Remove these items from data so they are not added when merged.
+    sourcename = data.get('source', None)
     del data['source']
-    reference = data['source_reference']
-    del data['source_reference']
-    bucket_list = data['bucket_list']
-    del data['bucket_list']
-    ticket = data['ticket']
-    del data['ticket']
-    campaign = data['campaign']
-    del data['campaign']
-    confidence = data['campaign_confidence']
-    del data['campaign_confidence']
+    reference = data.get('source_reference', None)
+    try:
+        del data['source_reference']
+    except:
+        pass
+    bucket_list = data.get('bucket_list', None)
+    try:
+        del data['bucket_list']
+    except:
+        pass
+    ticket = data.get('ticket', None)
+    try:
+        del data['ticket']
+    except:
+        pass
+    campaign = data.get('campaign', None)
+    try:
+        del data['campaign']
+    except:
+        pass
+    confidence = data.get('campaign_confidence', 'low')
+    try:
+        del data['campaign_confidence']
+    except:
+        pass
 
     for x in ('cc', 'to'):
         y = data.get(x, None)
@@ -487,8 +505,6 @@ def handle_email_fields(data, analyst, method):
                                                analyst=analyst)]
 
     if campaign:
-        if not confidence:
-            confidence = "low"
         ec = EmbeddedCampaign(name=campaign,
                               confidence=confidence,
                               description="",
