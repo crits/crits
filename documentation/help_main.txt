@@ -1501,7 +1501,7 @@ only "date" is required:
 :date: The Date field.
 :to: The To field.
 :cc: The CC field.
-:from_address: The From field.
+:from: The From field.
 :sender: The Sender field.
 :subject: The email subject.
 :reply_to: The Reply-To field.
