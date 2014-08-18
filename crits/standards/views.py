@@ -45,9 +45,12 @@ def upload_standards(request):
     make_event = std_form.cleaned_data['make_event']
     source = std_form.cleaned_data['source']
 
+    reference = std_form.cleaned_data['reference']
+
+
     # XXX: Add reference to form and handle here?
     status = import_standards_doc(data, request.user.username, "Upload",
-                                  make_event=make_event, source=source)
+                                 ref=reference, make_event=make_event, source=source)
 
     if not status['success']:
         response['message'] = status['reason']
