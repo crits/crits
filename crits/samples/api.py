@@ -69,10 +69,12 @@ class SampleResource(CRITsAPIResource):
         campaign = bundle.data.get('campaign', None)
         confidence = bundle.data.get('confidence', None)
         source = bundle.data.get('source', None)
-        method = bundle.data.get('method', None)
+        method = bundle.data.get('method', "")
         reference = bundle.data.get('reference', None)
         file_format = bundle.data.get('file_format', None)
-        parent_md5 = bundle.data.get('parent_md5', None)
+        related_md5 = bundle.data.get('related_md5', None)
+        related_id = bundle.data.get('related_id', None)
+        related_type = bundle.data.get('related_type', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
@@ -85,7 +87,9 @@ class SampleResource(CRITsAPIResource):
                                           user=analyst,
                                           campaign=campaign,
                                           confidence=confidence,
-                                          parent_md5 = parent_md5,
+                                          related_md5 = related_md5,
+                                          related_id = related_id,
+                                          related_type = related_type,
                                           filename=filename,
                                           md5=md5,
                                           bucket_list=bucket_list,
