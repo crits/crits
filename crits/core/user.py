@@ -870,8 +870,6 @@ class CRITsAuthBackend(object):
         fusername = username
         if '\\' in username:
             username = username.split("\\")[1]
-        elif "@" in username:
-            username = username.split("@")[0]
         user = CRITsUser.objects(username=username).first()
         if user:
             # If the user needs TOTP and it is not disabled system-wide, and

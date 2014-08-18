@@ -107,6 +107,9 @@ class EmailResource(CRITsAPIResource):
                                  confidence)
         if type_ == 'fields':
             fields = bundle.data
+            # Strip these so they don't get put in unsupported_attrs.
+            del fields['username']
+            del fields['api_key']
             result = handle_email_fields(fields,
                                          analyst,
                                          'Upload')
