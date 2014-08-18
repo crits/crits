@@ -60,7 +60,10 @@ from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, UnsupportedAttrs
 from crits.core.user_migrate import migrate_user
 
+
+
 logger = logging.getLogger(__name__)
+
 
 class EmbeddedSubscription(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -316,6 +319,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
+    defaultDashboard = ObjectIdField(required=False, default=None)
+    
+    
     def migrate(self):
         """
         Migrate to latest schema version.
@@ -862,6 +868,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         l.unbind()
         return resp
 
+    def getDashboards(self):
+        from crits.core.dashboard.models import getDashboardsForUser
+        return getDashboardsForUser(self)
 
 # stolen from MongoEngine and modified to use the CRITsUser class.
 class CRITsAuthBackend(object):
@@ -1060,7 +1069,7 @@ Please contact a site administrator to resolve.
         backend = auth.get_backends()[0]
         user.backend = "%s.%s" % (backend.__module__, backend.__class__.__name__)
         return user
-
+    
 
 class CRITsRemoteUserBackend(CRITsAuthBackend):
     """

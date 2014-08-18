@@ -174,10 +174,16 @@ def absVal(value):
     :returns: int
     """
     return abs(value)
-
 @register.filter
 @stringfilter
 def url_target_blank(var):
     """Follow the 'urlize' filter with this to make the URL open in a new tab."""
     return mark_safe(re.sub("<a([^>]+)(?<!target=)>",'<a target="_blank"\\1>',var))
-    
+
+@register.filter
+def is_object_id_equal(obj1, obj2):
+    if "id" in obj1:
+        obj1 = obj1.id
+    if "id" in obj2:
+        obj2 = obj2.id
+    return str(obj1) == str(obj2)

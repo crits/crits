@@ -22,4 +22,10 @@
     </ul>
 </div>
 
+
+<form id='openSavedSearch' method='GET' action='{% url "crits.core.dashboard.views.new_save_search" %}'>
+    <input type='hidden' value='{{term}}' name='q'/>
+    <input type='hidden' value='global' name='search_type'/>
+    <input type='submit' value='Open as Saved Search'/>
+</form>
 {% endblock %}

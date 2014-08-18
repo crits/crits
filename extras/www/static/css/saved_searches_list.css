@@ -1,0 +1,49 @@
+.margBottom {
+	margin-bottom:10px;
+}
+#extraNote {
+	color:red !important;
+	display:none;
+}
+.black {
+	color: inherit !important;
+}
+.editWrapper i {
+    width:30px;
+    cursor:pointer!important;
+    font-size: 150%;
+}
+.editWrapper {
+	padding-left:5px;
+}
+.dashboard-settings {
+	margin-left:5px;
+	cursor:pointer!important;
+}
+#dashboard-settings-dropdown {
+	position:absolute;
+	display:none;
+	width:100px;
+	border:1px solid black;
+	background-color:white;
+}
+.dashboard-settings-option {
+	cursor:pointer;
+	text-align:center;
+	line-height:25px;
+	height:25px;
+	border-bottom:1px solid black;
+}
+.dashboard-settings-option-last {
+	border:none !important;
+}
+.error {
+    border: 1px red solid !important;
+    background-color: rgba(255, 0, 0, 0.1) !important;
+}
+#resultsDiv {
+	height:20px;
+}
+.dashbaord {
+	width:100%;
+}

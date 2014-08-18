@@ -10,6 +10,9 @@ urlpatterns = patterns('',
         # Core
         (r'^', include('crits.core.urls')),
 
+        # Dashboard
+        (r'^', include('crits.core.dashboard.urls')),
+
         # Actors
         (r'^actors/', include('crits.actors.urls')),
 

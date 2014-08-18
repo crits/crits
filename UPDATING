@@ -3,6 +3,20 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: dbuchta
+Date:   2014-10-14
+
+    Dashboard 2.0 is here. Users can customize their dashboard by adding/removing
+    their favorite searches, changing table positions, width, and more! Users can
+    also have multiple dashboards and admins have the ability to create public
+    dashboards shared by all. 
+    
+    In order for the dashboard to work correctly, the initial default dashboard
+    must be created in the database. This can be done with the following 
+    management command:
+    
+        python manage.py create_default_dashboard
+        
 Author: mgoffin
 Date:   2014-10-04
 

@@ -55,6 +55,7 @@ from crits.indicators.indicator import Indicator
 
 from crits.core.totp import valid_totp
 
+
 logger = logging.getLogger(__name__)
 
 def get_favorites(analyst):
@@ -1848,7 +1849,6 @@ def get_query(col_obj,request):
     :type request: :class:`django.http.HttpRequest`
     :returns: dict -- The MongoDB query
     """
-
     keymaps = {
             "actor_identifier": "identifiers.identifier_id",
             "campaign": "campaign.name",
@@ -2522,9 +2522,10 @@ def generate_dashboard(request):
 
     query = {}
     sources = user_sources(request.user.username)
+    
     query["source.name"] = {"$in": sources}
     #limit = 5
-
+    """
     # indicators
     type_ = "indicator"
     indicator_jtopts = {
@@ -2710,8 +2711,16 @@ def generate_dashboard(request):
         'count_jtid':count_jtid,
         'count_button':count_button,
         'title': title,
-        'rt_url': settings.RT_URL
+        'rt_url': settings.RT_URL,
         }, RequestContext(request))
+    """
+    
+    from crits.core.dashboard.models import get_dashboard
+
+    args = get_dashboard(request.user)
+    return render_to_response('dashboard.html', args, RequestContext(request))
+    
+    
 
 def dns_timeline(query, analyst, sources):
     """
