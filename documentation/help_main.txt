@@ -1705,7 +1705,9 @@ Unique POST Parameters:
 
 - Must be one of "zip", "rar", or "raw".
 
-:parent_md5: The MD5 of the parent sample if this was an embedded sample.
+:related_md5: The MD5 of the related sample if this was an embedded sample.
+:related_id: The ObjectId of the related TLO.
+:related_type: The type of TLO to relate to.
 
 Screenshot API
 --------------

@@ -4,6 +4,16 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: mgoffin
+Date:   2014-08-13
+
+    The Sample API has been updated. The Method will default to an empty string
+    now to stay in-line with the behavior of the backend handler function. Also,
+    parent_md5 is now related_md5 as that option was renamed in the same
+    function. Expanded to include related_id and related_type so you can relate
+    the Sample to more than just another Sample (common case an Email). Be aware
+    if you use this feature to make the appropriate changes.
+
+Author: mgoffin
 Date:   2014-08-12
 
     Updated DEPENDENCIES. We are now supporting Django 1.6.5 (in preparation for
