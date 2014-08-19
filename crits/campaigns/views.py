@@ -145,13 +145,14 @@ def campaign_add(request, ctype, objectid):
             description = data['description']
             related = data['related']
             analyst = request.user.username
-            result = campaign_addh(ctype,
-                                   objectid,
-                                   campaign,
+            result = campaign_addh(campaign,
                                    confidence,
                                    description,
                                    related,
-                                   analyst)
+                                   analyst,
+                                   ctype,
+                                   objectid,
+                                   update=False)
             if result['success']:
                 return HttpResponse(json.dumps(result),
                                     mimetype="application/json")
