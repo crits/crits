@@ -27,6 +27,7 @@ from crits.config.config import CRITsConfig
 from crits.core.crits_mongoengine import json_handler, create_embedded_source
 from crits.core.crits_mongoengine import EmbeddedCampaign
 from crits.core.data_tools import clean_dict
+from crits.core.exceptions import ZipFileError
 from crits.core.handlers import class_from_id
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
@@ -39,7 +40,6 @@ from crits.indicators.handlers import handle_indicator_ind
 from crits.indicators.indicator import Indicator
 from crits.notifications.handlers import remove_user_from_notification
 from crits.samples.handlers import handle_file, handle_uploaded_file, mail_sample
-from crits.samples.sample import Sample
 
 def create_email_field_dict(field_name,
                             field_type,
@@ -514,6 +514,7 @@ def handle_email_fields(data, analyst, method):
 
     try:
         new_email.save(username=analyst)
+        new_email.reload()
         result['object'] = new_email
         result['status'] = True
     except Exception, e:
@@ -586,6 +587,7 @@ def handle_json(data, sourcename, reference, analyst, method,
 
     try:
         result['object'].save(username=analyst)
+        result['object'].reload()
     except Exception, e:
         result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
 
@@ -690,6 +692,7 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
 
         try:
             result['object'].save(username=analyst)
+            result['object'].reload()
         except Exception, e:
             result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
             return result

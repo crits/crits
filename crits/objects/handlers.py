@@ -1,5 +1,3 @@
-import datetime
-
 from hashlib import md5
 
 from django.conf import settings
@@ -12,7 +10,6 @@ from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.data_tools import convert_string_to_bool
 from crits.core.handlers import get_object_types
 from crits.core.handsontable_tools import form_to_dict, get_field_from_label
-from crits.core.crits_mongoengine import EmbeddedCampaign
 from crits.core.mongo_tools import put_file, mongo_connector
 from crits.core.user_tools import get_user_organization
 from crits.indicators.indicator import Indicator
@@ -379,6 +376,7 @@ def add_object(type_, oid, object_type, name, source, method,
         if (get_objects):
             results['objects'] = obj.sort_objects()
 
+        results['id'] = str(obj.id)
         return results
     except ValidationError, e:
         return {'success': False,
@@ -600,7 +598,7 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
         value = value.lower().strip()
         ind_type = ind_type.strip()
         source_name = source_name.strip()
-        
+
         create_indicator_result = {}
         ind_tlist = ind_type.split(" - ")
         if ind_tlist[0] == ind_tlist[1]:

@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -43,7 +44,7 @@ class EmailResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Campaign.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If a type_ is not provided or creation fails.
         """
 
@@ -113,9 +114,20 @@ class EmailResource(CRITsAPIResource):
             result = handle_email_fields(fields,
                                          analyst,
                                          'Upload')
-        if not result:
-            raise BadRequest('No upload type found.')
+
+        content = {'return_code': 0,
+                   'type': 'Email',
+                   'message': result.get('message', '')}
+        if result.get('obj_id'):
+            content['id'] = result.get('obj_id', '')
+        elif result.get('object'):
+            content['id'] = str(result.get('object').id)
+        if content.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'emails',
+                                  'api_name': 'v1',
+                                  'pk': content.get('id')})
+            content['url'] = url
         if not result['status']:
-            raise BadRequest(result['reason'])
-        else:
-            return bundle
+            content['return_code'] = 1
+        self.crits_response(content)
