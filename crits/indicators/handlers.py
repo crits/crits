@@ -458,7 +458,7 @@ def handle_indicator_ind(value, source, reference, ctype, analyst,
             return handle_indicator_insert(ind, source, reference, analyst,
                                            method, add_domain, add_relationship, cache=cache)
         except Exception, e:
-            return {'success': False, 'message': [e]}
+            return {'success': False, 'message': repr(e)}
 
     return result
 
@@ -519,18 +519,20 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.impact = EmbeddedImpact(analyst=analyst)
         is_new_indicator = True;
 
-    ec = None
     if 'campaign' in ind:
-        confidence = 'low'
-
-        if 'campaign_confidence' in ind:
-            confidence = ind['campaign_confidence']
-
-        ec = EmbeddedCampaign(name=ind['campaign'],
-                              confidence=confidence,
-                              description="",
-                              analyst=analyst,
-                              date=datetime.datetime.now())
+        if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:
+            confidence = ind.get('campaign_confidence', 'low')
+            ind['campaign'] = EmbeddedCampaign(name=ind['campaign'],
+                                               confidence=confidence,
+                                               description="",
+                                               analyst=analyst,
+                                               date=datetime.datetime.now())
+        if isinstance(ind['campaign'], EmbeddedCampaign):
+            indicator.add_campaign(ind['campaign'])
+        elif isinstance(ind['campaign'], list):
+            for campaign in ind['campaign']:
+                if isinstance(campaign, EmbeddedCampaign):
+                    indicator.add_campaign(campaign)
 
     if 'confidence' in ind and rank.get(ind['confidence'], 0) > rank.get(indicator.confidence.rating, 0):
         indicator.confidence.rating = ind['confidence']
@@ -565,8 +567,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         instance.date = datetime.datetime.now()
         s.instances = [instance]
         indicator.add_source(s)
-    if ec:
-        indicator.add_campaign(ec)
+
     indicator.save(username=analyst)
 
     if add_domain or add_relationship:
