@@ -687,12 +687,9 @@ def promote_bucket_list(bucket, confidence, name, related, description, analyst)
         if not klass:
             continue
 
-        # This is pretty bad. This will query the database to get the id
-        # for every object of this type which is in this bucket. It then
-        # calls campaign_add() which does another lookup to get the object.
-        objs = klass.objects(bucket_list=bucket.name).only('id')
+        objs = klass.objects(bucket_list=bucket.name)
         for obj in objs:
-            campaign_add(ctype, obj.id, name, confidence, description, related, analyst)
+            campaign_add(name, confidence, description, related, analyst, obj=obj)
 
     return {'success': True,
             'message': 'Bucket successfully promoted. <a href="%s">View campaign.</a>' % reverse('crits.campaigns.views.campaign_details', args=(name,))}

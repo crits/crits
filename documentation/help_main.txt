@@ -1501,7 +1501,7 @@ only "date" is required:
 :date: The Date field.
 :to: The To field.
 :cc: The CC field.
-:from: The From field.
+:from_address: The From field.
 :sender: The Sender field.
 :subject: The email subject.
 :reply_to: The Reply-To field.
@@ -1705,7 +1705,9 @@ Unique POST Parameters:
 
 - Must be one of "zip", "rar", or "raw".
 
-:parent_md5: The MD5 of the parent sample if this was an embedded sample.
+:related_md5: The MD5 of the related sample if this was an embedded sample.
+:related_id: The ObjectId of the related TLO.
+:related_type: The type of TLO to relate to.
 
 Screenshot API
 --------------
