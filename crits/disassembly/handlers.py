@@ -186,7 +186,7 @@ def generate_disassembly_jtable(request, option):
                                        default=json_handler),
                             content_type="application/json")
     jtopts = {
-        'name': "Disassembly",
+        'title': "Disassembly",
         'default_sort': mapper['default_sort'],
         'listurl': reverse('crits.%s.views.%s_listing' % (type_,
                                                             type_),
