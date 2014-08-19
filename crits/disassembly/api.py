@@ -64,7 +64,7 @@ class DisassemblyResource(CRITsAPIResource):
 
         source = bundle.data.get('source', None)
         description = bundle.data.get('description', '')
-        title = bundle.data.get('title', None)
+        name = bundle.data.get('name', None)
         data_type = bundle.data.get('data_type', None)
         tool_name = bundle.data.get('tool_name', '')
         tool_version = bundle.data.get('tool_version', '')
@@ -75,13 +75,13 @@ class DisassemblyResource(CRITsAPIResource):
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
-        if not title:
-            raise BadRequest("Must provide a title.")
+        if not name:
+            raise BadRequest("Must provide a name.")
         if not data_type:
             raise BadRequest("Must provide a data type.")
 
         status = handle_disassembly_file(data, source, analyst,
-                                      description, title, data_type,
+                                      description, name, data_type,
                                       tool_name, tool_version, tool_details,
                                       link_id,
                                       method=method,

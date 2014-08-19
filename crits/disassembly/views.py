@@ -222,7 +222,7 @@ def upload_disassembly(request, link_id=None):
             source = form.cleaned_data.get('source')
             user = request.user.username
             description = form.cleaned_data.get('description', '')
-            title = form.cleaned_data.get('title', None)
+            name = form.cleaned_data.get('name', None)
             tool_name = form.cleaned_data.get('tool_name', '')
             tool_version = form.cleaned_data.get('tool_version', '')
             tool_details = form.cleaned_data.get('tool_details', '')
@@ -233,7 +233,7 @@ def upload_disassembly(request, link_id=None):
             ticket = form.cleaned_data.get('ticket')
             method = 'Upload'
             status = handle_disassembly_file(data, source, user,
-                                             description, title, data_type,
+                                             description, name, data_type,
                                              tool_name, tool_version,
                                              tool_details, link_id,
                                              method=method,

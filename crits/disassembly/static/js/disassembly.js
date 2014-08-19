@@ -6,21 +6,6 @@ function escapeHtml(str) {
     return res;
 }
 
-function diffUsingJS(from_text, to_text, from_header, to_header, output_div) {
-    var base = difflib.stringAsLines(from_text);
-    var newtxt = difflib.stringAsLines(to_text);
-    var sm = new difflib.SequenceMatcher(base, newtxt);
-    var opcodes = sm.get_opcodes();
-    $(output_div).empty()
-        .append(diffview.buildView({
-            baseTextLines:base,
-            newTextLines:newtxt,
-            opcodes:opcodes,
-            baseTextName:from_header,
-            newTextName:to_header,
-            viewType:0}));
-}
-
 function upload_new_version_dialog(e) {
     var dialog = $(this);
     var form = dialog.find("form");
@@ -33,8 +18,8 @@ function upload_new_version_dialog(e) {
 
     if (!form.attr("_dialog_once")) {
         copy_button = {'Copy Data From Current Version': function() {
-            //title
-            form.find("#id_title").val($('#disassembly_title').attr('data-title'));
+            //name
+            form.find("#id_name").val($('#disassembly_name').attr('data-name'));
             //tool name
             form.find("#id_tool_name").val($('#disassembly_tool_name').text());
             //tool version
@@ -178,13 +163,13 @@ $(document).ready(function() {
                         her.removeClass('ui-icon-circle-check');
                         her.addClass('ui-icon');
                         her.addClass('ui-icon-alert');
-                        her.attr('title', data.message);
+                        her.attr('name', data.message);
                         value = revert;
                     } else {
                         her.removeClass('ui-icon-alert');
                         her.addClass('ui-icon');
                         her.addClass('ui-icon-circle-check');
-                        her.attr('title', "Success!");
+                        her.attr('name', "Success!");
                     }
                 }
             });
@@ -245,7 +230,7 @@ $(document).ready(function() {
                 $('#disassembly_versions').find('option').remove();
                 $("div[id^=version_]").remove();
                 $.each(data, function(i, d) {
-                    $('#disassembly_versions').append('<option value=' +  d.version + '>' + d.version + ' - ' + d.title + '</option>');
+                    $('#disassembly_versions').append('<option value=' +  d.version + '>' + d.version + ' - ' + d.name + '</option>');
                     $('#versions_container').append('<div id="version_' + d.version + '" style="display: none;" data-link="' + d.link + '"><pre>' + escapeHtml(d.data) + '</pre></div>');
                 });
                 $('#disassembly_versions')
@@ -254,7 +239,6 @@ $(document).ready(function() {
                     var brel = parseInt($(b).attr('value'), 10)|| 0;
                     return arel == brel ? 0 : arel < brel ? -1 : 1
                 }));
-                $('#disassembly_diff_selector').html($('#disassembly_versions').html());
                 $('#disassembly_versions').trigger('change');
             }
         });
@@ -267,19 +251,6 @@ $(document).ready(function() {
         $('span#disassembly_version_info').html(link);
     });
 
-    $('#disassembly_versions_diff').on('submit', function(e) {
-        e.preventDefault();
-        var versions = $('#disassembly_diff_selector').val();
-        var first = $('div#version_' + versions[0]).children('pre').text();
-        var first_title = $("#disassembly_diff_selector option[value='" + versions[0] + "']").text()
-        var second = $('div#version_' + versions[1]).children('pre').text();
-        var second_title = $("#disassembly_diff_selector option[value='" + versions[1] + "']").text()
-        diffUsingJS(first, second, first_title, second_title, $('#diff_results'));
-        $("div#versions_container").find('div').hide();
-        $('#diff_results')
-        .css('width', '100%')
-        .show();
-    });
 
     $('#jump_versions').on('change', function(e) {
         var version = this.value;
