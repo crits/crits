@@ -60,11 +60,11 @@ class Disassembly(CritsBaseAttributes, CritsSourceDocument, Document):
                          'details_url_key': 'id',
                          'default_sort': "modified DESC",
                          'searchurl': 'crits.disassembly.views.disassembly_listing',
-                         'fields': [ "title", "data_type", "version",
+                         'fields': [ "name", "data_type", "version",
                                      "modified", "source", "campaign",
                                      "id", "status"],
                          'jtopts_fields': [ "details",
-                                            "title",
+                                            "name",
                                             "data_type",
                                             "version",
                                             "modified",
@@ -85,7 +85,7 @@ class Disassembly(CritsBaseAttributes, CritsSourceDocument, Document):
     filedata = getFileField(collection_name=settings.COL_DISASSEMBLY)
     link_id = UUIDField(binary=True, required=True, default=uuid.uuid4())
     md5 = StringField()
-    title = StringField()
+    name = StringField()
     tool = EmbeddedDocumentField(EmbeddedTool)
     version = IntField(default=0)
 
