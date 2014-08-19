@@ -141,12 +141,12 @@ def generate_disassembly_versions(_id):
     else:
         versions = []
         dvs = Disassembly.objects(link_id=dis.link_id).only('id',
-                                                            'title',
+                                                            'name',
                                                             'version')
         for dv in dvs:
             link = reverse('crits.disassembly.views.disassembly_details',
                            args=(dv.id,))
-            versions.append({'title': dv.title,
+            versions.append({'name': dv.name,
                              'version': dv.version,
                              'link': link})
         return versions
@@ -186,7 +186,7 @@ def generate_disassembly_jtable(request, option):
                                        default=json_handler),
                             content_type="application/json")
     jtopts = {
-        'title': "Disassembly",
+        'name': "Disassembly",
         'default_sort': mapper['default_sort'],
         'listurl': reverse('crits.%s.views.%s_listing' % (type_,
                                                             type_),
@@ -253,7 +253,7 @@ def generate_disassembly_jtable(request, option):
                                   RequestContext(request))
 
 def handle_disassembly_file(data, source_name, user=None,
-                         description=None, title=None, data_type=None,
+                         description=None, name=None, data_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
                          link_id=None, method=None, copy_rels=False,
                          bucket_list=None, ticket=None):
@@ -270,8 +270,8 @@ def handle_disassembly_file(data, source_name, user=None,
     :type user: str
     :param description: Description of the Disassembly.
     :type description: str
-    :param title: Title of the Disassembly.
-    :type title: str
+    :param name: Name of the Disassembly.
+    :type name: str
     :param data_type: Datatype of the Disassembly.
     :type data_type: str
     :param tool_name: Name of the tool used to acquire/generate the Disassembly.
@@ -297,8 +297,8 @@ def handle_disassembly_file(data, source_name, user=None,
     """
 
     status = { 'success': False }
-    if not data or not title or not data_type:
-        status['message'] = 'No data object, title, or data type passed in'
+    if not data or not name or not data_type:
+        status['message'] = 'No data object, name, or data type passed in'
         return status
 
     dt = DisassemblyType.objects(name=data_type).first()
@@ -335,7 +335,7 @@ def handle_disassembly_file(data, source_name, user=None,
         # XXX: This needs to do the whole "do i have this" dance like samples.
         dis._generate_file_metadata(data)
         dis.add_file_data(data)
-        dis.title = title
+        dis.name = name
         dis.data_type = data_type
         dis.add_tool(name=tool_name,
                           version=tool_version,
