@@ -458,7 +458,7 @@ def handle_indicator_ind(value, source, reference, ctype, analyst,
             return handle_indicator_insert(ind, source, reference, analyst,
                                            method, add_domain, add_relationship, cache=cache)
         except Exception, e:
-            return {'success': False, 'message': [e]}
+            return {'success': False, 'message': repr(e)}
 
     return result
 
@@ -519,18 +519,20 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.impact = EmbeddedImpact(analyst=analyst)
         is_new_indicator = True;
 
-    ec = None
     if 'campaign' in ind:
-        confidence = 'low'
-
-        if 'campaign_confidence' in ind:
-            confidence = ind['campaign_confidence']
-
-        ec = EmbeddedCampaign(name=ind['campaign'],
-                              confidence=confidence,
-                              description="",
-                              analyst=analyst,
-                              date=datetime.datetime.now())
+        if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:
+            confidence = ind.get('campaign_confidence', 'low')
+            ind['campaign'] = EmbeddedCampaign(name=ind['campaign'],
+                                               confidence=confidence,
+                                               description="",
+                                               analyst=analyst,
+                                               date=datetime.datetime.now())
+        if isinstance(ind['campaign'], EmbeddedCampaign):
+            indicator.add_campaign(ind['campaign'])
+        elif isinstance(ind['campaign'], list):
+            for campaign in ind['campaign']:
+                if isinstance(campaign, EmbeddedCampaign):
+                    indicator.add_campaign(campaign)
 
     if 'confidence' in ind and rank.get(ind['confidence'], 0) > rank.get(indicator.confidence.rating, 0):
         indicator.confidence.rating = ind['confidence']
@@ -565,8 +567,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         instance.date = datetime.datetime.now()
         s.instances = [instance]
         indicator.add_source(s)
-    if ec:
-        indicator.add_campaign(ec)
+
     indicator.save(username=analyst)
 
     if add_domain or add_relationship:
@@ -584,7 +585,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                 try:
                     validate_ipv46_address(domain_or_ip)
                     url_contains_ip = True
-                except DjangoValidationError, e:
+                except DjangoValidationError:
                     pass
             if not url_contains_ip:
                 success = None
@@ -596,7 +597,8 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                         indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
                                          % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
                         message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
-                        return {'success':False, 'message':message + success['message']}
+                        return {'success':False, 'message':message + success['message'],
+                                'id': str(indicator.id)}
 
                 if not success or not 'object' in success:
                     dmain = Domain.objects(domain=domain_or_ip).first()
@@ -628,7 +630,8 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                     indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
                                      % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
                     message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
-                    return {'success':False, 'message':message + success['message']}
+                    return {'success':False, 'message':message + success['message'],
+                            'id': str(indicator.id)}
 
             if not success or not 'object' in success:
                 ip = IP.objects(ip=indicator.value).first()
@@ -647,7 +650,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.reload()
         run_triage(None, indicator, analyst)
 
-    return {'success': True, 'objectid': indicator.id,
+    return {'success': True, 'objectid': str(indicator.id),
             'is_new_indicator': is_new_indicator, 'object': indicator}
 
 def does_indicator_relationship_exist(field, indicator_relationships):
@@ -912,9 +915,11 @@ def activity_add(indicator_id, activity):
                                activity['description'],
                                activity['date'])
         indicator.save(username=activity['analyst'])
-        return {'success': True, 'object': activity}
+        return {'success': True, 'object': activity,
+                'id': str(indicator.id)}
     except ValidationError, e:
-        return {'success': False, 'message': e}
+        return {'success': False, 'message': e,
+                'id': str(indicator.id)}
 
 def activity_update(indicator_id, activity):
     """

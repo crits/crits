@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -42,7 +43,7 @@ class SampleResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Sample.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If filedata is not provided or creation fails.
         """
 
@@ -69,10 +70,12 @@ class SampleResource(CRITsAPIResource):
         campaign = bundle.data.get('campaign', None)
         confidence = bundle.data.get('confidence', None)
         source = bundle.data.get('source', None)
-        method = bundle.data.get('method', None)
+        method = bundle.data.get('method', "")
         reference = bundle.data.get('reference', None)
         file_format = bundle.data.get('file_format', None)
-        parent_md5 = bundle.data.get('parent_md5', None)
+        related_md5 = bundle.data.get('related_md5', None)
+        related_id = bundle.data.get('related_id', None)
+        related_type = bundle.data.get('related_type', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
@@ -85,16 +88,30 @@ class SampleResource(CRITsAPIResource):
                                           user=analyst,
                                           campaign=campaign,
                                           confidence=confidence,
-                                          parent_md5 = parent_md5,
+                                          related_md5 = related_md5,
+                                          related_id = related_id,
+                                          related_type = related_type,
                                           filename=filename,
                                           md5=md5,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
                                           is_return_only_md5=False)
 
+        content = {'return_code': 0,
+                   'type': 'Sample'}
+        result = {'success': False}
+
         if len(sample_md5) > 0:
-            if not sample_md5[0].get('success') and 'message' in sample_md5[0]:
-                raise BadRequest(sample_md5[0]['message'])
-            return bundle
-        else:
-            raise BadRequest('Unable to create sample from data.')
+            result = sample_md5[0]
+            content['message'] = result.get('message', '')
+            content['id'] = str(result.get('object').id)
+            if content.get('id'):
+                url = reverse('api_dispatch_detail',
+                            kwargs={'resource_name': 'samples',
+                                    'api_name': 'v1',
+                                    'pk': content.get('id')})
+                content['url'] = url
+        if not result['success']:
+            content['return_code'] = 1
+            content['message'] = "Could not create Sample for unknown reason."
+        self.crits_response(content)

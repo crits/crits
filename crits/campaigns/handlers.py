@@ -300,7 +300,8 @@ def add_campaign(name, description, aliases, analyst, bucket_list=None,
     # Verify the Campaign does not exist.
     campaign = Campaign.objects(name=name).first()
     if campaign:
-        return {'success': False, 'message': ['Campaign already exists.']}
+        return {'success': False, 'message': ['Campaign already exists.'],
+                'id': str(campaign.id)}
 
     # Create new campaign.
     campaign = Campaign(name=name)
@@ -323,7 +324,10 @@ def add_campaign(name, description, aliases, analyst, bucket_list=None,
 
     try:
         campaign.save(username=analyst)
-        return {'success': True}
+        campaign.reload()
+        return {'success': True,
+                'message': 'Campaign created successfully!',
+                'id': str(campaign.id)}
     except ValidationError, e:
         return {'success':False, 'message': "Invalid value: %s" % e}
 
@@ -547,15 +551,11 @@ def campaign_addto_related(crits_object, campaign, analyst):
             pass
 
 # Functions for campaign attribution.
-def campaign_add(ctype, oid, campaign_name, confidence, description, related,
-                 analyst):
+def campaign_add(campaign_name, confidence, description, related,
+                 analyst, ctype=None, oid=None, obj=None, update=True):
     """
     Attribute a Campaign to a top-level object.
 
-    :param ctype: The top-level object type.
-    :type ctype: str
-    :param oid: The ObjectId of the top-level object.
-    :type oid: str
     :param campaign_name: The Campaign to attribute.
     :type campaign_name: str
     :param confidence: The confidence level of this attribution (low, medium, high)
@@ -566,31 +566,45 @@ def campaign_add(ctype, oid, campaign_name, confidence, description, related,
     :type related: boolean
     :param analyst: The user attributing this Campaign.
     :type analyst: str
+    :param ctype: The top-level object type.
+    :type ctype: str
+    :param oid: The ObjectId of the top-level object.
+    :type oid: str
+    :param obj: The top-level object instantiated class.
+    :type obj: Instantiated class object
+    :param update: If True, allow merge with pre-existing campaigns
+    :              If False, do not change any pre-existing campaigns
+    :type update:  boolean
     :returns: dict with keys:
         'success' (boolean),
         'html' (str) if successful,
         'message' (str).
     """
 
-    # Verify the document exists.
-    crits_object = class_from_id(ctype, oid)
-    if not crits_object:
-        return {'success': False, 'message': 'Cannot find %s.' % ctype}
+    if not obj:
+        if ctype and oid:
+            # Verify the document exists.
+            obj = class_from_id(ctype, oid)
+            if not obj:
+                return {'success': False, 'message': 'Cannot find %s.' % ctype}
+        else:
+            return {'success': False, 'message': 'Object type and ID, or object instance, must be provided.'}
 
     # Create the embedded campaign.
     campaign = EmbeddedCampaign(name=campaign_name, confidence=confidence, description=description, analyst=analyst)
-    crits_object.add_campaign(campaign)
+    result = obj.add_campaign(campaign, update=update)
 
-    if related:
-        campaign_addto_related(crits_object, campaign, analyst)
+    if result['success']:
+        if related:
+            campaign_addto_related(obj, campaign, analyst)
 
-    try:
-        crits_object.save(username=analyst)
-        html = crits_object.format_campaign(campaign, analyst)
-        message = "Campaign added successfully!"
-        return {'success': True, 'html': html, 'message': message}
-    except ValidationError, e:
-        return {'success':False, 'message': "Invalid value: %s" % e}
+        try:
+            obj.save(username=analyst)
+            html = obj.format_campaign(campaign, analyst)
+            return {'success': True, 'html': html, 'message': result['message']}
+        except ValidationError, e:
+            return {'success':False, 'message': "Invalid value: %s" % e}
+    return {'success':False, 'message': result['message']}
 
 def campaign_edit(ctype, oid, campaign_name, confidence,
                   description, date, related, analyst):

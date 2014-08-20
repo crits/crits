@@ -1,6 +1,6 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.targets.target import Target
 from crits.targets.handlers import upsert_target
@@ -43,14 +43,24 @@ class TargetResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Target.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If creation fails.
         """
 
         analyst = bundle.request.user.username
         data = bundle.data
         result = upsert_target(data, analyst)
-        if result['success']:
-            return bundle
-        else:
-            raise BadRequest(result['message'])
+
+        content = {'return_code': 0,
+                   'type': 'Target',
+                   'message': result.get('message', ''),
+                   'id': result.get('id', '')}
+        if result.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'targets',
+                                  'api_name': 'v1',
+                                  'pk': result.get('id')})
+            content['url'] = url
+        if not result['success']:
+            content['return_code'] = 1
+        self.crits_response(content)

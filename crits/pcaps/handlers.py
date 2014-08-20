@@ -325,6 +325,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
         'success':      True,
         'message':      'Uploaded pcap',
         'md5':          md5,
+        'id':           str(pcap.id),
     }
 
     return status

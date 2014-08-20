@@ -1,5 +1,6 @@
 import datetime
 
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -46,7 +47,7 @@ class IndicatorResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Indicator.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If a campaign name is not provided or creation fails.
         """
 
@@ -65,27 +66,34 @@ class IndicatorResource(CRITsAPIResource):
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
-        if analyst:
-            result =  handle_indicator_ind(value,
-                                           source,
-                                           reference,
-                                           ctype,
-                                           analyst,
-                                           method,
-                                           add_domain,
-                                           add_relationship,
-                                           campaign,
-                                           campaign_confidence,
-                                           confidence,
-                                           impact,
-                                           bucket_list,
-                                           ticket)
-            if not result['success']:
-                raise BadRequest(result['message'])
-            else:
-                return bundle
-        else:
-            raise BadRequest('You must be an authenticated user!')
+        result =  handle_indicator_ind(value,
+                                        source,
+                                        reference,
+                                        ctype,
+                                        analyst,
+                                        method,
+                                        add_domain,
+                                        add_relationship,
+                                        campaign,
+                                        campaign_confidence,
+                                        confidence,
+                                        impact,
+                                        bucket_list,
+                                        ticket)
+
+        content = {'return_code': 0,
+                   'type': 'Indicator',
+                   'message': result.get('message', ''),
+                   'id': result.get('objectid', '')}
+        if result.get('objectid'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'indicators',
+                                  'api_name': 'v1',
+                                  'pk': result.get('objectid')})
+            content['url'] = url
+        if not result['success']:
+            content['return_code'] = 1
+        self.crits_response(content)
 
 class IndicatorActivityResource(CRITsAPIResource):
     """
@@ -123,7 +131,7 @@ class IndicatorActivityResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to add the Activity.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If a campaign name is not provided or creation fails.
         """
 
@@ -143,3 +151,17 @@ class IndicatorActivityResource(CRITsAPIResource):
             raise BadRequest(result['message'])
         else:
             return bundle
+
+        content = {'return_code': 0,
+                   'type': 'Indicator',
+                   'message': result.get('message', ''),
+                   'id': result.get('id', '')}
+        if result.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'indicators',
+                                  'api_name': 'v1',
+                                  'pk': result.get('id')})
+            content['url'] = url
+        if not result['success']:
+            content['return_code'] = 1
+        self.crits_response(content)

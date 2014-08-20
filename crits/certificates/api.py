@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -44,7 +45,7 @@ class CertificateResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Certificate.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If filedata is not provided or creation fails.
 
         """
@@ -79,7 +80,16 @@ class CertificateResource(CRITsAPIResource):
                                   bucket_list=bucket_list,
                                   ticket=ticket)
 
-        if result['success']:
-            return bundle
-        else:
-            raise BadRequest(result['message'])
+        content = {'return_code': 0,
+                   'type': 'Certificate',
+                   'message': result.get('message', ''),
+                   'id': result.get('id', '')}
+        if result.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'certificates',
+                                  'api_name': 'v1',
+                                  'pk': result.get('id')})
+            content['url'] = url
+        if not result['success']:
+            content['return_code'] = 1
+        self.crits_response(content)
