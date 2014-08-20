@@ -375,6 +375,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
 
     retVal['success'] = True
     retVal['object'] = actor
+    retVal['id'] = str(actor.id)
 
     return retVal
 

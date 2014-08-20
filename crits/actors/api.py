@@ -1,6 +1,6 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.actors.actor import Actor
 from crits.actors.handlers import add_new_actor
@@ -71,7 +71,17 @@ class ActorResource(CRITsAPIResource):
                                analyst=analyst,
                                bucket_list=bucket_list,
                                ticket=ticket)
-        if 'message' in result:
-            raise BadRequest(result['message'])
-        else:
-            return bundle
+
+        content = {'return_code': 0,
+                   'type': 'Actor',
+                   'message': result.get('message', ''),
+                   'id': result.get('id', '')}
+        if result.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'actors',
+                                  'api_name': 'v1',
+                                  'pk': result.get('id')})
+            content['url'] = url
+        if not result['success']:
+            content['return_code'] = 1
+        self.crits_response(content)
