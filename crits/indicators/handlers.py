@@ -584,7 +584,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                 try:
                     validate_ipv46_address(domain_or_ip)
                     url_contains_ip = True
-                except DjangoValidationError, e:
+                except DjangoValidationError:
                     pass
             if not url_contains_ip:
                 success = None
@@ -596,7 +596,8 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                         indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
                                          % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
                         message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
-                        return {'success':False, 'message':message + success['message']}
+                        return {'success':False, 'message':message + success['message'],
+                                'id': str(indicator.id)}
 
                 if not success or not 'object' in success:
                     dmain = Domain.objects(domain=domain_or_ip).first()
@@ -628,7 +629,8 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                     indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
                                      % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
                     message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
-                    return {'success':False, 'message':message + success['message']}
+                    return {'success':False, 'message':message + success['message'],
+                            'id': str(indicator.id)}
 
             if not success or not 'object' in success:
                 ip = IP.objects(ip=indicator.value).first()
@@ -647,7 +649,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.reload()
         run_triage(indicator, analyst)
 
-    return {'success': True, 'objectid': indicator.id,
+    return {'success': True, 'objectid': str(indicator.id),
             'is_new_indicator': is_new_indicator, 'object': indicator}
 
 def does_indicator_relationship_exist(field, indicator_relationships):
@@ -912,9 +914,11 @@ def activity_add(indicator_id, activity):
                                activity['description'],
                                activity['date'])
         indicator.save(username=activity['analyst'])
-        return {'success': True, 'object': activity}
+        return {'success': True, 'object': activity,
+                'id': str(indicator.id)}
     except ValidationError, e:
-        return {'success': False, 'message': e}
+        return {'success': False, 'message': e,
+                'id': str(indicator.id)}
 
 def activity_update(indicator_id, activity):
     """

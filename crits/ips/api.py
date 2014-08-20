@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -43,7 +44,7 @@ class IPResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the IP.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If creation fails.
         """
 
@@ -76,7 +77,18 @@ class IPResource(CRITsAPIResource):
                                ticket=ticket,
                                is_add_indicator=add_indicator,
                                indicator_reference=indicator_reference)
+
+        content = {'return_code': 0,
+                   'type': 'IP',
+                   'message': result.get('message', '')}
+        if result.get('object'):
+            content['id'] = str(result.get('object').id)
+        if content.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'ips',
+                                  'api_name': 'v1',
+                                  'pk': content.get('id')})
+            content['url'] = url
         if not result['success']:
-            raise BadRequest(result['message'])
-        else:
-            return bundle
+            content['return_code'] = 1
+        self.crits_response(content)

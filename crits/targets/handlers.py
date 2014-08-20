@@ -68,8 +68,10 @@ def upsert_target(data, analyst):
 
     try:
         target.save(username=analyst)
+        target.reload()
         return {'success': True,
-                'message': "Target saved successfully"}
+                'message': "Target saved successfully",
+                'id': str(target.id)}
     except ValidationError, e:
         return {'success': False,
                 'message': "Target save failed: %s" % e}

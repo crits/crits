@@ -1037,8 +1037,6 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         if cached_results != None:
             cached_results[md5_digest] = sample
 
-    retVal['object'] = sample
-
     # attempt to discover binary in GridFS before assuming we don't
     # have it
     sample.discover_binary()
@@ -1168,6 +1166,7 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
     if is_return_only_md5 == True:
         return md5_digest
     else:
+        retVal['object'] = sample
         return retVal
 
 def handle_uploaded_file(f, source, method="", reference=None, file_format=None,
@@ -1331,7 +1330,7 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     #is_email_results = data.get('email')
     related_md5 = data.get('related_md5')
     source = data.get('source')
-    #method = data.get('method')
+    method = data.get('method', '')
     reference = data.get('reference')
     bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
