@@ -166,7 +166,7 @@ def populate_raw_data_types(drop):
     # define your raw data types here
     data_types = ['Text', 'JSON']
     if drop:
-        DisassemblyType.drop_collection()
+        RawDataType.drop_collection()
     if len(RawDataType.objects()) < 1:
         for data_type in data_types:
             dt = RawDataType()
