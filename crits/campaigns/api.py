@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -44,7 +45,7 @@ class CampaignResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Campaign.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If a campaign name is not provided or creation fails.
 
         """
@@ -63,7 +64,16 @@ class CampaignResource(CRITsAPIResource):
                                 analyst,
                                 bucket_list,
                                 ticket)
+        content = {'return_code': 0,
+                   'type': 'Campaign',
+                   'message': result.get('message', ''),
+                   'id': result.get('id', '')}
+        if result.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'campaigns',
+                                  'api_name': 'v1',
+                                  'pk': result.get('id')})
+            content['url'] = url
         if not result['success']:
-            raise BadRequest(result['message'])
-        else:
-            return bundle
+            content['return_code'] = 1
+        self.crits_response(content)

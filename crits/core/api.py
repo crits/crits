@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 from django.http import HttpResponse
 from lxml.etree import tostring
 
-from tastypie.exceptions import BadRequest
+from tastypie.exceptions import BadRequest, ImmediateHttpResponse
 from tastypie.serializers import Serializer
 from tastypie.authentication import SessionAuthentication, ApiKeyAuthentication
 from tastypie.utils.mime import build_content_type
@@ -362,6 +362,34 @@ class CRITsAPIResource(MongoEngineResource):
     class Meta:
         default_format = "application/json"
 
+    def crits_response(self, content, status=200):
+        """
+        An amazing hack so we can return our own custom JSON response. Instead
+        of having the ability to craft and return an HttpResponse, Tastypie
+        requires us to raise this custom exception in order to do so.
+
+        The content should be a dict with keys of:
+
+            - return_code: 0 (success), 1 (failure), etc. for custom returns.
+            - type: The CRITs TLO type (Sample, Email, etc.)
+            - id: The ObjectId (as a string) of the TLO. (optional if not
+                  available)
+            - message: A custom message you wish to return.
+
+        If you wish to extend your content to contain more k/v pairs you can do
+        so as long as they are JSON serializable.
+
+        :param content: The information we wish to return in the response.
+        :type content: dict (must be json serializable)
+        :param status: If we wish to return anything other than a 200.
+        :type status: int
+        :raises: :class:`tastypie.exceptions.ImmediateHttpResponse`
+        """
+
+        raise ImmediateHttpResponse(HttpResponse(json.dumps(content),
+                                                 mimetype="application/json",
+                                                 status=status))
+
     def create_response(self, request, data, response_class=HttpResponse,
                         **response_kwargs):
         """
@@ -595,6 +623,20 @@ class CRITsAPIResource(MongoEngineResource):
         """
 
         raise NotImplementedError('You cannot currently delete this object through the API.')
+
+    def resource_name_from_type(self, crits_type):
+        """
+        Take a CRITs type and convert it to the appropriate API resource name.
+
+        :param crits_type: The CRITs type.
+        :type crits_type: str
+        :returns: str
+        """
+
+        if crits_type == "RawData":
+            return "raw_data"
+        else:
+            return "%ss" % crits_type.lower()
 
 
 def determine_format(request, serializer, default_format='application/json'):

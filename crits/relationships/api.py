@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -44,7 +45,7 @@ class RelationshipResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the relationship information.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If necessary data is not provided or creation fails.
 
         """
@@ -70,7 +71,17 @@ class RelationshipResource(CRITsAPIResource):
                                     rel_date=rel_date,
                                     analyst=analyst,
                                     get_rels=False)
+
+        content = {'return_code': 0,
+                   'type': left_type,
+                   'message': result.get('message', ''),
+                   'id': left_id}
+        rname = self.resource_name_from_type(left_type)
+        url = reverse('api_dispatch_detail',
+                        kwargs={'resource_name': rname,
+                                'api_name': 'v1',
+                                'pk': left_id})
+        content['url'] = url
         if not result['success']:
-            raise BadRequest(result['message'])
-        else:
-            return bundle
+            content['return_code'] = 1
+        self.crits_response(content)

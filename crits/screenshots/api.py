@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -44,7 +45,7 @@ class ScreenshotResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to create the
                        Screenshot.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If filedata is not provided or creation fails.
         """
 
@@ -77,8 +78,16 @@ class ScreenshotResource(CRITsAPIResource):
         result = add_screenshot(description, tags, source, method, reference,
                                 analyst, screenshot, screenshot_ids, oid, otype)
 
-        if result['success']:
-            return bundle
-        else:
-            err = result['message']
-            raise BadRequest('Unable to create screenshot from data. %s' % err)
+        content = {'return_code': 0,
+                   'type': 'Screenshot',
+                   'message': result.get('message', ''),
+                   'id': result.get('id', '')}
+        if result.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'screenshots',
+                                  'api_name': 'v1',
+                                  'pk': result.get('id')})
+            content['url'] = url
+        if not result['success']:
+            content['return_code'] = 1
+        self.crits_response(content)
