@@ -150,17 +150,17 @@ def run_triage(obj, user):
     :type user: str
     """
 
-    #TODO: make this work
-    #env = crits.service_env.environment
-    #for service_name in env.manager.triage_services:
-    #    try:
-    #        env.run_service(service_name,
-    #                        obj,
-    #                        user,
-    #                        execute=settings.SERVICE_MODEL)
-    #    except:
-    #        pass
-    #return
+    services = triage_services()
+    for service_name in services:
+        try:
+            run_service(service_name,
+                        obj._meta['crits_type'],
+                        obj.id,
+                        user,
+                        obj=obj,
+                        execute=settings.SERVICE_MODEL)
+        except:
+            pass
     return
 
 
@@ -475,7 +475,7 @@ def enabled_services(status=True):
 
     if status:
         services = CRITsService.objects(enabled=True,
-                                        status="Available")
+                                        status="available")
     else:
         services = CRITsService.objects(enabled=True)
     return [s.name for s in services]
@@ -497,7 +497,7 @@ def triage_services(status=True):
 
     if status:
         services = CRITsService.objects(run_on_triage=True,
-                                        status="Available")
+                                        status="available")
     else:
         services = CRITsService.objects(run_on_triage=True)
     return [s.name for s in services]
