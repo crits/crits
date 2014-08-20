@@ -22,7 +22,6 @@ from crits.core.user_tools import is_user_subscribed
 from crits.events.event import Event, EventType
 from crits.notifications.handlers import remove_user_from_notification
 from crits.samples.handlers import handle_uploaded_file, mail_sample
-from crits.samples.sample import Sample
 from crits.services.handlers import run_triage
 
 
@@ -300,7 +299,8 @@ def add_new_event(title, description, event_type, source, method, reference,
                                                   args=[event.id]),
                                           title))
         result = {'success': True,
-                  'message': message}
+                  'message': message,
+                  'id': str(event.id)}
     except ValidationError, e:
         result = {'success': False,
                   'message': e}

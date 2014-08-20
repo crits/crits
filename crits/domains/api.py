@@ -1,4 +1,5 @@
 from dateutil.parser import parse
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -42,11 +43,10 @@ class DomainResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Domain.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If a domain name is not provided or creation fails.
         """
 
-        analyst = bundle.request.user.username
         request = bundle.request
         # Domain and source information
         domain = bundle.data.get('domain', None)
@@ -84,28 +84,36 @@ class DomainResource(CRITsAPIResource):
                 'bucket_list': bucket_list,
                 'ticket': ticket}
 
-        if analyst:
-            if not domain:
-                raise BadRequest('Need a Domain Name.')
-            # The empty list is necessary. The function requires a list of
-            # non-fatal errors so it can be added to if any other errors
-            # occur. Since we have none, we pass the empty list.
-            (result, errors, retVal) =  add_new_domain(data,
-                                                       request,
-                                                       [])
-            if errors:
-                if not 'message' in retVal:
-                    retVal['message'] = ""
-                elif not isinstance(retVal['message'], basestring):
-                    retVal['message'] = str(retVal['message'])
-                for e in errors:
-                    retVal['message'] += " %s " % str(e)
-                raise BadRequest(retVal['message'])
-            else:
-                return bundle
-        else:
-            raise BadRequest('You must be an authenticated user!')
+        if not domain:
+            raise BadRequest('Need a Domain Name.')
+        # The empty list is necessary. The function requires a list of
+        # non-fatal errors so it can be added to if any other errors
+        # occur. Since we have none, we pass the empty list.
+        (result, errors, retVal) =  add_new_domain(data,
+                                                    request,
+                                                    [])
+        if not 'message' in retVal:
+            retVal['message'] = ""
+        elif not isinstance(retVal['message'], basestring):
+            retVal['message'] = str(retVal['message'])
+        if errors:
+            for e in errors:
+                retVal['message'] += " %s " % str(e)
 
+        obj = retVal.get('object', None)
+        content = {'return_code': 0,
+                   'type': 'Domain',
+                   'message': retVal.get('message', '')}
+        if obj:
+            content['id'] = str(obj.id)
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'domains',
+                                  'api_name': 'v1',
+                                  'pk': str(obj.id)})
+            content['url'] = url
+        if not result['success']:
+            content['return_code'] = 1
+        self.crits_response(content)
 
 class WhoIsResource(CRITsAPIResource):
     """
@@ -127,7 +135,7 @@ class WhoIsResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Domain.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If a domain name is not provided or creation fails.
         """
 
@@ -149,7 +157,17 @@ class WhoIsResource(CRITsAPIResource):
             raise BadRequest('Cannot parse date: %s' % str(e))
 
         result = add_whois(domain, whois, date, analyst, True)
+
+        content = {'return_code': 0,
+                   'type': 'Domain',
+                   'message': result.get('message', ''),
+                   'id': result.get('id', '')}
+        if result.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'domains',
+                                  'api_name': 'v1',
+                                  'pk': result.get('id')})
+            content['url'] = url
         if not result['success']:
-            raise BadRequest('Could not add whois: %s' % str(result['message']))
-        else:
-            return bundle
+            content['return_code'] = 1
+        self.crits_response(content)

@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -44,7 +45,7 @@ class ObjectResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the object to add.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If necessary data is not provided or creation fails.
 
         """
@@ -84,7 +85,17 @@ class ObjectResource(CRITsAPIResource):
                             value=value,
                             file_=filedata,
                             add_indicator=add_indicator)
+
+        content = {'return_code': 0,
+                   'type': crits_type,
+                   'message': result.get('message', ''),
+                   'id': crits_id}
+        rname = self.resource_name_from_type(crits_type)
+        url = reverse('api_dispatch_detail',
+                        kwargs={'resource_name': rname,
+                                'api_name': 'v1',
+                                'pk': crits_id})
+        content['url'] = url
         if not result['success']:
-            raise BadRequest(result['message'])
-        else:
-            return bundle
+            content['return_code'] = 1
+        self.crits_response(content)

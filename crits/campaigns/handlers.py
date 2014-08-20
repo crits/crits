@@ -300,7 +300,8 @@ def add_campaign(name, description, aliases, analyst, bucket_list=None,
     # Verify the Campaign does not exist.
     campaign = Campaign.objects(name=name).first()
     if campaign:
-        return {'success': False, 'message': ['Campaign already exists.']}
+        return {'success': False, 'message': ['Campaign already exists.'],
+                'id': str(campaign.id)}
 
     # Create new campaign.
     campaign = Campaign(name=name)
@@ -323,7 +324,10 @@ def add_campaign(name, description, aliases, analyst, bucket_list=None,
 
     try:
         campaign.save(username=analyst)
-        return {'success': True}
+        campaign.reload()
+        return {'success': True,
+                'message': 'Campaign created successfully!',
+                'id': str(campaign.id)}
     except ValidationError, e:
         return {'success':False, 'message': "Invalid value: %s" % e}
 
