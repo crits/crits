@@ -182,30 +182,6 @@ class ServiceManager(object):
 
         return self._services.get(service_name, None)
 
-    @property
-    def enabled_services(self):
-        """
-        A list of names of enabled services.
-
-        This should be overridden by subclasses which allow users to enable
-        and disable services.
-        """
-
-        # Return all services, since there's no concept of enabled/disabled.
-        return self._services.keys()
-
-    @property
-    def triage_services(self):
-        """
-        A list of names of services set to run for "triage".
-
-        This should be overridden by subclasses which allow users to specify
-        which services run for triage.
-        """
-
-        # Return all services, since there's no concept of "triage" services.
-        return self.enabled_services
-
 
 class AnalysisTask(object):
     """

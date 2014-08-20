@@ -46,7 +46,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
         result['html'] = "Unknown CRITs type."
         return result
 
-    if name not in crits.services.manager.enabled_services:
+    if name not in enabled_services():
         result['html'] = "Service %s is unknown or not enabled." % name
         return result
 
