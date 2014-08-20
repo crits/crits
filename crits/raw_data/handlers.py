@@ -322,7 +322,7 @@ def handle_raw_data_file(data, source_name, user=None,
               'md5' (str) if successful.
     """
 
-    if not data and not title and not data_type:
+    if not data or not title or not data_type
         status = {
             'success':   False,
             'message':  'No data object, title, or data type passed in'
