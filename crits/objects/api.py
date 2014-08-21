@@ -46,7 +46,6 @@ class ObjectResource(CRITsAPIResource):
         :param bundle: Bundle containing the object to add.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If necessary data is not provided or creation fails.
 
         """
         analyst = bundle.request.user.username
@@ -54,8 +53,12 @@ class ObjectResource(CRITsAPIResource):
         crits_id = bundle.data.get('crits_id', None)
         object_type = bundle.data.get('object_type', None)
 
+        content = {'return_code': 1,
+                   'type': crits_type}
+
         if not object_type:
-            raise BadRequest("You must provide an Object Type!")
+            content['message'] = "You must provide an Object Type!"
+            self.crits_response(content)
 
         ot_array = object_type.split(" - ")
         object_type = ot_array[0]
@@ -69,10 +72,11 @@ class ObjectResource(CRITsAPIResource):
         value = bundle.data.get('value', None)
 
         if not crits_type or not crits_id:
-            raise BadRequest("You must provide a top-level object!")
+            content['message'] = "You must provide a top-level object!"
+            self.crits_response(content)
         if not filedata and not value:
-            raise BadRequest("You must provide a value or filedata!")
-
+            content['message'] = "You must provide a value or filedata!"
+            self.crits_response(content)
 
         result = add_object(crits_type,
                             crits_id,
@@ -86,16 +90,17 @@ class ObjectResource(CRITsAPIResource):
                             file_=filedata,
                             add_indicator=add_indicator)
 
-        content = {'return_code': 0,
-                   'type': crits_type,
-                   'message': result.get('message', ''),
-                   'id': crits_id}
+        if result.get('message'):
+            content['message'] = result.get('message')
+
+        content['id'] = crits_id
+
         rname = self.resource_name_from_type(crits_type)
         url = reverse('api_dispatch_detail',
                         kwargs={'resource_name': rname,
                                 'api_name': 'v1',
                                 'pk': crits_id})
         content['url'] = url
-        if not result['success']:
-            content['return_code'] = 1
+        if result['success']:
+            content['return_code'] = 0
         self.crits_response(content)

@@ -46,7 +46,6 @@ class CampaignResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to create the Campaign.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If a campaign name is not provided or creation fails.
 
         """
         analyst = bundle.request.user.username
@@ -56,24 +55,28 @@ class CampaignResource(CRITsAPIResource):
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
+        content = {'return_code': 1,
+                   'type': 'Campaign'}
         if not name:
-            raise BadRequest('Need a Campaign name.')
+            content['message'] = 'Need a Campaign name.'
+            self.crits_response(content)
+
         result =  add_campaign(name,
-                                description,
-                                aliases,
-                                analyst,
-                                bucket_list,
-                                ticket)
-        content = {'return_code': 0,
-                   'type': 'Campaign',
-                   'message': result.get('message', ''),
-                   'id': result.get('id', '')}
+                               description,
+                               aliases,
+                               analyst,
+                               bucket_list,
+                               ticket)
         if result.get('id'):
             url = reverse('api_dispatch_detail',
                           kwargs={'resource_name': 'campaigns',
                                   'api_name': 'v1',
                                   'pk': result.get('id')})
             content['url'] = url
-        if not result['success']:
-            content['return_code'] = 1
+            content['id'] = result.get('id')
+
+        if result['success']:
+            content['return_code'] = 0
+
+        content['message'] = result['message']
         self.crits_response(content)

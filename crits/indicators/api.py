@@ -48,7 +48,6 @@ class IndicatorResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to create the Indicator.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If a campaign name is not provided or creation fails.
         """
 
         analyst = bundle.request.user.username
@@ -83,13 +82,13 @@ class IndicatorResource(CRITsAPIResource):
 
         content = {'return_code': 0,
                    'type': 'Indicator',
-                   'message': result.get('message', ''),
-                   'id': result.get('objectid', '')}
+                   'message': result.get('message', '')}
         if result.get('objectid'):
             url = reverse('api_dispatch_detail',
                           kwargs={'resource_name': 'indicators',
                                   'api_name': 'v1',
                                   'pk': result.get('objectid')})
+            content['id'] = result.get('objectid')
             content['url'] = url
         if not result['success']:
             content['return_code'] = 1
@@ -132,7 +131,6 @@ class IndicatorActivityResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to add the Activity.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If a campaign name is not provided or creation fails.
         """
 
         analyst = bundle.request.user.username
@@ -141,6 +139,13 @@ class IndicatorActivityResource(CRITsAPIResource):
         end_date = bundle.data.get('end_date', None)
         description = bundle.data.get('description', None)
 
+        content = {'return_code': 1,
+                   'type': 'Indicator'}
+
+        if not object_id or not description:
+            content['message'] = 'Must provide object_id and description.'
+            self.crits_response(content)
+
         activity = {'analyst': analyst,
                     'start_date': start_date,
                     'end_date': end_date,
@@ -148,20 +153,18 @@ class IndicatorActivityResource(CRITsAPIResource):
                     'date': datetime.datetime.now()}
         result = activity_add(object_id, activity)
         if not result['success']:
-            raise BadRequest(result['message'])
-        else:
-            return bundle
+            content['message'] = result['message']
+            self.crits_response(content)
 
-        content = {'return_code': 0,
-                   'type': 'Indicator',
-                   'message': result.get('message', ''),
-                   'id': result.get('id', '')}
+        if result.get('message'):
+            content['message'] = result.get('message')
         if result.get('id'):
             url = reverse('api_dispatch_detail',
                           kwargs={'resource_name': 'indicators',
                                   'api_name': 'v1',
                                   'pk': result.get('id')})
+            content['id'] = result.get('id')
             content['url'] = url
-        if not result['success']:
-            content['return_code'] = 1
+        if result['success']:
+            content['return_code'] = 0
         self.crits_response(content)

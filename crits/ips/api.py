@@ -45,7 +45,6 @@ class IPResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to create the IP.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If creation fails.
         """
 
         analyst = bundle.request.user.username
@@ -62,8 +61,12 @@ class IPResource(CRITsAPIResource):
         bucket_list = data.get('bucket_list', None)
         ticket = data.get('ticket', None)
 
+        content = {'return_code': 1,
+                   'type': 'IP'}
+
         if not ip or not name or not ip_type:
-            raise BadRequest("Must provide an IP, IP Type, and Source.")
+            content['message'] = "Must provide an IP, IP Type, and Source."
+            self.crits_response(content)
 
         result = ip_add_update(ip,
                                ip_type,
@@ -78,9 +81,7 @@ class IPResource(CRITsAPIResource):
                                is_add_indicator=add_indicator,
                                indicator_reference=indicator_reference)
 
-        content = {'return_code': 0,
-                   'type': 'IP',
-                   'message': result.get('message', '')}
+        content['message'] = result.get('message', '')
         if result.get('object'):
             content['id'] = str(result.get('object').id)
         if content.get('id'):
@@ -89,6 +90,6 @@ class IPResource(CRITsAPIResource):
                                   'api_name': 'v1',
                                   'pk': content.get('id')})
             content['url'] = url
-        if not result['success']:
-            content['return_code'] = 1
+        if result['success']:
+            content['return_code'] = 0
         self.crits_response(content)

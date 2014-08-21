@@ -44,7 +44,6 @@ class EventResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to create the Event.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If a campaign name is not provided or creation fails.
         """
 
         analyst = bundle.request.user.username
@@ -58,11 +57,15 @@ class EventResource(CRITsAPIResource):
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
-        if not title and not event_type and not source:
-            raise BadRequest('Must provide a title, event_type, and source.')
+        content = {'return_code': 0,
+                   'type': 'Event'}
+        if not title or not event_type or not source or not description:
+            content['message'] = 'Must provide a title, event_type, source, and description.'
+            self.crits_response(content)
         et = EventType.objects(name=event_type).first()
         if not et:
-            raise BadRequest('Not a valid Event Type.')
+            content['message'] = 'Not a valid Event Type.'
+            self.crits_response(content)
 
         result = add_new_event(title,
                                description,
@@ -75,16 +78,14 @@ class EventResource(CRITsAPIResource):
                                bucket_list,
                                ticket)
 
-        content = {'return_code': 0,
-                   'type': 'Event',
-                   'message': result.get('message', ''),
-                   'id': result.get('id', '')}
+        content['message'] = result.get('message', '')
+        content['id'] = result.get('id', '')
         if result.get('id'):
             url = reverse('api_dispatch_detail',
                           kwargs={'resource_name': 'events',
                                   'api_name': 'v1',
                                   'pk': result.get('id')})
             content['url'] = url
-        if not result['success']:
-            content['return_code'] = 1
+        if result['success']:
+            content['return_code'] = 0
         self.crits_response(content)
