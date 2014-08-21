@@ -81,8 +81,9 @@ class IndicatorResource(CRITsAPIResource):
                                         ticket)
 
         content = {'return_code': 0,
-                   'type': 'Indicator',
-                   'message': result.get('message', '')}
+                   'type': 'Indicator'}
+        if result.get('message'):
+            content['message'] = result.get('message')
         if result.get('objectid'):
             url = reverse('api_dispatch_detail',
                           kwargs={'resource_name': 'indicators',

@@ -52,8 +52,9 @@ class TargetResource(CRITsAPIResource):
 
         content = {'return_code': 0,
                    'type': 'Target',
-                   'message': result.get('message', ''),
                    'id': result.get('id', '')}
+        if result.get('message'):
+            content['message'] = result.get('message')
         if result.get('id'):
             url = reverse('api_dispatch_detail',
                           kwargs={'resource_name': 'targets',

@@ -78,7 +78,8 @@ class EventResource(CRITsAPIResource):
                                bucket_list,
                                ticket)
 
-        content['message'] = result.get('message', '')
+        if result.get('message'):
+            content['message'] = result.get('message')
         content['id'] = result.get('id', '')
         if result.get('id'):
             url = reverse('api_dispatch_detail',

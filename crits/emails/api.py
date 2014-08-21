@@ -121,7 +121,8 @@ class EmailResource(CRITsAPIResource):
                                          analyst,
                                          'Upload')
 
-        content['message'] = result.get('message', '')
+        if result.get('message'):
+            content['message'] = result.get('message')
         if result.get('obj_id'):
             content['id'] = result.get('obj_id', '')
         elif result.get('object'):

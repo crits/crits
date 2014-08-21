@@ -81,7 +81,8 @@ class IPResource(CRITsAPIResource):
                                is_add_indicator=add_indicator,
                                indicator_reference=indicator_reference)
 
-        content['message'] = result.get('message', '')
+        if result.get('message'):
+            content['message'] = result.get('message')
         if result.get('object'):
             content['id'] = str(result.get('object').id)
         if content.get('id'):
