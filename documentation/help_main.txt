@@ -1687,6 +1687,7 @@ Unique POST Parameters:
 :data: The raw data if the upload type is "metadata".
 :description: Description of the raw data.
 :filedata: The raw data if the upload type is "file".
+:data_type: The type of raw data. Must match choices in the database.
 :link_id: The Link ID of an existing version of this raw data.
 :title: Title for the raw data.
 :tool_details: Details about the tool.
