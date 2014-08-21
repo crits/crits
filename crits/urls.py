@@ -312,6 +312,7 @@ if settings.ENABLE_API:
     from tastypie.api import Api
     from crits.campaigns.api import CampaignResource
     from crits.certificates.api import CertificateResource
+    from crits.disassembly.api import DisassemblyResource
     from crits.domains.api import DomainResource, WhoIsResource
     from crits.emails.api import EmailResource
     from crits.events.api import EventResource
@@ -330,6 +331,7 @@ if settings.ENABLE_API:
     v1_api = Api(api_name='v1')
     v1_api.register(CampaignResource())
     v1_api.register(CertificateResource())
+    v1_api.register(DisassemblyResource())
     v1_api.register(DomainResource())
     v1_api.register(WhoIsResource())
     v1_api.register(EmailResource())

@@ -376,7 +376,7 @@ def handle_disassembly_file(data, source_name, user=None,
 
     status['success'] = True
     status['message'] = 'Uploaded disassembly'
-    status['_id'] = dis.id
+    status['id'] = str(dis.id)
 
     return status
 

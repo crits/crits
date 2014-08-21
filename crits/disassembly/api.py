@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -43,24 +44,18 @@ class DisassemblyResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Disassembly.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
-        :raises BadRequest: If filedata is not provided or creation fails.
-
+        :returns: HttpResponse.
         """
 
+        content = {'return_code': 1,
+                   'type': 'Disassembly'}
+
         analyst = bundle.request.user.username
-        type_ = bundle.data.get('upload_type', None)
-        if not type_:
-            raise BadRequest('Must provide an upload type.')
-        if type_ not in ('metadata', 'file'):
-            raise BadRequest('Not a valid upload type.')
-        if type_ == 'metadata':
-            data = bundle.data.get('data', None)
-        elif type_ == 'file':
-            file_ = bundle.data.get('filedata', None)
-            if not file_:
-                raise BadRequest("Upload type of 'file' but no file uploaded.")
-            data = file_.read()
+        file_ = bundle.data.get('filedata', None)
+        if not file_:
+            content['message'] = "Upload type of 'file' but no file uploaded."
+            self.crits_response(content)
+        data = file_.read()
 
         source = bundle.data.get('source', None)
         description = bundle.data.get('description', '')
@@ -76,11 +71,13 @@ class DisassemblyResource(CRITsAPIResource):
         ticket = bundle.data.get('ticket', None)
 
         if not name:
-            raise BadRequest("Must provide a name.")
+            content['message'] = "Must provide a name."
+            self.crits_response(content)
         if not data_type:
-            raise BadRequest("Must provide a data type.")
+            content['message'] = "Must provide a data type."
+            self.crits_response(content)
 
-        status = handle_disassembly_file(data, source, analyst,
+        result = handle_disassembly_file(data, source, analyst,
                                       description, name, data_type,
                                       tool_name, tool_version, tool_details,
                                       link_id,
@@ -88,7 +85,15 @@ class DisassemblyResource(CRITsAPIResource):
                                       copy_rels=copy_rels,
                                       bucket_list=bucket_list,
                                       ticket=ticket)
-        if status['success']:
-            return bundle
-        else:
-            raise BadRequest(status['message'])
+        if result['success']:
+            print result
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'disassembly',
+                                  'api_name': 'v1',
+                                  'pk': result['id']})
+            content['url'] = url
+            content['return_code'] = 0
+            content['id'] = result['id']
+
+        content['message'] = result['message']
+        self.crits_response(content)
