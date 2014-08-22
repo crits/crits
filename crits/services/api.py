@@ -46,7 +46,6 @@ class ServiceResource(CRITsAPIResource):
         :param bundle: Bundle containing the service results to add.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If necessary data is not provided or creation fails.
 
         """
         analyst = bundle.request.user.username
@@ -64,11 +63,16 @@ class ServiceResource(CRITsAPIResource):
         success = True
         message = ""
 
+        content = {'return_code': 1,
+                   'type': object_type}
+
         if not object_type or not object_id or not analysis_id:
-            raise BadRequest('Need an object type, object id, and analysis id.')
+            content['message'] = 'Need an object type, object id, and analysis id.'
+            self.crits_response(content)
         if result:
             if not result_type or not result_subtype:
-                raise BadRequest('When adding a result, also need type and subtype')
+                content['message'] = 'When adding a result, also need type and subtype'
+                self.crits_response(content)
             result = add_result(object_type, object_id, analysis_id,
                                 result, result_type, result_subtype, analyst)
             if not result['success']:
@@ -87,16 +91,14 @@ class ServiceResource(CRITsAPIResource):
                 message += ", %s" % result['message']
                 success = False
 
-        content = {'return_code': 0,
-                   'type': object_type,
-                   'message': message,
-                   'id': object_id}
+        content['message'] = message
+        content['id'] = object_id
         rname = self.resource_name_from_type(object_type)
         url = reverse('api_dispatch_detail',
                         kwargs={'resource_name': rname,
                                 'api_name': 'v1',
                                 'pk': object_id})
         content['url'] = url
-        if not success:
-            content['return_code'] = 1
+        if success:
+            content['return_code'] = 0
         self.crits_response(content)

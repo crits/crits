@@ -380,7 +380,7 @@ def add_object(type_, oid, object_type, name, source, method,
         return results
     except ValidationError, e:
         return {'success': False,
-                'message': e}
+                'message': str(e)}
 
 def delete_object_file(value):
     """

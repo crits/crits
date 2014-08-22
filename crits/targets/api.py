@@ -44,7 +44,6 @@ class TargetResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to create the Target.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If creation fails.
         """
 
         analyst = bundle.request.user.username
@@ -53,14 +52,16 @@ class TargetResource(CRITsAPIResource):
 
         content = {'return_code': 0,
                    'type': 'Target',
-                   'message': result.get('message', ''),
                    'id': result.get('id', '')}
+        if result.get('message'):
+            content['message'] = result.get('message')
         if result.get('id'):
             url = reverse('api_dispatch_detail',
                           kwargs={'resource_name': 'targets',
                                   'api_name': 'v1',
                                   'pk': result.get('id')})
             content['url'] = url
+            content['id'] = result.get('id')
         if not result['success']:
             content['return_code'] = 1
         self.crits_response(content)

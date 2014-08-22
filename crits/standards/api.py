@@ -39,30 +39,34 @@ class StandardsResource(CRITsAPIResource):
         :param bundle: Bundle to create the records associated with this STIX document.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If a type_ is not provided or creation fails.
         """
 
         analyst = bundle.request.user.username
         type_ = bundle.data.get('upload_type', None)
 
+        content = {'return_code': 1,
+                   'imported': [],
+                   'failed': []}
 
         if not type_:
-            raise BadRequest('You must specify the upload type.')
+            content['message'] = 'You must specify the upload type.'
+            self.crits_response(content)
         elif type_ not in ('file', 'xml'):
-            raise BadRequest('Unknown or unsupported upload type. '+type_)
+            content['message'] = 'Unknown or unsupported upload type. ' + type_
+            self.crits_response(content)
 
         # Remove this so it doesn't get included with the fields upload
         del bundle.data['upload_type']
-        result = None
 
         # Extract common information
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', None)
         reference = bundle.data.get('reference', None)
-        me = bundle.data.get('make_event',False)  # default to False for the event
+        me = bundle.data.get('make_event', False)  # default to False for the event
 
         if not source:
-            raise BadRequest('No Source was specified')
+            content['message'] = 'No Source was specified'
+            self.crits_response(content)
 
         if type_ == 'xml':
             filedata = bundle.data.get('xml', None)
@@ -70,7 +74,8 @@ class StandardsResource(CRITsAPIResource):
             file_ = bundle.data.get('filedata', None)
             filedata = file_.read()
         if not filedata:
-            raise BadRequest('No STIX content uploaded.')
+            content['message'] = 'No STIX content uploaded.'
+            self.crits_response(content)
         result = import_standards_doc(filedata,
                                       analyst,
                                       method,
@@ -78,9 +83,6 @@ class StandardsResource(CRITsAPIResource):
                                       ref = reference,
                                       source = source)
 
-        content = {'return_code': 0,
-                   'imported': [],
-                   'failed': []}
         if len(result['imported']):
             for i in result['imported']:
                 d = {}
@@ -100,6 +102,6 @@ class StandardsResource(CRITsAPIResource):
                 d = {'type': f[1],
                      'message': f[0]}
                 content['failed'].append(d)
-        if not result['success']:
-            content['return_code'] = 1
+        if result['success']:
+            content['return_code'] = 0
         self.crits_response(content)
