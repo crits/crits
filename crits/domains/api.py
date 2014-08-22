@@ -44,7 +44,6 @@ class DomainResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to create the Domain.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If a domain name is not provided or creation fails.
         """
 
         request = bundle.request
@@ -84,14 +83,18 @@ class DomainResource(CRITsAPIResource):
                 'bucket_list': bucket_list,
                 'ticket': ticket}
 
+        content = {'return_code': 1,
+                   'type': 'Domain'}
         if not domain:
-            raise BadRequest('Need a Domain Name.')
+            content['message'] = 'Need a Domain Name.'
+            self.crits_response(content)
+
         # The empty list is necessary. The function requires a list of
         # non-fatal errors so it can be added to if any other errors
         # occur. Since we have none, we pass the empty list.
         (result, errors, retVal) =  add_new_domain(data,
-                                                    request,
-                                                    [])
+                                                   request,
+                                                   [])
         if not 'message' in retVal:
             retVal['message'] = ""
         elif not isinstance(retVal['message'], basestring):
@@ -101,9 +104,7 @@ class DomainResource(CRITsAPIResource):
                 retVal['message'] += " %s " % str(e)
 
         obj = retVal.get('object', None)
-        content = {'return_code': 0,
-                   'type': 'Domain',
-                   'message': retVal.get('message', '')}
+        content['message'] = retVal.get('message', '')
         if obj:
             content['id'] = str(obj.id)
             url = reverse('api_dispatch_detail',
@@ -111,8 +112,10 @@ class DomainResource(CRITsAPIResource):
                                   'api_name': 'v1',
                                   'pk': str(obj.id)})
             content['url'] = url
-        if not result['success']:
-            content['return_code'] = 1
+
+        if result:
+            content['return_code'] = 0
+
         self.crits_response(content)
 
 class WhoIsResource(CRITsAPIResource):

@@ -45,15 +45,20 @@ class EmailResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to create the Campaign.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If a type_ is not provided or creation fails.
         """
 
         analyst = bundle.request.user.username
         type_ = bundle.data.get('upload_type', None)
+
+        content = {'return_code': 1,
+                   'type': 'Email'}
+
         if not type_:
-            raise BadRequest('You must specify the upload type.')
+            content['message'] = 'You must specify the upload type.'
+            self.crits_response(content)
         elif type_ not in ('eml', 'msg', 'raw', 'yaml', 'fields'):
-            raise BadRequest('Unknown or unsupported upload type.')
+            content['message'] = 'Unknown or unsupported upload type.'
+            self.crits_response(content)
 
         # Remove this so it doesn't get included with the fields upload
         del bundle.data['upload_type']
@@ -68,7 +73,8 @@ class EmailResource(CRITsAPIResource):
         if type_ == 'eml':
             file_ = bundle.data.get('filedata', None)
             if not file_:
-                raise BadRequest('No file uploaded.')
+                content['message'] = 'No file uploaded.'
+                self.crits_response(content)
             filedata = file_.read()
             result = handle_eml(filedata, source, reference,
                                 analyst, 'Upload', campaign,
@@ -115,9 +121,8 @@ class EmailResource(CRITsAPIResource):
                                          analyst,
                                          'Upload')
 
-        content = {'return_code': 0,
-                   'type': 'Email',
-                   'message': result.get('message', '')}
+        if result.get('message'):
+            content['message'] = result.get('message')
         if result.get('obj_id'):
             content['id'] = result.get('obj_id', '')
         elif result.get('object'):
@@ -128,6 +133,6 @@ class EmailResource(CRITsAPIResource):
                                   'api_name': 'v1',
                                   'pk': content.get('id')})
             content['url'] = url
-        if not result['status']:
-            content['return_code'] = 1
+        if result['status']:
+            content['return_code'] = 0
         self.crits_response(content)

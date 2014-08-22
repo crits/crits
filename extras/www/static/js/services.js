@@ -139,24 +139,25 @@ $(document).ready(function() {
             }
         });
     });
-    $('span.enabled').off().click(function(e) {
-        var me = $(this);
-        var url = me.attr('data-url');
-        $.ajax({
-            type: 'POST',
-            url: url,
-            data: {},
-            datatype: 'json',
-            success: function(data) {
-                if (data.success) {
-                    if (me.text() == "Yes") {
-                        me.text("No");
-                    } else {
-                        me.text("Yes")
-                    }
-                    me.attr('data-url', data.url);
-                }
-            }
-        });
-    });
+});
+
+$(document).on("click", "span.enabled", function(e) {
+	 var me = $(this);
+     var url = me.attr('data-url');
+     $.ajax({
+         type: 'POST',
+         url: url,
+         data: {},
+         datatype: 'json',
+         success: function(data) {
+             if (data.success) {
+                 if (me.text() == "Yes") {
+                     me.text("No");
+                 } else {
+                     me.text("Yes")
+                 }
+                 me.attr('data-url', data.url);
+             }
+         }
+     });
 });

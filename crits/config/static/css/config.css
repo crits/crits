@@ -1,0 +1,68 @@
+.error {
+    border: 1px red solid !important;
+    background-color: rgba(255, 0, 0, 0.1) !important;
+}
+div.error {
+	background-image: linear-gradient( rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0.1)) !important;
+}
+#config_results {
+    color: #ff0000;
+    position:absolute;
+    text-align:center;
+    top:20px;
+    left:0;
+    right:0;
+    margin-left:auto;
+    margin-right:auto;
+}
+#submitWrapper {
+    text-align: center;
+    margin-right:100px;
+}
+#sidebar {
+   float:left;
+   width: 200px;
+   height:600px;
+   border:1px solid grey;
+   margin-right: 5px;
+   margin-top:20px;
+   position: fixed;
+}
+.systemTable {
+  padding-top: 20px;
+  padding-left: 20px;
+}
+.systemTable th {
+  width:200px;
+  text-align: left;
+}
+#wrapper {
+    width:100%;
+    display:inline-block;
+}
+#reset_button {
+    padding: 4px;
+    border: 1px solid #BBB;
+    border-radius: 3px;
+    color: #000;
+    background-color: #FFF;
+}
+.rightContent {
+  overflow:hidden;
+  border:none;
+  overflow-y:auto;
+  padding-left: 5px;
+  margin-left: 205px;
+}
+.forceInvisible {
+  display:none !important;
+}
+.highlighted {
+    background-image: linear-gradient(#69B1E0, #4A96D3);
+    border-top: 1px solid #5295CD;
+    border-bottom: 1px solid #2661A6;
+    color:white !important;
+}
+.w2ui-node-group:not(.highlighted) {
+	color:black !important;
+}
