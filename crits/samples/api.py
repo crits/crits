@@ -109,16 +109,17 @@ class SampleResource(CRITsAPIResource):
             result = sample_md5[0]
             if result.get('message'):
                 content['message'] = result.get('message')
-            content['id'] = str(result.get('object').id)
+            if result.get('object'):
+                content['id'] = str(result.get('object').id)
             if content.get('id'):
                 url = reverse('api_dispatch_detail',
                             kwargs={'resource_name': 'samples',
                                     'api_name': 'v1',
                                     'pk': content.get('id')})
                 content['url'] = url
+        else:
+            content['message'] = "Could not create Sample for unknown reason."
 
         if result['success']:
             content['return_code'] = 0
-        else:
-            content['message'] = "Could not create Sample for unknown reason."
         self.crits_response(content)
