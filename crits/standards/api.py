@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from mongoengine import Document
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
@@ -37,7 +38,7 @@ class StandardsResource(CRITsAPIResource):
 
         :param bundle: Bundle to create the records associated with this STIX document.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If a type_ is not provided or creation fails.
         """
 
@@ -71,13 +72,34 @@ class StandardsResource(CRITsAPIResource):
         if not filedata:
             raise BadRequest('No STIX content uploaded.')
         result = import_standards_doc(filedata,
-                    analyst,
-                    method,
-                    make_event = me,
-                    ref = reference,
-                    source = source)
-        if not result:
-            raise BadRequest('No upload type found.')
+                                      analyst,
+                                      method,
+                                      make_event = me,
+                                      ref = reference,
+                                      source = source)
+
+        content = {'return_code': 0,
+                   'imported': [],
+                   'failed': []}
+        if len(result['imported']):
+            for i in result['imported']:
+                d = {}
+                otype = i[0]
+                obj = i[1]
+                rname = self.resource_name_from_type(otype)
+                url = reverse('api_dispatch_detail',
+                            kwargs={'resource_name': rname,
+                                    'api_name': 'v1',
+                                    'pk': str(obj.id)})
+                d['url'] = url
+                d['type'] = otype
+                d['id'] = str(obj.id)
+                content['imported'].append(d)
+        if len(result['failed']):
+            for f in result['failed']:
+                d = {'type': f[1],
+                     'message': f[0]}
+                content['failed'].append(d)
         if not result['success']:
-            raise BadRequest(result['reason'])
-        return bundle
+            content['return_code'] = 1
+        self.crits_response(content)

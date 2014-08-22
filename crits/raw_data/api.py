@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -43,7 +44,7 @@ class RawDataResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the RawData.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
+        :returns: HttpResponse.
         :raises BadRequest: If filedata is not provided or creation fails.
 
         """
@@ -80,7 +81,7 @@ class RawDataResource(CRITsAPIResource):
         if not data_type:
             raise BadRequest("Must provide a data type.")
 
-        status = handle_raw_data_file(data, source, analyst,
+        result = handle_raw_data_file(data, source, analyst,
                                       description, title, data_type,
                                       tool_name, tool_version, tool_details,
                                       link_id,
@@ -88,7 +89,17 @@ class RawDataResource(CRITsAPIResource):
                                       copy_rels=copy_rels,
                                       bucket_list=bucket_list,
                                       ticket=ticket)
-        if status['success']:
-            return bundle
-        else:
-            raise BadRequest(status['message'])
+
+        content = {'return_code': 0,
+                   'type': 'RawData',
+                   'message': result.get('message', ''),
+                   'id': str(result.get('_id', ''))}
+        if result.get('_id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'raw_data',
+                                  'api_name': 'v1',
+                                  'pk': str(result.get('_id'))})
+            content['url'] = url
+        if not result['success']:
+            content['return_code'] = 1
+        self.crits_response(content)
