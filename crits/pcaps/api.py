@@ -44,13 +44,17 @@ class PCAPResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to create the PCAP.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If filedata is not provided or creation fails.
         """
 
         analyst = bundle.request.user.username
         file_ = bundle.data.get('filedata', None)
+
+        content = {'return_code': 1,
+                   'type': 'PCAP'}
         if not file_:
-            raise BadRequest("Upload type of 'file' but no file uploaded.")
+            content['message'] = "Upload type of 'file' but no file uploaded."
+            self.crits_response(content)
+
         filedata = file_.read()
         filename = str(file_)
 
@@ -58,9 +62,9 @@ class PCAPResource(CRITsAPIResource):
         method = bundle.data.get('method', None)
         description = bundle.data.get('reference', None)
         relationship = bundle.data.get('relationship', None)
-        parent_id = bundle.data.get('related_id', None)
-        parent_md5 = bundle.data.get('related_md5', None)
-        parent_type = bundle.data.get('related_type', None)
+        related_id = bundle.data.get('related_id', None)
+        related_md5 = bundle.data.get('related_md5', None)
+        related_type = bundle.data.get('related_type', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
@@ -69,24 +73,23 @@ class PCAPResource(CRITsAPIResource):
                                   source,
                                   analyst,
                                   description,
-                                  parent_id=parent_id,
-                                  parent_md5=parent_md5,
-                                  parent_type = parent_type,
+                                  related_id=related_id,
+                                  related_md5=related_md5,
+                                  related_type = related_type,
                                   method=method,
                                   relationship=relationship,
                                   bucket_list=bucket_list,
                                   ticket=ticket)
 
-        content = {'return_code': 0,
-                   'type': 'PCAP',
-                   'message': result.get('message', ''),
-                   'id': result.get('id', '')}
+        if result.get('message'):
+            content['message'] = result.get('message')
         if result.get('id'):
             url = reverse('api_dispatch_detail',
                           kwargs={'resource_name': 'pcaps',
                                   'api_name': 'v1',
                                   'pk': result.get('id')})
             content['url'] = url
-        if not result['success']:
-            content['return_code'] = 1
+            content['id'] = result.get('id')
+        if result['success']:
+            content['return_code'] = 0
         self.crits_response(content)

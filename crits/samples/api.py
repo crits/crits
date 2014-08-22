@@ -44,15 +44,20 @@ class SampleResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to create the Sample.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
-        :raises BadRequest: If filedata is not provided or creation fails.
         """
 
         analyst = bundle.request.user.username
         type_ = bundle.data.get('upload_type', None)
+
+        content = {'return_code': 1,
+                   'type': 'Sample'}
+
         if not type_:
-            raise BadRequest('Must provide an upload type.')
+            content['message'] = 'Must provide an upload type.'
+            self.crits_response(content)
         if type_ not in ('metadata', 'file'):
-            raise BadRequest('Not a valid upload type.')
+            content['message'] = 'Not a valid upload type.'
+            self.crits_response(content)
         if type_ == 'metadata':
             filename = bundle.data.get('filename', None)
             md5 = bundle.data.get('md5', None)
@@ -63,7 +68,8 @@ class SampleResource(CRITsAPIResource):
             password = bundle.data.get('password', None)
             file_ = bundle.data.get('filedata', None)
             if not file_:
-                raise BadRequest("Upload type of 'file' but no file uploaded.")
+                content['message'] = "Upload type of 'file' but no file uploaded."
+                self.crits_response(content)
             filedata = file_
             filename = None
 
@@ -97,21 +103,23 @@ class SampleResource(CRITsAPIResource):
                                           ticket=ticket,
                                           is_return_only_md5=False)
 
-        content = {'return_code': 0,
-                   'type': 'Sample'}
         result = {'success': False}
 
         if len(sample_md5) > 0:
             result = sample_md5[0]
-            content['message'] = result.get('message', '')
-            content['id'] = str(result.get('object').id)
+            if result.get('message'):
+                content['message'] = result.get('message')
+            if result.get('object'):
+                content['id'] = str(result.get('object').id)
             if content.get('id'):
                 url = reverse('api_dispatch_detail',
                             kwargs={'resource_name': 'samples',
                                     'api_name': 'v1',
                                     'pk': content.get('id')})
                 content['url'] = url
-        if not result['success']:
-            content['return_code'] = 1
+        else:
             content['message'] = "Could not create Sample for unknown reason."
+
+        if result['success']:
+            content['return_code'] = 0
         self.crits_response(content)

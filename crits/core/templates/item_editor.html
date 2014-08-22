@@ -1,43 +1,26 @@
-{% extends "containment.html" %}
-{% load url from future %}
-
-{% block title %} Item Editor {% endblock %}
-{% block content %}
-
-<script>
-        var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
-</script>
-
-<div id="tabnav" class="tabnav" style="font-size: 90%;">
+<div id='items_jTable' class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
-    <li><a href="{% url 'crits.core.views.items_listing' 'Backdoor' 'inline' %}"
-        id="backdoor_button"><span>Backdoors ({{ counts.Backdoor }})</span></a></li>
-    <li><a href="{% url 'crits.core.views.items_listing' 'Campaign' 'inline' %}"
-        id="campaign_button"><span>Campaigns ({{ counts.Campaign }})</span></a></li>
-    <li><a href="{% url 'crits.core.views.items_listing' 'DisassemblyType' 'inline' %}"
-        id="disassemblytype_button"><span>Disassembly Types ({{ counts.DisassemblyType }})</span></a></li>
-    <li><a href="{% url 'crits.core.views.items_listing' 'EventType' 'inline' %}"
-        id="eventtype_button"><span>Event Types ({{ counts.EventType }})</span></a></li>
-    <li><a href="{% url 'crits.core.views.items_listing' 'Exploit' 'inline' %}"
-        id="exploit_button"><span>Exploits ({{ counts.Exploit }})</span></a></li>
-    <li><a href="{% url 'crits.core.views.items_listing' 'IndicatorAction' 'inline' %}"
-        id="indicatoraction_button"><span>Indicator Actions ({{ counts.IndicatorAction }})</span></a></li>
-    <li><a href="{% url 'crits.core.views.items_listing' 'ObjectType' 'inline' %}"
-        id="objecttype_button"><span>Object Types ({{ counts.ObjectType }})</span></a></li>
-    <li><a href="{% url 'crits.core.views.items_listing' 'RawDataType' 'inline' %}"
-        id="rawdatatype_button"><span>Raw Data Types ({{ counts.RawDataType }})</span></a></li>
-    <li><a href="{% url 'crits.core.views.items_listing' 'RelationshipType' 'inline' %}"
-        id="relationshiptype_button"><span>Relationship Types ({{ counts.RelationshipType }})</span></a></li>
-    <li><a href="{% url 'crits.core.views.items_listing' 'SourceAccess' 'inline' %}"
-        id="sourceaccess_button"><span>Sources ({{ counts.SourceAccess }})</span></a></li>
-    <li><a href="{% url 'crits.core.views.items_listing' 'UserRole' 'inline' %}"
-        id="userrole_button"><span>User Roles ({{ counts.UserRole }})</span></a></li>
+	    <li><a href="{% url 'crits.core.views.items_listing' 'Backdoor' 'inline' %}"
+	        id="backdoor_button"><span>Backdoors ({{ counts.Backdoor }})</span></a></li>
+	    <li><a href="{% url 'crits.core.views.items_listing' 'Campaign' 'inline' %}"
+	        id="campaign_button"><span>Campaigns ({{ counts.Campaign }})</span></a></li>
+            <li><a href="{% url 'crits.core.views.items_listing' 'DisassemblyType' 'inline' %}"
+                id="disassemblytype_button"><span>Disassembly Types ({{ counts.DisassemblyType }})</span></a></li>
+	    <li><a href="{% url 'crits.core.views.items_listing' 'EventType' 'inline' %}"
+	        id="eventtype_button"><span>Event Types ({{ counts.EventType }})</span></a></li>
+	    <li><a href="{% url 'crits.core.views.items_listing' 'Exploit' 'inline' %}"
+	        id="exploit_button"><span>Exploits ({{ counts.Exploit }})</span></a></li>
+	    <li><a href="{% url 'crits.core.views.items_listing' 'IndicatorAction' 'inline' %}"
+	        id="indicatoraction_button"><span>Indicator Actions ({{ counts.IndicatorAction }})</span></a></li>
+	    <li><a href="{% url 'crits.core.views.items_listing' 'ObjectType' 'inline' %}"
+	        id="objecttype_button"><span>Object Types ({{ counts.ObjectType }})</span></a></li>
+	    <li><a href="{% url 'crits.core.views.items_listing' 'RawDataType' 'inline' %}"
+	        id="rawdatatype_button"><span>Raw Data Types ({{ counts.RawDataType }})</span></a></li>
+	    <li><a href="{% url 'crits.core.views.items_listing' 'RelationshipType' 'inline' %}"
+	        id="relationshiptype_button"><span>Relationship Types ({{ counts.RelationshipType }})</span></a></li>
+	    <li><a href="{% url 'crits.core.views.items_listing' 'SourceAccess' 'inline' %}"
+	        id="sourceaccess_button"><span>Sources ({{ counts.SourceAccess }})</span></a></li>
+	    <li><a href="{% url 'crits.core.views.items_listing' 'UserRole' 'inline' %}"
+	        id="userrole_button"><span>User Roles ({{ counts.UserRole }})</span></a></li>
     </ul>
-
 </div>
-
-{% endblock %}
-
-{% block javascript_includes %}
-{% endblock %}
-
