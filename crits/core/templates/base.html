@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="/css/jquery.tagit.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/chardinjs.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/jquery.mmenu.all.css" type="text/css" media="screen" />
-
+    <link rel="stylesheet" href="/css/w2ui-1.4.min.css" type="text/css"/>
     <link rel="stylesheet" href="/js/jtable/themes/jqueryui/jtable_jqueryui.min.css" type="text/css" />
     <link rel="stylesheet" href="{{ STATIC_URL }}css/core.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="{{ STATIC_URL }}css/jtable-custom.css" type="text/css" media="screen" />
@@ -29,7 +29,7 @@
 
     <script type="text/javascript" src="/js/jquery-1.10.2.min.js"></script>
     <script type="text/javascript" src="/js/jquery-ui-1.10.3.custom.min.js"></script>
-
+    <script type="text/javascript" src="/js/w2ui-1.4.min.js"></script>
     <script type="text/javascript" src="/js/jquery.highlight-3.js"></script>
     <script type="text/javascript" src="/js/datetimewidget.js"></script>
     <script type="text/javascript" src="/js/jquery.tablesorter.min.js"></script>
@@ -85,6 +85,7 @@
     var login_user = "{% url 'crits.core.views.login' %}";
     var get_item_data_url = "{% url 'crits.core.views.get_item_data' %}";
     var get_dialog_url = "{% url 'crits.core.views.get_dialog' %}";
+    
     </script>
 </head>
 <body>
@@ -155,8 +156,8 @@
       <span class="right" data-intro="Data Classification" data-position="top">
 	<b>{{ classification }}</b>
       </span>
-      <span class="left" data-intro="CRITs DB Version" data-position="top">
-	<b>Version:</b> {{ crits_version }}
+      <span class="left" data-intro="CRITs DB Version" data-position="top" >
+        <b>Version:</b> {{ crits_version }}
       </span>
       <span class="left" data-intro="Hosting Organization" data-position="top">
 	<b>Hosted by:</b> {{ company_name }}
@@ -522,9 +523,93 @@
     </li>
     {% endif %}
     {% if user_role == 'Administrator' %}
-    <li class='nav_admin mmenu_item'>
-      <a id="control_panel" href="{% url 'crits.core.views.control_panel' %}">CRITs Control Panel</a>
-    </li>
+	    <li class='nav_admin mmenu_item'>
+	        <a href="{% url 'crits.config.views.crits_config' %}">CRITs Control Panel</a>
+	        <ul class='sub-mmenu'>
+                <li class='mmenu_item'>
+                    <a href="{% url 'crits.config.views.crits_config' %}">System</a>
+	                <ul class='sub-mmenu'>
+                        <li class='mmenu_item'>
+                            <a node='node_system' sub_node='CRITsTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#CRITsTab">CRITs Configuration</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a node='node_system' sub_node='generalTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#generalTab">General</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a node='node_system' sub_node='LDAP' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#LDAP">LDAP Settings</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a node='node_system' sub_node='downloadTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#downloadTab">Downloading</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a node='node_system' sub_node='securityTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#securityTab">Security</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a node='node_system' sub_node='servicesTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#servicesTab">Services</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a node='node_system' sub_node='loggingTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#loggingTab">Logging</a>
+                        </li>
+	                </ul>
+		        </li>
+		        <li class='mmenu_item'>
+	               <a class='controlPanelNav' sub_node='backdoor_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#backdoor_button">Items</a>
+	               <ul class='sub-mmenu'>
+	                   <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='actor_threat_identifiers_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_threat_identifiers_button">Actor Threat Identifiers</a>
+                       </li>
+	                   <li class='mmenu_item'>
+                           <a class='controlPanelNav' sub_node='actor_threat_types_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_threat_types_button">Actor Threat Types</a>
+                       </li>
+	                   <li class='mmenu_item'>
+                           <a class='controlPanelNav' sub_node='actor_motiviations_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_motiviations_button">Actor Motivations</a>
+                       </li>
+	                   <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='actor_sophistications_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_sophistications_button">Actor Sophistications</a>
+                       </li>
+	                   <li class='mmenu_item'>
+                           <a class='controlPanelNav' sub_node='actor_intended_effects_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_intended_effects_button">Actor Intended Effects</a>
+                       </li>
+	                   <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='backdoor_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#backdoor_button">Backdoors</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='campaign_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#campaign_button">Campaigns</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='eventtype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#eventtype_button">Event Types</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='exploit_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#exploit_button">Exploits</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='indicatoraction_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#indicatoraction_button">Indicator Actions</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='objecttype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#objecttype_button">Object Types</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='rawdatatype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#rawdatatype_button">Raw Data Types</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='relationshiptype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#relationshiptype_button">Relationship Types</a>
+                        </li>
+                        <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='sourceaccess_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#sourceaccess_button">Sources</a>
+                        </li>
+	               </ul>
+		        </li>
+		        <li class='mmenu_item'>
+	                <a class='controlPanelNav' node='node_users' href="{% url 'crits.config.views.crits_config' %}#users">Users</a>
+		        </li>
+		        <li class='mmenu_item'>
+	                <a class='controlPanelNav' node='node_services' href="{% url 'crits.config.views.crits_config' %}#services">Services</a>
+		        </li>
+		        <li class='mmenu_item'>
+	                <a class='controlPanelNav' node='node_audit_log' href="{% url 'crits.config.views.crits_config' %}#auditLog">Audit Log</a>
+	            </li>
+	        </ul>
+	    </li>
     {% endif %}
     <li class='nav_help mmenu_item'>
       <a href="{% url 'crits.core.views.about' %}">About CRITs</a>

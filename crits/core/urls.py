@@ -28,7 +28,6 @@ urlpatterns = patterns('',
     # CRITs Configuration
     (r'^config/$', 'crits.config.views.crits_config'),
     (r'^modify_config/$', 'crits.config.views.modify_config'),
-    (r'^control_panel/$', 'crits.core.views.control_panel'),
     (r'^audit/list/$', 'crits.core.views.audit_listing'),
     (r'^audit/list/(?P<option>\S+)/$', 'crits.core.views.audit_listing'),
     (r'^items/editor/$', 'crits.core.views.item_editor'),
