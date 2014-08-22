@@ -103,6 +103,8 @@ class SampleResource(CRITsAPIResource):
 
         if len(sample_md5) > 0:
             result = sample_md5[0]
+            if result.get('success') is False:
+                raise BadRequest('Must provide a related type ')
             content['message'] = result.get('message', '')
             content['id'] = str(result.get('object').id)
             if content.get('id'):
