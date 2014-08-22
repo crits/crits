@@ -181,6 +181,41 @@
 	                    $(currentNode).addClass("w2ui-selected");
 	        		}
 	        });
+			//forces changes when selecting from the top toolbar
+			$(".controlPanelNav").click(function(e) {
+				//parent node corresponding to sidebar
+				var node = $(this).attr("node");
+				//if its part of the system sub_nodes
+				if(node == 'node_system'){
+					//corresponding subnode under system
+					var sub_node = $(this).attr("sub_node");
+					//toggles the highlighting 
+					if(sub_node != currentTab) {
+						$("#node_"+currentTab.substring(1)).removeClass("w2ui-selected");
+						$("#node_"+sub_node).addClass("w2ui-selected");
+					}
+					var event = jQuery.Event( "click" );
+					event.target = sub_node; 
+					//fires off the click event implemented above
+                    w2ui.sidebar.trigger(event);
+				}//if its part of the items jtable
+				else if(node == 'node_items') {
+					//couldn't figure out trigger events for jtable so reloads the page
+					var newHash = "#"+$(this).attr("sub_node");
+					var url = document.URL;
+					var hashIndex = url.indexOf("#");
+					//if there is a current hash, remove it and then append the new hash
+					if(hashIndex > 0 && url.slice(hashIndex) != newHash)
+						url = url.slice(0, hashIndex)+newHash;
+					//if url has been changed, reload the page
+					if(url != document.URL) {
+						window.location.href = url;
+						location.reload();
+					}
+				}
+				else //the rest of the nodes in the sidebar can operate normally
+				    $("#"+node).trigger("click");
+			});
 		 });  //end document.ready
 	</script>
 {% endblock %}
