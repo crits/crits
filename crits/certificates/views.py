@@ -101,7 +101,7 @@ def upload_certificate(request):
             ticket = form.cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
             method = 'Upload'
             status = handle_cert_file(filename, data, source, user, description,
-                                      related_id=parent, related_type=related_type,
+                                      related_id=related, related_type=related_type,
                                       method=method, bucket_list=bucket_list,
                                       ticket=ticket)
             if status['success']:
