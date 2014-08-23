@@ -1,3 +1,5 @@
+from mongoengine.base import ValidationError
+
 def class_from_id(type_, _id):
     """
     Return an instantiated class object.
@@ -37,51 +39,57 @@ def class_from_id(type_, _id):
     # make sure it's a string
     _id = str(_id)
 
-    if type_ == 'Backdoor':
-        return Backdoor.objects(id=_id).first()
-    if type_ == 'Campaign':
-        return Campaign.objects(id=_id).first()
-    elif type_ == 'Certificate':
-        return Certificate.objects(id=_id).first()
-    elif type_ == 'Comment':
-        return Comment.objects(id=_id).first()
-    elif type_ == 'Domain':
-        return Domain.objects(id=_id).first()
-    elif type_ == 'Email':
-        return Email.objects(id=_id).first()
-    elif type_ == 'Event':
-        return Event.objects(id=_id).first()
-    elif type_ == 'EventType':
-        return EventType.objects(id=_id).first()
-    elif type_ == 'Exploit':
-        return Exploit.objects(id=_id).first()
-    elif type_ == 'Indicator':
-        return Indicator.objects(id=_id).first()
-    elif type_ == 'IndicatorAction':
-        return IndicatorAction.objects(id=_id).first()
-    elif type_ == 'IP':
-        return IP.objects(id=_id).first()
-    elif type_ == 'ObjectType':
-        return ObjectType.objects(id=_id).first()
-    elif type_ == 'PCAP':
-        return PCAP.objects(id=_id).first()
-    elif type_ == 'RawData':
-        return RawData.objects(id=_id).first()
-    elif type_ == 'RawDataType':
-        return RawDataType.objects(id=_id).first()
-    elif type_ == 'RelationshipType':
-        return RelationshipType.objects(id=_id).first()
-    elif type_ == 'Sample':
-        return Sample.objects(id=_id).first()
-    elif type_ == 'SourceAccess':
-        return SourceAccess.objects(id=_id).first()
-    elif type_ == 'Screenshot':
-        return Screenshot.objects(id=_id).first()
-    elif type_ == 'Target':
-        return Target.objects(id=_id).first()
-    elif type_ == 'UserRole':
-        return UserRole.objects(id=_id).first()
-    else:
+    try:
+        if type_ == 'Backdoor':
+            return Backdoor.objects(id=_id).first()
+        if type_ == 'Campaign':
+            return Campaign.objects(id=_id).first()
+        elif type_ == 'Certificate':
+            return Certificate.objects(id=_id).first()
+        elif type_ == 'Comment':
+            return Comment.objects(id=_id).first()
+        elif type_ == 'Domain':
+            return Domain.objects(id=_id).first()
+        elif type_ == 'Email':
+            return Email.objects(id=_id).first()
+        elif type_ == 'Event':
+            return Event.objects(id=_id).first()
+        elif type_ == 'EventType':
+            return EventType.objects(id=_id).first()
+        elif type_ == 'Exploit':
+            return Exploit.objects(id=_id).first()
+        elif type_ == 'Indicator':
+            return Indicator.objects(id=_id).first()
+        elif type_ == 'IndicatorAction':
+            return IndicatorAction.objects(id=_id).first()
+        elif type_ == 'IP':
+            return IP.objects(id=_id).first()
+        elif type_ == 'ObjectType':
+            return ObjectType.objects(id=_id).first()
+        elif type_ == 'PCAP':
+            return PCAP.objects(id=_id).first()
+        elif type_ == 'RawData':
+            return RawData.objects(id=_id).first()
+        elif type_ == 'RawDataType':
+            return RawDataType.objects(id=_id).first()
+        elif type_ == 'RelationshipType':
+            return RelationshipType.objects(id=_id).first()
+        elif type_ == 'Sample':
+            return Sample.objects(id=_id).first()
+        elif type_ == 'SourceAccess':
+            return SourceAccess.objects(id=_id).first()
+        elif type_ == 'Screenshot':
+            return Screenshot.objects(id=_id).first()
+        elif type_ == 'Target':
+            return Target.objects(id=_id).first()
+        elif type_ == 'UserRole':
+            return UserRole.objects(id=_id).first()
+        else:
+            return None
+    except ValidationError:
+        # Mongoengine tries to verify that _id is a valid ObjectID.
+        # If it isn't it will raise this exception. This is most commonly
+        # seen by passing invalid IDs in API requests.
         return None
 
 def class_from_value(type_, value):
