@@ -23,6 +23,8 @@ def get_relationships(obj=None, type_=None, id_=None, analyst=None):
         return obj.sort_relationships("%s" % analyst, meta=True)
     elif type_ and id_:
         obj = class_from_id(type_, id_)
+        if not obj:
+            return {}
         return obj.sort_relationships("%s" % analyst, meta=True)
     else:
         return {}
@@ -93,6 +95,9 @@ def forge_relationship(left_class=None, right_class=None,
     if not left_class:
         if left_type and left_id:
             left_class = class_from_id(left_type, left_id)
+            if not left_class:
+                return {'success': False,
+                        'message': "Unable to get object."}
         else:
             return {'success': False,
                     'message': "Need a valid left type and id"}
@@ -142,6 +147,9 @@ def delete_all_relationships(left_class=None, left_type=None,
     if not left_class:
         if left_type and left_id:
             left_class = class_from_id(left_type, left_id)
+            if not left_class:
+                return {'success': False,
+                        'message': "Unable to get object."}
         else:
             return {'success': False,
                     'message': "Need a valid left type and id"}
@@ -190,6 +198,9 @@ def delete_relationship(left_class=None, right_class=None,
     if not left_class:
         if left_type and left_id:
             left_class = class_from_id(left_type, left_id)
+            if not left_class:
+                return {'success': False,
+                        'message': "Unable to get object."}
         else:
             return {'success': False,
                     'message': "Need a valid left type and id"}
@@ -258,6 +269,9 @@ def update_relationship_types(left_class=None, right_class=None,
     if not left_class:
         if left_type and left_id:
             left_class = class_from_id(left_type, left_id)
+            if not left_class:
+                return {'success': False,
+                        'message': "Unable to get object."}
         else:
             return {'success': False,
                     'message': "Need a valid left type and id"}
@@ -334,6 +348,9 @@ def update_relationship_dates(left_class=None, right_class=None,
     if not left_class:
         if left_type and left_id:
             left_class = class_from_id(left_type, left_id)
+            if not left_class:
+                return {'success': False,
+                        'message': "Unable to get object."}
         else:
             return {'success': False,
                     'message': "Need a valid left type and id"}
