@@ -226,7 +226,6 @@ def bulk_add_object_inline(request):
             # Get the item with the type and ID from the database
             obj = class_from_id(otype, oid)
 
-
             if obj:
                 source_field_name = get_source_field_for_class(otype)
                 if source_field_name:
