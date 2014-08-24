@@ -264,8 +264,10 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
 
     collection = settings.CRITS_TYPES[obj_type]
     obj_class = class_from_value(obj_type, obj_id)
-    data = obj_class.to_dict()
+    if not obj_class:
+        return ""
 
+    data = obj_class.to_dict()
     if data is None:
         return ""
 

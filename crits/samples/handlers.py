@@ -674,7 +674,7 @@ def handle_unzip_file(md5, user=None, password=None):
 
     sample = class_from_value('Sample', md5)
     if not sample:
-        return
+        return None
     data = sample.filedata.read()
     source = sample.source[0].name
     campaign = sample.campaign

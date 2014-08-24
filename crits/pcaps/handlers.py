@@ -256,6 +256,27 @@ def handle_pcap_file(filename, data, source_name, user=None,
             'message':  'Data length <= 0'
         }
         return status
+    if ((related_type and not (related_id or related_md5)) or
+        (not related_type and (related_id or related_md5))):
+        status = {
+            'success':   False,
+            'message':  'Must specify both related_type and related_id or related_md5.'
+        }
+        return status
+
+    related_obj = None
+    if related_id or related_md5:
+        if related_id:
+            related_obj = class_from_id(related_type, related_id)
+        else:
+            related_obj = class_from_value(related_type, related_md5)
+        if not related_obj:
+            status = {
+                'success': False,
+                'message': 'Related object not found.'
+            }
+            return status
+
 
     # generate md5 and timestamp
     md5 = hashlib.md5(data).hexdigest()
@@ -301,20 +322,15 @@ def handle_pcap_file(filename, data, source_name, user=None,
     pcap.save(username=user)
 
     # update relationship if a related top-level object is supplied
-    if related_id or related_md5:
-        if  related_id:
-            related_obj = class_from_id(related_type, related_id)
-        else:
-            related_obj = class_from_value(related_type, related_md5)
-        if related_obj and pcap:
-            if not relationship:
-                relationship = "Related_To"
-            pcap.add_relationship(rel_item=related_obj,
-                                  rel_type=relationship,
-                                  analyst=user,
-                                  get_rels=False)
-            related_obj.save(username=user)
-            pcap.save(username=user)
+    if related_obj and pcap:
+        if not relationship:
+            relationship = "Related_To"
+        pcap.add_relationship(rel_item=related_obj,
+                              rel_type=relationship,
+                              analyst=user,
+                              get_rels=False)
+        related_obj.save(username=user)
+        pcap.save(username=user)
 
     # run pcap triage
     if is_pcap_new and data:
@@ -357,7 +373,7 @@ def delete_pcap(pcap_md5, username=None):
 
     :param pcap_md5: The MD5 of the PCAP to delete.
     :type pcap_md5: str
-    :param username: The user deleting the certificate.
+    :param username: The user deleting the pcap.
     :type username: str
     :returns: True, False
     """

@@ -85,6 +85,11 @@ class SampleResource(CRITsAPIResource):
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
+        if ((related_id and not related_type) or
+            (related_type and not related_id)):
+            content['message'] = "Must specify related_type and related_id"
+            self.crits_response(content)
+
         sample_md5 = handle_uploaded_file(filedata,
                                           source,
                                           method,
