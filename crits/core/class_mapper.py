@@ -124,15 +124,27 @@ def class_from_value(type_, value):
     elif type_ == 'Certificate':
         return Certificate.objects(md5=value).first()
     elif type_ == 'Comment':
-        return Comment.objects(id=value).first()
+        try:
+            return Comment.objects(id=value).first()
+        except ValidationError:
+            return None
     elif type_ == 'Domain':
         return Domain.objects(domain=value).first()
     elif type_ == 'Email':
-        return Email.objects(id=value).first()
+        try:
+            return Email.objects(id=value).first()
+        except ValidationError:
+            return None
     elif type_ == 'Event':
-        return Event.objects(id=value).first()
+        try:
+            return Event.objects(id=value).first()
+        except ValidationError:
+            return None
     elif type_ == 'Indicator':
-        return Indicator.objects(id=value).first()
+        try:
+            return Indicator.objects(id=value).first()
+        except ValidationError:
+            return None
     elif type_ == 'IP':
         return IP.objects(ip=value).first()
     elif type_ == 'PCAP':
@@ -142,7 +154,10 @@ def class_from_value(type_, value):
     elif type_ == 'Sample':
         return Sample.objects(md5=value).first()
     elif type_ == 'Screenshot':
-        return Screenshot.objects(id=value).first()
+        try:
+            return Screenshot.objects(id=value).first()
+        except ValidationError:
+            return None
     elif type_ == 'Target':
         return Target.objects(email_address=value).first()
     else:
