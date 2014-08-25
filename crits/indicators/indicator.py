@@ -212,14 +212,12 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         return (observables, self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_object, source):
+    def from_cybox(cls, cybox_object):
         """
         Convert a Cybox DefinedObject to a MongoEngine Indicator object.
 
         :param cybox_object: The cybox object to create the indicator from.
         :type cybox_object: :class:`cybox.core.Observable``
-        :param source: The source list for the Indicator.
-        :type source: list
         :returns: :class:`crits.indicators.indicator.Indicator`
         """
 
@@ -233,7 +231,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         if db_indicator:
             indicator = db_indicator
         else:
-            indicator = cls(source=source)
+            indicator = cls()
             indicator.value = obj.value
             indicator.created = obj.date
             indicator.modified = obj.date
