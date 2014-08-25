@@ -125,7 +125,9 @@ class STIXParser():
                 try: # create CRITs Indicator from observable
                     item = observable.object_.properties
                     obj = Indicator.from_cybox(item, [self.source])
-                    obj.add_source(self.source)
+                    # SAB  the add source is redunadnt and causes the self.source object to grow
+                    # source is added by the Indicator.from_cybox call
+                    #obj.add_source(self.source)
                     obj.save(username=self.source_instance.analyst)
                     self.imported.append((Indicator._meta['crits_type'], obj))
                 except Exception, e: # probably caused by cybox object we don't handle
