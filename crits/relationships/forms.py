@@ -30,11 +30,17 @@ class ForgeRelationshipForm(forms.Form):
                                             input_formats=settings.PY_FORM_DATETIME_FORMATS,
                                             required=False,
                                             label="Relationship Date")
+    rel_confidence = forms.ChoiceField(required=True, label='Confidence', widget=forms.Select)
+    rel_reason = forms.CharField(label="Reason", required=False, widget=forms.Textarea(attrs={'cols':38, 'rows': 2}))
 
     def __init__(self, *args, **kwargs):
         super(ForgeRelationshipForm, self).__init__(*args, **kwargs)
         self.fields['forward_type'].choices = self.fields['reverse_type'].choices = [(c, c) for c in sorted(settings.CRITS_TYPES.iterkeys())]
         self.fields['forward_relationship'].choices = [(c, c) for c in get_relationship_types(True)]
+        self.fields['rel_confidence'].choices = [(1, '1 (Low)'), (2, '2'),
+                                                 (3, '3'), (4, '4'),
+                                                 (5, '5 (High')]
+        self.fields['rel_confidence'].initial = 1
 
     def clean(self):
         cleaned_data = super(ForgeRelationshipForm, self).clean()

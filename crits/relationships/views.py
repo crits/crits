@@ -9,8 +9,8 @@ from django.template import RequestContext
 from crits.core.user_tools import user_can_view_data
 from crits.relationships.forms import ForgeRelationshipForm
 from crits.relationships.handlers import get_relationship_types
-from crits.relationships.handlers import forge_relationship, update_relationship_dates
-from crits.relationships.handlers import update_relationship_types, delete_relationship
+from crits.relationships.handlers import forge_relationship, update_relationship_dates, update_relationship_confidences
+from crits.relationships.handlers import update_relationship_types, delete_relationship, update_relationship_reasons
 
 @user_passes_test(user_can_view_data)
 def add_new_relationship(request):
@@ -35,6 +35,8 @@ def add_new_relationship(request):
                                          rel_type=cleaned_data.get('forward_relationship'),
                                          rel_date=cleaned_data.get('relationship_date'),
                                          analyst=request.user.username,
+                                         rel_reason=cleaned_data.get('rel_reason'),
+                                         rel_confidence=cleaned_data.get('rel_confidence'),
                                          get_rels=True)
             if results['success'] == True:
                 relationship = {'type': cleaned_data.get('forward_type'),
@@ -90,7 +92,78 @@ def update_relationship_type(request):
         return render_to_response("error.html",
                                   {"error" : error },
                                   RequestContext(request))
+                                  
+@user_passes_test(user_can_view_data)
+def update_relationship_confidence(request):
+    """
+    Update relationship confidence. Should be an AJAX POST.
 
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+    if request.method == 'POST' and request.is_ajax():
+        new_confidence = int(request.POST['new_confidence'])
+        if (new_confidence<1):
+            result = {'success': False, 'message': 'Error updating relationship: You must choose a positive confidence level.'}
+            return HttpResponse(json.dumps(result), mimetype="application/json")
+        else:
+            results = update_relationship_confidences(left_type=request.POST['my_type'],
+                                                left_id=request.POST['my_value'],
+                                                right_type=request.POST['reverse_type'],
+                                                right_id=request.POST['dest_id'],
+                                                rel_type=request.POST['forward_relationship'],
+                                                rel_date=request.POST['relationship_date'],
+                                                analyst=request.user.username,
+                                                new_confidence=new_confidence)
+            
+        if results['success']:
+            message = "Successfully updated relationship: %s" % results['message']
+            result = {'success': True, 'message': message}
+        else:
+            message = "Error updating relationship: %s" % results['message']
+            result = {'success': False, 'message': message}
+        return HttpResponse(json.dumps(result), mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))  
+        
+        
+                
+        
+@user_passes_test(user_can_view_data)
+def update_relationship_reason(request):
+    """
+    Update relationship reason. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+    if request.method == 'POST' and request.is_ajax():
+        results = update_relationship_reasons(left_type=request.POST['my_type'],
+                                            left_id=request.POST['my_value'],
+                                            right_type=request.POST['reverse_type'],
+                                            right_id=request.POST['dest_id'],
+                                            rel_type=request.POST['forward_relationship'],
+                                            rel_date=request.POST['relationship_date'],
+                                            analyst=request.user.username,
+                                            new_reason=request.POST['new_reason'])
+        if results['success']:
+            message = "Successfully updated relationship: %s" % results['message']
+            result = {'success': True, 'message': message}
+        else:
+            message = "Error updating relationship: %s" % results['message']
+            result = {'success': False, 'message': message}
+        return HttpResponse(json.dumps(result), mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))                               
+                                  
 @user_passes_test(user_can_view_data)
 def update_relationship_date(request):
     """
