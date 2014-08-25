@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -44,8 +45,7 @@ class CampaignResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Campaign.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
-        :raises BadRequest: If a campaign name is not provided or creation fails.
+        :returns: HttpResponse.
 
         """
         analyst = bundle.request.user.username
@@ -55,15 +55,28 @@ class CampaignResource(CRITsAPIResource):
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
+        content = {'return_code': 1,
+                   'type': 'Campaign'}
         if not name:
-            raise BadRequest('Need a Campaign name.')
+            content['message'] = 'Need a Campaign name.'
+            self.crits_response(content)
+
         result =  add_campaign(name,
-                                description,
-                                aliases,
-                                analyst,
-                                bucket_list,
-                                ticket)
-        if not result['success']:
-            raise BadRequest(result['message'])
-        else:
-            return bundle
+                               description,
+                               aliases,
+                               analyst,
+                               bucket_list,
+                               ticket)
+        if result.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'campaigns',
+                                  'api_name': 'v1',
+                                  'pk': result.get('id')})
+            content['url'] = url
+            content['id'] = result.get('id')
+
+        if result['success']:
+            content['return_code'] = 0
+
+        content['message'] = result['message']
+        self.crits_response(content)

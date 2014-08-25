@@ -529,9 +529,9 @@ def add_whois(domain, data, date, analyst, editable):
     try:
         whois_entry = domain.add_whois(data, analyst, date, editable)
         domain.save(username=analyst)
-        return {"success": True, 'whois': whois_entry}
+        return {"success": True, 'whois': whois_entry, 'id': str(domain.id)}
     except ValidationError, e:
-        return {"success": False, "message": e}
+        return {"success": False, "message": e, 'id': str(domain.id)}
 
 def edit_whois(domain, data, date, analyst):
     """

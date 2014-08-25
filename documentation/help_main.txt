@@ -1389,8 +1389,36 @@ Listing the Domains
         | result=JSON.load(res.body)
 
 
-      
-        
+POST Responses
+-------------------------------------------
+
+In most cases when submitting a POST to add new content to CRITs you will
+get a response in the following JSON format:
+
+        | {
+        |   "return_code": <code>,
+        |   "type": <type>,
+        |   "id": <object_id>,
+        |   "message": <message>,
+        |   "url": <url>
+        | }
+
+The return_code is usually 0 for success, 1 for failure. Some API calls may
+wish to extend this to include other codes to represent other results. Those
+return codes should be listed in the appropriate sections below.
+
+In the event a new TLO was created or content was successfully added to an
+existing TLO, the TLO type and ID will be returned to you. In addition, a
+URL will be provided which can be used to query the API for the details of
+that TLO.
+
+If there is a message to give context, whether the request was successful or
+not, it will also be provided.
+
+In some situations the entire response may not look like this. Refer to the
+sections below for any special conditions you may need to look out for.
+
+
 Common POST Parameters
 -------------------------------------------
 
@@ -1501,7 +1529,7 @@ only "date" is required:
 :date: The Date field.
 :to: The To field.
 :cc: The CC field.
-:from: The From field.
+:from_address: The From field.
 :sender: The Sender field.
 :subject: The email subject.
 :reply_to: The Reply-To field.
@@ -1659,6 +1687,7 @@ Unique POST Parameters:
 :data: The raw data if the upload type is "metadata".
 :description: Description of the raw data.
 :filedata: The raw data if the upload type is "file".
+:data_type: The type of raw data. Must match choices in the database.
 :link_id: The Link ID of an existing version of this raw data.
 :title: Title for the raw data.
 :tool_details: Details about the tool.
@@ -1771,6 +1800,15 @@ Unique POST Parameters:
 :filedata: The STIX document if uploading as a file using the 'file' upload_type.
 :xml: The STIX document if uploading as 'xml' using the 'xml' upload_type.
 :make_event: Wether to create an event within CRITS.  False if not present.  Set to True
+
+POST Response:
+
+Since it is possible to import multiple TLOs within a single standards document
+the format of the response is different from most others. You will find two fields
+called "imported" and "failed". The imported field is a list of dictionaries. Each
+dictionary contains the TLO type (type), ObjectId (id), and API details URL (url).
+The failed field is a list of dictionaries containing the TLO type (type) CRITs
+tried to create and a message (message) detailing what went wrong.
 
 
 Target API

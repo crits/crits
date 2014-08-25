@@ -461,25 +461,26 @@ phrase.</p>
 <li><a class="reference internal" href="#searching-using-get-parameters" id="id75">17.2&nbsp;&nbsp;&nbsp;Searching Using GET Parameters</a></li>
 <li><a class="reference internal" href="#limiting-get-request-results" id="id76">17.3&nbsp;&nbsp;&nbsp;Limiting GET Request Results</a></li>
 <li><a class="reference internal" href="#examples" id="id77">17.4&nbsp;&nbsp;&nbsp;Examples:</a></li>
-<li><a class="reference internal" href="#common-post-parameters" id="id78">17.5&nbsp;&nbsp;&nbsp;Common POST Parameters</a></li>
-<li><a class="reference internal" href="#campaign-api" id="id79">17.6&nbsp;&nbsp;&nbsp;Campaign API</a></li>
-<li><a class="reference internal" href="#certificate-api" id="id80">17.7&nbsp;&nbsp;&nbsp;Certificate API</a></li>
-<li><a class="reference internal" href="#domain-api" id="id81">17.8&nbsp;&nbsp;&nbsp;Domain API</a></li>
-<li><a class="reference internal" href="#email-api" id="id82">17.9&nbsp;&nbsp;&nbsp;Email API</a></li>
-<li><a class="reference internal" href="#event-api" id="id83">17.10&nbsp;&nbsp;&nbsp;Event API</a></li>
-<li><a class="reference internal" href="#indicator-api" id="id84">17.11&nbsp;&nbsp;&nbsp;Indicator API</a></li>
-<li><a class="reference internal" href="#indicator-activity-api" id="id85">17.12&nbsp;&nbsp;&nbsp;Indicator Activity API</a></li>
-<li><a class="reference internal" href="#ip-api" id="id86">17.13&nbsp;&nbsp;&nbsp;IP API</a></li>
-<li><a class="reference internal" href="#object-api" id="id87">17.14&nbsp;&nbsp;&nbsp;Object API</a></li>
-<li><a class="reference internal" href="#pcap-api" id="id88">17.15&nbsp;&nbsp;&nbsp;PCAP API</a></li>
-<li><a class="reference internal" href="#raw-data-api" id="id89">17.16&nbsp;&nbsp;&nbsp;Raw Data API</a></li>
-<li><a class="reference internal" href="#relationship-api" id="id90">17.17&nbsp;&nbsp;&nbsp;Relationship API</a></li>
-<li><a class="reference internal" href="#sample-api" id="id91">17.18&nbsp;&nbsp;&nbsp;Sample API</a></li>
-<li><a class="reference internal" href="#screenshot-api" id="id92">17.19&nbsp;&nbsp;&nbsp;Screenshot API</a></li>
-<li><a class="reference internal" href="#service-api" id="id93">17.20&nbsp;&nbsp;&nbsp;Service API</a></li>
-<li><a class="reference internal" href="#standards-api" id="id94">17.21&nbsp;&nbsp;&nbsp;Standards API</a></li>
-<li><a class="reference internal" href="#target-api" id="id95">17.22&nbsp;&nbsp;&nbsp;Target API</a></li>
-<li><a class="reference internal" href="#whois-api" id="id96">17.23&nbsp;&nbsp;&nbsp;WhoIs API</a></li>
+<li><a class="reference internal" href="#post-responses" id="id78">17.5&nbsp;&nbsp;&nbsp;POST Responses</a></li>
+<li><a class="reference internal" href="#common-post-parameters" id="id79">17.6&nbsp;&nbsp;&nbsp;Common POST Parameters</a></li>
+<li><a class="reference internal" href="#campaign-api" id="id80">17.7&nbsp;&nbsp;&nbsp;Campaign API</a></li>
+<li><a class="reference internal" href="#certificate-api" id="id81">17.8&nbsp;&nbsp;&nbsp;Certificate API</a></li>
+<li><a class="reference internal" href="#domain-api" id="id82">17.9&nbsp;&nbsp;&nbsp;Domain API</a></li>
+<li><a class="reference internal" href="#email-api" id="id83">17.10&nbsp;&nbsp;&nbsp;Email API</a></li>
+<li><a class="reference internal" href="#event-api" id="id84">17.11&nbsp;&nbsp;&nbsp;Event API</a></li>
+<li><a class="reference internal" href="#indicator-api" id="id85">17.12&nbsp;&nbsp;&nbsp;Indicator API</a></li>
+<li><a class="reference internal" href="#indicator-activity-api" id="id86">17.13&nbsp;&nbsp;&nbsp;Indicator Activity API</a></li>
+<li><a class="reference internal" href="#ip-api" id="id87">17.14&nbsp;&nbsp;&nbsp;IP API</a></li>
+<li><a class="reference internal" href="#object-api" id="id88">17.15&nbsp;&nbsp;&nbsp;Object API</a></li>
+<li><a class="reference internal" href="#pcap-api" id="id89">17.16&nbsp;&nbsp;&nbsp;PCAP API</a></li>
+<li><a class="reference internal" href="#raw-data-api" id="id90">17.17&nbsp;&nbsp;&nbsp;Raw Data API</a></li>
+<li><a class="reference internal" href="#relationship-api" id="id91">17.18&nbsp;&nbsp;&nbsp;Relationship API</a></li>
+<li><a class="reference internal" href="#sample-api" id="id92">17.19&nbsp;&nbsp;&nbsp;Sample API</a></li>
+<li><a class="reference internal" href="#screenshot-api" id="id93">17.20&nbsp;&nbsp;&nbsp;Screenshot API</a></li>
+<li><a class="reference internal" href="#service-api" id="id94">17.21&nbsp;&nbsp;&nbsp;Service API</a></li>
+<li><a class="reference internal" href="#standards-api" id="id95">17.22&nbsp;&nbsp;&nbsp;Standards API</a></li>
+<li><a class="reference internal" href="#target-api" id="id96">17.23&nbsp;&nbsp;&nbsp;Target API</a></li>
+<li><a class="reference internal" href="#whois-api" id="id97">17.24&nbsp;&nbsp;&nbsp;WhoIs API</a></li>
 </ul>
 </li>
 </ul>
@@ -2017,8 +2018,37 @@ curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/
 </dd>
 </dl>
 </div>
+<div class="section" id="post-responses">
+<h2><a class="toc-backref" href="#id78">17.5&nbsp;&nbsp;&nbsp;POST Responses</a></h2>
+<p>In most cases when submitting a POST to add new content to CRITs you will
+get a response in the following JSON format:</p>
+<blockquote>
+<div class="line-block">
+<div class="line">{</div>
+<div class="line-block">
+<div class="line">&quot;return_code&quot;: &lt;code&gt;,</div>
+<div class="line">&quot;type&quot;: &lt;type&gt;,</div>
+<div class="line">&quot;id&quot;: &lt;object_id&gt;,</div>
+<div class="line">&quot;message&quot;: &lt;message&gt;,</div>
+<div class="line">&quot;url&quot;: &lt;url&gt;</div>
+</div>
+<div class="line">}</div>
+</div>
+</blockquote>
+<p>The return_code is usually 0 for success, 1 for failure. Some API calls may
+wish to extend this to include other codes to represent other results. Those
+return codes should be listed in the appropriate sections below.</p>
+<p>In the event a new TLO was created or content was successfully added to an
+existing TLO, the TLO type and ID will be returned to you. In addition, a
+URL will be provided which can be used to query the API for the details of
+that TLO.</p>
+<p>If there is a message to give context, whether the request was successful or
+not, it will also be provided.</p>
+<p>In some situations the entire response may not look like this. Refer to the
+sections below for any special conditions you may need to look out for.</p>
+</div>
 <div class="section" id="common-post-parameters">
-<h2><a class="toc-backref" href="#id78">17.5&nbsp;&nbsp;&nbsp;Common POST Parameters</a></h2>
+<h2><a class="toc-backref" href="#id79">17.6&nbsp;&nbsp;&nbsp;Common POST Parameters</a></h2>
 <p>These parameters are frequently used across most top-level objects in CRITs.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2060,7 +2090,7 @@ curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/
 </table>
 </div>
 <div class="section" id="campaign-api">
-<h2><a class="toc-backref" href="#id79">17.6&nbsp;&nbsp;&nbsp;Campaign API</a></h2>
+<h2><a class="toc-backref" href="#id80">17.7&nbsp;&nbsp;&nbsp;Campaign API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/campaigns/</p>
@@ -2084,7 +2114,7 @@ curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/
 </table>
 </div>
 <div class="section" id="certificate-api">
-<h2><a class="toc-backref" href="#id80">17.7&nbsp;&nbsp;&nbsp;Certificate API</a></h2>
+<h2><a class="toc-backref" href="#id81">17.8&nbsp;&nbsp;&nbsp;Certificate API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/certificates/</p>
@@ -2114,7 +2144,7 @@ curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/
 </table>
 </div>
 <div class="section" id="domain-api">
-<h2><a class="toc-backref" href="#id81">17.8&nbsp;&nbsp;&nbsp;Domain API</a></h2>
+<h2><a class="toc-backref" href="#id82">17.9&nbsp;&nbsp;&nbsp;Domain API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/domains/</p>
@@ -2148,7 +2178,7 @@ curl -F &quot;<a class="reference external" href="mailto:filedata=&#64;/path/to/
 </table>
 </div>
 <div class="section" id="email-api">
-<h2><a class="toc-backref" href="#id82">17.9&nbsp;&nbsp;&nbsp;Email API</a></h2>
+<h2><a class="toc-backref" href="#id83">17.10&nbsp;&nbsp;&nbsp;Email API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/emails/</p>
@@ -2184,7 +2214,7 @@ only &quot;date&quot; is required:</p>
 </tr>
 <tr class="field"><th class="field-name">cc:</th><td class="field-body">The CC field.</td>
 </tr>
-<tr class="field"><th class="field-name">from:</th><td class="field-body">The From field.</td>
+<tr class="field"><th class="field-name">from_address:</th><td class="field-body">The From field.</td>
 </tr>
 <tr class="field"><th class="field-name">sender:</th><td class="field-body">The Sender field.</td>
 </tr>
@@ -2213,7 +2243,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="event-api">
-<h2><a class="toc-backref" href="#id83">17.10&nbsp;&nbsp;&nbsp;Event API</a></h2>
+<h2><a class="toc-backref" href="#id84">17.11&nbsp;&nbsp;&nbsp;Event API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/events/</p>
@@ -2239,7 +2269,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="indicator-api">
-<h2><a class="toc-backref" href="#id84">17.11&nbsp;&nbsp;&nbsp;Indicator API</a></h2>
+<h2><a class="toc-backref" href="#id85">17.12&nbsp;&nbsp;&nbsp;Indicator API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/indicators/</p>
@@ -2290,7 +2320,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="indicator-activity-api">
-<h2><a class="toc-backref" href="#id85">17.12&nbsp;&nbsp;&nbsp;Indicator Activity API</a></h2>
+<h2><a class="toc-backref" href="#id86">17.13&nbsp;&nbsp;&nbsp;Indicator Activity API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/indicator_activity/</blockquote>
@@ -2311,7 +2341,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="ip-api">
-<h2><a class="toc-backref" href="#id86">17.13&nbsp;&nbsp;&nbsp;IP API</a></h2>
+<h2><a class="toc-backref" href="#id87">17.14&nbsp;&nbsp;&nbsp;IP API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/ips/</p>
@@ -2338,7 +2368,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="object-api">
-<h2><a class="toc-backref" href="#id87">17.14&nbsp;&nbsp;&nbsp;Object API</a></h2>
+<h2><a class="toc-backref" href="#id88">17.15&nbsp;&nbsp;&nbsp;Object API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/objects/</blockquote>
@@ -2369,7 +2399,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="pcap-api">
-<h2><a class="toc-backref" href="#id88">17.15&nbsp;&nbsp;&nbsp;PCAP API</a></h2>
+<h2><a class="toc-backref" href="#id89">17.16&nbsp;&nbsp;&nbsp;PCAP API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/pcaps/</p>
@@ -2397,7 +2427,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="raw-data-api">
-<h2><a class="toc-backref" href="#id89">17.16&nbsp;&nbsp;&nbsp;Raw Data API</a></h2>
+<h2><a class="toc-backref" href="#id90">17.17&nbsp;&nbsp;&nbsp;Raw Data API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/raw_data/</p>
@@ -2431,6 +2461,8 @@ only &quot;date&quot; is required:</p>
 </tr>
 <tr class="field"><th class="field-name">filedata:</th><td class="field-body">The raw data if the upload type is &quot;file&quot;.</td>
 </tr>
+<tr class="field"><th class="field-name">data_type:</th><td class="field-body">The type of raw data. Must match choices in the database.</td>
+</tr>
 <tr class="field"><th class="field-name">link_id:</th><td class="field-body">The Link ID of an existing version of this raw data.</td>
 </tr>
 <tr class="field"><th class="field-name">title:</th><td class="field-body">Title for the raw data.</td>
@@ -2445,7 +2477,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="relationship-api">
-<h2><a class="toc-backref" href="#id90">17.17&nbsp;&nbsp;&nbsp;Relationship API</a></h2>
+<h2><a class="toc-backref" href="#id91">17.18&nbsp;&nbsp;&nbsp;Relationship API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/relationships/</blockquote>
@@ -2470,7 +2502,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="sample-api">
-<h2><a class="toc-backref" href="#id91">17.18&nbsp;&nbsp;&nbsp;Sample API</a></h2>
+<h2><a class="toc-backref" href="#id92">17.19&nbsp;&nbsp;&nbsp;Sample API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/samples/</p>
@@ -2515,7 +2547,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="screenshot-api">
-<h2><a class="toc-backref" href="#id92">17.19&nbsp;&nbsp;&nbsp;Screenshot API</a></h2>
+<h2><a class="toc-backref" href="#id93">17.20&nbsp;&nbsp;&nbsp;Screenshot API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/screenshots/</p>
@@ -2545,7 +2577,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="service-api">
-<h2><a class="toc-backref" href="#id93">17.20&nbsp;&nbsp;&nbsp;Service API</a></h2>
+<h2><a class="toc-backref" href="#id94">17.21&nbsp;&nbsp;&nbsp;Service API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/services/</blockquote>
@@ -2590,7 +2622,7 @@ only &quot;date&quot; is required:</p>
 field, &quot;log_level&quot; will be set to &quot;info&quot; if it is not provided.</p>
 </div>
 <div class="section" id="standards-api">
-<h2><a class="toc-backref" href="#id94">17.21&nbsp;&nbsp;&nbsp;Standards API</a></h2>
+<h2><a class="toc-backref" href="#id95">17.22&nbsp;&nbsp;&nbsp;Standards API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/standards/</blockquote>
@@ -2609,9 +2641,16 @@ field, &quot;log_level&quot; will be set to &quot;info&quot; if it is not provid
 </tr>
 </tbody>
 </table>
+<p>POST Response:</p>
+<p>Since it is possible to import multiple TLOs within a single standards document
+the format of the response is different from most others. You will find two fields
+called &quot;imported&quot; and &quot;failed&quot;. The imported field is a list of dictionaries. Each
+dictionary contains the TLO type (type), ObjectId (id), and API details URL (url).
+The failed field is a list of dictionaries containing the TLO type (type) CRITs
+tried to create and a message (message) detailing what went wrong.</p>
 </div>
 <div class="section" id="target-api">
-<h2><a class="toc-backref" href="#id95">17.22&nbsp;&nbsp;&nbsp;Target API</a></h2>
+<h2><a class="toc-backref" href="#id96">17.23&nbsp;&nbsp;&nbsp;Target API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/targets/</p>
@@ -2646,7 +2685,7 @@ field, &quot;log_level&quot; will be set to &quot;info&quot; if it is not provid
 </table>
 </div>
 <div class="section" id="whois-api">
-<h2><a class="toc-backref" href="#id96">17.23&nbsp;&nbsp;&nbsp;WhoIs API</a></h2>
+<h2><a class="toc-backref" href="#id97">17.24&nbsp;&nbsp;&nbsp;WhoIs API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/whois/</blockquote>

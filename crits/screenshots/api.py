@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -44,16 +45,21 @@ class ScreenshotResource(CRITsAPIResource):
         :param bundle: Bundle containing the information to create the
                        Screenshot.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
-        :raises BadRequest: If filedata is not provided or creation fails.
+        :returns: HttpResponse.
         """
 
         analyst = bundle.request.user.username
         type_ = bundle.data.get('upload_type', None)
+
+        content = {'return_code': 1,
+                   'type': 'Screenshot'}
+
         if not type_:
-            raise BadRequest('Must provide an upload type.')
+            content['message'] = 'Must provide an upload type.'
+            self.crits_response(content)
         if type_ not in ('ids', 'screenshot'):
-            raise BadRequest('Not a valid upload type.')
+            content['message'] = 'Not a valid upload type.'
+            self.crits_response(content)
         if type_ == 'ids':
             screenshot_ids = bundle.data.get('screenshot_ids', None)
             screenshot = None
@@ -61,7 +67,8 @@ class ScreenshotResource(CRITsAPIResource):
             screenshot = bundle.data.get('filedata', None)
             screenshot_ids = None
             if not screenshot:
-                raise BadRequest("Upload type of 'screenshot' but no file uploaded.")
+                content['message'] = "Upload type of 'screenshot' but no file uploaded."
+                self.crits_response(content)
 
         description = bundle.data.get('description', None)
         tags = bundle.data.get('tags', None)
@@ -71,14 +78,24 @@ class ScreenshotResource(CRITsAPIResource):
         oid = bundle.data.get('oid', None)
         otype = bundle.data.get('otype', None)
 
-        if not oid and not otype and not source and not (screenshot or screenshot_ids):
-            raise BadRequest("You must provide a valid set of information.")
+        if not oid or not otype or not source or not (screenshot or screenshot_ids):
+            content['message'] = "You must provide a valid set of information."
+            self.crits_response(content)
 
         result = add_screenshot(description, tags, source, method, reference,
                                 analyst, screenshot, screenshot_ids, oid, otype)
 
+        if result.get('message'):
+            content['message'] = result.get('message')
+
+        if result.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'screenshots',
+                                  'api_name': 'v1',
+                                  'pk': result.get('id')})
+            content['url'] = url
+            content['id'] = result.get('id')
+
         if result['success']:
-            return bundle
-        else:
-            err = result['message']
-            raise BadRequest('Unable to create screenshot from data. %s' % err)
+            content['return_code'] = 0
+        self.crits_response(content)

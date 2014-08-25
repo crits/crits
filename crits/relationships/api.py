@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -44,8 +45,7 @@ class RelationshipResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the relationship information.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
-        :raises BadRequest: If necessary data is not provided or creation fails.
+        :returns: HttpResponse.
 
         """
         analyst = bundle.request.user.username
@@ -56,12 +56,17 @@ class RelationshipResource(CRITsAPIResource):
         rel_type = bundle.data.get('rel_type', None)
         rel_date = bundle.data.get('rel_date', None)
 
+        content = {'return_code': 1,
+                   'type': left_type}
+
         if (not left_type
             or not left_id
             or not right_type
             or not right_id
             or not rel_type):
-            raise BadRequest('Need all of the relationship information.')
+            content['message'] = 'Need all of the relationship information.'
+            self.crits_response(content)
+
         result = forge_relationship(left_type=left_type,
                                     left_id=left_id,
                                     right_type=right_type,
@@ -70,7 +75,17 @@ class RelationshipResource(CRITsAPIResource):
                                     rel_date=rel_date,
                                     analyst=analyst,
                                     get_rels=False)
-        if not result['success']:
-            raise BadRequest(result['message'])
-        else:
-            return bundle
+
+        if result.get('message'):
+            content['message'] = result.get('message')
+
+        content['id'] = left_id
+        rname = self.resource_name_from_type(left_type)
+        url = reverse('api_dispatch_detail',
+                        kwargs={'resource_name': rname,
+                                'api_name': 'v1',
+                                'pk': left_id})
+        content['url'] = url
+        if result['success']:
+            content['return_code'] = 0
+        self.crits_response(content)

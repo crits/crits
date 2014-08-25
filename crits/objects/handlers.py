@@ -1,5 +1,3 @@
-import datetime
-
 from hashlib import md5
 
 from django.conf import settings
@@ -12,7 +10,6 @@ from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.data_tools import convert_string_to_bool
 from crits.core.handlers import get_object_types
 from crits.core.handsontable_tools import form_to_dict, get_field_from_label
-from crits.core.crits_mongoengine import EmbeddedCampaign
 from crits.core.mongo_tools import put_file, mongo_connector
 from crits.core.user_tools import get_user_organization
 from crits.indicators.indicator import Indicator
@@ -231,7 +228,6 @@ def add_new_handler_object(data, rowData, request, errors, is_validate_only=Fals
 def add_object(type_, oid, object_type, name, source, method,
                reference, analyst, value=None, file_=None,
                add_indicator=False, get_objects=True,
-               indicator_campaign=None, indicator_campaign_confidence=None,
                obj=None, is_sort_relationships=False,
                is_validate_only=False, is_validate_locally=False, cache={}):
     """
@@ -261,6 +257,11 @@ def add_object(type_, oid, object_type, name, source, method,
     :type add_indicator: bool
     :param get_objects: Return the formatted list of objects when completed.
     :type get_object: bool
+    :param obj: The CRITs top-level object we are adding objects to.
+                This is an optional parameter used mainly for performance
+                reasons (by not querying mongo if we already have the
+                top level-object).
+    :type obj: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     :param is_validate_only: Only validate, do not add.
     :type is_validate_only: bool
     :param is_validate_locally: Only validate, do not add.
@@ -268,11 +269,6 @@ def add_object(type_, oid, object_type, name, source, method,
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
     :type cache: dict
-    :param obj: The CRITs top-level object we are adding objects to.
-                This is an optional parameter used mainly for performance
-                reasons (by not querying mongo if we already have the
-                top level-object).
-    :type obj: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -344,38 +340,27 @@ def add_object(type_, oid, object_type, name, source, method,
                 if object_type != name:
                     object_type = "%s - %s" % (object_type, name)
 
+                campaign = obj.campaign if hasattr(obj, 'campaign') else None
                 ind_res = handle_indicator_ind(value,
                                                source,
                                                reference,
                                                object_type,
                                                analyst,
-                                               method=method,
+                                               method,
                                                add_domain=True,
-                                               campaign=indicator_campaign,
-                                               campaign_confidence=indicator_campaign_confidence,
+                                               campaign=campaign,
                                                cache=cache)
 
                 if ind_res['success']:
                     ind = ind_res['object']
-
-                    # Inherit campaigns from top level item when creating
-                    # an indicator from an object if no campaigns were specified
-                    if indicator_campaign == None and ind != None:
-                        for campaign in obj.campaign:
-                            ec = EmbeddedCampaign(name=campaign.name,
-                                                  confidence=campaign.confidence,
-                                                  description="",
-                                                  analyst=analyst,
-                                                  date=datetime.datetime.now())
-                            ind.add_campaign(ec)
-
-                        ind.save(username=analyst)
-
                     forge_relationship(left_class=obj,
                                        right_class=ind,
                                        rel_type="Related_To",
                                        analyst=analyst,
                                        get_rels=is_sort_relationships)
+                else:
+                    results['message'] = "Object was added, but failed to add Indicator." \
+                                         "<br>Error: " + ind_res.get('message')
 
             if is_sort_relationships == True:
                 if file_ or add_indicator:
@@ -391,10 +376,11 @@ def add_object(type_, oid, object_type, name, source, method,
         if (get_objects):
             results['objects'] = obj.sort_objects()
 
+        results['id'] = str(obj.id)
         return results
     except ValidationError, e:
         return {'success': False,
-                'message': e}
+                'message': str(e)}
 
 def delete_object_file(value):
     """
@@ -612,24 +598,26 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
         value = value.lower().strip()
         ind_type = ind_type.strip()
         source_name = source_name.strip()
-        
+
         create_indicator_result = {}
         ind_tlist = ind_type.split(" - ")
         if ind_tlist[0] == ind_tlist[1]:
             ind_type = ind_tlist[0]
         from crits.indicators.handlers import handle_indicator_ind
 
+        campaign = me.campaign if hasattr(me, 'campaign') else None
         create_indicator_result = handle_indicator_ind(value,
                                                        source_name,
                                                        reference,
                                                        ind_type,
                                                        analyst,
                                                        method,
-                                                       add_domain=True)
+                                                       add_domain=True,
+                                                       campaign=campaign)
 
         # Check if an error occurred, if it did then return the error result
         if create_indicator_result.get('success', True) == False:
-            return result
+            return create_indicator_result
 
         indicator = Indicator.objects(ind_type=ind_type,
                                       value=value).first()

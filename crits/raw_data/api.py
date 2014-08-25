@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
@@ -43,23 +44,30 @@ class RawDataResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the RawData.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
-        :raises BadRequest: If filedata is not provided or creation fails.
+        :returns: HttpResponse.
 
         """
 
         analyst = bundle.request.user.username
         type_ = bundle.data.get('upload_type', None)
+
+        content = {'return_code': 1,
+                   'type': 'RawData'}
+
         if not type_:
-            raise BadRequest('Must provide an upload type.')
+            content['message'] = 'Must provide an upload type.'
+            self.crits_response(content)
         if type_ not in ('metadata', 'file'):
-            raise BadRequest('Not a valid upload type.')
+            content['message'] = 'Not a valid upload type.'
+            self.crits_response(content)
+
         if type_ == 'metadata':
             data = bundle.data.get('data', None)
         elif type_ == 'file':
             file_ = bundle.data.get('filedata', None)
             if not file_:
-                raise BadRequest("Upload type of 'file' but no file uploaded.")
+                content['message'] = "Upload type of 'file' but no file uploaded."
+                self.crits_response(content)
             data = file_.read()
 
         source = bundle.data.get('source', None)
@@ -76,11 +84,13 @@ class RawDataResource(CRITsAPIResource):
         ticket = bundle.data.get('ticket', None)
 
         if not title:
-            raise BadRequest("Must provide a title.")
+            content['message'] = "Must provide a title."
+            self.crits_response(content)
         if not data_type:
-            raise BadRequest("Must provide a data type.")
+            content['message'] = "Must provide a data type."
+            self.crits_response(content)
 
-        status = handle_raw_data_file(data, source, analyst,
+        result = handle_raw_data_file(data, source, analyst,
                                       description, title, data_type,
                                       tool_name, tool_version, tool_details,
                                       link_id,
@@ -88,7 +98,16 @@ class RawDataResource(CRITsAPIResource):
                                       copy_rels=copy_rels,
                                       bucket_list=bucket_list,
                                       ticket=ticket)
-        if status['success']:
-            return bundle
-        else:
-            raise BadRequest(status['message'])
+
+        if result.get('message'):
+            content['message'] = result.get('message')
+        if result.get('_id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'raw_data',
+                                  'api_name': 'v1',
+                                  'pk': str(result.get('_id'))})
+            content['url'] = url
+            content['id'] = str(result.get('_id'))
+        if result['success']:
+            content['return_code'] = 0
+        self.crits_response(content)
