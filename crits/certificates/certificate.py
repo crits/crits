@@ -151,15 +151,13 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
         return ([obs], self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_obs, source):
+    def from_cybox(cls, cybox_obs):
         """
-        Convert a Cybox DefinedObject to a MongoEngine Indicator object.
+        Convert a Cybox DefinedObject to a MongoEngine Certificate object.
 
-        :param cybox_obs: The cybox object to create the indicator from.
+        :param cybox_obs: The cybox object to create the Certificate from.
         :type cybox_obs: :class:`cybox.core.Observable``
-        :param source: The source list for the Indicator.
-        :type source: list
-        :returns: :class:`crits.indicators.indicator.Indicator`
+        :returns: :class:`crits.certificates.certificate.Certificate`
         """
         cybox_object = cybox_obs.object_.properties
         if cybox_object.md5:
@@ -167,7 +165,7 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
             if db_obj:
                 return db_obj
 
-        cert = cls(source=source)
+        cert = cls()
         cert.md5 = cybox_object.md5
         cert.filename = cybox_object.file_name
         cert.filetype = cybox_object.file_format
@@ -177,4 +175,3 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
             if isinstance(obj.properties, Artifact):
                 cert.add_file_data(base64.b64decode(obj.properties.data))
         return cert
-

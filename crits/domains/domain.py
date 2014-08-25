@@ -207,23 +207,20 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
         return ([Observable(obj)], self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_obs, source):
+    def from_cybox(cls, cybox_obs):
         """
-        Convert a Cybox DefinedObject to a MongoEngine Indicator object.
+        Convert a Cybox DefinedObject to a MongoEngine Domain object.
 
-        :param cybox_obs: The cybox observable to create the indicator from.
+        :param cybox_obs: The cybox observable to create the Domain from.
         :type cybox_obs: :class:`cybox.core.Observable``
-        :param source: The source list for the Indicator.
-        :type source: list
-        :returns: :class:`crits.indicators.indicator.Indicator`
+        :returns: :class:`crits.domains.domain.Domain`
         """
         cybox_object = cybox_obs.object_.properties
         db_obj = Domain.objects(domain=str(cybox_object.value)).first()
         if db_obj:
             return db_obj
         else:
-            domain = cls(source=source)
+            domain = cls()
             domain.domain = str(cybox_object.value)
             domain.record_type = str(cybox_object.type_)
             return domain
-
