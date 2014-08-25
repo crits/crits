@@ -25,6 +25,19 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       vb.customize ["modifyvm", :id, "--memory", "2048"]
     end
 
+    # Install curl. Salt will use curl during initial bootstrap
+    # and operate properly behind HTTP proxies.
+    dev.vm.provision :shell do |shell|
+      shell.inline = "apt-get install -y curl"
+    end
+
+    # Add salt repository key via http, using curl, in order to properly
+    # fetch the key behind HTTP proxies.
+    dev.vm.provision :shell do |shell|
+      shell.inline = "curl 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4759FA960E27C0A6' | apt-key add -"
+    end
+
+
     dev.vm.provision :salt do |config|
       config.run_highstate = true
       config.minion_config = "salt/roots/salt/minion.conf"
