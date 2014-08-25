@@ -9,7 +9,7 @@ anyjson:
 
 cybox:
   pip.installed:
-    - name: cybox==2.0.0b6
+    - name: cybox==2.1.0.5
     - requires:
       - cmd: python-pip
 
@@ -27,13 +27,13 @@ defusedxml:
 
 django:
   pip.installed:
-    - name: Django==1.6.4
+    - name: Django==1.6.5
     - requires:
         - cmd: python-pip
 
 django-tastypie:
   pip.installed:
-    - name: django-tastypie==0.11.1
+    - name: django-tastypie==0.11.0
     - requires:
         - cmd: python-pip
 
@@ -90,3 +90,15 @@ stix:
     - name: stix==1.1.1.0
     - requires:
         - cmd: python-pip
+
+requests:
+  pip.installed:
+    - name: requests==1.1.0
+    - requires:
+      - cmd: python-pip
+
+celery:
+  pip.installed:
+    - name: celery==3.0.12
+    - requires:
+      - cmd: python-pip
