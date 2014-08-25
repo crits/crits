@@ -37,10 +37,11 @@ class ForgeRelationshipForm(forms.Form):
         super(ForgeRelationshipForm, self).__init__(*args, **kwargs)
         self.fields['forward_type'].choices = self.fields['reverse_type'].choices = [(c, c) for c in sorted(settings.CRITS_TYPES.iterkeys())]
         self.fields['forward_relationship'].choices = [(c, c) for c in get_relationship_types(True)]
-        self.fields['rel_confidence'].choices = [(1, '1 (Low)'), (2, '2'),
-                                                 (3, '3'), (4, '4'),
-                                                 (5, '5 (High')]
-        self.fields['rel_confidence'].initial = 1
+        self.fields['rel_confidence'].choices = [('unknown', 'unknown'),
+                                                 ('low', 'low'),
+                                                 ('medium', 'medium'),
+                                                 ('high', 'high')]
+        self.fields['rel_confidence'].initial = 'medium'
 
     def clean(self):
         cleaned_data = super(ForgeRelationshipForm, self).clean()

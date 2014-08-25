@@ -58,7 +58,7 @@ def forge_relationship(left_class=None, right_class=None,
                        right_type=None, right_id=None,
                        rel_type=None, rel_date=None,
                        analyst=None, rel_reason="N/A",
-                       rel_confidence=3, get_rels=False):
+                       rel_confidence='unknown', get_rels=False):
     """
     Forge a relationship between two top-level objects.
 
@@ -82,8 +82,8 @@ def forge_relationship(left_class=None, right_class=None,
     :type analyst: str
     :param rel_reason: The reason for the relationship.
     :type rel_reason: str
-    :param rel_confidence: The importance of the relationship.
-    :type rel_confidence: int
+    :param rel_confidence: The confidence of the relationship.
+    :type rel_confidence: str
     :param get_rels: Return the relationships after forging.
     :type get_rels: boolean
     :returns: dict with keys "success" (boolean) and "message" (str if
@@ -133,6 +133,7 @@ def forge_relationship(left_class=None, right_class=None,
 
     if results['success']:
         left_class.save(username=analyst)
+        left_class.reload()
         if get_rels:
             results['relationships'] = left_class.sort_relationships("%s" % analyst, meta=True)
     return results
@@ -311,10 +312,11 @@ def update_relationship_types(left_class=None, right_class=None,
 
 
 def update_relationship_confidences(left_class=None, right_class=None,
-                              left_type=None, left_id=None,
-                              right_type=None, right_id=None,
-                              rel_type=None, rel_date=None,
-                              new_type=None,analyst=None, new_confidence=3):
+                                    left_type=None, left_id=None,
+                                    right_type=None, right_id=None,
+                                    rel_type=None, rel_date=None,
+                                    new_type=None,analyst=None,
+                                    new_confidence='unknown'):
     """
     Update the relationship type between two top-level objects.
 
@@ -336,6 +338,8 @@ def update_relationship_confidences(left_class=None, right_class=None,
     :type rel_date: datetime.datetime
     :param analyst: The user updating this relationship.
     :type analyst: str
+    :param new_confidence: The new confidence level.
+    :type new_confidence: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
     if rel_date is None or rel_date == 'None':

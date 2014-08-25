@@ -1,7 +1,5 @@
 from django.test import SimpleTestCase
-from django.test.client import RequestFactory
 
-import crits.domains.views as views
 from crits.relationships.handlers import forge_relationship, update_relationship_reasons, update_relationship_confidences
 from crits.core.user import CRITsUser
 from crits.campaigns.campaign import Campaign
@@ -15,8 +13,8 @@ TUSER2_EMAIL = "asdfsaser@example.com"
 TCAMPAIGN1 = "Test_Campain1"
 TCAMPAIGN2 = "Test_Campain2"
 TRELATIONSHIP_TYPE = "Allocated"
-TRELATIONSHIP_CONFIDENCE = 5
-TRELATIONSHIP_NEW_CONFIDENCE = 2
+TRELATIONSHIP_CONFIDENCE = 'high'
+TRELATIONSHIP_NEW_CONFIDENCE = 'medium'
 TRELATIONSHIP_NEW_REASON = "Because I Said So"
 
 def prep_db():
@@ -67,11 +65,11 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
         self.user2 = CRITsUser.objects(username=TUSER2_NAME).first()
         self.campaign1 = Campaign.objects(name=TCAMPAIGN1).first()
         self.campaign2 = Campaign.objects(name=TCAMPAIGN2).first()
-        relationship = forge_relationship(left_class=self.campaign1,
-                                          right_class=self.campaign2,
-                                          rel_type=TRELATIONSHIP_TYPE,
-                                          analyst=self.user.username, 
-                                          rel_confidence=TRELATIONSHIP_CONFIDENCE)
+        forge_relationship(left_class=self.campaign1,
+                           right_class=self.campaign2,
+                           rel_type=TRELATIONSHIP_TYPE,
+                           analyst=self.user.username,
+                           rel_confidence=TRELATIONSHIP_CONFIDENCE)
     def tearDown(self):
         clean_db()
     def testCreateRelationship(self):
@@ -89,7 +87,7 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
         update_relationship_reasons(left_class=self.campaign1,
                                     right_class=self.campaign2,
                                     rel_type=TRELATIONSHIP_TYPE,
-                                    analyst=self.user2.username, 
+                                    analyst=self.user2.username,
                                     new_reason=TRELATIONSHIP_NEW_REASON)
         campaign1 = Campaign.objects.get(id=self.campaign1.id)
         campaign2 = Campaign.objects.get(id=self.campaign2.id)
@@ -105,7 +103,7 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
         update_relationship_confidences(left_class=self.campaign1,
                                     right_class=self.campaign2,
                                     rel_type=TRELATIONSHIP_TYPE,
-                                    analyst=self.user2.username, 
+                                    analyst=self.user2.username,
                                     new_confidence=TRELATIONSHIP_NEW_CONFIDENCE)
         self.assertEqual(relationship1.rel_confidence, TRELATIONSHIP_NEW_CONFIDENCE)
         self.assertEqual(relationship2.rel_confidence, TRELATIONSHIP_NEW_CONFIDENCE)

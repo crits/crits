@@ -34,8 +34,8 @@ function qtip_container_setup() {
     $(".relationship_reason_edit").click(function(e) {
     	changeRelationshipReason(e, $(this));
     });
-    
-    
+
+
     $('.qtip-body').click(function(e) {
       e.stopPropagation();
     });
@@ -69,10 +69,10 @@ function changeRelationshipReason(event, element) {
 	                }
 	            },
 	        });
-	        return value; 
+	        return value;
 	    }(value, settings, this);
-	}, 
-	{ 
+	},
+	{
 	    event:'reason_edit',
 	    type: 'textarea',
 	    data: function() {
@@ -80,7 +80,7 @@ function changeRelationshipReason(event, element) {
 	    },
 	    style:"display:inline",
 	    onblur:'submit',
-	});	
+	});
 	element.trigger('reason_edit');
 }
 
@@ -250,7 +250,7 @@ $(document).ready(function() {
     $(".scripted_relationship").click(function() {
         var guardian = $(this).closest("tr");
         var td = $(this).closest("td");
-        var new_confidence = Math.abs(guardian.attr('rConfidence'));
+        var new_confidence = guardian.attr('rConfidence');
         var data = {
             reverse_type: guardian.attr('rtype'),
             dest_id: guardian.attr('rvalue'),
@@ -271,15 +271,14 @@ $(document).ready(function() {
                 td.find(".scripted_relationship").remove();
                 new_confidence = new_confidence.toString().trim();
                 td.html(new_confidence);
-                td.addClass("relationship_confidence_edit");            
+                td.addClass("relationship_confidence_edit");
             },
         });
     });
     $(document).on('click', '.relationship_confidence_edit', function(e) {
         e.preventDefault();
         //this is to set the inital value of the select
-        if($.isNumeric($(this).html())) 
-            var currentConfidence = $(this).html();
+        var currentConfidence = $(this).html();
         $(this).editable(function(value, settings) {
               return function(value, settings, elem) {
                   var guardian = $(elem).parent();
@@ -293,37 +292,29 @@ $(document).ready(function() {
                   forge_date: guardian.attr('fdate'),
                   new_confidence: value,
                   };
-                if (value <1) 
-                    return currentConfidence;
-                else
-                    $.ajax({
-                        type: "POST",
-                        async: false,
-                        url: $(elem).attr('action'),
-                        data: data,
-                        success: function(data) {
-                            if (data.success) {
-                                guardian.attr('rConfidence', value);
-                                currentConfidence = value;
-                            } else {
-                                alert(data.message);
-                            }
-                        },
-                        error: function(data) {
-                            alert(data.message);
-                        }
-                    });
-                return value; 
+                  $.ajax({
+                      type: "POST",
+                      async: false,
+                      url: $(elem).attr('action'),
+                      data: data,
+                      success: function(data) {
+                          if (data.success) {
+                              guardian.attr('rConfidence', value);
+                              currentConfidence = value;
+                          }
+                      },
+                  });
+                  return value;
               }(value, settings, this);
-        }, 
-        { 
+        },
+        {
             event:'confidence_edit',
             type: 'select',
             width: '50px',
             data: function() {
-                if (currentConfidence < 1)
-                    currentConfidence = '';
-                var dataValues = "{0: '', 1:'1 (Low)', 2:'2', 3:'3', 4:'4', 5:'5 (High)', 'selected': '"+currentConfidence+"'}";
+                if (currentConfidence.length < 1)
+                    currentConfidence = 'unknown';
+                var dataValues = "{'unknown':'unknown', 'low':'low', 'medium':'medium', 'high':'high', 'selected': '"+currentConfidence+"'}";
                 return dataValues;
             },
             placeholder: currentConfidence,

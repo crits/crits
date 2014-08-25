@@ -92,7 +92,7 @@ def update_relationship_type(request):
         return render_to_response("error.html",
                                   {"error" : error },
                                   RequestContext(request))
-                                  
+
 @user_passes_test(user_can_view_data)
 def update_relationship_confidence(request):
     """
@@ -103,9 +103,10 @@ def update_relationship_confidence(request):
     :returns: :class:`django.http.HttpResponse`
     """
     if request.method == 'POST' and request.is_ajax():
-        new_confidence = int(request.POST['new_confidence'])
-        if (new_confidence<1):
-            result = {'success': False, 'message': 'Error updating relationship: You must choose a positive confidence level.'}
+        new_confidence = request.POST['new_confidence']
+        if new_confidence not in ('unknown', 'low', 'medium', 'high'):
+            result = {'success': False,
+                      'message': 'Unknown confidence level.'}
             return HttpResponse(json.dumps(result), mimetype="application/json")
         else:
             results = update_relationship_confidences(left_type=request.POST['my_type'],
@@ -116,7 +117,7 @@ def update_relationship_confidence(request):
                                                 rel_date=request.POST['relationship_date'],
                                                 analyst=request.user.username,
                                                 new_confidence=new_confidence)
-            
+
         if results['success']:
             message = "Successfully updated relationship: %s" % results['message']
             result = {'success': True, 'message': message}
@@ -128,11 +129,11 @@ def update_relationship_confidence(request):
         error = "Expected AJAX POST"
         return render_to_response("error.html",
                                   {"error" : error },
-                                  RequestContext(request))  
-        
-        
-                
-        
+                                  RequestContext(request))
+
+
+
+
 @user_passes_test(user_can_view_data)
 def update_relationship_reason(request):
     """
@@ -162,8 +163,8 @@ def update_relationship_reason(request):
         error = "Expected AJAX POST"
         return render_to_response("error.html",
                                   {"error" : error },
-                                  RequestContext(request))                               
-                                  
+                                  RequestContext(request))
+
 @user_passes_test(user_can_view_data)
 def update_relationship_date(request):
     """
