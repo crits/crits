@@ -31,10 +31,61 @@ function qtip_container_setup() {
     $(document).click(function() {
         $('.qtip-container').qtip('hide');
     });
+    $(".relationship_reason_edit").click(function(e) {
+    	changeRelationshipReason(e, $(this));
+    });
+    
+    
     $('.qtip-body').click(function(e) {
       e.stopPropagation();
     });
 }
+
+function changeRelationshipReason(event, element) {
+	event.preventDefault();
+	var currentReason = element.html().trim();
+	element.editable(function(value, settings) {
+	    return function(value, settings, elem) {
+	        var guardian = $(elem).parent();
+	        var data = {
+	                 reverse_type: guardian.attr('rtype'),
+	                 dest_id: guardian.attr('rvalue'),
+	                 my_type: guardian.attr('mtype'),
+	                 my_value: guardian.attr('mvalue'),
+	                 forward_relationship: guardian.attr('frel'),
+	                 relationship_date: guardian.attr('rdate'),
+	                 forge_date: guardian.attr('fdate'),
+	                 new_reason: value,
+	        };
+	        $.ajax({
+	            type: "POST",
+	            async: false,
+	            url: $(elem).attr('action'),
+	            data: data,
+	            success: function(data) {
+	                if (data.success) {
+	                     guardian.attr('new_reason', value);
+	                     currentReason = value;
+	                }
+	            },
+	        });
+	        return value; 
+	    }(value, settings, this);
+	}, 
+	{ 
+	    event:'reason_edit',
+	    type: 'textarea',
+	    data: function() {
+	        return currentReason;
+	    },
+	    style:"display:inline",
+	    onblur:'submit',
+	});	
+	element.trigger('reason_edit');
+}
+
+
+
 
 $(document).ready(function() {
     function more_relationship_types(e, widget) {
@@ -104,7 +155,7 @@ $(document).ready(function() {
             datatype: 'json',
             success: function(data) {
                 if (data.success) {
-                    $("#form-forge-relationship #id_rel_confidence").prop('selectedIndex',8);
+                    $("#form-forge-relationship #id_rel_confidence").prop('selectedIndex',0);
                     $("#form-forge-relationship #id_rel_reason").val('');
                     $("#form-forge-relationship #id_dest_id").val('');
                     $("#form-forge-relationship #id_relationship_date").val('');
@@ -280,49 +331,6 @@ $(document).ready(function() {
             onblur:'submit'
         });
         $(this).trigger('confidence_edit');
-    });
-    $(document).on('click', '.relationship_reason_edit', function(e) {
-        e.preventDefault();
-        var element = $(this);
-        var currentReason = element.html().trim();
-        $(this).editable(function(value, settings) {
-            return function(value, settings, elem) {
-                var guardian = $(elem).parent();
-                var data = {
-                         reverse_type: guardian.attr('rtype'),
-                         dest_id: guardian.attr('rvalue'),
-                         my_type: guardian.attr('mtype'),
-                         my_value: guardian.attr('mvalue'),
-                         forward_relationship: guardian.attr('frel'),
-                         relationship_date: guardian.attr('rdate'),
-                         forge_date: guardian.attr('fdate'),
-                         new_reason: value,
-                };
-                $.ajax({
-                    type: "POST",
-                    async: false,
-                    url: $(elem).attr('action'),
-                    data: data,
-                    success: function(data) {
-                        if (data.success) {
-                             guardian.attr('new_reason', value);
-                             currentReason = value;
-                        }
-                    },
-                });
-                return value; 
-            }(value, settings, this);
-        }, 
-        { 
-            event:'reason_edit',
-            type: 'textarea',
-            data: function() {
-                return currentReason;
-            },
-            style:'display:inline',
-            onblur:'submit',
-        });	
-        $(this).trigger('reason_edit');
     });
     $(document).on('click', '.relationship_type_edit', function(e) {
         e.preventDefault();

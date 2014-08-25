@@ -40,7 +40,7 @@ class ForgeRelationshipForm(forms.Form):
         self.fields['rel_confidence'].choices = [(1, '1 (Low)'), (2, '2'),
                                                  (3, '3'), (4, '4'),
                                                  (5, '5 (High')]
-        self.fields['rel_confidence'].initial = 3
+        self.fields['rel_confidence'].initial = 1
 
     def clean(self):
         cleaned_data = super(ForgeRelationshipForm, self).clean()

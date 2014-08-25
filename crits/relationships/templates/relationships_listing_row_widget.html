@@ -58,7 +58,6 @@
                     <th>Analyst</th>
                     <th>Date</th>
                     <th width="75px">Confidence</th>
-                    <th>Reason</th> 
                     <th width="50px"></th>
                 </tr>
             </thead>
@@ -135,13 +134,6 @@
                                 {{ rel.rel_confidence|absVal }}<span title="This relationship was produced by a script. Click to confirm" class="scripted_relationship ui-icon ui-icon-script"></span>
                             </td>
                         {% endif %}
-                        <td class='relationship_reason_edit' action="{% url 'crits.relationships.views.update_relationship_reason' %}">
-                            {% if rel.rel_reason != null and rel.rel_reason != '' %}
-                                {{ rel.rel_reason }}
-                            {% else %}
-                                N/A
-                            {% endif %}
-                        </td>
                         <td width="50px">
                             <div class="qtip-container ui-icon ui-icon-note" title="More Info..."></div>
                             <div class="qtip-body" mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}">
@@ -153,6 +145,16 @@
                                    {% endif %}
                                     </span><br />
                                 <b>Forge Date:</b> {{ rel.date|date:"Y-m-d" }}
+                                <div  mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}" rConfidence="{{ rel.rel_confidence }}" {% if rel_type == 'Indicator' %} data-value="{{rel.ind_value}}" data-type="{{rel.ind_type}}"{% endif %}>
+                                	<b>Reason: </b>
+                                	<div style="display:inline-block; min-width:200px" class='relationship_reason_edit' action="{% url 'crits.relationships.views.update_relationship_reason' %}">
+	                                	{% if rel.rel_reason != null and rel.rel_reason != '' %}
+			                                {{ rel.rel_reason }}
+			                            {% else %}
+			                                N/A
+			                            {% endif %}
+		                            </div>
+                                </div>
                             </div>
                             <div>
                             {% if rel_type == 'Campaign' %}
