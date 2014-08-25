@@ -10,42 +10,6 @@ class ConfigGeneralForm(forms.Form):
     """
 
     required_css_class = 'required'
-    allowed_hosts = forms.CharField(widget=forms.TextInput,
-                                    required=True,
-                                    initial="*",
-                                    help_text=('A list of strings representing'
-                                               ' the host/domain names that'
-                                               ' this site can serve.<br />'
-                                               '*Leaving this as * is BAD!<br />'
-                                               '*Requires a web server restart.'))
-    company_name = forms.CharField(widget=forms.TextInput, required=True)
-    classification = forms.CharField(widget=forms.TextInput, required=True)
-    crits_message = forms.CharField(widget=forms.Textarea(attrs={'cols': '25',
-                                                                'rows': '3'}),
-                               required=False,
-                               initial="Welcome to CRITs!",
-                               label="CRITS Message",
-                               help_text="Message to user on the Login page")
-    crits_email = forms.CharField(widget=forms.TextInput,
-                                  required=True,
-                                  label="CRITs Email",
-                                  help_text='*Requires a web server restart.')
-    crits_email_subject_tag = forms.CharField(widget=forms.TextInput,
-                                  required=False,
-                                  label="Text to tag on to every Email's subject line",
-                                  help_text='*Requires a web server restart.')
-    crits_email_end_tag = forms.BooleanField(initial=True,
-                               required=False,
-                               label="Tag on the end (default=True) or the beginning",
-                               help_text='*Requires a web server restart.')
-    crits_version = forms.CharField(widget=forms.TextInput,
-                                    required=True,
-                                    initial=settings.CRITS_VERSION,
-                                    label="CRITs Version")
-    git_repo_url = forms.CharField(widget=forms.TextInput,
-                                   required=False,
-                                   initial=settings.CRITS_VERSION,
-                                   label="Git Repo URL")
     debug = forms.BooleanField(initial=False,
                                required=False,
                                help_text='*Requires a web server restart.')
@@ -245,6 +209,10 @@ class ConfigCritsForm(forms.Form):
                                     required=True,
                                     initial=settings.CRITS_VERSION,
                                     label="CRITs Version")
+    git_repo_url = forms.CharField(widget=forms.TextInput,
+                                   required=False,
+                                   initial=settings.CRITS_VERSION,
+                                   label="Git Repo URL")
     instance_name = forms.CharField(widget=forms.TextInput, required=True)
     instance_url = forms.CharField(widget=forms.TextInput, required=True)
     def __init__(self, *args, **kwargs):
