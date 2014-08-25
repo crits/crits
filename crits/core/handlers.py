@@ -236,6 +236,9 @@ def add_releasability(type_, _id, name, analyst):
     """
 
     obj = class_from_id(type_, _id)
+    if not obj:
+        return {'success': False,
+                'message': "Could not find object."}
     try:
         obj.add_releasability(name=name, analyst=analyst, instances=[])
         obj.save(username=analyst)
@@ -262,6 +265,9 @@ def add_releasability_instance(type_, _id, name, analyst):
     """
 
     obj = class_from_id(type_, _id)
+    if not obj:
+        return {'success': False,
+                'message': "Could not find object."}
     try:
         date = datetime.datetime.now()
         ri = Releasability.ReleaseInstance(analyst=analyst, date=date)
@@ -292,6 +298,9 @@ def remove_releasability_instance(type_, _id, name, date, analyst):
     """
 
     obj = class_from_id(type_, _id)
+    if not obj:
+        return {'success': False,
+                'message': "Could not find object."}
     try:
         obj.remove_releasability_instance(name=name, date=date)
         obj.save(username=analyst)
@@ -318,6 +327,9 @@ def remove_releasability(type_, _id, name, analyst):
     """
 
     obj = class_from_id(type_, _id)
+    if not obj:
+        return {'success': False,
+                'message': "Could not find object."}
     try:
         obj.remove_releasability(name=name)
         obj.save(username=analyst)
@@ -3782,12 +3794,6 @@ def ticket_add(type_, id_, ticket):
     if not obj:
         return {'success': False, 'message': 'Could not find object.'}
 
-# XXX How is source__name_in handled via class_from_id ???
-#    obj = Indicator.objects(id=oid,
-#                                  source__name__in=sources).first()
-    if not obj:
-        return {'success': False,
-                'message': 'Could not find object'}
     try:
         obj.add_ticket(ticket['ticket_number'],
                              ticket['analyst'],
@@ -3817,12 +3823,6 @@ def ticket_update(type_, id_, ticket):
     if not obj:
         return {'success': False, 'message': 'Could not find object.'}
 
-# XXX How is source__name_in handled via class_from_id ???
-#    obj = Indicator.objects(id=oid,
-#                                  source__name__in=sources).first()
-    if not obj:
-        return {'success': False,
-                'message': 'Could not find Object'}
     try:
         obj.edit_ticket(ticket['analyst'],
                         ticket['ticket_number'],
@@ -3853,13 +3853,6 @@ def ticket_remove(type_, id_, date, analyst):
     if not obj:
         return {'success': False, 'message': 'Could not find object.'}
 
-# XXX How is source__name_in handled via class_from_id ???
-#    obj = Indicator.objects(id=oid,
-#                                  source__name__in=sources).first()
-#XXX ticket_remove didn't do that source__name thing, is there a reason?     obj = Indicator.objects(id=oid).first()
-    if not obj:
-        return {'success': False,
-                'message': 'Could not find object'}
     try:
         obj.delete_ticket(date)
         obj.save(username=analyst)
