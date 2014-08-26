@@ -216,13 +216,17 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
         return (observables, self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_obs, source):
+    def from_cybox(cls, cybox_obs):
         """
         Convert a Cybox DefinedObject to a MongoEngine Email object.
+
+        :param cybox_obs: The cybox object to create the Email from.
+        :type cybox_obs: :class:`cybox.core.Observable``
+        :returns: :class:`crits.emails.email.Email`
         """
 
         cybox_obj = cybox_obs.object_.properties
-        email = cls(source=source)
+        email = cls()
 
         if cybox_obj.header:
             email.from_address = str(cybox_obj.header.from_)
@@ -239,4 +243,3 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
             email.raw_header = str(cybox_obj.raw_header)
 
         return email
-

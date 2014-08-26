@@ -254,21 +254,18 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
         return ([obs], self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_obs, source):
+    def from_cybox(cls, cybox_obs):
         """
-        Convert a Cybox DefinedObject to a MongoEngine Indicator object.
+        Convert a Cybox DefinedObject to a MongoEngine RawData object.
 
-        :param cybox_obs: The cybox object to create the indicator from.
+        :param cybox_obs: The cybox object to create the RawData from.
         :type cybox_obs: :class:`cybox.core.Observable``
-        :param source: The source list for the Indicator.
-        :type source: list
-        :returns: :class:`crits.indicators.indicator.Indicator`
+        :returns: :class:`crits.raw_data.raw_data.RawData`
         """
         cybox_object = cybox_obs.object_.properties
-        rawdata = cls(source=source)
+        rawdata = cls()
         rawdata.add_file_data(cybox_object.data)
         db_obj = RawData.objects(md5=rawdata.md5).first()
         if db_obj:
             return db_obj
         return rawdata
-

@@ -144,14 +144,12 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
         return ([obs], self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_obs, source):
+    def from_cybox(cls, cybox_obs):
         """
         Convert a Cybox Artifact to a CRITs PCAP object.
 
         :param cybox_obs: The cybox object to create the PCAP from.
         :type cybox_obs: :class:`cybox.core.Observable`
-        :param source: The source list for the PCAP.
-        :type source: list
         :returns: :class:`crits.pcaps.pcap.PCAP`
         """
         cybox_object = cybox_obs.object_.properties
@@ -159,7 +157,7 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
             db_obj = PCAP.objects(md5=cybox_object.md5).first()
             if db_obj:
                 return db_obj
-        pcap = cls(source=source)
+        pcap = cls()
         pcap.description = str(cybox_obs.description)
         pcap.md5 = cybox_object.md5
         pcap.filename = str(cybox_object.file_name)

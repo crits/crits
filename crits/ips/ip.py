@@ -90,14 +90,12 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
         return ([Observable(obj)], self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_obs, source):
+    def from_cybox(cls, cybox_obs):
         """
         Convert a Cybox Address to a CRITs IP object.
 
         :param cybox_obs: The cybox object to create the IP from.
         :type cybox_obs: :class:`cybox.core.Observable`
-        :param source: The source list for the IP.
-        :type source: list
         :returns: :class:`crits.ips.ip.IP`
         """
         cybox_object = cybox_obs.object_.properties
@@ -107,7 +105,7 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
         if db_obj:
             return db_obj
 
-        ip = cls(source=source)
+        ip = cls()
         ip.ip = str(cybox_object.address_value)
         ip.ip_type = iptype
         return ip

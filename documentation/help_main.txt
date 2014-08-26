@@ -1709,6 +1709,11 @@ Unique POST Parameters:
 :right_id: The ObjectId of the second top-level object in the relationship.
 :rel_type: The relationship type.
 :rel_date: The date the relationship applies (optional).
+:rel_confidence: The confidence level for this relationship.
+
+- Must be one of 'unknown', 'low', 'medium', or 'high'.
+
+:rel_reason: A reason for this relationship, confidence level, etc.
 
 Sample API
 -------------------------------------------

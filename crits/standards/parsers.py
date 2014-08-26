@@ -101,8 +101,9 @@ class STIXParser():
         self.source.instances.append(self.source_instance)
 
         if make_event:
-            event = Event.from_stix(stix_package=self.package, source=[self.source])
+            event = Event.from_stix(stix_package=self.package)
             try:
+                event.add_source(self.source)
                 event.save(username=self.source_instance.analyst)
                 self.imported.append((Event._meta['crits_type'], event))
             except Exception, e:
@@ -144,7 +145,7 @@ class STIXParser():
             for observable in indicator.observables: # get each observable from indicator (expecting only 1)
                 try: # create CRITs Indicator from observable
                     item = observable.object_.properties
-                    obj = Indicator.from_cybox(item, [self.source])
+                    obj = Indicator.from_cybox(item)
                     obj.add_source(self.source)
                     obj.save(username=self.source_instance.analyst)
                     self.imported.append((Indicator._meta['crits_type'], obj))
@@ -165,7 +166,7 @@ class STIXParser():
             try: # try to create CRITs object from observable
                 item = obs.object_.properties
                 cls = self.get_crits_type(item) # determine which CRITs class matches
-                obj = cls.from_cybox(obs, [self.source])
+                obj = cls.from_cybox(obs)
                 obj.add_source(self.source)
                 obj.save(username=self.source_instance.analyst)
                 self.imported.append((cls._meta['crits_type'], obj)) # use class to parse object
