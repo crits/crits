@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
@@ -55,6 +54,8 @@ class RelationshipResource(CRITsAPIResource):
         right_id = bundle.data.get('right_id', None)
         rel_type = bundle.data.get('rel_type', None)
         rel_date = bundle.data.get('rel_date', None)
+        rel_confidence = bundle.data.get('rel_confidence', 'unknown')
+        rel_reason = bundle.data.get('rel_reason', 'N/A')
 
         content = {'return_code': 1,
                    'type': left_type}
@@ -67,6 +68,10 @@ class RelationshipResource(CRITsAPIResource):
             content['message'] = 'Need all of the relationship information.'
             self.crits_response(content)
 
+        if rel_confidence not in ('unknown', 'low', 'medium', 'high'):
+            content['message'] = 'Bad relationship confidence.'
+            self.crits_response(content)
+
         result = forge_relationship(left_type=left_type,
                                     left_id=left_id,
                                     right_type=right_type,
@@ -74,6 +79,8 @@ class RelationshipResource(CRITsAPIResource):
                                     rel_type=rel_type,
                                     rel_date=rel_date,
                                     analyst=analyst,
+                                    rel_confidence=rel_confidence,
+                                    rel_reason=rel_reason,
                                     get_rels=False)
 
         if result.get('message'):

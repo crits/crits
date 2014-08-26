@@ -1170,7 +1170,8 @@ class EmbeddedRelationship(EmbeddedDocument, CritsDocumentFormatter):
     date = CritsDateTimeField(default=datetime.datetime.now)
     rel_type = StringField(db_field="type", required=True)
     analyst = StringField()
-
+    rel_reason = StringField()
+    rel_confidence = StringField(default='unknown', required=True)
 
 class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                           CritsSchemaDocument, CritsStatusDocument, EmbeddedTickets):
@@ -1566,7 +1567,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         return o_dict
 
     def add_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                         rel_date=None, analyst=None, get_rels=False):
+                         rel_date=None, analyst=None, rel_confidence='unknown',
+                         rel_reason='N/A', get_rels=False):
         """
         Add a relationship to this top-level object. If rel_item is provided it
         will be used, otherwise rel_id and type_ must be provided.
@@ -1584,6 +1586,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type rel_date: datetime.datetime
         :param analyst: The user forging this relationship.
         :type analyst: str
+        :param rel_confidence: The confidence of the relationship.
+        :type rel_confidence: str
+        :param rel_reason: The reason for the relationship.
+        :type rel_reason: str
         :param get_rels: Return the relationships after forging.
         :type get_rels: boolean
         :returns: dict with keys "success" (boolean) and "message" (str if
@@ -1619,6 +1625,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             my_rel.date = date
             my_rel.relationship_date = rel_date
             my_rel.object_id = rel_item.id
+            my_rel.rel_confidence = rel_confidence
+            my_rel.rel_reason = rel_reason
 
             # setup the relationship for them
             their_rel = EmbeddedRelationship()
@@ -1628,6 +1636,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             their_rel.date = date
             their_rel.relationship_date = rel_date
             their_rel.object_id = self.id
+            their_rel.rel_confidence = rel_confidence
+            their_rel.rel_reason = rel_reason
 
             # check for existing relationship before
             # blindly adding them
@@ -1673,9 +1683,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             return {'success': False,
                     'message': 'Need valid object and relationship type'}
 
-    def _modify_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                             rel_date=None, new_type=None, new_date=None,
-                             modification=None, analyst=None):
+    def _modify_relationship(self, rel_item=None, rel_id=None, type_=None,
+                             rel_type=None, rel_date=None, new_type=None,
+                             new_date=None, new_confidence='unknown',
+                             new_reason="N/A", modification=None, analyst=None):
         """
         Modify a relationship to this top-level object. If rel_item is provided it
         will be used, otherwise rel_id and type_ must be provided.
@@ -1695,14 +1706,17 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type new_type: str
         :param new_date: The new relationship date.
         :type new_date: datetime.datetime
+        :param new_confidence: The new confidence.
+        :type new_confidence: str
+        :param new_reason: The new reason.
+        :type new_reason: str
         :param modification: What type of modification this is ("type",
-                             "delete", "date").
+                             "delete", "date", "confidence").
         :type modification: str
         :param analyst: The user forging this relationship.
         :type analyst: str
         :returns: dict with keys "success" (boolean) and "message" (str)
         """
-
         got_rel = True
         if not rel_item:
             got_rel = False
@@ -1741,6 +1755,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             self.relationships[c].relationship = new_type
                         elif modification == "date":
                             self.relationships[c].relationship_date = new_date
+                        elif modification == "confidence":
+                            self.relationships[c].rel_confidence = new_confidence
+                        elif modification == "reason":
+                            self.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
                             del self.relationships[c]
                 else:
@@ -1751,6 +1769,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             self.relationships[c].relationship = new_type
                         elif modification == "date":
                             self.relationships[c].relationship_date = new_date
+                        elif modification == "confidence":
+                            self.relationships[c].rel_confidence = new_confidence
+                        elif modification == "reason":
+                            self.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
                             del self.relationships[c]
             for c, r in enumerate(rel_item.relationships):
@@ -1763,6 +1785,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             rel_item.relationships[c].relationship = new_rev_type
                         elif modification == "date":
                             rel_item.relationships[c].relationship_date = new_date
+                        elif modification == "confidence":
+                            rel_item.relationships[c].rel_confidence = new_confidence
+                        elif modification == "reason":
+                            rel_item.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
                             del rel_item.relationships[c]
                 else:
@@ -1773,6 +1799,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             rel_item.relationships[c].relationship = new_rev_type
                         elif modification == "date":
                             rel_item.relationships[c].relationship_date = new_date
+                        elif modification == "confidence":
+                            rel_item.relationships[c].rel_confidence = new_confidence
+                        elif modification == "reason":
+                            rel_item.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
                             del rel_item.relationships[c]
             if not got_rel:
@@ -1846,6 +1876,66 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                              type_=type_, rel_type=rel_type,
                              rel_date=rel_date, new_type=new_type,
                              modification="type", analyst=analyst)
+
+    def edit_relationship_confidence(self, rel_item=None, rel_id=None,
+                                     type_=None, rel_type=None, rel_date=None,
+                                     new_confidence='unknown', analyst=None):
+        """
+        Modify a relationship type for a relationship to this top-level object.
+        If rel_item is provided it will be used, otherwise rel_id and type_ must
+        be provided.
+
+        :param rel_item: The top-level object to relate to.
+        :type rel_item: class which inherits from
+                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        :param rel_id: The ObjectId of the top-level object to relate to.
+        :type rel_id: str
+        :param type_: The type of top-level object to relate to.
+        :type type_: str
+        :param rel_type: The type of relationship.
+        :type rel_type: str
+        :param rel_date: The date this relationship applies.
+        :type rel_date: datetime.datetime
+        :param new_confidence: The new confidence of the relationship.
+        :type new_confidence: str
+        :param analyst: The user editing this relationship.
+        :type analyst: str
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
+                             type_=type_, rel_type=rel_type,
+                             rel_date=rel_date, new_confidence=new_confidence,
+                             modification="confidence", analyst=analyst)
+
+    def edit_relationship_reason(self, rel_item=None, rel_id=None, type_=None,
+                                 rel_type=None, rel_date=None, new_reason="N/A",
+                                 analyst=None):
+        """
+        Modify a relationship type for a relationship to this top-level object.
+        If rel_item is provided it will be used, otherwise rel_id and type_ must
+        be provided.
+
+        :param rel_item: The top-level object to relate to.
+        :type rel_item: class which inherits from
+                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        :param rel_id: The ObjectId of the top-level object to relate to.
+        :type rel_id: str
+        :param type_: The type of top-level object to relate to.
+        :type type_: str
+        :param rel_type: The type of relationship.
+        :type rel_type: str
+        :param rel_date: The date this relationship applies.
+        :type rel_date: datetime.datetime
+        :param new_confidence: The new confidence of the relationship.
+        :type new_confidence: int
+        :param analyst: The user editing this relationship.
+        :type analyst: str
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
+                             type_=type_, rel_type=rel_type,
+                             rel_date=rel_date, new_reason=new_reason,
+                             modification="reason", analyst=analyst)
 
     def delete_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
                             rel_date=None, analyst=None, *args, **kwargs):

@@ -204,17 +204,22 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         return (observables, self.releasability)
 
     @classmethod
-    def from_cybox(cls, cybox_obs, source):
+    def from_cybox(cls, cybox_obs):
         """
-            Convert a Cybox DefinedObject to a MongoEngine Sample object.
+        Convert a Cybox DefinedObject to a MongoEngine Sample object.
+
+        :param cybox_obs: The cybox object to create the Sample from.
+        :type cybox_obs: :class:`cybox.core.Observable``
+        :returns: :class:`crits.samples.sample.Sample`
         """
+
         cybox_object = cybox_obs.object_.properties
         if cybox_object.md5:
             db_obj = Sample.objects(md5=cybox_object.md5).first()
             if db_obj: # if a sample with md5 already exists
                 return db_obj # don't modify, just return
 
-        sample = cls(source=source) # else, start creating new sample record
+        sample = cls() # else, start creating new sample record
         sample.filename = str(cybox_object.file_name)
         sample.size = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
         for hash_ in cybox_object.hashes:
