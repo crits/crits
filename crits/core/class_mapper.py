@@ -41,7 +41,7 @@ def class_from_id(type_, _id):
 
     # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
     # the queries below will raise a ValidationError exception.
-    if not ObjectId.is_valid(_id):
+    if not ObjectId.is_valid(_id.decode('utf8')):
         return None
 
     if type_ == 'Backdoor':
@@ -118,10 +118,13 @@ def class_from_value(type_, value):
     from crits.screenshots.screenshot import Screenshot
     from crits.targets.target import Target
 
+    # Make sure value is a string...
+    value = str(value)
+
     # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
     # the queries below will raise a ValidationError exception.
     if (type_ in ['Comment', 'Email', 'Event', 'Indicator', 'Screenshot'] and
-       not ObjectId.is_valid(value)):
+       not ObjectId.is_valid(value.decode('utf8'))):
         return None
 
     if type_ == 'Campaign':
