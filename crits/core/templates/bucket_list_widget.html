@@ -17,7 +17,7 @@
                 update_buckets(my_tags);
             },
             onTagClicked: function(event, ui) {
-                var url = "{% url 'crits.core.views.global_search_listing' %}?search_type=bucket_list&force_full=1&search=Search&q=" + ui.tagLabel
+                var url = "{% url 'crits.core.views.global_search_listing' %}?search_type=bucket_list&force_full=1&search=Search&q=" + encodeURIComponent(ui.tagLabel);
                 window.location.href = url;
             },
             autocomplete: {
