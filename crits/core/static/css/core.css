@@ -201,3 +201,13 @@ kbd.light {
 A.noclick {
     cursor: default;
 }
+
+.campaignWidth {
+	width:150px;
+}   
+
+.relationship_confidence_edit {
+	width:75px;
+}  
+
+
