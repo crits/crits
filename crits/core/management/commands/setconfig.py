@@ -58,9 +58,9 @@ class Command(BaseCommand):
            classification:\t\t<string> (ex: "unclassified")
            company_name:\t\t<string>
            create_unknown_user:\t\t<boolean> (ex: True, true, yes, or 1)
-           crits_message:\t\t\t<Login screen message string>
+           crits_message:\t\t<Login screen message string>
            crits_email:\t\t\t<email address string>
-           crits_email_subject_tag:\t\t<string>
+           crits_email_subject_tag:\t<string>
            crits_email_end_tag:\t\t<boolean> (ex: True, true, yes, or 1)
            crits_version:\t\t<X.X.X string>
            debug:\t\t\t<boolean> (ex: True, true, yes, or 1)
@@ -68,6 +68,7 @@ class Command(BaseCommand):
            email_host:\t\t\t<string>
            email_port:\t\t\t<string>
            enable_api:\t\t\t<boolean> (ex: True, true, yes, or 1)
+           git_repo_url:\t\t<string>
            http_proxy:\t\t\t<string>
            instance_name:\t\t<string>
            instance_url:\t\t<string>
