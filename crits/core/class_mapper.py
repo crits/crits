@@ -1,4 +1,4 @@
-from mongoengine.base import ValidationError
+from bson.objectid import ObjectId
 
 def class_from_id(type_, _id):
     """
@@ -40,57 +40,56 @@ def class_from_id(type_, _id):
     # make sure it's a string
     _id = str(_id)
 
-    try:
-        if type_ == 'Backdoor':
-            return Backdoor.objects(id=_id).first()
-        if type_ == 'Campaign':
-            return Campaign.objects(id=_id).first()
-        elif type_ == 'Certificate':
-            return Certificate.objects(id=_id).first()
-        elif type_ == 'Comment':
-            return Comment.objects(id=_id).first()
-        elif type_ == 'Domain':
-            return Domain.objects(id=_id).first()
-        elif type_ == 'Email':
-            return Email.objects(id=_id).first()
-        elif type_ == 'Event':
-            return Event.objects(id=_id).first()
-        elif type_ == 'EventType':
-            return EventType.objects(id=_id).first()
-        elif type_ == 'Exploit':
-            return Exploit.objects(id=_id).first()
-        elif type_ == 'Indicator':
-            return Indicator.objects(id=_id).first()
-        elif type_ == 'IndicatorAction':
-            return IndicatorAction.objects(id=_id).first()
-        elif type_ == 'IP':
-            return IP.objects(id=_id).first()
-        elif type_ == 'ObjectType':
-            return ObjectType.objects(id=_id).first()
-        elif type_ == 'PCAP':
-            return PCAP.objects(id=_id).first()
-        elif type_ == 'RawData':
-            return RawData.objects(id=_id).first()
-        elif type_ == 'RawDataType':
-            return RawDataType.objects(id=_id).first()
-        elif type_ == 'RelationshipType':
-            return RelationshipType.objects(id=_id).first()
-        elif type_ == 'Sample':
-            return Sample.objects(id=_id).first()
-        elif type_ == 'SourceAccess':
-            return SourceAccess.objects(id=_id).first()
-        elif type_ == 'Screenshot':
-            return Screenshot.objects(id=_id).first()
-        elif type_ == 'Target':
-            return Target.objects(id=_id).first()
-        elif type_ == 'UserRole':
-            return UserRole.objects(id=_id).first()
-        else:
-            return None
-    except ValidationError:
-        # Mongoengine tries to verify that _id is a valid ObjectID.
-        # If it isn't it will raise this exception. This is most commonly
-        # seen by passing invalid IDs in API requests.
+    # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
+    # the queries below will raise a ValidationError exception.
+    if not ObjectId.is_valid(_id.decode('utf8')):
+        return None
+
+    if type_ == 'Backdoor':
+        return Backdoor.objects(id=_id).first()
+    if type_ == 'Campaign':
+        return Campaign.objects(id=_id).first()
+    elif type_ == 'Certificate':
+        return Certificate.objects(id=_id).first()
+    elif type_ == 'Comment':
+        return Comment.objects(id=_id).first()
+    elif type_ == 'Domain':
+        return Domain.objects(id=_id).first()
+    elif type_ == 'Email':
+        return Email.objects(id=_id).first()
+    elif type_ == 'Event':
+        return Event.objects(id=_id).first()
+    elif type_ == 'EventType':
+        return EventType.objects(id=_id).first()
+    elif type_ == 'Exploit':
+        return Exploit.objects(id=_id).first()
+    elif type_ == 'Indicator':
+        return Indicator.objects(id=_id).first()
+    elif type_ == 'IndicatorAction':
+        return IndicatorAction.objects(id=_id).first()
+    elif type_ == 'IP':
+        return IP.objects(id=_id).first()
+    elif type_ == 'ObjectType':
+        return ObjectType.objects(id=_id).first()
+    elif type_ == 'PCAP':
+        return PCAP.objects(id=_id).first()
+    elif type_ == 'RawData':
+        return RawData.objects(id=_id).first()
+    elif type_ == 'RawDataType':
+        return RawDataType.objects(id=_id).first()
+    elif type_ == 'RelationshipType':
+        return RelationshipType.objects(id=_id).first()
+    elif type_ == 'Sample':
+        return Sample.objects(id=_id).first()
+    elif type_ == 'SourceAccess':
+        return SourceAccess.objects(id=_id).first()
+    elif type_ == 'Screenshot':
+        return Screenshot.objects(id=_id).first()
+    elif type_ == 'Target':
+        return Target.objects(id=_id).first()
+    elif type_ == 'UserRole':
+        return UserRole.objects(id=_id).first()
+    else:
         return None
 
 def class_from_value(type_, value):
@@ -121,34 +120,31 @@ def class_from_value(type_, value):
     from crits.screenshots.screenshot import Screenshot
     from crits.targets.target import Target
 
+    # Make sure value is a string...
+    value = str(value)
+
+    # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
+    # the queries below will raise a ValidationError exception.
+    if (type_ in ['Comment', 'Email', 'Event', 'Indicator', 'Screenshot'] and
+       not ObjectId.is_valid(value.decode('utf8'))):
+        return None
+
     if type_ == 'Campaign':
         return Campaign.objects(name=value).first()
     elif type_ == 'Certificate':
         return Certificate.objects(md5=value).first()
     elif type_ == 'Comment':
-        try:
-            return Comment.objects(id=value).first()
-        except ValidationError:
-            return None
+        return Comment.objects(id=value).first()
     elif type_ == 'Disassembly':
         return Disassembly.objects(md5=value).first()
     elif type_ == 'Domain':
         return Domain.objects(domain=value).first()
     elif type_ == 'Email':
-        try:
-            return Email.objects(id=value).first()
-        except ValidationError:
-            return None
+        return Email.objects(id=value).first()
     elif type_ == 'Event':
-        try:
-            return Event.objects(id=value).first()
-        except ValidationError:
-            return None
+        return Event.objects(id=value).first()
     elif type_ == 'Indicator':
-        try:
-            return Indicator.objects(id=value).first()
-        except ValidationError:
-            return None
+        return Indicator.objects(id=value).first()
     elif type_ == 'IP':
         return IP.objects(ip=value).first()
     elif type_ == 'PCAP':
@@ -158,10 +154,7 @@ def class_from_value(type_, value):
     elif type_ == 'Sample':
         return Sample.objects(md5=value).first()
     elif type_ == 'Screenshot':
-        try:
-            return Screenshot.objects(id=value).first()
-        except ValidationError:
-            return None
+        return Screenshot.objects(id=value).first()
     elif type_ == 'Target':
         return Target.objects(email_address=value).first()
     else:

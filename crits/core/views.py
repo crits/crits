@@ -973,9 +973,22 @@ def base_context(request):
     company_name = getattr(crits_config,
                            'company_name',
                            settings.COMPANY_NAME)
-    crits_version = getattr(crits_config,
-                            'crits_version',
-                            settings.CRITS_VERSION)
+    crits_version = settings.CRITS_VERSION
+    git_branch = getattr(crits_config,
+                         'git_branch',
+                         settings.GIT_BRANCH)
+    git_hash = getattr(crits_config,
+                       'git_hash',
+                        settings.GIT_HASH)
+    git_hash_long = getattr(crits_config,
+                       'git_hash_long',
+                        settings.GIT_HASH_LONG)
+    git_repo_url = getattr(crits_config,
+                            'git_repo_url',
+                            settings.GIT_REPO_URL)
+    hide_git_hash = getattr(crits_config,
+                      'hide_git_hash',
+                      settings.HIDE_GIT_HASH)
     splunk_url = getattr(crits_config,
                          'splunk_search_url',
                          settings.SPLUNK_SEARCH_URL)
@@ -989,6 +1002,11 @@ def base_context(request):
     base_context['instance_name'] = instance_name
     base_context['company_name'] = company_name
     base_context['crits_version'] = crits_version
+    if git_repo_url:
+        base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long+"'>"+git_branch+':'+git_hash+"</a>"
+    else:
+        base_context['git_repo_link'] = "%s:%s" % (git_branch, git_hash)
+    base_context['hide_git_hash'] = hide_git_hash
     base_context['splunk_search_url'] = splunk_url
     base_context['mongo_database'] = mongo_database
     base_context['secure_cookie'] = secure_cookie

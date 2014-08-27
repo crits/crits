@@ -1,24 +1,24 @@
 /* expand/collapse */
 
 table .collapsible {
-	padding: 0 0 3px 0;
+    padding: 0 0 3px 0;
 }
 
 table.chart tbody td.collapsible a { /*, th a#toggleAll {*/
-	margin: 2px;
-	display: block;
-	width: 15px;
-	height: 15px;
-	outline: 0;
-	/*background: url(/css/images/ui-icons_222222_256x240.png) no-repeat -32px -16px;  */
+    margin: 2px;
+    display: block;
+    width: 15px;
+    height: 15px;
+    outline: 0;
+    /*background: url(/css/images/ui-icons_222222_256x240.png) no-repeat -32px -16px;  */
 }
 
 table.chart tbody td.collapsible a {
-	margin: 2px;
-	display: block;
-	width: 15px;
-	height: 15px;
-	outline: 0;
+    margin: 2px;
+    display: block;
+    width: 15px;
+    height: 15px;
+    outline: 0;
 /*  background: url(/css/images/ui-icons_222222_256x240.png) no-repeat -64px -16px;  */
 }
 
@@ -202,12 +202,20 @@ A.noclick {
     cursor: default;
 }
 
+.customQtip {
+    background-color: #6f6f6f;
+    border-color: #464646;
+    border-radius:5px;
+}
+
+.customQtip a{
+    color:white;
+}
+
 .campaignWidth {
-	width:150px;
-}   
+    width:150px;
+}
 
 .relationship_confidence_edit {
-	width:75px;
-}  
-
-
+    width:75px;
+}

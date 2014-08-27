@@ -10,7 +10,6 @@ class ConfigGeneralForm(forms.Form):
     """
 
     required_css_class = 'required'
-    
     debug = forms.BooleanField(initial=False,
                                required=False,
                                help_text='*Requires a web server restart.')
@@ -210,6 +209,10 @@ class ConfigCritsForm(forms.Form):
                                     required=True,
                                     initial=settings.CRITS_VERSION,
                                     label="CRITs Version")
+    git_repo_url = forms.CharField(widget=forms.TextInput,
+                                   required=False,
+                                   initial=settings.CRITS_VERSION,
+                                   label="Git Repo URL")
     instance_name = forms.CharField(widget=forms.TextInput, required=True)
     instance_url = forms.CharField(widget=forms.TextInput, required=True)
     def __init__(self, *args, **kwargs):
