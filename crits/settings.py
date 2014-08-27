@@ -35,7 +35,7 @@ except:
     GIT_HASH=''
     GIT_HASH_LONG=''
     HIDE_GIT_HASH = True
-    GIT_BRANCH=None
+    GIT_BRANCH=''
 
 APPEND_SLASH = True
 TEST_RUN = False
