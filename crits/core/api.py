@@ -486,12 +486,25 @@ class CRITsAPIResource(MongoEngineResource):
         exclude = request.GET.get('exclude', None)
         source_list = user_sources(request.user.username)
         no_sources = True
+        # Chop off trailing slash and split on remaining slashes.
+        # If last part of path is not the resource name, assume it is an
+        # object ID.
+        path = request.path[:-1].split('/')
+        if path[-1] != self.Meta.resource_name:
+            # If this is a valid object ID, convert it. Otherwise, use
+            # the string. The corresponding query will return 0.
+            if ObjectId.is_valid(path[-1]):
+                querydict['_id'] = ObjectId(path[-1])
+            else:
+                querydict['_id'] = path[-1]
+
         for k,v in get_params.iteritems():
             v = v.strip()
             try:
                 v_int = int(v)
             except:
-                pass
+                # If can't be converted to an int use the string.
+                v_int = v
             if k == "c-_id":
                 try:
                     querydict['_id'] = ObjectId(v)
