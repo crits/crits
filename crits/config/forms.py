@@ -82,6 +82,8 @@ class ConfigLDAPForm(forms.Form):
     required_css_class = 'required'
     ldap_auth = forms.BooleanField(initial=False,
                                    required=False)
+    ldap_cert_bundle = forms.CharField(widget=forms.TextInput, required=False,
+                                       help_text='Path to custom cert bundle.')
     ldap_tls = forms.BooleanField(initial=False,
                                   required=False)
     ldap_server = forms.CharField(widget=forms.TextInput, required=False,

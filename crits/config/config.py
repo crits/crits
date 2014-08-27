@@ -41,6 +41,7 @@ class CRITsConfig(CritsDocument, Document):
     invalid_login_attempts = IntField(default=3)
     language_code = StringField(default='en-us')
     ldap_auth = BooleanField(default=False)
+    ldap_cert_bundle = StringField(default='')
     ldap_tls = BooleanField(default=False)
     ldap_server = StringField(default='')
     ldap_usercn = StringField(default='')
