@@ -18,21 +18,24 @@ DJANGO_ROOT = os.path.dirname(os.path.realpath(django.__file__))
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
 # Version
-CRITS_VERSION = '3.0.0'
+CRITS_VERSION = '4-master'
 
-#the following gets the current git hash to be displayed in the footer and 
+#the following gets the current git hash to be displayed in the footer and
 #hides it if it is not a git repo
 try:
     HIDE_GIT_HASH = False
     #get the short hand of current git hash
-    GIT_HASH="("+subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()+")"
+    GIT_HASH=subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
     #get the long hand of the current git hash
     GIT_HASH_LONG=subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
+    #get the git branch
+    GIT_BRANCH=subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).strip()
 except:
     #if it is not a git repo, clear out all values and hide them
     GIT_HASH=''
     GIT_HASH_LONG=''
     HIDE_GIT_HASH = True
+    GIT_BRANCH=None
 
 APPEND_SLASH = True
 TEST_RUN = False

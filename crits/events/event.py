@@ -90,14 +90,12 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
         return self.title
 
     @classmethod
-    def from_stix(cls, stix_package, source):
+    def from_stix(cls, stix_package):
         """
         Converts a stix_package to a CRITs Event.
 
         :param stix_package: A stix package.
         :type stix_package: :class:`stix.core.STIXPackage`
-        :param source: The source list for this STIX package.
-        :type source: list
         :returns: None, :class:`crits.events.event.Event'
         """
 
@@ -107,7 +105,7 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
         if isinstance(stix_package, STIXPackage):
             stix_header = stix_package.stix_header
             stix_id = stix_package.id_
-            event = cls(source=source)
+            event = cls()
             event.title = "STIX Document %s" % stix_id
             event.event_type = "Collective Threat Intelligence"
             event.description = str(datetime.datetime.now())
