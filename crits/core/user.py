@@ -783,6 +783,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             return resp
         ldap_server = config.ldap_server.split(':')
         scheme = "ldap"
+        if config.ldap_cert_bundle:
+            ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, config.ldap_cert_bundle)
         if config.ldap_tls:
             scheme = "ldaps"
         url = ldapurl.LDAPUrl('%s://%s' % (scheme, ldap_server[0]))
@@ -901,6 +903,9 @@ class CRITsAuthBackend(object):
                     # don't parse the port if there is one
                     ldap_server = config.ldap_server.split(':')
                     scheme = "ldap"
+                    if config.ldap_cert_bundle:
+                        ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, 
+                                        config.ldap_cert_bundle)
                     if config.ldap_tls:
                         scheme = "ldaps"
                     url = ldapurl.LDAPUrl('%s://%s' % (scheme, ldap_server[0]))

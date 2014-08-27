@@ -178,6 +178,7 @@ INSTANCE_URL =           crits_config.get('instance_url', '')
 INVALID_LOGIN_ATTEMPTS = crits_config.get('invalid_login_attempts', 3) - 1
 LANGUAGE_CODE =          crits_config.get('language_code', 'en-us')
 LDAP_AUTH =              crits_config.get('ldap_auth', False)
+LDAP_CERT_BUNDLE =       crits_config.get('ldap_cert_bundle', '')
 LDAP_SERVER =            crits_config.get('ldap_server', '')
 LDAP_USERDN =            crits_config.get('ldap_userdn', '')
 LDAP_USERCN =            crits_config.get('ldap_usercn', '')
