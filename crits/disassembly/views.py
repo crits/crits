@@ -243,7 +243,7 @@ def upload_disassembly(request, link_id=None):
                 jdump = json.dumps({
                     'message': 'Disassembly uploaded successfully! <a href="%s">View disassembly</a>'
                     % reverse('crits.disassembly.views.disassembly_details',
-                              args=[status['_id']]), 'success': True})
+                              args=[status['id']]), 'success': True})
             else:
                 jdump = json.dumps({'success': False,
                                     'message': status['message']})
