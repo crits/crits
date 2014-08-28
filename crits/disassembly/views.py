@@ -216,7 +216,6 @@ def upload_disassembly(request, link_id=None):
                                          request.FILES)
         filedata = request.FILES['filedata']
         data = filedata.read() # XXX: Should be using chunks here.
-        has_file = True
 
         if form.is_valid():
             source = form.cleaned_data.get('source')
@@ -245,27 +244,15 @@ def upload_disassembly(request, link_id=None):
                     'message': 'Disassembly uploaded successfully! <a href="%s">View disassembly</a>'
                     % reverse('crits.disassembly.views.disassembly_details',
                               args=[status['_id']]), 'success': True})
-                if not has_file:
-                    return HttpResponse(jdump, mimetype="application/json")
-                return render_to_response('file_upload_response.html',
-                                          {'response': jdump},
-                                          RequestContext(request))
             else:
                 jdump = json.dumps({'success': False,
                                     'message': status['message']})
-                if not has_file:
-                    return HttpResponse(jdump, mimetype="application/json")
-                return render_to_response('file_upload_response.html',
-                                          {'response': jdump},
-                                          RequestContext(request))
         else:
             jdump = json.dumps({'success': False,
                                 'form': form.as_table()})
-            if not has_file:
-                return HttpResponse(jdump, mimetype="application/json")
-            return render_to_response('file_upload_response.html',
-                                      {'response': jdump},
-                                      RequestContext(request))
+        return render_to_response('file_upload_response.html',
+                                  {'response': jdump},
+                                  RequestContext(request))
     else:
         return render_to_response('error.html',
                                   {'error': "Expected POST."},
