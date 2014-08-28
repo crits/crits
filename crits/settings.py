@@ -5,6 +5,7 @@ import glob
 import os
 import sys
 import django
+import subprocess
 
 from pymongo import ReadPreference, MongoClient
 from mongoengine import connect
@@ -17,10 +18,28 @@ DJANGO_ROOT = os.path.dirname(os.path.realpath(django.__file__))
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
 # Version
-CRITS_VERSION = '3.0.0'
+CRITS_VERSION = '4-master'
+
+#the following gets the current git hash to be displayed in the footer and
+#hides it if it is not a git repo
+try:
+    HIDE_GIT_HASH = False
+    #get the short hand of current git hash
+    GIT_HASH=subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
+    #get the long hand of the current git hash
+    GIT_HASH_LONG=subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
+    #get the git branch
+    GIT_BRANCH=subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).strip()
+except:
+    #if it is not a git repo, clear out all values and hide them
+    GIT_HASH=''
+    GIT_HASH_LONG=''
+    HIDE_GIT_HASH = True
+    GIT_BRANCH=''
 
 APPEND_SLASH = True
 TEST_RUN = False
+
 # Set to DENY|SAMEORIGIN|ALLOW-FROM uri
 # Default: SAMEORIGIN
 # More details: https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options
@@ -179,6 +198,7 @@ if crits_config.get('email_host', None):
 if crits_config.get('email_port', None):
     EMAIL_PORT =             int(crits_config.get('email_port', None))
 ENABLE_API =             crits_config.get('enable_api', False)
+GIT_REPO_URL =           crits_config.get('git_repo_url', '')
 HTTP_PROXY =             crits_config.get('http_proxy', None)
 INSTANCE_NAME =          crits_config.get('instance_name', 'My Instance')
 INSTANCE_URL =           crits_config.get('instance_url', '')
