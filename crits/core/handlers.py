@@ -1924,6 +1924,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
     """
 
     response = {"Result": "ERROR"}
+    users_sources = user_sources(request.user.username)
     if request.is_ajax():
         pageSize = request.user.get_preference('ui','table_page_size',25)
 
@@ -1998,7 +1999,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 elif key == "source":
                     srcs = []
                     for srcdict in doc[key]:
-                        srcs.append(srcdict['name'])
+                        if srcdict['name'] in users_sources:
+                            srcs.append(srcdict['name'])
                     doc[key] = "|||".join(srcs)
                 elif key == "tags":
                     tags = []
