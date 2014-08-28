@@ -28,7 +28,7 @@
 <div id="details_section">
     <span class="horizontal_menu">
     <ul class="hmenu">
-        <li><a href="#" id="upload-new-version" class="dialogClick" dialog="upload-new-version" data-action="{% url 'crits.disassembly.views.upload_disassembly' disassembly.link_id|stringformat:"s" %}">Upload New Version</a></li>
+        <li><a href="#" id="upload-new-disassembly-version" class="dialogClick" dialog="upload-new-disassembly-version" data-action="{% url 'crits.disassembly.views.upload_disassembly' disassembly.link_id|stringformat:"s" %}">Upload New Version</a></li>
         {% if admin %}
             <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="disassembly" action='{% url "crits.disassembly.views.remove_disassembly" disassembly.id %}'>Delete Disassembly</a></li>
         {% endif %}
