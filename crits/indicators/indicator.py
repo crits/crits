@@ -110,8 +110,8 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
                          'default_sort': "created DESC",
                          'searchurl': 'crits.indicators.views.indicators_listing',
                           'fields': [ "value", "ind_type", "created",
-                                      "modified", "status", "source",
-                                      "campaign", "status", "id" ],
+                                      "modified", "source", "campaign",
+                                      "status", "id" ],
                           'jtopts_fields': [ "details",
                                              "value",
                                              "type",
@@ -123,7 +123,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
                                              "favorite",
                                              "id" ],
                          'hidden_fields': [],
-                         'linked_fields': [ "value", "source", "campaign"
+                         'linked_fields': [ "value", "source", "campaign",
                                             "type", "status" ],
                          'details_link': 'details',
                          'no_sort': ['details']
