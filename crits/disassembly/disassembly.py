@@ -81,7 +81,7 @@ class Disassembly(CritsBaseAttributes, CritsSourceDocument, Document):
     data_type = StringField()
     description = StringField()
     filedata = getFileField(collection_name=settings.COL_DISASSEMBLY)
-    link_id = UUIDField(binary=True, required=True, default=uuid.uuid4())
+    link_id = UUIDField(binary=True, required=True, default=uuid.uuid4)
     md5 = StringField()
     name = StringField()
     tool = EmbeddedDocumentField(EmbeddedTool)
