@@ -227,7 +227,6 @@ def upload_disassembly(request, link_id=None):
             tool_details = form.cleaned_data.get('tool_details', '')
             data_type = form.cleaned_data.get('data_type', None)
             copy_rels = request.POST.get('copy_relationships', False)
-            link_id = link_id
             bucket_list = form.cleaned_data.get('bucket_list')
             ticket = form.cleaned_data.get('ticket')
             method = 'Upload'

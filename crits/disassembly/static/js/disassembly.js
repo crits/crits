@@ -6,60 +6,6 @@ function escapeHtml(str) {
     return res;
 }
 
-// XXX: This is not used...
-function upload_new_version_dialog(e) {
-    var dialog = $(this);
-    var form = dialog.find("form");
-    var widget = dialog.dialog("activatedBy");
-    var copy_rels = '<tr><th><label for="id_copy_relationships">Copy relationships:</label></th><td><input id="id_copy_relationships" name="copy_relationships" type="checkbox"></td></tr>';
-
-    if (!form.find("#id_copy_relationships").length) {
-        form.find("#id_data").closest('tr').after(copy_rels);
-    };
-
-    if (!form.attr("_dialog_once")) {
-        copy_button = {'Copy Data From Current Version': function() {
-            //name
-            form.find("#id_name").val($('#disassembly_name').attr('data-name'));
-            //tool name
-            form.find("#id_tool_name").val($('#disassembly_tool_name').text());
-            //tool version
-            form.find("#id_tool_version").val($('#disassembly_tool_version').text());
-            //tool details
-            form.find("#id_tool_details").val($('#disassembly_tool_details').text());
-            //data_type
-            form.find("#id_data_type").val($('#disassembly_type').text());
-            //description
-            form.find("#id_description").val($('#disassembly_description').text());
-            //copy relationships
-            form.find("#id_copy_relationships").prop('checked', true);
-            //source
-            //bucket_list
-            var buckets = "";
-            $.each($('.tagit-label'), function(id,val) {
-                buckets = buckets + $(val).text() + ", ";
-            });
-            if (buckets.length > 2) {
-                buckets = buckets.substring(0, buckets.length - 2);
-            }
-            form.find("#id_bucket_list").val(buckets);
-            //ticket
-            var tickets = "";
-            $.each($('#ticket_listing td[data-field="ticket_number"]'), function(id, val) {
-                tickets = tickets + $(val).text() + ", ";
-            });
-            if (tickets.length > 2) {
-                tickets = tickets.substring(0, tickets.length - 2);
-            }
-            form.find("#id_ticket").val(tickets);
-        }};
-        var buttons = dialog.dialog("option", "buttons");
-        $.extend(copy_button, buttons);
-        dialog.dialog("option", "buttons", copy_button);
-    }
-    form.attr("_dialog_once", true);
-}
-
 $(document).ready(function() {
     $('#disassembly_description').editable(function(value, settings) {
         return function(value, settings, elem) {
@@ -255,31 +201,85 @@ $(document).ready(function() {
     }
 
     /*
-     * Use this global variable to tell if we should be uploading a new
-     * version of a disassembly or not. This is used to modify the action.
+     * Use this global variable to tell if we should be uploading a new version
+     * of a disassembly or not. This is used to modify the action and add
+     * buttons to the form.
      */
     var use_link_id = false;
     $(document).on('click', '#new-disassembly-ver', function(e) {
         use_link_id = true;
     });
 
-    $(document).on('submit', '#form-new-disassembly', function(e) {
-        e.preventDefault();
-        /* If uploading a new version, use the link ID to modify the action. */
+    $(document).on('dialogopen', '#dialog-new-disassembly', function(e) {
         if (use_link_id == true) {
-            url = $(this).attr('action');
+            var dialog = $(this);
+            var form = dialog.find("form");
+            var widget = dialog.dialog("activatedBy");
+            var copy_rels = '<tr><th><label for="id_copy_relationships">Copy relationships:</label></th><td><input id="id_copy_relationships" name="copy_relationships" type="checkbox"></td></tr>';
+
+            if (!form.find("#id_copy_relationships").length) {
+                form.find("#id_data").closest('tr').after(copy_rels);
+            };
+
+            if (!form.attr("_dialog_once")) {
+                copy_button = {'Copy Data From Current Version': function() {
+                    //name
+                    form.find("#id_name").val($('#disassembly_name').attr('data-name'));
+                    //tool name
+                    form.find("#id_tool_name").val($('#disassembly_tool_name').text());
+                    //tool version
+                    form.find("#id_tool_version").val($('#disassembly_tool_version').text());
+                    //tool details
+                    form.find("#id_tool_details").val($('#disassembly_tool_details').text());
+                    //data_type
+                    form.find("#id_data_type").val($('#disassembly_type').text());
+                    //description
+                    form.find("#id_description").val($('#disassembly_description').text());
+                    //copy relationships
+                    form.find("#id_copy_relationships").prop('checked', true);
+                    //source
+                    //bucket_list
+                    var buckets = "";
+                    $.each($('.tagit-label'), function(id,val) {
+                        buckets = buckets + $(val).text() + ", ";
+                    });
+                    if (buckets.length > 2) {
+                        buckets = buckets.substring(0, buckets.length - 2);
+                    }
+                    form.find("#id_bucket_list").val(buckets);
+                    //ticket
+                    var tickets = "";
+                    $.each($('#ticket_listing td[data-field="ticket_number"]'), function(id, val) {
+                        tickets = tickets + $(val).text() + ", ";
+                    });
+                    if (tickets.length > 2) {
+                        tickets = tickets.substring(0, tickets.length - 2);
+                    }
+                    form.find("#id_ticket").val(tickets);
+                }};
+                var buttons = dialog.dialog("option", "buttons");
+                $.extend(copy_button, buttons);
+                dialog.dialog("option", "buttons", copy_button);
+            }
+            form.attr("_dialog_once", true);
+        }
+    });
+
+    $(document).on('submit', '#form-new-disassembly', function(e) {
+        // Prevent default, we will submit and then flip URL back.
+        e.preventDefault();
+        url = $(this).attr('action');
+        /*
+         * If uploading a new version, use the link ID to modify the action.
+         * Also, add in other buttons.
+         */
+        if (use_link_id == true) {
             $(this).attr('action',  url + link_id);
             use_link_id = false;
         }
-        console.log($(this).attr('action'));
+        this.submit();
+        $(this).attr('action', url);
     });
-
-    // XXX: This is not used...
-    var localDialogs = {
-        "new-disassembly-ver": {title: "Upload New Version",
-            open: upload_new_version_dialog}
-    };
-    $.each(localDialogs, function(id,opt) { stdDialog(id, opt) });
 
     details_copy_id('Disassembly');
     toggle_favorite('Disassembly');
