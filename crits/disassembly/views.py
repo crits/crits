@@ -1,4 +1,5 @@
 import json
+from hashlib import md5
 
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
@@ -22,7 +23,7 @@ from crits.disassembly.handlers import generate_disassembly_csv
 from crits.disassembly.handlers import generate_disassembly_versions
 from crits.disassembly.handlers import get_id_from_link_and_version
 from crits.disassembly.handlers import add_new_disassembly_type
-from crits.disassembly.disassembly import DisassemblyType 
+from crits.disassembly.disassembly import DisassemblyType
 
 @user_passes_test(user_can_view_data)
 def disassembly_listing(request, option=None):
@@ -214,14 +215,23 @@ def upload_disassembly(request, link_id=None):
         form = UploadDisassemblyFileForm(request.user,
                                          request.POST,
                                          request.FILES)
+        if 'filedata' not in request.FILES:
+            jdump = json.dumps({'success': False,
+                                'message': 'Need a file.'})
+            return render_to_response('file_upload_response.html',
+                                      {'response': jdump},
+                                      RequestContext(request))
+
         filedata = request.FILES['filedata']
         data = filedata.read() # XXX: Should be using chunks here.
+        filename = filedata.name
+        if not filename:
+            filename = md5(data).hexdigest()
 
         if form.is_valid():
             source = form.cleaned_data.get('source')
             user = request.user.username
             description = form.cleaned_data.get('description', '')
-            name = form.cleaned_data.get('name', None)
             tool_name = form.cleaned_data.get('tool_name', '')
             tool_version = form.cleaned_data.get('tool_version', '')
             tool_details = form.cleaned_data.get('tool_details', '')
@@ -231,7 +241,7 @@ def upload_disassembly(request, link_id=None):
             ticket = form.cleaned_data.get('ticket')
             method = 'Upload'
             status = handle_disassembly_file(data, source, user,
-                                             description, name, data_type,
+                                             description, filename, data_type,
                                              tool_name, tool_version,
                                              tool_details, link_id,
                                              method=method,

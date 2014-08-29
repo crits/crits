@@ -253,7 +253,7 @@ def generate_disassembly_jtable(request, option):
                                   RequestContext(request))
 
 def handle_disassembly_file(data, source_name, user=None,
-                         description=None, name=None, data_type=None,
+                         description=None, filename=None, data_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
                          link_id=None, method=None, copy_rels=False,
                          bucket_list=None, ticket=None):
@@ -270,8 +270,8 @@ def handle_disassembly_file(data, source_name, user=None,
     :type user: str
     :param description: Description of the Disassembly.
     :type description: str
-    :param name: Name of the Disassembly.
-    :type name: str
+    :param filename: Filename of the Disassembly.
+    :type filename: str
     :param data_type: Datatype of the Disassembly.
     :type data_type: str
     :param tool_name: Name of the tool used to acquire/generate the Disassembly.
@@ -297,7 +297,7 @@ def handle_disassembly_file(data, source_name, user=None,
     """
 
     status = { 'success': False }
-    if not data or not name or not data_type:
+    if not data or not filename or not data_type:
         status['message'] = 'No data object, name, or data type passed in'
         return status
 
@@ -335,11 +335,9 @@ def handle_disassembly_file(data, source_name, user=None,
         # XXX: This needs to do the whole "do i have this" dance like samples.
         dis._generate_file_metadata(data)
         dis.add_file_data(data)
-        dis.name = name
+        dis.filename = filename
         dis.data_type = data_type
-        dis.add_tool(name=tool_name,
-                          version=tool_version,
-                          details=tool_details)
+        dis.add_tool(name=tool_name, version=tool_version, details=tool_details)
         is_disassembly_new = True
     #XXX: need to validate this is a UUID
     if link_id:
