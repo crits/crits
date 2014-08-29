@@ -6,7 +6,9 @@ function escapeHtml(str) {
     return res;
 }
 
+// XXX: This is not used...
 function upload_new_version_dialog(e) {
+    alert("HERE");
     var dialog = $(this);
     var form = dialog.find("form");
     var widget = dialog.dialog("activatedBy");
@@ -57,22 +59,6 @@ function upload_new_version_dialog(e) {
         dialog.dialog("option", "buttons", copy_button);
     }
     form.attr("_dialog_once", true);
-}
-
-function upload_new_version_dialog_submit(e) {
-    var dialog = $(this).closest(".ui-dialog").find(".ui-dialog-content");
-    var form = $(this).find("form");
-    form.attr('action', $('#upload-new-disassembly-version').attr('data-action'));
-    var data = form.serialize();
-    $.ajax({
-        type: "POST",
-        url: form.attr('action'),
-        data: data,
-        datatype: 'json',
-        success: function(data) {
-            $('#form-upload-new-version-results').html(data.message).show();
-        }
-    });
 }
 
 $(document).ready(function() {
@@ -269,14 +255,33 @@ $(document).ready(function() {
         }
     }
 
-    var localDialogs = {
-        "upload-new-disassembly-version": {title: "Upload New Version",
-            open: upload_new_version_dialog,
-            new: { submit: upload_new_version_dialog_submit },
-        },
-    };
+    /*
+     * Use this global variable to tell if we should be uploading a new
+     * version of a disassembly or not. This is used to modify the action.
+     */
+    var use_link_id = false;
+    $(document).on('click', '#new-disassembly-ver', function(e) {
+        use_link_id = true;
+    });
 
+    $(document).on('submit', '#form-new-disassembly', function(e) {
+        e.preventDefault();
+        /* If uploading a new version, use the link ID to modify the action. */
+        if (use_link_id == true) {
+            url = $(this).attr('action');
+            $(this).attr('action',  url + link_id);
+            use_link_id = false;
+        }
+        console.log($(this).attr('action'));
+    });
+
+    // XXX: This is not used...
+    var localDialogs = {
+        "new-disassembly-ver": {title: "Upload New Version",
+            open: upload_new_version_dialog}
+    };
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt) });
+
     details_copy_id('Disassembly');
     toggle_favorite('Disassembly');
 }); //document.ready

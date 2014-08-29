@@ -8,6 +8,7 @@
 
 <script>
     var disassembly_id = "{{ disassembly.id }}";
+    var link_id = "{{ disassembly.link_id|stringformat:"s" }}/"
     var details_by_link = "{% url 'crits.disassembly.views.details_by_link' disassembly.link_id|stringformat:"s" %}"
     var update_disassembly_description = "{% url 'crits.disassembly.views.set_disassembly_description' disassembly.id %}";
     var update_disassembly_tool_details = "{% url 'crits.disassembly.views.set_disassembly_tool_details' disassembly.id %}";
@@ -28,7 +29,7 @@
 <div id="details_section">
     <span class="horizontal_menu">
     <ul class="hmenu">
-        <li><a href="#" id="upload-new-disassembly-version" class="dialogClick" dialog="upload-new-disassembly-version" data-action="{% url 'crits.disassembly.views.upload_disassembly' disassembly.link_id|stringformat:"s" %}">Upload New Version</a></li>
+        <li><a href="#" id="new-disassembly-ver" class="dialogClick" dialog="new-disassembly" persona="new" title="New Disassembly" data-action="{% url 'crits.disassembly.views.upload_disassembly' disassembly.link_id|stringformat:"s" %}">Upload New Version</a></li>
         {% if admin %}
             <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="disassembly" action='{% url "crits.disassembly.views.remove_disassembly" disassembly.id %}'>Delete Disassembly</a></li>
         {% endif %}

@@ -1142,10 +1142,8 @@ var stdDialogs = {
 
   $(document).on('change', "#id_rst_fmt", function(e) {
       if (this.value == 'stix') {
-          console.log("disable");
           $("#id_bin_fmt").val("base64").prop("disabled", true);
       } else {
-          console.log("enable");
           $("#id_bin_fmt").prop("disabled", false);
       }
   });
