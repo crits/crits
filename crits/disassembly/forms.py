@@ -12,7 +12,7 @@ class UploadDisassemblyFileForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    filedata = forms.FileField()
+    filedata = forms.FileField(required=True)
     tool_name = forms.CharField(required=True)
     tool_version = forms.CharField(required=False)
     tool_details = forms.CharField(required=False)
