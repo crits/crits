@@ -109,7 +109,7 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
     data = StringField()
     highlights = ListField(EmbeddedDocumentField(EmbeddedHighlight))
     inlines = ListField(EmbeddedDocumentField(EmbeddedInline))
-    link_id = UUIDField(binary=True, required=True, default=uuid.uuid4())
+    link_id = UUIDField(binary=True, required=True, default=uuid.uuid4)
     md5 = StringField()
     title = StringField()
     tool = EmbeddedDocumentField(EmbeddedTool)

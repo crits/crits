@@ -66,7 +66,7 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
     title = StringField(required=True)
     event_type = StringField(required=True)
     description = StringField(required=True)
-    event_id = UUIDField(binary=True, required=True, default=uuid.uuid4())
+    event_id = UUIDField(binary=True, required=True, default=uuid.uuid4)
 
     def set_event_type(self, event_type):
         """
