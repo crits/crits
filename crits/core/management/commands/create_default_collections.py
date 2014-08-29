@@ -7,12 +7,12 @@ from optparse import make_option
 from create_indexes import create_indexes
 from create_event_types import add_event_types
 from create_object_types import add_object_types
+from create_disassembly_types import add_disassembly_types
 from create_relationship_types import add_relationship_types
 from create_sectors import add_sector_objects
 from setconfig import create_config_if_not_exist
 
 from crits.core.user_role import UserRole
-from crits.disassembly.disassembly import DisassemblyType
 from crits.domains.domain import TLD
 from crits.samples.exploit import Exploit
 from crits.samples.backdoor import Backdoor
@@ -48,7 +48,6 @@ class Command(BaseCommand):
         populate_exploits(drop)
         populate_backdoors(drop)
         populate_indicator_actions(drop)
-        populate_disassembly_types(drop)
         populate_raw_data_types(drop)
         # The following will always occur with every run of this script:
         #   - tlds are based off of a Mozilla TLD list so it should never
@@ -61,6 +60,7 @@ class Command(BaseCommand):
         # (not recommended), then be sure to add them above so they will be
         # added back if this script were to be used again.
         populate_tlds(drop)
+        add_disassembly_types(drop)
         add_relationship_types(drop)
         add_object_types(drop)
         add_event_types(drop)
@@ -175,28 +175,6 @@ def populate_raw_data_types(drop):
         print "Raw Data Types: added %s types!" % len(data_types)
     else:
         print "Raw Data Types: existing documents detected. skipping!"
-
-
-def populate_disassembly_types(drop):
-    """
-    Populate default set of disassembly types into the system.
-
-    :param drop: Drop the existing collection before trying to populate.
-    :type: boolean
-    """
-
-    # define your disassembly types here
-    data_types = ['IDA', 'Hopper']
-    if drop:
-        DisassemblyType.drop_collection()
-    if len(DisassemblyType.objects()) < 1:
-        for data_type in data_types:
-            dt = DisassemblyType()
-            dt.name = data_type
-            dt.save()
-        print "Disassembly Types: added %s types!" % len(data_types)
-    else:
-        print "Disassembly Types: existing documents detected. skipping!"
 
 
 def populate_tlds(drop):
