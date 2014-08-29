@@ -8,7 +8,6 @@ function escapeHtml(str) {
 
 // XXX: This is not used...
 function upload_new_version_dialog(e) {
-    alert("HERE");
     var dialog = $(this);
     var form = dialog.find("form");
     var widget = dialog.dialog("activatedBy");
