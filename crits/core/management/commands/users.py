@@ -134,7 +134,7 @@ class Command(BaseCommand):
         # new user...
         if user and not adduser:
             if admin:
-                user.role = "Adminstrator"
+                user.role = "Administrator"
             if clearsecret:
                 user.secret = ""
             if deactivate and not setactive:
