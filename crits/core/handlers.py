@@ -3711,7 +3711,7 @@ def audit_entry(self, username, type_, new_doc=False):
         'Target': 'email_address'
     }
     if my_type in field_dict:
-        value = str(getattr(self, field_dict[my_type], ''))
+        value = getattr(self, field_dict[my_type], '')
     else:
         value = ""
 
