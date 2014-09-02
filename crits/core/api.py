@@ -272,10 +272,12 @@ class CRITsSerializer(Serializer):
 
         options = options or {}
         get_binaries = 'stix_no_bin'
+        bin_fmt = 'raw'
         if 'binaries' in options:
             try:
                 if int(options['binaries']):
                     get_binaries = 'stix'
+                    bin_fmt = 'base64'
             except:
                 pass
 
@@ -317,7 +319,7 @@ class CRITsSerializer(Serializer):
                                            0,
                                            0,
                                            get_binaries,
-                                           'raw',
+                                           bin_fmt,
                                            object_types,
                                            objects,
                                            sources)
@@ -325,6 +327,7 @@ class CRITsSerializer(Serializer):
             data = ""
         if 'data' in data:
             data = data['data']
+        print "Data: ", data
         return data
 
     def _convert_mongoengine(self, data, options=None):
