@@ -28,6 +28,8 @@ class CRITsConfig(CritsDocument, Document):
     crits_email = StringField(default='')
     crits_email_subject_tag = StringField(default='')
     crits_email_end_tag = BooleanField(default=True)
+    # This is actually the internal DB version, but is named crits_version
+    # for historical reasons.
     crits_version = StringField(required=True,
                                 default=settings.CRITS_VERSION)
     debug = BooleanField(default=True)
