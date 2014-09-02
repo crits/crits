@@ -1,22 +1,15 @@
-import datetime
 import logging
+import pymongo
 
-from bson.objectid import ObjectId
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from dateutil.parser import parse
 
-from crits.core.audit import AuditLog
-from crits.core.mongo_tools import mongo_find, mongo_find_one, mongo_update
-from crits.core.source_access import SourceAccess
-from crits.core.user_role import UserRole
-from crits.indicators.indicator import IndicatorAction
-from crits.samples.backdoor import Backdoor
-from crits.samples.exploit import Exploit
-from crits.samples.yarahit import YaraHit
-from crits.targets.division import Division
+from crits.config.config import CRITsConfig
+from crits.core.mongo_tools import mongo_update, mongo_remove, mongo_connector
 
-from setconfig import create_config_if_not_exist
+from create_sectors import add_sector_objects
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -39,36 +32,14 @@ def prep_audit_log():
     Migrate the audit log.
     """
 
-    print "Adjusting Audit Log Dates..."
-    col = settings.COL_AUDIT_LOG
-    schema_version = AuditLog._meta['latest_schema_version']
-    entries = mongo_find(col, {})
-    total = 0
-    for entry in entries:
-        changes = {}
-        changes['schema_version'] = schema_version
-        if 'date' in entry:
-            if not isinstance(entry['date'], datetime.datetime):
-                changes['date'] = parse(entry['date'], fuzzy=True)
-                total += 1
-            else:
-                changes['date'] = entry['date']
-        mongo_update(col,
-                    {'_id': ObjectId(entry['_id'])},
-                    {'$set': changes})
-    print "Fixed %s audit log entries!\n" % total
+    pass
 
 def prep_backdoors():
     """
     Migrate backdoors.
     """
 
-    # fix backdoors not having schema_versions
-    sv = Backdoor._meta['latest_schema_version']
-    mongo_update(settings.COL_BACKDOOR_DETAILS,
-                 {'schema_version': {'$exists': 0}},
-                 {'$set': {'schema_version': sv}})
-    print "Fixed backdoors without a schema!\n"
+    pass
 
 def prep_campaigns():
     """
@@ -82,45 +53,14 @@ def prep_comments():
     Migrate comments.
     """
 
-    print "Adjusting comment url_keys..."
-    col = settings.COL_COMMENTS
-    query = {'url_key': {'$type': 7}}
-    comments = mongo_find(col, query)
-    total = 0
-    for comment in comments:
-        _id = comment['_id']
-        url_key = str(comment['url_key'])
-        mongo_update(col,
-                     {'_id': ObjectId(_id)},
-                     {'$set': {'url_key': url_key}})
-        total += 1
-    print "Fixed %s comments, correcting ObjectId url_key!\n" % total
-
-    query = {'obj_type': "Campaign",  "url_key": {'$exists': 0} }
-    comments = mongo_find(col, query)
-    total = 0
-    for comment in comments:
-        _id = comment['_id']
-        obj = mongo_find_one(settings.COL_CAMPAIGNS, {"_id": comment['obj_id']})
-        if obj:
-            url_key = obj['name']
-            mongo_update(col,
-                         {'_id': ObjectId(_id)},
-                         {'$set': {'url_key': url_key}})
-            total += 1
-    print "Fixed %s comments, correcting url_key based on obj_id!\n" % total
+    pass
 
 def prep_divisions():
     """
     Migrate divisions.
     """
 
-    # fix divisions not having schema_versions
-    sv = Division._meta['latest_schema_version']
-    mongo_update(settings.COL_DIVISION_DATA,
-                 {'schema_version': {'$exists': 0}},
-                 {'$set': {'schema_version': sv}})
-    print "Fixed divisions without a schema!\n"
+    pass
 
 def prep_events():
     """
@@ -134,24 +74,14 @@ def prep_exploits():
     Migrate exploits.
     """
 
-    # fix exploits not having schema_versions
-    sv = Exploit._meta['latest_schema_version']
-    mongo_update(settings.COL_EXPLOIT_DETAILS,
-                 {'schema_version': {'$exists': 0}},
-                 {'$set': {'schema_version': sv}})
-    print "Fixed exploits without a schema!\n"
+    pass
 
 def prep_indicator_actions():
     """
     Migrate indicator actions.
     """
 
-    # fix indicator actions not having schema_versions
-    sv = IndicatorAction._meta['latest_schema_version']
-    mongo_update(settings.COL_IDB_ACTIONS,
-                 {'schema_version': {'$exists': 0}},
-                 {'$set': {'schema_version': sv}})
-    print "Fixed Indicator Actions without a schema!\n"
+    pass
 
 def prep_indicators():
     """
@@ -193,49 +123,81 @@ def prep_sources():
     Migrate sources.
     """
 
-    # fix source_access not having schema_versions
-    sv = SourceAccess._meta['latest_schema_version']
-    mongo_update(settings.COL_SOURCE_ACCESS,
-                 {'schema_version': {'$exists': 0}},
-                 {'$set': {'schema_version': sv}})
-    print "Fixed sources without a schema!\n"
+    pass
 
 def prep_user_roles():
     """
     Migrate user roles.
     """
 
-    # fix user_roles not having schema_versions
-    sv = UserRole._meta['latest_schema_version']
-    mongo_update(settings.COL_USER_ROLES,
-                 {'schema_version': {'$exists': 0}},
-                 {'$set': {'schema_version': sv}})
-    print "Fixed user roles without a schema!\n"
+    pass
 
 def prep_yarahits():
     """
     Migrate yara hits.
     """
 
-    # fix yarahits not having schema_versions
-    sv = YaraHit._meta['latest_schema_version']
-    mongo_update(settings.COL_YARAHITS,
-                 {'schema_version': {'$exists': 0}},
-                 {'$set': {'schema_version': sv}})
-    print "Fixed yara hits without a schema!\n"
+    pass
+
+def prep_notifications():
+    """
+    Update notifications.
+    """
+
+    a1 = {"$unset": {"notifications": 1}}
+    a2 = {"$unset": {"unsupported_attrs.notifications": 1}}
+    mongo_update(settings.COL_USERS, {}, a1)
+    mongo_update(settings.COL_USERS, {}, a2)
+    query = {"type": "notification"}
+    mongo_remove(settings.COL_COMMENTS, query)
+
+def prep_sectors():
+
+    add_sector_objects()
+
+def prep_indexes():
+    """
+    Update indexing.
+    """
+
+    notifications = mongo_connector(settings.COL_NOTIFICATIONS)
+    # auto-expire notifications after 30 days
+    notifications.ensure_index("obj_id", background=True,
+                               expireAfterSeconds=2592000)
+    notifications.ensure_index("users", background=True)
+    print "Notification indexes created."
+    screenshots = mongo_connector(settings.COL_SCREENSHOTS)
+    screenshots.ensure_index("tags", background=True)
+    print "Screenshot indexes created."
+
+    # check for old invalid chunk indexes and fix
+    for col in ("%s.chunks" % settings.COL_OBJECTS,
+                "%s.chunks" % settings.COL_PCAPS,
+                "%s.chunks" % settings.COL_SAMPLES):
+        c = mongo_connector(col)
+        d = c.index_information()
+        if d.get('files_id_1_n_1', False):
+            b = d['files_id_1_n_1'].get('background', None)
+            # background could be set to False or True in the DB
+            if b is not None:
+                c.drop_index("files_id_1_n_1")
+                c.ensure_index([("files_id", pymongo.ASCENDING),
+                                ("n", pymongo.ASCENDING)],
+                               unique=True)
+                print "Found bad index for %s. Fixed it." % col
+
+def update_database_version():
+
+    c = CRITsConfig.objects().first()
+    c.crits_version = "3.1.0"
+    c.save()
 
 def prep_database():
     """
     Migrate the appropriate collections.
     """
 
-    create_config_if_not_exist()
-    prep_audit_log()
-    prep_comments()
-    prep_backdoors()
-    prep_divisions()
-    prep_exploits()
-    prep_indicator_actions()
-    prep_sources()
-    prep_user_roles()
-    prep_yarahits()
+    prep_notifications()
+    prep_sectors()
+    prep_indexes()
+    return

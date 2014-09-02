@@ -213,7 +213,7 @@ class ConfigCritsForm(forms.Form):
     crits_version = forms.CharField(widget=forms.TextInput,
                                     required=True,
                                     initial=settings.CRITS_VERSION,
-                                    label="CRITs Version")
+                                    label="DB Version")
     git_repo_url = forms.CharField(widget=forms.TextInput,
                                    required=False,
                                    initial=settings.CRITS_VERSION,
