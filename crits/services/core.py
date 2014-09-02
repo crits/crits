@@ -477,7 +477,6 @@ class Service(object):
 
         raise NotImplementedError
 
-
     @staticmethod
     def valid_for(obj):
         """
