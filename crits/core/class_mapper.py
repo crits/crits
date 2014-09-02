@@ -53,6 +53,10 @@ def class_from_id(type_, _id):
         return Certificate.objects(id=_id).first()
     elif type_ == 'Comment':
         return Comment.objects(id=_id).first()
+    elif type_ == 'Disassembly':
+        return Disassembly.objects(id=_id).first()
+    elif type_ == 'DisassemblyType':
+        return DisassemblyType.objects(id=_id).first()
     elif type_ == 'Domain':
         return Domain.objects(id=_id).first()
     elif type_ == 'Email':
