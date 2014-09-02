@@ -514,8 +514,10 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
             actor_identifier.add_source(s)
 
     actor_identifier.save(username=analyst)
+    actor_identifier.reload()
 
     return {'success': True,
+            'id': str(actor_identifier.id),
             'message': "Actor Identifier added successfully!"}
 
 def actor_identifier_types(active=True):

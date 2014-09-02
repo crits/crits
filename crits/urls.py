@@ -68,7 +68,7 @@ urlpatterns = patterns('',
 # Enable the API if configured
 if settings.ENABLE_API:
     from tastypie.api import Api
-    from crits.actors.api import ActorResource
+    from crits.actors.api import ActorResource, ActorIdentifierResource
     from crits.campaigns.api import CampaignResource
     from crits.certificates.api import CertificateResource
     from crits.domains.api import DomainResource, WhoIsResource
@@ -88,6 +88,7 @@ if settings.ENABLE_API:
 
     v1_api = Api(api_name='v1')
     v1_api.register(ActorResource())
+    v1_api.register(ActorIdentifierResource())
     v1_api.register(CampaignResource())
     v1_api.register(CertificateResource())
     v1_api.register(DomainResource())
