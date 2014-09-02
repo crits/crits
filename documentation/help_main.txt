@@ -1438,6 +1438,25 @@ These parameters are frequently used across most top-level objects in CRITs.
 
 :ticket: Associated Ticket.
 
+Actor API
+-------------------------------------------
+
+GET:
+
+        /api/v1/actors/
+
+        /api/v1/actors/<object_id>/
+
+POST:
+
+        /api/v1/actors/
+
+Unique POST Parameters:
+
+:name: Name of the Actor.
+:aliases: Comma-separated list of actor aliases.
+:description: Description of the Actor.
+
 Campaign API
 -------------------------------------------
 
