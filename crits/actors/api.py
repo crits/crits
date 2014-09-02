@@ -128,7 +128,7 @@ class ActorIdentifierResource(CRITsAPIResource):
         analyst = bundle.request.user.username
         data = bundle.data
         identifier_type = data.get('identifier_type', None)
-        identifier= data.get('identifier', None)
+        identifier = data.get('identifier', None)
         source = data.get('source', None)
         reference = data.get('reference', None)
         method = data.get('method', None)
