@@ -327,7 +327,7 @@ $(document).ready(function() {
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt) });
 
 
-    $('#edit_attribution_confidence').editable(function(value, settings) {
+    $('.edit_attribution_confidence').editable(function(value, settings) {
         var revert = this.revert;
         return function(value, settings, elem) {
             var id = $(elem).attr('data-id');
