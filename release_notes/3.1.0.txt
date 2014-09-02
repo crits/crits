@@ -1,8 +1,8 @@
 CRITs 3.1.0 Release Notes:
 
 Please read *all* of the release notes as there are steps provided to help
-upgrading from 3.0.0 to 3.1.0. This is written mostly for people who are working
-on releases but might be informative for those tracking branches. If you do
+upgrading from 3.0.0 to 3.1.0. This is written mostly for people who are using
+release installs but might be informative for those tracking branches. If you do
 track branches, you'll be keeping up-to-date through UPDATING and commits so
 there shouldn't be any upgrade steps for you that you haven't already been
 doing.
@@ -29,6 +29,7 @@ result in errors when running crits.
         - Grab the tarball for the 3.1.0 release.
         - If you need help determining how to install the dependencies, look at
           the 'install_dependencies.sh' script that comes in the repository.
+    Updates include:
     - MongoDB 2.6.4
     - PyMongo 2.7.2
     - MongoEngine 0.8.7
@@ -45,19 +46,18 @@ result in errors when running crits.
         - crits/config/database.py
         - crits/config/overrides.py (if used)
     - Backup any custom modifications to the codebase.
-    - Extract the new 3.1.0 codebase and *replace* your old codebase with it.
     - Install and update the software dependencies above.
+    - Extract the new 3.1.0 codebase and *replace* your old codebase with it.
     - Put your custom code modifications back in place if you have any.
     - Put your configuration files back in place.
-    - Run management commands to upgrade:
+    - Run management commands to update the database:
         - Run the prep management command:
             python manage.py prep
         - Once prep has finished you can now use the UI.
     - Look at the Services section below for information on how to acquire,
       install, and use the new Services available.
-    - Some new services have dependencies (like Snugglefish) which will need
-      to be installed before CRITs can run if you choose to import that
-      service!
+    - Some new services have dependencies which will need to be installed before
+      CRITs can run if you choose to import that service!
 
 ######################
 ## Detailed Changes ##

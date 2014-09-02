@@ -14,7 +14,7 @@ CRITs is designed to work on a 64-bit architecture of Ubuntu or RHEL6 using Pyth
 
 If you require the use of a 32-bit OS, you will need to download 32-bit versions of the pre-compiled dependencies.
 
-The following instructions assume you are running Ubuntu or RHEL6 64-bit with Python 2.7.
+The following instructions assume you are running Ubuntu or RHEL6 64-bit with Python 2.7. If you are on RHEL which does not come with Python 2.7, you will need to install it. If you do, ensure all python library dependencies are installed using Python 2.7. Also, make sure you install mod_wsgi against the Python 2.7 install. More information on this can be found in the Github wiki at https://github.com/crits/crits/wiki/Common-Questions.
 
 ## Installing Dependencies
 
@@ -50,7 +50,7 @@ You can configure CRITs with the location(s) of the directory or directories lat
 
 ## Setting up MongoDB for CRITs
 
-CRITs uses MongoDB to store metadata and binary information. Mongo is a non-relational database. If you would like to read more about MongoDB and how to administer it, here are some links:
+CRITs uses MongoDB to store authentication, session, metadata and binary information. MongoDB is a non-relational database. If you would like to read more about MongoDB and how to administer it, here are some links:
 
 * [Starting and Stopping Mongo](http://www.mongodb.org/display/DOCS/Starting+and+Stopping+Mongo)
 * [Replica Sets](http://www.mongodb.org/display/DOCS/Replica+Sets)
@@ -162,6 +162,12 @@ Run the `create_default_collections` management command to setup your database:
     python manage.py create_default_collections
 ```
 
+If you have issues running this command, it is usually because of a few things:
+
+* There is a missing dependency. Go back through the dependency installation and
+  make sure everything was installed properly.
+* You did not set your SECRET_KEY in the previous step.
+
 ### Add your first user:
 
 Take a look at the options for the **users** management command:
@@ -267,7 +273,7 @@ export LANG=en_US.UTF-8
 
 #### Using Apache on RHEL:
 
-For installs on a new Apache instance you can follow the steps below. For existing Apache installations, use the files mentioned as a guideline.
+For installs on a new Apache instance you can follow the steps below. For existing Apache installations, use the files mentioned as a guideline. Depending on the version of Apache you may need to adjust some config values. See documentation about Django, mod_wsgi, and Apache on the Django website.
 
 * Stop Apache:
 
@@ -349,6 +355,12 @@ Run the `create_default_collections` management command to setup your database:
     python manage.py create_default_collections
 ```
 
+If you have issues running this command, it is usually because of a few things:
+
+* There is a missing dependency. Go back through the dependency installation and
+  make sure everything was installed properly.
+* You did not set your SECRET_KEY in the previous step.
+
 ### Add your first user:
 
 Take a look at the options for the **users** management command:
@@ -358,7 +370,7 @@ Take a look at the options for the **users** management command:
     python manage.py users -h
 ```
 
-Use that command to setup your first admin user for CRITs. Be sure to use **-a** to set them as an admin. **Make note of the temporary password provided in the output!!**
+Use that command to setup your first admin user for CRITs. Be sure to use **-A** to set them as an admin. **Make note of the temporary password provided in the output!!**
 
 ### Set your allowed hosts:
 
@@ -397,7 +409,7 @@ At this point you should be able to point your browser to that location and see 
 
 ### CRITs cronjobs:
 
-The main cronjob we recommend is for the script which executes common mapreduce jobs. These jobs do things like collect database statistics, generate Campaign information, and other useful bits of information.
+The main cronjob we recommend is for the script which executes common mapreduce jobs. These jobs do things like collect database statistics, generate Campaign information, and other useful bits of information. If you would like the Counts and stats updated on your Dashboard, you will need to add this.
 
 We also support sending batch email notifications to users of your system. The email provided a non-detailed overview of how many changes have happened to items they are subscribed to. This cronjob also updates the notifications users will see in the interface.
 
@@ -420,12 +432,12 @@ Add the following entries, making adjustments for the folder path and the freque
 
 ### (Optional) Customizing Django environment with local overrides
 
-In most cases this step is not neccessary, but if you do have any custom django settings that you need to change for your local environment, In the **crits/config** directory you can copy **overrides_example.py** to **overrides.py**.  You can look at the example for some ideas on what you can do with this.  This file gets included at the end of the settings.py, so you can do pretty much anything you would there, but this allows you to isolate your changes from the settings.py distributed in the package.
+In most cases this step is not neccessary, but if you do have any custom django settings that you need to change for your local environment, In the **crits/config** directory you can copy **overrides_example.py** to **overrides.py**.  You can look at the example for some ideas on what you can do with this.  This file gets included at the end of the settings.py, so you can do pretty much anything you would like there, but this allows you to isolate your changes from the settings.py distributed in the package.
 
 ### CRITs Control Panel:
 
-If you opted to configure CRITs after the web server is up, or want to change and values after it is up, you can go to the CRITs Control Panel in the navigation menu as an admin. From there, you can click on 'System' to make your changes.
+If you opted to configure CRITs after the web server is up, or want to change and values after it is up, you can go to the CRITs Control Panel in the navigation menu as an admin. From there, you can make your changes.
 
-For more information, check the FAQ in the **documentation** directory. If you’d like to generate Sphinx documentation for the code, you can run **make html** in the **documentation/src** directory. There is also a Help guide in the UI.
+For more information, check the FAQ in the **documentation** directory and the Github wiki page. If you’d like to generate Sphinx documentation for the code, you can run **make html** in the **documentation/src** directory. There is also a Help guide in the UI.
 
 **Thanks for using CRITs!**
