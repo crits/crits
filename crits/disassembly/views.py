@@ -129,10 +129,10 @@ def set_disassembly_type(request, _id):
     """
 
     if request.method == 'POST':
-        data_type = request.POST['data_type']
+        disassembly_type = request.POST['disassembly_type']
         analyst = request.user.username
         return HttpResponse(json.dumps(update_disassembly_type(_id,
-                                                            data_type,
+                                                            disassembly_type,
                                                             analyst)),
                             mimetype="application/json")
     else:
@@ -235,13 +235,13 @@ def upload_disassembly(request, link_id=None):
             tool_name = form.cleaned_data.get('tool_name', '')
             tool_version = form.cleaned_data.get('tool_version', '')
             tool_details = form.cleaned_data.get('tool_details', '')
-            data_type = form.cleaned_data.get('data_type', None)
+            disassembly_type = form.cleaned_data.get('disassembly_type', None)
             copy_rels = request.POST.get('copy_relationships', False)
             bucket_list = form.cleaned_data.get('bucket_list')
             ticket = form.cleaned_data.get('ticket')
             method = 'Upload'
             status = handle_disassembly_file(data, source, user,
-                                             description, filename, data_type,
+                                             description, filename, disassembly_type,
                                              tool_name, tool_version,
                                              tool_details, link_id,
                                              method=method,
@@ -300,8 +300,8 @@ def new_disassembly_type(request):
         form = NewDisassemblyTypeForm(request.POST)
         analyst = request.user.username
         if form.is_valid():
-            result = add_new_disassembly_type(form.cleaned_data['data_type'],
-                                           analyst)
+            result = add_new_disassembly_type(form.cleaned_data['disassembly_type'],
+                                              analyst)
             if result:
                 message = {'message': '<div>Disassembly Type added successfully!</div>',
                            'success': True}

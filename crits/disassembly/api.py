@@ -60,7 +60,7 @@ class DisassemblyResource(CRITsAPIResource):
         source = bundle.data.get('source', None)
         description = bundle.data.get('description', '')
         name = bundle.data.get('name', None)
-        data_type = bundle.data.get('data_type', None)
+        disassembly_type = bundle.data.get('disassembly_type', None)
         tool_name = bundle.data.get('tool_name', '')
         tool_version = bundle.data.get('tool_version', '')
         tool_details = bundle.data.get('tool_details', '')
@@ -73,12 +73,12 @@ class DisassemblyResource(CRITsAPIResource):
         if not name:
             content['message'] = "Must provide a name."
             self.crits_response(content)
-        if not data_type:
+        if not disassembly_type:
             content['message'] = "Must provide a data type."
             self.crits_response(content)
 
         result = handle_disassembly_file(data, source, analyst,
-                                      description, name, data_type,
+                                      description, name, disassembly_type,
                                       tool_name, tool_version, tool_details,
                                       link_id,
                                       method=method,

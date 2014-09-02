@@ -253,7 +253,7 @@ def generate_disassembly_jtable(request, option):
                                   RequestContext(request))
 
 def handle_disassembly_file(data, source_name, user=None,
-                         description=None, filename=None, data_type=None,
+                         description=None, filename=None, disassembly_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
                          link_id=None, method=None, copy_rels=False,
                          bucket_list=None, ticket=None):
@@ -272,8 +272,8 @@ def handle_disassembly_file(data, source_name, user=None,
     :type description: str
     :param filename: Filename of the Disassembly.
     :type filename: str
-    :param data_type: Datatype of the Disassembly.
-    :type data_type: str
+    :param disassembly_type: Datatype of the Disassembly.
+    :type disassembly_type: str
     :param tool_name: Name of the tool used to acquire/generate the Disassembly.
     :type tool_name: str
     :param tool_version: Version of the tool.
@@ -297,11 +297,11 @@ def handle_disassembly_file(data, source_name, user=None,
     """
 
     status = { 'success': False }
-    if not data or not filename or not data_type:
+    if not data or not filename or not disassembly_type:
         status['message'] = 'No data object, name, or data type passed in'
         return status
 
-    dt = DisassemblyType.objects(name=data_type).first()
+    dt = DisassemblyType.objects(name=disassembly_type).first()
     if not dt:
         status['message'] = 'Invalid data type passed in'
         return status
@@ -336,7 +336,7 @@ def handle_disassembly_file(data, source_name, user=None,
         dis._generate_file_metadata(data)
         dis.add_file_data(data)
         dis.filename = filename
-        dis.data_type = data_type
+        dis.disassembly_type = disassembly_type
         dis.add_tool(name=tool_name, version=tool_version, details=tool_details)
         is_disassembly_new = True
     #XXX: need to validate this is a UUID
@@ -444,25 +444,25 @@ def update_disassembly_tool_name(_id, name, analyst):
     except ValidationError, e:
         return e
 
-def update_disassembly_type(_id, data_type, analyst):
+def update_disassembly_type(_id, disassembly_type, analyst):
     """
     Update the Disassembly data type.
 
     :param _id: ObjectId of the Disassembly to update.
     :type _id: str
-    :param data_type: The data type to set.
-    :type data_type: str
+    :param disassembly_type: The data type to set.
+    :type disassembly_type: str
     :param analyst: The user updating the data type.
     :type analyst: str
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
     dis = Disassembly.objects(id=_id).first()
-    data_type = DisassemblyType.objects(name=data_type).first()
-    if not data_type:
+    disassembly_type = DisassemblyType.objects(name=disassembly_type).first()
+    if not disassembly_type:
         return None
     else:
-        dis.data_type = data_type.name
+        dis.disassembly_type = disassembly_type.name
         try:
             dis.save(username=analyst)
             return {'success': True}
@@ -487,24 +487,24 @@ def delete_disassembly(_id, username=None):
             return True
     return False
 
-def add_new_disassembly_type(data_type, analyst):
+def add_new_disassembly_type(disassembly_type, analyst):
     """
     Add a new Disassembly datatype to CRITs.
 
-    :param data_type: The new datatype to add.
-    :type data_type: str
+    :param disassembly_type: The new datatype to add.
+    :type disassembly_type: str
     :param analyst: The user adding the new datatype.
     :type analyst: str
     :returns: bool
     """
 
-    data_type = data_type.strip()
+    disassembly_type = disassembly_type.strip()
     try:
-        dis_type = DisassemblyType.objects(name=data_type).first()
+        dis_type = DisassemblyType.objects(name=disassembly_type).first()
         if dis_type:
             return False
         dis_type = DisassemblyType()
-        dis_type.name = data_type
+        dis_type.name = disassembly_type
         dis_type.save(username=analyst)
         return True
     except ValidationError:

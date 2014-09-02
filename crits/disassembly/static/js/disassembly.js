@@ -82,7 +82,7 @@ $(document).ready(function() {
         var her = $(this).closest('tr').find('.object_status_response');
         return function(value, settings, elem) {
             var data = {
-                data_type: value,
+                disassembly_type: value,
             };
             $.ajax({
                 type: "POST",
@@ -231,8 +231,8 @@ $(document).ready(function() {
                     form.find("#id_tool_version").val($('#disassembly_tool_version').text());
                     //tool details
                     form.find("#id_tool_details").val($('#disassembly_tool_details').text());
-                    //data_type
-                    form.find("#id_data_type").val($('#disassembly_type').text());
+                    //disassembly_type
+                    form.find("#id_disassembly_type").val($('#disassembly_type').text());
                     //description
                     form.find("#id_description").val($('#disassembly_description').text());
                     //copy relationships

@@ -16,7 +16,7 @@
             <td>
                 <a href="{% url 'crits.disassembly.views.disassembly_details' data.id %}">{{ data.name }}</a>
             </td>
-            <td>{{ data.data_type }}</td>
+            <td>{{ data.disassembly_type }}</td>
             <td>{{ data.tool.name }} ({{ data.tool.version }})</td>
             <td>{{ data.description }}</td>
             <td>{{ data.created|date:"m/d/Y" }}</td>

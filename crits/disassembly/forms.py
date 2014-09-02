@@ -16,7 +16,7 @@ class UploadDisassemblyFileForm(forms.Form):
     tool_name = forms.CharField(required=True)
     tool_version = forms.CharField(required=False)
     tool_details = forms.CharField(required=False)
-    data_type = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
+    disassembly_type = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'40',
                                                                'rows':'2'}),
                                                                required=False)
@@ -30,9 +30,9 @@ class UploadDisassemblyFileForm(forms.Form):
                                                                       True,
                                                                       username)]
         self.fields['source'].initial = get_user_organization(username)
-        self.fields['data_type'].choices = [(c.name,
-                                             c.name
-                                             ) for c in get_item_names(DisassemblyType,
+        self.fields['disassembly_type'].choices = [(c.name,
+                                                    c.name
+                                                    ) for c in get_item_names(DisassemblyType,
                                                                        True)]
 
         add_bucketlist_to_form(self)
@@ -45,4 +45,4 @@ class NewDisassemblyTypeForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    data_type = forms.CharField(widget=forms.TextInput, required=True)
+    disassembly_type = forms.CharField(widget=forms.TextInput, required=True)
