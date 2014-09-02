@@ -724,7 +724,7 @@
             {% for notification in notifications %}
                 <tr>
                 <td>{{ notification.obj_type }}</td>
-                <td><a href="{% url 'crits.core.views.details' notification.obj_type notification.id %}">View {{ notification.obj_type }}</a></td>
+                <td><a href="{% url 'crits.core.views.details' notification.obj_type notification.obj_id %}">View {{ notification.obj_type }}</a></td>
                 <td>{{ notification.notification }}</td>
                 <td>{{ notification.created }}</td>
                 <td><span class="delete_notification ui-icon ui-icon-close" action="{% url 'crits.core.views.delete_user_notification' notification.obj_type notification.obj_id %}"></span></td>

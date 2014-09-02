@@ -830,7 +830,11 @@ class Service(object):
             elif option.runtime_only:
                 continue
             else:
-                value = config[key]
+                try:
+                    value = config[key]
+                except KeyError, e:
+                    logger.debug("KeyError: %s, populating with a default value" % e)
+                    value = option.default
                 value = option.format_value(value, printable=printable)
             logger.debug("key: %s, value: %s" % (key, value))
             config_list.append((key, value))
