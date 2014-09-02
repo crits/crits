@@ -127,7 +127,8 @@ class STIXParser():
         """
         for threat_actor in threat_actors: # for each STIX ThreatActor
             try: # create CRITs Actor from ThreatActor
-                obj = Actor.from_stix(threat_actor, [self.source])
+                obj = Actor.from_stix(threat_actor)
+                obj.add_source(self.source)
                 obj.save(username=self.source_instance.analyst)
                 self.imported.append((Actor._meta['crits_type'], obj))
             except Exception, e:

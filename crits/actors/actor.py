@@ -403,21 +403,19 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
         return (ta, self.releasability)
 
     @classmethod
-    def from_stix(cls, stix_threat_actor, source):
+    def from_stix(cls, stix_threat_actor):
         """
         Converts a STIX ThreatActor to a CRITs Actor.
 
         :param stix_package: A stix package.
         :type stix_package: :class:`stix.core.STIXPackage`
-        :param source: The source list for this STIX package.
-        :type source: list
         :returns: None, :class:`crits.actors.actor.Actor'
         """
 
         from stix.threat_actor import ThreatActor
 
         if isinstance(stix_threat_actor, ThreatActor):
-            actor = cls(source=source)
+            actor = cls()
             actor.name = str(stix_threat_actor.title)
             actor.description = str(stix_threat_actor.description)
             for sophistication in stix_threat_actor.sophistications:
