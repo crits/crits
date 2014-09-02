@@ -173,7 +173,7 @@ def prep_indexes():
     # check for old invalid chunk indexes and fix
     for col in ("%s.chunks" % settings.COL_OBJECTS,
                 "%s.chunks" % settings.COL_PCAPS,
-                "%s.chunks" % settings.COL_SAMPLE):
+                "%s.chunks" % settings.COL_SAMPLES):
         c = mongo_connector(col)
         d = c.index_information()
         if d.get('files_id_1_n_1', False):
