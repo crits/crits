@@ -4,6 +4,18 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: mgoffin
+Date:   2014-09-03
+
+    The way we handle URLs is changing drastically. Now, each TLO and major
+    section of CRITs is going to handle its own urls.py file. They are imported
+    in the normal `crits/urls.py` file. If you've made any changes to your
+    urls.py file, you will need to determine the correct new location and adjust
+    accordingly.
+
+    This change was made because we exceeded the 255 argument limit when trying
+    to jam them all into one file.
+
+Author: mgoffin
 Date:   2014-09-02
 
     Actors are a new TLO that come with a lot of attribution content. In order
