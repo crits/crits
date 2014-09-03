@@ -880,7 +880,8 @@ def modify_bucket_list(itype, oid, tags, analyst):
         pass
 
 def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
-                            bin_fmt, object_types, objs, sources):
+                            bin_fmt, object_types, objs, sources,
+                            make_zip=True):
     """
     Given a list of tuples, collect the objects for each given the total
     number of objects to return for each, the depth to traverse for each
@@ -949,9 +950,15 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                         to_zip.append((obj.filename + ext, data))
                     obj.filedata.seek(0)
             else:
-                stix_docs.append(obj.to_stix(items_to_convert=[obj],
-                                             loaded=True,
-                                             bin_fmt=bin_fmt))
+                try:
+                    stix_docs.append(obj.to_stix(items_to_convert=[obj],
+                                                loaded=True,
+                                                bin_fmt=bin_fmt))
+                except:
+                    # Usually due to the object not being a supported exportable
+                    # object such as Indicators with a type that is not a CybOX
+                    # object.
+                    pass
 
     doc_count = len(stix_docs)
     zip_count = len(to_zip)
@@ -962,15 +969,48 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                                             stix_docs[0]['final_objects'][0].id)
         result['mimetype'] = 'text/xml'
     elif doc_count + zip_count >= 1: # we have multiple or mixed items to return
-        zip_data = to_zip
-        for doc in stix_docs:
-            inner_filename = "%s_%s.xml" % (doc['final_objects'][0]._meta['crits_type'],
-                                            doc['final_objects'][0].id)
-            zip_data.append((inner_filename, doc['stix_obj'].to_xml()))
-        result['success'] = True
-        result['data'] = create_zip(zip_data, True)
-        result['filename'] = "CRITS_%s.zip" % datetime.datetime.today().strftime("%Y-%m-%d")
-        result['mimetype'] = 'application/zip'
+        if not make_zip:
+            # We are making a single STIX document out of our results. Pop any
+            # STIX object out of the list and use it as the "main" STIX object.
+            # TODO: This fails miserably for Events since they are their own
+            # unique STIX document.
+            final_doc = stix_docs.pop()
+            final_doc = final_doc['stix_obj']
+            for doc in stix_docs:
+                doc = doc['stix_obj']
+                # Add any indicators from this doc into the "main" STIX object.
+                if doc.indicators:
+                    if isinstance(doc.indicators, list):
+                        final_doc.indicators.extend(doc.indicators)
+                    else:
+                        final_doc.indicators.append(doc.indicators)
+                # Add any observables from this doc into the "main" STIX object.
+                if doc.observables:
+                    if isinstance(doc.observables.observables, list):
+                        for d in doc.observables.observables:
+                            final_doc.observables.add(d)
+                    else:
+                        final_doc.observables.add(doc.observables)
+                # Add any Actors from this doc into the "main" STIX object.
+                if doc.threat_actors:
+                    if isinstance(doc.threat_actors, list):
+                        final_doc.threat_actors.extend(doc.threat_actors)
+                    else:
+                        final_doc.threat_actors.append(doc.threat_actors)
+            # Convert the "main" STIX object into XML and return.
+            result['success'] = True
+            result['data'] = final_doc.to_xml()
+            result['mimetype'] = 'application/xml'
+        else:
+            zip_data = to_zip
+            for doc in stix_docs:
+                inner_filename = "%s_%s.xml" % (doc['final_objects'][0]._meta['crits_type'],
+                                                doc['final_objects'][0].id)
+                zip_data.append((inner_filename, doc['stix_obj'].to_xml()))
+            result['success'] = True
+            result['data'] = create_zip(zip_data, True)
+            result['filename'] = "CRITS_%s.zip" % datetime.datetime.today().strftime("%Y-%m-%d")
+            result['mimetype'] = 'application/zip'
     return result
 
 def collect_objects(obj_type, obj_id, depth_limit, total_limit, rel_limit,
