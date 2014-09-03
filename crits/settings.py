@@ -18,7 +18,7 @@ DJANGO_ROOT = os.path.dirname(os.path.realpath(django.__file__))
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
 # Version
-CRITS_VERSION = '4-master'
+CRITS_VERSION = '4-stable'
 
 #the following gets the current git hash to be displayed in the footer and
 #hides it if it is not a git repo
