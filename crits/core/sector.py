@@ -20,6 +20,7 @@ class Sector(CritsDocument, CritsSchemaDocument, Document):
         "latest_schema_version": 1,
         "schema_doc": {
             'name': 'Sectorlist name',
+            'Actor': 'Integer',
             'Campaign': 'Integer',
             'Certificate': 'Integer',
             'Domain': 'Integer',
@@ -35,6 +36,7 @@ class Sector(CritsDocument, CritsSchemaDocument, Document):
     }
 
     name = StringField(required=True)
+    Actor = IntField(default=0)
     Campaign = IntField(default=0)
     Certificate = IntField(default=0)
     Domain = IntField(default=0)

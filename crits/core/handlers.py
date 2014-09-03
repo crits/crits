@@ -36,6 +36,7 @@ from crits.core.user_tools import user_sources, is_admin
 from crits.core.user_tools import get_subscribed_users, save_user_secret
 from crits.core.user_tools import get_user_email_notification
 
+from crits.actors.actor import Actor
 from crits.campaigns.campaign import Campaign
 from crits.certificates.certificate import Certificate
 from crits.comments.comment import Comment
@@ -74,6 +75,7 @@ def get_favorites(analyst):
         return {'success': True, 'message': '<div id="favorites_results">You have no favorites.</div>'}
 
     field_dict = {
+        'Actor': 'name',
         'Campaign': 'name',
         'Certificate': 'filename',
         'Comment': 'object_id',
@@ -180,6 +182,7 @@ def get_data_for_item(item_type, item_id):
     """
 
     type_to_fields = {
+        'Actor': ['name', ],
         'Campaign': ['name', ],
         'Certificate': ['filename', ],
         'Domain': ['domain', ],
@@ -741,6 +744,7 @@ def alter_bucket_list(obj, buckets, val):
         # Find and remove this bucket if, and only if, all counts are zero.
         if val == -1:
             Bucket.objects(name=name,
+                           Actor=0,
                            Campaign=0,
                            Certificate=0,
                            Domain=0,
@@ -783,6 +787,7 @@ def generate_bucket_jtable(request, option):
                                     details_key,
                                     request,
                                     includes=['name',
+                                              'Actor',
                                               'Campaign',
                                               'Certificate',
                                               'Domain',
@@ -797,8 +802,8 @@ def generate_bucket_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Campaign', 'Certificate', 'Domain', 'Email', 'Event',
-              'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target',
+    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
+              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target',
               'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
@@ -1399,6 +1404,8 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         query = {'bucket_list': search_query}
     elif search_type == "sectors":
         query = {'sectors': search_query}
+    elif search_type == "actor_identifier":
+        query = {'identifiers.identifier_id': search_query}
     # object_ comes from the core/views.py search function.
     # It joins search_type with otype
     elif search_type.startswith("object_"):
@@ -1424,6 +1431,11 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             search_list.append(sample_queries["filename"])
             if len(term) == 32:
                 search_list.append(sample_queries["md5hash"])
+        elif type_ == "Actor":
+            search_list = [
+                    {'name': search_query},
+                    {'objects.value': search_query},
+            ]
         elif type_ == "Certificate":
             search_list = [
                     {'md5': search_query},
@@ -1805,6 +1817,7 @@ def get_query(col_obj,request):
     """
 
     keymaps = {
+            "actor_identifier": "identifiers.identifier_id",
             "campaign": "campaign.name",
             "source": "source.name",
             "confidence": "confidence.rating",
@@ -1917,6 +1930,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         multisort = []
 
         keymaps = {
+            "actor_identifier": "identifiers.identifier_id",
             "campaign": "campaign.name",
             "source": "source.name",
             "confidence": "confidence.rating",
@@ -2002,16 +2016,17 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 doc[key] = html_escape(doc[key])
             if col_obj._meta['crits_type'] == "Comment":
                 mapper = {
-                    "Indicator": 'crits.indicators.views.indicator',
-                    "Sample": 'crits.samples.views.detail',
+                    "Actor": 'crits.actors.views.actor_detail',
+                    "Campaign": 'crits.campaigns.views.campaign_details',
+                    "Certificate": 'crits.certificates.views.certificate_details',
                     "Domain": 'crits.domains.views.domain_detail',
-                    "Event": 'crits.events.views.view_event',
                     "Email": 'crits.emails.views.email_detail',
+                    "Event": 'crits.events.views.view_event',
+                    "Indicator": 'crits.indicators.views.indicator',
                     "IP": 'crits.ips.views.ip_detail',
                     "PCAP": 'crits.pcaps.views.pcap_details',
-                    "Certificate": 'crits.certificates.views.certificate_details',
                     "RawData": 'crits.raw_data.views.raw_data_details',
-                    "Campaign": 'crits.campaigns.views.campaign_details',
+                    "Sample": 'crits.samples.views.detail',
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
                                      args=(doc['url_key'],))
@@ -2321,7 +2336,18 @@ def generate_items_jtable(request, itype, option):
 
     obj_type = class_from_type(itype)
 
-    if itype == 'Backdoor':
+    if itype == 'ActorThreatIdentifier':
+        fields = ['name', 'active', 'id']
+        click = "function () {window.parent.$('#actor_identifier_type_add').click();}"
+    elif itype == 'ActorThreatType':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorMotivation':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorSophistication':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorIntendedEffect':
+        fields = ['name', 'active', 'id']
+    elif itype == 'Backdoor':
         fields = ['name', 'sample_count', 'active', 'id']
         click = "function () {window.parent.$('#backdoor_add').click();}"
     elif itype == 'Campaign':
@@ -2375,7 +2401,9 @@ def generate_items_jtable(request, itype, option):
         'details_link': '',
     }
     jtable = build_jtable(jtopts, request)
-    if itype not in ('EventType', 'ObjectType', 'RelationshipType'):
+    if itype not in ('ActorThreatType', 'ActorMotivation',
+                     'ActorSophistication', 'ActorIntendedEffect',
+                     'EventType', 'ObjectType', 'RelationshipType'):
         jtable['toolbar'] = [
             {
                 'tooltip': "'Add %s'" % itype,
@@ -3387,7 +3415,9 @@ def generate_global_search(request):
     """
 
     results = []
-    for col_obj,url in [[Campaign, "crits.campaigns.views.campaigns_listing"],
+    for col_obj,url in [
+                    [Actor, "crits.actors.views.actors_listing"],
+                    [Campaign, "crits.campaigns.views.campaigns_listing"],
                     [Certificate, "crits.certificates.views.certificates_listing"],
                     [Comment, "crits.comments.views.comments_listing"],
                     [Domain, "crits.domains.views.domains_listing"],
@@ -3580,7 +3610,8 @@ def details_from_id(type_, id_):
     :returns: str
     """
 
-    type_map = {'Campaign': 'crits.campaigns.views.campaign_details',
+    type_map = {'Actor': 'crits.actors.views.actor_detail',
+                'Campaign': 'crits.campaigns.views.campaign_details',
                 'Certificate': 'crits.certificates.views.certificate_details',
                 'Domain': 'crits.domains.views.domain_detail',
                 'Email': 'crits.emails.views.email_detail',
@@ -3665,6 +3696,7 @@ def audit_entry(self, username, type_, new_doc=False):
     else:
         what_changed = ', '.join(changed)
     field_dict = {
+        'Actor': 'name',
         'Campaign': 'name',
         'Certificate': 'md5',
         'Comment': 'object_id',
@@ -3884,6 +3916,7 @@ def alter_sector_list(obj, sectors, val):
         # Find and remove this sector if, and only if, all counts are zero.
         if val == -1:
             Sector.objects(name=name,
+                           Actor=0,
                            Campaign=0,
                            Certificate=0,
                            Domain=0,
@@ -3926,6 +3959,7 @@ def generate_sector_jtable(request, option):
                                     details_key,
                                     request,
                                     includes=['name',
+                                              'Actor',
                                               'Campaign',
                                               'Certificate',
                                               'Domain',
@@ -3940,8 +3974,8 @@ def generate_sector_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Campaign', 'Certificate', 'Domain', 'Email', 'Event',
-              'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target']
+    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
+              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',

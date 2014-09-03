@@ -113,6 +113,13 @@ if TEST_RUN:
 MONGO_READ_PREFERENCE = ReadPreference.PRIMARY
 
 # MongoDB default collections
+COL_ACTORS = "actors"                                   # main collection for actors
+COL_ACTOR_IDENTIFIERS = "actor_identifiers"             # main collection for actor identifiers
+COL_ACTOR_THREAT_IDENTIFIERS="actor_threat_identifiers" # actor threat identifiers
+COL_ACTOR_THREAT_TYPES="actor_threat_types"             # actor threat types
+COL_ACTOR_MOTIVATIONS="actor_motivations"               # actor motivations
+COL_ACTOR_SOPHISTICATIONS="actor_sophistications"       # actor sophistications
+COL_ACTOR_INTENDED_EFFECTS="actor_intended_effects"     # actor intended effects
 COL_AUDIT_LOG = "audit_log"                             # audit log entries
 COL_BACKDOOR_DETAILS = "backdoor_details"               # backdoor information
 COL_BUCKET_LISTS = "bucket_lists"                       # bucketlist information
@@ -303,6 +310,7 @@ ROOT_URLCONF = 'crits.urls'
 TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, '../documentation'),
     os.path.join(SITE_ROOT, 'core/templates'),
+    os.path.join(SITE_ROOT, 'actors/templates'),
     os.path.join(SITE_ROOT, 'campaigns/templates'),
     os.path.join(SITE_ROOT, 'certificates/templates'),
     os.path.join(SITE_ROOT, 'comments/templates'),
@@ -326,6 +334,7 @@ TEMPLATE_DIRS = (
 
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'core/static'),
+    os.path.join(SITE_ROOT, 'actors/static'),
     os.path.join(SITE_ROOT, 'campaigns/static'),
     os.path.join(SITE_ROOT, 'certificates/static'),
     os.path.join(SITE_ROOT, 'comments/static'),
@@ -354,6 +363,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.staticfiles',
+    'crits.actors',
     'crits.campaigns',
     'crits.certificates',
     'crits.domains',
@@ -451,6 +461,7 @@ for handler in LOGGING['handlers'].values():
 
 # CRITs Types
 CRITS_TYPES = {
+        'Actor': COL_ACTORS,
         'Campaign': COL_CAMPAIGNS,
         'Certificate': COL_CERTIFICATES,
         'Comment': COL_COMMENTS,

@@ -13,6 +13,7 @@ class Common():
     BULK_REQUIRED = "bulkrequired"
 
     # class names
+    Actor = "Actor"
     Campaign = "Campaign"
     Certificate = "Certificate"
     Domain = "Domain"
@@ -38,6 +39,22 @@ class Status():
     FAILURE = 0;
     SUCCESS = 1;
     DUPLICATE = 2;
+
+
+class Actor():
+    """
+    Constants for Campaigns.
+    """
+
+    NAME = "Name"
+    ALIASES = "Aliases"
+    DESCRIPTION = "Description"
+    CAMPAIGN = "Campaign"
+    CAMPAIGN_CONFIDENCE = "Campaign Confidence"
+    SOURCE = Common.SOURCE
+    SOURCE_METHOD = "Source Method"
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+
 
 class Campaign():
     """

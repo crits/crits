@@ -14,6 +14,11 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
+from crits.actors.actor import ActorIntendedEffect, ActorMotivation
+from crits.actors.actor import ActorSophistication, ActorThreatType
+from crits.actors.actor import ActorThreatIdentifier
+from crits.actors.forms import AddActorForm, AddActorIdentifierTypeForm
+from crits.actors.forms import AddActorIdentifierForm, AttributeIdentifierForm
 from crits.campaigns.campaign import Campaign
 from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
@@ -1027,8 +1032,18 @@ def base_context(request):
         base_context['upload_tlds'] = TLDUpdateForm()
         base_context['user_role_add'] = AddUserRoleForm()
         base_context['new_ticket'] = TicketForm(initial={'date': datetime.datetime.now()})
+        base_context['add_actor_identifier_type'] = AddActorIdentifierTypeForm()
+        base_context['attribute_actor_identifier'] = AttributeIdentifierForm()
 
         # Forms that require a user
+        try:
+            base_context['actor_add'] = AddActorForm(user)
+        except Exception, e:
+            logger.warning("Base Context AddActorForm Error: %s" % e)
+        try:
+            base_context['add_actor_identifier'] = AddActorIdentifierForm(user)
+        except Exception, e:
+            logger.warning("Base Context AddActorIdentifierForm Error: %s" % e)
         try:
             base_context['add_domain'] = AddDomainForm(user)
         except Exception, e:
@@ -1629,7 +1644,12 @@ def item_editor(request):
     """
 
     counts = {}
-    obj_list = [Backdoor,
+    obj_list = [ActorThreatIdentifier,
+                ActorThreatType,
+                ActorMotivation,
+                ActorSophistication,
+                ActorIntendedEffect,
+                Backdoor,
                 Campaign,
                 EventType,
                 Exploit,
