@@ -138,7 +138,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
     service_instance.set_task(task)
 
     if execute == 'process':
-        __service_process_pool__.apply_async(func=service_work_handler,
+        __service_thread_pool__.apply_async(func=service_work_handler,
                                              args=(service_instance, final_config,))
     elif execute == 'thread':
         __service_thread_pool__.apply_async(func=service_work_handler,
@@ -586,5 +586,4 @@ def update_analysis_results(task):
 # Initialize BOTH process and thread pools for backwards compatability since
 # run_service() can be made to run in either process or thread mode. Ideally
 # we should just need to initialize one of these.
-__service_process_pool__ = Pool(processes=settings.SERVICE_POOL_SIZE)
 __service_thread_pool__ = ThreadPool(processes=settings.SERVICE_POOL_SIZE)
