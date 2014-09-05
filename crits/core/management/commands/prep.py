@@ -200,4 +200,5 @@ def prep_database():
     prep_notifications()
     prep_sectors()
     prep_indexes()
+    update_database_version()
     return
