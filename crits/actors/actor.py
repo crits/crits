@@ -344,7 +344,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
                 existing_tags = self.threat_types
         else:
             return
-        if existing_tags:
+        if existing_tags is not None:
             for t in tags:
                 if t not in existing_tags:
                     existing_tags.append(t)

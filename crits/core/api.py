@@ -322,12 +322,12 @@ class CRITsSerializer(Serializer):
                                            bin_fmt,
                                            object_types,
                                            objects,
-                                           sources)
+                                           sources,
+                                           False)
         except Exception:
             data = ""
         if 'data' in data:
             data = data['data']
-        print "Data: ", data
         return data
 
     def _convert_mongoengine(self, data, options=None):
