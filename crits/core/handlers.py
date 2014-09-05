@@ -2511,7 +2511,7 @@ def generate_users_jtable(request, option):
         {
             'tooltip': "'Add User'",
             'text': "'Add User'",
-            'click': "function () {$('#add-new-user-form').dialog('open')}",
+            'click': "function () {editUser('');}",
         },
 
     ]
