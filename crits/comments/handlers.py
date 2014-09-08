@@ -92,7 +92,8 @@ def get_user_allowed_comments(comments, sources):
     :returns: list of :class:`crits.comments.comment.Comment`
     """
 
-    docs = {'Campaign':{},
+    docs = {'Actor': {},
+            'Campaign':{},
             'Certificate':{},
             'Domain':{},
             'Email':{},
