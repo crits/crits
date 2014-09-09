@@ -219,7 +219,7 @@ class CritsDocumentFormatter(object):
         Return the object as a dict.
         """
 
-        return self.to_mongo()
+        return self.to_mongo().to_dict()
 
     def __str__(self):
         """

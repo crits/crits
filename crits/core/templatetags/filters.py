@@ -150,6 +150,18 @@ def cgi_escape(value):
     return cgi.escape(value)
 
 @register.filter
+def to_dict(obj):
+    """
+    Convert a mongoengine object into a dictionary.
+
+    :param obj: The mongoengine object to convert.
+    :type obj: A mongoengine object.
+    :returns: dict
+    """
+
+    return obj.to_dict()
+
+@register.filter
 def absVal(value):
     """
     return absolute value
