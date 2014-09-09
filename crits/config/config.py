@@ -28,6 +28,8 @@ class CRITsConfig(CritsDocument, Document):
     crits_email = StringField(default='')
     crits_email_subject_tag = StringField(default='')
     crits_email_end_tag = BooleanField(default=True)
+    # This is actually the internal DB version, but is named crits_version
+    # for historical reasons.
     crits_version = StringField(required=True,
                                 default=settings.CRITS_VERSION)
     debug = BooleanField(default=True)
@@ -35,6 +37,7 @@ class CRITsConfig(CritsDocument, Document):
     email_host = StringField(default='')
     email_port = StringField(default='')
     enable_api = BooleanField(default=False)
+    git_repo_url = StringField(default='https://github.com/crits/crits')
     http_proxy = StringField(default='')
     instance_name = StringField(default='My Instance')
     instance_url = StringField(default='')

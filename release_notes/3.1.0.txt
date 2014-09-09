@@ -1,0 +1,220 @@
+CRITs 3.1.0 Release Notes:
+
+Please read *all* of the release notes as there are steps provided to help
+upgrading from 3.0.0 to 3.1.0. This is written mostly for people who are using
+release installs but might be informative for those tracking branches. If you do
+track branches, you'll be keeping up-to-date through UPDATING and commits so
+there shouldn't be any upgrade steps for you that you haven't already been
+doing.
+
+This document is broken down into two major sections. The first are the
+necessary instructions for upgrading your CRITs install. The second section
+covers the details of what has changed in this release from a UI and CRITs
+internals perspective. Please read both sections completely as they will both
+answer questions you might have.
+
+It is vital that you read and follow the instructions in the first section
+completely. There are some critical steps that if not followed properly will
+result in errors when running crits.
+
+############################
+## UPGRADE INSTRUCTIONS ##
+############################
+
+-----------------------------
+| New Software Dependencies |
+-----------------------------
+    All new core dependencies can be found in the following repository on Github.
+        - https://github.com/crits/crits_dependencies
+        - Grab the tarball for the 3.1.0 release.
+        - If you need help determining how to install the dependencies, look at
+          the 'install_dependencies.sh' script that comes in the repository.
+    Updates include:
+    - MongoDB 2.6.4
+    - PyMongo 2.7.2
+    - MongoEngine 0.8.7
+    - Django 1.6.5
+    - CybOX 2.1.0.5
+    - STIX 1.1.1.0
+    - Service-specific dependencies can be found in the Services section below.
+
+------------------------
+| Install Instructions |
+------------------------
+    - Stop your webserver from running.
+    - Backup your config files:
+        - crits/config/database.py
+        - crits/config/overrides.py (if used)
+    - Backup any custom modifications to the codebase.
+    - Install and update the software dependencies above.
+    - Extract the new 3.1.0 codebase and *replace* your old codebase with it.
+    - Put your custom code modifications back in place if you have any.
+    - Put your configuration files back in place.
+    - Run management commands to update the database:
+        - Run the prep management command:
+            python manage.py prep
+        - Once prep has finished you can now use the UI.
+    - Look at the Services section below for information on how to acquire,
+      install, and use the new Services available.
+    - Some new services have dependencies which will need to be installed before
+      CRITs can run if you choose to import that service!
+
+######################
+## Detailed Changes ##
+######################
+The rest of this document is covering changes that do not require action during
+install. If you are ever wondering what a new icon or feature means, or how it
+works, please read about it in this section.
+
+ -----------------
+| General Changes |
+ -----------------
+
+    - Improvements to capabilities and performance of Bulk Uploading.
+    - Relationships now allow for a confidence level and reason to be included.
+    - Support for STIX and CybOX has been improved.
+    - There is now support for quickly setting up CRITs using Vagrant and Salt.
+        - More information on this can be found in the Github wiki.
+    - The Control Panel got a major overhaul making it cleaner, neater, and
+      easier to navigate.
+    - The "adduser" management command has been renamed to "users" and now
+      supports adding as well as editing users.
+    - CRITs versioning scheme is now properly exposed in the bottom-left corner
+      of the interface.
+    - Users can now have "Favorites".
+        - You can mark any top-level object as a Favorite so you can quickly
+          find it from your Favorites profile section or the Favorites icon in
+          the top bar.
+    - Top-level objects can now be attributed to sectors.
+    - Many other small bug fixes.
+
+ -------------------
+| Authenticated API |
+ -------------------
+
+    - CRITs now has an authenticated API!
+    - API is built off of Tastypie and Tastypie-MongoEngine.
+    - Users can generate and revoke their own API Keys.
+    - API is disabled by default and requires you to enable it in the Control
+      Panel (web server restart required to expose the API).
+    - Review the documentation on the Github wiki as well as the Help page in
+      CRITs for more information on how to leverage the API for reading from and
+      writing to CRITs.
+
+ -----------
+| Campaigns |
+ -----------
+
+    - Nothing new to report!
+
+ --------------
+| Certificates |
+ --------------
+
+    - Nothing new to report!
+
+ ---------
+| Domains |
+ ---------
+
+    - Nothing new to report!
+
+ --------
+| Emails |
+ --------
+
+    - Emails can now be uploaded as an MSG file and parsed.
+
+ ------------
+| Indicators |
+ ------------
+
+    - Nothing new to report!
+
+ -----
+| IPs |
+ -----
+
+    - Nothing new to report!
+
+ ----------
+| Raw Data |
+ ----------
+
+    - Raw Data is a new top-level object designed around harvesting blobs of
+      unfiltered information.
+    - You can use the Raw Data interface to review content line-by-line and make
+      note of any interesting bits of data.
+    - You can upload multiple versions of the same Raw Data in case newer
+      revisions are released or generated.
+    - There is a diffing engine so you can look at changes over time.
+    - Check out the "Data Miner" service in the Services section for ways to
+      find Domains, IPs, and Email Addresses in your Raw Data.
+
+ ---------
+| Samples |
+ ---------
+
+    - Samples can now have multiple filenames.
+    - You can modify the "filename" to be whichever name you would like your
+      organization to refer to the Sample as.
+    - Other filenames can be added manually or will automatically be appended if
+      the same binary is uploaded with a different name.
+
+ -------------
+| Screenshots |
+ -------------
+
+    - Top-level objects now support screenshots!
+    - You can upload a screenshot to associate with a top-level object.
+    - Screenshots can have keywords assigned to them.
+    - If a bucket list item for a top-level object matches that of any
+      screenshot keywords, those screenshots will show up with a blue border.
+    - You can copy screenshot IDs to your CRITs Clipboard for quickly
+      associating with other top-level objects.
+    - You can click on a screenshot and go to a Gallery view to see more
+      details.
+
+ ----------
+| Services |
+ ----------
+
+    - You can acquire any of the services listed below at
+      https://www.github.com/crits/crits_services.
+
+    New/Updated Services:
+
+    - Clamd Service
+        - Scan samples with ClamAV.
+    - Cuckoo Service
+        - Submit samples to Cuckoo and retrieve results.
+    - Data Miner
+        - Find Domains, IPs, and Email Addresses in Raw Data or Samples.
+    - OpenDNS Service
+        - Query OpenDNS Investigate for more information on Domains and IPs.
+    - PassiveTotal Service
+        - Query the PassiveTotal database for Domains and IPs.
+    - ThreatRecon Service
+        - Check the ThreatRecon Database for Domains and IPs.
+    - Timeline Service
+        - View a top-level object's changes over time.
+    - Totalhash Service
+        - Generate PEHash and look it up in Totalhash.
+    - Yara Service:
+        - The yara dependencies have been updated. Make sure to updated to yara
+          2.1.0 (3.0 is not yet supported but might work).
+
+ -------------
+| MongoEngine |
+ -------------
+
+    - Updated to version 0.8.7.
+
+ ---------
+| Backend |
+ ---------
+
+    - docstrings have been added all over the code base to make it easier to
+      jump into development.
+    - We now support SSL-enabled MongoDB connections as well as authenticated
+      connections.

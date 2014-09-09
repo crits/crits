@@ -4,6 +4,35 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: mgoffin
+Date:   2014-09-03
+
+    The way we handle URLs is changing drastically. Now, each TLO and major
+    section of CRITs is going to handle its own urls.py file. They are imported
+    in the normal `crits/urls.py` file. If you've made any changes to your
+    urls.py file, you will need to determine the correct new location and adjust
+    accordingly.
+
+    This change was made because we exceeded the 255 argument limit when trying
+    to jam them all into one file.
+
+Author: mgoffin
+Date:   2014-09-02
+
+    Actors are a new TLO that come with a lot of attribution content. In order
+    to get Actors working, you will need to populate your database with several
+    things:
+
+        python manage.py create_actors_content
+
+    That will populate the available Threat Types, Motivations, Sophistications,
+    and Intended Effects from STIX into your database to make available.
+
+    You will also need to add some Actor Identifier Types to your system. You
+    can do this via the Control Panel or under "Add New Item". Once you have one
+    or more of these set, you can add Actor Identifiers. More information on
+    Actors, Actor Identifiers, etc. can be found on the wiki.
+
+Author: mgoffin
 Date:   2014-08-13
 
     The Sample API has been updated. The Method will default to an empty string
@@ -20,17 +49,6 @@ Date:   2014-08-12
     their 1.7 release), MongoDB 2.6.4, and PyMongo 2.7.2. I also bumped dateutil
     and Yara to 2.1.0 so people using the service push to upgrade and stay on
     the latest code base (new features which will help us enhance the service).
-
-Author: ssnow
-Date: 2014-06-23
-
-    Updating CRITs to expand the TAXII service. Within this repository, this
-    involves creating a to_stix method for crits objects within
-    crits_mongoengine.py. This method will need to be updated as more crits
-    objects can be converted into the STIX standard and potentially shared
-    via TAXII.
-
-    Related: updating STIX to v1.1.1.0 and CybOX to 2.1.0.5.
 
 Author: mgoffin
 Date:   2014-07-16
@@ -59,6 +77,17 @@ Date: 2014-06-26
 
         python manage.py sector_counts
 
+Author: ssnow
+Date: 2014-06-23
+
+    Updating CRITs to expand the TAXII service. Within this repository, this
+    involves creating a to_stix method for crits objects within
+    crits_mongoengine.py. This method will need to be updated as more crits
+    objects can be converted into the STIX standard and potentially shared
+    via TAXII.
+
+    Related: updating STIX to v1.1.1.0 and CybOX to 2.1.0.5.
+
 Author: mgoffin
 Date: 2014-06-06
 
@@ -73,7 +102,7 @@ Date: 2014-06-06
     feature matures.
 
 Author: mgoffin
-Date:  2014-05.15
+Date:  2014-05-15
 
     Notifications are getting an overhaul. They are now stored in their own
     separate collection instead of being mixed in with comment and embedded in a

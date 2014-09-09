@@ -14,6 +14,11 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
+from crits.actors.actor import ActorIntendedEffect, ActorMotivation
+from crits.actors.actor import ActorSophistication, ActorThreatType
+from crits.actors.actor import ActorThreatIdentifier
+from crits.actors.forms import AddActorForm, AddActorIdentifierTypeForm
+from crits.actors.forms import AddActorIdentifierForm, AttributeIdentifierForm
 from crits.campaigns.campaign import Campaign
 from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
@@ -970,9 +975,22 @@ def base_context(request):
     company_name = getattr(crits_config,
                            'company_name',
                            settings.COMPANY_NAME)
-    crits_version = getattr(crits_config,
-                            'crits_version',
-                            settings.CRITS_VERSION)
+    crits_version = settings.CRITS_VERSION
+    git_branch = getattr(crits_config,
+                         'git_branch',
+                         settings.GIT_BRANCH)
+    git_hash = getattr(crits_config,
+                       'git_hash',
+                        settings.GIT_HASH)
+    git_hash_long = getattr(crits_config,
+                       'git_hash_long',
+                        settings.GIT_HASH_LONG)
+    git_repo_url = getattr(crits_config,
+                            'git_repo_url',
+                            settings.GIT_REPO_URL)
+    hide_git_hash = getattr(crits_config,
+                      'hide_git_hash',
+                      settings.HIDE_GIT_HASH)
     splunk_url = getattr(crits_config,
                          'splunk_search_url',
                          settings.SPLUNK_SEARCH_URL)
@@ -986,6 +1004,11 @@ def base_context(request):
     base_context['instance_name'] = instance_name
     base_context['company_name'] = company_name
     base_context['crits_version'] = crits_version
+    if git_repo_url:
+        base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long+"'>"+git_branch+':'+git_hash+"</a>"
+    else:
+        base_context['git_repo_link'] = "%s:%s" % (git_branch, git_hash)
+    base_context['hide_git_hash'] = hide_git_hash
     base_context['splunk_search_url'] = splunk_url
     base_context['mongo_database'] = mongo_database
     base_context['secure_cookie'] = secure_cookie
@@ -1009,8 +1032,18 @@ def base_context(request):
         base_context['upload_tlds'] = TLDUpdateForm()
         base_context['user_role_add'] = AddUserRoleForm()
         base_context['new_ticket'] = TicketForm(initial={'date': datetime.datetime.now()})
+        base_context['add_actor_identifier_type'] = AddActorIdentifierTypeForm()
+        base_context['attribute_actor_identifier'] = AttributeIdentifierForm()
 
         # Forms that require a user
+        try:
+            base_context['actor_add'] = AddActorForm(user)
+        except Exception, e:
+            logger.warning("Base Context AddActorForm Error: %s" % e)
+        try:
+            base_context['add_actor_identifier'] = AddActorIdentifierForm(user)
+        except Exception, e:
+            logger.warning("Base Context AddActorIdentifierForm Error: %s" % e)
         try:
             base_context['add_domain'] = AddDomainForm(user)
         except Exception, e:
@@ -1611,7 +1644,12 @@ def item_editor(request):
     """
 
     counts = {}
-    obj_list = [Backdoor,
+    obj_list = [ActorThreatIdentifier,
+                ActorThreatType,
+                ActorMotivation,
+                ActorSophistication,
+                ActorIntendedEffect,
+                Backdoor,
                 Campaign,
                 EventType,
                 Exploit,

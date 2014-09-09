@@ -36,6 +36,7 @@ from crits.core.user_tools import user_sources, is_admin
 from crits.core.user_tools import get_subscribed_users, save_user_secret
 from crits.core.user_tools import get_user_email_notification
 
+from crits.actors.actor import Actor
 from crits.campaigns.campaign import Campaign
 from crits.certificates.certificate import Certificate
 from crits.comments.comment import Comment
@@ -74,6 +75,7 @@ def get_favorites(analyst):
         return {'success': True, 'message': '<div id="favorites_results">You have no favorites.</div>'}
 
     field_dict = {
+        'Actor': 'name',
         'Campaign': 'name',
         'Certificate': 'filename',
         'Comment': 'object_id',
@@ -180,6 +182,7 @@ def get_data_for_item(item_type, item_id):
     """
 
     type_to_fields = {
+        'Actor': ['name', ],
         'Campaign': ['name', ],
         'Certificate': ['filename', ],
         'Domain': ['domain', ],
@@ -741,6 +744,7 @@ def alter_bucket_list(obj, buckets, val):
         # Find and remove this bucket if, and only if, all counts are zero.
         if val == -1:
             Bucket.objects(name=name,
+                           Actor=0,
                            Campaign=0,
                            Certificate=0,
                            Domain=0,
@@ -783,6 +787,7 @@ def generate_bucket_jtable(request, option):
                                     details_key,
                                     request,
                                     includes=['name',
+                                              'Actor',
                                               'Campaign',
                                               'Certificate',
                                               'Domain',
@@ -797,8 +802,8 @@ def generate_bucket_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Campaign', 'Certificate', 'Domain', 'Email', 'Event',
-              'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target',
+    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
+              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target',
               'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
@@ -875,7 +880,8 @@ def modify_bucket_list(itype, oid, tags, analyst):
         pass
 
 def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
-                            bin_fmt, object_types, objs, sources):
+                            bin_fmt, object_types, objs, sources,
+                            make_zip=True):
     """
     Given a list of tuples, collect the objects for each given the total
     number of objects to return for each, the depth to traverse for each
@@ -944,9 +950,15 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                         to_zip.append((obj.filename + ext, data))
                     obj.filedata.seek(0)
             else:
-                stix_docs.append(obj.to_stix(items_to_convert=[obj],
-                                             loaded=True,
-                                             bin_fmt=bin_fmt))
+                try:
+                    stix_docs.append(obj.to_stix(items_to_convert=[obj],
+                                                loaded=True,
+                                                bin_fmt=bin_fmt))
+                except:
+                    # Usually due to the object not being a supported exportable
+                    # object such as Indicators with a type that is not a CybOX
+                    # object.
+                    pass
 
     doc_count = len(stix_docs)
     zip_count = len(to_zip)
@@ -957,15 +969,48 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                                             stix_docs[0]['final_objects'][0].id)
         result['mimetype'] = 'text/xml'
     elif doc_count + zip_count >= 1: # we have multiple or mixed items to return
-        zip_data = to_zip
-        for doc in stix_docs:
-            inner_filename = "%s_%s.xml" % (doc['final_objects'][0]._meta['crits_type'],
-                                            doc['final_objects'][0].id)
-            zip_data.append((inner_filename, doc['stix_obj'].to_xml()))
-        result['success'] = True
-        result['data'] = create_zip(zip_data, True)
-        result['filename'] = "CRITS_%s.zip" % datetime.datetime.today().strftime("%Y-%m-%d")
-        result['mimetype'] = 'application/zip'
+        if not make_zip:
+            # We are making a single STIX document out of our results. Pop any
+            # STIX object out of the list and use it as the "main" STIX object.
+            # TODO: This fails miserably for Events since they are their own
+            # unique STIX document.
+            final_doc = stix_docs.pop()
+            final_doc = final_doc['stix_obj']
+            for doc in stix_docs:
+                doc = doc['stix_obj']
+                # Add any indicators from this doc into the "main" STIX object.
+                if doc.indicators:
+                    if isinstance(doc.indicators, list):
+                        final_doc.indicators.extend(doc.indicators)
+                    else:
+                        final_doc.indicators.append(doc.indicators)
+                # Add any observables from this doc into the "main" STIX object.
+                if doc.observables:
+                    if isinstance(doc.observables.observables, list):
+                        for d in doc.observables.observables:
+                            final_doc.observables.add(d)
+                    else:
+                        final_doc.observables.add(doc.observables)
+                # Add any Actors from this doc into the "main" STIX object.
+                if doc.threat_actors:
+                    if isinstance(doc.threat_actors, list):
+                        final_doc.threat_actors.extend(doc.threat_actors)
+                    else:
+                        final_doc.threat_actors.append(doc.threat_actors)
+            # Convert the "main" STIX object into XML and return.
+            result['success'] = True
+            result['data'] = final_doc.to_xml()
+            result['mimetype'] = 'application/xml'
+        else:
+            zip_data = to_zip
+            for doc in stix_docs:
+                inner_filename = "%s_%s.xml" % (doc['final_objects'][0]._meta['crits_type'],
+                                                doc['final_objects'][0].id)
+                zip_data.append((inner_filename, doc['stix_obj'].to_xml()))
+            result['success'] = True
+            result['data'] = create_zip(zip_data, True)
+            result['filename'] = "CRITS_%s.zip" % datetime.datetime.today().strftime("%Y-%m-%d")
+            result['mimetype'] = 'application/zip'
     return result
 
 def collect_objects(obj_type, obj_id, depth_limit, total_limit, rel_limit,
@@ -1399,6 +1444,8 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         query = {'bucket_list': search_query}
     elif search_type == "sectors":
         query = {'sectors': search_query}
+    elif search_type == "actor_identifier":
+        query = {'identifiers.identifier_id': search_query}
     # object_ comes from the core/views.py search function.
     # It joins search_type with otype
     elif search_type.startswith("object_"):
@@ -1424,6 +1471,11 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             search_list.append(sample_queries["filename"])
             if len(term) == 32:
                 search_list.append(sample_queries["md5hash"])
+        elif type_ == "Actor":
+            search_list = [
+                    {'name': search_query},
+                    {'objects.value': search_query},
+            ]
         elif type_ == "Certificate":
             search_list = [
                     {'md5': search_query},
@@ -1805,6 +1857,7 @@ def get_query(col_obj,request):
     """
 
     keymaps = {
+            "actor_identifier": "identifiers.identifier_id",
             "campaign": "campaign.name",
             "source": "source.name",
             "confidence": "confidence.rating",
@@ -1900,6 +1953,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
     """
 
     response = {"Result": "ERROR"}
+    users_sources = user_sources(request.user.username)
     if request.is_ajax():
         pageSize = request.user.get_preference('ui','table_page_size',25)
 
@@ -1916,6 +1970,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         multisort = []
 
         keymaps = {
+            "actor_identifier": "identifiers.identifier_id",
             "campaign": "campaign.name",
             "source": "source.name",
             "confidence": "confidence.rating",
@@ -1974,7 +2029,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 elif key == "source":
                     srcs = []
                     for srcdict in doc[key]:
-                        srcs.append(srcdict['name'])
+                        if srcdict['name'] in users_sources:
+                            srcs.append(srcdict['name'])
                     doc[key] = "|||".join(srcs)
                 elif key == "tags":
                     tags = []
@@ -2000,16 +2056,17 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 doc[key] = html_escape(doc[key])
             if col_obj._meta['crits_type'] == "Comment":
                 mapper = {
-                    "Indicator": 'crits.indicators.views.indicator',
-                    "Sample": 'crits.samples.views.detail',
+                    "Actor": 'crits.actors.views.actor_detail',
+                    "Campaign": 'crits.campaigns.views.campaign_details',
+                    "Certificate": 'crits.certificates.views.certificate_details',
                     "Domain": 'crits.domains.views.domain_detail',
-                    "Event": 'crits.events.views.view_event',
                     "Email": 'crits.emails.views.email_detail',
+                    "Event": 'crits.events.views.view_event',
+                    "Indicator": 'crits.indicators.views.indicator',
                     "IP": 'crits.ips.views.ip_detail',
                     "PCAP": 'crits.pcaps.views.pcap_details',
-                    "Certificate": 'crits.certificates.views.certificate_details',
                     "RawData": 'crits.raw_data.views.raw_data_details',
-                    "Campaign": 'crits.campaigns.views.campaign_details',
+                    "Sample": 'crits.samples.views.detail',
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
                                      args=(doc['url_key'],))
@@ -2319,7 +2376,18 @@ def generate_items_jtable(request, itype, option):
 
     obj_type = class_from_type(itype)
 
-    if itype == 'Backdoor':
+    if itype == 'ActorThreatIdentifier':
+        fields = ['name', 'active', 'id']
+        click = "function () {window.parent.$('#actor_identifier_type_add').click();}"
+    elif itype == 'ActorThreatType':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorMotivation':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorSophistication':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorIntendedEffect':
+        fields = ['name', 'active', 'id']
+    elif itype == 'Backdoor':
         fields = ['name', 'sample_count', 'active', 'id']
         click = "function () {window.parent.$('#backdoor_add').click();}"
     elif itype == 'Campaign':
@@ -2373,7 +2441,9 @@ def generate_items_jtable(request, itype, option):
         'details_link': '',
     }
     jtable = build_jtable(jtopts, request)
-    if itype not in ('EventType', 'ObjectType', 'RelationshipType'):
+    if itype not in ('ActorThreatType', 'ActorMotivation',
+                     'ActorSophistication', 'ActorIntendedEffect',
+                     'EventType', 'ObjectType', 'RelationshipType'):
         jtable['toolbar'] = [
             {
                 'tooltip': "'Add %s'" % itype,
@@ -2441,7 +2511,7 @@ def generate_users_jtable(request, option):
         {
             'tooltip': "'Add User'",
             'text': "'Add User'",
-            'click': "function () {$('#add-new-user-form').dialog('open')}",
+            'click': "function () {editUser('');}",
         },
 
     ]
@@ -3385,7 +3455,9 @@ def generate_global_search(request):
     """
 
     results = []
-    for col_obj,url in [[Campaign, "crits.campaigns.views.campaigns_listing"],
+    for col_obj,url in [
+                    [Actor, "crits.actors.views.actors_listing"],
+                    [Campaign, "crits.campaigns.views.campaigns_listing"],
                     [Certificate, "crits.certificates.views.certificates_listing"],
                     [Comment, "crits.comments.views.comments_listing"],
                     [Domain, "crits.domains.views.domains_listing"],
@@ -3578,7 +3650,8 @@ def details_from_id(type_, id_):
     :returns: str
     """
 
-    type_map = {'Campaign': 'crits.campaigns.views.campaign_details',
+    type_map = {'Actor': 'crits.actors.views.actor_detail',
+                'Campaign': 'crits.campaigns.views.campaign_details',
                 'Certificate': 'crits.certificates.views.certificate_details',
                 'Domain': 'crits.domains.views.domain_detail',
                 'Email': 'crits.emails.views.email_detail',
@@ -3663,6 +3736,7 @@ def audit_entry(self, username, type_, new_doc=False):
     else:
         what_changed = ', '.join(changed)
     field_dict = {
+        'Actor': 'name',
         'Campaign': 'name',
         'Certificate': 'md5',
         'Comment': 'object_id',
@@ -3677,7 +3751,7 @@ def audit_entry(self, username, type_, new_doc=False):
         'Target': 'email_address'
     }
     if my_type in field_dict:
-        value = str(getattr(self, field_dict[my_type], ''))
+        value = getattr(self, field_dict[my_type], '')
     else:
         value = ""
 
@@ -3882,6 +3956,7 @@ def alter_sector_list(obj, sectors, val):
         # Find and remove this sector if, and only if, all counts are zero.
         if val == -1:
             Sector.objects(name=name,
+                           Actor=0,
                            Campaign=0,
                            Certificate=0,
                            Domain=0,
@@ -3924,6 +3999,7 @@ def generate_sector_jtable(request, option):
                                     details_key,
                                     request,
                                     includes=['name',
+                                              'Actor',
                                               'Campaign',
                                               'Certificate',
                                               'Domain',
@@ -3938,8 +4014,8 @@ def generate_sector_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Campaign', 'Certificate', 'Domain', 'Email', 'Event',
-              'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target']
+    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
+              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',

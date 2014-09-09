@@ -5,6 +5,7 @@ import glob
 import os
 import sys
 import django
+import subprocess
 
 from pymongo import ReadPreference, MongoClient
 from mongoengine import connect
@@ -17,10 +18,28 @@ DJANGO_ROOT = os.path.dirname(os.path.realpath(django.__file__))
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
 # Version
-CRITS_VERSION = '3.0.0'
+CRITS_VERSION = '4-master'
+
+#the following gets the current git hash to be displayed in the footer and
+#hides it if it is not a git repo
+try:
+    HIDE_GIT_HASH = False
+    #get the short hand of current git hash
+    GIT_HASH=subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
+    #get the long hand of the current git hash
+    GIT_HASH_LONG=subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
+    #get the git branch
+    GIT_BRANCH=subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).strip()
+except:
+    #if it is not a git repo, clear out all values and hide them
+    GIT_HASH=''
+    GIT_HASH_LONG=''
+    HIDE_GIT_HASH = True
+    GIT_BRANCH=''
 
 APPEND_SLASH = True
 TEST_RUN = False
+
 # Set to DENY|SAMEORIGIN|ALLOW-FROM uri
 # Default: SAMEORIGIN
 # More details: https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options
@@ -94,6 +113,13 @@ if TEST_RUN:
 MONGO_READ_PREFERENCE = ReadPreference.PRIMARY
 
 # MongoDB default collections
+COL_ACTORS = "actors"                                   # main collection for actors
+COL_ACTOR_IDENTIFIERS = "actor_identifiers"             # main collection for actor identifiers
+COL_ACTOR_THREAT_IDENTIFIERS="actor_threat_identifiers" # actor threat identifiers
+COL_ACTOR_THREAT_TYPES="actor_threat_types"             # actor threat types
+COL_ACTOR_MOTIVATIONS="actor_motivations"               # actor motivations
+COL_ACTOR_SOPHISTICATIONS="actor_sophistications"       # actor sophistications
+COL_ACTOR_INTENDED_EFFECTS="actor_intended_effects"     # actor intended effects
 COL_AUDIT_LOG = "audit_log"                             # audit log entries
 COL_BACKDOOR_DETAILS = "backdoor_details"               # backdoor information
 COL_BUCKET_LISTS = "bucket_lists"                       # bucketlist information
@@ -172,6 +198,7 @@ if crits_config.get('email_host', None):
 if crits_config.get('email_port', None):
     EMAIL_PORT =             int(crits_config.get('email_port', None))
 ENABLE_API =             crits_config.get('enable_api', False)
+GIT_REPO_URL =           crits_config.get('git_repo_url', '')
 HTTP_PROXY =             crits_config.get('http_proxy', None)
 INSTANCE_NAME =          crits_config.get('instance_name', 'My Instance')
 INSTANCE_URL =           crits_config.get('instance_url', '')
@@ -283,6 +310,7 @@ ROOT_URLCONF = 'crits.urls'
 TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, '../documentation'),
     os.path.join(SITE_ROOT, 'core/templates'),
+    os.path.join(SITE_ROOT, 'actors/templates'),
     os.path.join(SITE_ROOT, 'campaigns/templates'),
     os.path.join(SITE_ROOT, 'certificates/templates'),
     os.path.join(SITE_ROOT, 'comments/templates'),
@@ -306,6 +334,7 @@ TEMPLATE_DIRS = (
 
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'core/static'),
+    os.path.join(SITE_ROOT, 'actors/static'),
     os.path.join(SITE_ROOT, 'campaigns/static'),
     os.path.join(SITE_ROOT, 'certificates/static'),
     os.path.join(SITE_ROOT, 'comments/static'),
@@ -334,6 +363,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.staticfiles',
+    'crits.actors',
     'crits.campaigns',
     'crits.certificates',
     'crits.domains',
@@ -431,6 +461,7 @@ for handler in LOGGING['handlers'].values():
 
 # CRITs Types
 CRITS_TYPES = {
+        'Actor': COL_ACTORS,
         'Campaign': COL_CAMPAIGNS,
         'Certificate': COL_CERTIFICATES,
         'Comment': COL_COMMENTS,
