@@ -2,9 +2,7 @@ import ast
 import datetime
 import logging
 
-
-from multiprocessing import Pool, Process
-from multiprocessing.pool import ThreadPool
+from multiprocessing import Process
 from threading import Thread
 
 from mongoengine.base import ValidationError
@@ -21,23 +19,6 @@ from crits.services.core import ServiceConfigError, AnalysisTask
 from crits.services.service import CRITsService
 
 logger = logging.getLogger(__name__)
-
-
-def service_work_handler(service_instance, final_config):
-    """
-    Handles a unit of work for a service by calling the service's "execute"
-    method. This function is generally called by processes/threads. Also
-    this function is needed because it is picklable and passing in the
-    service_instance.execute method is not picklable because it is an
-    instance method.
-
-    :param service_instance: The service instance that the work will be performed in
-    :type service_instance: crits.services.core.Service
-    :param service_instance: The service's configuration settings
-    :type service_instance: dict
-    """
-
-    service_instance.execute(final_config)
 
 def run_service(name, crits_type, identifier, analyst, obj=None,
                 execute='local', custom_config={}):
@@ -138,11 +119,11 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
     service_instance.set_task(task)
 
     if execute == 'process':
-        __service_process_pool__.apply_async(func=service_work_handler,
-                                             args=(service_instance, final_config,))
+        p = Process(target=service_instance.execute, args=(final_config,))
+        p.start()
     elif execute == 'thread':
-        __service_thread_pool__.apply_async(func=service_work_handler,
-                                            args=(service_instance, final_config,))
+        t = Thread(target=service_instance.execute, args=(final_config,))
+        t.start()
     elif execute == 'local':
         service_instance.execute(final_config)
 
@@ -579,12 +560,3 @@ def update_analysis_results(task):
         ear.merge(arg_dict=tdict)
         obj_class.objects(id=obj_id,
                           analysis__id=task.task_id).update_one(set__analysis__S=ear)
-
-
-# The service pools need to be defined down here because the functions
-# that are used by the services must already be defined.
-# Initialize BOTH process and thread pools for backwards compatability since
-# run_service() can be made to run in either process or thread mode. Ideally
-# we should just need to initialize one of these.
-__service_process_pool__ = Pool(processes=settings.SERVICE_POOL_SIZE)
-__service_thread_pool__ = ThreadPool(processes=settings.SERVICE_POOL_SIZE)

@@ -61,7 +61,6 @@ class CRITsConfig(CritsDocument, Document):
     secure_cookie = BooleanField(default=True)
     service_dirs = ListField(StringField())
     service_model = StringField(default='process')
-    service_pool_size = IntField(default=5)
     session_timeout = IntField(default=12)
     splunk_search_url = StringField(default='')
     temp_dir = StringField(default='/tmp')

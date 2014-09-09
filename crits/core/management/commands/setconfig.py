@@ -92,7 +92,6 @@ class Command(BaseCommand):
            secure_cookie:\t\t<boolean> (ex: True, true, yes, or 1)
            service_dirs:\t\t<list of full directory paths>
            service_model:\t\t<process/thread/local>
-           service_pool_size:\t\t<integer>
            session_timeout:\t\t<integer>
            splunk_search_url:\t\t<string>
            temp_dir:\t\t\t<full directory path>
@@ -221,7 +220,7 @@ def set_config_attribute(crits_config, attr, value):
             else:
                 raise CE('%s is a boolean True/False.' % attr)
         if attr in ('depth_max', 'invalid_login_attempts', 'rel_max',
-                    'service_pool_size', 'session_timeout', 'total_max'):
+                    'session_timeout', 'total_max'):
             try:
                 value = int(value)
             except:
