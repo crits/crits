@@ -3,6 +3,20 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: wxs
+Date:   2014-08-13
+
+    Services are getting an overhaul. They no longer use the Context concept.
+    Contexts existed from a time before we had real objects to pass around.
+    Now that we have real objects Contexts are no longer needed and are a
+    layer of indirection we can do without.
+
+    If you are a service author you need to update your code to work on an
+    object.
+
+    Services have also received a major rewrite in how they are configured
+    and run. The wiki page will be updated accordingly.
+
 Author: mgoffin
 Date:   2014-09-03
 

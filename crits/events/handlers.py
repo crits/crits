@@ -1,4 +1,4 @@
-import crits.service_env
+import crits.services
 import json
 import uuid
 
@@ -22,7 +22,7 @@ from crits.core.user_tools import is_user_subscribed
 from crits.events.event import Event, EventType
 from crits.notifications.handlers import remove_user_from_notification
 from crits.samples.handlers import handle_uploaded_file, mail_sample
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 
 def generate_event_csv(request):
@@ -113,8 +113,7 @@ def get_event_details(event_id, analyst):
     favorite = is_user_favorite("%s" % analyst, 'Event', event.id)
 
     # services
-    manager = crits.service_env.manager
-    service_list = manager.get_supported_services('Event', True)
+    service_list = get_supported_services('Event')
 
     args = {'service_list': service_list,
             'objects': objects,
@@ -292,7 +291,7 @@ def add_new_event(title, description, event_type, source, method, reference,
 
         # run event triage
         event.reload()
-        run_triage(None, event, analyst)
+        run_triage(event, analyst)
 
         message = ('<div>Success! Click here to view the new event: <a href='
                    '"%s">%s</a></div>' % (reverse('crits.events.views.view_event',

@@ -1,4 +1,4 @@
-import crits.service_env
+import crits.services
 import csv
 import datetime
 import json
@@ -38,7 +38,7 @@ from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.object_type import ObjectType
 from crits.raw_data.raw_data import RawData
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 logger = logging.getLogger(__name__)
 
@@ -223,8 +223,7 @@ def get_indicator_details(indicator_id, analyst):
     favorite = is_user_favorite("%s" % analyst, 'Indicator', indicator.id)
 
     # services
-    manager = crits.service_env.manager
-    service_list = manager.get_supported_services('Indicator', True)
+    service_list = get_supported_services('Indicator')
 
     args = {'objects': objects,
             'relationships': relationships,
@@ -648,7 +647,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     # run indicator triage
     if is_new_indicator:
         indicator.reload()
-        run_triage(None, indicator, analyst)
+        run_triage(indicator, analyst)
 
     return {'success': True, 'objectid': str(indicator.id),
             'is_new_indicator': is_new_indicator, 'object': indicator}

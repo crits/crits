@@ -1,5 +1,5 @@
+import crits.services
 import copy
-import crits.service_env
 import json
 import logging
 import os
@@ -42,7 +42,7 @@ from crits.samples.forms import BackdoorForm, ExploitForm, XORSearchForm
 from crits.samples.forms import UnrarSampleForm, UploadFileForm
 from crits.samples.sample import Sample
 from crits.samples.yarahit import YaraHit
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 from crits.stats.handlers import generate_yara_hits
 
 logger = logging.getLogger(__name__)
@@ -166,8 +166,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
         favorite = is_user_favorite("%s" % analyst, 'Sample', sample.id)
 
         # services
-        manager = crits.service_env.manager
-        service_list = manager.get_supported_services('Sample', binary_exists)
+        service_list = get_supported_services('Sample')
 
         args = {'objects': objects,
                 'relationships': relationships,
@@ -1118,7 +1117,7 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
 
         # run sample triage:
         if len(sample.analysis) < 1 and data:
-            run_triage(data, sample, user)
+            run_triage(sample, user)
 
         # update relationship if a related top-level object is supplied
         if related_obj and sample:

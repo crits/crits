@@ -86,7 +86,7 @@ class ServiceResource(CRITsAPIResource):
                 success = False
         if finish:
             result = finish_task(object_type, object_id, analysis_id,
-                                 status, analyst)
+                                     status, analyst)
             if not result['success']:
                 message += ", %s" % result['message']
                 success = False
