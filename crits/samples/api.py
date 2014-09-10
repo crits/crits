@@ -59,7 +59,6 @@ class SampleResource(CRITsAPIResource):
             content['message'] = 'Not a valid upload type.'
             self.crits_response(content)
         if type_ == 'metadata':
-            filename = bundle.data.get('filename', None)
             md5 = bundle.data.get('md5', None)
             password = None
             filedata = None
@@ -71,8 +70,8 @@ class SampleResource(CRITsAPIResource):
                 content['message'] = "Upload type of 'file' but no file uploaded."
                 self.crits_response(content)
             filedata = file_
-            filename = None
 
+        filename = bundle.data.get('filename', None)
         campaign = bundle.data.get('campaign', None)
         confidence = bundle.data.get('confidence', None)
         source = bundle.data.get('source', None)
