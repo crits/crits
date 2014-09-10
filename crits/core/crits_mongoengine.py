@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
 from mongoengine import IntField, UUIDField, DateTimeField, ObjectIdField
-from mongoengine import DynamicField, DictField
+from mongoengine import DynamicField, DictField, BooleanField
 from mongoengine.base import BaseDocument, ValidationError
 from mongoengine.queryset import Q
 
@@ -2308,6 +2308,83 @@ class RelationshipType(CritsDocument, CritsSchemaDocument, Document):
 
     def migrate(self):
         pass
+
+
+class CommonAccess(BaseDocument):
+    """
+    ACL for common TLO content.
+    """
+
+    # Basics
+    read = BooleanField(default=False)
+    write = BooleanField(default=False)
+    delete = BooleanField(default=False)
+    download = BooleanField(default=False)
+
+    # Bucket List
+    bucketlist_read = BooleanField(default=False)
+    bucketlist_add = BooleanField(default=False)
+    bucketlist_delete = BooleanField(default=False)
+
+    # Campaigns
+    campaigns_read = BooleanField(default=False)
+    campaigns_add = BooleanField(default=False)
+    campaigns_edit = BooleanField(default=False)
+    campaigns_delete = BooleanField(default=False)
+
+    # Comments
+    comments_read = BooleanField(default=False)
+    comments_add = BooleanField(default=False)
+    comments_edit = BooleanField(default=False)
+    comments_delete = BooleanField(default=False)
+
+    # Objects
+    objects_read = BooleanField(default=False)
+    objects_add = BooleanField(default=False)
+    objects_edit = BooleanField(default=False)
+    objects_delete = BooleanField(default=False)
+
+    # Relationships
+    relationships_read = BooleanField(default=False)
+    relationships_add = BooleanField(default=False)
+    relationships_edit = BooleanField(default=False)
+    relationships_delete = BooleanField(default=False)
+
+    # Releasability
+    releasability_read = BooleanField(default=False)
+    releasability_add = BooleanField(default=False)
+    relationships_delete = BooleanField(default=False)
+
+    # Screenshots
+    screenshots_read = BooleanField(default=False)
+    screenshots_add = BooleanField(default=False)
+    screenshots_delete = BooleanField(default=False)
+
+    # Sectors
+    sectors_read = BooleanField(default=False)
+    sectors_add = BooleanField(default=False)
+    sectors_delete = BooleanField(default=False)
+
+    # Services
+    services_read = BooleanField(default=False)
+    services_execute = BooleanField(default=False)
+
+    # Sources
+    sources_read = BooleanField(default=False)
+    sources_add = BooleanField(default=False)
+    sources_edit = BooleanField(default=False)
+    sources_delete = BooleanField(default=False)
+
+    # Status
+    status_read = BooleanField(default=False)
+    status_edit = BooleanField(default=False)
+
+    # Tickets
+    tickets_read = BooleanField(default=False)
+    tickets_add = BooleanField(default=False)
+    tickets_edit = BooleanField(default=False)
+    tickets_delete = BooleanField(default=False)
+
 
 def merge(self, arg_dict=None, overwrite=False, **kwargs):
     """

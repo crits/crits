@@ -1,11 +1,11 @@
 import datetime
 
 from mongoengine import Document, EmbeddedDocument, StringField, ListField
-from mongoengine import EmbeddedDocumentField
+from mongoengine import EmbeddedDocumentField, BooleanField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
-from crits.core.crits_mongoengine import CritsDocumentFormatter
+from crits.core.crits_mongoengine import CritsDocumentFormatter, CommonAccess
 from crits.core.crits_mongoengine import CritsSchemaDocument, CritsDocument
 from crits.core.fields import CritsDateTimeField
 from crits.core.user_tools import user_sources, get_user_organization
@@ -430,3 +430,47 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
             # for identifier in stix_threat_actor.where_the_heck_do_they_go?
         else:
             return None
+
+
+class ActorIdentifierAccess(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    ACL for Actor Identifiers.
+    """
+
+    actor_identifiers_read = BooleanField(default=False)
+    actor_identifiers_add = BooleanField(default=False)
+    actor_identifiers_delete = BooleanField(default=False)
+
+
+class ActorAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Actor.
+    """
+
+    name_edit = BooleanField(default=False)
+    aliases_read = BooleanField(default=False)
+    aliases_add = BooleanField(default=False)
+    aliases_delete = BooleanField(default=False)
+    description_read = BooleanField(default=False)
+    description_edit = BooleanField(default=False)
+
+    intended_effects_read = BooleanField(default=False)
+    intended_effects_add = BooleanField(default=False)
+    intended_effects_delete = BooleanField(default=False)
+
+    motivations_read = BooleanField(default=False)
+    motivations_add = BooleanField(default=False)
+    motivations_delete = BooleanField(default=False)
+
+    sophistications_read = BooleanField(default=False)
+    sophistications_add = BooleanField(default=False)
+    sophistications_delete = BooleanField(default=False)
+
+    threat_types_read = BooleanField(default=False)
+    threat_types_add = BooleanField(default=False)
+    threat_types_delete = BooleanField(default=False)
+
+    # Actor Identifiers
+    actor_identifiers_read = BooleanField(default=False)
+    actor_identifiers_add = BooleanField(default=False)
+    actor_identifiers_delete = BooleanField(default=False)

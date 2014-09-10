@@ -148,6 +148,7 @@ COL_PCAPS = "pcaps"                                     # main pcaps collection
 COL_RAW_DATA = "raw_data"                               # main raw data collection
 COL_RAW_DATA_TYPES = "raw_data_types"                   # list of available raw data types
 COL_RELATIONSHIP_TYPES = "relationship_types"           # list of available relationship types
+COL_ROLES = "roles"                                     # main roles collection
 COL_SAMPLES = "sample"                                  # main samples collection
 COL_SCREENSHOTS = "screenshots"                         # main screenshots collection
 COL_SECTOR_LISTS = "sector_lists"                       # sector lists information
@@ -462,6 +463,7 @@ for handler in LOGGING['handlers'].values():
 # CRITs Types
 CRITS_TYPES = {
         'Actor': COL_ACTORS,
+        'ActorIdentifier': COL_ACTOR_IDENTIFIERS,
         'Campaign': COL_CAMPAIGNS,
         'Certificate': COL_CERTIFICATES,
         'Comment': COL_COMMENTS,

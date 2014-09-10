@@ -59,6 +59,7 @@ from crits.config.config import CRITsConfig
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, UnsupportedAttrs
 from crits.core.user_migrate import migrate_user
+from crits.core.role import Role
 
 logger = logging.getLogger(__name__)
 
@@ -188,6 +189,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
              'sparse': True,
             },
         ],
+        "cached_acl": None,
         "crits_type": 'User',
         "latest_schema_version": 2,
         "schema_doc": {
@@ -304,6 +306,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     login_attempts = ListField(EmbeddedDocumentField(EmbeddedLoginAttempt))
     organization = StringField(default=settings.COMPANY_NAME)
     password_reset = EmbeddedDocumentField(EmbeddedPasswordReset, default=EmbeddedPasswordReset())
+    roles = ListField(StringField())
     role = StringField(default="Analyst")
     sources = ListField(StringField())
     subscriptions = EmbeddedDocumentField(EmbeddedSubscriptions, default=EmbeddedSubscriptions())
@@ -833,6 +836,114 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         l.unbind()
         return resp
 
+
+    def get_access_list(self):
+        """
+        Generate a single new Role object based off of a combination of all of
+        the user's assigned roles. Each attribute is analyzed across all roles
+        and the "highest-order-access" is granted.
+
+        :returns: :class:`crits.core.role.Role`
+        """
+
+        acl = Role()
+        roles = Role.objects(name__in=self.roles)
+
+        # for each role, modify the acl object to reflect all of the attributes
+        # the user should be granted access to.
+        for r in roles:
+            for p,v in r._data.iteritems():
+                if p == 'name':
+                    # No need to worry about the name here. Added benefit of
+                    # throwing a validation error since there is no name
+                    # preventing people from accidentally saving this as a new
+                    # Role.
+                    pass
+                elif p == 'sources':
+                    # For each source, try to find it in the existing list. If
+                    # we find it, adjust the attributes based on which ones the
+                    # user should get access to. If not, append it to the list
+                    # of sources.
+                    for s in r.sources:
+                        c = 0
+                        found = False
+                        for src in acl.sources:
+                            if s.name == src.name:
+                                for x,y in s._data.iteritems():
+                                    if not getattr(acl.sources[c], x, False):
+                                        setattr(acl.sources[c], x, y)
+                                found = True
+                                break
+                            c += 1
+                        if not found:
+                            acl.sources.append(s)
+                elif p in settings.CRITS_TYPES.iterkeys():
+                    # For each CRITs Type adjust the attributes based on which
+                    # ones the # user should get access to.
+
+                    # Get the attribute we are working with.
+                    attr = getattr(acl, p)
+
+                    # Modify the attributes.
+                    for x,y in getattr(r, p)._data.iteritems():
+                        if not getattr(attr, x, False):
+                            setattr(attr, x, y)
+
+                    # Set the attribute on the ACL.
+                    setattr(acl, p, attr)
+                else:
+                    # Set the attribute if the user should get access to it.
+                    if not getattr(acl, p, False):
+                        setattr(acl, p, v)
+        self._meta['cached_acl'] = acl
+        return acl
+
+    def has_access_to(self, attribute):
+        """
+        Try to determine if a user has access to this feature in CRITs. If the
+        "cached_acl" field of '._meta' is None, we will cache the results of
+        '.get_access_list()' there. This will make situations where you have to
+        check several ACL values quicker.
+
+        Checking multiple ACL values at a time will be very common. For example:
+
+            - Does user X have access to the Sample TLO?
+            - If so, does user X have access to see the Bucket List of Samples?
+
+        You could just get the return value of '.get_access_list()' and iterate
+        over it however you wish. This function saves the hassle of replicating
+        that code by allowing you to immediately check for the specific ACL you
+        are looking for. You also want to use strings instead of hardcoding
+        attributes to allow for functions that act dynamically on multiple TLOs
+        to be able to do so without huge if blocks. Example from above:
+
+            for x in settings.CRITS_TYPES.iterkeys():
+                if (X.has_access_to('%s.read' % x)
+                    and X.has_access_to('%s.bucketlist_read' % x):
+
+        Is much cleaner than:
+
+            acl = X.get_access_list()
+            for x in settings.CRITS_TYPES.iterkeys():
+                if (getattr(getattr(acl, x), 'read')
+                    and getattr(getattr(acl, x), 'bucketlist_read'))
+
+        :param attribute: The feature to look up. Can be in the format of
+                          "Attribute.attribute" if it's an embedded attribute.
+        :type attribute: str
+        :returns: boolean
+        """
+
+        if self._meta['cached_acl'] is None:
+            self.get_access_list()
+        attrs = attribute.split('.')
+        attr = self._meta['cached_acl']
+        for a in attrs:
+            try:
+                attr = getattr(attr, a, False)
+            except:
+                return False
+        return attr
 
 # stolen from MongoEngine and modified to use the CRITsUser class.
 class CRITsAuthBackend(object):
