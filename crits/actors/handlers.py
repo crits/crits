@@ -326,7 +326,8 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     if not actor:
         actor = Actor()
         actor.name = name
-        actor.description = description.strip()
+        if description:
+            actor.description = description.strip()
         is_item_new = True
 
     if isinstance(source, basestring):
