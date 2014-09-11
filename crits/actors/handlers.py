@@ -366,7 +366,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     # run actor triage
     if is_item_new:
         actor.reload()
-        run_triage(None, actor, analyst)
+        run_triage(actor, analyst)
 
     resp_url = reverse('crits.actors.views.actor_detail', args=[actor.id])
 
