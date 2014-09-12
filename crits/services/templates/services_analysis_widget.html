@@ -22,7 +22,6 @@
     <h3>Information</h3>
     <ul>
         <!--<li>ID: {{ analysis.analysis_id }}</li>-->
-        <li>Type: {{ analysis.analysis_type }}</li>
         <li>Start: {{ analysis.start_date }}</li>
         <li>Finish: {{ analysis.finish_date }}</li>
         <li>Analyst: {{ analysis.analyst }}</li>
@@ -30,9 +29,11 @@
     <h4>Configuration</h4>
 {% if analysis.config %}
     <ul>
-    {% for key, value in analysis.config.items %}
+    {% with config=analysis.config|to_dict %}
+        {% for key, value in config.items %}
         <li><b> {{ key }} </b>: {{ value }}</li>
-    {% endfor %}
+        {% endfor %}
+    {% endwith %}
     </ul>
 {% else %}
     No configuration information available.

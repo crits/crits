@@ -219,7 +219,7 @@ class CritsDocumentFormatter(object):
         Return the object as a dict.
         """
 
-        return self.to_mongo()
+        return self.to_mongo().to_dict()
 
     def __str__(self):
         """
@@ -1004,9 +1004,6 @@ class EmbeddedTickets(BaseDocument):
         :type date: datetime.datetime.
         """
 
-        # Track the addition or subtraction of tags.
-        # Get the bucket_list for the object, find out if this is an addition
-        # or subtraction of a bucket_list.
         if isinstance(ticket, list) and len(ticket) == 1 and ticket[0] == '':
             parsed_tickets = []
         elif isinstance(ticket, (str, unicode)):
@@ -1018,7 +1015,7 @@ class EmbeddedTickets(BaseDocument):
 
         for ticket_number in parsed_tickets:
             # prevent duplicates
-            if self.is_ticket_exist(ticket_number) == False:
+            if ticket_number and self.is_ticket_exist(ticket_number) == False:
                 et = EmbeddedTicket()
                 et.analyst = analyst
                 et.ticket_number = ticket_number
@@ -1299,7 +1296,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         if append:
             for t in parsed_tags:
-                if t not in self.bucket_list:
+                if t and t not in self.bucket_list:
                     self.bucket_list.append(t)
         else:
             self.bucket_list = parsed_tags

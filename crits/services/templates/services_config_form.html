@@ -1,0 +1,10 @@
+{% load url from future %}
+
+{% block content %}
+    <form action="{% url 'crits.services.views.edit_config' name %}" method="post">{% csrf_token %}
+        <table class="form" style="width: 75%;">
+        {{ form }}
+        </table>
+        <input class="form_submit_button" type="submit" value="Submit" />
+    </form>
+{% endblock %}
