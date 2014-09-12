@@ -49,7 +49,7 @@ class ActorResource(CRITsAPIResource):
         analyst = bundle.request.user.username
         data = bundle.data
         name = data.get('name', None)
-        aliases = data.get('aliases', None)
+        aliases = data.get('aliases', '')
         description = data.get('description', None)
         source = data.get('source', None)
         reference = data.get('reference', None)

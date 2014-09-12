@@ -1,4 +1,3 @@
-import crits.service_env
 import datetime
 import hashlib
 import json
@@ -10,6 +9,8 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from mongoengine.base import ValidationError
 
+import crits.services
+
 from crits.core.class_mapper import class_from_id, class_from_value
 from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
@@ -19,7 +20,7 @@ from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed
 from crits.certificates.certificate import Certificate
 from crits.notifications.handlers import remove_user_from_notification
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 
 def generate_cert_csv(request):
@@ -86,8 +87,7 @@ def get_certificate_details(md5, analyst):
         screenshots = cert.get_screenshots(analyst)
 
         # services
-        manager = crits.service_env.manager
-        service_list = manager.get_supported_services('Certificate', True)
+        service_list = get_supported_services('Certificate')
 
         args = {'service_list': service_list,
                 'objects': objects,
@@ -316,7 +316,7 @@ def handle_cert_file(filename, data, source_name, user=None,
 
     # run certificate triage
     if len(cert.analysis) < 1 and data:
-        run_triage(data, cert, user)
+        run_triage(cert, user)
 
     # update relationship if a related top-level object is supplied
     if related_obj and cert:

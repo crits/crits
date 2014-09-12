@@ -6,7 +6,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
-import crits.service_env
+import crits.services
 
 from crits.actors.actor import Actor, ActorIdentifier, ActorThreatIdentifier
 from crits.core.class_mapper import class_from_type
@@ -18,7 +18,7 @@ from crits.core.handlers import csv_export
 from crits.core.user_tools import is_admin, is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 def generate_actor_identifier_csv(request):
     """
@@ -255,8 +255,7 @@ def get_actor_details(id_, analyst):
         favorite = is_user_favorite("%s" % analyst, 'Actor', actor.id)
 
         # services
-        manager = crits.service_env.manager
-        service_list = manager.get_supported_services('Actor', True)
+        service_list = get_supported_services('Actor')
 
         args = {'actor_identifiers': actor_identifiers,
                 'objects': objects,
@@ -327,7 +326,8 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     if not actor:
         actor = Actor()
         actor.name = name
-        actor.description = description.strip()
+        if description:
+            actor.description = description.strip()
         is_item_new = True
 
     if isinstance(source, basestring):
@@ -366,7 +366,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     # run actor triage
     if is_item_new:
         actor.reload()
-        run_triage(None, actor, analyst)
+        run_triage(actor, analyst)
 
     resp_url = reverse('crits.actors.views.actor_detail', args=[actor.id])
 

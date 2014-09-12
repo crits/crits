@@ -1,4 +1,4 @@
-import crits.service_env
+import crits.services
 import datetime
 import hashlib
 import json
@@ -19,7 +19,7 @@ from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.pcaps.pcap import PCAP
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 
 def generate_pcap_csv(request):
@@ -89,9 +89,8 @@ def get_pcap_details(md5, analyst):
         favorite = is_user_favorite("%s" % analyst, 'PCAP', pcap.id)
 
         # services
-        manager = crits.service_env.manager
         # Assume all PCAPs have the data available
-        service_list = manager.get_supported_services('PCAP', True)
+        service_list = get_supported_services('PCAP')
 
         args = {'service_list': service_list,
                 'objects': objects,
@@ -335,7 +334,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
     # run pcap triage
     if is_pcap_new and data:
         pcap.reload()
-        run_triage(data, pcap, user)
+        run_triage(pcap, user)
 
     status = {
         'success':      True,

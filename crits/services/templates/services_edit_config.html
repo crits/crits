@@ -4,20 +4,10 @@
 {% block title %} Services {% endblock %}
 
 {% block content %}
+<div>
+    <p><a href="{% url 'crits.services.views.list' %}">Back to Service List</a></p>     
+</div>
 {% include "services_detail_widget.html" %}
 
-<div class="content_box" style="width: 75%;">
-    <h3 class="titleheader">
-        <span>Configuration</span>
-        <span style="float: right;">
-            <a style="font-size: 90%;" href="{% url 'crits.services.views.reset_config' service.name %}" method="get">Reset to Defaults</a>
-        </span>
-    </h3>
-    <form action="{% url 'crits.services.views.edit_config' service.name %}" method="post">{% csrf_token %}
-        <table class="form" style="width: 100%;">
-        {{ form.as_table }}
-        </table>
-        <input class="form_submit_button" type="submit" value="Submit" />
-    </form> 
-</div>
+        {{ form }}
 {% endblock %}
