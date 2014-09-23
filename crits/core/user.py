@@ -837,14 +837,22 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         return resp
 
 
-    def get_access_list(self):
+    def get_access_list(self, update=False):
         """
         Generate a single new Role object based off of a combination of all of
         the user's assigned roles. Each attribute is analyzed across all roles
         and the "highest-order-access" is granted.
 
+        :param update: Update the cache before returning. If the cache is empty
+                       we always update first.
+        :type update: boolean
         :returns: :class:`crits.core.role.Role`
         """
+
+        # If we already have this cached, return it unless we are supposed to
+        # update the cache first.
+        if self._meta['cached_acl'] and not update:
+            return self._meta['cached_acl']
 
         acl = Role()
         roles = Role.objects(name__in=self.roles)
@@ -897,6 +905,22 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                         setattr(acl, p, v)
         self._meta['cached_acl'] = acl
         return acl
+
+    def can_do_one_of(self, acls=[]):
+        """
+        Given a list of possible acls, verify the user has access to do at least
+        one of them.
+
+        :param acls: The ACL list to check.
+        :type acls: list
+        :returns: boolean
+        """
+        result = False
+        for acl in acls:
+            if self.has_access_to(acl):
+                result = True
+                break
+        return result
 
     def has_access_to(self, attribute):
         """
