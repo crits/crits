@@ -66,6 +66,7 @@ class EmailResource(CRITsAPIResource):
 
         # Extract common information
         source = bundle.data.get('source', None)
+        method = bundle.data.get('method', None)
         reference = bundle.data.get('reference', None)
         campaign = bundle.data.get('campaign', None)
         confidence = bundle.data.get('confidence', None)
@@ -77,7 +78,7 @@ class EmailResource(CRITsAPIResource):
                 self.crits_response(content)
             filedata = file_.read()
             result = handle_eml(filedata, source, reference,
-                                analyst, 'Upload', campaign,
+                                analyst, method or 'Upload', campaign,
                                 confidence)
         if type_ == 'msg':
             raw_email = bundle.data.get('filedata', None)
@@ -86,7 +87,7 @@ class EmailResource(CRITsAPIResource):
                                 source,
                                 reference,
                                 analyst,
-                                'Upload',
+                                method or 'Upload',
                                 password,
                                 campaign,
                                 confidence)
@@ -96,7 +97,7 @@ class EmailResource(CRITsAPIResource):
                                        source,
                                        reference,
                                        analyst,
-                                       'Upload',
+                                       method or 'Upload',
                                        campaign,
                                        confidence)
         if type_ == 'yaml':
@@ -107,7 +108,7 @@ class EmailResource(CRITsAPIResource):
                                  source,
                                  reference,
                                  analyst,
-                                 'Upload',
+                                 method or 'Upload',
                                  email_id,
                                  save_unsupported,
                                  campaign,
@@ -119,7 +120,7 @@ class EmailResource(CRITsAPIResource):
             del fields['api_key']
             result = handle_email_fields(fields,
                                          analyst,
-                                         'Upload')
+                                         method or 'Upload')
 
         if result.get('message'):
             content['message'] = result.get('message')

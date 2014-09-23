@@ -246,7 +246,7 @@ def email_yaml_add(request, email_id=None):
                       yaml_form.cleaned_data['source'],
                       yaml_form.cleaned_data['source_reference'],
                       request.user.username,
-                      "Upload",
+                      yaml_form.cleaned_data['source_method'] or "Upload",
                       email_id=email_id,
                       save_unsupported=yaml_form.cleaned_data['save_unsupported'],
                       campaign=yaml_form.cleaned_data['campaign'],
@@ -305,7 +305,8 @@ def email_raw_add(request):
     obj = handle_pasted_eml(fields_form.cleaned_data['raw_email'],
                     fields_form.cleaned_data['source'],
                     fields_form.cleaned_data['source_reference'],
-                    request.user.username, "Upload",
+                    request.user.username,
+                    fields_form.cleaned_data['source_method'] or "Upload",
                     campaign=fields_form.cleaned_data['campaign'],
                     confidence=fields_form.cleaned_data['campaign_confidence'])
     if not obj['status']:
@@ -359,7 +360,7 @@ def email_eml_add(request):
     obj = handle_eml(data, eml_form.cleaned_data['source'],
                      eml_form.cleaned_data['source_reference'],
                      request.user.username,
-                     "Upload",
+                     eml_form.cleaned_data['source_method'] or "Upload",
                      campaign=eml_form.cleaned_data['campaign'],
                      confidence=eml_form.cleaned_data['campaign_confidence'])
     if not obj['status']:
@@ -402,7 +403,7 @@ def email_outlook_add(request):
         return render(request, 'file_upload_response.html', {'response': json.dumps(json_reply)})
 
     analyst = request.user.username
-    method = "Outlook MSG File Import"
+    method = outlook_form.cleaned_data['source_method'] or "Outlook MSG File Import"
     source = outlook_form.cleaned_data['source']
     source_reference = outlook_form.cleaned_data['source_reference']
     password = outlook_form.cleaned_data['password']

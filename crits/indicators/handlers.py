@@ -291,7 +291,7 @@ def get_verified_field(row, field, valid_values, default=None):
     else:
         return ''
 
-def handle_indicator_csv(csv_data, source, reference, ctype, username,
+def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                          add_domain=False):
     """
     Handle adding Indicators in CSV format (file or blob).
@@ -300,6 +300,8 @@ def handle_indicator_csv(csv_data, source, reference, ctype, username,
     :type csv_data: str or file handle
     :param source: The name of the source for these indicators.
     :type source: str
+    :param method: The method of acquisition of this indicator.
+    :type method: str
     :param reference: The reference to this data.
     :type reference: str
     :param ctype: The CSV type.
@@ -372,7 +374,7 @@ def handle_indicator_csv(csv_data, source, reference, ctype, username,
         ind[form_consts.Common.TICKET_VARIABLE_NAME] = d.get(form_consts.Common.TICKET, '')
         try:
             handle_indicator_insert(ind, source, reference, analyst=username,
-                                    add_domain=add_domain)
+                                    method=method, add_domain=add_domain)
         except Exception, e:
             result['success'] = False
             result['message'] = str(e)
@@ -553,9 +555,9 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
 
     if isinstance(source, list):
         for s in source:
-            indicator.add_source(source_item=s)
+            indicator.add_source(source_item=s, method=method, reference=reference)
     elif isinstance(source, EmbeddedSource):
-        indicator.add_source(source_item=source)
+        indicator.add_source(source_item=source, method=method, reference=reference)
     elif isinstance(source, basestring):
         s = EmbeddedSource()
         s.name = source

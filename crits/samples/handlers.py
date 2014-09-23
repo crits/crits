@@ -1080,11 +1080,11 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         # this will handle adding a new source, or an instance automatically
         sample.add_source(s)
     elif isinstance(source, EmbeddedSource):
-        sample.add_source(source)
+        sample.add_source(source, method=method, reference=reference)
     elif isinstance(source, list) and len(source) > 0:
         for s in source:
             if isinstance(s, EmbeddedSource):
-                sample.add_source(s)
+                sample.add_source(s, method=method, reference=reference)
 
     if bucket_list:
         sample.add_bucket_list(bucket_list, user)
