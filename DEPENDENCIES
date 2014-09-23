@@ -3,39 +3,95 @@ leverage services they may require their own dependencies. Since we import
 services into core when the web server loads, failure to install dependencies
 for these services may cause CRITs to break!
 
-* Apache
-* curl
-* mod-wsgi
-* MongoDB 2.6.4
-* PCRE3
-* Python 2.7.x
-* ssdeep
+========================
+Required System Programs
+========================
+* mongodb 2.6.4
+* python 2.7.x
 * unrar
-* upx
 * zip
 * 7zip
 
-Python Libraries:
-* anyjson
-* cybox 2.1.0.5
-* dateutil 2.2
-* defusedxml 0.4.1
-* django 1.6.5
-* django-tastypie-0.11.0
-* django-tastypie-mongoengine-0.4.5
-* importlib
-* lxml
-* m2crypto
-* mongoengine 0.8.7
-* pillow 2.4.0
-* pycurl
-* pydeep
-* pymongo 2.7.2
-* pyparsing
-* python-ldap 2.4.15
-* python-magic
-* python-mimeparse 0.1.4.1
-* setuptools
-* simplejson
-* stix 1.1.1.0
-* yaml
+
+========================
+Optional System Programs
+========================
+* Apache
+* mod-wsgi
+
+
+=========================
+Required Python Libraries
+=========================
+
+pillow
+Provides: PIL
+
+PyYAML
+Provides: yaml
+
+django<1.7
+Provides: django
+
+pymongo==2.7.2
+Provides: bson, gridfs, pymongo
+
+python-magic
+Provides: magic
+Note: Requires a compatible libmagic on your system to use
+
+pydeep
+Provides: pydeep
+Note: Requires libfuzzy and its development headers on your system to build
+
+M2Crypto
+Provides: M2Crypto
+Note: Requires the swig tool and openssl development headers on your system to build
+
+lxml
+Provides: lxml
+Note: Requires libxml and libxslt development headers to be installed on your system to build
+
+python-dateutil
+Requires: six
+Provides: dateutil
+
+cybox==2.1.0.5
+Requires: lxml>=2.3, python-dateutil
+Provides: cybox
+
+stix==1.1.1.0
+Requires: cybox>=2.1.0.4,<2.1.1.0, lxml>=2.3, python-dateutil
+Provides: stix
+
+mongoengine==0.8.7
+Requires: pymongo>=2.5
+Provides: mongoengine
+
+django-tastypie==0.11.0
+Requires: python-mimeparse>=0.1.4, python-dateutil>=1.5,!=2.0
+Provides: tastypie
+
+django-tastypie-mongoengine==0.4.5
+Requires: Django>=1.4, django-tastypie>=0.9.12,<=0.10.0, mongoengine>=0.8.1,<0.8.2, python-dateutil>=2.1, lxml, PyYAML, defusedxml, biplist, python-mimeparse>=0.1.4
+Provides: tastypie_mongoengine
+Note: CRITs requires you to ignore/override the mongoengine and django-tastypie version restrictions on this library.
+
+
+=========================
+Optional Python Libraries
+=========================
+
+boto
+Provides: boto
+Note: Only necessary if you are using Amazon S3 as a storage backend
+
+python-ldap
+Requires: setuptools
+Provides: ldap, ldapurl
+Note: Only necessary if you are using LDAP as an authentication backend
+
+qrcode
+Requires: six
+Provides: qrcode
+Note: Only necessary if you are using TOTP with your authentication
