@@ -120,6 +120,7 @@ COL_ACTOR_THREAT_TYPES="actor_threat_types"             # actor threat types
 COL_ACTOR_MOTIVATIONS="actor_motivations"               # actor motivations
 COL_ACTOR_SOPHISTICATIONS="actor_sophistications"       # actor sophistications
 COL_ACTOR_INTENDED_EFFECTS="actor_intended_effects"     # actor intended effects
+COL_ANALYSIS_RESULTS="analysis_results"                 # analysis results
 COL_AUDIT_LOG = "audit_log"                             # audit log entries
 COL_BACKDOOR_DETAILS = "backdoor_details"               # backdoor information
 COL_BUCKET_LISTS = "bucket_lists"                       # bucketlist information
@@ -462,6 +463,7 @@ for handler in LOGGING['handlers'].values():
 # CRITs Types
 CRITS_TYPES = {
         'Actor': COL_ACTORS,
+        'AnalysisResult': COL_ANALYSIS_RESULTS,
         'Campaign': COL_CAMPAIGNS,
         'Certificate': COL_CERTIFICATES,
         'Comment': COL_COMMENTS,

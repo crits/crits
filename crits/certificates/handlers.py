@@ -9,8 +9,6 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from mongoengine.base import ValidationError
 
-import crits.services
-
 from crits.core.class_mapper import class_from_id, class_from_value
 from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
@@ -89,6 +87,9 @@ def get_certificate_details(md5, analyst):
         # services
         service_list = get_supported_services('Certificate')
 
+        # analysis results
+        service_results = cert.get_analysis_results()
+
         args = {'service_list': service_list,
                 'objects': objects,
                 'relationships': relationships,
@@ -96,6 +97,7 @@ def get_certificate_details(md5, analyst):
                 'relationship': relationship,
                 "subscription": subscription,
                 "screenshots": screenshots,
+                'service_results': service_results,
                 "cert": cert}
 
     return template, args

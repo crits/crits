@@ -13,8 +13,9 @@ from django.conf import settings
 import crits.services
 
 from crits.core.class_mapper import class_from_type, class_from_id
-from crits.core.crits_mongoengine import EmbeddedAnalysisResult, AnalysisConfig
 from crits.core.user_tools import user_sources
+from crits.services.analysis_result import AnalysisResult, AnalysisConfig
+from crits.services.analysis_result import EmbeddedAnalysisResultLog
 from crits.services.core import ServiceConfigError, AnalysisTask
 from crits.services.service import CRITsService
 
@@ -190,22 +191,16 @@ def add_result(object_type, object_id, analysis_id, result, type_, subtype,
     if not object_type or not object_id or not analysis_id:
         res['message'] = "Must supply object id/type and analysis id."
         return res
+
+    # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
     sources = user_sources(analyst)
     obj = klass.objects(id=object_id, source__name__in=sources).first()
     if not obj:
         res['message'] = "Could not find object to add results to."
         return res
-    found = False
-    c = 0
-    for a in obj.analysis:
-        if str(a.analysis_id) == analysis_id:
-            found = True
-            break
-        c += 1
-    if not found:
-        res['message'] = "Could not find an analysis task to update."
-        return res
+
+    # Update analysis results
     if result and type_ and subtype:
         final = {}
         final['subtype'] = subtype
@@ -213,8 +208,7 @@ def add_result(object_type, object_id, analysis_id, result, type_, subtype,
         tmp = ast.literal_eval(type_)
         for k in tmp:
             final[k] = tmp[k]
-        klass.objects(id=object_id,
-                        analysis__id=analysis_id).update_one(push__analysis__S__results=final)
+        AnalysisResult.objects(analysis_id=analysis_id).update_one(push__results=final)
     else:
         res['message'] = "Need a result, type, and subtype to add a result."
         return res
@@ -245,28 +239,21 @@ def add_log(object_type, object_id, analysis_id, log_message, level, analyst):
     if not object_type or not object_id or not analysis_id:
         results['message'] = "Must supply object id/type and analysis id."
         return results
+
+    # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
     sources = user_sources(analyst)
     obj = klass.objects(id=object_id, source__name__in=sources).first()
     if not obj:
-        results['message'] = "Could not find object to add log to."
+        results['message'] = "Could not find object to add results to."
         return results
-    found = False
-    c = 0
-    for a in obj.analysis:
-        if str(a.analysis_id) == analysis_id:
-            found = True
-            break
-        c += 1
-    if not found:
-        results['message'] = "Could not find an analysis task to update."
-        return results
-    le = EmbeddedAnalysisResult.EmbeddedAnalysisResultLog()
+
+    # Update analysis log
+    le = EmbeddedAnalysisResultLog()
     le.message = log_message
     le.level = level
     le.datetime = str(datetime.datetime.now())
-    klass.objects(id=object_id,
-                  analysis__id=analysis_id).update_one(push__analysis__S__log=le)
+    AnalysisResult.objects(analysis_id=analysis_id).update_one(push__log=le)
     results['success'] = True
     return results
 
@@ -297,16 +284,19 @@ def finish_task(object_type, object_id, analysis_id, status, analyst):
     if not object_type or not object_id or not analysis_id:
         results['message'] = "Must supply object id/type and analysis id."
         return results
+
+    # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
     sources = user_sources(analyst)
     obj = klass.objects(id=object_id, source__name__in=sources).first()
     if not obj:
-        results['message'] = "Could not find object to add log to."
+        results['message'] = "Could not find object to add results to."
         return results
+
+    # Update analysis log
     date = str(datetime.datetime.now())
-    klass.objects(id=object_id,
-                  analysis__id=analysis_id).update_one(set__analysis__S__status=status,
-                                                       set__analysis__S__finish_date=date)
+    AnalysisResult.objects(analysis_id=analysis_id).update_one(set__status=status,
+                                                                set__finish_date=date)
     results['success'] = True
     return results
 
@@ -502,33 +492,26 @@ def triage_services(status=True):
         services = CRITsService.objects(run_on_triage=True)
     return [s.name for s in services]
 
-def delete_analysis(crits_type, identifier, task_id, analyst):
+def delete_analysis(task_id, analyst):
     """
     Delete analysis results.
     """
 
-    obj = class_from_id(crits_type, identifier)
-    if obj:
-        c = 0
-        for a in obj.analysis:
-            if str(a.analysis_id) == task_id:
-                del obj.analysis[c]
-            c += 1
-        obj.save(username=analyst)
+    ar = AnalysisResult.objects(id=task_id).first()
+    if ar:
+        ar.delete(username=analyst)
 
 def insert_analysis_results(task):
     """
     Insert analysis results for this task.
     """
 
-    obj_class = class_from_type(task.obj._meta['crits_type'])
-
-    ear = EmbeddedAnalysisResult()
+    ar = AnalysisResult()
     tdict = task.to_dict()
     tdict['analysis_id'] = tdict['id']
     del tdict['id']
-    ear.merge(arg_dict=tdict)
-    obj_class.objects(id=task.obj.id).update_one(push__analysis=ear)
+    ar.merge(arg_dict=tdict)
+    ar.save()
 
 def update_analysis_results(task):
     """
@@ -538,25 +521,21 @@ def update_analysis_results(task):
     # If the task does not currently exist for the given sample in the
     # database, add it.
 
-    obj_class = class_from_type(task.obj._meta['crits_type'])
-
-    obj = obj_class.objects(id=task.obj.id).first()
-    obj_id = obj.id
     found = False
-    for a in obj.analysis:
-        if str(a.analysis_id) == task.task_id:
-            found = True
-            break
+    ar = AnalysisResult.objects(analysis_id=task.task_id).first()
+    if ar:
+        found = True
 
     if not found:
         logger.warning("Tried to update a task that didn't exist.")
         insert_analysis_results(task)
     else:
         # Otherwise, update it.
-        ear = EmbeddedAnalysisResult()
         tdict = task.to_dict()
         tdict['analysis_id'] = tdict['id']
         del tdict['id']
-        ear.merge(arg_dict=tdict)
-        obj_class.objects(id=obj_id,
-                          analysis__id=task.task_id).update_one(set__analysis__S=ear)
+        #TODO: find a better way to do this.
+        new_dict = {}
+        for k in tdict.iterkeys():
+            new_dict['set__%s' % k] = tdict[k]
+        AnalysisResult.objects(analysis_id=task.task_id).update_one(**new_dict)

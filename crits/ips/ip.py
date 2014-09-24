@@ -15,7 +15,7 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_IPS,
         "crits_type": 'IP',
-        "latest_schema_version": 1,
+        "latest_schema_version": 2,
         "schema_doc": {
             'ip': 'The IP address',
             'type': ('The type of IP address based on a subset of CybOX Address'

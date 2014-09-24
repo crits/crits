@@ -1,4 +1,3 @@
-import crits.services
 import copy
 import json
 import logging
@@ -168,6 +167,9 @@ def get_sample_details(sample_md5, analyst, format_=None):
         # services
         service_list = get_supported_services('Sample')
 
+        # analysis results
+        service_results = sample.get_analysis_results()
+
         args = {'objects': objects,
                 'relationships': relationships,
                 'comments': comments,
@@ -183,7 +185,8 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'binary_exists': binary_exists,
                 'favorite': favorite,
                 'screenshots': screenshots,
-                'service_list': service_list}
+                'service_list': service_list,
+                'service_results': service_results}
 
     return template, args
 

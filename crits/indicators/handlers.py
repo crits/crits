@@ -225,6 +225,9 @@ def get_indicator_details(indicator_id, analyst):
     # services
     service_list = get_supported_services('Indicator')
 
+    # analysis results
+    service_results = indicator.get_analysis_results()
+
     args = {'objects': objects,
             'relationships': relationships,
             'comments':comments,
@@ -235,6 +238,7 @@ def get_indicator_details(indicator_id, analyst):
             "indicator_id": indicator_id,
             'screenshots': screenshots,
             'service_list': service_list,
+            'service_results': service_results,
             'favorite': favorite,
             'rt_url': settings.RT_URL}
 

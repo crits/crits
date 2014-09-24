@@ -11,8 +11,7 @@ from django.template.loader import render_to_string
 
 from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
-from mongoengine import IntField, UUIDField, DateTimeField, ObjectIdField
-from mongoengine import DynamicField, DictField
+from mongoengine import IntField, DateTimeField, ObjectIdField
 from mongoengine.base import BaseDocument, ValidationError
 from mongoengine.queryset import Q
 
@@ -768,13 +767,6 @@ class CritsDocument(BaseDocument):
 
 # Embedded Documents common to most classes
 
-class AnalysisConfig(DynamicEmbeddedDocument, CritsDocumentFormatter):
-    """
-    Embedded Analysis Configuration dictionary.
-    """
-
-    meta = {}
-
 class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
     """
     Embedded Source.
@@ -1120,38 +1112,6 @@ class UnrecognizedSchemaError(ValidationError):
             field_name='schema_version', **kwargs)
 
 
-class EmbeddedAnalysisResult(EmbeddedDocument, CritsDocumentFormatter):
-    """
-    Embedded Analysis Result from running an analytic service.
-    """
-
-    class EmbeddedAnalysisResultLog(EmbeddedDocument, CritsDocumentFormatter):
-        """
-        Log entry for a service run.
-        """
-
-        message = StringField()
-        #TODO: this should be a datetime object
-        datetime = StringField()
-        level = StringField()
-
-
-    #TODO: these should be datetime objects, not strings
-    analyst = StringField()
-    analysis_id = UUIDField(db_field="id", binary=False)
-    analysis_type = StringField(db_field="type")
-    config = EmbeddedDocumentField(AnalysisConfig)
-    finish_date = StringField()
-    log = ListField(EmbeddedDocumentField(EmbeddedAnalysisResultLog))
-    results = ListField(DynamicField(DictField))
-    service_name = StringField()
-    source = StringField()
-    start_date = StringField()
-    status = StringField()
-    template = StringField()
-    version = StringField()
-
-
 class EmbeddedObject(EmbeddedDocument, CritsDocumentFormatter):
     """
     Embedded Object Class.
@@ -1188,7 +1148,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     features.
     """
 
-    analysis = ListField(EmbeddedDocumentField(EmbeddedAnalysisResult))
     analyst = StringField()
     bucket_list = ListField(StringField())
     campaign = ListField(EmbeddedDocumentField(EmbeddedCampaign))
@@ -2272,6 +2231,19 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         return [obj['name'] for obj in self._data['campaign']]
+
+
+    def get_analysis_results(self):
+        """
+        Get analysis results for this TLO.
+
+        :returns: list
+        """
+
+        from crits.services.analysis_result import AnalysisResult
+
+        return AnalysisResult.objects(object_id=str(self.id),
+                                      object_type=self._meta['crits_type'])
 
 
 # Needs to be here to prevent circular imports with CritsBaseAttributes

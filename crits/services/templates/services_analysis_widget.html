@@ -15,7 +15,7 @@
     | <a id="log_button" href="#" style="display: inline">Log</a>
     | <a id="results_button" href="#" style="display: inline">Results</a>
     {% if admin %}
-    | <a class="delete_analysis" href="{% url 'crits.services.views.delete_task' crits_type item.id analysis.analysis_id %}" style="display: inline" msg="Delete {{ analysis.service_name }} (v.{{ analysis.version }}) - {{ analysis.status|capfirst }} from {{ analysis.start_date }}?">Delete</a>
+    | <a class="delete_analysis" href="{% url 'crits.services.views.delete_task' crits_type analysis.object_id analysis.id %}" style="display: inline" msg="Delete {{ analysis.service_name }} (v.{{ analysis.version }}) - {{ analysis.status|capfirst }} from {{ analysis.start_date }}?">Delete</a>
     {% endif %}
     </p>
 <div id="info" style="display: none;" class="titleheader">

@@ -304,6 +304,9 @@ def get_email_detail(email_id, analyst):
                 href_search_field="x_originating_ip"
                 ))
 
+        # analysis results
+        service_results = email.get_analysis_results()
+
         args = {'objects': objects,
                 'email_fields': email_fields,
                 'relationships': relationships,
@@ -317,6 +320,7 @@ def get_email_detail(email_id, analyst):
                 'download_form': download_form,
                 'update_data_form': update_data_form,
                 'admin': is_admin(analyst),
+                'service_results': service_results,
                 'rt_url': settings.RT_URL}
     return template, args
 

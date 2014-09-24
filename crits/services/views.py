@@ -9,9 +9,10 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
-from crits.core.class_mapper import class_from_id
-from crits.core.user_tools import user_can_view_data, user_is_admin
-from crits.services.handlers import update_config, do_edit_config
+from crits.core.class_mapper import class_from_type
+from crits.core.user_tools import user_can_view_data, user_is_admin, user_sources
+from crits.services.analysis_result import AnalysisResult
+from crits.services.handlers import do_edit_config
 from crits.services.handlers import get_service_config, set_enabled, set_triage
 from crits.services.handlers import run_service, get_supported_services
 from crits.services.handlers import delete_analysis
@@ -115,6 +116,7 @@ def edit_config(request, name):
                                        'service': results['service']},
                                       RequestContext(request))
         else:
+            error = results['config_error']
             return render_to_response('error.html', {'error': error},
                                       RequestContext(request))
 
@@ -160,12 +162,19 @@ def refresh_services(request, crits_type, identifier):
 
     response = {}
 
-    obj = class_from_id(crits_type, identifier)
+    # Verify user can see results.
+    sources = user_sources(request.user.username)
+    klass = class_from_type(crits_type)
+    obj = klass.objects(id=identifier,source__name__in=sources).first()
     if not obj:
         msg = 'Could not find object to refresh!'
         response['success'] = False
         response['html'] = msg
         return HttpResponse(json.dumps(response), mimetype="application/json")
+
+    # Get analysis results.
+    results = AnalysisResult.objects(object_type=crits_type,
+                                     object_id=identifier)
 
     relationship = {'type': crits_type,
                     'value': identifier}
@@ -179,7 +188,7 @@ def refresh_services(request, crits_type, identifier):
     response['html'] = render_to_string("services_analysis_listing.html",
                                         {'relationship': relationship,
                                          'subscription': subscription,
-                                         'item': obj,
+                                         'service_results': results,
                                          'crits_type': crits_type,
                                          'identifier': identifier,
                                          'service_list': service_list},
@@ -223,5 +232,5 @@ def delete_task(request, crits_type, identifier, task_id):
     analyst = request.user.username
 
     # Identifier is used since there's not currently an index on task_id
-    delete_analysis(crits_type, identifier, task_id, analyst)
+    delete_analysis(task_id, analyst)
     return refresh_services(request, crits_type, identifier)
