@@ -5,6 +5,8 @@ from django.conf.urls import patterns, include, url
 
 urlpatterns = patterns('crits.services.views',
     (r'^list/$', 'list'),
+    (r'^analysis_results/list/$', 'analysis_results_listing'),
+    (r'^analysis_results/list/(?P<option>\S+)/$', 'analysis_results_listing'),
     (r'^detail/(?P<name>[\w ]+)/$', 'detail'),
     (r'^enable/(?P<name>[\w ]+)/$', 'enable'),
     (r'^disable/(?P<name>[\w ]+)/$', 'disable'),

@@ -1,7 +1,9 @@
 import ast
 import datetime
+import json
 import logging
 
+from django.http import HttpResponse
 from multiprocessing import Process
 from threading import Thread
 
@@ -9,10 +11,15 @@ from mongoengine.base import ValidationError
 
 from django.core.urlresolvers import reverse
 from django.conf import settings
+from django.shortcuts import render_to_response
+from django.template import RequestContext
 
 import crits.services
 
 from crits.core.class_mapper import class_from_type, class_from_id
+from crits.core.crits_mongoengine import json_handler
+from crits.core.handlers import build_jtable, csv_export
+from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
 from crits.core.user_tools import user_sources
 from crits.services.analysis_result import AnalysisResult, AnalysisConfig
 from crits.services.analysis_result import EmbeddedAnalysisResultLog
@@ -20,6 +27,81 @@ from crits.services.core import ServiceConfigError, AnalysisTask
 from crits.services.service import CRITsService
 
 logger = logging.getLogger(__name__)
+
+def generate_analysis_results_csv(request):
+    """
+    Generate a CSV file of the Analysis Results information
+
+    :param request: The request for this CSV.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    response = csv_export(request,AnalysisResult)
+    return response
+
+def generate_analysis_results_jtable(request, option):
+    """
+    Generate the jtable data for rendering in the list template.
+
+    :param request: The request for this jtable.
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Action to take.
+    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    obj_type = AnalysisResult
+    type_ = "analysis_result"
+    mapper = obj_type._meta['jtable_opts']
+    if option == "jtlist":
+        # Sets display url
+        details_url = mapper['details_url']
+        details_url_key = mapper['details_url_key']
+        fields = mapper['fields']
+        response = jtable_ajax_list(obj_type,
+                                    details_url,
+                                    details_url_key,
+                                    request,
+                                    includes=fields)
+        return HttpResponse(json.dumps(response,
+                                       default=json_handler),
+                            content_type="application/json")
+    if option == "jtdelete":
+        response = {"Result": "ERROR"}
+        if jtable_ajax_delete(obj_type,request):
+            response = {"Result": "OK"}
+        return HttpResponse(json.dumps(response,
+                                       default=json_handler),
+                            content_type="application/json")
+    jtopts = {
+        'title': "Analysis Results",
+        'default_sort': mapper['default_sort'],
+        'listurl': reverse('crits.services.views.%ss_listing' % type_,
+                           args=('jtlist',)),
+        'deleteurl': reverse('crits.services.views.%ss_listing' % type_,
+                             args=('jtdelete',)),
+        'searchurl': reverse(mapper['searchurl']),
+        'fields': mapper['jtopts_fields'],
+        'hidden_fields': mapper['hidden_fields'],
+        'linked_fields': mapper['linked_fields'],
+        'details_link': mapper['details_link'],
+        'no_sort': mapper['no_sort']
+    }
+    jtable = build_jtable(jtopts,request)
+    jtable['toolbar'] = [
+    ]
+    if option == "inline":
+        return render_to_response("jtable.html",
+                                  {'jtable': jtable,
+                                   'jtid': '%s_listing' % type_,
+                                   'button' : '%ss_tab' % type_},
+                                  RequestContext(request))
+    else:
+        return render_to_response("%s_listing.html" % type_,
+                                  {'jtable': jtable,
+                                   'jtid': '%s_listing' % type_},
+                                  RequestContext(request))
 
 def run_service(name, crits_type, identifier, analyst, obj=None,
                 execute='local', custom_config={}):

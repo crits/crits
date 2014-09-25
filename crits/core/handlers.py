@@ -2039,6 +2039,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                         doc[key] = "False"
                 elif key == "datatype":
                     doc[key] = value.keys()[0]
+                elif key == "results":
+                    doc[key] = len(doc[key])
                 elif isinstance(value, list):
                     if value:
                         for item in value:

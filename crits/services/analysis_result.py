@@ -54,7 +54,26 @@ class AnalysisResult(CritsDocument, CritsSchemaDocument, CritsDocumentFormatter,
             'status': 'Status of the execution.',
             'template': 'Custom template to render results.',
             'version': 'Version of the service used.',
-        }
+        },
+        "jtable_opts": {
+                         'details_url': '',
+                         'details_url_key': '',
+                         'default_sort': "start_date DESC",
+                         'searchurl': 'crits.services.views.analysis_results_listing',
+                          'fields': [ "object_type", "service_name", "version",
+                                      "start_date", "finish_date", "results",
+                                      "object_id"],
+                          'jtopts_fields': [ "object_type",
+                                             "service_name",
+                                             "version",
+                                             "start_date",
+                                             "finish_date",
+                                             "results"],
+                         'hidden_fields': ["object_id"],
+                         'linked_fields': [ "object_type", "service_name" ],
+                         'details_link': '',
+                         'no_sort': []
+                       }
     }
 
     #TODO: these should be datetime objects, not strings

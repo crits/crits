@@ -12,7 +12,8 @@ from django.template.loader import render_to_string
 from crits.core.class_mapper import class_from_type
 from crits.core.user_tools import user_can_view_data, user_is_admin, user_sources
 from crits.services.analysis_result import AnalysisResult
-from crits.services.handlers import do_edit_config
+from crits.services.handlers import do_edit_config, generate_analysis_results_csv
+from crits.services.handlers import generate_analysis_results_jtable
 from crits.services.handlers import get_service_config, set_enabled, set_triage
 from crits.services.handlers import run_service, get_supported_services
 from crits.services.handlers import delete_analysis
@@ -21,6 +22,22 @@ import crits.services
 
 logger = logging.getLogger(__name__)
 
+
+@user_passes_test(user_can_view_data)
+def analysis_results_listing(request,option=None):
+    """
+    Generate Analysis Results Listing template.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Whether or not we should generate a CSV (yes if option is "csv")
+    :type option: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if option == "csv":
+        return generate_analysis_results_csv(request)
+    return generate_analysis_results_jtable(request, option)
 
 @user_passes_test(user_is_admin)
 def list(request):
