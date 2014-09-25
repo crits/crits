@@ -479,6 +479,9 @@
     <li class='nav_services mmenu_item'>
       <a href class="noclick">Services</a>
       <ul class='sub-mmenu'>
+        <li class='mmenu_item'>
+          <a href="{% url 'crits.services.views.analysis_results_listing' %}">Analysis Results</a>
+        </li>
         {% for nav_template in service_nav_templates %}
         {% include nav_template %}
         {% endfor %}

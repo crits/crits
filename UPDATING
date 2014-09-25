@@ -3,6 +3,55 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: mgoffin
+Date:   2014-09-25
+
+    There is a drastic change to Analysis Results. Historically, analysis
+    results were stored within the document of the TLO they were derived from.
+    This was fine but as time went on more services were developed which had
+    more robust output. Each TLO is bound by MongoDBs 16MB max document size. As
+    services are being executed they are consuming part of that 16MB for the
+    TLO. This results in contention for space and has sometimes led to documents
+    which can no longer be modified due to hitting the cap.
+
+    The change that has been implemented is to move all Analysis Results to
+    their own collection. This gives service developers almost 16MB of space
+    dedicated to the results their service output. There is no more contention
+    with other service output to deal with. Each execution of a service will
+    have its own document in the collection making it easier to work with.
+
+    With this change you will need to run some commands:
+
+    In mongo shell:
+        use crits
+        db.analysis_results.ensureIndex({'service_name': 1}, {'background': true})
+        db.analysis_results.ensureIndex({'object_type': 1}, {'background': true})
+        db.analysis_results.ensureIndex({'object_id': 1}, {'background': true})
+
+    If you run a clustered database you'll also need to run:
+        use admin
+        db.runCommand({shardcollection:"crits.analysis_results",key:{"object_id":1}})
+
+    Once the indexes (and sharding if applicable) are set, you can then begin
+    migrating your Analysis Results to the new collection. This can be skipped
+    if you wish to have them migrated as you view content through the interface
+    but keep in mind search results will not be accurate until all of them are
+    moved.
+
+    To migrate the Analysis Results, you can run the following management
+    command:
+
+        python manage.py upgrade -as
+
+    You can use -h to get more information, but this tells the command to skip
+    preparation (there is no need to do this at this time) and to upgrade all
+    documents in all collections. You can use the individual options to migrate
+    a collection at a time (this is useful if you have bad data in your database
+    that you need to hunt down as the migration happens).
+
+    There is a new Nav Menu option under Services called "Analysis Results" to
+    get to the jTable listing of the results.
+
 Author: wxs
 Date:   2014-08-13
 

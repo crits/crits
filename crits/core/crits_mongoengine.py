@@ -2242,8 +2242,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         from crits.services.analysis_result import AnalysisResult
 
-        return AnalysisResult.objects(object_id=str(self.id),
-                                      object_type=self._meta['crits_type'])
+        return AnalysisResult.objects(object_id=str(self.id))
 
 
 # Needs to be here to prevent circular imports with CritsBaseAttributes
