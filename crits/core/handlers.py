@@ -49,6 +49,7 @@ from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
 from crits.emails.email import Email
 from crits.samples.sample import Sample
+from crits.services.analysis_result import AnalysisResult
 from crits.screenshots.screenshot import Screenshot
 from crits.targets.target import Target
 from crits.indicators.indicator import Indicator
@@ -2051,7 +2052,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     else:
                         doc[key] = ""
                 doc[key] = html_escape(doc[key])
-            if col_obj._meta['crits_type'] in ("Comment", "AnalysisResult"):
+            if col_obj._meta['crits_type'] == "Comment":
                 mapper = {
                     "Actor": 'crits.actors.views.actor_detail',
                     "Campaign": 'crits.campaigns.views.campaign_details',
@@ -2065,12 +2066,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     "RawData": 'crits.raw_data.views.raw_data_details',
                     "Sample": 'crits.samples.views.detail',
                 }
-                if col_obj._meta['crits_type'] == "Comment":
-                    doc['url'] = reverse(mapper[doc['obj_type']],
-                                        args=(doc['url_key'],))
-                else:
-                    doc['url'] = reverse(mapper[doc['object_type']],
-                                        args=(doc['object_id'],))
+                doc['url'] = reverse(mapper[doc['obj_type']],
+                                    args=(doc['url_key'],))
             elif col_obj._meta['crits_type'] == "Backdoor" and url:
                 doc['url'] = "{0}?q={1}&search_type=backdoor&force_full=1".format(
                     reverse(url), doc['name'])
@@ -3456,6 +3453,7 @@ def generate_global_search(request):
     results = []
     for col_obj,url in [
                     [Actor, "crits.actors.views.actors_listing"],
+                    [AnalysisResult, "crits.services.views.analysis_results_listing"],
                     [Campaign, "crits.campaigns.views.campaigns_listing"],
                     [Certificate, "crits.certificates.views.certificates_listing"],
                     [Comment, "crits.comments.views.comments_listing"],
