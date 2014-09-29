@@ -49,6 +49,13 @@ Date:   2014-09-25
     a collection at a time (this is useful if you have bad data in your database
     that you need to hunt down as the migration happens).
 
+    After everything is migrated and verified, if you want to ensure all of the
+    old analysis results were cleaned up, you can run the following in mongo
+    shell for each TLO collection (replace "collection" with the collection you
+    wish to update):
+
+    db.collection.update({}, {$unset: {'unsupported_attrs.analysis': 1}}, {'multi': true})
+
     There is a new Nav Menu option under Services called "Analysis Results" to
     get to the jTable listing of the results.
 
