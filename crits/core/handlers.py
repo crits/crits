@@ -49,6 +49,7 @@ from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
 from crits.emails.email import Email
 from crits.samples.sample import Sample
+from crits.services.analysis_result import AnalysisResult
 from crits.screenshots.screenshot import Screenshot
 from crits.targets.target import Target
 from crits.indicators.indicator import Indicator
@@ -1375,7 +1376,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
     query = {}
     # Some terms, regardless of the query, will want to be full search terms and
     # not regex terms.
-    force_full_terms = ['detectexact', 'ssdeephash']
+    force_full_terms = ['analysis_result', 'ssdeephash']
     force = False
     # Exclude searches for 'source' or 'releasability'
     # This is required because the check_query function doesn't handle
@@ -1407,17 +1408,9 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
     defaultquery = check_query({search_type: search_query},user,obj)
 
     sample_queries = {
-        'detectexact': {'analysis.results.result': search_query},
-        # very very slow in larger collections
-        'detect' : {'analysis.results.result': search_query},
         'size' : {'size': search_query},
         'backdoor': {'backdoor.name': search_query},
         'md5hash': {'md5': search_query},
-        # very slow in larger collections
-        'md5search': {'$or': [
-            {'md5': search_query},
-            {'analysis.results.md5': search_query},
-        ]},
         'sha1hash': {'sha1': search_query},
         'ssdeephash': {'ssdeep': search_query},
         'sha256hash': {'sha256': search_query},
@@ -1467,10 +1460,13 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         if type_ == "Sample":
             search_list.append(sample_queries["backdoor"])
             search_list.append(sample_queries["object_value"])
-            search_list.append(sample_queries["detectexact"])
             search_list.append(sample_queries["filename"])
             if len(term) == 32:
                 search_list.append(sample_queries["md5hash"])
+        elif type_ == "AnalysisResult":
+            search_list = [
+                    {'results.result': search_query},
+            ]
         elif type_ == "Actor":
             search_list = [
                     {'name': search_query},
@@ -1485,8 +1481,6 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             search_list = [
                     {'md5': search_query},
                     {'objects.value': search_query},
-                    {'analysis.results.result.src': search_query},
-                    {'analysis.results.result.dst': search_query}
                 ]
         elif type_ == "RawData":
             search_list = [
@@ -1863,6 +1857,7 @@ def get_query(col_obj,request):
             "confidence": "confidence.rating",
             "impact": "impact.rating",
             "object_value":"objects.value",
+            "analysis_result":"results.result",
     }
     term = ""
     query = {}
@@ -1976,6 +1971,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
             "confidence": "confidence.rating",
             "impact": "impact.rating",
             "object_value": "objects.value",
+            "analysis_result": "results.result",
         }
 
         for key in keys:
@@ -2044,6 +2040,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                         doc[key] = "False"
                 elif key == "datatype":
                     doc[key] = value.keys()[0]
+                elif key == "results":
+                    doc[key] = len(doc[key])
                 elif isinstance(value, list):
                     if value:
                         for item in value:
@@ -2069,12 +2067,10 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     "Sample": 'crits.samples.views.detail',
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
-                                     args=(doc['url_key'],))
+                                    args=(doc['url_key'],))
             elif col_obj._meta['crits_type'] == "Backdoor" and url:
                 doc['url'] = "{0}?q={1}&search_type=backdoor&force_full=1".format(
                     reverse(url), doc['name'])
-            elif col_obj._meta['crits_type'] == "YaraHit" and url:
-                doc['url'] = reverse(url) + "?q="+doc['result']+"&search_type=detectexact"
             elif col_obj._meta['crits_type'] == "AuditLog":
                 if doc.get('method', 'delete()') != 'delete()':
                     doc['url'] = details_from_id(doc['type'],
@@ -3457,6 +3453,7 @@ def generate_global_search(request):
     results = []
     for col_obj,url in [
                     [Actor, "crits.actors.views.actors_listing"],
+                    [AnalysisResult, "crits.services.views.analysis_results_listing"],
                     [Campaign, "crits.campaigns.views.campaigns_listing"],
                     [Certificate, "crits.certificates.views.certificates_listing"],
                     [Comment, "crits.comments.views.comments_listing"],

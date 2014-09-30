@@ -211,10 +211,8 @@
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="bucket_list">Bucket List</option>
-          <option value="detect" checked>Analysis</option>
           <option value="filename">Filename</option>
           <option value="md5hash" selected="selected">MD5</option>
-          <option value="md5search">MD5 (inc. Analysis)</option>
           <option value="object_value">Object Value</option>
           <option value="sha1hash">SHA1</option>
           <option value="ssdeephash">SSDeep</option>
@@ -481,6 +479,9 @@
     <li class='nav_services mmenu_item'>
       <a href class="noclick">Services</a>
       <ul class='sub-mmenu'>
+        <li class='mmenu_item'>
+          <a href="{% url 'crits.services.views.analysis_results_listing' %}">Analysis Results</a>
+        </li>
         {% for nav_template in service_nav_templates %}
         {% include nav_template %}
         {% endfor %}

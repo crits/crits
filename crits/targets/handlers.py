@@ -179,6 +179,9 @@ def get_target_details(email_address, analyst):
     # favorites
     favorite = is_user_favorite("%s" % analyst, 'Target', target.id)
 
+    # analysis results
+    service_results = target.get_analysis_results()
+
     args = {'objects': objects,
             'relationships': relationships,
             'relationship': relationship,
@@ -188,6 +191,7 @@ def get_target_details(email_address, analyst):
             'screenshots': screenshots,
             'email_list': email_list,
             'target_detail': target,
+            'service_results': service_results,
             'form': form}
 
     return template, args

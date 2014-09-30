@@ -3,7 +3,7 @@ from mongoengine import BooleanField, EmbeddedDocumentField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
-from crits.core.crits_mongoengine import AnalysisConfig
+from crits.services.analysis_result import AnalysisConfig
 
 
 class CRITsService(CritsDocument, CritsSchemaDocument, Document):

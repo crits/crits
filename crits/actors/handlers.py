@@ -6,8 +6,6 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
-import crits.services
-
 from crits.actors.actor import Actor, ActorIdentifier, ActorThreatIdentifier
 from crits.core.class_mapper import class_from_type
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
@@ -257,6 +255,9 @@ def get_actor_details(id_, analyst):
         # services
         service_list = get_supported_services('Actor')
 
+        # analysis results
+        service_results = actor.get_analysis_results()
+
         args = {'actor_identifiers': actor_identifiers,
                 'objects': objects,
                 'download_form': download_form,
@@ -265,6 +266,7 @@ def get_actor_details(id_, analyst):
                 'subscription': subscription,
                 'favorite': favorite,
                 'service_list': service_list,
+                'service_results': service_results,
                 'screenshots': screenshots,
                 'actor': actor,
                 'actor_id': id_,

@@ -9,8 +9,6 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from mongoengine.base import ValidationError
 
-import crits.services
-
 from crits.core import form_consts
 from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
 from crits.core.crits_mongoengine import json_handler, create_embedded_source
@@ -134,6 +132,9 @@ def get_domain_details(domain, analyst):
     # services
     service_list = get_supported_services('Domain')
 
+    # analysis results
+    service_results = dmain.get_analysis_results()
+
     args = {'objects': objects,
             'relationships': relationships,
             'comments': comments,
@@ -145,6 +146,7 @@ def get_domain_details(domain, analyst):
             'forms': forms,
             'whois_data': whois_data,
             'service_list': service_list,
+            'service_results': service_results,
             'whois_len': whois_len}
 
     return template, args

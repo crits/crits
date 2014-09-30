@@ -1,4 +1,3 @@
-import crits.services
 import datetime
 import hashlib
 import json
@@ -92,6 +91,9 @@ def get_pcap_details(md5, analyst):
         # Assume all PCAPs have the data available
         service_list = get_supported_services('PCAP')
 
+        # analysis results
+        service_results = pcap.get_analysis_results()
+
         args = {'service_list': service_list,
                 'objects': objects,
                 'relationships': relationships,
@@ -100,6 +102,7 @@ def get_pcap_details(md5, analyst):
                 'relationship': relationship,
                 "subscription": subscription,
                 "screenshots": screenshots,
+                "service_results": service_results,
                 "pcap": pcap}
 
     return template, args
