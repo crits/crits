@@ -41,6 +41,7 @@ from crits.samples.forms import BackdoorForm, ExploitForm, XORSearchForm
 from crits.samples.forms import UnrarSampleForm, UploadFileForm
 from crits.samples.sample import Sample
 from crits.samples.yarahit import YaraHit
+from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import run_triage, get_supported_services
 from crits.stats.handlers import generate_yara_hits
 
@@ -1119,7 +1120,9 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         sample.reload()
 
         # run sample triage:
-        if len(sample.analysis) < 1 and data:
+        ar = AnalysisResult.objects(object_type=sample._meta['crits_type'],
+                                    object_id=str(sample.id))
+        if len(ar) < 1 and data:
             run_triage(sample, user)
 
         # update relationship if a related top-level object is supplied
