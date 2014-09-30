@@ -18,6 +18,7 @@ from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed
 from crits.certificates.certificate import Certificate
 from crits.notifications.handlers import remove_user_from_notification
+from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import run_triage, get_supported_services
 
 
@@ -317,7 +318,9 @@ def handle_cert_file(filename, data, source_name, user=None,
     cert.reload()
 
     # run certificate triage
-    if len(cert.analysis) < 1 and data:
+    ar = AnalysisResult.objects(object_type=sample._meta['crits_type'],
+                                object_id=str(sample.id))
+    if len(ar) < 1 and data:
         run_triage(cert, user)
 
     # update relationship if a related top-level object is supplied
