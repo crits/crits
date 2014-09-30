@@ -10,6 +10,7 @@ from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocumen
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.fields import CritsDateTimeField
+from crits.raw_data.migrate import migrate_raw_data
 
 from cybox.objects.artifact_object import Artifact, Base64Encoding
 from cybox.core import Observable
@@ -76,7 +77,7 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_RAW_DATA,
         "crits_type": 'RawData',
-        "latest_schema_version": 1,
+        "latest_schema_version": 2,
         "schema_doc": {
         },
         "jtable_opts": {
@@ -120,7 +121,7 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
         Migrate to the latest schema version.
         """
 
-        pass
+        migrate_raw_data(self)
 
     def add_file_data(self, file_data):
         """

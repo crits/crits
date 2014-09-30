@@ -1,4 +1,3 @@
-import crits.services
 import csv
 import datetime
 import json
@@ -28,6 +27,7 @@ from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.domains.domain import Domain
 from crits.domains.handlers import get_domain, upsert_domain
+from crits.events.event import Event
 from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
 from crits.indicators.indicator import IndicatorAction
@@ -225,6 +225,9 @@ def get_indicator_details(indicator_id, analyst):
     # services
     service_list = get_supported_services('Indicator')
 
+    # analysis results
+    service_results = indicator.get_analysis_results()
+
     args = {'objects': objects,
             'relationships': relationships,
             'comments':comments,
@@ -235,6 +238,7 @@ def get_indicator_details(indicator_id, analyst):
             "indicator_id": indicator_id,
             'screenshots': screenshots,
             'service_list': service_list,
+            'service_results': service_results,
             'favorite': favorite,
             'rt_url': settings.RT_URL}
 
@@ -1209,6 +1213,56 @@ def create_indicator_from_raw(type_, id_, value, analyst):
             ind.save(username=analyst)
         raw_data.reload()
         rels = raw_data.sort_relationships("%s" % analyst, meta=True)
+        return {'success': True, 'message': rels, 'value': id_}
+    else:
+        return {'success': False, 'message': result['message']}
+
+def create_indicator_from_event(type_, id_, value, analyst):
+    """
+    Add indicators from an Event description.
+
+    :param type_: The indicator type to add.
+    :type type_: str
+    :param id_: The ObjectId of the Event object.
+    :type id_: str
+    :param value: The value of the indicator to add.
+    :type value: str
+    :param analyst: The user adding this indicator.
+    :type analyst: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str),
+              "value" (str)
+    """
+
+    event = Event.objects(id=id_).first()
+    if not event:
+        return {'success': False,
+                'message': 'Could not find event'}
+    source = event.source
+    bucket_list = event.bucket_list
+    campaign = None
+    campaign_confidence = None
+    if len(event.campaign) > 0:
+        campaign = event.campaign[0].name
+        campaign_confidence = event.campaign[0].confidence
+    result = handle_indicator_ind(value, source, reference=None, ctype=type_,
+                                  analyst=analyst,
+                                  add_domain=True,
+                                  add_relationship=True,
+                                  campaign=campaign,
+                                  campaign_confidence=campaign_confidence,
+                                  bucket_list=bucket_list)
+    if result['success']:
+        ind = Indicator.objects(id=result['objectid']).first()
+        if ind:
+            event.add_relationship(rel_item=ind,
+                                   rel_type="Related_To",
+                                   analyst=analyst)
+            event.save(username=analyst)
+            ind.save(username=analyst)
+        event.reload()
+        rels = event.sort_relationships("%s" % analyst, meta=True)
         return {'success': True, 'message': rels, 'value': id_}
     else:
         return {'success': False, 'message': result['message']}
