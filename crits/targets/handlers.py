@@ -45,7 +45,7 @@ def upsert_target(data, analyst):
     if 'email_address' not in data:
         return {'success': False,
                 'message': "No email address to look up"}
-    target = Target.objects(email_address=data['email_address']).first()
+    target = Target.objects(email_address__iexact=data['email_address']).first()
     if not target:
         target = Target()
         target.email_address = data['email_address']
@@ -90,7 +90,7 @@ def remove_target(email_address=None, analyst=None):
     if not email_address:
         return {'success': False,
                 'message': "No email address to look up"}
-    target = Target.objects(email_address=email_address).first()
+    target = Target.objects(email_address__iexact=email_address).first()
     if not target:
         return {'success': False,
                 'message': "No target matching this email address."}
@@ -109,7 +109,7 @@ def get_target(email_address=None):
 
     if not email_address:
         return None
-    target = Target.objects(email_address=email_address).first()
+    target = Target.objects(email_address__iexact=email_address).first()
     return target
 
 def get_target_details(email_address, analyst):
@@ -128,7 +128,7 @@ def get_target_details(email_address, analyst):
         template = "error.html"
         args = {'error': "Must provide an email address."}
         return template, args
-    target = Target.objects(email_address=email_address).first()
+    target = Target.objects(email_address__iexact=email_address).first()
     if not target:
         target = Target()
         target.email_address = email_address
