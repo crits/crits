@@ -13,6 +13,7 @@ class Command(BaseCommand):
                     '-d',
                     dest='is_delete',
                     default=False,
+                    action='store_true',
                     help='Delete duplicate targets based on the email_address field.'),
     )
     help = 'Prints out duplicate target emails due to case sensitivity.'
