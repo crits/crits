@@ -10,6 +10,7 @@
     var change_password = "{% url 'crits.core.views.change_password' %}";
     var change_totp_pin = "{% url 'crits.core.views.change_totp_pin' %}";
     var create_api_key = "{% url 'crits.core.views.create_api_key' %}";
+    var make_default_api_key = "{% url 'crits.core.views.make_default_api_key' %}";
     var revoke_api_key = "{% url 'crits.core.views.revoke_api_key' %}";
     var get_api_key = "{% url 'crits.core.views.get_api_key' %}";
     $(document).ready(function() {
@@ -653,6 +654,10 @@
 </div>
 
 <style>
+    #api_key_table tr td:first-child {
+        margin: auto;
+        text-align: left;
+    }
     #api_key_table tr td {
         margin: auto;
         text-align: center;
@@ -673,23 +678,35 @@
                 <colgroup>
                     <col width="200px" />
                     <col width="100px" />
-                    <col width="200px" />
+                    <col width="150px" />
+                    <col width="50px" />
                     <col width="50px" />
                 </colgroup>
                 <tr>
                 <th>Key Name</th>
                 <th>Date Added</th>
                 <th>View Key</th>
+                <th>Default</th>
                 <th>Revoke</th>
                 </tr>
             </thead>
             <tbody>
             {% for key in user_info.api_keys %}
                 <tr>
-                    <td>{{ key.name }}</td>
+                    {% if key.default %}
+                        <td>{{ key.name }} <span id="default_api_key">(default)</span></td>
+                    {% else %}
+                        <td>{{ key.name }}</td>
+                    {% endif %}
                     <td>{{ key.date }}</td>
                     <td><button class="view_api_key" data-name="{{key.name}}">View Key</button></td>
-                    <td><button class="revoke_api_key" data-name="{{key.name}}">Revoke Key</button></td>
+                    {% if key.default %}
+                        <td><button class="make_default_api_key" data-name="{{key.name}}" style="display:none;">Make Default</button></td>
+                        <td><button class="revoke_api_key" data-name="{{key.name}}" style="display:none;">Revoke Key</button></td>
+                    {% else %}
+                        <td><button class="make_default_api_key" data-name="{{key.name}}">Make Default</button></td>
+                        <td><button class="revoke_api_key" data-name="{{key.name}}">Revoke Key</button></td>
+                    {% endif %}
                 </tr>
             {% endfor %}
             </tbody>

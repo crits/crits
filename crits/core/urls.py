@@ -93,6 +93,7 @@ urlpatterns = patterns('',
     # User API Authentication
     (r'^get_api_key/$', 'crits.core.views.get_api_key'),
     (r'^create_api_key/$', 'crits.core.views.create_api_key'),
+    (r'^make_default_api_key/$', 'crits.core.views.make_default_api_key'),
     (r'^revoke_api_key/$', 'crits.core.views.revoke_api_key'),
 
 )

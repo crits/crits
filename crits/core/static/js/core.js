@@ -1275,6 +1275,25 @@ $(document).ready(function() {
         $('#global_search_help').remove();
     });
 
+    $(document).on('click', '.make_default_api_key', function(e) {
+        var me = $(this)
+        $.ajax({
+            type: 'POST',
+            url: make_default_api_key,
+            data: {name: me.attr('data-name')},
+            success: function(data) {
+                if (data.success) {
+                    $('span#default_api_key').remove();
+                    var defapi = '<span id="default_api_key">(default)</span>';
+                    me.closest('tr').find('td:first').append(defapi);
+                    me.closest('tbody').find('button:hidden').show();
+                    me.closest('tr').find('td:nth-child(5)').find('button').hide();
+                    me.closest('tr').find('td:nth-child(4)').find('button').hide();
+                }
+            }
+        });
+    });
+
     $(document).on('click', '.revoke_api_key', function(e) {
         var me = $(this)
         $.ajax({
