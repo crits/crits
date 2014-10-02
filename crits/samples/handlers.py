@@ -1120,9 +1120,7 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         sample.reload()
 
         # run sample triage:
-        ar = AnalysisResult.objects(object_type=sample._meta['crits_type'],
-                                    object_id=str(sample.id))
-        if len(ar) < 1 and data:
+        if len(AnalysisResult.objects(object_id=str(sample.id))) < 1 and data:
             run_triage(sample, user)
 
         # update relationship if a related top-level object is supplied

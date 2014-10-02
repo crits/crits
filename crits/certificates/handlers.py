@@ -318,9 +318,7 @@ def handle_cert_file(filename, data, source_name, user=None,
     cert.reload()
 
     # run certificate triage
-    ar = AnalysisResult.objects(object_type=sample._meta['crits_type'],
-                                object_id=str(sample.id))
-    if len(ar) < 1 and data:
+    if len(AnalysisResult.objects(object_id=str(cert.id))) < 1 and data:
         run_triage(cert, user)
 
     # update relationship if a related top-level object is supplied
