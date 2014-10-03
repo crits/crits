@@ -560,7 +560,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         new_uuid = uuid.uuid4()
         key = hmac.new(new_uuid.bytes, digestmod=sha1).hexdigest()
         ea = EmbeddedAPIKey(name=name, api_key=key, default=default)
-        if len(self.api_key) < 1:
+        if len(self.api_keys) < 1:
             ea.default = True
         self.api_keys.append(ea)
         self.save(username=analyst)
