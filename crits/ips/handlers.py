@@ -5,8 +5,6 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-import crits.services
-
 from crits.core import form_consts
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import create_embedded_source
@@ -190,12 +188,16 @@ def get_ip_details(ip, analyst):
         # services
         service_list = get_supported_services('IP')
 
+        # analysis results
+        service_results = ip.get_analysis_results()
+
         args = {'objects': objects,
                 'relationships': relationships,
                 'relationship': relationship,
                 'subscription': subscription,
                 'favorite': favorite,
                 'service_list': service_list,
+                'service_results': service_results,
                 'screenshots': screenshots,
                 'ip': ip,
                 'comments':comments}

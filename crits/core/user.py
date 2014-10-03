@@ -173,6 +173,7 @@ class EmbeddedAPIKey(EmbeddedDocument, CritsDocumentFormatter):
     name = StringField(required=True)
     api_key = StringField(required=True)
     date = DateTimeField(default=datetime.datetime.now)
+    default = BooleanField(default=False)
 
 
 class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
@@ -540,7 +541,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
 
         return check_password(raw_password, self.password)
 
-    def create_api_key(self, name, analyst):
+    def create_api_key(self, name, analyst, default=False):
         """
         Generate an API key for the user. It will require a name as we allow for
         unlimited API keys and users need a way to reference them.
@@ -549,6 +550,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         :type name: str
         :param analyst: The user.
         :type analyst: str
+        :param default: Use as default API key.
+        :type default: boolean
         :returns: dict with keys "success" (boolean) and "message" (str).
         """
 
@@ -556,12 +559,37 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             return {'success': False, 'message': 'Need a name'}
         new_uuid = uuid.uuid4()
         key = hmac.new(new_uuid.bytes, digestmod=sha1).hexdigest()
-        ea = EmbeddedAPIKey(name=name, api_key=key)
+        ea = EmbeddedAPIKey(name=name, api_key=key, default=default)
+        if len(self.api_keys) < 1:
+            ea.default = True
         self.api_keys.append(ea)
         self.save(username=analyst)
         return {'success': True, 'message': {'name': name,
                                              'key': key,
                                              'date': str(ea.date)}}
+
+    def default_api_key(self, name, analyst):
+        """
+        Make an API key the default key for a user. The default key is used for
+        situations where the user is not or cannot be asked which API key to
+        use.
+
+        :param name: The name of the API key.
+        :type name: str
+        :param analyst: The user.
+        :type analyst: str
+        :returns: dict with keys "success" (boolean) and "message" (str).
+        """
+
+        c = 0
+        for key in self.api_keys:
+            if key.name == name:
+                self.api_keys[c].default = True
+            else:
+                self.api_keys[c].default = False
+            c += 1
+        self.save(username=analyst)
+        return {'success': True}
 
     def revoke_api_key(self, name, analyst):
         """
@@ -631,6 +659,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                 email = '@'.join([email_name, domain_part.lower()])
 
         user = cls(username=username, email=email, date_joined=now)
+        user.create_api_key("default", analyst, default=True)
         if password and user.set_password(password):
             user.save(username=analyst)
             return user

@@ -1,4 +1,3 @@
-import crits.services
 import copy
 import json
 import logging
@@ -42,6 +41,7 @@ from crits.samples.forms import BackdoorForm, ExploitForm, XORSearchForm
 from crits.samples.forms import UnrarSampleForm, UploadFileForm
 from crits.samples.sample import Sample
 from crits.samples.yarahit import YaraHit
+from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import run_triage, get_supported_services
 from crits.stats.handlers import generate_yara_hits
 
@@ -168,6 +168,9 @@ def get_sample_details(sample_md5, analyst, format_=None):
         # services
         service_list = get_supported_services('Sample')
 
+        # analysis results
+        service_results = sample.get_analysis_results()
+
         args = {'objects': objects,
                 'relationships': relationships,
                 'comments': comments,
@@ -183,7 +186,8 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'binary_exists': binary_exists,
                 'favorite': favorite,
                 'screenshots': screenshots,
-                'service_list': service_list}
+                'service_list': service_list,
+                'service_results': service_results}
 
     return template, args
 
@@ -1116,7 +1120,7 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         sample.reload()
 
         # run sample triage:
-        if len(sample.analysis) < 1 and data:
+        if len(AnalysisResult.objects(object_id=str(sample.id))) < 1 and data:
             run_triage(sample, user)
 
         # update relationship if a related top-level object is supplied

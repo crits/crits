@@ -4,14 +4,16 @@ import logging
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
-from crits.core.class_mapper import class_from_id
-from crits.core.user_tools import user_can_view_data, user_is_admin
-from crits.services.handlers import update_config, do_edit_config
+from crits.core.class_mapper import class_from_type
+from crits.core.user_tools import user_can_view_data, user_is_admin, user_sources
+from crits.services.analysis_result import AnalysisResult
+from crits.services.handlers import do_edit_config, generate_analysis_results_csv
+from crits.services.handlers import generate_analysis_results_jtable
 from crits.services.handlers import get_service_config, set_enabled, set_triage
 from crits.services.handlers import run_service, get_supported_services
 from crits.services.handlers import delete_analysis
@@ -20,6 +22,22 @@ import crits.services
 
 logger = logging.getLogger(__name__)
 
+
+@user_passes_test(user_can_view_data)
+def analysis_results_listing(request,option=None):
+    """
+    Generate Analysis Results Listing template.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Whether or not we should generate a CSV (yes if option is "csv")
+    :type option: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if option == "csv":
+        return generate_analysis_results_csv(request)
+    return generate_analysis_results_jtable(request, option)
 
 @user_passes_test(user_is_admin)
 def list(request):
@@ -30,6 +48,28 @@ def list(request):
     all_services = CRITsService.objects().order_by('+name')
     return render_to_response('services_list.html', {'services': all_services},
                               RequestContext(request))
+
+
+@user_passes_test(user_is_admin)
+def analysis_result(request, analysis_id):
+    """
+    Get the TLO type and object_id and redirect to the details page for that
+    TLO.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param analysis_id: The ObjectId of the AnalysisResult
+    :type analysis_id: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    ar = AnalysisResult.objects(id=analysis_id).first()
+    if ar:
+        return HttpResponseRedirect(reverse('crits.core.views.details',
+                                            args=(ar.object_type,ar.object_id)))
+    else:
+        return render_to_response('error.html',
+                                  {'error': "No TLO found to redirect to."})
 
 
 @user_passes_test(user_is_admin)
@@ -115,6 +155,7 @@ def edit_config(request, name):
                                        'service': results['service']},
                                       RequestContext(request))
         else:
+            error = results['config_error']
             return render_to_response('error.html', {'error': error},
                                       RequestContext(request))
 
@@ -160,12 +201,19 @@ def refresh_services(request, crits_type, identifier):
 
     response = {}
 
-    obj = class_from_id(crits_type, identifier)
+    # Verify user can see results.
+    sources = user_sources(request.user.username)
+    klass = class_from_type(crits_type)
+    obj = klass.objects(id=identifier,source__name__in=sources).first()
     if not obj:
         msg = 'Could not find object to refresh!'
         response['success'] = False
         response['html'] = msg
         return HttpResponse(json.dumps(response), mimetype="application/json")
+
+    # Get analysis results.
+    results = AnalysisResult.objects(object_type=crits_type,
+                                     object_id=identifier)
 
     relationship = {'type': crits_type,
                     'value': identifier}
@@ -179,7 +227,7 @@ def refresh_services(request, crits_type, identifier):
     response['html'] = render_to_string("services_analysis_listing.html",
                                         {'relationship': relationship,
                                          'subscription': subscription,
-                                         'item': obj,
+                                         'service_results': results,
                                          'crits_type': crits_type,
                                          'identifier': identifier,
                                          'service_list': service_list},
@@ -223,5 +271,5 @@ def delete_task(request, crits_type, identifier, task_id):
     analyst = request.user.username
 
     # Identifier is used since there's not currently an index on task_id
-    delete_analysis(crits_type, identifier, task_id, analyst)
+    delete_analysis(task_id, analyst)
     return refresh_services(request, crits_type, identifier)

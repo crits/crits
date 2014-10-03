@@ -1,4 +1,3 @@
-import crits.services
 import json
 import uuid
 
@@ -115,6 +114,9 @@ def get_event_details(event_id, analyst):
     # services
     service_list = get_supported_services('Event')
 
+    # analysis results
+    service_results = event.get_analysis_results()
+
     args = {'service_list': service_list,
             'objects': objects,
             'relationships': relationships,
@@ -125,6 +127,7 @@ def get_event_details(event_id, analyst):
             'screenshots': screenshots,
             'event': event,
             'campaign_form': campaign_form,
+            'service_results': service_results,
             'download_form': download_form}
 
     return template, args
