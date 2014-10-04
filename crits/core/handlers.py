@@ -3405,9 +3405,8 @@ def login_user(username, password, next_url=None, user_agent=None,
                     # to validate the URL is something we know about.
                     # We use get_script_prefix() here to tell us what
                     # the script prefix is configured in Apache.
-                    # By default this is /crits/. We strip it out
-                    # so resolve can work properly, and then redirect
-                    # to the full url.
+                    # We strip it out so resolve can work properly, and then
+                    # redirect to the full url.
                     prefix = get_script_prefix()
                     tmp_url = next_url
                     if next_url.startswith(prefix):
