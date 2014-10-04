@@ -11,6 +11,9 @@ Date:   2014-10-04
     compatibility with old links, but if you wish to make them work, you can use
     your own custom Apache config to redirect /crits/ to /.
 
+    Please reference the example Apache config files in the extras folder for
+    how to configure Apache to work with CRITs.
+
 Author: mgoffin
 Date:   2014-09-25
 
