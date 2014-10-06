@@ -290,7 +290,7 @@ def add_result(object_type, object_id, analysis_id, result, type_, subtype,
         tmp = ast.literal_eval(type_)
         for k in tmp:
             final[k] = tmp[k]
-        ar = AnalysisResult.object(analysis_id=analysis_id).first()
+        ar = AnalysisResult.objects(analysis_id=analysis_id).first()
         if ar:
             AnalysisResult.objects(id=ar.id).update_one(push__results=final)
     else:
@@ -337,7 +337,7 @@ def add_log(object_type, object_id, analysis_id, log_message, level, analyst):
     le.message = log_message
     le.level = level
     le.datetime = str(datetime.datetime.now())
-    ar = AnalysisResult.object(analysis_id=analysis_id).first()
+    ar = AnalysisResult.objects(analysis_id=analysis_id).first()
     if ar:
         AnalysisResult.objects(id=ar.id).update_one(push__log=le)
         results['success'] = True
@@ -383,7 +383,7 @@ def finish_task(object_type, object_id, analysis_id, status, analyst):
 
     # Update analysis log
     date = str(datetime.datetime.now())
-    ar = AnalysisResult.object(analysis_id=analysis_id).first()
+    ar = AnalysisResult.objects(analysis_id=analysis_id).first()
     if ar:
         AnalysisResult.objects(id=ar.id).update_one(set__status=status,
                                                     set__finish_date=date)
