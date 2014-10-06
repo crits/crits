@@ -4,6 +4,7 @@ from mongoengine import Document, EmbeddedDocument, StringField, ListField
 from mongoengine import EmbeddedDocumentField
 from django.conf import settings
 
+from crits.actors.migrate import migrate_actor
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsSchemaDocument, CritsDocument
@@ -170,7 +171,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_ACTORS,
         "crits_type": 'Actor',
-        "latest_schema_version": 1,
+        "latest_schema_version": 2,
         "schema_doc": {
         },
         "jtable_opts": {
@@ -207,7 +208,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
     threat_types = ListField(StringField())
 
     def migrate(self):
-        pass
+        migrate_actor(self)
 
     def generate_identifiers_list(self, username=None):
         """

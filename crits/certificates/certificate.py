@@ -3,6 +3,7 @@ import base64
 from mongoengine import Document, StringField, IntField
 from django.conf import settings
 
+from crits.certificates.migrate import migrate_certificate
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.fields import getFileField
 
@@ -19,7 +20,7 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_CERTIFICATES,
         "crits_type": 'Certificate',
-        "latest_schema_version": 1,
+        "latest_schema_version": 2,
         "schema_doc": {
             'filename': 'The filename of the certificate',
             'filetype': 'The filetype of the certificate',
@@ -66,7 +67,7 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
         """
         Migrate the Certificate tot he latest schema version.
         """
-        pass
+        migrate_certificate(self)
 
     def add_file_data(self, file_data):
         """

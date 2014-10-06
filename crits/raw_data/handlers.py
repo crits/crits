@@ -1,4 +1,3 @@
-import crits.services
 import datetime
 import hashlib
 import json
@@ -112,6 +111,9 @@ def get_raw_data_details(_id, analyst):
         # services
         service_list = get_supported_services('RawData')
 
+        # analysis results
+        service_results = raw_data.get_analysis_results()
+
         args = {'service_list': service_list,
                 'objects': objects,
                 'relationships': relationships,
@@ -121,6 +123,7 @@ def get_raw_data_details(_id, analyst):
                 "subscription": subscription,
                 "screenshots": screenshots,
                 "versions": versions,
+                "service_results": service_results,
                 "raw_data": raw_data}
 
     return template, args

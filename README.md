@@ -319,7 +319,7 @@ For installs on a new Apache instance you can follow the steps below. For existi
 ```
 
 
-Make sure you can only get to https://your-site.com/crits/ and not http://your-site.com/crits/
+Make sure you can only get to https://your-site.com/ and not http://your-site.com/
 
 Proceed to the **Final Steps** section for more information on cronjobs and other useful things.
 

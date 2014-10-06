@@ -1,7 +1,9 @@
 import ast
 import datetime
+import json
 import logging
 
+from django.http import HttpResponse
 from multiprocessing import Process
 from threading import Thread
 
@@ -9,16 +11,97 @@ from mongoengine.base import ValidationError
 
 from django.core.urlresolvers import reverse
 from django.conf import settings
+from django.shortcuts import render_to_response
+from django.template import RequestContext
 
 import crits.services
 
 from crits.core.class_mapper import class_from_type, class_from_id
-from crits.core.crits_mongoengine import EmbeddedAnalysisResult, AnalysisConfig
+from crits.core.crits_mongoengine import json_handler
+from crits.core.handlers import build_jtable, csv_export
+from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
 from crits.core.user_tools import user_sources
+from crits.services.analysis_result import AnalysisResult, AnalysisConfig
+from crits.services.analysis_result import EmbeddedAnalysisResultLog
 from crits.services.core import ServiceConfigError, AnalysisTask
 from crits.services.service import CRITsService
 
 logger = logging.getLogger(__name__)
+
+def generate_analysis_results_csv(request):
+    """
+    Generate a CSV file of the Analysis Results information
+
+    :param request: The request for this CSV.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    response = csv_export(request,AnalysisResult)
+    return response
+
+def generate_analysis_results_jtable(request, option):
+    """
+    Generate the jtable data for rendering in the list template.
+
+    :param request: The request for this jtable.
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Action to take.
+    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    obj_type = AnalysisResult
+    type_ = "analysis_result"
+    mapper = obj_type._meta['jtable_opts']
+    if option == "jtlist":
+        # Sets display url
+        details_url = mapper['details_url']
+        details_url_key = mapper['details_url_key']
+        fields = mapper['fields']
+        response = jtable_ajax_list(obj_type,
+                                    details_url,
+                                    details_url_key,
+                                    request,
+                                    includes=fields)
+        return HttpResponse(json.dumps(response,
+                                       default=json_handler),
+                            content_type="application/json")
+    if option == "jtdelete":
+        response = {"Result": "ERROR"}
+        if jtable_ajax_delete(obj_type,request):
+            response = {"Result": "OK"}
+        return HttpResponse(json.dumps(response,
+                                       default=json_handler),
+                            content_type="application/json")
+    jtopts = {
+        'title': "Analysis Results",
+        'default_sort': mapper['default_sort'],
+        'listurl': reverse('crits.services.views.%ss_listing' % type_,
+                           args=('jtlist',)),
+        'deleteurl': reverse('crits.services.views.%ss_listing' % type_,
+                             args=('jtdelete',)),
+        'searchurl': reverse(mapper['searchurl']),
+        'fields': mapper['jtopts_fields'],
+        'hidden_fields': mapper['hidden_fields'],
+        'linked_fields': mapper['linked_fields'],
+        'details_link': mapper['details_link'],
+        'no_sort': mapper['no_sort']
+    }
+    jtable = build_jtable(jtopts,request)
+    jtable['toolbar'] = [
+    ]
+    if option == "inline":
+        return render_to_response("jtable.html",
+                                  {'jtable': jtable,
+                                   'jtid': '%s_listing' % type_,
+                                   'button' : '%ss_tab' % type_},
+                                  RequestContext(request))
+    else:
+        return render_to_response("%s_listing.html" % type_,
+                                  {'jtable': jtable,
+                                   'jtid': '%s_listing' % type_},
+                                  RequestContext(request))
 
 def run_service(name, crits_type, identifier, analyst, obj=None,
                 execute='local', custom_config={}):
@@ -190,22 +273,16 @@ def add_result(object_type, object_id, analysis_id, result, type_, subtype,
     if not object_type or not object_id or not analysis_id:
         res['message'] = "Must supply object id/type and analysis id."
         return res
+
+    # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
     sources = user_sources(analyst)
     obj = klass.objects(id=object_id, source__name__in=sources).first()
     if not obj:
         res['message'] = "Could not find object to add results to."
         return res
-    found = False
-    c = 0
-    for a in obj.analysis:
-        if str(a.analysis_id) == analysis_id:
-            found = True
-            break
-        c += 1
-    if not found:
-        res['message'] = "Could not find an analysis task to update."
-        return res
+
+    # Update analysis results
     if result and type_ and subtype:
         final = {}
         final['subtype'] = subtype
@@ -213,8 +290,9 @@ def add_result(object_type, object_id, analysis_id, result, type_, subtype,
         tmp = ast.literal_eval(type_)
         for k in tmp:
             final[k] = tmp[k]
-        klass.objects(id=object_id,
-                        analysis__id=analysis_id).update_one(push__analysis__S__results=final)
+        ar = AnalysisResult.objects(analysis_id=analysis_id).first()
+        if ar:
+            AnalysisResult.objects(id=ar.id).update_one(push__results=final)
     else:
         res['message'] = "Need a result, type, and subtype to add a result."
         return res
@@ -245,29 +323,26 @@ def add_log(object_type, object_id, analysis_id, log_message, level, analyst):
     if not object_type or not object_id or not analysis_id:
         results['message'] = "Must supply object id/type and analysis id."
         return results
+
+    # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
     sources = user_sources(analyst)
     obj = klass.objects(id=object_id, source__name__in=sources).first()
     if not obj:
-        results['message'] = "Could not find object to add log to."
+        results['message'] = "Could not find object to add results to."
         return results
-    found = False
-    c = 0
-    for a in obj.analysis:
-        if str(a.analysis_id) == analysis_id:
-            found = True
-            break
-        c += 1
-    if not found:
-        results['message'] = "Could not find an analysis task to update."
-        return results
-    le = EmbeddedAnalysisResult.EmbeddedAnalysisResultLog()
+
+    # Update analysis log
+    le = EmbeddedAnalysisResultLog()
     le.message = log_message
     le.level = level
     le.datetime = str(datetime.datetime.now())
-    klass.objects(id=object_id,
-                  analysis__id=analysis_id).update_one(push__analysis__S__log=le)
-    results['success'] = True
+    ar = AnalysisResult.objects(analysis_id=analysis_id).first()
+    if ar:
+        AnalysisResult.objects(id=ar.id).update_one(push__log=le)
+        results['success'] = True
+    else:
+        results['message'] = "Could not find task to add log to."
     return results
 
 
@@ -297,16 +372,21 @@ def finish_task(object_type, object_id, analysis_id, status, analyst):
     if not object_type or not object_id or not analysis_id:
         results['message'] = "Must supply object id/type and analysis id."
         return results
+
+    # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
     sources = user_sources(analyst)
     obj = klass.objects(id=object_id, source__name__in=sources).first()
     if not obj:
-        results['message'] = "Could not find object to add log to."
+        results['message'] = "Could not find object to add results to."
         return results
+
+    # Update analysis log
     date = str(datetime.datetime.now())
-    klass.objects(id=object_id,
-                  analysis__id=analysis_id).update_one(set__analysis__S__status=status,
-                                                       set__analysis__S__finish_date=date)
+    ar = AnalysisResult.objects(analysis_id=analysis_id).first()
+    if ar:
+        AnalysisResult.objects(id=ar.id).update_one(set__status=status,
+                                                    set__finish_date=date)
     results['success'] = True
     return results
 
@@ -502,33 +582,26 @@ def triage_services(status=True):
         services = CRITsService.objects(run_on_triage=True)
     return [s.name for s in services]
 
-def delete_analysis(crits_type, identifier, task_id, analyst):
+def delete_analysis(task_id, analyst):
     """
     Delete analysis results.
     """
 
-    obj = class_from_id(crits_type, identifier)
-    if obj:
-        c = 0
-        for a in obj.analysis:
-            if str(a.analysis_id) == task_id:
-                del obj.analysis[c]
-            c += 1
-        obj.save(username=analyst)
+    ar = AnalysisResult.objects(id=task_id).first()
+    if ar:
+        ar.delete(username=analyst)
 
 def insert_analysis_results(task):
     """
     Insert analysis results for this task.
     """
 
-    obj_class = class_from_type(task.obj._meta['crits_type'])
-
-    ear = EmbeddedAnalysisResult()
+    ar = AnalysisResult()
     tdict = task.to_dict()
     tdict['analysis_id'] = tdict['id']
     del tdict['id']
-    ear.merge(arg_dict=tdict)
-    obj_class.objects(id=task.obj.id).update_one(push__analysis=ear)
+    ar.merge(arg_dict=tdict)
+    ar.save()
 
 def update_analysis_results(task):
     """
@@ -538,25 +611,21 @@ def update_analysis_results(task):
     # If the task does not currently exist for the given sample in the
     # database, add it.
 
-    obj_class = class_from_type(task.obj._meta['crits_type'])
-
-    obj = obj_class.objects(id=task.obj.id).first()
-    obj_id = obj.id
     found = False
-    for a in obj.analysis:
-        if str(a.analysis_id) == task.task_id:
-            found = True
-            break
+    ar = AnalysisResult.objects(analysis_id=task.task_id).first()
+    if ar:
+        found = True
 
     if not found:
         logger.warning("Tried to update a task that didn't exist.")
         insert_analysis_results(task)
     else:
         # Otherwise, update it.
-        ear = EmbeddedAnalysisResult()
         tdict = task.to_dict()
         tdict['analysis_id'] = tdict['id']
         del tdict['id']
-        ear.merge(arg_dict=tdict)
-        obj_class.objects(id=obj_id,
-                          analysis__id=task.task_id).update_one(set__analysis__S=ear)
+        #TODO: find a better way to do this.
+        new_dict = {}
+        for k in tdict.iterkeys():
+            new_dict['set__%s' % k] = tdict[k]
+        AnalysisResult.objects(id=ar.id).update_one(**new_dict)

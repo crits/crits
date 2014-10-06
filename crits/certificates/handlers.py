@@ -9,8 +9,6 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from mongoengine.base import ValidationError
 
-import crits.services
-
 from crits.core.class_mapper import class_from_id, class_from_value
 from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
@@ -20,6 +18,7 @@ from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed
 from crits.certificates.certificate import Certificate
 from crits.notifications.handlers import remove_user_from_notification
+from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import run_triage, get_supported_services
 
 
@@ -89,6 +88,9 @@ def get_certificate_details(md5, analyst):
         # services
         service_list = get_supported_services('Certificate')
 
+        # analysis results
+        service_results = cert.get_analysis_results()
+
         args = {'service_list': service_list,
                 'objects': objects,
                 'relationships': relationships,
@@ -96,6 +98,7 @@ def get_certificate_details(md5, analyst):
                 'relationship': relationship,
                 "subscription": subscription,
                 "screenshots": screenshots,
+                'service_results': service_results,
                 "cert": cert}
 
     return template, args
@@ -317,7 +320,7 @@ def handle_cert_file(filename, data, source_name, user=None,
     cert.reload()
 
     # run certificate triage
-    if len(cert.analysis) < 1 and data:
+    if len(AnalysisResult.objects(object_id=str(cert.id))) < 1 and data:
         run_triage(cert, user)
 
     # update relationship if a related top-level object is supplied
