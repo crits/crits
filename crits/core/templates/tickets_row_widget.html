@@ -1,12 +1,13 @@
 {% load url from future %}
+{% load filters %}
 
 <tr>
     <td data-field="ticket_number">{{ticket.ticket_number}}</td>
     <td data-field="url">
       {% if "http://" in ticket.ticket_number or "https://" in ticket.ticket_number %}
-        {{ ticket.ticket_number|urlize }}
+        {{ ticket.ticket_number|urlize|url_target_blank }}
       {% else %}
-        {{ crits_config.rt_url|add:ticket.ticket_number | urlize }}
+        {{ crits_config.rt_url|add:ticket.ticket_number | urlize|url_target_blank }}
       {% endif %}
     </td>
     <td data-field="date">{{ticket.date}}</td>
