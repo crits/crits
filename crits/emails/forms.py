@@ -19,8 +19,14 @@ class EmailOutlookForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     msg_file = forms.FileField(label='MSG File', required=True)
-    source = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'no_clear'}))
-    source_reference = forms.CharField(widget=forms.TextInput(attrs={'size':'90'}), required=False)
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.Email.SOURCE)
+    source_method = forms.CharField(required=False, widget=forms.TextInput,
+                                    label=form_consts.Email.SOURCE_METHOD)
+    source_reference = forms.CharField(required=False,
+                                       widget=forms.TextInput(attrs={'size': '90'}),
+                                       label=form_consts.Email.SOURCE_REFERENCE)
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     password = forms.CharField(widget=forms.TextInput, required=False, label='Attachment Password')
@@ -45,8 +51,14 @@ class EmailYAMLForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    source = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'no_clear'}))
-    source_reference = forms.CharField(widget=forms.TextInput(attrs={'size':'90'}), required=False)
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.Email.SOURCE)
+    source_method = forms.CharField(required=False, widget=forms.TextInput,
+                                    label=form_consts.Email.SOURCE_METHOD)
+    source_reference = forms.CharField(required=False,
+                                       widget=forms.TextInput(attrs={'size': '90'}),
+                                       label=form_consts.Email.SOURCE_REFERENCE)
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     yaml_data = forms.CharField(required=True, widget=forms.Textarea(attrs={'cols':'80', 'rows':'20'}))
@@ -72,8 +84,14 @@ class EmailEMLForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    source = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'no_clear'}))
-    source_reference = forms.CharField(widget=forms.TextInput(attrs={'size':'90'}), required=False)
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.Email.SOURCE)
+    source_method = forms.CharField(required=False, widget=forms.TextInput,
+                                    label=form_consts.Email.SOURCE_METHOD)
+    source_reference = forms.CharField(required=False,
+                                       widget=forms.TextInput(attrs={'size': '90'}),
+                                       label=form_consts.Email.SOURCE_REFERENCE)
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     filedata = forms.FileField(required=True)
@@ -99,8 +117,14 @@ class EmailRawUploadForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     raw_email = forms.CharField(required=True, widget=forms.Textarea(attrs={'cols':'80', 'rows':'12'}), label="Raw Email")
-    source = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'no_clear'}))
-    source_reference = forms.CharField(widget=forms.TextInput(attrs={'size':'120'}), required=False)
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.Email.SOURCE)
+    source_method = forms.CharField(required=False, widget=forms.TextInput,
+                                    label=form_consts.Email.SOURCE_METHOD)
+    source_reference = forms.CharField(required=False,
+                                       widget=forms.TextInput(attrs={'size': '120'}),
+                                       label=form_consts.Email.SOURCE_REFERENCE)
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     def __init__(self, username, *args, **kwargs):
@@ -142,8 +166,14 @@ class EmailUploadForm(forms.Form):
     raw_body = forms.CharField(required=False, widget=forms.Textarea(attrs={'cols':'80', 'rows':'4'}), label="Raw Body")
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
-    source = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'no_clear'}))
-    source_reference = forms.CharField(widget=forms.Textarea(attrs={'cols': '80', 'rows': '1'}), required=False)
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.Email.SOURCE)
+    source_method = forms.CharField(required=False, widget=forms.TextInput,
+                                    label=form_consts.Email.SOURCE_METHOD)
+    source_reference = forms.CharField(required=False,
+                                       widget=forms.TextInput(attrs={'size': '90'}),
+                                       label=form_consts.Email.SOURCE_REFERENCE)
 
     def __init__(self, username, *args, **kwargs):
         super(EmailUploadForm, self).__init__(*args, **kwargs)

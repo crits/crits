@@ -209,8 +209,8 @@ def generate_pcap_jtable(request, option):
 
 def handle_pcap_file(filename, data, source_name, user=None,
                      description=None, related_id=None, related_md5=None,
-                     related_type=None, method=None, relationship=None,
-                     bucket_list=None, ticket=None):
+                     related_type=None, method=None, reference=None,
+                     relationship=None, bucket_list=None, ticket=None):
     """
     Add a PCAP.
 
@@ -234,6 +234,8 @@ def handle_pcap_file(filename, data, source_name, user=None,
     :type related_type: str
     :param method: The method of acquiring this PCAP.
     :type method: str
+    :param reference: A reference to the source of this PCAP.
+    :type reference: str
     :param relationship: The relationship between the parent and the PCAP.
     :type relationship: str
     :param bucket_list: Bucket(s) to add to this PCAP.
@@ -300,15 +302,15 @@ def handle_pcap_file(filename, data, source_name, user=None,
     if isinstance(source_name, basestring) and len(source_name) > 0:
         s = create_embedded_source(source_name,
                                    method=method,
-                                   reference='',
+                                   reference=reference,
                                    analyst=user)
         pcap.add_source(s)
     elif isinstance(source_name, EmbeddedSource):
-        pcap.add_source(source_name)
+        pcap.add_source(source_name, method=method, reference=reference)
     elif isinstance(source_name, list) and len(source_name) > 0:
         for s in source_name:
             if isinstance(s, EmbeddedSource):
-                pcap.add_source(s)
+                pcap.add_source(s, method=method, reference=reference)
 
     # add file to GridFS
     if not isinstance(pcap.filedata.grid_id, ObjectId):

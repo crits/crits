@@ -156,6 +156,7 @@ def upload_indicator(request):
             if form.is_valid():
                 result = handle_indicator_csv(request.FILES['filedata'],
                                               request.POST['source'],
+                                              request.POST['method'],
                                               request.POST['reference'],
                                               "file",
                                               username,
@@ -174,6 +175,7 @@ def upload_indicator(request):
             if form.is_valid():
                 result = handle_indicator_csv(request.POST['data'],
                                               request.POST['source'],
+                                              request.POST['method'],
                                               request.POST['reference'],
                                               "ti",
                                               username,
@@ -202,6 +204,7 @@ def upload_indicator(request):
                                                   request.POST['reference'],
                                                   request.POST['indicator_type'],
                                                   username,
+                                                  request.POST['method'],
                                                   add_domain=True,
                                                   campaign=request.POST['campaign'],
                                                   campaign_confidence=request.POST['campaign_confidence'],

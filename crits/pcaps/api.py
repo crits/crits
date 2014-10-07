@@ -60,7 +60,8 @@ class PCAPResource(CRITsAPIResource):
 
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', None)
-        description = bundle.data.get('reference', None)
+        reference = bundle.data.get('reference', None)
+        description = bundle.data.get('description', None)
         relationship = bundle.data.get('relationship', None)
         related_id = bundle.data.get('related_id', None)
         related_md5 = bundle.data.get('related_md5', None)
@@ -77,6 +78,7 @@ class PCAPResource(CRITsAPIResource):
                                   related_md5=related_md5,
                                   related_type = related_type,
                                   method=method,
+                                  reference=reference,
                                   relationship=relationship,
                                   bucket_list=bucket_list,
                                   ticket=ticket)

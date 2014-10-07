@@ -393,12 +393,14 @@ def upload_raw_data(request, link_id=None):
             link_id = link_id
             bucket_list = form.cleaned_data.get('bucket_list')
             ticket = form.cleaned_data.get('ticket')
-            method = 'Upload'
+            method = form.cleaned_data.get('method', '') or 'Upload'
+            reference = form.cleaned_data.get('reference', '')
             status = handle_raw_data_file(data, source, user,
                                           description, title, data_type,
                                           tool_name, tool_version, tool_details,
                                           link_id,
                                           method=method,
+                                          reference=reference,
                                           copy_rels=copy_rels,
                                           bucket_list=bucket_list,
                                           ticket=ticket)
