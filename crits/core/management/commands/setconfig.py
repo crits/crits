@@ -220,7 +220,7 @@ def set_config_attribute(crits_config, attr, value):
             else:
                 raise CE('%s is a boolean True/False.' % attr)
         if attr in ('depth_max', 'invalid_login_attempts', 'rel_max',
-                    'session_timeout', 'total_max'):
+                    'session_timeout', 'service_pool_size', 'total_max'):
             try:
                 value = int(value)
             except:

@@ -164,6 +164,11 @@ class ConfigServicesForm(forms.Form):
                                       help_text=('Warning: Using process_pool '
                                                  'may be memory intensive.<br />'
                                                  '*Requires a web server restart.'))
+    service_pool_size = forms.IntegerField(required=True,
+                                           min_value=1,
+                                           initial="12",
+                                           help_text=('Service Thread/Process Pool Size<br />'
+                                                      '*Requires a web server restart.'))
     def __init__(self, *args, **kwargs):
         super(ConfigServicesForm, self).__init__(*args, **kwargs)
 
