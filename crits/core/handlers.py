@@ -49,7 +49,6 @@ from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
 from crits.emails.email import Email
 from crits.samples.sample import Sample
-from crits.services.analysis_result import AnalysisResult
 from crits.screenshots.screenshot import Screenshot
 from crits.targets.target import Target
 from crits.indicators.indicator import Indicator
@@ -3448,6 +3447,9 @@ def generate_global_search(request):
               "results" (list),
               "Result" (str of "OK" or "ERROR")
     """
+
+    # Importing here to prevent a circular import with Services and runscript.
+    from crits.services.analysis_result import AnalysisResult
 
     results = []
     for col_obj,url in [
