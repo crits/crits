@@ -31,16 +31,6 @@ class ConfigGeneralForm(forms.Form):
                                        help_text='*Requires a web server restart. '
                                        'Caching will improve performance but will '
                                        'consume more memory to do so!')
-    remote_user = forms.BooleanField(initial=False,
-                                     required=False,
-                                     help_text='*Requires a web server restart. '
-                                     'Disables other authentication methods.')
-    create_unknown_user = forms.BooleanField(initial=False,
-                                             required=False,
-                                             help_text='Creates CRITs accounts '
-                                             'for users authenticated through '
-                                             'REMOTE_USER. Will use LDAP info '
-                                             'if ldap settings are filled out.')
     rar_path = forms.CharField(widget=forms.TextInput, required=True,
                                help_text='*Requires a web server restart.')
     rt_url = forms.CharField(widget=forms.TextInput,
@@ -61,26 +51,12 @@ class ConfigGeneralForm(forms.Form):
                                help_text='*Requires a web server restart.')
     zip7_path = forms.CharField(widget=forms.TextInput, required=True,
                                 help_text='*Requires a web server restart.')
-    totp_web = forms.ChoiceField(choices=[('Optional', 'Optional'),
-                                          ('Required', 'Required'),
-                                          ('Disabled', 'Disabled')],
-                                  widget=forms.Select(),
-                                  required=False,
-                                  initial='Optional')
-    totp_cli = forms.ChoiceField(choices=[('Optional', 'Optional'),
-                                          ('Required', 'Required'),
-                                          ('Disabled', 'Disabled')],
-                                  widget=forms.Select(),
-                                  required=False,
-                                  initial='Disabled')
     def __init__(self, *args, **kwargs):
         super(ConfigGeneralForm, self).__init__(*args, **kwargs)
         
         
 class ConfigLDAPForm(forms.Form):
     required_css_class = 'required'
-    ldap_auth = forms.BooleanField(initial=False,
-                                   required=False)
     ldap_tls = forms.BooleanField(initial=False,
                                   required=False)
     ldap_server = forms.CharField(widget=forms.TextInput, required=False,
@@ -107,8 +83,6 @@ class ConfigSecurityForm(forms.Form):
                                                '*Leaving this as * is BAD!<br />'
                                                '*Requires a web server restart.'))
     invalid_login_attempts = forms.CharField(widget=forms.TextInput, required=True)
-    secure_cookie = forms.BooleanField(initial=True,
-                                       required=False)
     password_complexity_regex = forms.CharField(
                                 widget=forms.TextInput,
                                 required=True,
@@ -119,6 +93,32 @@ class ConfigSecurityForm(forms.Form):
                                required=True,
                                initial='8 characters, at least 1 capital, 1 lowercase and 1 number/special',
                                help_text="*Description of complexity regex")
+    ldap_auth = forms.BooleanField(initial=False,
+                                   required=False)
+    remote_user = forms.BooleanField(initial=False,
+                                     required=False,
+                                     help_text='*Requires a web server restart. '
+                                     'Disables other authentication methods.')
+    create_unknown_user = forms.BooleanField(initial=False,
+                                             required=False,
+                                             help_text='Creates CRITs accounts '
+                                             'for users authenticated through '
+                                             'REMOTE_USER. Will use LDAP info '
+                                             'if ldap settings are filled out.')
+    totp_web = forms.ChoiceField(choices=[('Optional', 'Optional'),
+                                          ('Required', 'Required'),
+                                          ('Disabled', 'Disabled')],
+                                  widget=forms.Select(),
+                                  required=False,
+                                  initial='Optional')
+    totp_cli = forms.ChoiceField(choices=[('Optional', 'Optional'),
+                                          ('Required', 'Required'),
+                                          ('Disabled', 'Disabled')],
+                                  widget=forms.Select(),
+                                  required=False,
+                                  initial='Disabled')
+    secure_cookie = forms.BooleanField(initial=True,
+                                       required=False)
     def __init__(self, *args, **kwargs):
         super(ConfigSecurityForm, self).__init__(*args, **kwargs)
         
