@@ -1,4 +1,3 @@
-import crits.services
 import datetime
 import hashlib
 import json
@@ -92,6 +91,9 @@ def get_pcap_details(md5, analyst):
         # Assume all PCAPs have the data available
         service_list = get_supported_services('PCAP')
 
+        # analysis results
+        service_results = pcap.get_analysis_results()
+
         args = {'service_list': service_list,
                 'objects': objects,
                 'relationships': relationships,
@@ -100,6 +102,7 @@ def get_pcap_details(md5, analyst):
                 'relationship': relationship,
                 "subscription": subscription,
                 "screenshots": screenshots,
+                "service_results": service_results,
                 "pcap": pcap}
 
     return template, args
@@ -206,8 +209,8 @@ def generate_pcap_jtable(request, option):
 
 def handle_pcap_file(filename, data, source_name, user=None,
                      description=None, related_id=None, related_md5=None,
-                     related_type=None, method=None, relationship=None,
-                     bucket_list=None, ticket=None):
+                     related_type=None, method=None, reference=None,
+                     relationship=None, bucket_list=None, ticket=None):
     """
     Add a PCAP.
 
@@ -231,6 +234,8 @@ def handle_pcap_file(filename, data, source_name, user=None,
     :type related_type: str
     :param method: The method of acquiring this PCAP.
     :type method: str
+    :param reference: A reference to the source of this PCAP.
+    :type reference: str
     :param relationship: The relationship between the parent and the PCAP.
     :type relationship: str
     :param bucket_list: Bucket(s) to add to this PCAP.
@@ -297,15 +302,15 @@ def handle_pcap_file(filename, data, source_name, user=None,
     if isinstance(source_name, basestring) and len(source_name) > 0:
         s = create_embedded_source(source_name,
                                    method=method,
-                                   reference='',
+                                   reference=reference,
                                    analyst=user)
         pcap.add_source(s)
     elif isinstance(source_name, EmbeddedSource):
-        pcap.add_source(source_name)
+        pcap.add_source(source_name, method=method, reference=reference)
     elif isinstance(source_name, list) and len(source_name) > 0:
         for s in source_name:
             if isinstance(s, EmbeddedSource):
-                pcap.add_source(s)
+                pcap.add_source(s, method=method, reference=reference)
 
     # add file to GridFS
     if not isinstance(pcap.filedata.grid_id, ObjectId):

@@ -3,6 +3,73 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: mgoffin
+Date:   2014-10-04
+
+    We have removed the requirement to use /crits/ when using Apache. It will
+    now function with a similar URL as runserver. This removes backwards
+    compatibility with old links, but if you wish to make them work, you can use
+    your own custom Apache config to redirect /crits/ to /.
+
+    Please reference the example Apache config files in the extras folder for
+    how to configure Apache to work with CRITs.
+
+Author: mgoffin
+Date:   2014-09-25
+
+    There is a drastic change to Analysis Results. Historically, analysis
+    results were stored within the document of the TLO they were derived from.
+    This was fine but as time went on more services were developed which had
+    more robust output. Each TLO is bound by MongoDBs 16MB max document size. As
+    services are being executed they are consuming part of that 16MB for the
+    TLO. This results in contention for space and has sometimes led to documents
+    which can no longer be modified due to hitting the cap.
+
+    The change that has been implemented is to move all Analysis Results to
+    their own collection. This gives service developers almost 16MB of space
+    dedicated to the results their service output. There is no more contention
+    with other service output to deal with. Each execution of a service will
+    have its own document in the collection making it easier to work with.
+
+    With this change you will need to run some commands:
+
+    In mongo shell:
+        use crits
+        db.analysis_results.ensureIndex({'service_name': 1}, {'background': true})
+        db.analysis_results.ensureIndex({'object_type': 1}, {'background': true})
+        db.analysis_results.ensureIndex({'object_id': 1}, {'background': true})
+
+    If you run a clustered database you'll also need to run:
+        use admin
+        db.runCommand({shardcollection:"crits.analysis_results",key:{"object_id":1}})
+
+    Once the indexes (and sharding if applicable) are set, you can then begin
+    migrating your Analysis Results to the new collection. This can be skipped
+    if you wish to have them migrated as you view content through the interface
+    but keep in mind search results will not be accurate until all of them are
+    moved.
+
+    To migrate the Analysis Results, you can run the following management
+    command:
+
+        python manage.py upgrade -as
+
+    You can use -h to get more information, but this tells the command to skip
+    preparation (there is no need to do this at this time) and to upgrade all
+    documents in all collections. You can use the individual options to migrate
+    a collection at a time (this is useful if you have bad data in your database
+    that you need to hunt down as the migration happens).
+
+    After everything is migrated and verified, if you want to ensure all of the
+    old analysis results were cleaned up, you can run the following in mongo
+    shell for each TLO collection (replace "collection" with the collection you
+    wish to update):
+
+    db.collection.update({}, {$unset: {'unsupported_attrs.analysis': 1}}, {'multi': true})
+
+    There is a new Nav Menu option under Services called "Analysis Results" to
+    get to the jTable listing of the results.
+
 Author: wxs
 Date:   2014-08-13
 
@@ -16,6 +83,35 @@ Date:   2014-08-13
 
     Services have also received a major rewrite in how they are configured
     and run. The wiki page will be updated accordingly.
+
+Author: mgoffin
+Date:   2014-09-03
+
+    The way we handle URLs is changing drastically. Now, each TLO and major
+    section of CRITs is going to handle its own urls.py file. They are imported
+    in the normal `crits/urls.py` file. If you've made any changes to your
+    urls.py file, you will need to determine the correct new location and adjust
+    accordingly.
+
+    This change was made because we exceeded the 255 argument limit when trying
+    to jam them all into one file.
+
+Author: mgoffin
+Date:   2014-09-02
+
+    Actors are a new TLO that come with a lot of attribution content. In order
+    to get Actors working, you will need to populate your database with several
+    things:
+
+        python manage.py create_actors_content
+
+    That will populate the available Threat Types, Motivations, Sophistications,
+    and Intended Effects from STIX into your database to make available.
+
+    You will also need to add some Actor Identifier Types to your system. You
+    can do this via the Control Panel or under "Add New Item". Once you have one
+    or more of these set, you can add Actor Identifiers. More information on
+    Actors, Actor Identifiers, etc. can be found on the wiki.
 
 Author: mgoffin
 Date:   2014-08-13
@@ -34,17 +130,6 @@ Date:   2014-08-12
     their 1.7 release), MongoDB 2.6.4, and PyMongo 2.7.2. I also bumped dateutil
     and Yara to 2.1.0 so people using the service push to upgrade and stay on
     the latest code base (new features which will help us enhance the service).
-
-Author: ssnow
-Date: 2014-06-23
-
-    Updating CRITs to expand the TAXII service. Within this repository, this
-    involves creating a to_stix method for crits objects within
-    crits_mongoengine.py. This method will need to be updated as more crits
-    objects can be converted into the STIX standard and potentially shared
-    via TAXII.
-
-    Related: updating STIX to v1.1.1.0 and CybOX to 2.1.0.5.
 
 Author: mgoffin
 Date:   2014-07-16
@@ -72,6 +157,17 @@ Date: 2014-06-26
     for some reason:
 
         python manage.py sector_counts
+
+Author: ssnow
+Date: 2014-06-23
+
+    Updating CRITs to expand the TAXII service. Within this repository, this
+    involves creating a to_stix method for crits objects within
+    crits_mongoengine.py. This method will need to be updated as more crits
+    objects can be converted into the STIX standard and potentially shared
+    via TAXII.
+
+    Related: updating STIX to v1.1.1.0 and CybOX to 2.1.0.5.
 
 Author: mgoffin
 Date: 2014-06-06

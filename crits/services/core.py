@@ -1,8 +1,6 @@
 from datetime import datetime
 from distutils.version import StrictVersion
-
 from importlib import import_module
-
 import logging
 import os.path
 import shutil
@@ -11,7 +9,7 @@ import uuid
 
 from django.conf import settings
 
-from crits.core.crits_mongoengine import EmbeddedAnalysisResult, AnalysisConfig
+from crits.services.analysis_result import EmbeddedAnalysisResultLog, AnalysisConfig
 from crits.services.service import CRITsService
 
 logger = logging.getLogger(__name__)
@@ -272,6 +270,9 @@ class AnalysisTask(object):
             'config':               self.config,
             'log':                  self.log,
             'results':              self.results,
+            'object_type':          self.obj._meta['crits_type'],
+            'object_id':            str(self.obj.id),
+            'results':              self.results,
         }
 
     def __str__(self):
@@ -281,7 +282,7 @@ class AnalysisTask(object):
 
 class Service(object):
     """
-    An abstract class to perform analysis on a sample.
+    An abstract class to perform analysis on a TLO.
 
     Subclasses must define the following class-level fields:
     - name
@@ -533,7 +534,7 @@ class Service(object):
         self.ensure_current_task()
 
         now = str(datetime.now())
-        log = EmbeddedAnalysisResult.EmbeddedAnalysisResultLog()
+        log = EmbeddedAnalysisResultLog()
         log.level = level
         log.message = msg
         log.datetime = now

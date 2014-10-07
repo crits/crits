@@ -13,6 +13,7 @@ from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
 from crits.emails.email import Email
+from crits.services.handlers import run_triage
 from crits.stats.handlers import target_user_stats
 from crits.targets.division import Division
 from crits.targets.forms import TargetInfoForm
@@ -46,7 +47,9 @@ def upsert_target(data, analyst):
         return {'success': False,
                 'message': "No email address to look up"}
     target = Target.objects(email_address=data['email_address']).first()
+    is_new = False
     if not target:
+        is_new = True
         target = Target()
         target.email_address = data['email_address']
 
@@ -69,6 +72,8 @@ def upsert_target(data, analyst):
     try:
         target.save(username=analyst)
         target.reload()
+        if is_new:
+            run_triage(target, analyst)
         return {'success': True,
                 'message': "Target saved successfully",
                 'id': str(target.id)}
@@ -179,6 +184,9 @@ def get_target_details(email_address, analyst):
     # favorites
     favorite = is_user_favorite("%s" % analyst, 'Target', target.id)
 
+    # analysis results
+    service_results = target.get_analysis_results()
+
     args = {'objects': objects,
             'relationships': relationships,
             'relationship': relationship,
@@ -188,6 +196,7 @@ def get_target_details(email_address, analyst):
             'screenshots': screenshots,
             'email_list': email_list,
             'target_detail': target,
+            'service_results': service_results,
             'form': form}
 
     return template, args

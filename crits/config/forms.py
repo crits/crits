@@ -162,11 +162,6 @@ class ConfigServicesForm(forms.Form):
                                       required=True,
                                       initial='process',
                                       help_text='*Requires a web server restart.')
-    service_pool_size = forms.IntegerField(required=False,
-                                           min_value=1,
-                                           initial="12",
-                                           help_text='Service Thread/Process Pool Size *Requires a web server restart.')
-
     def __init__(self, *args, **kwargs):
         super(ConfigServicesForm, self).__init__(*args, **kwargs)       
         

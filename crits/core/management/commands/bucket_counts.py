@@ -15,7 +15,7 @@ class Command(BaseCommand):
 
         buckets = {}
 
-        types = ['Campaign', 'Certificate', 'Domain', 'Email', 'Event',
+        types = ['Actor', 'Campaign', 'Certificate', 'Domain', 'Email', 'Event',
                  'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target']
 
         for otype in types:

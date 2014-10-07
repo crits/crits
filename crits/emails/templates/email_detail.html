@@ -20,6 +20,7 @@
     <li><a href="#json_section" id="json_button"><span>JSON View</span></a></li>
     <li><a href="#yaml_section" id="yaml_button"><span>YAML View</span></a></li>
     <li><a href="#cybox_section" id="cybox_button"><span>CybOX View</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     </ul>
 <div id="details_section">
@@ -194,6 +195,11 @@
 <div id="cybox_section">
     <textarea id="cybox_display" cols="150" rows="40"></textarea>
 </div>
+
+{% with item=email %}
+    {% include "services_analysis_section.html" with crits_type="Email" identifier=email.id %}
+{% endwith %}
+
 {% include 'services_tab_tabs_widget.html' %}
 </div>
 

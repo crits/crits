@@ -70,6 +70,12 @@ def create_indexes():
     """
 
     print "Creating indexes (duplicates will be ignored automatically)"
+
+    analysis_results = mongo_connector(settings.COL_ANALYSIS_RESULTS)
+    analysis_results.ensure_index("service_name", background=True)
+    analysis_results.ensure_index("object_type", background=True)
+    analysis_results.ensure_index("object_id", background=True)
+
     bucket_lists = mongo_connector(settings.COL_BUCKET_LISTS)
     bucket_lists.ensure_index("name", background=True)
 

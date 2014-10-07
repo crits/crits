@@ -1,5 +1,6 @@
 from StringIO import StringIO
 
+from crits.actors.actor import Actor
 from crits.events.event import Event
 from crits.indicators.indicator import Indicator
 from crits.core.crits_mongoengine import EmbeddedSource
@@ -113,6 +114,26 @@ class STIXParser():
 
         if self.package.observables and self.package.observables.observables:
             self.parse_observables(self.package.observables.observables)
+
+        if self.package.threat_actors:
+            self.parse_threat_actors(self.package.threat_actors)
+
+    def parse_threat_actors(self, threat_actors):
+        """
+        Parse list of Threat Actors.
+
+        :param threat_actors: List of STIX ThreatActors.
+        :type threat_actors: List of STIX ThreatActors.
+        """
+        for threat_actor in threat_actors: # for each STIX ThreatActor
+            try: # create CRITs Actor from ThreatActor
+                obj = Actor.from_stix(threat_actor)
+                obj.add_source(self.source)
+                obj.save(username=self.source_instance.analyst)
+                self.imported.append((Actor._meta['crits_type'], obj))
+            except Exception, e:
+                self.failed.append((e.message, type(threat_actor).__name__,
+                                    "")) # note for display in UI
 
     def parse_indicators(self, indicators):
         """

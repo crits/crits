@@ -102,6 +102,9 @@ def get_campaign_details(campaign_name, analyst):
     # favorites
     favorite = is_user_favorite("%s" % analyst, 'Campaign', campaign_detail.id)
 
+    # analysis results
+    service_results = campaign_detail.get_analysis_results()
+
     args = {'objects': objects,
             'relationships': relationships,
             "relationship": relationship,
@@ -111,6 +114,7 @@ def get_campaign_details(campaign_name, analyst):
             "counts": counts,
             "favorite": favorite,
             "screenshots": screenshots,
+            'service_results': service_results,
             "ttp_form": ttp_form}
 
     return template, args

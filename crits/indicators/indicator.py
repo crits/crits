@@ -84,7 +84,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_INDICATORS,
         "crits_type": 'Indicator',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "schema_doc": {
             'value': 'The value of this indicator',
             'type': 'The type of this indicator based on CybOX Object Types',
