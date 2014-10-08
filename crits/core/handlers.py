@@ -4185,23 +4185,14 @@ def add_new_action(action, object_types, preferred, analyst):
     :returns: True, False
     """
 
-    action = action.strip()
-    idb_action = Action.objects(name=action).first()
-    if not idb_action:
-        idb_action = Action()
-    idb_action.name = action
-    idb_action.object_types = object_types
-    idb_action.preferred = []
-    prefs = preferred.split('\n')
-    for pref in prefs:
-        cols = pref.split(',')
-        if len(cols) != 3:
-            continue
-        epa = EmbeddedPreferredAction()
-        epa.object_type = cols[0].strip()
-        epa.object_field = cols[1].strip()
-        epa.object_value = cols[2].strip()
-        idb_action.preferred.append(epa)
+    name = name.strip()
+    if name == "UberAdmin":
+        return False
+    if copy_from:
+        role = Role.objects(id=copy_from).first()
+    else:
+        role = Role()
+    role.name = name
     try:
         idb_action.save(username=analyst)
     except ValidationError:
