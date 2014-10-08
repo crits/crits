@@ -458,6 +458,12 @@ def handle_email_fields(data, analyst, method):
     # Remove these items from data so they are not added when merged.
     sourcename = data.get('source', None)
     del data['source']
+    if data.get('source_method', None):
+        method = method + " - " + data.get('source_method', None)
+    try:
+        del data['source_method']
+    except:
+        pass
     reference = data.get('source_reference', None)
     try:
         del data['source_reference']

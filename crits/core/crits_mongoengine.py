@@ -828,6 +828,10 @@ class CritsSourceDocument(BaseDocument):
 
         if isinstance(source_item, EmbeddedSource):
             match = None
+            if method or reference: # if method or reference is given, use it
+                for instance in source_item.instances:
+                    instance.method = method or instance.method
+                    instance.reference = reference or instance.reference
             for c, s in enumerate(self.source):
                 if s.name == source_item.name: # find index of matching source
                     match = c

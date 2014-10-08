@@ -524,7 +524,7 @@ class CRITsAPIResource(MongoEngineResource):
                 except ValueError:
                     op_index = None
                 if op_index is not None:
-                    if op in ('$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin'):
+                    if op in ('$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin', '$exists'):
                         val = v
                         if op in ('$in', '$nin'):
                             if field == 'source.name':
@@ -536,6 +536,11 @@ class CRITsAPIResource(MongoEngineResource):
                                         val.append(s)
                             else:
                                 val = [remove_quotes(i) for i in v.split(',')]
+                        if op == '$exists':
+                            if val in ('true', 'True', '1'):
+                                val = 1
+                            elif val in ('false', 'False', '0'):
+                                val = 0
                         if field in ('size', 'schema_version'):
                             if isinstance(val, list):
                                 v_f = []
@@ -550,7 +555,7 @@ class CRITsAPIResource(MongoEngineResource):
                                     val = int(val)
                                 except:
                                     val = None
-                        if val:
+                        if val or val == 0:
                             querydict[field] = {op: val}
                 elif field in ('size', 'schema_version'):
                     querydict[field] = v_int
