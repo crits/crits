@@ -534,13 +534,13 @@
         </li>
         {% if user_role == 'Administrator' %}
         <li class='mmenu_item'>
+            <a href class="dialogClick" persona="new" dialog="new-role" id="new-role" title="Add Role">Role</a></span>
+        </li>
+        <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="source_create" id="source_create">Source</a>
         </li>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="upload_tlds" id="upload_tlds">TLDs</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="user_role" id="user_role">User Role</a>
         </li>
         {% endif %}
       </ul>
@@ -622,6 +622,9 @@
                             <a class='controlPanelNav' sub_node='sourceaccess_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#sourceaccess_button">Sources</a>
                         </li>
                    </ul>
+                </li>
+                <li class='mmenu_item'>
+                    <a class='controlPanelNav' node='node_roles' href="{% url 'crits.config.views.crits_config' %}#roles">Roles</a>
                 </li>
                 <li class='mmenu_item'>
                     <a class='controlPanelNav' node='node_users' href="{% url 'crits.config.views.crits_config' %}#users">Users</a>

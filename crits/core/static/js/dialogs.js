@@ -950,6 +950,17 @@ function new_domain_dialog(e) {
     createPickers();
 }
 
+function new_role_dialog(e) {
+    if (do_copy) {
+        var dialog = $(this).find("form");
+        var copy_from = dialog.find('#id_copy_from');
+        if (typeof(rid) === "undefined") {
+            rid = '';
+        }
+        copy_from.val(rid);
+    }
+}
+
 function new_event_dialog() {
     createPickers();
 }
@@ -1047,6 +1058,7 @@ var stdDialogs = {
       "exploit_add": {title: "Exploit"},
       "source_create": {title: "Source"},
       "user_role": {title: "User Role"},
+      "new-role": {title: "Role", open: new_role_dialog},
 
       "campaign-add": { title: "Assign Campaign", personas: {
           promote: newPersona("Promote to Campaign",
@@ -1112,7 +1124,7 @@ var stdDialogs = {
   // to make that sort of global change before 3.0.
   var singleInputDialogs = "#dialog-actor-identifier-type,#dialog-ticket,"+
       "#dialog-backdoor_add,#dialog-source_create,#dialog-user_role,#dialog-exploit_add," +
-      "#dialog-indicator_action_add,#dialog-raw_data_type_add";
+      "#dialog-indicator_action_add,#dialog-raw_data_type_add,#dialog-role";
   $(singleInputDialogs).on("dialogopen", fix_form_submit(addEditSubmit));
 
 

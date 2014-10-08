@@ -29,6 +29,7 @@ from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.source_access import SourceAccess
 from crits.core.data_tools import create_zip, format_file
 from crits.core.mongo_tools import mongo_connector, get_file
+from crits.core.role import Role
 from crits.core.sector import Sector, SectorObject
 from crits.core.user import CRITsUser, EmbeddedSubscriptions
 from crits.core.user import EmbeddedLoginAttempt
@@ -2407,9 +2408,6 @@ def generate_items_jtable(request, itype, option):
     elif itype == 'SourceAccess':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#source_create').click();}"
-    elif itype == 'UserRole':
-        fields = ['name', 'active', 'id']
-        click = "function () {window.parent.$('#user_role').click();}"
 
     if option == 'jtlist':
         details_url = None
@@ -2463,6 +2461,72 @@ def generate_items_jtable(request, itype, option):
         return render_to_response("item_editor.html",
                                   {'jtable': jtable,
                                    'jtid': 'items_listing'},
+                                  RequestContext(request))
+
+def generate_roles_jtable(request, option):
+    """
+    Generate a jtable list for Roles.
+
+    :param request: The request for this jtable.
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Action to take.
+    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    obj_type = Role
+    itype = "Role"
+    mapper = obj_type._meta['jtable_opts']
+    if option == 'jtlist':
+        details_url = mapper['details_url']
+        details_url_key = mapper['details_url_key']
+        fields = mapper['fields']
+        response = jtable_ajax_list(obj_type,
+                                    details_url,
+                                    details_url_key,
+                                    request,
+                                    includes=fields)
+        return HttpResponse(json.dumps(response, default=json_handler),
+                            content_type="application/json")
+    #TODO: make this delete a role and remove it from any users that have it.
+    # if option == "jtdelete":
+    jtopts = {
+        'title': "Roles",
+        'default_sort': mapper['default_sort'],
+        'listurl': reverse('crits.core.views.roles_listing', args=('jtlist',)),
+        'deleteurl': reverse('crits.core.views.roles_listing',
+                             args=('jtdelete',)),
+        'searchurl': reverse(mapper['searchurl']),
+        'fields': mapper['jtopts_fields'],
+        'hidden_fields': mapper['hidden_fields'],
+        'linked_fields': mapper['linked_fields'],
+        'no_sort': mapper['no_sort']
+    }
+    jtable = build_jtable(jtopts, request)
+    jtable['toolbar'] = [
+        {
+            'tooltip': "'Add Role'",
+            'text': "'Add Role'",
+            'click': "function () {$('#new-role').click();}",
+        },
+
+    ]
+
+    for field in jtable['fields']:
+        if field['fieldname'].startswith("'active"):
+            field['display'] = """ function (data) {
+            return '<a id="is_active_' + data.record.id + '" href="#" onclick=\\'javascript:toggleItemActive("%s","'+data.record.id+'");\\'>' + data.record.active + '</a>';
+            }
+            """ % itype
+    if option == "inline":
+        return render_to_response("jtable.html",
+                                  {'jtable': jtable,
+                                   'jtid': 'users_listing'},
+                                  RequestContext(request))
+    else:
+        return render_to_response("user_editor.html",
+                                  {'jtable': jtable,
+                                   'jtid': 'users_listing'},
                                   RequestContext(request))
 
 def generate_users_jtable(request, option):
@@ -4101,3 +4165,77 @@ def get_bucket_autocomplete(term):
     buckets = [b.name for b in results]
     return HttpResponse(json.dumps(buckets, default=json_handler),
                         content_type='application/json')
+
+def get_role_details(rid, analyst):
+    """
+    Generate the data to render the Role details template.
+
+    :param rid: The ObjectId of the Role to get details for.
+    :type rid: str
+    :param analyst: The user requesting this information.
+    :type analyst: str
+    :returns: template (str), arguments (dict)
+    """
+
+    template = None
+    role = Role.objects(id=rid).first()
+    if not role or role.name == "UberAdmin":
+        error = ("Either this Role does not exist or you do "
+                 "not have permission to view it.")
+        template = "error.html"
+        args = {'error': error}
+        return template, args
+
+    do_not_render = ['_id', 'schema_version']
+
+    args = {'role': role.to_dict(),
+            'do_not_render': do_not_render,
+            "rid": rid}
+
+    return template, args
+
+def set_role_value(rid, name, value, analyst):
+    """
+    Set the value of a role item.
+
+    :param rid: The ObjectId of the role to alter.
+    :type rid: str
+    :param name: The name of the item to set.
+    :type name: str
+    :param value: The value to set.
+    :type value: boolean
+    :param analyst: The user making the change.
+    :type analyst: str
+    """
+
+    if value in [1, '1', 'true', 'True', True]:
+        value = True
+    else:
+        value = False
+    ud = {'set__%s' % name: value}
+    Role.objects(id=rid,name__ne="UberAdmin").update_one(**ud)
+
+def add_new_role(name, copy_from, analyst):
+    """
+    Add a new role to the system.
+
+    :param name: The name of the role.
+    :type name: str
+    :param copy_from: Copy this role from an existing role.
+    :type copy_from: str
+    :param analyst: The user adding the role.
+    :type analyst: str
+    :returns: True, False
+    """
+
+    name = name.strip()
+    if copy_from:
+        role = Role.objects(id=copy_from).first()
+    else:
+        role = Role()
+    role.name = name
+    try:
+        role.save(username=analyst)
+        return True
+    except ValidationError:
+        return False

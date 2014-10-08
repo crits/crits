@@ -5,6 +5,7 @@ import string
 from crits.indicators.handlers import does_indicator_relationship_exist
 
 from django import template
+from django.conf import settings
 from django.template.defaultfilters import stringfilter
 from django.utils.safestring import mark_safe
 register = template.Library()
@@ -168,7 +169,7 @@ def to_dict(obj):
 def absVal(value):
     """
     return absolute value
-    
+
     :param value: the int to get the absolute value of
     :type value: int
     :returns: int
@@ -180,4 +181,19 @@ def absVal(value):
 def url_target_blank(var):
     """Follow the 'urlize' filter with this to make the URL open in a new tab."""
     return mark_safe(re.sub("<a([^>]+)(?<!target=)>",'<a target="_blank"\\1>',var))
-    
+
+
+@register.filter
+def is_tlo(value):
+    """
+    Check to see if the string is a valid TLO
+
+    :param value: The string to check.
+    :type value: str
+    :returns: boolean
+    """
+
+    if value in settings.CRITS_TYPES.keys():
+        return True
+    else:
+        return False

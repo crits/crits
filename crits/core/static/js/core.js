@@ -1367,4 +1367,22 @@ $(document).ready(function() {
             }
         });
     });
+
+    $(document).on('change', '.role_value', function(e) {
+        var data = {
+            rid: rid,
+            name: $(this).attr('name'),
+            value: $(this).prop('checked')
+        }
+        $.ajax({
+            type: 'POST',
+            url: role_value_change,
+            data: data,
+            success: function(data) {
+            }
+        });
+    });
+    $(document).on('click', '.copy_role', function(e) {
+        do_copy = true;
+    });
 }); //document.ready

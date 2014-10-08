@@ -32,6 +32,7 @@
                             "#sourceaccess_button"
                             ]
         var usersHash = "#users";
+        var rolesHash = "#roles";
         var servicesHash = "#services";
         var auditLogHash = "#auditLog"
         //objects used in modularized ajax call
@@ -43,6 +44,11 @@
                     //this was necessary because the jtable was not loading
                     initTabNav();
                 }
+        };
+        var rolesObject = {
+                url:"{% url 'crits.core.views.roles_listing' %}",
+                container:$("#rolesContainer"),
+                hasGottenData:false,
         };
         var usersObject = {
                 url:"{% url 'crits.core.views.users_listing' %}",
@@ -120,6 +126,7 @@
                                    ]
                         },
                         { id: 'items', text: 'Items', group: true},
+                        { id: 'roles', text: 'Roles', group: true},
                         { id: 'users', text: 'Users', group: true},
                         { id: 'services', text: 'Services', group: true},
                         { id: 'audit_log', text: 'Audit Log', group: true}
@@ -127,12 +134,17 @@
                 });
                 //remove the show/hide label on the nodes that don't expand
                 $("#node_items span:first").empty();
+                $("#node_roles span:first").empty();
                 $("#node_users span:first").empty();
                 $("#node_services span:first").empty();
                 $("#node_audit_log span:first").empty();
                 //call to get the content for the items tab
                 $("#node_items").click(function() {
                     getRightContent(itemsObject);
+                });
+                //call to get the content for the roles tab
+                $("#node_roles").click(function() {
+                    getRightContent(rolesObject);
                 });
                 //call to get the content for the users tab
                 $("#node_users").click(function() {
@@ -172,6 +184,8 @@
                         getRightContent(itemsObject);
                     else if(hash == servicesHash)
                         getRightContent(servicesObject);
+                    else if(hash == rolesHash)
+                        getRightContent(rolesObject);
                     else if(hash == usersHash)
                         getRightContent(usersObject);
                     else if(hash == auditLogHash)
@@ -259,6 +273,7 @@
             </form>   
         </div> 
         <div id="itemsContainer" class='rightContent forceInvisible'></div>
+        <div id="rolesContainer" class="rightContent forceInvisible"></div>
         <div id="usersContainer" class="rightContent forceInvisible">
             <div id="add-new-user-form" title="Add/Edit User">
                 <select class="selectbox" name="user" onchange="getUserSources(this);">
@@ -278,4 +293,3 @@
         <div id="audit_logContainer" class="rightContent forceInvisible"></div>
 </div>
 {% endblock %}
-

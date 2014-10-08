@@ -33,10 +33,27 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
         "latest_schema_version": 1,
         "schema_doc": {
         },
+        "jtable_opts": {
+                         'details_url': 'crits.core.views.role_details',
+                         'details_url_key': 'id',
+                         'default_sort': "name ASC",
+                         'searchurl': 'crits.core.views.roles_listing',
+                          'fields': [ "name", "active", "description",
+                                      "id" ],
+                          'jtopts_fields': [ "details",
+                                             "name",
+                                             "active",
+                                             "description" ],
+                         'hidden_fields': [],
+                         'linked_fields': [ "name", ],
+                         'details_link': 'details',
+                         'no_sort': ['details']
+                       }
     }
 
     name = StringField(required=True)
     active = StringField(default="on")
+    description = StringField()
     sources = ListField(EmbeddedDocumentField(EmbeddedSourceACL))
 
     # TLOs

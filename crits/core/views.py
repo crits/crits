@@ -28,7 +28,7 @@ from crits.core.crits_mongoengine import RelationshipType
 from crits.core.data_tools import json_handler
 from crits.core.forms import SourceAccessForm, AddSourceForm, AddUserRoleForm
 from crits.core.forms import SourceForm, DownloadFileForm, AddReleasabilityForm
-from crits.core.forms import TicketForm
+from crits.core.forms import TicketForm, AddRoleForm
 from crits.core.handlers import add_releasability, add_releasability_instance
 from crits.core.handlers import remove_releasability, remove_releasability_instance
 from crits.core.handlers import add_new_source, generate_counts_jtable
@@ -46,13 +46,13 @@ from crits.core.handlers import dns_timeline, email_timeline, indicator_timeline
 from crits.core.handlers import generate_users_jtable, generate_items_jtable
 from crits.core.handlers import toggle_item_state, download_grid_file
 from crits.core.handlers import get_data_for_item, generate_audit_jtable
-from crits.core.handlers import details_from_id, status_update
-from crits.core.handlers import get_favorites, favorite_update
-from crits.core.handlers import generate_favorites_jtable
+from crits.core.handlers import details_from_id, status_update, set_role_value
+from crits.core.handlers import get_favorites, favorite_update, get_role_details
+from crits.core.handlers import generate_favorites_jtable, generate_roles_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
+from crits.core.handlers import add_new_role
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
-from crits.core.user_role import UserRole
 from crits.core.user_tools import user_can_view_data, is_admin, user_sources
 from crits.core.user_tools import user_is_admin, get_user_list, get_nav_template
 from crits.core.user_tools import get_user_role, get_user_email_notification
@@ -609,6 +609,40 @@ def user_role_add(request):
                               {"error" : 'Expected AJAX POST'},
                               RequestContext(request))
 
+@user_passes_test(user_is_admin)
+def role_add(request):
+    """
+    Add a role to CRITs. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        role_form = AddRoleForm(request.POST)
+        analyst = request.user.username
+        if role_form.is_valid() and is_admin(request.user.username):
+            name = role_form.cleaned_data['name']
+            copy_from = role_form.cleaned_data['copy_from']
+            result = add_new_role(name,
+                                  copy_from,
+                                  analyst)
+            if result:
+                message = {'message': '<div>Role added successfully!</div>',
+                           'success': True}
+            else:
+                message = {'message': '<div>Role addition failed!</div>',
+                           'success': False}
+        else:
+            message = {'success': False,
+                       'form': role_form.as_table()}
+        return HttpResponse(json.dumps(message),
+                            mimetype="application/json")
+    return render_to_response("error.html",
+                              {"error" : 'Expected AJAX POST'},
+                              RequestContext(request))
+
 @user_passes_test(user_can_view_data)
 def add_update_source(request, method, obj_type, obj_id):
     """
@@ -1031,6 +1065,7 @@ def base_context(request):
         base_context['source_access'] = SourceAccessForm()
         base_context['upload_tlds'] = TLDUpdateForm()
         base_context['user_role_add'] = AddUserRoleForm()
+        base_context['role_add'] = AddRoleForm()
         base_context['new_ticket'] = TicketForm(initial={'date': datetime.datetime.now()})
         base_context['add_actor_identifier_type'] = AddActorIdentifierTypeForm()
         base_context['attribute_actor_identifier'] = AttributeIdentifierForm()
@@ -1594,6 +1629,20 @@ def control_panel(request):
                                 RequestContext(request))
 
 @user_passes_test(user_is_admin)
+def roles_listing(request, option=None):
+    """
+    Generate the jtable data for rendering in the list template.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Action to take.
+    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    return generate_roles_jtable(request, option)
+
+@user_passes_test(user_is_admin)
 def users_listing(request, option=None):
     """
     Generate the jtable data for rendering in the list template.
@@ -1657,8 +1706,7 @@ def item_editor(request):
                 ObjectType,
                 RawDataType,
                 RelationshipType,
-                SourceAccess,
-                UserRole]
+                SourceAccess]
     for col_obj in obj_list:
         counts[col_obj._meta['crits_type']] = col_obj.objects().count()
     return render_to_response("item_editor.html",
@@ -1713,6 +1761,53 @@ def toggle_item_active(request):
             result = {'success': False}
         else:
             result = toggle_item_state(type_, oid, analyst)
+        return HttpResponse(json.dumps(result), mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def role_details(request, rid):
+    """
+    Generate Role details template.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param rid: The ObjectId of the Role to get details for.
+    :type rid: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    analyst = request.user.username
+    template = "role_detail.html"
+    (new_template, args) = get_role_details(rid, analyst)
+    if new_template:
+        template = new_template
+    return render_to_response(template,
+                              args,
+                              RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def role_value_change(request):
+    """
+    Change the value of a Role item. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        rid = request.POST.get('rid', None)
+        name = request.POST.get('name', None)
+        value = request.POST.get('value', None)
+        analyst = request.user.username
+        if not rid or not name:
+            result = {'success': False}
+        else:
+            result = set_role_value(rid, name, value, analyst)
         return HttpResponse(json.dumps(result), mimetype="application/json")
     else:
         error = "Expected AJAX POST"

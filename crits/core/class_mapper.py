@@ -22,6 +22,7 @@ def class_from_id(type_, _id):
     from crits.core.crits_mongoengine import RelationshipType
     from crits.core.source_access import SourceAccess
     from crits.core.user_role import UserRole
+    from crits.core.role import Role
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event, EventType
@@ -93,6 +94,8 @@ def class_from_id(type_, _id):
         return RawDataType.objects(id=_id).first()
     elif type_ == 'RelationshipType':
         return RelationshipType.objects(id=_id).first()
+    elif type_ == 'Role':
+        return Role.objects(id=_id).first()
     elif type_ == 'Sample':
         return Sample.objects(id=_id).first()
     elif type_ == 'SourceAccess':
@@ -206,6 +209,7 @@ def class_from_type(type_):
     from crits.core.crits_mongoengine import RelationshipType
     from crits.core.source_access import SourceAccess
     from crits.core.user_role import UserRole
+    from crits.core.role import Role
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event, EventType
@@ -266,6 +270,8 @@ def class_from_type(type_):
         return RawDataType
     elif type_ == 'RelationshipType':
         return RelationshipType
+    elif type_ == 'Role':
+        return Role
     elif type_ == 'Sample':
         return Sample
     elif type_ == 'SourceAccess':
