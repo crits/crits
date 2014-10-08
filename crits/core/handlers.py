@@ -4229,6 +4229,8 @@ def add_new_role(name, copy_from, analyst):
     """
 
     name = name.strip()
+    if name == "UberAdmin":
+        return False
     if copy_from:
         role = Role.objects(id=copy_from).first()
     else:
