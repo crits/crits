@@ -890,8 +890,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         # the user should be granted access to.
         for r in roles:
             for p,v in r._data.iteritems():
-                if p == 'name':
-                    # No need to worry about the name here. Added benefit of
+                if p in ['name', 'description', 'active', 'id']:
+                    # No need to worry about these. Added benefit of
                     # throwing a validation error since there is no name
                     # preventing people from accidentally saving this as a new
                     # Role.

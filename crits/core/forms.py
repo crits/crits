@@ -49,6 +49,7 @@ class AddRoleForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     name = forms.CharField(widget=forms.TextInput, required=True)
+    description = forms.CharField(widget=forms.TextInput, required=False)
     copy_from = forms.CharField(widget=HiddenInput, required=False)
 
 class AddSourceForm(forms.Form):

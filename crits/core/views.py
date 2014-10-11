@@ -624,9 +624,11 @@ def role_add(request):
         analyst = request.user.username
         if role_form.is_valid() and is_admin(request.user.username):
             name = role_form.cleaned_data['name']
+            description = role_form.cleaned_data['description']
             copy_from = role_form.cleaned_data['copy_from']
             result = add_new_role(name,
                                   copy_from,
+                                  description,
                                   analyst)
             if result:
                 message = {'message': '<div>Role added successfully!</div>',

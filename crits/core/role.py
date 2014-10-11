@@ -63,6 +63,11 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
                                             required=True,
                                             default=ActorIdentifierAccess())
 
+    # Interfacing
+    api_interface = BooleanField(default=False)
+    script_interface = BooleanField(default=False)
+    web_interface = BooleanField(default=False)
+
     # Add New
     add_new_actor_identifier_type = BooleanField(default=False)
     add_new_backdoor = BooleanField(default=False)

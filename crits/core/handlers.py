@@ -4215,7 +4215,7 @@ def set_role_value(rid, name, value, analyst):
     ud = {'set__%s' % name: value}
     Role.objects(id=rid,name__ne="UberAdmin").update_one(**ud)
 
-def add_new_role(name, copy_from, analyst):
+def add_new_role(name, copy_from, description, analyst):
     """
     Add a new role to the system.
 
@@ -4236,6 +4236,12 @@ def add_new_role(name, copy_from, analyst):
     else:
         role = Role()
     role.name = name
+    if not len(description):
+        description = "None"
+    role.description = description
+    role.id = None
+    # hack because MongoEngine makes this false if you unset the id
+    role._created = True
     try:
         role.save(username=analyst)
         return True
