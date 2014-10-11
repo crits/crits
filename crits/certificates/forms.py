@@ -1,5 +1,6 @@
 from django import forms
 
+from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_source_names
 from crits.core.user_tools import get_user_organization
@@ -15,7 +16,13 @@ class UploadCertificateForm(forms.Form):
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                                'rows':'2'}),
                                                                required=False)
-    source = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.Certificate.SOURCE)
+    method = forms.CharField(required=False, widget=forms.TextInput,
+                             label=form_consts.Certificate.SOURCE_METHOD)
+    reference = forms.CharField(required=False, widget=forms.TextInput,
+                                label=form_consts.Certificate.SOURCE_REFERENCE)
     related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
     related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
 

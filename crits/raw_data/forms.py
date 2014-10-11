@@ -1,5 +1,6 @@
 from django import forms
 
+from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
@@ -21,7 +22,14 @@ class UploadRawDataFileForm(forms.Form):
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                                'rows':'2'}),
                                                                required=False)
-    source = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.RawData.SOURCE)
+    method = forms.CharField(required=False, widget=forms.TextInput,
+                             label=form_consts.RawData.SOURCE_METHOD)
+    reference = forms.CharField(required=False,
+                                widget=forms.TextInput(attrs={'size': '90'}),
+                                label=form_consts.RawData.SOURCE_REFERENCE)
 
     def __init__(self, username, *args, **kwargs):
         super(UploadRawDataFileForm, self).__init__(*args, **kwargs)
@@ -54,7 +62,14 @@ class UploadRawDataForm(forms.Form):
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                                'rows':'2'}),
                                                                required=False)
-    source = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.RawData.SOURCE)
+    method = forms.CharField(required=False, widget=forms.TextInput,
+                             label=form_consts.RawData.SOURCE_METHOD)
+    reference = forms.CharField(required=False,
+                                widget=forms.TextInput(attrs={'size': '90'}),
+                                label=form_consts.RawData.SOURCE_REFERENCE)
     data = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                         'rows':'2'}),
                                                         required=True)

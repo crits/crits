@@ -99,11 +99,12 @@ def upload_certificate(request):
             related_type = form.cleaned_data.get('related_type', '')
             bucket_list = form.cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = form.cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
-            method = 'Upload'
+            method = form.cleaned_data.get('method', '') or 'Upload'
+            reference = form.cleaned_data.get('reference', '')
             status = handle_cert_file(filename, data, source, user, description,
                                       related_id=related, related_type=related_type,
-                                      method=method, bucket_list=bucket_list,
-                                      ticket=ticket)
+                                      method=method, reference=reference,
+                                      bucket_list=bucket_list, ticket=ticket)
             if status['success']:
                 return render_to_response('file_upload_response.html',
                                           {'response': json.dumps({
