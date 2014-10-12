@@ -50,7 +50,7 @@ from crits.core.handlers import details_from_id, status_update, set_role_value
 from crits.core.handlers import get_favorites, favorite_update, get_role_details
 from crits.core.handlers import generate_favorites_jtable, generate_roles_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
-from crits.core.handlers import add_new_role
+from crits.core.handlers import add_new_role, render_role_graph
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, is_admin, user_sources
@@ -643,6 +643,38 @@ def role_add(request):
                             mimetype="application/json")
     return render_to_response("error.html",
                               {"error" : 'Expected AJAX POST'},
+                              RequestContext(request))
+
+@user_passes_test(user_is_admin)
+def role_graph(request):
+    """
+    Render the role graph.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    analyst = request.user.username
+    if request.method == "GET":
+        start_type = request.GET.get('start_type', 'roles')
+        start_node = request.GET.get('start_node', None)
+        expansion_node = request.GET.get('expansion_node', None)
+    if request.method == "POST" and request.is_ajax():
+        start_type = request.POST.get('start_type', 'roles')
+        start_node = request.POST.get('start_node', None)
+        expansion_node = request.POST.get('expansion_node', None)
+        result = render_role_graph(start_type,
+                                start_node,
+                                expansion_node,
+                                analyst)
+        if result:
+            return HttpResponse(json.dumps(result),
+                                mimetype="application/json")
+    return render_to_response("role_graph.html",
+                              {"start_type": start_type,
+                              "start_node": start_node,
+                              "expansion_node": expansion_node},
                               RequestContext(request))
 
 @user_passes_test(user_can_view_data)

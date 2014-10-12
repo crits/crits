@@ -4247,3 +4247,147 @@ def add_new_role(name, copy_from, description, analyst):
         return True
     except ValidationError:
         return False
+
+def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
+                      analyst=None):
+    """
+    Gather the necessary data to render the Role graph. The format of a node is:
+
+        {'name': Name of node.
+         'childen': [{'name': Name of child',
+                      'size': Size for child (if doesn't have more children).
+                     }]
+        }
+
+    :param start_type: The starting type. Must be "roles", "sources", or "users".
+    :type start_type: str
+    :param start_node: The first node to render sub-nodes for.
+    :type start_node: str
+    :param expansion_node: The 3rd-level node to expand.
+    :type expansion_node: str
+    :returns: dict
+    """
+
+    data = {'children': []}
+
+    # Roles (default)
+    if start_type == "role" or start_type not in ['source', 'user']:
+        data['name'] = "Roles"
+        roles = Role.objects()
+        for role in roles:
+            role_dict = {'name': role.name,
+                         'children': []}
+            if role.name == start_node:
+                role_dict['expand'] = True
+            else:
+                role_dict['expand'] = False
+
+            # get sources
+            source_list = {'name': 'Sources',
+                           'children': []}
+            if expansion_node and expansion_node.lower() == 'sources':
+                source_list['expand'] = True
+            else:
+                source_list['expand'] = False
+            for source in role.sources:
+                d = {'name': source.name,
+                     'size': 3000}
+                source_list['children'].append(d)
+            role_dict['children'].append(source_list)
+
+            # get users
+            user_list = {'name': 'Users',
+                         'children': []}
+            if expansion_node and expansion_node.lower() == 'users':
+                user_list['expand'] = True
+            else:
+                user_list['expand'] = False
+            users = CRITsUser.objects(roles=role.name)
+            for user in users:
+                d = {'name': user.username,
+                     'size': 3000}
+                user_list['children'].append(d)
+            role_dict['children'].append(user_list)
+
+            # populate
+            data['children'].append(role_dict)
+
+    # Sources
+    if start_type == "source":
+        data['name'] = "Sources"
+        sources = SourceAccess.objects()
+        for source in sources:
+            source_dict = {'name': source.name,
+                           'children': []}
+            if source.name == start_node:
+                source_dict['expand'] = True
+            else:
+                source_dict['expand'] = False
+
+            users_dict = {'name': 'Users',
+                          'children': []}
+            users_list = []
+            if expansion_node and expansion_node.lower() == 'users':
+                users_dict['expand'] = True
+            else:
+                users_dict['expand'] = False
+
+            # get roles
+            roles = Role.objects(sources__name=source.name)
+            for role in roles:
+                role_dict = {'name': role.name,
+                             'children': []}
+                if expansion_node and expansion_node == role.name:
+                    role_dict['expand'] = True
+                else:
+                    role_dict['expand'] = False
+                users = CRITsUser.objects(roles=role.name)
+                for user in users:
+                    d = {'name': user.username,
+                         'size': 3000}
+                    role_dict['children'].append(d)
+                    if user.username not in users_list:
+                        users_dict['children'].append(d)
+                        users_list.append(user.username)
+                source_dict['children'].append(role_dict)
+            source_dict['children'].append(users_dict)
+            data['children'].append(source_dict)
+
+    # Users
+    if start_type == "user":
+        data['name'] = "Users"
+        users = CRITsUser.objects()
+        for user in users:
+            user_dict = {'name': user.username,
+                         'children': []}
+            if user.username == start_node:
+                user_dict['expand'] = True
+            else:
+                user_dict['expand'] = True
+
+            sources_dict = {'name': 'Sources',
+                            'children': []}
+            if expansion_node and expansion_node.lower() == 'sources':
+                sources_dict['expand'] = True
+            else:
+                sources_dict['expand'] = False
+            roles_dict = {'name': 'Roles',
+                          'children': []}
+            if expansion_node and expansion_node.lower() == 'roles':
+                roles_dict['expand'] = True
+            else:
+                roles_dict['expand'] = False
+
+            roles = Role.objects(name__in=user.roles)
+            for role in roles:
+                for source in role.sources:
+                    d = {'name': source.name,
+                         'size': 3000}
+                    sources_dict['children'].append(d)
+                roles_dict['children'].append({'name': role.name,
+                                   'size': 3000})
+            user_dict['children'].append(sources_dict)
+            user_dict['children'].append(roles_dict)
+            data['children'].append(user_dict)
+
+    return data
