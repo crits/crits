@@ -4269,6 +4269,7 @@ def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
     """
 
     data = {'children': []}
+    url = reverse('crits.core.views.role_graph')
 
     # Roles (default)
     if start_type == "role" or start_type not in ['source', 'user']:
@@ -4291,6 +4292,8 @@ def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
                 source_list['expand'] = False
             for source in role.sources:
                 d = {'name': source.name,
+                     'url': "%s?start_type=source&start_node=%s" % (url,
+                                                                    source.name),
                      'size': 3000}
                 source_list['children'].append(d)
             role_dict['children'].append(source_list)
@@ -4305,6 +4308,8 @@ def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
             users = CRITsUser.objects(roles=role.name)
             for user in users:
                 d = {'name': user.username,
+                     'url': "%s?start_type=user&start_node=%s" % (url,
+                                                                  user.username),
                      'size': 3000}
                 user_list['children'].append(d)
             role_dict['children'].append(user_list)
@@ -4336,6 +4341,8 @@ def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
             roles = Role.objects(sources__name=source.name)
             for role in roles:
                 role_dict = {'name': role.name,
+                             'url': "%s?start_type=role&start_node=%s" % (url,
+                                                                          role.name),
                              'children': []}
                 if expansion_node and expansion_node == role.name:
                     role_dict['expand'] = True
@@ -4344,6 +4351,8 @@ def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
                 users = CRITsUser.objects(roles=role.name)
                 for user in users:
                     d = {'name': user.username,
+                         'url': "%s?start_type=user&start_node=%s" % (url,
+                                                                      user.username),
                          'size': 3000}
                     role_dict['children'].append(d)
                     if user.username not in users_list:
@@ -4382,10 +4391,15 @@ def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
             for role in roles:
                 for source in role.sources:
                     d = {'name': source.name,
+                         'url': "%s?start_type=source&start_node=%s" % (url,
+                                                                        source.name),
                          'size': 3000}
                     sources_dict['children'].append(d)
-                roles_dict['children'].append({'name': role.name,
-                                   'size': 3000})
+                d = {'name': role.name,
+                     'url': "%s?start_type=role&start_node=%s" % (url,
+                                                                  role.name),
+                     'size': 3000}
+                roles_dict['children'].append(d)
             user_dict['children'].append(sources_dict)
             user_dict['children'].append(roles_dict)
             data['children'].append(user_dict)

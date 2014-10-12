@@ -256,18 +256,20 @@
                     .attr("class", "node")
                     .attr("transform", function(d) {
                         return "translate(" + source.y0 + "," + source.x0 + ")";
-                    })
-                    .on('click', click);
+                    });
 
                 nodeEnter.append("circle")
                     .attr('class', 'nodeCircle')
                     .attr("r", 0)
                     .style("fill", function(d) {
                         return d._children ? "lightsteelblue" : "#fff";
-                    });
+                    })
+                    .on('click', click);
 
-                //TODO: make these links if necessary
-                nodeEnter.append("text")
+                nodeEnter .append("text")
+                    .text(function(d) {
+                        return d.name;
+                    })
                     .attr("x", function(d) {
                         return d.children || d._children ? -10 : 10;
                     })
@@ -276,13 +278,22 @@
                     .attr("text-anchor", function(d) {
                         return d.children || d._children ? "end" : "start";
                     })
-                    .text(function(d) {
-                        return d.name;
+                    .style("fill-opacity", 0)
+                    .style("fill", function(d) {
+                        if (d.url) {
+                            return "#3399ff";
+                        } else {
+                            return "#000000";
+                        }
                     })
-                    .style("fill-opacity", 0);
+                    .on('click', function(d) {
+                        if (d.url) {
+                            window.open(d.url, '_self');
+                        }
+                    });
 
                 // Update the text to reflect whether node has children or not.
-                node.select('text')
+                node.select('circle')
                     .attr("x", function(d) {
                         return d.children || d._children ? -10 : 10;
                     })
