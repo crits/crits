@@ -279,6 +279,25 @@ class SourceAccessForm(forms.Form):
                                                                                      None)]
 
 
+class RoleSourceEdit(forms.Form):
+    """
+    Django form to edit sources for a Role.
+    """
+
+    sources = forms.MultipleChoiceField(required=False,
+                                        widget=SelectMultiple(attrs={'class':'multiselect',
+                                                                     'style': 'height: auto;'}))
+    error_css_class = 'error'
+    required_css_class = 'required'
+
+    def __init__(self, *args, **kwargs):
+        super(RoleSourceEdit, self).__init__(*args, **kwargs)
+        self.fields['sources'].choices = [(c.name,
+                                           c.name) for c in get_source_names(False,
+                                                                             False,
+                                                                             None)]
+
+
 class SourceForm(forms.Form):
     """
     Django form to add source information to a top-level object.

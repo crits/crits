@@ -51,6 +51,7 @@ from crits.core.handlers import get_favorites, favorite_update, get_role_details
 from crits.core.handlers import generate_favorites_jtable, generate_roles_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
 from crits.core.handlers import add_new_role, render_role_graph
+from crits.core.handlers import add_role_source, remove_role_source
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, is_admin, user_sources
@@ -1842,6 +1843,56 @@ def role_value_change(request):
             result = {'success': False}
         else:
             result = set_role_value(rid, name, value, analyst)
+        return HttpResponse(json.dumps(result), mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def role_add_source(request):
+    """
+    Add a source to a Role. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        rid = request.POST.get('rid', None)
+        name = request.POST.get('name', None)
+        analyst = request.user.username
+        if not rid or not name:
+            result = {'success': False}
+        else:
+            result = add_role_source(rid, name, analyst)
+        return HttpResponse(json.dumps(result), mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def role_remove_source(request):
+    """
+    Remove a source from a Role. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        rid = request.POST.get('rid', None)
+        name = request.POST.get('name', None)
+        analyst = request.user.username
+        if not rid or not name:
+            result = {'success': False}
+        else:
+            result = remove_role_source(rid, name, analyst)
         return HttpResponse(json.dumps(result), mimetype="application/json")
     else:
         error = "Expected AJAX POST"

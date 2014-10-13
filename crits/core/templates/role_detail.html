@@ -8,6 +8,8 @@
 
 <script>
     var role_value_change = "{% url 'crits.core.views.role_value_change' %}";
+    var role_add_source = "{% url 'crits.core.views.role_add_source' %}";
+    var role_remove_source = "{% url 'crits.core.views.role_remove_source' %}";
     var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
     var rid = "{{ rid }}";
     var do_copy = false;
@@ -15,6 +17,21 @@
 <style>
     table.vertical tr td {
         min-width: 300px;
+    }
+    table.form tr th {
+        min-width: 300px;
+    }
+    div.ui-multiselect {
+        min-width: 297px;
+    }
+    div.selected {
+        min-width: 148px;
+    }
+    div.available {
+        min-width: 148px;
+    }
+    table.form tr th label {
+        float: left;
     }
     #copy_role {
         float: right;
@@ -38,11 +55,19 @@
     <li><a href="#target_section" id="ttarget_button"><span>Target</span></a></li>
     </ul>
 <div id="general_section">
+    <div style="float: right;">
+        <table class="form" id="role_source_table">
+            {{ source_form.as_table }}
+            {% for source in role.sources %}
+                {% include 'role_source_item.html' %}
+            {% endfor %}
+        </table>
+    </div>
     <table class="vertical">
         <tbody>
             {% with tlo=None %}
                 {% for k,v in role.items %}
-                    {% if not k|is_tlo %}
+                    {% if not k|is_tlo and k != "sources" %}
                         {% include 'role_item.html' %}
                     {% endif %}
                 {% endfor %}
@@ -189,5 +214,6 @@
 {% endblock %}
 
 {% block javascript_includes %}
+ <script type="text/javascript" src="{{ STATIC_URL }}js/roles.js"></script>
 {% endblock %}
 

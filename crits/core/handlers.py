@@ -15,6 +15,7 @@ from django.core.urlresolvers import reverse, resolve, get_script_prefix
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.template.loader import render_to_string
 from django.utils.html import escape as html_escape
 from django.utils.http import urlencode
 from mongoengine.base import ValidationError
@@ -4188,11 +4189,55 @@ def get_role_details(rid, analyst):
 
     do_not_render = ['_id', 'schema_version']
 
+    from crits.core.forms import RoleSourceEdit
+    d = {'sources': [s.name for s in role.sources]}
+    source_form = RoleSourceEdit(initial=d)
+
     args = {'role': role.to_dict(),
             'do_not_render': do_not_render,
+            'source_form': source_form,
             "rid": rid}
 
     return template, args
+
+def add_role_source(rid, name, analyst):
+    """
+    Add a source to a role.
+
+    :param rid: The ObjectId of the role to alter.
+    :type rid: str
+    :param name: The name of the source to add.
+    :type name: str
+    :param analyst: The user making the change.
+    :type analyst: str
+    """
+
+    ed = {'name': name,
+          'read': False,
+          'write': False}
+    d = {'push__sources': ed}
+    Role.objects(id=rid, name__ne="UberAdmin").update_one(**d)
+
+    html = render_to_string('role_source_item.html',
+                            {'source': ed})
+    return {'success': True,
+            'html': html}
+
+def remove_role_source(rid, name, analyst):
+    """
+    Remove a source from a role.
+
+    :param rid: The ObjectId of the role to alter.
+    :type rid: str
+    :param name: The name of the source to remove.
+    :type name: str
+    :param analyst: The user making the change.
+    :type analyst: str
+    """
+
+    d = {'pull__sources': {'name': name}}
+    Role.objects(id=rid, name__ne="UberAdmin").update_one(**d)
+    return {'success': True}
 
 def set_role_value(rid, name, value, analyst):
     """
@@ -4212,8 +4257,17 @@ def set_role_value(rid, name, value, analyst):
         value = True
     else:
         value = False
+    if name.startswith("sources"):
+        d = name.split('__')
+        sname = d[1]
+        name = "%s__S__%s" % (d[0], d[2])
     ud = {'set__%s' % name: value}
-    Role.objects(id=rid,name__ne="UberAdmin").update_one(**ud)
+    if name.startswith("sources"):
+        Role.objects(id=rid,
+                     name__ne="UberAdmin",
+                     sources__name=sname).update_one(**ud)
+    else:
+        Role.objects(id=rid,name__ne="UberAdmin").update_one(**ud)
 
 def add_new_role(name, copy_from, description, analyst):
     """
