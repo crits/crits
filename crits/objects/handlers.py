@@ -293,6 +293,11 @@ def add_object(type_, oid, object_type, name, source, method,
             results['message'] = "Could not find item to add object to."
             results['success'] = False
             return results
+
+    if name == "URL" and "://" not in value.split('.')[0]:
+        results = {"success" : False, "message" : "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://)"}
+        return results
+
     try:
         cur_len = len(obj.obj)
         if file_:
