@@ -282,18 +282,42 @@ def get_indicator_type_value_pair(field):
     # specific field type is not supported
     return (None, None)
 
-def get_verified_field(row, field, valid_values, default=None):
+def get_verified_field(data, valid_values, field=None, default=None):
     """
-    Validate and correct a key's value from a dictionary
+    Validate and correct string value(s) in a dictionary key or list,
+    or a string by itself.
+
+    :param data: The data to be verified and corrected.
+    :type data: dict, list of strings, or str
+    :param valid_values: Key with simplified string, value with actual string
+    :type valid_values: dict
+    :param field: The dictionary key containing the data.
+    :type field: str
+    :param default: A value to use if an invalid item cannot be corrected
+    :type default: str
+    :returns: the validated/corrected value(str), list of values(list) or ''
     """
 
-    value = row.get(field, '').strip()
-    if value.lower() in valid_values:
-        return valid_values[value.lower()]
-    elif default is not None:
-        return default
+    if isinstance(data, dict):
+        data = data.get(field, '')
+    if isinstance(data, list):
+        value_list = data
     else:
+        value_list = [data]
+    for i, item in enumerate(value_list):
+        if isinstance(item, basestring):
+            item = item.lower().strip().replace(' - ', '-')
+            if item in valid_values:
+                value_list[i] = valid_values[item]
+                continue
+        if default is not None:
+            item = default
+            continue
         return ''
+    if isinstance(data, list):
+        return value_list
+    else:
+        return value_list[0]
 
 def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                          add_domain=False):
@@ -324,7 +348,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         cdata = csv_data.encode('ascii')
     data = csv.DictReader(StringIO(cdata), skipinitialspace=True)
     result = {'success': True}
-    result_message = "Indicators added successfully!"
+    result_message = ""
     # Compute permitted values in CSV
     valid_ratings = {
         'unknown': 'unknown',
@@ -338,55 +362,61 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         'high': 'high'}
     valid_campaigns = {}
     for c in Campaign.objects(active='on'):
-        valid_campaigns[c['name'].lower()] = c['name']
+        valid_campaigns[c['name'].lower().replace(' - ', '-')] = c['name']
     valid_ind_types = {}
     for obj in ObjectType.objects(datatype__enum__exists=False, datatype__file__exists=False):
         if obj['object_type'] == obj['name']:
             name = obj['object_type']
         else:
             name = "%s - %s" % (obj['object_type'], obj['name'])
-        valid_ind_types[name.lower()] = name
+        valid_ind_types[name.lower().replace(' - ', '-')] = name
 
     # Start line-by-line import
-    processed = 0
+    processed = 1 #first line was header row
+    added = 0
     for d in data:
         processed += 1
         ind = {}
         ind['value'] = d.get('Indicator', '').lower().strip()
-        ind['type'] = get_verified_field(d, 'Type', valid_ind_types)
+        ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
         if not ind['value'] or not ind['type']:
             # Mandatory value missing or malformed, cannot process csv row
             i = ""
             result['success'] = False
             if not ind['value']:
-                i += "No valid Indicator value. "
+                i += "No valid Indicator value "
             if not ind['type']:
-                i += "No valid Indicator type. "
-            result_message += "Cannot process row: %s. %s<br />" % (processed, i)
+                i += "No valid Indicator type "
+            result_message += "Cannot process row %s: %s<br />" % (processed, i)
             continue
-        campaign = get_verified_field(d, 'Campaign', valid_campaigns)
+        campaign = get_verified_field(d, valid_campaigns, 'Campaign')
         if campaign:
             ind['campaign'] = campaign
-            ind['campaign_confidence'] = get_verified_field(d, 'Campaign Confidence',
-                                                            valid_campaign_confidence,
+            ind['campaign_confidence'] = get_verified_field(d, valid_campaign_confidence,
+                                                            'Campaign Confidence',
                                                             default='low')
-        ind['confidence'] = get_verified_field(d, 'Confidence', valid_ratings,
+        ind['confidence'] = get_verified_field(d, valid_ratings, 'Confidence',
                                                default='unknown')
-        ind['impact'] = get_verified_field(d, 'Impact', valid_ratings,
+        ind['impact'] = get_verified_field(d, valid_ratings, 'Impact',
                                            default='unknown')
         ind[form_consts.Common.BUCKET_LIST_VARIABLE_NAME] = d.get(form_consts.Common.BUCKET_LIST, '')
         ind[form_consts.Common.TICKET_VARIABLE_NAME] = d.get(form_consts.Common.TICKET, '')
         try:
-            handle_indicator_insert(ind, source, reference, analyst=username,
-                                    method=method, add_domain=add_domain)
+            response = handle_indicator_insert(ind, source, reference, analyst=username,
+                                               method=method, add_domain=add_domain)
         except Exception, e:
             result['success'] = False
-            result['message'] = str(e)
-            return result
+            result_message += "Failure processing row %s: %s<br />" % (processed, str(e))
+            continue
+        if not response['success']:
+            result['success'] = False
+            result_message += "Failure processing row %s: %s<br />" % (processed, response['message'])
+            continue
+        added += 1
     if processed < 1:
         result['success'] = False
         result_message = "Could not find any valid CSV rows to parse!"
-    result['message'] = result_message
+    result['message'] = "Successfully added %s Indicator(s).<br />%s" % (added, result_message)
     return result
 
 def handle_indicator_ind(value, source, reference, ctype, analyst,
@@ -504,7 +534,12 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
               "is_new_indicator" (boolean) if successful.
     """
 
-    is_new_indicator = False;
+    if ind['type'] == "URI - URL" and "://" not in ind['value'].split('.')[0]:
+        return {"success" : False, "message" : "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://) "}
+
+    is_new_indicator = False
+    dmain = None
+    ip = None
     rank = {
              'unknown': 0,
              'benign': 1,
@@ -522,7 +557,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)
-        is_new_indicator = True;
+        is_new_indicator = True
 
     if 'campaign' in ind:
         if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:
@@ -550,12 +585,14 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     bucket_list = None
     if form_consts.Common.BUCKET_LIST_VARIABLE_NAME in ind:
         bucket_list = ind[form_consts.Common.BUCKET_LIST_VARIABLE_NAME]
-        indicator.add_bucket_list(bucket_list, analyst)
+        if bucket_list:
+            indicator.add_bucket_list(bucket_list, analyst)
 
     ticket = None
     if form_consts.Common.TICKET_VARIABLE_NAME in ind:
         ticket = ind[form_consts.Common.TICKET_VARIABLE_NAME]
-        indicator.add_ticket(ticket, analyst)
+        if ticket:
+            indicator.add_ticket(ticket, analyst)
 
     if isinstance(source, list):
         for s in source:
