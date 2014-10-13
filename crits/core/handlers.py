@@ -36,6 +36,7 @@ from crits.core.user_tools import user_sources, is_admin
 from crits.core.user_tools import get_subscribed_users, save_user_secret
 from crits.core.user_tools import get_user_email_notification
 
+from crits.actors.actor import Actor
 from crits.campaigns.campaign import Campaign
 from crits.certificates.certificate import Certificate
 from crits.comments.comment import Comment
@@ -75,6 +76,7 @@ def get_favorites(analyst):
         return {'success': True, 'message': '<div id="favorites_results">You have no favorites.</div>'}
 
     field_dict = {
+        'Actor': 'name',
         'Campaign': 'name',
         'Certificate': 'filename',
         'Comment': 'object_id',
@@ -182,6 +184,7 @@ def get_data_for_item(item_type, item_id):
     """
 
     type_to_fields = {
+        'Actor': ['name', ],
         'Campaign': ['name', ],
         'Certificate': ['filename', ],
         'Disassembly': ['md5', ],
@@ -744,6 +747,7 @@ def alter_bucket_list(obj, buckets, val):
         # Find and remove this bucket if, and only if, all counts are zero.
         if val == -1:
             Bucket.objects(name=name,
+                           Actor=0,
                            Campaign=0,
                            Certificate=0,
                            Disassembly=0,
@@ -787,6 +791,7 @@ def generate_bucket_jtable(request, option):
                                     details_key,
                                     request,
                                     includes=['name',
+                                              'Actor',
                                               'Campaign',
                                               'Certificate',
                                               'Disassembly',
@@ -802,9 +807,9 @@ def generate_bucket_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Campaign', 'Certificate', 'Disassembly', 'Domain',
-              'Email', 'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample',
-              'Target', 'Promote']
+    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Disassembly',
+              'Domain', 'Email', 'Event', 'Indicator', 'IP', 'PCAP', 'RawData',
+              'Sample', 'Target', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
@@ -882,7 +887,8 @@ def modify_bucket_list(itype, oid, tags, analyst):
         pass
 
 def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
-                            bin_fmt, object_types, objs, sources):
+                            bin_fmt, object_types, objs, sources,
+                            make_zip=True):
     """
     Given a list of tuples, collect the objects for each given the total
     number of objects to return for each, the depth to traverse for each
@@ -951,9 +957,15 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                         to_zip.append((obj.filename + ext, data))
                     obj.filedata.seek(0)
             else:
-                stix_docs.append(obj.to_stix(items_to_convert=[obj],
-                                             loaded=True,
-                                             bin_fmt=bin_fmt))
+                try:
+                    stix_docs.append(obj.to_stix(items_to_convert=[obj],
+                                                loaded=True,
+                                                bin_fmt=bin_fmt))
+                except:
+                    # Usually due to the object not being a supported exportable
+                    # object such as Indicators with a type that is not a CybOX
+                    # object.
+                    pass
 
     doc_count = len(stix_docs)
     zip_count = len(to_zip)
@@ -964,15 +976,48 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                                             stix_docs[0]['final_objects'][0].id)
         result['mimetype'] = 'text/xml'
     elif doc_count + zip_count >= 1: # we have multiple or mixed items to return
-        zip_data = to_zip
-        for doc in stix_docs:
-            inner_filename = "%s_%s.xml" % (doc['final_objects'][0]._meta['crits_type'],
-                                            doc['final_objects'][0].id)
-            zip_data.append((inner_filename, doc['stix_obj'].to_xml()))
-        result['success'] = True
-        result['data'] = create_zip(zip_data, True)
-        result['filename'] = "CRITS_%s.zip" % datetime.datetime.today().strftime("%Y-%m-%d")
-        result['mimetype'] = 'application/zip'
+        if not make_zip:
+            # We are making a single STIX document out of our results. Pop any
+            # STIX object out of the list and use it as the "main" STIX object.
+            # TODO: This fails miserably for Events since they are their own
+            # unique STIX document.
+            final_doc = stix_docs.pop()
+            final_doc = final_doc['stix_obj']
+            for doc in stix_docs:
+                doc = doc['stix_obj']
+                # Add any indicators from this doc into the "main" STIX object.
+                if doc.indicators:
+                    if isinstance(doc.indicators, list):
+                        final_doc.indicators.extend(doc.indicators)
+                    else:
+                        final_doc.indicators.append(doc.indicators)
+                # Add any observables from this doc into the "main" STIX object.
+                if doc.observables:
+                    if isinstance(doc.observables.observables, list):
+                        for d in doc.observables.observables:
+                            final_doc.observables.add(d)
+                    else:
+                        final_doc.observables.add(doc.observables)
+                # Add any Actors from this doc into the "main" STIX object.
+                if doc.threat_actors:
+                    if isinstance(doc.threat_actors, list):
+                        final_doc.threat_actors.extend(doc.threat_actors)
+                    else:
+                        final_doc.threat_actors.append(doc.threat_actors)
+            # Convert the "main" STIX object into XML and return.
+            result['success'] = True
+            result['data'] = final_doc.to_xml()
+            result['mimetype'] = 'application/xml'
+        else:
+            zip_data = to_zip
+            for doc in stix_docs:
+                inner_filename = "%s_%s.xml" % (doc['final_objects'][0]._meta['crits_type'],
+                                                doc['final_objects'][0].id)
+                zip_data.append((inner_filename, doc['stix_obj'].to_xml()))
+            result['success'] = True
+            result['data'] = create_zip(zip_data, True)
+            result['filename'] = "CRITS_%s.zip" % datetime.datetime.today().strftime("%Y-%m-%d")
+            result['mimetype'] = 'application/zip'
     return result
 
 def collect_objects(obj_type, obj_id, depth_limit, total_limit, rel_limit,
@@ -1337,7 +1382,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
     query = {}
     # Some terms, regardless of the query, will want to be full search terms and
     # not regex terms.
-    force_full_terms = ['detectexact', 'ssdeephash']
+    force_full_terms = ['analysis_result', 'ssdeephash']
     force = False
     # Exclude searches for 'source' or 'releasability'
     # This is required because the check_query function doesn't handle
@@ -1369,17 +1414,9 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
     defaultquery = check_query({search_type: search_query},user,obj)
 
     sample_queries = {
-        'detectexact': {'analysis.results.result': search_query},
-        # very very slow in larger collections
-        'detect' : {'analysis.results.result': search_query},
         'size' : {'size': search_query},
         'backdoor': {'backdoor.name': search_query},
         'md5hash': {'md5': search_query},
-        # very slow in larger collections
-        'md5search': {'$or': [
-            {'md5': search_query},
-            {'analysis.results.md5': search_query},
-        ]},
         'sha1hash': {'sha1': search_query},
         'ssdeephash': {'ssdeep': search_query},
         'sha256hash': {'sha256': search_query},
@@ -1406,6 +1443,8 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         query = {'bucket_list': search_query}
     elif search_type == "sectors":
         query = {'sectors': search_query}
+    elif search_type == "actor_identifier":
+        query = {'identifiers.identifier_id': search_query}
     # object_ comes from the core/views.py search function.
     # It joins search_type with otype
     elif search_type.startswith("object_"):
@@ -1427,10 +1466,18 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         if type_ == "Sample":
             search_list.append(sample_queries["backdoor"])
             search_list.append(sample_queries["object_value"])
-            search_list.append(sample_queries["detectexact"])
             search_list.append(sample_queries["filename"])
             if len(term) == 32:
                 search_list.append(sample_queries["md5hash"])
+        elif type_ == "AnalysisResult":
+            search_list = [
+                    {'results.result': search_query},
+            ]
+        elif type_ == "Actor":
+            search_list = [
+                    {'name': search_query},
+                    {'objects.value': search_query},
+            ]
         elif type_ == "Certificate":
             search_list = [
                     {'md5': search_query},
@@ -1440,8 +1487,6 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             search_list = [
                     {'md5': search_query},
                     {'objects.value': search_query},
-                    {'analysis.results.result.src': search_query},
-                    {'analysis.results.result.dst': search_query}
                 ]
         elif type_ == "RawData":
             search_list = [
@@ -1829,11 +1874,13 @@ def get_query(col_obj,request):
     """
 
     keymaps = {
+            "actor_identifier": "identifiers.identifier_id",
             "campaign": "campaign.name",
             "source": "source.name",
             "confidence": "confidence.rating",
             "impact": "impact.rating",
             "object_value":"objects.value",
+            "analysis_result":"results.result",
     }
     term = ""
     query = {}
@@ -1941,11 +1988,13 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         multisort = []
 
         keymaps = {
+            "actor_identifier": "identifiers.identifier_id",
             "campaign": "campaign.name",
             "source": "source.name",
             "confidence": "confidence.rating",
             "impact": "impact.rating",
             "object_value": "objects.value",
+            "analysis_result": "results.result",
         }
 
         for key in keys:
@@ -2014,6 +2063,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                         doc[key] = "False"
                 elif key == "datatype":
                     doc[key] = value.keys()[0]
+                elif key == "results":
+                    doc[key] = len(doc[key])
                 elif isinstance(value, list):
                     if value:
                         for item in value:
@@ -2026,25 +2077,24 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 doc[key] = html_escape(doc[key])
             if col_obj._meta['crits_type'] == "Comment":
                 mapper = {
-                    "Indicator": 'crits.indicators.views.indicator',
-                    "Sample": 'crits.samples.views.detail',
+                    "Actor": 'crits.actors.views.actor_detail',
+                    "Campaign": 'crits.campaigns.views.campaign_details',
+                    "Certificate": 'crits.certificates.views.certificate_details',
                     "Disassembly": 'crits.disassembly.views.disassembly_details',
                     "Domain": 'crits.domains.views.domain_detail',
-                    "Event": 'crits.events.views.view_event',
                     "Email": 'crits.emails.views.email_detail',
+                    "Event": 'crits.events.views.view_event',
+                    "Indicator": 'crits.indicators.views.indicator',
                     "IP": 'crits.ips.views.ip_detail',
                     "PCAP": 'crits.pcaps.views.pcap_details',
-                    "Certificate": 'crits.certificates.views.certificate_details',
                     "RawData": 'crits.raw_data.views.raw_data_details',
-                    "Campaign": 'crits.campaigns.views.campaign_details',
+                    "Sample": 'crits.samples.views.detail',
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
-                                     args=(doc['url_key'],))
+                                    args=(doc['url_key'],))
             elif col_obj._meta['crits_type'] == "Backdoor" and url:
                 doc['url'] = "{0}?q={1}&search_type=backdoor&force_full=1".format(
                     reverse(url), doc['name'])
-            elif col_obj._meta['crits_type'] == "YaraHit" and url:
-                doc['url'] = reverse(url) + "?q="+doc['result']+"&search_type=detectexact"
             elif col_obj._meta['crits_type'] == "AuditLog":
                 if doc.get('method', 'delete()') != 'delete()':
                     doc['url'] = details_from_id(doc['type'],
@@ -2346,7 +2396,18 @@ def generate_items_jtable(request, itype, option):
 
     obj_type = class_from_type(itype)
 
-    if itype == 'Backdoor':
+    if itype == 'ActorThreatIdentifier':
+        fields = ['name', 'active', 'id']
+        click = "function () {window.parent.$('#actor_identifier_type_add').click();}"
+    elif itype == 'ActorThreatType':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorMotivation':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorSophistication':
+        fields = ['name', 'active', 'id']
+    elif itype == 'ActorIntendedEffect':
+        fields = ['name', 'active', 'id']
+    elif itype == 'Backdoor':
         fields = ['name', 'sample_count', 'active', 'id']
         click = "function () {window.parent.$('#backdoor_add').click();}"
     elif itype == 'Campaign':
@@ -2403,7 +2464,9 @@ def generate_items_jtable(request, itype, option):
         'details_link': '',
     }
     jtable = build_jtable(jtopts, request)
-    if itype not in ('EventType', 'ObjectType', 'RelationshipType'):
+    if itype not in ('ActorThreatType', 'ActorMotivation',
+                     'ActorSophistication', 'ActorIntendedEffect',
+                     'EventType', 'ObjectType', 'RelationshipType'):
         jtable['toolbar'] = [
             {
                 'tooltip': "'Add %s'" % itype,
@@ -2471,7 +2534,7 @@ def generate_users_jtable(request, option):
         {
             'tooltip': "'Add User'",
             'text': "'Add User'",
-            'click': "function () {$('#add-new-user-form').dialog('open')}",
+            'click': "function () {editUser('');}",
         },
 
     ]
@@ -3369,9 +3432,8 @@ def login_user(username, password, next_url=None, user_agent=None,
                     # to validate the URL is something we know about.
                     # We use get_script_prefix() here to tell us what
                     # the script prefix is configured in Apache.
-                    # By default this is /crits/. We strip it out
-                    # so resolve can work properly, and then redirect
-                    # to the full url.
+                    # We strip it out so resolve can work properly, and then
+                    # redirect to the full url.
                     prefix = get_script_prefix()
                     tmp_url = next_url
                     if next_url.startswith(prefix):
@@ -3414,8 +3476,14 @@ def generate_global_search(request):
               "Result" (str of "OK" or "ERROR")
     """
 
+    # Importing here to prevent a circular import with Services and runscript.
+    from crits.services.analysis_result import AnalysisResult
+
     results = []
-    for col_obj,url in [[Campaign, "crits.campaigns.views.campaigns_listing"],
+    for col_obj,url in [
+                    [Actor, "crits.actors.views.actors_listing"],
+                    [AnalysisResult, "crits.services.views.analysis_results_listing"],
+                    [Campaign, "crits.campaigns.views.campaigns_listing"],
                     [Certificate, "crits.certificates.views.certificates_listing"],
                     [Comment, "crits.comments.views.comments_listing"],
                     [Disassembly, "crits.disassembly.views.disassembly_listing"],
@@ -3609,7 +3677,8 @@ def details_from_id(type_, id_):
     :returns: str
     """
 
-    type_map = {'Campaign': 'crits.campaigns.views.campaign_details',
+    type_map = {'Actor': 'crits.actors.views.actor_detail',
+                'Campaign': 'crits.campaigns.views.campaign_details',
                 'Certificate': 'crits.certificates.views.certificate_details',
                 'Disassembly': 'crits.disassembly.views.disassembly_details',
                 'Domain': 'crits.domains.views.domain_detail',
@@ -3695,6 +3764,7 @@ def audit_entry(self, username, type_, new_doc=False):
     else:
         what_changed = ', '.join(changed)
     field_dict = {
+        'Actor': 'name',
         'Campaign': 'name',
         'Certificate': 'md5',
         'Comment': 'object_id',
@@ -3915,6 +3985,7 @@ def alter_sector_list(obj, sectors, val):
         # Find and remove this sector if, and only if, all counts are zero.
         if val == -1:
             Sector.objects(name=name,
+                           Actor=0,
                            Campaign=0,
                            Certificate=0,
                            Disassembly=0,
@@ -3958,6 +4029,7 @@ def generate_sector_jtable(request, option):
                                     details_key,
                                     request,
                                     includes=['name',
+                                              'Actor',
                                               'Campaign',
                                               'Certificate',
                                               'Disassembly',
@@ -3973,9 +4045,9 @@ def generate_sector_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Campaign', 'Certificate', 'Disassembly', 'Domain',
-              'Email', 'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample',
-              'Target']
+    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Disassembly',
+              'Domain', 'Email', 'Event', 'Indicator', 'IP', 'PCAP', 'RawData',
+              'Sample', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',

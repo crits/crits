@@ -34,7 +34,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_SAMPLES,
         "crits_type": 'Sample',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "shard_key": ('md5',),
         "schema_doc": {
             'filename': 'The name of the last file that was uploaded with this'\
@@ -59,7 +59,6 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
                 'date': 'The date this backdoor was added'
             },
             'campaign': 'List [] of campaigns using this file',
-            'analysis': 'List [] of analysis results from tools for this file',
             'source': 'List [] of sources that provided this file',
             'created': 'ISODate of when this file was uploaded',
             'modified': 'ISODate of when the file metadata was last modified',
@@ -147,6 +146,24 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
             self.ssdeep = pydeep.hash_bytes(data)
         except:
             self.ssdeep = None
+
+    def is_pe(self):
+        """
+        Is this a PE file.
+        """
+
+        ret = self.filedata != None and self.filedata.read(2) == "MZ"
+        self.filedata.seek(0) # Reset
+        return ret
+
+    def is_pdf(self):
+        """
+        Is this a PDF.
+        """
+
+        ret = self.filedata != None and "%PDF-" in self.filedata.read(1024)
+        self.filedata.seek(0)
+        return ret
 
     def to_cybox_observable(self, exclude=None, bin_fmt="raw"):
         if exclude == None:

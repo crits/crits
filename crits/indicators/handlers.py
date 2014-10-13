@@ -1,4 +1,3 @@
-import crits.service_env
 import csv
 import datetime
 import json
@@ -28,6 +27,7 @@ from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.domains.domain import Domain
 from crits.domains.handlers import get_domain, upsert_domain
+from crits.events.event import Event
 from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
 from crits.indicators.indicator import IndicatorAction
@@ -38,7 +38,7 @@ from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.object_type import ObjectType
 from crits.raw_data.raw_data import RawData
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 logger = logging.getLogger(__name__)
 
@@ -223,8 +223,10 @@ def get_indicator_details(indicator_id, analyst):
     favorite = is_user_favorite("%s" % analyst, 'Indicator', indicator.id)
 
     # services
-    manager = crits.service_env.manager
-    service_list = manager.get_supported_services('Indicator', True)
+    service_list = get_supported_services('Indicator')
+
+    # analysis results
+    service_results = indicator.get_analysis_results()
 
     args = {'objects': objects,
             'relationships': relationships,
@@ -236,6 +238,7 @@ def get_indicator_details(indicator_id, analyst):
             "indicator_id": indicator_id,
             'screenshots': screenshots,
             'service_list': service_list,
+            'service_results': service_results,
             'favorite': favorite,
             'rt_url': settings.RT_URL}
 
@@ -292,7 +295,7 @@ def get_verified_field(row, field, valid_values, default=None):
     else:
         return ''
 
-def handle_indicator_csv(csv_data, source, reference, ctype, username,
+def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                          add_domain=False):
     """
     Handle adding Indicators in CSV format (file or blob).
@@ -301,6 +304,8 @@ def handle_indicator_csv(csv_data, source, reference, ctype, username,
     :type csv_data: str or file handle
     :param source: The name of the source for these indicators.
     :type source: str
+    :param method: The method of acquisition of this indicator.
+    :type method: str
     :param reference: The reference to this data.
     :type reference: str
     :param ctype: The CSV type.
@@ -373,7 +378,7 @@ def handle_indicator_csv(csv_data, source, reference, ctype, username,
         ind[form_consts.Common.TICKET_VARIABLE_NAME] = d.get(form_consts.Common.TICKET, '')
         try:
             handle_indicator_insert(ind, source, reference, analyst=username,
-                                    add_domain=add_domain)
+                                    method=method, add_domain=add_domain)
         except Exception, e:
             result['success'] = False
             result['message'] = str(e)
@@ -554,9 +559,9 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
 
     if isinstance(source, list):
         for s in source:
-            indicator.add_source(source_item=s)
+            indicator.add_source(source_item=s, method=method, reference=reference)
     elif isinstance(source, EmbeddedSource):
-        indicator.add_source(source_item=source)
+        indicator.add_source(source_item=source, method=method, reference=reference)
     elif isinstance(source, basestring):
         s = EmbeddedSource()
         s.name = source
@@ -648,7 +653,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     # run indicator triage
     if is_new_indicator:
         indicator.reload()
-        run_triage(None, indicator, analyst)
+        run_triage(indicator, analyst)
 
     return {'success': True, 'objectid': str(indicator.id),
             'is_new_indicator': is_new_indicator, 'object': indicator}
@@ -1210,6 +1215,56 @@ def create_indicator_from_raw(type_, id_, value, analyst):
             ind.save(username=analyst)
         raw_data.reload()
         rels = raw_data.sort_relationships("%s" % analyst, meta=True)
+        return {'success': True, 'message': rels, 'value': id_}
+    else:
+        return {'success': False, 'message': result['message']}
+
+def create_indicator_from_event(type_, id_, value, analyst):
+    """
+    Add indicators from an Event description.
+
+    :param type_: The indicator type to add.
+    :type type_: str
+    :param id_: The ObjectId of the Event object.
+    :type id_: str
+    :param value: The value of the indicator to add.
+    :type value: str
+    :param analyst: The user adding this indicator.
+    :type analyst: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str),
+              "value" (str)
+    """
+
+    event = Event.objects(id=id_).first()
+    if not event:
+        return {'success': False,
+                'message': 'Could not find event'}
+    source = event.source
+    bucket_list = event.bucket_list
+    campaign = None
+    campaign_confidence = None
+    if len(event.campaign) > 0:
+        campaign = event.campaign[0].name
+        campaign_confidence = event.campaign[0].confidence
+    result = handle_indicator_ind(value, source, reference=None, ctype=type_,
+                                  analyst=analyst,
+                                  add_domain=True,
+                                  add_relationship=True,
+                                  campaign=campaign,
+                                  campaign_confidence=campaign_confidence,
+                                  bucket_list=bucket_list)
+    if result['success']:
+        ind = Indicator.objects(id=result['objectid']).first()
+        if ind:
+            event.add_relationship(rel_item=ind,
+                                   rel_type="Related_To",
+                                   analyst=analyst)
+            event.save(username=analyst)
+            ind.save(username=analyst)
+        event.reload()
+        rels = event.sort_relationships("%s" % analyst, meta=True)
         return {'success': True, 'message': rels, 'value': id_}
     else:
         return {'success': False, 'message': result['message']}

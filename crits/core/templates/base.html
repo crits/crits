@@ -45,6 +45,7 @@
 
     <script type="text/javascript" src="/js/chardinjs.min.js"></script>
     <script src="/js/jtable/jquery.jtable.top-paging.min.js" type="text/javascript"></script>
+    <script src="/js/tag-it.js" type="text/javascript" charset="utf-8"></script>
 
     {% if nav_template %}
         {% include nav_template %}
@@ -211,10 +212,8 @@
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="bucket_list">Bucket List</option>
-          <option value="detect" checked>Analysis</option>
           <option value="filename">Filename</option>
           <option value="md5hash" selected="selected">MD5</option>
-          <option value="md5search">MD5 (inc. Analysis)</option>
           <option value="object_value">Object Value</option>
           <option value="sha1hash">SHA1</option>
           <option value="ssdeephash">SSDeep</option>
@@ -366,6 +365,16 @@
       <a href="{% url 'crits.core.views.sector_list' %}">Sector Lists</a>
     </li>
     <li class='nav_objects mmenu_item'>
+        <a href="{% url 'crits.actors.views.actors_listing' %}">Actors</a>
+        <a href id="new-actor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor" persona="new" title="New Actor"></a>
+      <ul class='sub-mmenu'>
+        <li class='mmenu_item'>
+          <a href="{% url 'crits.actors.views.actor_identifiers_listing' %}">Actor Identifiers</a>
+        <a href id="new-actor-identifier" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor-identifier" persona="new" title="New Actor Identifier"></a>
+        </li>
+      </ul>
+    </li>
+    <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.campaigns.views.campaigns_listing' %}">Campaigns</a>
       <a href id="new-campaign" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-campaign" persona="new" title="New Campaign"></a>
     </li>
@@ -476,6 +485,9 @@
     <li class='nav_services mmenu_item'>
       <a href class="noclick">Services</a>
       <ul class='sub-mmenu'>
+        <li class='mmenu_item'>
+          <a href="{% url 'crits.services.views.analysis_results_listing' %}">Analysis Results</a>
+        </li>
         {% for nav_template in service_nav_templates %}
         {% include nav_template %}
         {% endfor %}
@@ -510,6 +522,9 @@
     <li class='nav_admin mmenu_item'>
       <a href class="noclick">Add New Item</a>
       <ul class='sub-mmenu'>
+        <li class='mmenu_item'>
+          <a href class="dialogClick" persona="new" dialog="actor_identifier_type_add" id="actor_identifier_type_add">Actor Identifier Type</a>
+        </li>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="backdoor_add" id="backdoor_add">Backdoor</a>
         </li>
@@ -570,8 +585,23 @@
                     </ul>
                 </li>
                 <li class='mmenu_item'>
-                   <a class='controlPanelNav' sub_node='backdoor_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#backdoor_button">Items</a>
+                   <a class='controlPanelNav' sub_node='actor_threat_identifiers_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_threat_identifiers_button">Items</a>
                    <ul class='sub-mmenu'>
+                       <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='actor_threat_identifiers_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_threat_identifiers_button">Actor Threat Identifiers</a>
+                       </li>
+                       <li class='mmenu_item'>
+                           <a class='controlPanelNav' sub_node='actor_threat_types_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_threat_types_button">Actor Threat Types</a>
+                       </li>
+                       <li class='mmenu_item'>
+                           <a class='controlPanelNav' sub_node='actor_motiviations_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_motiviations_button">Actor Motivations</a>
+                       </li>
+                       <li class='mmenu_item'>
+                            <a class='controlPanelNav' sub_node='actor_sophistications_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_sophistications_button">Actor Sophistications</a>
+                       </li>
+                       <li class='mmenu_item'>
+                           <a class='controlPanelNav' sub_node='actor_intended_effects_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_intended_effects_button">Actor Intended Effects</a>
+                       </li>
                        <li class='mmenu_item'>
                             <a class='controlPanelNav' sub_node='backdoor_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#backdoor_button">Backdoors</a>
                         </li>

@@ -1,4 +1,3 @@
-import crits.service_env
 import datetime
 import hashlib
 import json
@@ -18,7 +17,7 @@ from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.raw_data.raw_data import RawData, RawDataType
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 
 def generate_raw_data_csv(request):
@@ -110,8 +109,10 @@ def get_raw_data_details(_id, analyst):
         favorite = is_user_favorite("%s" % analyst, 'RawData', raw_data.id)
 
         # services
-        manager = crits.service_env.manager
-        service_list = manager.get_supported_services('RawData', True)
+        service_list = get_supported_services('RawData')
+
+        # analysis results
+        service_results = raw_data.get_analysis_results()
 
         args = {'service_list': service_list,
                 'objects': objects,
@@ -122,6 +123,7 @@ def get_raw_data_details(_id, analyst):
                 "subscription": subscription,
                 "screenshots": screenshots,
                 "versions": versions,
+                "service_results": service_results,
                 "raw_data": raw_data}
 
     return template, args
@@ -281,8 +283,8 @@ def generate_raw_data_jtable(request, option):
 def handle_raw_data_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
-                         link_id=None, method=None, copy_rels=False,
-                         bucket_list=None, ticket=None):
+                         link_id=None, method=None, reference=None,
+                         copy_rels=False, bucket_list=None, ticket=None):
     """
     Add RawData.
 
@@ -310,6 +312,8 @@ def handle_raw_data_file(data, source_name, user=None,
     :type link_id: str
     :param method: The method of acquiring this RawData.
     :type method: str
+    :param reference: A reference to the source of this RawData.
+    :type reference: str
     :param copy_rels: Copy relationships from the previous version to this one.
     :type copy_rels: bool
     :param bucket_list: Bucket(s) to add to this RawData
@@ -353,7 +357,7 @@ def handle_raw_data_file(data, source_name, user=None,
     # create source
     source = create_embedded_source(source_name,
                                     date=timestamp,
-                                    reference='',
+                                    reference=reference,
                                     method=method,
                                     analyst=user)
 
@@ -406,7 +410,7 @@ def handle_raw_data_file(data, source_name, user=None,
     # run raw_data triage
     if is_rawdata_new:
         raw_data.reload()
-        run_triage(None, raw_data, user)
+        run_triage(raw_data, user)
 
     status = {
         'success':      True,

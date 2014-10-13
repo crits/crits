@@ -138,6 +138,7 @@ db.runCommand( { shardcollection : "crits.objects.files", key : { "md5" : 1 } })
 db.runCommand( { shardcollection : "crits.sample.chunks", key : { "files_id" : 1 } } );
 db.runCommand( { shardcollection : "crits.pcaps.chunks", key : { "files_id" : 1 } } );
 db.runCommand( { shardcollection : "crits.objects.chunks", key : { "files_id" : 1 } } );
+db.runCommand( { shardcollection : "crits.analysis_results", key : { "object_id" : 1 } } );
 
 Cluster administration:
 

@@ -5,8 +5,6 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-import crits.service_env
-
 from crits.core import form_consts
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import create_embedded_source
@@ -20,7 +18,7 @@ from crits.ips.forms import AddIPForm
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict, validate_and_add_new_handler_object
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 def generate_ip_csv(request):
     """
@@ -188,8 +186,10 @@ def get_ip_details(ip, analyst):
         favorite = is_user_favorite("%s" % analyst, 'IP', ip.id)
 
         # services
-        manager = crits.service_env.manager
-        service_list = manager.get_supported_services('IP', True)
+        service_list = get_supported_services('IP')
+
+        # analysis results
+        service_results = ip.get_analysis_results()
 
         args = {'objects': objects,
                 'relationships': relationships,
@@ -197,6 +197,7 @@ def get_ip_details(ip, analyst):
                 'subscription': subscription,
                 'favorite': favorite,
                 'service_list': service_list,
+                'service_results': service_results,
                 'screenshots': screenshots,
                 'ip': ip,
                 'comments':comments}
@@ -437,7 +438,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
     # run ip triage
     if is_item_new and is_validate_only == False:
         ip_object.reload()
-        run_triage(None, ip_object, analyst)
+        run_triage(ip_object, analyst)
 
     retVal['success'] = True
     retVal['object'] = ip_object

@@ -13,6 +13,9 @@ def class_from_id(type_, _id):
     """
 
     # doing this to avoid circular imports
+    from crits.actors.actor import ActorThreatType, ActorMotivation
+    from crits.actors.actor import ActorSophistication, ActorIntendedEffect
+    from crits.actors.actor import ActorThreatIdentifier, Actor
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
@@ -45,9 +48,21 @@ def class_from_id(type_, _id):
     if not ObjectId.is_valid(_id.decode('utf8')):
         return None
 
-    if type_ == 'Backdoor':
+    if type_ == 'Actor':
+        return Actor.objects(id=_id).first()
+    elif type_ == 'ActorThreatIdentifier':
+        return ActorThreatIdentifier.objects(id=_id).first()
+    elif type_ == 'ActorThreatType':
+        return ActorThreatType.objects(id=_id).first()
+    elif type_ == 'ActorMotivation':
+        return ActorMotivation.objects(id=_id).first()
+    elif type_ == 'ActorSophistication':
+        return ActorSophistication.objects(id=_id).first()
+    elif type_ == 'ActorIntendedEffect':
+        return ActorIntendedEffect.objects(id=_id).first()
+    elif type_ == 'Backdoor':
         return Backdoor.objects(id=_id).first()
-    if type_ == 'Campaign':
+    elif type_ == 'Campaign':
         return Campaign.objects(id=_id).first()
     elif type_ == 'Certificate':
         return Certificate.objects(id=_id).first()
@@ -109,6 +124,9 @@ def class_from_value(type_, value):
     """
 
     # doing this to avoid circular imports
+    from crits.actors.actor import ActorThreatType, ActorMotivation
+    from crits.actors.actor import ActorSophistication, ActorIntendedEffect
+    from crits.actors.actor import ActorThreatIdentifier, Actor
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
@@ -133,7 +151,19 @@ def class_from_value(type_, value):
        not ObjectId.is_valid(value.decode('utf8'))):
         return None
 
-    if type_ == 'Campaign':
+    if type_ == 'Actor':
+        return Actor.objects(name=value).first()
+    elif type_ == 'ActorThreatIdentifier':
+        return ActorThreatIdentifier.objects(name=value).first()
+    elif type_ == 'ActorThreatType':
+        return ActorThreatType.objects(name=value).first()
+    elif type_ == 'ActorMotivation':
+        return ActorMotivation.objects(name=value).first()
+    elif type_ == 'ActorSophistication':
+        return ActorSophistication.objects(name=value).first()
+    elif type_ == 'ActorIntendedEffect':
+        return ActorIntendedEffect.objects(name=value).first()
+    elif type_ == 'Campaign':
         return Campaign.objects(name=value).first()
     elif type_ == 'Certificate':
         return Certificate.objects(md5=value).first()
@@ -175,6 +205,9 @@ def class_from_type(type_):
     """
 
     # doing this to avoid circular imports
+    from crits.actors.actor import ActorThreatType, ActorMotivation
+    from crits.actors.actor import ActorSophistication, ActorIntendedEffect
+    from crits.actors.actor import ActorThreatIdentifier, Actor
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
@@ -196,7 +229,19 @@ def class_from_type(type_):
     from crits.screenshots.screenshot import Screenshot
     from crits.targets.target import Target
 
-    if type_ == 'Backdoor':
+    if type_ == 'Actor':
+        return Actor
+    elif type_ == 'ActorThreatIdentifier':
+        return ActorThreatIdentifier
+    elif type_ == 'ActorThreatType':
+        return ActorThreatType
+    elif type_ == 'ActorMotivation':
+        return ActorMotivation
+    elif type_ == 'ActorSophistication':
+        return ActorSophistication
+    elif type_ == 'ActorIntendedEffect':
+        return ActorIntendedEffect
+    elif type_ == 'Backdoor':
         return Backdoor
     elif type_ == 'Campaign':
         return Campaign

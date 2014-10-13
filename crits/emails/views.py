@@ -180,7 +180,7 @@ def email_fields_add(request):
 
     obj = handle_email_fields(fields_form.cleaned_data,
                               request.user.username,
-                              "Upload")
+                              "Fields Upload")
     if not obj['status']:
         if request.is_ajax():
             json_reply['message'] = obj['reason']
@@ -242,11 +242,15 @@ def email_yaml_add(request, email_id=None):
                                       {'error': message},
                                       RequestContext(request))
 
+    method = "YAML Upload"
+    if yaml_form.cleaned_data['source_method']:
+        method = method + " - " + yaml_form.cleaned_data['source_method']
+
     obj = handle_yaml(yaml_form.cleaned_data['yaml_data'],
                       yaml_form.cleaned_data['source'],
                       yaml_form.cleaned_data['source_reference'],
                       request.user.username,
-                      "Upload",
+                      method,
                       email_id=email_id,
                       save_unsupported=yaml_form.cleaned_data['save_unsupported'],
                       campaign=yaml_form.cleaned_data['campaign'],
@@ -302,10 +306,15 @@ def email_raw_add(request):
         else:
             return render_to_response('error.html', {'error': message}, RequestContext(request))
 
+    method = "Raw Upload"
+    if fields_form.cleaned_data['source_method']:
+        method = method + " - " + fields_form.cleaned_data['source_method']
+
     obj = handle_pasted_eml(fields_form.cleaned_data['raw_email'],
                     fields_form.cleaned_data['source'],
                     fields_form.cleaned_data['source_reference'],
-                    request.user.username, "Upload",
+                    request.user.username,
+                    method,
                     campaign=fields_form.cleaned_data['campaign'],
                     confidence=fields_form.cleaned_data['campaign_confidence'])
     if not obj['status']:
@@ -356,10 +365,14 @@ def email_eml_add(request):
     for chunk in request.FILES['filedata']:
         data += chunk
 
+    method = "EML Upload"
+    if eml_form.cleaned_data['source_method']:
+        method = method + " - " + eml_form.cleaned_data['source_method']
+
     obj = handle_eml(data, eml_form.cleaned_data['source'],
                      eml_form.cleaned_data['source_reference'],
                      request.user.username,
-                     "Upload",
+                     method,
                      campaign=eml_form.cleaned_data['campaign'],
                      confidence=eml_form.cleaned_data['campaign_confidence'])
     if not obj['status']:
@@ -402,7 +415,9 @@ def email_outlook_add(request):
         return render(request, 'file_upload_response.html', {'response': json.dumps(json_reply)})
 
     analyst = request.user.username
-    method = "Outlook MSG File Import"
+    method = "Outlook MSG Upload"
+    if outlook_form.cleaned_data['source_method']:
+        method = method + " - " + outlook_form.cleaned_data['source_method']
     source = outlook_form.cleaned_data['source']
     source_reference = outlook_form.cleaned_data['source_reference']
     password = outlook_form.cleaned_data['password']

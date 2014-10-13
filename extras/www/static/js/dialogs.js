@@ -847,6 +847,7 @@ $(document).ready(function() {
 // Some dialog specific callacks below
 //
 
+
 function releasability_add_submit(e) {
     var widget = $(e.currentTarget);
     var dialog;
@@ -1021,6 +1022,9 @@ function new_sample_dialog() {
 /// Standard Dialog setup below
 
 var stdDialogs = {
+      "new-actor": {title: "Actor"},
+      "new-actor-identifier": {title: "Actor Identifier"},
+      "actor_identifier_type_add": {title: "Actor Identifier Type"},
       "new-email-raw": {title: "Email (Raw)"},
       "new-email-fields": {title: "Email"},
       "new-email-yaml": {title: "Email (YAML)", open: new_email_yaml_dialog},
@@ -1108,8 +1112,8 @@ var stdDialogs = {
   // There might be a more general fix to this, like assigning the
   // action to the form's submit action by default, but I don't want
   // to make that sort of global change before 3.0.
-  var singleInputDialogs = "#dialog-ticket,#dialog-backdoor_add," +
-      "#dialog-source_create,#dialog-user_role,#dialog-exploit_add," +
+  var singleInputDialogs = "#dialog-actor-identifier-type,#dialog-ticket,"+
+      "#dialog-backdoor_add,#dialog-source_create,#dialog-user_role,#dialog-exploit_add," +
       "#dialog-indicator_action_add,#dialog-raw_data_type_add";
   $(singleInputDialogs).on("dialogopen", fix_form_submit(addEditSubmit));
 

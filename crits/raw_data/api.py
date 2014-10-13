@@ -79,7 +79,8 @@ class RawDataResource(CRITsAPIResource):
         tool_details = bundle.data.get('tool_details', '')
         link_id = bundle.data.get('link_id', None)
         copy_rels = bundle.data.get('copy_relationships', False)
-        method = 'Upload'
+        method = bundle.data.get('method', None) or 'Upload'
+        reference = bundle.data.get('reference', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
@@ -95,6 +96,7 @@ class RawDataResource(CRITsAPIResource):
                                       tool_name, tool_version, tool_details,
                                       link_id,
                                       method=method,
+                                      reference=reference,
                                       copy_rels=copy_rels,
                                       bucket_list=bucket_list,
                                       ticket=ticket)

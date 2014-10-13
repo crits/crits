@@ -11,8 +11,7 @@ from django.template.loader import render_to_string
 
 from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
-from mongoengine import IntField, UUIDField, DateTimeField, ObjectIdField
-from mongoengine import DynamicField, DictField
+from mongoengine import IntField, DateTimeField, ObjectIdField
 from mongoengine.base import BaseDocument, ValidationError
 from mongoengine.queryset import Q
 
@@ -219,7 +218,7 @@ class CritsDocumentFormatter(object):
         Return the object as a dict.
         """
 
-        return self.to_mongo()
+        return self.to_mongo().to_dict()
 
     def __str__(self):
         """
@@ -679,10 +678,11 @@ class CritsDocument(BaseDocument):
         from stix.core import STIXPackage, STIXHeader
         from stix.common.identity import Identity
 
-        # These two lists are used to determine which CRITs objects
+        # These lists are used to determine which CRITs objects
         # go in which part of the STIX document.
         ind_list = []
         obs_list = []
+        actor_list = []
 
         # determine which CRITs types support standardization
         for ctype in settings.CRITS_TYPES:
@@ -691,12 +691,15 @@ class CritsDocument(BaseDocument):
                 ind_list.append(ctype)
             elif hasattr(cls, "to_cybox_observable"):
                 obs_list.append(ctype)
+            elif hasattr(cls, "to_stix_actor"):
+                actor_list.append(ctype)
 
 
         # Store message
         stix_msg = {
                        'stix_indicators': [],
                        'stix_observables': [],
+                       'stix_actors': [],
                        'final_objects': []
                    }
 
@@ -726,6 +729,11 @@ class CritsDocument(BaseDocument):
                     ind, releas = obj.to_cybox_observable()
                 stix_msg['stix_observables'].extend(ind)
                 stix_msg['final_objects'].append(obj)
+            elif obj_type in actor_list: # cover to STIX actor
+                act, releas = obj.to_stix_actor()
+                stix_msg['stix_actors'].append(act)
+                stix_msg['final_objects'].append(obj)
+
 
         tool_list = ToolInformationList()
         tool = ToolInformation("CRITs", "MITRE")
@@ -751,19 +759,13 @@ class CritsDocument(BaseDocument):
 
         stix_msg['stix_obj'] = STIXPackage(indicators=stix_msg['stix_indicators'],
                         observables=Observables(stix_msg['stix_observables']),
+                        threat_actors=stix_msg['stix_actors'],
                         stix_header=header,
                         id_=uuid.uuid4())
 
         return stix_msg
 
 # Embedded Documents common to most classes
-
-class AnalysisConfig(DynamicEmbeddedDocument, CritsDocumentFormatter):
-    """
-    Embedded Analysis Configuration dictionary.
-    """
-
-    meta = {}
 
 class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -826,6 +828,10 @@ class CritsSourceDocument(BaseDocument):
 
         if isinstance(source_item, EmbeddedSource):
             match = None
+            if method or reference: # if method or reference is given, use it
+                for instance in source_item.instances:
+                    instance.method = method or instance.method
+                    instance.reference = reference or instance.reference
             for c, s in enumerate(self.source):
                 if s.name == source_item.name: # find index of matching source
                     match = c
@@ -994,9 +1000,6 @@ class EmbeddedTickets(BaseDocument):
         :type date: datetime.datetime.
         """
 
-        # Track the addition or subtraction of tags.
-        # Get the bucket_list for the object, find out if this is an addition
-        # or subtraction of a bucket_list.
         if isinstance(ticket, list) and len(ticket) == 1 and ticket[0] == '':
             parsed_tickets = []
         elif isinstance(ticket, (str, unicode)):
@@ -1008,7 +1011,7 @@ class EmbeddedTickets(BaseDocument):
 
         for ticket_number in parsed_tickets:
             # prevent duplicates
-            if self.is_ticket_exist(ticket_number) == False:
+            if ticket_number and self.is_ticket_exist(ticket_number) == False:
                 et = EmbeddedTicket()
                 et.analyst = analyst
                 et.ticket_number = ticket_number
@@ -1113,38 +1116,6 @@ class UnrecognizedSchemaError(ValidationError):
             field_name='schema_version', **kwargs)
 
 
-class EmbeddedAnalysisResult(EmbeddedDocument, CritsDocumentFormatter):
-    """
-    Embedded Analysis Result from running an analytic service.
-    """
-
-    class EmbeddedAnalysisResultLog(EmbeddedDocument, CritsDocumentFormatter):
-        """
-        Log entry for a service run.
-        """
-
-        message = StringField()
-        #TODO: this should be a datetime object
-        datetime = StringField()
-        level = StringField()
-
-
-    #TODO: these should be datetime objects, not strings
-    analyst = StringField()
-    analysis_id = UUIDField(db_field="id", binary=False)
-    analysis_type = StringField(db_field="type")
-    config = EmbeddedDocumentField(AnalysisConfig)
-    finish_date = StringField()
-    log = ListField(EmbeddedDocumentField(EmbeddedAnalysisResultLog))
-    results = ListField(DynamicField(DictField))
-    service_name = StringField()
-    source = StringField()
-    start_date = StringField()
-    status = StringField()
-    template = StringField()
-    version = StringField()
-
-
 class EmbeddedObject(EmbeddedDocument, CritsDocumentFormatter):
     """
     Embedded Object Class.
@@ -1181,7 +1152,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     features.
     """
 
-    analysis = ListField(EmbeddedDocumentField(EmbeddedAnalysisResult))
     analyst = StringField()
     bucket_list = ListField(StringField())
     campaign = ListField(EmbeddedDocumentField(EmbeddedCampaign))
@@ -1289,7 +1259,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         if append:
             for t in parsed_tags:
-                if t not in self.bucket_list:
+                if t and t not in self.bucket_list:
                     self.bucket_list.append(t)
         else:
             self.bucket_list = parsed_tags
@@ -2001,6 +1971,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             return {}
         rel_dict = dict((r.rel_type,[]) for r in self.relationships)
         query_dict = {
+            'Actor': ('id', 'name', 'campaign'),
             'Campaign': ('id', 'name'),
             'Certificate': ('id', 'md5', 'filename', 'description', 'campaign'),
             'Domain': ('id', 'domain'),
@@ -2264,6 +2235,18 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         return [obj['name'] for obj in self._data['campaign']]
+
+
+    def get_analysis_results(self):
+        """
+        Get analysis results for this TLO.
+
+        :returns: list
+        """
+
+        from crits.services.analysis_result import AnalysisResult
+
+        return AnalysisResult.objects(object_id=str(self.id))
 
 
 # Needs to be here to prevent circular imports with CritsBaseAttributes

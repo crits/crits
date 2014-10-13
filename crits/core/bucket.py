@@ -20,6 +20,7 @@ class Bucket(CritsDocument, CritsSchemaDocument, Document):
         "latest_schema_version": 1,
         "schema_doc": {
             'name': 'Bucketlist name',
+            'Actor': 'Integer',
             'Campaign': 'Integer',
             'Certificate': 'Integer',
             'Disassembly': 'Integer',
@@ -36,6 +37,7 @@ class Bucket(CritsDocument, CritsSchemaDocument, Document):
     }
 
     name = StringField(required=True)
+    Actor = IntField(default=0)
     Campaign = IntField(default=0)
     Certificate = IntField(default=0)
     Disassembly = IntField(default=0)

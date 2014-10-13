@@ -221,8 +221,8 @@ def convert_string_to_bool(value):
 def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
                   obj_sources=[], remove_source=False, remove_rels=False,
                   remove_schema_version=False, remove_campaign=False,
-                  remove_analysis=False, remove_buckets=False,
-                  remove_releasability=False, remove_unsupported=False):
+                  remove_buckets=False, remove_releasability=False,
+                  remove_unsupported=False):
     """
     Formats a top-level object for utilization in certain conditions. Removes
     CRITs-internal necessary data so users editing the document via the
@@ -251,8 +251,6 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
     :type remove_schema_version: boolean
     :param remove_campaign: Remove the campaign key from the document.
     :type remove_campaign: boolean
-    :param remove_analysis: Remove the analysis key from the document.
-    :type remove_analysis: boolean
     :param remove_buckets: Remove the bucket_list key from the document.
     :type remove_buckets: boolean
     :param remove_releasability: Remove the releasability key from the document.
@@ -309,9 +307,6 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
     del data["_id"]
     if data.has_key("modified"):
         del data["modified"]
-
-    if remove_analysis and 'analysis' in data:
-        del data['analysis']
 
     if remove_buckets and 'bucket_list' in data:
         del data['bucket_list']

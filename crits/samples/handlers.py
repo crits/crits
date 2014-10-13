@@ -1,5 +1,4 @@
 import copy
-import crits.service_env
 import json
 import logging
 import os
@@ -42,7 +41,8 @@ from crits.samples.forms import BackdoorForm, ExploitForm, XORSearchForm
 from crits.samples.forms import UnrarSampleForm, UploadFileForm
 from crits.samples.sample import Sample
 from crits.samples.yarahit import YaraHit
-from crits.services.handlers import run_triage
+from crits.services.analysis_result import AnalysisResult
+from crits.services.handlers import run_triage, get_supported_services
 from crits.stats.handlers import generate_yara_hits
 
 logger = logging.getLogger(__name__)
@@ -166,8 +166,10 @@ def get_sample_details(sample_md5, analyst, format_=None):
         favorite = is_user_favorite("%s" % analyst, 'Sample', sample.id)
 
         # services
-        manager = crits.service_env.manager
-        service_list = manager.get_supported_services('Sample', binary_exists)
+        service_list = get_supported_services('Sample')
+
+        # analysis results
+        service_results = sample.get_analysis_results()
 
         args = {'objects': objects,
                 'relationships': relationships,
@@ -184,7 +186,8 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'binary_exists': binary_exists,
                 'favorite': favorite,
                 'screenshots': screenshots,
-                'service_list': service_list}
+                'service_list': service_list,
+                'service_results': service_results}
 
     return template, args
 
@@ -1081,11 +1084,11 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         # this will handle adding a new source, or an instance automatically
         sample.add_source(s)
     elif isinstance(source, EmbeddedSource):
-        sample.add_source(source)
+        sample.add_source(source, method=method, reference=reference)
     elif isinstance(source, list) and len(source) > 0:
         for s in source:
             if isinstance(s, EmbeddedSource):
-                sample.add_source(s)
+                sample.add_source(s, method=method, reference=reference)
 
     if bucket_list:
         sample.add_bucket_list(bucket_list, user)
@@ -1117,8 +1120,8 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         sample.reload()
 
         # run sample triage:
-        if len(sample.analysis) < 1 and data:
-            run_triage(data, sample, user)
+        if len(AnalysisResult.objects(object_id=str(sample.id))) < 1 and data:
+            run_triage(sample, user)
 
         # update relationship if a related top-level object is supplied
         if related_obj and sample:

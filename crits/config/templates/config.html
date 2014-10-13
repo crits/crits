@@ -10,248 +10,253 @@
         shown. For javascript involving form submission and error placement, look in config.js
     {% endcomment %}
     <script type="text/javascript">
-	    //used in item_editor
-		var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
-		//used in user_editor
-	    var user_source_access = "{% url 'crits.core.views.user_source_access' %}";
-	    var toggle_user_active = "{% url 'crits.core.views.toggle_user_active' %}";
-	    //below hash variables are used in selecting the correct tab on load    
-	    var itemHashTabs = ["#backdoor_button",
-	                        "#campaign_button",
-	                        "#disassemblytype_button",
-	                        "#eventtype_button",
-	                        "#exploit_button",
-	                        "#indicatoraction_button",
-	                        "#objecttype_button",
-	                        "#rawdatatype_button",
-	                        "#relationshiptype_button",
-	                        "#sourceaccess_button"
-	                        ]
-	    var usersHash = "#users";
-	    var servicesHash = "#services";
-	    var auditLogHash = "#auditLog"
-	    //objects used in modularized ajax call
-	    var itemsObject = {
-	    		url:"{% url 'crits.core.views.item_editor' %}",
-	    		container:$("#itemsContainer"),
-	    		hasGottenData:false,
-	    		extraFunctions:function(){
-	    			//this was necessary because the jtable was not loading
-	    			initTabNav();
-	    		}
-	    };
-	    var usersObject = {
-	            url:"{% url 'crits.core.views.users_listing' %}",
-	            container:$("#usersContainer"),
-	            hasGottenData:false,
-	    };
-	    var servicesObject = {
-	            url:"{% url 'crits.services.views.list' %}",
-	            container:$("#servicesContainer"),
-	            hasGottenData:false,
-	    };
-	    var auditLogObject = {
-	            url:"{% url 'crits.core.views.audit_listing' %}",
-	            container:$("#audit_logContainer"),
-	            hasGottenData:false,
-	    };
-	    //modularized ajax call to get/show right content
-	    function getRightContent(object) {
-	    	if(!object.hasGottenData) {
-	            $.ajax({
-	                type:"POST",
-	                url: object.url,
-	                data: $(this).serialize(),
-	                datatype: 'json',
-	                success: function(data) {
-	                    object.container.append(data);
-	                    if(object.extraFunctions != undefined)
-	                        object.extraFunctions();
-	                },
-	            });
-	            object.hasGottenData = true;
-	        }
-	        //show content
-	        toggleRightContent(object.container);
-	    }
-	    //hiding and showing action for the right side
-	    function toggleRightContent(element, showSystemContainer) {
-	        $(".rightContent").hide();
-	        removeForcedInvisible(element);
-	        if(showSystemContainer) {
-        		removeForcedInvisible($("#systemContainer"));
-	            $("#systemContainer").show();
-	            $(".highlighted").removeClass("highlighted"); //remove custom class for outer nodes
-	        }
-	        else {  //add custom highlight class for outer nodes only
-	             var highlightedElement = "#node_"+element.attr("id").replace("Container", "");
-	             highlightLeftSide($(highlightedElement));
-	        }
-	        element.show();
-	    }
-	    function removeForcedInvisible(element) {
-	    	 if(element.hasClass("forceInvisible")) 
-	    		    element.removeClass("forceInvisible");
-	    }
-	    //adds light blue highlight to selected node in sidebar
-	    //(this was necessary for the outer nodes)
-	    function highlightLeftSide(element) {
-	        $(".w2ui-selected").removeClass("w2ui-selected");
-	        $(".highlighted").removeClass("highlighted");
-	        element.addClass("highlighted");
-	    }
-		$(document).ready(function() {        //start document.ready
-		    $(function () {                   //start of init sidebar
-		        $('#sidebar').w2sidebar({
-		            name: 'sidebar',
-			        nodes: [ 
-	                    { id: 'system', class:'dontChange', text: 'System', expanded: true, group: true,
-	                        nodes: [ { id: 'generalTab', text: 'General'},
-	                                 { id: 'CRITsTab', text: 'CRITs'},
-	                                 { id: 'LDAP', text: 'LDAP Settings'},
-	                                 { id: 'securityTab', text: 'Security'},
-	                                 { id: 'downloadTab', text: 'Downloading'},
-	                                 { id: 'servicesTab', text: 'Services'},
-	                                 { id: 'loggingTab', text: 'Logging'}
-	                               ]
-			            },
-			            { id: 'items', text: 'Items', group: true},
-			            { id: 'users', text: 'Users', group: true},
-			            { id: 'services', text: 'Services', group: true},
-			            { id: 'audit_log', text: 'Audit Log', group: true}
-			        ]
-			    });
-		        //remove the show/hide label on the nodes that don't expand
-		        $("#node_items span:first").empty();
-		        $("#node_users span:first").empty();
+        //used in item_editor
+        var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
+        //used in user_editor
+        var user_source_access = "{% url 'crits.core.views.user_source_access' %}";
+        var toggle_user_active = "{% url 'crits.core.views.toggle_user_active' %}";
+        //below hash variables are used in selecting the correct tab on load    
+        var itemHashTabs = ["#actor_threat_identifiers_button",
+                            "#actor_threat_types_button",
+                            "#actor_motivations_button",
+                            "#actor_sophistications_button",
+                            "#actor_intended_effects_button",
+                            "#backdoor_button",
+                            "#campaign_button",
+	                    "#disassemblytype_button",
+                            "#eventtype_button",
+                            "#exploit_button",
+                            "#indicatoraction_button",
+                            "#objecttype_button",
+                            "#rawdatatype_button",
+                            "#relationshiptype_button",
+                            "#sourceaccess_button"
+                            ]
+        var usersHash = "#users";
+        var servicesHash = "#services";
+        var auditLogHash = "#auditLog"
+        //objects used in modularized ajax call
+        var itemsObject = {
+                url:"{% url 'crits.core.views.item_editor' %}",
+                container:$("#itemsContainer"),
+                hasGottenData:false,
+                extraFunctions:function(){
+                    //this was necessary because the jtable was not loading
+                    initTabNav();
+                }
+        };
+        var usersObject = {
+                url:"{% url 'crits.core.views.users_listing' %}",
+                container:$("#usersContainer"),
+                hasGottenData:false,
+        };
+        var servicesObject = {
+                url:"{% url 'crits.services.views.list' %}",
+                container:$("#servicesContainer"),
+                hasGottenData:false,
+        };
+        var auditLogObject = {
+                url:"{% url 'crits.core.views.audit_listing' %}",
+                container:$("#audit_logContainer"),
+                hasGottenData:false,
+        };
+        //modularized ajax call to get/show right content
+        function getRightContent(object) {
+            if(!object.hasGottenData) {
+                $.ajax({
+                    type:"POST",
+                    url: object.url,
+                    data: $(this).serialize(),
+                    datatype: 'json',
+                    success: function(data) {
+                        object.container.append(data);
+                        if(object.extraFunctions != undefined)
+                            object.extraFunctions();
+                    },
+                });
+                object.hasGottenData = true;
+            }
+            //show content
+            toggleRightContent(object.container);
+        }
+        //hiding and showing action for the right side
+        function toggleRightContent(element, showSystemContainer) {
+            $(".rightContent").hide();
+            removeForcedInvisible(element);
+            if(showSystemContainer) {
+                removeForcedInvisible($("#systemContainer"));
+                $("#systemContainer").show();
+                $(".highlighted").removeClass("highlighted"); //remove custom class for outer nodes
+            }
+            else {  //add custom highlight class for outer nodes only
+                 var highlightedElement = "#node_"+element.attr("id").replace("Container", "");
+                 highlightLeftSide($(highlightedElement));
+            }
+            element.show();
+        }
+        function removeForcedInvisible(element) {
+             if(element.hasClass("forceInvisible")) 
+                    element.removeClass("forceInvisible");
+        }
+        //adds light blue highlight to selected node in sidebar
+        //(this was necessary for the outer nodes)
+        function highlightLeftSide(element) {
+            $(".w2ui-selected").removeClass("w2ui-selected");
+            $(".highlighted").removeClass("highlighted");
+            element.addClass("highlighted");
+        }
+        $(document).ready(function() {        //start document.ready
+            $(function () {                   //start of init sidebar
+                $('#sidebar').w2sidebar({
+                    name: 'sidebar',
+                    nodes: [ 
+                        { id: 'system', class:'dontChange', text: 'System', expanded: true, group: true,
+                            nodes: [ { id: 'generalTab', text: 'General'},
+                                     { id: 'CRITsTab', text: 'CRITs'},
+                                     { id: 'LDAP', text: 'LDAP Settings'},
+                                     { id: 'securityTab', text: 'Auth/Security'},
+                                     { id: 'downloadTab', text: 'Downloading'},
+                                     { id: 'servicesTab', text: 'Service Settings'},
+                                     { id: 'loggingTab', text: 'Logging'}
+                                   ]
+                        },
+                        { id: 'items', text: 'Items', group: true},
+                        { id: 'users', text: 'Users', group: true},
+                        { id: 'services', text: 'Services', group: true},
+                        { id: 'audit_log', text: 'Audit Log', group: true}
+                    ]
+                });
+                //remove the show/hide label on the nodes that don't expand
+                $("#node_items span:first").empty();
+                $("#node_users span:first").empty();
                 $("#node_services span:first").empty();
                 $("#node_audit_log span:first").empty();
-			    //call to get the content for the items tab
-	            $("#node_items").click(function() {
-	            	getRightContent(itemsObject);
-	            });
-			    //call to get the content for the users tab
-			    $("#node_users").click(function() {
-			    	getRightContent(usersObject);
-	            });
-			    //call to get the content for the services tab
-	            $("#node_services").click(function() {
-	            	getRightContent(servicesObject);
-	            });
-	            //call to get content for the audit log tab
-	            $("#node_audit_log").click(function() {
-	            	getRightContent(auditLogObject);
-	            });
-			    //action for the INNER NODES ONLY (aka under systems tab)
-			    w2ui.sidebar.on('*', function (event) {
-			    	if(event.type == 'click') {
-				        var target = "#"+event.target;
-				        var targetElem = $(target);
-				        if((target != currentTab && targetElem != null) 
-				        		|| $("#systemContainer").is(':hidden')) {
-				        	$(currentTab).hide();
-		                    toggleRightContent(targetElem, true);
-				            currentTab = target;
-				        }
-			    	}//else if was necessary in order to maintain the currently highlighted node
-			    	else if(event.type == 'refresh' || event.type=='dblClick')
-	                    event.preventDefault();
-		        });
-			});  //end of init sidebar
-			//display general tab by default
-			var currentTab = "#generalTab";
-			//handles the tab shown on load
-			$(function () {
-				//if they link to a specific tag, reset current tab
-		        	var hash = document.location.hash;
-		        	if(itemHashTabs.indexOf(hash) != -1)
-		        		getRightContent(itemsObject);
-		        	else if(hash == servicesHash)
-		        		getRightContent(servicesObject);
-		        	else if(hash == usersHash)
-		        		getRightContent(usersObject);
-		        	else if(hash == auditLogHash)
-		        		getRightContent(auditLogObject);
-		        	else {
-		        		//if the hash is an existing tab, set currentTab to it
-		        		if($(hash).length > 0)
-		        		    currentTab = hash;
-	        			toggleRightContent($(currentTab), true);
-	                    //show the correct node in the sidebar corresponding to shown tab
-	                    var currentNode = "#node_"+currentTab.substring(1);
-	                    $(currentNode).addClass("w2ui-selected");
-	        		}
-	        });
-			//forces changes when selecting from the top toolbar
-			$(".controlPanelNav").click(function(e) {
-				//parent node corresponding to sidebar
-				var node = $(this).attr("node");
-				//if its part of the system sub_nodes
-				if(node == 'node_system'){
-					//corresponding subnode under system
-					var sub_node = $(this).attr("sub_node");
-					//toggles the highlighting 
-					if(sub_node != currentTab) {
-						$("#node_"+currentTab.substring(1)).removeClass("w2ui-selected");
-						$("#node_"+sub_node).addClass("w2ui-selected");
-					}
-					var event = jQuery.Event( "click" );
-					event.target = sub_node; 
-					//fires off the click event implemented above
+                //call to get the content for the items tab
+                $("#node_items").click(function() {
+                    getRightContent(itemsObject);
+                });
+                //call to get the content for the users tab
+                $("#node_users").click(function() {
+                    getRightContent(usersObject);
+                });
+                //call to get the content for the services tab
+                $("#node_services").click(function() {
+                    getRightContent(servicesObject);
+                });
+                //call to get content for the audit log tab
+                $("#node_audit_log").click(function() {
+                    getRightContent(auditLogObject);
+                });
+                //action for the INNER NODES ONLY (aka under systems tab)
+                w2ui.sidebar.on('*', function (event) {
+                    if(event.type == 'click') {
+                        var target = "#"+event.target;
+                        var targetElem = $(target);
+                        if((target != currentTab && targetElem != null) 
+                                || $("#systemContainer").is(':hidden')) {
+                            $(currentTab).hide();
+                            toggleRightContent(targetElem, true);
+                            currentTab = target;
+                        }
+                    }//else if was necessary in order to maintain the currently highlighted node
+                    else if(event.type == 'refresh' || event.type=='dblClick')
+                        event.preventDefault();
+                });
+            });  //end of init sidebar
+            //display general tab by default
+            var currentTab = "#generalTab";
+            //handles the tab shown on load
+            $(function () {
+                //if they link to a specific tag, reset current tab
+                    var hash = document.location.hash;
+                    if(itemHashTabs.indexOf(hash) != -1)
+                        getRightContent(itemsObject);
+                    else if(hash == servicesHash)
+                        getRightContent(servicesObject);
+                    else if(hash == usersHash)
+                        getRightContent(usersObject);
+                    else if(hash == auditLogHash)
+                        getRightContent(auditLogObject);
+                    else {
+                        //if the hash is an existing tab, set currentTab to it
+                        if($(hash).length > 0)
+                            currentTab = hash;
+                        toggleRightContent($(currentTab), true);
+                        //show the correct node in the sidebar corresponding to shown tab
+                        var currentNode = "#node_"+currentTab.substring(1);
+                        $(currentNode).addClass("w2ui-selected");
+                    }
+            });
+            //forces changes when selecting from the top toolbar
+            $(".controlPanelNav").click(function(e) {
+                //parent node corresponding to sidebar
+                var node = $(this).attr("node");
+                //if its part of the system sub_nodes
+                if(node == 'node_system'){
+                    //corresponding subnode under system
+                    var sub_node = $(this).attr("sub_node");
+                    //toggles the highlighting 
+                    if(sub_node != currentTab) {
+                        $("#node_"+currentTab.substring(1)).removeClass("w2ui-selected");
+                        $("#node_"+sub_node).addClass("w2ui-selected");
+                    }
+                    var event = jQuery.Event( "click" );
+                    event.target = sub_node; 
+                    //fires off the click event implemented above
                     w2ui.sidebar.trigger(event);
-				}//if its part of the items jtable
-				else if(node == 'node_items') {
-					//couldn't figure out trigger events for jtable so reloads the page
-					var newHash = "#"+$(this).attr("sub_node");
-					var url = document.URL;
-					var hashIndex = url.indexOf("#");
-					//if there is a current hash, remove it and then append the new hash
-					if(hashIndex > 0 && url.slice(hashIndex) != newHash)
-						url = url.slice(0, hashIndex)+newHash;
-					//if url has been changed, reload the page
-					if(url != document.URL) {
-						window.location.href = url;
-						location.reload();
-					}
-				}
-				else //the rest of the nodes in the sidebar can operate normally
-				    $("#"+node).trigger("click");
-			});
-		 });  //end document.ready
-	</script>
+                }//if its part of the items jtable
+                else if(node == 'node_items') {
+                    //couldn't figure out trigger events for jtable so reloads the page
+                    var newHash = "#"+$(this).attr("sub_node");
+                    var url = document.URL;
+                    var hashIndex = url.indexOf("#");
+                    //if there is a current hash, remove it and then append the new hash
+                    if(hashIndex > 0 && url.slice(hashIndex) != newHash)
+                        url = url.slice(0, hashIndex)+newHash;
+                    //if url has been changed, reload the page
+                    if(url != document.URL) {
+                        window.location.href = url;
+                        location.reload();
+                    }
+                }
+                else //the rest of the nodes in the sidebar can operate normally
+                    $("#"+node).trigger("click");
+            });
+         });  //end document.ready
+    </script>
 {% endblock %}
 {% block content %}
-	<link rel="stylesheet" href="{{ STATIC_URL }}css/config.css" type="text/css" media="screen" />
-	<div id="wrapper">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/config.css" type="text/css" media="screen" />
+    <div id="wrapper">
         <div id="sidebar" ></div>
         <div id='systemContainer' class='rightContent forceInvisible'>
                <div id="config_results"></div>
             <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
-	            <div id='CRITsTab' class='box forceInvisible'>
-	                <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
-	            </div>  
-	            <div id='generalTab' class='box forceInvisible'>
-	                <table class="systemTable">{{ config_general_form.as_table }}</table>
-	            </div>
-	            <div id="LDAP" class='box forceInvisible'>
-	                <table class="systemTable">{{ config_LDAP_form.as_table }}</table>
-	            </div>
-	            <div id="securityTab" class='box forceInvisible'>
-	                <table class="systemTable">{{ config_security_form.as_table }}</table>
-	            </div>
-	            <div id="downloadTab" class='box forceInvisible'>
-	                <table class="systemTable">{{ config_download_form.as_table }}</table>
-	            </div>
-	            <div id="servicesTab" class='box forceInvisible'>
-	                <table class="systemTable">{{ config_services_form.as_table }}</table>
-	            </div>
-	            <div id="loggingTab" class='box forceInvisible'>
-	                <table class="systemTable">{{ config_logging_form.as_table }}</table>
-	            </div>
-	            <div id="submitWrapper">
-	                <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
-	                <input id="reset_button" type="button" value="Reset"></input>
-	            </div>
+                <div id='CRITsTab' class='box forceInvisible'>
+                    <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
+                </div>  
+                <div id='generalTab' class='box forceInvisible'>
+                    <table class="systemTable">{{ config_general_form.as_table }}</table>
+                </div>
+                <div id="LDAP" class='box forceInvisible'>
+                    <table class="systemTable">{{ config_LDAP_form.as_table }}</table>
+                </div>
+                <div id="securityTab" class='box forceInvisible'>
+                    <table class="systemTable">{{ config_security_form.as_table }}</table>
+                </div>
+                <div id="downloadTab" class='box forceInvisible'>
+                    <table class="systemTable">{{ config_download_form.as_table }}</table>
+                </div>
+                <div id="servicesTab" class='box forceInvisible'>
+                    <table class="systemTable">{{ config_services_form.as_table }}</table>
+                </div>
+                <div id="loggingTab" class='box forceInvisible'>
+                    <table class="systemTable">{{ config_logging_form.as_table }}</table>
+                </div>
+                <div id="submitWrapper">
+                    <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
+                    <input id="reset_button" type="button" value="Reset"></input>
+                </div>
             </form>   
         </div> 
         <div id="itemsContainer" class='rightContent forceInvisible'></div>

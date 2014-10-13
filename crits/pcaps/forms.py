@@ -1,5 +1,6 @@
 from django import forms
 
+from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_source_names
 from crits.core.user_tools import get_user_organization
@@ -13,7 +14,14 @@ class UploadPcapForm(forms.Form):
     required_css_class = 'required'
     filedata = forms.FileField()
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80', 'rows':'2'}), required=False)
-    source = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.PCAP.SOURCE)
+    method = forms.CharField(required=False, widget=forms.TextInput,
+                             label=form_consts.PCAP.SOURCE_METHOD)
+    reference = forms.CharField(required=False,
+                                widget=forms.TextInput(attrs={'size': '90'}),
+                                label=form_consts.PCAP.SOURCE_REFERENCE)
     related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
     related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
 

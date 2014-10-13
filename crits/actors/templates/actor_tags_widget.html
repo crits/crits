@@ -1,0 +1,50 @@
+<script>
+    var global_search = "{% url 'crits.core.views.global_search_listing' %}";
+    var actor_tags_modify = "{% url 'crits.actors.views.actor_tags_modify' %}";
+    var actor_tags_list = "{% url 'crits.actors.views.get_actor_tags' %}";
+</script>
+<tr>
+    <td class="key">Intended Effects</td>
+    <td>
+        <ul id="intended_effects_list">
+            {% for ie in actor.intended_effects %}
+                <li>{{ie}}</li>
+            {% endfor %}
+        </ul>
+    </td>
+</tr>
+<tr>
+    <td class="key">Motivations</td>
+    <td>
+        <ul id="motivations_list">
+            {% for motivation in actor.motivations %}
+                <li>{{motivation}}</li>
+            {% endfor %}
+        </ul>
+    </td>
+</tr>
+<tr>
+    <td class="key">Sophistication</td>
+    <td>
+        <ul id="sophistications_list">
+            {% for sophistication in actor.sophistications %}
+                <li>{{sophistication}}</li>
+            {% endfor %}
+        </ul>
+    </td>
+</tr>
+<tr>
+    <td class="key">Threat Types</td>
+    <td>
+        <ul id="threat_types_list">
+            {% for tt in actor.threat_types %}
+                <li>{{tt}}</li>
+            {% endfor %}
+        </ul>
+    </td>
+</tr>
+<script type="text/javascript">
+    $(document).bind('enable_actor_tags', function(){
+        actor_tags = false;
+    });
+</script>

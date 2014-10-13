@@ -22,6 +22,9 @@
                         <th>Last Name</th>
                         <th>Email Address</th>
                         <th>Email Count</th>
+                    {% elif rel_type == 'Actor' %}
+                        <th>Name</th>
+                        <th>Campaign</th>
                     {% elif rel_type == 'Event' %}
                         <th>Title</th>
                         <th>Event Type</th>
@@ -75,6 +78,8 @@
                             <td>{{ rel.lastname }}</td>
                             <td>{{ rel.email_address }}</td>
                             <td>{{ rel.email_count }}</td>
+                        {% elif rel_type == 'Actor' %}
+                            <td>{{ rel.name }}</td>
                         {% elif rel_type == 'Event' %}
                             <td>{{ rel.title }}</td>
                             <td>{{ rel.event_type }}</td>
@@ -105,8 +110,7 @@
                             <td>{{ rel.description|truncatechars:100 }}</td>
                             <td>{{ rel.version }}</td>
                         {% endif %}
-                        
-                        {% if rel_type in "RawDataPCAPCertificateIndicatorEvent" %}
+                        {% if rel_type in "RawDataPCAPCertificateIndicatorEventActor" %}
                             <td class='campaignWidth'>
                                 {% for campaign in rel.campaign %}
                                     <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
@@ -123,7 +127,6 @@
                                 {% endfor %}
                             </td>
                         {% endif %}
-                        
                         <td width="125px">{{rel.analyst}}</td>
                         <td width="125px">{{rel.relationship_date|date:"Y-m-d H:i:s"}}</td>
                         <td class='relationship_confidence_edit' action="{% url 'crits.relationships.views.update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
@@ -139,18 +142,20 @@
                                     </span><br />
                                 <b>Forge Date:</b> {{ rel.date|date:"Y-m-d" }}
                                 <div  mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}" rConfidence="{{ rel.rel_confidence }}" {% if rel_type == 'Indicator' %} data-value="{{rel.ind_value}}" data-type="{{rel.ind_type}}"{% endif %}>
-                                	<b>Reason: </b>
-                                	<div style="display:inline-block; min-width:200px" class='relationship_reason_edit' action="{% url 'crits.relationships.views.update_relationship_reason' %}">
-	                                	{% if rel.rel_reason != null and rel.rel_reason != '' %}
-			                                {{ rel.rel_reason }}
-			                            {% else %}
-			                                N/A
-			                            {% endif %}
-		                            </div>
+                                    <b>Reason: </b>
+                                    <div style="display:inline-block; min-width:200px" class='relationship_reason_edit' action="{% url 'crits.relationships.views.update_relationship_reason' %}">
+                                        {% if rel.rel_reason != null and rel.rel_reason != '' %}
+                                            {{ rel.rel_reason }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                             <div>
-                            {% if rel_type == 'Campaign' %}
+                            {% if rel_type == 'Actor' %}
+                                <a href="{% url 'crits.actors.views.actor_detail' rel.value %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
+                            {% elif rel_type == 'Campaign' %}
                                 <a href="{% url 'crits.campaigns.views.campaign_details' rel.name %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
                             {% elif rel_type == 'Domain' %}
                                 <a href="{% url 'crits.domains.views.domain_detail' rel.domain %}" class="ui-icon ui-icon-arrowthick-1-e"></a>

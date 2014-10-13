@@ -1,9 +1,12 @@
 import cgi
+import re
 import string
 
 from crits.indicators.handlers import does_indicator_relationship_exist
 
 from django import template
+from django.template.defaultfilters import stringfilter
+from django.utils.safestring import mark_safe
 register = template.Library()
 
 # TODO: make this more generic if it winds up being used more
@@ -150,6 +153,18 @@ def cgi_escape(value):
     return cgi.escape(value)
 
 @register.filter
+def to_dict(obj):
+    """
+    Convert a mongoengine object into a dictionary.
+
+    :param obj: The mongoengine object to convert.
+    :type obj: A mongoengine object.
+    :returns: dict
+    """
+
+    return obj.to_dict()
+
+@register.filter
 def absVal(value):
     """
     return absolute value
@@ -159,4 +174,10 @@ def absVal(value):
     :returns: int
     """
     return abs(value)
+
+@register.filter
+@stringfilter
+def url_target_blank(var):
+    """Follow the 'urlize' filter with this to make the URL open in a new tab."""
+    return mark_safe(re.sub("<a([^>]+)(?<!target=)>",'<a target="_blank"\\1>',var))
     

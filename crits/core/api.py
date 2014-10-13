@@ -272,10 +272,12 @@ class CRITsSerializer(Serializer):
 
         options = options or {}
         get_binaries = 'stix_no_bin'
+        bin_fmt = 'raw'
         if 'binaries' in options:
             try:
                 if int(options['binaries']):
                     get_binaries = 'stix'
+                    bin_fmt = 'base64'
             except:
                 pass
 
@@ -317,10 +319,11 @@ class CRITsSerializer(Serializer):
                                            0,
                                            0,
                                            get_binaries,
-                                           'raw',
+                                           bin_fmt,
                                            object_types,
                                            objects,
-                                           sources)
+                                           sources,
+                                           False)
         except Exception:
             data = ""
         if 'data' in data:
@@ -486,12 +489,25 @@ class CRITsAPIResource(MongoEngineResource):
         exclude = request.GET.get('exclude', None)
         source_list = user_sources(request.user.username)
         no_sources = True
+        # Chop off trailing slash and split on remaining slashes.
+        # If last part of path is not the resource name, assume it is an
+        # object ID.
+        path = request.path[:-1].split('/')
+        if path[-1] != self.Meta.resource_name:
+            # If this is a valid object ID, convert it. Otherwise, use
+            # the string. The corresponding query will return 0.
+            if ObjectId.is_valid(path[-1]):
+                querydict['_id'] = ObjectId(path[-1])
+            else:
+                querydict['_id'] = path[-1]
+
         for k,v in get_params.iteritems():
             v = v.strip()
             try:
                 v_int = int(v)
             except:
-                pass
+                # If can't be converted to an int use the string.
+                v_int = v
             if k == "c-_id":
                 try:
                     querydict['_id'] = ObjectId(v)
@@ -508,7 +524,7 @@ class CRITsAPIResource(MongoEngineResource):
                 except ValueError:
                     op_index = None
                 if op_index is not None:
-                    if op in ('$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin'):
+                    if op in ('$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin', '$exists'):
                         val = v
                         if op in ('$in', '$nin'):
                             if field == 'source.name':
@@ -520,6 +536,11 @@ class CRITsAPIResource(MongoEngineResource):
                                         val.append(s)
                             else:
                                 val = [remove_quotes(i) for i in v.split(',')]
+                        if op == '$exists':
+                            if val in ('true', 'True', '1'):
+                                val = 1
+                            elif val in ('false', 'False', '0'):
+                                val = 0
                         if field in ('size', 'schema_version'):
                             if isinstance(val, list):
                                 v_f = []
@@ -534,7 +555,7 @@ class CRITsAPIResource(MongoEngineResource):
                                     val = int(val)
                                 except:
                                     val = None
-                        if val:
+                        if val or val == 0:
                             querydict[field] = {op: val}
                 elif field in ('size', 'schema_version'):
                     querydict[field] = v_int

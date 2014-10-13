@@ -13,6 +13,7 @@ class Common():
     BULK_REQUIRED = "bulkrequired"
 
     # class names
+    Actor = "Actor"
     Campaign = "Campaign"
     Certificate = "Certificate"
     Disassembly = "Disassembly"
@@ -40,6 +41,22 @@ class Status():
     SUCCESS = 1;
     DUPLICATE = 2;
 
+
+class Actor():
+    """
+    Constants for Campaigns.
+    """
+
+    NAME = "Name"
+    ALIASES = "Aliases"
+    DESCRIPTION = "Description"
+    CAMPAIGN = "Campaign"
+    CAMPAIGN_CONFIDENCE = "Campaign Confidence"
+    SOURCE = Common.SOURCE
+    SOURCE_METHOD = "Source Method"
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+
+
 class Campaign():
     """
     Constants for Campaigns.
@@ -54,6 +71,8 @@ class Certificate():
     """
 
     SOURCE = Common.SOURCE
+    SOURCE_METHOD = Common.SOURCE_METHOD
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
 class IP():
@@ -67,15 +86,15 @@ class IP():
     CAMPAIGN = "Campaign"
     CAMPAIGN_CONFIDENCE = "Campaign Confidence"
     SOURCE = Common.SOURCE
-    SOURCE_METHOD = "Source Method"
+    SOURCE_METHOD = Common.SOURCE_METHOD
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
     ADD_INDICATOR = Common.ADD_INDICATOR
     INDICATOR_REFERENCE = "Indicator Reference"
 
     IP_DATE = "IP Date"
     IP_SOURCE = "IP Source"
-    IP_METHOD = "IP Method"
-    IP_REFERENCE = "IP Reference"
+    IP_METHOD = "IP Source Method"
+    IP_REFERENCE = "IP Source Reference"
     CACHED_RESULTS = "ip_cached_results"
 
 class Disassembly():
@@ -94,9 +113,9 @@ class Domain():
     DOMAIN_NAME = "Domain Name"
     CAMPAIGN = "Campaign"
     CAMPAIGN_CONFIDENCE = "Campaign Confidence"
-    DOMAIN_SOURCE = "Domain Source"
-    DOMAIN_METHOD = "Domain Method"
-    DOMAIN_REFERENCE = "Domain Reference"
+    DOMAIN_SOURCE = Common.SOURCE
+    DOMAIN_METHOD = Common.SOURCE_METHOD
+    DOMAIN_REFERENCE = Common.SOURCE_REFERENCE
     ADD_IP_ADDRESS = "Add IP Address?"
     IP_ADDRESS = IP.IP_ADDRESS
     IP_DATE = IP.IP_DATE
@@ -114,6 +133,8 @@ class Email():
     """
 
     SOURCE = Common.SOURCE
+    SOURCE_METHOD = Common.SOURCE_METHOD
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
 class Event():
@@ -123,6 +144,8 @@ class Event():
 
     TITLE = "Title"
     SOURCE = Common.SOURCE
+    SOURCE_METHOD = Common.SOURCE_METHOD
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
 class Indicator():
@@ -131,6 +154,8 @@ class Indicator():
     """
 
     SOURCE = Common.SOURCE
+    SOURCE_METHOD = Common.SOURCE_METHOD
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
 class Object():
@@ -161,6 +186,8 @@ class PCAP():
     """
 
     SOURCE = Common.SOURCE
+    SOURCE_METHOD = Common.SOURCE_METHOD
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
 class RawData():
@@ -169,6 +196,8 @@ class RawData():
     """
 
     SOURCE = Common.SOURCE
+    SOURCE_METHOD = Common.SOURCE_METHOD
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
 class Sample():

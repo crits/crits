@@ -9,8 +9,6 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from mongoengine.base import ValidationError
 
-import crits.service_env
-
 from crits.core import form_consts
 from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
 from crits.core.crits_mongoengine import json_handler, create_embedded_source
@@ -25,7 +23,7 @@ from crits.domains.forms import AddDomainForm, UpdateWhoisForm, DiffWhoisForm
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict, validate_and_add_new_handler_object
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 def get_domain(domain):
     """
@@ -132,8 +130,10 @@ def get_domain_details(domain, analyst):
     favorite = is_user_favorite("%s" % analyst, 'Domain', dmain.id)
 
     # services
-    manager = crits.service_env.manager
-    service_list = manager.get_supported_services('Domain', True)
+    service_list = get_supported_services('Domain')
+
+    # analysis results
+    service_results = dmain.get_analysis_results()
 
     args = {'objects': objects,
             'relationships': relationships,
@@ -146,6 +146,7 @@ def get_domain_details(domain, analyst):
             'forms': forms,
             'whois_data': whois_data,
             'service_list': service_list,
+            'service_results': service_results,
             'whois_len': whois_len}
 
     return template, args
@@ -752,10 +753,10 @@ def upsert_domain(sdomain, domain, source, username=None, campaign=None,
     # run domain triage
     if is_fqdn_domain_new:
         fqdn_domain.reload()
-        run_triage(None, fqdn_domain, username)
+        run_triage(fqdn_domain, username)
     if is_root_domain_new:
         root_domain.reload()
-        run_triage(None, root_domain, username)
+        run_triage(root_domain, username)
 
     # return fqdn if they added an fqdn, or root if they added a root
     if fqdn_domain:

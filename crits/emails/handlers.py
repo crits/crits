@@ -40,6 +40,7 @@ from crits.indicators.handlers import handle_indicator_ind
 from crits.indicators.indicator import Indicator
 from crits.notifications.handlers import remove_user_from_notification
 from crits.samples.handlers import handle_file, handle_uploaded_file, mail_sample
+from crits.services.handlers import run_triage
 
 def create_email_field_dict(field_name,
                             field_type,
@@ -304,6 +305,9 @@ def get_email_detail(email_id, analyst):
                 href_search_field="x_originating_ip"
                 ))
 
+        # analysis results
+        service_results = email.get_analysis_results()
+
         args = {'objects': objects,
                 'email_fields': email_fields,
                 'relationships': relationships,
@@ -317,6 +321,7 @@ def get_email_detail(email_id, analyst):
                 'download_form': download_form,
                 'update_data_form': update_data_form,
                 'admin': is_admin(analyst),
+                'service_results': service_results,
                 'rt_url': settings.RT_URL}
     return template, args
 
@@ -453,6 +458,12 @@ def handle_email_fields(data, analyst, method):
     # Remove these items from data so they are not added when merged.
     sourcename = data.get('source', None)
     del data['source']
+    if data.get('source_method', None):
+        method = method + " - " + data.get('source_method', None)
+    try:
+        del data['source_method']
+    except:
+        pass
     reference = data.get('source_reference', None)
     try:
         del data['source_reference']
@@ -515,6 +526,7 @@ def handle_email_fields(data, analyst, method):
     try:
         new_email.save(username=analyst)
         new_email.reload()
+        run_triage(new_email, analyst)
         result['object'] = new_email
         result['status'] = True
     except Exception, e:
@@ -588,6 +600,7 @@ def handle_json(data, sourcename, reference, analyst, method,
     try:
         result['object'].save(username=analyst)
         result['object'].reload()
+        run_triage(result['object'], analyst)
     except Exception, e:
         result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
 
@@ -693,6 +706,7 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
         try:
             result['object'].save(username=analyst)
             result['object'].reload()
+            run_triage(result['object'], analyst)
         except Exception, e:
             result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
             return result
@@ -1025,6 +1039,8 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
         result['object'].date = None
     try:
         result['object'].save(username=analyst)
+        result['object'].reload()
+        run_triage(result['object'], analyst)
     except Exception, e:
         result['reason'] = "Failed to save email.\n<br /><pre>" + \
             str(e) + "</pre>"
