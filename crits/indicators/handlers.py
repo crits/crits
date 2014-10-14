@@ -610,8 +610,6 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         s.instances = [instance]
         indicator.add_source(s)
 
-    indicator.save(username=analyst)
-
     if add_domain or add_relationship:
         ind_type = indicator.ind_type
         ind_value = indicator.value
@@ -621,7 +619,6 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                 domain_or_ip = urlparse.urlparse(ind_value).hostname
             elif ind_type == "URI - Domain Name":
                 domain_or_ip = ind_value
-            #try:
             (sdomain, fqdn) = get_domain(domain_or_ip)
             if sdomain == "no_tld_found_error" and ind_type == "URI - URL":
                 try:
@@ -636,23 +633,12 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                             '%s' % analyst, None,
                                             bucket_list=bucket_list, cache=cache)
                     if not success['success']:
-                        indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
-                                         % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
-                        message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
-                        return {'success':False, 'message':message + success['message'],
-                                'id': str(indicator.id)}
+                        return {'success':False, 'message': success['message']}
 
                 if not success or not 'object' in success:
                     dmain = Domain.objects(domain=domain_or_ip).first()
                 else:
                     dmain = success['object']
-                if dmain:
-                    dmain.add_relationship(rel_item=indicator,
-                                           rel_type='Related_To',
-                                           analyst="%s" % analyst,
-                                           get_rels=False)
-                    dmain.save(username=analyst)
-                    indicator.save(username=analyst)
 
         if ind_type.startswith("Address - ip") or ind_type == "Address - cidr" or url_contains_ip:
             if url_contains_ip:
@@ -669,23 +655,29 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                         indicator_reference=reference,
                                         cache=cache)
                 if not success['success']:
-                    indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
-                                     % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
-                    message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
-                    return {'success':False, 'message':message + success['message'],
-                            'id': str(indicator.id)}
+                    return {'success':False, 'message': success['message']}
 
             if not success or not 'object' in success:
                 ip = IP.objects(ip=indicator.value).first()
             else:
                 ip = success['object']
-            if ip:
-                ip.add_relationship(rel_item=indicator,
-                                    rel_type='Related_To',
-                                    analyst="%s" % analyst,
-                                    get_rels=False)
-                ip.save(username=analyst)
-                indicator.save(username=analyst)
+
+    indicator.save(username=analyst)
+
+    if dmain:
+        dmain.add_relationship(rel_item=indicator,
+                               rel_type='Related_To',
+                               analyst="%s" % analyst,
+                               get_rels=False)
+        dmain.save(username=analyst)
+    if ip:
+        ip.add_relationship(rel_item=indicator,
+                            rel_type='Related_To',
+                            analyst="%s" % analyst,
+                            get_rels=False)
+        ip.save(username=analyst)
+
+    indicator.save(username=analyst)
 
     # run indicator triage
     if is_new_indicator:
