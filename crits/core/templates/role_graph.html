@@ -38,7 +38,7 @@
         var data = {
             start_type: "{{start_type}}",
             start_node: "{{start_node}}",
-            expanion_node: "{{expansion_node}}",
+            expansion_node: "{{expansion_node}}",
         }
         $.ajax({
             type: "POST",
@@ -202,6 +202,18 @@
                 return d;
             }
 
+            function toggleAll(d) {
+                if (!d.expand && d.children) {
+                    d._children = d.children;
+                    d.children = null;
+                    d._children.forEach(toggleAll);
+                } else if (!d.expand && d._children) {
+                    d.children = d._children;
+                    d._children = null;
+                    d.children.forEach(toggleAll);
+                }
+                return d;
+            }
             // Toggle children on click.
 
             function click(d) {
@@ -390,6 +402,7 @@
             root = treeData;
             root.x0 = viewerHeight / 2;
             root.y0 = 500;
+            root.children.forEach(toggleAll);
 
             // Layout the tree initially and center on the root node.
             // centerNode throws a console error, but helps put the whole
