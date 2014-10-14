@@ -1,5 +1,20 @@
 /* expand/collapse */
 
+#notifications {
+    /* fixate the notifications div at the bottom right of the screen */
+    position: fixed;
+    bottom: 30px;
+    right: 20px;
+    padding-bottom: 10px;
+    padding-right: 10px;
+}
+
+li.sf-firstrow a.sf-level0 {
+    border-width: 0;
+    background-color:inherit;
+    height: 10px;
+}
+
 table .collapsible {
     padding: 0 0 3px 0;
 }

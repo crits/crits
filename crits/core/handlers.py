@@ -44,7 +44,7 @@ from crits.domains.domain import Domain
 from crits.events.event import Event
 from crits.ips.ip import IP
 from crits.notifications.notification import Notification
-from crits.notifications.handlers import get_user_notifications
+from crits.notifications.handlers import get_user_notifications, NotificationLockManager
 from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
 from crits.emails.email import Email
@@ -3679,6 +3679,58 @@ def details_from_id(type_, id_):
     else:
         return None
 
+def create_notification(obj, username, message, type):
+    n = Notification()
+    n.analyst = username
+
+    if type == 'Comment':
+        n.obj_id = obj.obj_id
+        n.obj_type = obj.obj_type
+        n.notification = "%s added a comment: %s" % (username, obj.comment)
+    else:
+        n.notification = message
+        n.obj_id = obj.id
+        n.obj_type = type
+
+    if hasattr(obj, 'source'):
+        sources = [s.name for s in obj.source]
+        subscribed_users = get_subscribed_users(n.obj_type, n.obj_id, sources)
+
+        # Filter on users that have access to the source of the object
+        for subscribed_user in subscribed_users:
+            allowed_sources = user_sources(subscribed_user)
+
+            for allowed_source in allowed_sources:
+                if allowed_source in sources:
+                    n.users.append(subscribed_user)
+                    break
+    else:
+        n.users = []
+
+    if type == 'Comment':
+        for u in obj.users:
+            if u not in n.users:
+                n.users.append(u)
+
+    # don't notify the user creating this notification
+    n.users = [u for u in n.users if u != username]
+    if not len(n.users):
+        return
+    try:
+        n.save()
+    except ValidationError:
+        pass
+
+    # Signal potentially waiting threads that notification information is available
+    for user in n.users:
+        notification_lock = NotificationLockManager.get_notification_lock(user)
+        notification_lock.acquire()
+
+        try:
+            notification_lock.notifyAll()
+        finally:
+            notification_lock.release()
+
 
 def audit_entry(self, username, type_, new_doc=False):
     """
@@ -3703,14 +3755,14 @@ def audit_entry(self, username, type_, new_doc=False):
     # don't audit audits
     if my_type in ("AuditLog", "Service"):
         return
-    changed = [f for f in self._get_changed_fields() if f not in ("modified",
+    changed_fields = [f for f in self._get_changed_fields() if f not in ("modified",
                                                                   "save",
                                                                   "delete")]
 
-    if new_doc and not changed:
+    if new_doc and not changed_fields:
         what_changed = "new document"
     else:
-        what_changed = ', '.join(changed)
+        what_changed = ', '.join(changed_fields)
     field_dict = {
         'Actor': 'name',
         'Campaign': 'name',
@@ -3763,34 +3815,127 @@ def audit_entry(self, username, type_, new_doc=False):
                                                        my_type,
                                                        self.id)
 
+    changed_field_handler = {
+        "analysis": skip_change_handler,
+        "bucket_list": bucket_list_change_handler,
+        "campaign": campaign_change_handler,
+        "source": source_change_handler,
+        "tickets": tickets_change_handler,
+    }
+
+    for changed_field in changed_fields:
+
+        # Fields may be fully qualified, e.g. source.1.instances.0.reference
+        # So, split on the '.' character and get the root of the changed field
+        base_changed_field = changed_field.split('.')[0]
+
+        new_value = getattr(self, base_changed_field, '')
+        old_obj = class_from_id(my_type, self.id)
+        old_value = getattr(old_obj, base_changed_field, '')
+
+#        print "new " + base_changed_field + " value: " + str(new_value)
+#        print "old " + base_changed_field + " value: " + str(old_value)
+
+        if base_changed_field in changed_field_handler:
+            change_message = changed_field_handler.get(base_changed_field)(old_value, new_value, changed_field)
+
+            if change_message is not None:
+                message += "<br/>" + change_message
+        else:
+            change_message = generic_single_field_change_handler(old_value, new_value, changed_field)
+
+            if change_message is not None:
+                message += "<br/>" + change_message
+
     if my_type in field_dict:
-        n = Notification()
-        n.analyst = username
-        if my_type == 'Comment':
-            n.obj_id = self.obj_id
-            n.obj_type = self.obj_type
-            n.notification = "%s added a comment." % username
+        create_notification(self, username, message, my_type)
+
+def generic_single_field_change_handler(old_value, new_value, changed_field):
+    return "%s changed from \"%s\" to \"%s\"" % (changed_field, old_value, new_value)
+
+
+def generic_list_change_handler(old_value, new_value, changed_field):
+    removed_names = [x for x in old_value if x not in new_value and x != '']
+    added_names = [x for x in new_value if x not in old_value and x != '']
+
+    message = ""
+    if len(added_names) > 0:
+        message += "Added to %s: %s. " % (changed_field, str(', '.join(added_names)))
+    if len(removed_names) > 0:
+        message += "Removed from %s: %s. " % (changed_field, str(', '.join(removed_names)))
+
+    return message
+
+def bucket_list_change_handler(old_value, new_value, changed_field):
+    return generic_list_change_handler(old_value, new_value, changed_field)
+
+def flatten_objects_to_list(objects, key):
+    return_list = []
+
+    for object in objects:
+        return_list.append(object[key])
+
+    return return_list
+
+def tickets_change_handler(old_value, new_value, changed_field):
+    old_tickets_list = flatten_objects_to_list(old_value, 'ticket_number')
+    new_tickets_list = flatten_objects_to_list(new_value, 'ticket_number')
+
+    return generic_list_change_handler(old_tickets_list, new_tickets_list, changed_field)
+
+def get_changed_object_list(old_objects, new_objects, object_key):
+    changed_objects = {}
+
+    # Try and detect which objects have changed
+    for old_source in old_objects:
+        if old_source not in new_objects:
+            if old_source[object_key] not in changed_objects:
+                changed_objects[old_source[object_key]] = {'old': old_source}
+            else:
+                changed_objects[old_source[object_key]]['old'] = old_source
+
+    for new_source in new_objects:
+        if new_source not in old_objects:
+            if new_source[object_key] not in changed_objects:
+                changed_objects[new_source[object_key]] = {'new': new_source}
+            else:
+                changed_objects[new_source[object_key]]['new'] = new_source
+
+    return changed_objects
+
+def parse_generic_change_object_list(change_dictionary, field_name, object_key):
+
+    message = ""
+
+    for changed_key_name in change_dictionary:
+        old_value = change_dictionary[changed_key_name].get('old')
+        new_value = change_dictionary[changed_key_name].get('new')
+
+        if old_value is not None and new_value is not None:
+            message += "%s %s modified: %s\n" % (field_name, object_key, changed_key_name)
+        elif old_value is not None and new_value is None:
+            message += "%s %s removed: %s\n" % (field_name, object_key, changed_key_name)
+        elif old_value is None and new_value is not None:
+            message += "%s %s added: %s\n" % (field_name, object_key, changed_key_name)
         else:
-            n.notification = message
-            n.obj_id = self.id
-            n.obj_type = my_type
-        if hasattr(self, 'source'):
-            sources = [s.name for s in self.source]
-            n.users = get_subscribed_users(n.obj_type, n.obj_id, sources)
-        else:
-            n.users = []
-        if my_type == 'Comment':
-            for u in self.users:
-                if u not in n.users:
-                    n.users.append(u)
-        # don't notify the user creating this notification
-        n.users = [u for u in n.users if u != username]
-        if not len(n.users):
-            return
-        try:
-            n.save()
-        except ValidationError:
-            pass
+            message += "Unknown operation on %s %s: %s\n" % (field_name, object_key, changed_key_name)
+
+    return message
+
+def campaign_change_handler(old_value, new_value, changed_field):
+    changed_sources = get_changed_object_list(old_value, new_value, 'name')
+    message = parse_generic_change_object_list(changed_sources, changed_field, 'name')
+
+    return message
+
+def source_change_handler(old_value, new_value, changed_field):
+    changed_sources = get_changed_object_list(old_value, new_value, 'name')
+    message = parse_generic_change_object_list(changed_sources, changed_field, 'name')
+
+    return message
+
+def skip_change_handler(old_value, new_value, changed_field):
+    return None
 
 def ticket_add(type_, id_, ticket):
     """

@@ -1395,4 +1395,95 @@ $(document).ready(function() {
             }
         });
     });
+
+    function generate(layout) {
+        console.log("generate: " + layout)
+        var n = noty({
+            text        : layout,
+            type        : 'alert',
+            dismissQueue: true,
+            layout      : layout,
+            theme       : 'defaultTheme'
+        });
+        console.log('html: ' + n.options.id);
+    }
+
+    function generateAll() {
+        generate('bottomRight');
+    }
+
+    function generateContainer(container, type, message) {
+
+        if(typeof message === 'undefined') {
+            message = type + ' for: ' + container
+        }
+
+        var n = $(container).noty({
+            text        : message,
+            type        : type,
+            dismissQueue: true,
+            layout      : 'topCenter',
+            theme       : 'defaultTheme',
+            maxVisible  : 10,
+            closeWith   : ['button'],
+        });
+
+        console.log('html: ' + n.options.id);
+        console.log(message);
+    }
+
+    function generateContainerAll() {
+        generateContainer('div#notifications', 'alert');
+    }
+
+    $("#noty-bottom-right").click(function() {
+        generate('bottomRight');
+    });
+
+    $("#noty-custom-container").click(function() {
+        generateContainer('div#notifications', 'alert');
+    });
+
+    (function poll(date_param) {
+        var newer_than = null;
+
+        if(typeof date_param !== "undefined" && date_param !== "") {
+            newer_than = date_param;
+        }
+
+        $.ajax({
+            url: notifications_url,
+            timeout: 120000,
+            dataType: "json",
+            type: "POST",
+            data: {newer_than: newer_than},
+            success: function (data) {
+                console.log(data);
+
+                var notifications = data['notifications'];
+                newest_notification = data['newest_notification'];
+
+                if(newest_notification !== null) {
+                    newer_than = newest_notification;
+                }
+
+                for(var counter = 0; counter < notifications.length; counter++) {
+                    var message = "";
+
+                    var notification = notifications[counter];
+
+                    if("header" in notification) {
+                        message = "<u>" + notification['header'] + "</u><br/><a href=\"" + notification['link'] + "\">" + notification['message'] + "</a>";
+                    }
+
+                    generateContainer('div#notifications', 'alert', message);
+                }
+            },
+            complete: function() {
+                // throttle a little bit before polling again
+                console.log("newer_than: " + newer_than)
+                setTimeout(poll, 1000, newer_than);
+            },
+        });
+    })();
 }); //document.ready

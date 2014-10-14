@@ -1,4 +1,6 @@
 from bson.objectid import ObjectId
+from django.core.urlresolvers import reverse
+
 
 def class_from_id(type_, _id):
     """
@@ -105,6 +107,19 @@ def class_from_id(type_, _id):
         return UserRole.objects(id=_id).first()
     else:
         return None
+
+def details_url_from_obj(obj):
+    """
+    Generic function that generates a details url for a mongo object.
+    """
+
+    mapper = obj._meta['jtable_opts']
+
+    details_url = mapper['details_url']
+    details_url_key = mapper['details_url_key']
+
+    # TODO: Validate that this works for every object.
+    return reverse(details_url, args=(unicode(obj[details_url_key]),))
 
 def class_from_value(type_, value):
     """

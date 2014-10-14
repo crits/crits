@@ -1,4 +1,7 @@
 from crits.notifications.notification import Notification
+from mongoengine.queryset import Q
+
+import threading
 
 def get_notifications_for_id(username, obj_id, obj_type):
     """
@@ -71,7 +74,7 @@ def remove_user_notifications(username):
     Notification.objects(users=username).update(pull__users=username)
 
 
-def get_user_notifications(username, count=False):
+def get_user_notifications(username, count=False, newer_than=None):
     """
     Get the notifications for a user.
 
@@ -81,9 +84,42 @@ def get_user_notifications(username, count=False):
     :type count:bool
     :returns: int, :class:`crits.core.crits_mongoengine.CritsQuerySet`
     """
+    n = None
 
-    n = Notification.objects(users=username).order_by('-created')
+    if newer_than is None or newer_than == None:
+        n = Notification.objects(users=username).order_by('-created')
+    else:
+        n = Notification.objects(Q(users=username) & Q(created__gt=newer_than)).order_by('-created')
+
     if count:
         return len(n)
     else:
         return n
+
+class NotificationLockManager(object):
+    """
+    Manager class to handle locks for notifications.
+    """
+    __notification_mutex__ = threading.Lock()
+    __notification_locks__ = {}
+
+    @classmethod
+    def get_notification_lock(cls, username):
+        """
+        @Threadsafe
+
+        Gets a notification lock for the specified user, if it doesn't exist
+        then one is created.
+        """
+
+        if username not in cls.__notification_locks__:
+            # notification lock doesn't exist for user, create new lock
+            cls.__notification_mutex__.acquire()
+            try:
+                # safe double checked locking
+                if username not in cls.__notification_locks__:
+                    cls.__notification_locks__[username] = threading.Condition()
+            finally:
+                cls.__notification_mutex__.release()
+
+        return cls.__notification_locks__.get(username)

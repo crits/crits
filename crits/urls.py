@@ -37,6 +37,9 @@ urlpatterns = patterns('',
         # IPs
         (r'^ips/', include('crits.ips.urls')),
 
+        # Notifications
+        (r'^notifications/', include('crits.notifications.urls')),
+
         # Objects
         (r'^objects/', include('crits.objects.urls')),
 
