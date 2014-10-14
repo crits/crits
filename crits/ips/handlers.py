@@ -1,6 +1,8 @@
 import json
 
+from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.core.validators import validate_ipv4_address, validate_ipv6_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -353,6 +355,17 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
               "message" (str),
               "object" (if successful) :class:`crits.ips.ip.IP`
     """
+
+    if "Address - ipv4" in ip_type:
+        try:
+            validate_ipv4_address(ip_address)
+        except ValidationError:
+            return {"success" : False, "message" : "Invalid IPv4 address. "}
+    elif "Address - ipv6" in ip_type:
+        try:
+            validate_ipv6_address(ip_address)
+        except ValidationError:
+            return {"success" : False, "message" : "Invalid IPv6 address. "}
 
     retVal = {}
     is_item_new = False

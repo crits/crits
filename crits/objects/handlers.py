@@ -1,6 +1,8 @@
 from hashlib import md5
 
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_ipv4_address, validate_ipv6_address
 from django.template.loader import render_to_string
 from django.template import RequestContext
 from mongoengine.base import ValidationError
@@ -295,8 +297,17 @@ def add_object(type_, oid, object_type, name, source, method,
             return results
 
     if name == "URL" and "://" not in value.split('.')[0]:
-        results = {"success" : False, "message" : "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://)"}
-        return results
+        return {"success" : False, "message" : "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://)"}
+    elif object_type == "Address" and "ipv4" in name:
+        try:
+            validate_ipv4_address(value)
+        except DjangoValidationError:
+            return {"success" : False, "message" : "Invalid IPv4 address. "}
+    elif object_type == "Address" and "ipv6" in name:
+        try:
+            validate_ipv6_address(value)
+        except DjangoValidationError:
+            return {"success" : False, "message" : "Invalid IPv6 address. "}
 
     try:
         cur_len = len(obj.obj)
