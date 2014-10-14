@@ -363,6 +363,9 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     valid_campaigns = {}
     for c in Campaign.objects(active='on'):
         valid_campaigns[c['name'].lower().replace(' - ', '-')] = c['name']
+    valid_actions = {}
+    for a in IndicatorAction.objects(active='on'):
+        valid_actions[a['name'].lower().replace(' - ', '-')] = a['name']
     valid_ind_types = {}
     for obj in ObjectType.objects(datatype__enum__exists=False, datatype__file__exists=False):
         if obj['object_type'] == obj['name']:
@@ -395,6 +398,13 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
             ind['campaign_confidence'] = get_verified_field(d, valid_campaign_confidence,
                                                             'Campaign Confidence',
                                                             default='low')
+        actions = d.get('Action', '')
+        if actions:
+            actions = get_verified_field(actions.split(','), valid_actions)
+            if not actions:
+                result['success'] = False
+                result_message += "Cannot process row %s: Invalid Action<br />" % processed
+                continue
         ind['confidence'] = get_verified_field(d, valid_ratings, 'Confidence',
                                                default='unknown')
         ind['impact'] = get_verified_field(d, valid_ratings, 'Impact',
@@ -408,7 +418,19 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, str(e))
             continue
-        if not response['success']:
+        if response['success']:
+            if actions:
+                action = {'active': 'on',
+                          'analyst': username,
+                          'begin_date': '',
+                          'end_date': '',
+                          'performed_date': '',
+                          'reason': '',
+                          'date': datetime.datetime.now()}
+                for action_type in actions:
+                    action['action_type'] = action_type
+                    action_add(response.get('objectid'), action)
+        else:
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, response['message'])
             continue
