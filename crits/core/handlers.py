@@ -4167,7 +4167,7 @@ def get_bucket_autocomplete(term):
     return HttpResponse(json.dumps(buckets, default=json_handler),
                         content_type='application/json')
 
-def get_role_details(rid, analyst):
+def get_role_details(rid, roles, analyst):
     """
     Generate the data to render the Role details template.
 
@@ -4179,26 +4179,77 @@ def get_role_details(rid, analyst):
     """
 
     template = None
-    role = Role.objects(id=rid).first()
-    if not role or role.name == "UberAdmin":
-        error = ("Either this Role does not exist or you do "
-                 "not have permission to view it.")
-        template = "error.html"
-        args = {'error': error}
-        return template, args
+    if rid:
+        role = Role.objects(id=rid).first()
+        if not role or role.name == "UberAdmin":
+            error = ("Either this Role does not exist or you do "
+                    "not have permission to view it.")
+            template = "error.html"
+            args = {'error': error}
+            return template, args
+        show_roles = None
+    if roles:
+        if isinstance(roles, basestring):
+            roles = roles.split(',')
+            roles = [r.strip() for r in roles]
+        tmp = CRITsUser()
+        tmp.roles = roles
+        role = tmp.get_access_list()
+        rid = None
+        show_roles = roles
 
     do_not_render = ['_id', 'schema_version']
 
     from crits.core.forms import RoleSourceEdit
-    d = {'sources': [s.name for s in role.sources]}
+    d = {'sources': [s['name'] for s in role['sources']]}
     source_form = RoleSourceEdit(initial=d)
 
     args = {'role': role.to_dict(),
             'do_not_render': do_not_render,
             'source_form': source_form,
+            'show_roles': show_roles,
             "rid": rid}
 
     return template, args
+
+def edit_role_name(rid, old_name, name, analyst):
+    """
+    Edit the name of a Role.
+
+    :param rid: The ObjectId of the role to alter.
+    :type rid: str
+    :param old_name: The name of the Role.
+    :type old_name: str
+    :param name: The new name of the Role.
+    :type name: str
+    :param analyst: The user making the change.
+    :type analyst: str
+    """
+
+    name = name.strip()
+    if old_name != "UberAdmin" and name != "UberAdmin":
+        Role.objects(id=rid, name__ne="UberAdmin").update_one(set__name=name)
+        CRITsUser.objects(roles=old_name).update(set__roles__S=name)
+        return {'success': True}
+    else:
+        return {'success': False}
+
+def edit_role_description(rid, description, analyst):
+    """
+    Edit the description of a role.
+
+    :param rid: The ObjectId of the role to alter.
+    :type rid: str
+    :param description: The new description for the Role.
+    :type description: str
+    :param analyst: The user making the change.
+    :type analyst: str
+    """
+
+    description = description.strip()
+    Role.objects(id=rid,
+                 name__ne="UberAdmin").update_one(set__description=description)
+    return {'success': True}
 
 def add_role_source(rid, name, analyst):
     """

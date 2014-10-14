@@ -1,0 +1,11 @@
+{% load url from future %}
+
+{% if user_role %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Role Combinator">
+  <form id="form-{{ request.GET.dialog }}" action='{% url "crits.core.views.role_details" %}' method='POST' enctype="multipart/form-data" item-type="" data-special="combinator">
+    <table class="form">{{ role_combine_preview.as_table }}</table>
+  </form>
+</div>
+
+{% endif %}

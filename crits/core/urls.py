@@ -41,10 +41,13 @@ urlpatterns = patterns('',
     (r'^roles/list/$', 'crits.core.views.roles_listing'),
     (r'^roles/add/$', 'crits.core.views.role_add'),
     (r'^roles/details/(?P<rid>\S+)/$', 'crits.core.views.role_details'),
+    (r'^roles/details/$', 'crits.core.views.role_details'),
     (r'^roles/update/$', 'crits.core.views.role_value_change'),
     (r'^roles/graph/$', 'crits.core.views.role_graph'),
     (r'^roles/add_source/$', 'crits.core.views.role_add_source'),
     (r'^roles/remove_source/$', 'crits.core.views.role_remove_source'),
+    (r'^roles/update_name/$', 'crits.core.views.update_role_name'),
+    (r'^roles/update_description/$', 'crits.core.views.update_role_description'),
     (r'^get_item_data/$', 'crits.core.views.get_item_data'),
 
     # Default landing page

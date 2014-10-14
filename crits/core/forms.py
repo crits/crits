@@ -6,6 +6,7 @@ from django.forms.widgets import HiddenInput, SelectMultiple
 
 from crits.core import form_consts
 from crits.core.handlers import get_source_names, get_item_names, ui_themes
+from crits.core.role import Role
 from crits.core.user_role import UserRole
 from crits.core.user_tools import get_user_organization
 from crits.config.config import CRITsConfig
@@ -296,6 +297,24 @@ class RoleSourceEdit(forms.Form):
                                            c.name) for c in get_source_names(False,
                                                                              False,
                                                                              None)]
+
+
+class RoleCombinePreview(forms.Form):
+    """
+    Django form to preview Role combinations.
+    """
+
+    roles = forms.MultipleChoiceField(required=False,
+                                      widget=SelectMultiple(attrs={'class':'multiselect',
+                                                                   'style': 'height: auto;'}))
+    error_css_class = 'error'
+    required_css_class = 'required'
+
+    def __init__(self, *args, **kwargs):
+        super(RoleCombinePreview, self).__init__(*args, **kwargs)
+        self.fields['roles'].choices = [(c.name,
+                                         c.name) for c in get_item_names(Role,
+                                                                         True)]
 
 
 class SourceForm(forms.Form):

@@ -321,6 +321,12 @@ function addEditSubmit(e) {
     }
     var form = dialog.find("form");
 
+    // Find special for forms that want unique actions.
+    var special = form.attr('data-special');
+    if (special == 'combinator') {
+        form.submit();
+    }
+
     var type = form.attr('item-type');
     if (!type)
     log("Form (" + form.attr('id') + ") should have a defined item-type");
@@ -847,7 +853,6 @@ $(document).ready(function() {
 // Some dialog specific callacks below
 //
 
-
 function releasability_add_submit(e) {
     var widget = $(e.currentTarget);
     var dialog;
@@ -1058,6 +1063,7 @@ var stdDialogs = {
       "exploit_add": {title: "Exploit"},
       "source_create": {title: "Source"},
       "user_role": {title: "User Role"},
+      "role_combine_preview": {title: "Role Combinator"},
       "new-role": {title: "Role", open: new_role_dialog},
 
       "campaign-add": { title: "Assign Campaign", personas: {

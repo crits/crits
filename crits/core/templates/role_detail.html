@@ -11,8 +11,15 @@
     var role_add_source = "{% url 'crits.core.views.role_add_source' %}";
     var role_remove_source = "{% url 'crits.core.views.role_remove_source' %}";
     var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
+    var update_role_name = "{% url 'crits.core.views.update_role_name' %}";
+    var update_role_description = "{% url 'crits.core.views.update_role_description' %}";
     var rid = "{{ rid }}";
     var do_copy = false;
+    {% if show_roles %}
+        var no_submit = true;
+    {% else %}
+        var no_submit = false;
+    {% endif %}
 </script>
 <style>
     table.vertical tr td {
@@ -55,6 +62,24 @@
     <li><a href="#target_section" id="ttarget_button"><span>Target</span></a></li>
     </ul>
 <div id="general_section">
+    {% if show_roles %}
+    <div>
+        <h3>Role Combination Preview for: 
+            {% for r in show_roles %}
+                {% if forloop.last %}
+                    {{ r }}
+                {% else %}
+                    {{ r }}, 
+                {% endif %}
+            {% endfor %}
+        </h3>
+        <span>Note: This view is read-only and meant as an informative
+            representation of what combining these rules would grant access to
+            for any users assigned to the combination of these roles.
+        </span>
+        <br /><br />
+    </div>
+    {% endif %}
     <div style="float: right;">
         <table class="form" id="role_source_table">
             {{ source_form.as_table }}

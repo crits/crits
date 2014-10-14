@@ -28,7 +28,7 @@ from crits.core.crits_mongoengine import RelationshipType
 from crits.core.data_tools import json_handler
 from crits.core.forms import SourceAccessForm, AddSourceForm, AddUserRoleForm
 from crits.core.forms import SourceForm, DownloadFileForm, AddReleasabilityForm
-from crits.core.forms import TicketForm, AddRoleForm
+from crits.core.forms import TicketForm, AddRoleForm, RoleCombinePreview
 from crits.core.handlers import add_releasability, add_releasability_instance
 from crits.core.handlers import remove_releasability, remove_releasability_instance
 from crits.core.handlers import add_new_source, generate_counts_jtable
@@ -52,6 +52,7 @@ from crits.core.handlers import generate_favorites_jtable, generate_roles_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
 from crits.core.handlers import add_new_role, render_role_graph
 from crits.core.handlers import add_role_source, remove_role_source
+from crits.core.handlers import edit_role_description, edit_role_name
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, is_admin, user_sources
@@ -1097,6 +1098,7 @@ def base_context(request):
         base_context['campaign_form'] = CampaignForm()
         base_context['add_raw_data_type'] = NewRawDataTypeForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
+        base_context['role_combine_preview'] = RoleCombinePreview()
         base_context['source_access'] = SourceAccessForm()
         base_context['upload_tlds'] = TLDUpdateForm()
         base_context['user_role_add'] = AddUserRoleForm()
@@ -1804,7 +1806,7 @@ def toggle_item_active(request):
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)
-def role_details(request, rid):
+def role_details(request, rid=None):
     """
     Generate Role details template.
 
@@ -1815,9 +1817,14 @@ def role_details(request, rid):
     :returns: :class:`django.http.HttpResponse`
     """
 
+    # Silly Django :(
+    try:
+        roles = request.POST.getlist('roles', None)
+    except:
+        roles = None
     analyst = request.user.username
     template = "role_detail.html"
-    (new_template, args) = get_role_details(rid, analyst)
+    (new_template, args) = get_role_details(rid, roles, analyst)
     if new_template:
         template = new_template
     return render_to_response(template,
@@ -1868,6 +1875,57 @@ def role_add_source(request):
             result = {'success': False}
         else:
             result = add_role_source(rid, name, analyst)
+        return HttpResponse(json.dumps(result), mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def update_role_name(request):
+    """
+    Update a Role name. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        rid = request.POST.get('rid', None)
+        name = request.POST.get('name', None)
+        old_name = request.POST.get('old_name', None)
+        analyst = request.user.username
+        if not rid or not name:
+            result = {'success': False}
+        else:
+            result = edit_role_name(rid, old_name, name, analyst)
+        return HttpResponse(json.dumps(result), mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def update_role_description(request):
+    """
+    Update a Role description. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        rid = request.POST.get('rid', None)
+        description = request.POST.get('description', None)
+        analyst = request.user.username
+        if not rid or not description:
+            result = {'success': False}
+        else:
+            result = edit_role_description(rid, description, analyst)
         return HttpResponse(json.dumps(result), mimetype="application/json")
     else:
         error = "Expected AJAX POST"

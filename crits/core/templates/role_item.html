@@ -7,10 +7,10 @@
             {% if k == "active" %}
             <a id="is_active_{{rid}}" href="#" onclick="javascript:toggleItemActive('Role', '{{rid}}');">{{v}}</a>
             {% elif k == "name" %}
-                <span>{{ v }}</span>
+                <span id="role_name" class="edit_underline">{{ v }}</span>
                 <span id="copy_role"><a href id="new-role" class="copy_role add dialogClick" dialog="new-role" persona="new" title="Add Role">Copy Role</a></span>
             {% elif k == "description" %}
-                <span class="edit_underline">{{v}}</span>
+                <span id="role_description" class="edit_underline">{{v}}</span>
             {% elif k == "sources" %}
                 Make this an interface: {{v}}
             {% elif v %}
