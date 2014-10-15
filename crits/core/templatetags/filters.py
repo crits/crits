@@ -197,3 +197,18 @@ def is_tlo(value):
         return True
     else:
         return False
+
+@register.filter
+def has_access_to(acl, user):
+    """
+    A filter that allows us to check Role access from template-land. Example:
+
+        {% if "add_new_source"|has_access_to:user %}
+        ...
+        {% endif %}
+
+    This passes the user object to this filter allowing us to access the
+    .has_access_to() function, and pass "add_new_source" to that function to
+    determine if the user has access to that.
+    """
+    return user.has_access_to(acl)
