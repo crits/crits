@@ -62,6 +62,22 @@ def remove_user_from_notification(username, obj_id, obj_type):
                          obj_type=obj_type).update(pull__users=username)
     return {'success': True}
 
+def remove_user_from_notification_id(username, id):
+    """
+    Remove a user from the list of users for a notification.
+
+    :param username: The user to remove.
+    :type username: str
+    :param obj_id: The ObjectId of the top-level object for this notification.
+    :type obj_id: str
+    :param obj_type: The top-level object type.
+    :type obj_type: str
+    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
+    """
+
+    Notification.objects(id=id).update(pull__users=username)
+    return {'success': True}
+
 def remove_user_notifications(username):
     """
     Remove a user from all notifications.

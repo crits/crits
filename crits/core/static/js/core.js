@@ -1396,7 +1396,7 @@ $(document).ready(function() {
         });
     });
 
-    var notificationsList = {};
+    var notyIDToNotyDict = {};
 
     function generateContainerNoty(container, type, message, id) {
 
@@ -1441,11 +1441,25 @@ $(document).ready(function() {
                         // closed, so hide the close notifications box.
                         $("#close_notifications").hide();
                     }
+
+                    if(n.options.id in notyIDToNotyDict) {
+                        var notyToDelete = notyIDToNotyDict[n.options.id];
+                        var idToDelete = notyToDelete['mongoID'];
+
+                        $.ajax({
+                            url: notifications_ack_url,
+                            dataType: "json",
+                            type: "POST",
+                            data: {id: idToDelete},
+                        });
+
+                        delete notyIDToNotyDict[n.options.id];
+                    }
                 },
             },
         });
 
-        notificationsList[id] = n;
+        notyIDToNotyDict[n.options.id] = {'noty': n, 'mongoID': id};
     }
 
     if(typeof notifications_url !== "undefined") {
@@ -1473,7 +1487,7 @@ $(document).ready(function() {
                         newer_than = newest_notification;
                     }
 
-                    for(var counter = 0; counter < notifications.length; counter++) {
+                    for(var counter = notifications.length - 1; counter >= 0 ; counter--) {
                         var message = "";
 
                         var notification = notifications[counter];

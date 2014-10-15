@@ -4,10 +4,8 @@ from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
 
 from crits.core.class_mapper import class_from_id, details_url_from_obj
-
-from crits.notifications.handlers import get_user_notifications
 from crits.core.user_tools import user_can_view_data
-
+from crits.notifications.handlers import get_user_notifications, remove_user_from_notification_id
 from crits.notifications.handlers import NotificationLockManager
 
 
@@ -62,6 +60,7 @@ def poll(request):
             "message": notification.notification,
             "time_ago": "just now",
             "link": details_url,
+            "id": str(notification.id),
         }
 
         notifications_list.append(notification_data)
@@ -70,8 +69,26 @@ def poll(request):
                                     'newest_notification': latest_notification}),
                         mimetype="application/json")
 
-def generate_notification_header(obj, time_ago):
+@user_passes_test(user_can_view_data)
+def acknowledge(request):
+    """
+    Called to indicate a user acknowledgment of a specific notification.
+    Users that acknowledge notifications will remove the user from
+    that notification listing.
+    """
 
+    id = request.POST.get("id", None)
+
+    remove_user_from_notification_id(request.user.username, id)
+
+    return HttpResponse(json.dumps({}),
+                        mimetype="application/json")
+
+def generate_notification_header(obj, time_ago):
+    """
+    Generates notification header information based upon the object -- this is
+    used to preface the notification's context.
+    """
 
     type = obj._meta['crits_type']
 
