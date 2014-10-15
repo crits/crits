@@ -76,4 +76,6 @@ def generate_notification_header(obj, time_ago):
     type = obj._meta['crits_type']
 
     if type == "Domain":
-        return "Domain: %s (%s)" % (obj.domain, time_ago)
+        return "Domain: %s" % (obj.domain)
+    else:
+        return "%s: %s" % (type, str(obj.id))

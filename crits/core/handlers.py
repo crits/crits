@@ -3755,7 +3755,7 @@ def audit_entry(self, username, type_, new_doc=False):
     # don't audit audits
     if my_type in ("AuditLog", "Service"):
         return
-    changed_fields = [f for f in self._get_changed_fields() if f not in ("modified",
+    changed_fields = [f.split('.')[0] for f in self._get_changed_fields() if f not in ("modified",
                                                                   "save",
                                                                   "delete")]
 
@@ -3837,12 +3837,12 @@ def audit_entry(self, username, type_, new_doc=False):
 #        print "old " + base_changed_field + " value: " + str(old_value)
 
         if base_changed_field in changed_field_handler:
-            change_message = changed_field_handler.get(base_changed_field)(old_value, new_value, changed_field)
+            change_message = changed_field_handler.get(base_changed_field)(old_value, new_value, base_changed_field)
 
             if change_message is not None:
                 message += "<br/>" + change_message
         else:
-            change_message = generic_single_field_change_handler(old_value, new_value, changed_field)
+            change_message = generic_single_field_change_handler(old_value, new_value, base_changed_field)
 
             if change_message is not None:
                 message += "<br/>" + change_message

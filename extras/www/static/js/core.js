@@ -1396,7 +1396,9 @@ $(document).ready(function() {
         });
     });
 
-    function generateContainerNoty(container, type, message) {
+    var notificationsList = {};
+
+    function generateContainerNoty(container, type, message, id) {
 
         if(typeof message === 'undefined') {
             message = type + ' for: ' + container
@@ -1410,46 +1412,90 @@ $(document).ready(function() {
             theme       : 'defaultTheme',
             maxVisible  : 10,
             closeWith   : ['button'],
-        });
-    }
+            callback: {
+                onShow: function() {
+                    var $closeNotifications = $("#close_notifications");
 
-    (function poll(date_param) {
-        var newer_than = null;
+                    if($closeNotifications.length === 0) {
+                        $("#notifications").append('<div id="close_notifications" class="noty_message">[Close All]</div>');
 
-        if(typeof date_param !== "undefined" && date_param !== "") {
-            newer_than = date_param;
-        }
+                        $("#close_notifications").click(function() {
+                            $.noty.closeAll();
+                            $("#close_notifications").hide();
+                        });
 
-        $.ajax({
-            url: notifications_url,
-            timeout: 120000,
-            dataType: "json",
-            type: "POST",
-            data: {newer_than: newer_than},
-            success: function (data) {
-                var notifications = data['notifications'];
-                newest_notification = data['newest_notification'];
-
-                if(newest_notification !== null) {
-                    newer_than = newest_notification;
-                }
-
-                for(var counter = 0; counter < notifications.length; counter++) {
-                    var message = "";
-
-                    var notification = notifications[counter];
-
-                    if("header" in notification) {
-                        message = "<u>" + notification['header'] + "</u><br/><a href=\"" + notification['link'] + "\">" + notification['message'] + "</a>";
+                    } else {
+                        // move the close notifications to the bottom, because
+                        // it will reset to the top after all the notifications
+                        // have been closed.
+                        $closeNotifications.parent().append($closeNotifications)
+                        $("#close_notifications").show();
                     }
 
-                    generateContainerNoty('div#notifications', 'alert', message);
-                }
-            },
-            complete: function() {
-                // throttle a little bit before polling again
-                setTimeout(poll, 3000, newer_than);
+                },
+                onClose: function(self) {
+                    var notifications_li = $("#notifications > ul > li");
+
+                    if(notifications_li.length === 1) {
+                        // this means that all the notifications have been
+                        // closed, so hide the close notifications box.
+                        $("#close_notifications").hide();
+                    }
+                },
             },
         });
-    })();
+
+        notificationsList[id] = n;
+    }
+
+    if(typeof notifications_url !== "undefined") {
+        (function poll(date_param) {
+            var newer_than = null;
+
+            if(typeof date_param !== "undefined" && date_param !== "") {
+                newer_than = date_param;
+            }
+
+            // the default timeout to throttle polling attempts.
+            var timeout = 3000;
+
+            $.ajax({
+                url: notifications_url,
+                timeout: 120000,
+                dataType: "json",
+                type: "POST",
+                data: {newer_than: newer_than},
+                success: function (data) {
+                    var notifications = data['notifications'];
+                    newest_notification = data['newest_notification'];
+
+                    if(newest_notification !== null) {
+                        newer_than = newest_notification;
+                    }
+
+                    for(var counter = 0; counter < notifications.length; counter++) {
+                        var message = "";
+
+                        var notification = notifications[counter];
+                        var id = notification['id'];
+
+                        if("header" in notification) {
+                            message = "<u>" + notification['header'] + "</u><br/><a href=\"" + notification['link'] + "\">" + notification['message'] + "</a>";
+                        }
+
+                        generateContainerNoty('div#notifications', 'alert', message, id);
+                    }
+                },
+                error: function(data) {
+                    // if an error occurred then give the server much more time
+                    // to try and recover from the error before reattempting.
+                    timeout = 60000;
+                },
+                complete: function() {
+                    // throttle a little bit before polling again
+                    setTimeout(poll, timeout, newer_than);
+                },
+            });
+        })();
+    }
 }); //document.ready
