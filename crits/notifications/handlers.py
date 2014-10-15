@@ -1,7 +1,59 @@
-from crits.notifications.notification import Notification
 from mongoengine.queryset import Q
 
+from crits.core.class_mapper import class_from_id, details_url_from_obj
+from crits.notifications.notification import Notification
+
 import threading
+
+
+def get_notification_details(username, newer_than):
+    notifications_list = []
+    notifications = None
+    latest_notification = None
+    lock = NotificationLockManager.get_notification_lock(username)
+
+    # Critical section, check if there are notifications to be consumed.
+    lock.acquire()
+    try:
+        notifications = get_user_notifications(username, newer_than=newer_than)
+
+        if len(notifications) > 0:
+            latest_notification = str(notifications[0].created)
+        else:
+            lock.wait(60)
+
+            # lock was released, check if there is any new information yet
+            notifications = get_user_notifications(username, newer_than=newer_than)
+
+            if len(notifications) > 0:
+                latest_notification = str(notifications[0].created)
+    finally:
+        lock.release()
+
+    for notification in notifications:
+        obj = class_from_id(notification.obj_type, notification.obj_id)
+        details_url = details_url_from_obj(obj)
+
+        # TODO Pass back the current server time back to the client
+        # so that they know how to calculate the difference in time?
+        # Alternatively we could have the server calculate it but that's
+        # resources consumed on the server side.
+        header = generate_notification_header(obj, "just now")
+
+        notification_data = {
+            "header": header,
+            "message": notification.notification,
+            "time_ago": "just now",
+            "link": details_url,
+            "id": str(notification.id),
+        }
+
+        notifications_list.append(notification_data)
+
+    return {
+        'notifications': notifications_list,
+        'newest_notification': latest_notification,
+    }
 
 def get_notifications_for_id(username, obj_id, obj_type):
     """
@@ -139,3 +191,74 @@ class NotificationLockManager(object):
                 cls.__notification_mutex__.release()
 
         return cls.__notification_locks__.get(username)
+
+def generate_actor_header(obj):
+    return "Actor: %s" % (obj.name)
+
+def generate_backdoor_header(obj):
+    return "Backdoor: %s" % (obj.name)
+
+def generate_campaign_header(obj):
+    return "Campaign: %s" % (obj.name)
+
+def generate_certificate_header(obj):
+    return "Certificate: %s" % (obj.filename)
+
+def generate_domain_header(obj):
+    return "Domain: %s" % (obj.domain)
+
+def generate_email_header(obj):
+    return "Email: %s" % (obj.subject)
+
+def generate_event_header(obj):
+    return "Event: %s" % (obj.title)
+
+def generate_indicator_header(obj):
+    return "Indicator: %s - %s" % (obj.ind_type, obj.value)
+
+def generate_ip_header(obj):
+    return "IP: %s" % (obj.ip)
+
+def generate_pcap_header(obj):
+    return "PCAP: %s" % (obj.filename)
+
+def generate_raw_data_header(obj):
+    return "RawData: %s" % (obj.title)
+
+def generate_sample_header(obj):
+    return "Sample: %s" % (obj.filename)
+
+def generate_screenshot_header(obj):
+    return "Screenshot: %s" % (obj.filename)
+
+def generate_target_header(obj):
+    return "Target: %s" % (obj.email_address)
+
+notification_header_handler = {
+    "Actor": generate_actor_header,
+    "Campaign": generate_campaign_header,
+    "Certificate": generate_certificate_header,
+    "Domain": generate_domain_header,
+    "Email": generate_email_header,
+    "Event": generate_event_header,
+    "Indicator": generate_indicator_header,
+    "IP": generate_ip_header,
+    "PCAP": generate_pcap_header,
+    "RawData": generate_raw_data_header,
+    "Sample": generate_sample_header,
+    "Screenshot": generate_screenshot_header,
+    "Target": generate_target_header,
+}
+
+def generate_notification_header(obj, time_ago):
+    """
+    Generates notification header information based upon the object -- this is
+    used to preface the notification's context.
+    """
+
+    generate_notification_header_handler = notification_header_handler.get(obj._meta['crits_type'])
+
+    if generate_notification_header_handler is not None:
+        return generate_notification_header_handler(obj)
+    else:
+        return "%s: %s" % (type, str(obj.id))

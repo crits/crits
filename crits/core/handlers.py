@@ -3776,7 +3776,7 @@ def audit_entry(self, username, type_, new_doc=False):
         'PCAP': 'md5',
         'RawData': 'title',
         'Sample': 'md5',
-        'Target': 'email_address'
+        'Target': 'email_address',
     }
     if my_type in field_dict:
         value = getattr(self, field_dict[my_type], '')
