@@ -3705,7 +3705,7 @@ def create_notification(obj, username, message, type):
                     n.users.append(subscribed_user)
                     break
     else:
-        n.users = []
+        n.users = get_subscribed_users(n.obj_type, n.obj_id, [])
 
     if type == 'Comment':
         for u in obj.users:
@@ -3833,19 +3833,20 @@ def audit_entry(self, username, type_, new_doc=False):
         old_obj = class_from_id(my_type, self.id)
         old_value = getattr(old_obj, base_changed_field, '')
 
-#        print "new " + base_changed_field + " value: " + str(new_value)
-#        print "old " + base_changed_field + " value: " + str(old_value)
-
         if base_changed_field in changed_field_handler:
             change_message = changed_field_handler.get(base_changed_field)(old_value, new_value, base_changed_field)
 
             if change_message is not None:
-                message += "<br/>" + change_message
+                # TODO remove html, possibly put messages in array format
+                message += "\n" + change_message[:1].capitalize() + change_message[1:]
         else:
             change_message = generic_single_field_change_handler(old_value, new_value, base_changed_field)
 
             if change_message is not None:
-                message += "<br/>" + change_message
+                # TODO remove html, possibly put messages in array format
+                message += "\n" + change_message[:1].capitalize() + change_message[1:]
+
+    message = html_escape(message)
 
     if my_type in field_dict:
         create_notification(self, username, message, my_type)

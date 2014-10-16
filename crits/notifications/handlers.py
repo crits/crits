@@ -1,9 +1,10 @@
+import datetime
+import threading
+
 from mongoengine.queryset import Q
 
 from crits.core.class_mapper import class_from_id, details_url_from_obj
 from crits.notifications.notification import Notification
-
-import threading
 
 
 def get_notification_details(username, newer_than):
@@ -43,8 +44,9 @@ def get_notification_details(username, newer_than):
         notification_data = {
             "header": header,
             "message": notification.notification,
-            "time_ago": "just now",
+            "date_modified": str(notification.created),
             "link": details_url,
+            "modified_by": notification.analyst,
             "id": str(notification.id),
         }
 
@@ -53,6 +55,7 @@ def get_notification_details(username, newer_than):
     return {
         'notifications': notifications_list,
         'newest_notification': latest_notification,
+        'server_time': str(datetime.datetime.now()),
     }
 
 def get_notifications_for_id(username, obj_id, obj_type):

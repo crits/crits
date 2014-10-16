@@ -787,7 +787,7 @@ $(document).ready(function() {
       //collect object types for search
       // Let's just call this when needed, until search is converted to a dynamic dialog
       if ($('select#object_s').find("option").length === 0)
-      getAllObjectTypes($('select#object_s'));
+          getAllObjectTypes($('select#object_s'));
     });
     $('.notify_enable').click(function(e) {
       e.stopPropagation();
@@ -1420,7 +1420,12 @@ $(document).ready(function() {
                         $("#notifications").append('<div id="close_notifications" class="noty_message">[Close All]</div>');
 
                         $("#close_notifications").click(function() {
-                            $.noty.closeAll();
+                            $("#notifications").find(".noty_bar").each(function() {
+                                // could do $.noty.closeAll() but it doesn't
+                                // display any of the hidden notifications
+                                // due to maxVisible limit.
+                                $.noty.close($(this).attr("id"));
+                            })
                             $("#close_notifications").hide();
                         });
 
@@ -1431,7 +1436,6 @@ $(document).ready(function() {
                         $closeNotifications.parent().append($closeNotifications)
                         $("#close_notifications").show();
                     }
-
                 },
                 onClose: function(self) {
                     var notifications_li = $("#notifications > ul > li");
@@ -1463,6 +1467,43 @@ $(document).ready(function() {
     }
 
     if(typeof notifications_url !== "undefined") {
+        var numPollFailures = 0;
+
+        var timeparts = [
+            {name: 'year', div: 31536000000, mod: 10000},
+            {name: 'day', div: 86400000, mod: 365},
+            {name: 'hour', div: 3600000, mod: 24},
+            {name: 'min', div: 60000, mod: 60},
+            {name: 'sec', div: 1000, mod: 60}
+         ];
+
+         function timeAgoFuzzy(currentDate, comparisonDate) {
+            var
+                i = 0,
+                l = timeparts.length,
+                calc,
+                result = null,
+                interval = currentDate.getTime() - comparisonDate.getTime();
+            while (i < l && result === null) {
+                calc = Math.floor(interval / timeparts[i].div) % timeparts[i].mod;
+                if (calc) {
+                    if(timeparts[i].name === 'sec' && calc < 5) {
+                        result = 'just now';
+                    }
+                    else {
+                        result = calc + ' ' + timeparts[i].name + (calc !== 1 ? 's' : '') + ' ago';
+                    }
+                }
+                i += 1;
+            }
+
+            if(result === null) {
+                result = 'just now';
+            }
+
+            return result;
+         }
+
         (function poll(date_param) {
             var newer_than = null;
 
@@ -1480,8 +1521,10 @@ $(document).ready(function() {
                 type: "POST",
                 data: {newer_than: newer_than},
                 success: function (data) {
+                    numPollFailures = 0;
                     var notifications = data['notifications'];
-                    newest_notification = data['newest_notification'];
+                    var newest_notification = data['newest_notification'];
+                    var serverTime = data['server_time'];
 
                     if(newest_notification !== null) {
                         newer_than = newest_notification;
@@ -1492,22 +1535,54 @@ $(document).ready(function() {
 
                         var notification = notifications[counter];
                         var id = notification['id'];
+                        var modifiedBy = notification['modified_by'];
+                        var dateModified = notification['date_modified'];
 
-                        if("header" in notification) {
-                            message = "<u>" + notification['header'] + "</u><br/><a href=\"" + notification['link'] + "\">" + notification['message'] + "</a>";
+                        if("message" in notification) {
+                            var formattedMessage = "";
+                            var messageSegments = notification['message'].split('\n');
+
+                            for(var i in messageSegments) {
+                                if(messageSegments[i].indexOf("updated the following attributes:") === -1 &&
+                                        messageSegments[i].indexOf("deleted the following") === -1) {
+
+                                    formattedMessage += messageSegments[i];
+
+                                    if(i < messageSegments.length - 1) {
+                                        formattedMessage += "<br>";
+                                    }
+                                }
+                            }
+
+                            message = "<a href=\"" + notification['link'] + "\">" + notification['header'] +
+                                    "</a> (by <b>" + modifiedBy + "</b> <span class='noty_modified' data-modified='" +
+                                    dateModified + "'></span>)<br/>" + formattedMessage;
+
+                            generateContainerNoty('div#notifications', 'alert', message, id);
                         }
-
-                        generateContainerNoty('div#notifications', 'alert', message, id);
                     }
+
+                    $("span.noty_modified").each(function() {
+                        var modifiedDate = new Date($(this).data("modified"));
+                        var serverDate = new Date(serverTime);
+                        var dateDifference = timeAgoFuzzy(serverDate, modifiedDate);
+
+                        $(this).text(dateDifference);
+                    });
                 },
                 error: function(data) {
                     // if an error occurred then give the server much more time
                     // to try and recover from the error before reattempting.
                     timeout = 60000;
+                    numPollFailures++;
                 },
                 complete: function() {
-                    // throttle a little bit before polling again
-                    setTimeout(poll, timeout, newer_than);
+                    // keep polling only if we haven't encountered x
+                    // consecutive failures.
+                    if(numPollFailures < 5) {
+                        // throttle a little bit before polling again
+                        setTimeout(poll, timeout, newer_than);
+                    }
                 },
             });
         })();

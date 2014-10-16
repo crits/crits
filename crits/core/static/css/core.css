@@ -16,6 +16,14 @@
     border-width: thin;
 }
 
+span.noty_modified {
+    font-style: italic;
+}
+
+.noty_message {
+    font-size: 12px !important;
+}
+
 li.sf-firstrow a.sf-level0 {
     border-width: 0;
     background-color:inherit;
