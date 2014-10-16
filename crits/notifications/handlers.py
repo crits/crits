@@ -177,19 +177,11 @@ class NotificationLockManager(object):
     @classmethod
     def get_notification_lock(cls, username):
         """
+        @threadsafe
+
         Gets a notification lock for the specified user, if it doesn't exist
         then one is created.
         """
-
-        # This locking is similar to a readers/writers problem. This will
-        # lock so that there is only a single concurrent writer at a time
-        # to the __notification_locks__ dictionary.
-        # However, there are no restrictions on readers so there could
-        # potentially be a race condition on a simultaneous read + write but
-        # this is a minor issue because:
-        #     1) Notifications are not critical.
-        #     2) Worst case is that a notification takes the entire duration
-        #        of a polling timeout before a user gets the notification.
 
         if username not in cls.__notification_locks__:
             # notification lock doesn't exist for user, create new lock
