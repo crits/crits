@@ -147,6 +147,28 @@ class PrefUIForm(forms.Form):
         self.fields['theme'].choices = [(t,
                                           t) for t in ui_themes()]
 
+class ToastNotificationConfigForm(forms.Form):
+    """
+    Django form for the user toast notifications.
+    """
+
+    error_css_class = 'error'
+    required_css_class = 'required'
+    enabled = forms.BooleanField(initial=True, required=False)
+    acknowledgement_type = forms.ChoiceField(widget=forms.Select, initial="sticky", required=False)
+    timeout = forms.IntegerField(min_value = 5, max_value = 3600, initial=30, required=False, label="Timeout (in seconds)")
+
+    def __init__(self, request, *args, **kwargs):
+        super(ToastNotificationConfigForm, self).__init__(*args, **kwargs)
+
+        prefs = request.user.prefs
+        for k in prefs.toast_notifications:
+            if k in self.fields:
+                self.fields[k].initial = prefs.toast_notifications[k]
+
+        self.fields['acknowledgement_type'].choices = [("sticky", "sticky"),
+                                                       ("timeout", "timeout")]
+
 class AddUserRoleForm(forms.Form):
     """
     Django form for adding a new user role.

@@ -3158,7 +3158,7 @@ def generate_user_preference(request,section=None,key=None,name=None):
     # Returned as an array to maintain the order
     # could also have a key/value and a ordered array
 
-    from crits.core.forms import PrefUIForm, NavMenuForm
+    from crits.core.forms import PrefUIForm, NavMenuForm, ToastNotificationConfigForm
 
     preferences = [
         {'section': 'notify',
@@ -3167,7 +3167,11 @@ def generate_user_preference(request,section=None,key=None,name=None):
          'enabled': get_user_email_notification(request.user.username),
          'name': 'Email Notifications'
          },
-
+        {'section': 'toast_notifications',
+         'title': 'Toast Notifications',
+         'form': ToastNotificationConfigForm(request),
+         'formclass': ToastNotificationConfigForm,
+        },
         {'section': 'ui',
          'title': 'UI Settings',
          'form': PrefUIForm(request),

@@ -7,11 +7,13 @@ from crits.core.class_mapper import class_from_id, details_url_from_obj
 from crits.notifications.notification import Notification
 
 
-def get_notification_details(username, newer_than):
+def get_notification_details(request, newer_than):
+    username = request.user.username
     notifications_list = []
     notifications = None
     latest_notification = None
     lock = NotificationLockManager.get_notification_lock(username)
+    timeout = 0
 
     # Critical section, check if there are notifications to be consumed.
     lock.acquire()
@@ -30,6 +32,12 @@ def get_notification_details(username, newer_than):
                 latest_notification = str(notifications[0].created)
     finally:
         lock.release()
+
+    if latest_notification is not None:
+        acknowledgement_type = request.user.get_preference('toast_notifications', 'acknowledgement_type', 'sticky')
+
+        if acknowledgement_type == 'timeout':
+            timeout = request.user.get_preference('toast_notifications', 'timeout', 30) * 1000
 
     for notification in notifications:
         obj = class_from_id(notification.obj_type, notification.obj_id)
@@ -56,6 +64,7 @@ def get_notification_details(username, newer_than):
         'notifications': notifications_list,
         'newest_notification': latest_notification,
         'server_time': str(datetime.datetime.now()),
+        'timeout': timeout,
     }
 
 def get_notifications_for_id(username, obj_id, obj_type):

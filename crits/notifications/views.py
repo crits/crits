@@ -18,7 +18,7 @@ def poll(request):
     if newer_than == "":
         newer_than = None
 
-    data = get_notification_details(request.user.username, newer_than)
+    data = get_notification_details(request, newer_than)
 
     return HttpResponse(json.dumps(data),
                         mimetype="application/json")
