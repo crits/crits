@@ -13,20 +13,26 @@ def poll(request):
 
     """
 
-    newer_than = request.POST.get("newer_than", None)
+    is_toast_enabled = request.user.get_preference('toast_notifications', 'enabled', True)
 
-    if newer_than == "":
-        newer_than = None
+    if is_toast_enabled:
+        newer_than = request.POST.get("newer_than", None)
 
-    data = get_notification_details(request, newer_than)
+        if newer_than == "":
+            newer_than = None
 
-    return HttpResponse(json.dumps(data),
-                        mimetype="application/json")
+        data = get_notification_details(request, newer_than)
+
+        return HttpResponse(json.dumps(data),
+                            mimetype="application/json")
+    else:
+        # toast notifications are not enabled for this user, return an error
+        return HttpResponse(status=403)
 
 @user_passes_test(user_can_view_data)
 def acknowledge(request):
     """
-    Called to indicate a user acknowledgment of a specific notification.
+    Called to indicate a user acknowledgement of a specific notification.
     Users that acknowledge notifications will remove the user from
     that notification listing.
     """

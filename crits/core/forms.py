@@ -155,8 +155,16 @@ class ToastNotificationConfigForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     enabled = forms.BooleanField(initial=True, required=False)
-    acknowledgement_type = forms.ChoiceField(widget=forms.Select, initial="sticky", required=False)
-    timeout = forms.IntegerField(min_value = 5, max_value = 3600, initial=30, required=False, label="Timeout (in seconds)")
+    acknowledgement_type = forms.ChoiceField(widget=forms.Select,
+                                             initial="sticky",
+                                             required=False,
+                                             label="Acknowledgement Type")
+    timeout = forms.IntegerField(min_value = 5,
+                                 max_value = 3600,
+                                 initial=30,
+                                 required=False,
+                                 label="Timeout (in seconds)",
+                                 help_text="Used only if Acknowledgement Type is set to 'timeout'")
 
     def __init__(self, request, *args, **kwargs):
         super(ToastNotificationConfigForm, self).__init__(*args, **kwargs)
