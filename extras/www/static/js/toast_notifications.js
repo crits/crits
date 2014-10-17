@@ -3,10 +3,6 @@ $(document).ready(function() {
 
     function generateContainerNoty(container, type, message, timeout, id) {
 
-        if(typeof message === 'undefined') {
-            message = type + ' for: ' + container
-        }
-
         var n = $(container).noty({
             text        : message,
             type        : type,
@@ -29,7 +25,7 @@ $(document).ready(function() {
                                 // display any of the hidden notifications
                                 // due to maxVisible limit.
                                 $.noty.close($(this).attr("id"));
-                            })
+                            });
                             $("#close_notifications").hide();
                         });
 
@@ -37,7 +33,7 @@ $(document).ready(function() {
                         // move the close notifications to the bottom, because
                         // it will reset to the top after all the notifications
                         // have been closed.
-                        $closeNotifications.parent().append($closeNotifications)
+                        $closeNotifications.parent().append($closeNotifications);
                         $("#close_notifications").show();
                     }
                 },
@@ -58,13 +54,13 @@ $(document).ready(function() {
                             url: notifications_ack_url,
                             dataType: "json",
                             type: "POST",
-                            data: {id: idToDelete},
+                            data: {id: idToDelete}
                         });
 
                         delete notyIDToNotyDict[n.options.id];
                     }
-                },
-            },
+                }
+            }
         });
 
         notyIDToNotyDict[n.options.id] = {'noty': n, 'mongoID': id};
@@ -142,6 +138,11 @@ $(document).ready(function() {
                         var id = notification['id'];
                         var modifiedBy = notification['modified_by'];
                         var dateModified = notification['date_modified'];
+                        var notificationType = notification['type'];
+
+                        if(typeof notificationType === 'undefined') {
+                            notificationType = 'alert';
+                        }
 
                         if("message" in notification) {
                             var formattedMessage = "";
@@ -159,11 +160,11 @@ $(document).ready(function() {
                                 }
                             }
 
-                            message = "<a href=\"" + notification['link'] + "\">" + notification['header'] +
+                            message = "<a href='" + notification['link'] + "' target='_blank'>" + notification['header'] +
                                     "</a> (by <b>" + modifiedBy + "</b> <span class='noty_modified' data-modified='" +
                                     dateModified + "'></span>)<br/>" + formattedMessage;
 
-                            generateContainerNoty('div#notifications', 'alert', message, dialogTimeout, id);
+                            generateContainerNoty('div#notifications', notificationType, message, dialogTimeout, id);
                         }
                     }
 
@@ -188,8 +189,8 @@ $(document).ready(function() {
                         // throttle a little bit before polling again
                         setTimeout(poll, poll_timeout, newer_than);
                     }
-                },
+                }
             });
-        })();
+        })(); // this function is executed here
     }
 }); //document.ready

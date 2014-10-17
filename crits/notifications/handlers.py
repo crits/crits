@@ -8,10 +8,21 @@ from crits.notifications.notification import Notification
 
 
 def get_notification_details(request, newer_than):
+    """
+    Generate the data to render the notification dialogs.
+
+    :param request: The Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param newer_than: A filter that specifies that only notifications
+                       newer than this time should be returned.
+    :type newer_than: str in ISODate format.
+    :returns: arguments (dict)
+    """
+
     username = request.user.username
     notifications_list = []
     notifications = None
-    latest_notification = None
+    latest_notification_time = None
     lock = NotificationLockManager.get_notification_lock(username)
     timeout = 0
 
@@ -21,19 +32,20 @@ def get_notification_details(request, newer_than):
         notifications = get_user_notifications(username, newer_than=newer_than)
 
         if len(notifications) > 0:
-            latest_notification = str(notifications[0].created)
+            latest_notification_time = str(notifications[0].created)
         else:
+            # no new notifications -- block until time expiration or lock release
             lock.wait(60)
 
             # lock was released, check if there is any new information yet
             notifications = get_user_notifications(username, newer_than=newer_than)
 
             if len(notifications) > 0:
-                latest_notification = str(notifications[0].created)
+                latest_notification_time = str(notifications[0].created)
     finally:
         lock.release()
 
-    if latest_notification is not None:
+    if latest_notification_time is not None:
         acknowledgement_type = request.user.get_preference('toast_notifications', 'acknowledgement_type', 'sticky')
 
         if acknowledgement_type == 'timeout':
@@ -42,12 +54,7 @@ def get_notification_details(request, newer_than):
     for notification in notifications:
         obj = class_from_id(notification.obj_type, notification.obj_id)
         details_url = details_url_from_obj(obj)
-
-        # TODO Pass back the current server time back to the client
-        # so that they know how to calculate the difference in time?
-        # Alternatively we could have the server calculate it but that's
-        # resources consumed on the server side.
-        header = generate_notification_header(obj, "just now")
+        header = generate_notification_header(obj)
 
         notification_data = {
             "header": header,
@@ -56,13 +63,14 @@ def get_notification_details(request, newer_than):
             "link": details_url,
             "modified_by": notification.analyst,
             "id": str(notification.id),
+            "type": "alert",
         }
 
         notifications_list.append(notification_data)
 
     return {
         'notifications': notifications_list,
-        'newest_notification': latest_notification,
+        'newest_notification': latest_notification_time,
         'server_time': str(datetime.datetime.now()),
         'timeout': timeout,
     }
@@ -180,6 +188,7 @@ class NotificationLockManager(object):
     """
     Manager class to handle locks for notifications.
     """
+
     __notification_mutex__ = threading.Lock()
     __notification_locks__ = {}
 
@@ -204,6 +213,10 @@ class NotificationLockManager(object):
 
         return cls.__notification_locks__.get(username)
 
+"""
+The following generate_*_header() functions generate a meaningful description
+for that specific object type.
+"""
 def generate_actor_header(obj):
     return "Actor: %s" % (obj.name)
 
@@ -262,10 +275,17 @@ notification_header_handler = {
     "Target": generate_target_header,
 }
 
-def generate_notification_header(obj, time_ago):
+def generate_notification_header(obj):
     """
     Generates notification header information based upon the object -- this is
     used to preface the notification's context.
+
+    Could possibly be used for "Favorites" descriptions as well.
+
+    :param obj: The top-level object instantiated class.
+    :type obj: class which inherits from
+               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`.
+    :returns: str with a human readable identification of the object
     """
 
     generate_notification_header_handler = notification_header_handler.get(obj._meta['crits_type'])

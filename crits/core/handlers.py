@@ -3683,18 +3683,31 @@ def details_from_id(type_, id_):
     else:
         return None
 
-def create_notification(obj, username, message, type):
+def create_notification(obj, username, message):
+    """
+    Generate an audit entry.
+
+    :param obj: The object.
+    :type obj: class which inherits from
+               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :param username: The user creating the notification.
+    :type username: str
+    :param message: The notification message.
+    :type message: str
+    """
+
     n = Notification()
     n.analyst = username
+    obj_type = obj._meta['crits_type']
 
-    if type == 'Comment':
+    if obj_type == 'Comment':
         n.obj_id = obj.obj_id
         n.obj_type = obj.obj_type
         n.notification = "%s added a comment: %s" % (username, obj.comment)
     else:
         n.notification = message
         n.obj_id = obj.id
-        n.obj_type = type
+        n.obj_type = obj_type
 
     if hasattr(obj, 'source'):
         sources = [s.name for s in obj.source]
@@ -3711,7 +3724,7 @@ def create_notification(obj, username, message, type):
     else:
         n.users = get_subscribed_users(n.obj_type, n.obj_id, [])
 
-    if type == 'Comment':
+    if obj_type == 'Comment':
         for u in obj.users:
             if u not in n.users:
                 n.users.append(u)
@@ -3853,7 +3866,7 @@ def audit_entry(self, username, type_, new_doc=False):
     message = html_escape(message)
 
     if my_type in field_dict:
-        create_notification(self, username, message, my_type)
+        create_notification(self, username, message)
 
 def generic_single_field_change_handler(old_value, new_value, changed_field):
     return "%s changed from \"%s\" to \"%s\"" % (changed_field, old_value, new_value)

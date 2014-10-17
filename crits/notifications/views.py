@@ -10,7 +10,9 @@ from crits.notifications.handlers import remove_user_from_notification_id, get_n
 @user_passes_test(user_can_view_data)
 def poll(request):
     """
-
+    Called by clients to wait for notifications for the user. Clients will
+    block for a period of time until either expiration or notification
+    that a new notification is available.
     """
 
     is_toast_enabled = request.user.get_preference('toast_notifications', 'enabled', True)

@@ -110,7 +110,8 @@ def class_from_id(type_, _id):
 
 def details_url_from_obj(obj):
     """
-    Generic function that generates a details url for a mongo object.
+    Generic function that generates a details url for a
+    :class:`crits.core.crits_mongoengine.CritsBaseAttributes` object.
     """
 
     mapper = obj._meta['jtable_opts']
