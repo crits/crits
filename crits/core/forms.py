@@ -162,9 +162,11 @@ class ToastNotificationConfigForm(forms.Form):
         super(ToastNotificationConfigForm, self).__init__(*args, **kwargs)
 
         prefs = request.user.prefs
-        for k in prefs.toast_notifications:
-            if k in self.fields:
-                self.fields[k].initial = prefs.toast_notifications[k]
+
+        if hasattr(prefs, 'toast_notifications'):
+            for k in prefs.toast_notifications:
+                if k in self.fields:
+                    self.fields[k].initial = prefs.toast_notifications[k]
 
         self.fields['acknowledgement_type'].choices = [("sticky", "sticky"),
                                                        ("timeout", "timeout")]
