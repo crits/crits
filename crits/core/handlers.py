@@ -3776,6 +3776,9 @@ def audit_entry(self, username, type_, new_doc=False):
                                                                   "save",
                                                                   "delete")]
 
+    # Remove any duplicate fields
+    changed_fields = list(set(changed_fields))
+
     if new_doc and not changed_fields:
         what_changed = "new document"
     else:
@@ -3854,13 +3857,11 @@ def audit_entry(self, username, type_, new_doc=False):
             change_message = changed_field_handler.get(base_changed_field)(old_value, new_value, base_changed_field)
 
             if change_message is not None:
-                # TODO remove html, possibly put messages in array format
                 message += "\n" + change_message[:1].capitalize() + change_message[1:]
         else:
             change_message = generic_single_field_change_handler(old_value, new_value, base_changed_field)
 
             if change_message is not None:
-                # TODO remove html, possibly put messages in array format
                 message += "\n" + change_message[:1].capitalize() + change_message[1:]
 
     message = html_escape(message)
@@ -3868,9 +3869,21 @@ def audit_entry(self, username, type_, new_doc=False):
     if my_type in field_dict:
         create_notification(self, username, message)
 
-def generic_single_field_change_handler(old_value, new_value, changed_field):
-    return "%s changed from \"%s\" to \"%s\"" % (changed_field, old_value, new_value)
+def generic_single_field_change_handler(old_value, new_value, changed_field, base_fqn=None):
+    if base_fqn is None:
+        return "%s changed from \"%s\" to \"%s\"\n" % (changed_field, old_value, new_value)
+    else:
+        return "%s.%s changed from \"%s\" to \"%s\"\n" % (base_fqn, changed_field, old_value, new_value)
 
+def generic_child_fields_change_handler(old_value, new_value, fields, base_fqn=None):
+    message = ""
+
+    for field in fields:
+        if old_value[field] != new_value[field]:
+            change_message = generic_single_field_change_handler(old_value[field], new_value[field], field, base_fqn)
+            message += change_message[:1].capitalize() + change_message[1:]
+
+    return message
 
 def generic_list_change_handler(old_value, new_value, changed_field):
     removed_names = [x for x in old_value if x not in new_value and x != '']
@@ -3905,23 +3918,23 @@ def get_changed_object_list(old_objects, new_objects, object_key):
     changed_objects = {}
 
     # Try and detect which objects have changed
-    for old_source in old_objects:
-        if old_source not in new_objects:
-            if old_source[object_key] not in changed_objects:
-                changed_objects[old_source[object_key]] = {'old': old_source}
+    for old_object in old_objects:
+        if old_object not in new_objects:
+            if old_object[object_key] not in changed_objects:
+                changed_objects[old_object[object_key]] = {'old': old_object}
             else:
-                changed_objects[old_source[object_key]]['old'] = old_source
+                changed_objects[old_object[object_key]]['old'] = old_object
 
-    for new_source in new_objects:
-        if new_source not in old_objects:
-            if new_source[object_key] not in changed_objects:
-                changed_objects[new_source[object_key]] = {'new': new_source}
+    for new_object in new_objects:
+        if new_object not in old_objects:
+            if new_object[object_key] not in changed_objects:
+                changed_objects[new_object[object_key]] = {'new': new_object}
             else:
-                changed_objects[new_source[object_key]]['new'] = new_source
+                changed_objects[new_object[object_key]]['new'] = new_object
 
     return changed_objects
 
-def parse_generic_change_object_list(change_dictionary, field_name, object_key):
+def parse_generic_change_object_list(change_dictionary, field_name, object_key, change_parser_handler=None):
 
     message = ""
 
@@ -3931,6 +3944,9 @@ def parse_generic_change_object_list(change_dictionary, field_name, object_key):
 
         if old_value is not None and new_value is not None:
             message += "%s %s modified: %s\n" % (field_name, object_key, changed_key_name)
+
+            if change_parser_handler is not None:
+                message += change_parser_handler(old_value, new_value, field_name)
         elif old_value is not None and new_value is None:
             message += "%s %s removed: %s\n" % (field_name, object_key, changed_key_name)
         elif old_value is None and new_value is not None:
@@ -3940,15 +3956,38 @@ def parse_generic_change_object_list(change_dictionary, field_name, object_key):
 
     return message
 
+def campaign_parse_handler(old_value, new_value, base_fqn):
+
+    fields = ['name', 'confidence', 'description']
+
+    message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
+
+    return message
+
+def source_instances_parse_handler(old_value, new_value, base_fqn):
+
+    fields = ['method', 'reference']
+
+    message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
+
+    return message
+
+def source_parse_handler(old_value, new_value, base_fqn):
+
+    changed_source_instances = get_changed_object_list(old_value['instances'], new_value['instances'], 'date')
+    message = parse_generic_change_object_list(changed_source_instances, 'source', 'instances', source_instances_parse_handler)
+
+    return message
+
 def campaign_change_handler(old_value, new_value, changed_field):
-    changed_sources = get_changed_object_list(old_value, new_value, 'name')
-    message = parse_generic_change_object_list(changed_sources, changed_field, 'name')
+    changed_campaigns = get_changed_object_list(old_value, new_value, 'name')
+    message = parse_generic_change_object_list(changed_campaigns, changed_field, 'name', campaign_parse_handler)
 
     return message
 
 def source_change_handler(old_value, new_value, changed_field):
     changed_sources = get_changed_object_list(old_value, new_value, 'name')
-    message = parse_generic_change_object_list(changed_sources, changed_field, 'name')
+    message = parse_generic_change_object_list(changed_sources, changed_field, 'name', source_parse_handler)
 
     return message
 
