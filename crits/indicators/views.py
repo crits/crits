@@ -162,10 +162,9 @@ def upload_indicator(request):
                                               username,
                                               add_domain=True)
                 if result['success']:
-                    message = {'message': ('<div>CSV added successfully! <a '
-                                           'href="%s">Go to all indicators</a>'
-                                           '.</div>'
-                                           % reverse('crits.indicators.views.indicators_listing'))}
+                    message = {'message': ('<div>%s <a href="%s">Go to all indicators</a>'
+                                           '.</div>' % (result['message'],
+                                           reverse('crits.indicators.views.indicators_listing')))}
                 else:
                     failed_msg = '<div>%s</div>' % result['message']
 
@@ -181,9 +180,9 @@ def upload_indicator(request):
                                               username,
                                               add_domain=True)
                 if result['success']:
-                    message = {'message': ('<div>Indicators added successfully! '
-                                           '<a href="%s">Go to all indicators</a>'
-                                           '.</div>' % reverse('crits.indicators.views.indicators_listing'))}
+                    message = {'message': ('<div>%s <a href="%s">Go to all indicators</a>'
+                                           '.</div>' % (result['message'],
+                                           reverse('crits.indicators.views.indicators_listing')))}
                 else:
                     failed_msg = '<div>%s</div>' % result['message']
 
@@ -196,22 +195,19 @@ def upload_indicator(request):
                                        all_ind_type_choices,
                                        request.POST)
             if form.is_valid():
-                if request.POST['indicator_type'] == "URI - URL" and "://" not in request.POST['value'].split('.')[0]:
-                    result = {"success" : False, "message" : "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://)"}
-                else:
-                    result = handle_indicator_ind(request.POST['value'],
-                                                  request.POST['source'],
-                                                  request.POST['reference'],
-                                                  request.POST['indicator_type'],
-                                                  username,
-                                                  request.POST['method'],
-                                                  add_domain=True,
-                                                  campaign=request.POST['campaign'],
-                                                  campaign_confidence=request.POST['campaign_confidence'],
-                                                  confidence=request.POST['confidence'],
-                                                  impact=request.POST['impact'],
-                                                  bucket_list=request.POST[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
-                                                  ticket=request.POST[form_consts.Common.TICKET_VARIABLE_NAME])
+                result = handle_indicator_ind(request.POST['value'],
+                                              request.POST['source'],
+                                              request.POST['reference'],
+                                              request.POST['indicator_type'],
+                                              username,
+                                              request.POST['method'],
+                                              add_domain=True,
+                                              campaign=request.POST['campaign'],
+                                              campaign_confidence=request.POST['campaign_confidence'],
+                                              confidence=request.POST['confidence'],
+                                              impact=request.POST['impact'],
+                                              bucket_list=request.POST[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
+                                              ticket=request.POST[form_consts.Common.TICKET_VARIABLE_NAME])
                 if result['success']:
                     indicator_link = '<a href=\"%s\">Go to this indicator</a> or <a href="%s">all indicators</a>.</div>' % (reverse('crits.indicators.views.indicator', args=[result['objectid']]), reverse('crits.indicators.views.indicators_listing'));
 
