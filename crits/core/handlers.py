@@ -17,7 +17,9 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.html import escape as html_escape
 from django.utils.http import urlencode
+from mongoengine import Document, EmbeddedDocument
 from mongoengine.base import ValidationError
+from mongoengine.base.datastructures import BaseList
 from operator import itemgetter
 
 from crits.config.config import CRITsConfig
@@ -26,6 +28,7 @@ from crits.core.bucket import Bucket
 from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.crits_mongoengine import Releasability, json_handler
 from crits.core.crits_mongoengine import CritsSourceDocument
+from crits.core.form_consts import NotificationType
 from crits.core.source_access import SourceAccess
 from crits.core.data_tools import create_zip, format_file
 from crits.core.mongo_tools import mongo_connector, get_file
@@ -3683,7 +3686,7 @@ def details_from_id(type_, id_):
     else:
         return None
 
-def create_notification(obj, username, message):
+def create_notification(obj, username, message, notification_type=NotificationType.ALERT):
     """
     Generate an audit entry.
 
@@ -3700,6 +3703,11 @@ def create_notification(obj, username, message):
     n.analyst = username
     obj_type = obj._meta['crits_type']
 
+    if notification_type not in NotificationType.ALL:
+        notification_type = NotificationType.ALERT
+
+    n.notification_type = notification_type
+
     if obj_type == 'Comment':
         n.obj_id = obj.obj_id
         n.obj_type = obj.obj_type
@@ -3711,6 +3719,13 @@ def create_notification(obj, username, message):
 
     if hasattr(obj, 'source'):
         sources = [s.name for s in obj.source]
+
+        if obj_type == 'Comment':
+            # for comments, use the sources from the object that it is linked to
+            # instead of the comments's sources
+            referenced_obj = class_from_id(n.obj_type, n.obj_id)
+            sources = [s.name for s in referenced_obj.source]
+
         subscribed_users = get_subscribed_users(n.obj_type, n.obj_id, sources)
 
         # Filter on users that have access to the source of the object
@@ -3837,17 +3852,29 @@ def audit_entry(self, username, type_, new_doc=False):
 
     changed_field_handler = {
         "analysis": skip_change_handler,
+        "backdoor": backdoor_change_handler,
         "bucket_list": bucket_list_change_handler,
         "campaign": campaign_change_handler,
+        "exploit": exploit_change_handler,
+        "obj": objects_change_handler,
+        "relationships": relationships_change_handler,
+        "screenshots": screenshots_change_handler,
         "source": source_change_handler,
         "tickets": tickets_change_handler,
     }
+
+    def map_field(field):
+        mapped_fields = {
+            "objects": "obj"
+        }
+
+        return mapped_fields.get(field, field)
 
     for changed_field in changed_fields:
 
         # Fields may be fully qualified, e.g. source.1.instances.0.reference
         # So, split on the '.' character and get the root of the changed field
-        base_changed_field = changed_field.split('.')[0]
+        base_changed_field = map_field(changed_field.split('.')[0])
 
         new_value = getattr(self, base_changed_field, '')
         old_obj = class_from_id(my_type, self.id)
@@ -3859,7 +3886,23 @@ def audit_entry(self, username, type_, new_doc=False):
             if change_message is not None:
                 message += "\n" + change_message[:1].capitalize() + change_message[1:]
         else:
-            change_message = generic_single_field_change_handler(old_value, new_value, base_changed_field)
+            change_field_handler = generic_single_field_change_handler
+
+            if isinstance(old_value, BaseList):
+
+                list_value = None
+
+                if len(old_value) > 0:
+                    list_value = old_value[0]
+                elif len(new_value) > 0:
+                    list_value = new_value[0]
+
+                if isinstance(list_value, basestring):
+                    change_field_handler = generic_list_change_handler
+                elif isinstance(list_value, EmbeddedDocument):
+                    change_field_handler = generic_list_json_change_handler
+
+            change_message = change_field_handler(old_value, new_value, base_changed_field)
 
             if change_message is not None:
                 message += "\n" + change_message[:1].capitalize() + change_message[1:]
@@ -3867,7 +3910,7 @@ def audit_entry(self, username, type_, new_doc=False):
     message = html_escape(message)
 
     if my_type in field_dict:
-        create_notification(self, username, message)
+        create_notification(self, username, message, NotificationType.ALERT)
 
 def generic_single_field_change_handler(old_value, new_value, changed_field, base_fqn=None):
     if base_fqn is None:
@@ -3888,6 +3931,18 @@ def generic_child_fields_change_handler(old_value, new_value, fields, base_fqn=N
 def generic_list_change_handler(old_value, new_value, changed_field):
     removed_names = [x for x in old_value if x not in new_value and x != '']
     added_names = [x for x in new_value if x not in old_value and x != '']
+
+    message = ""
+    if len(added_names) > 0:
+        message += "Added to %s: %s. " % (changed_field, str(', '.join(added_names)))
+    if len(removed_names) > 0:
+        message += "Removed from %s: %s. " % (changed_field, str(', '.join(removed_names)))
+
+    return message
+
+def generic_list_json_change_handler(old_value, new_value, changed_field):
+    removed_names = [x.to_json() for x in old_value if x not in new_value and x != '']
+    added_names = [x.to_json() for x in new_value if x not in old_value and x != '']
 
     message = ""
     if len(added_names) > 0:
@@ -3934,7 +3989,36 @@ def get_changed_object_list(old_objects, new_objects, object_key):
 
     return changed_objects
 
-def parse_generic_change_object_list(change_dictionary, field_name, object_key, change_parser_handler=None):
+def get_changed_primitive_list(old_objects, new_objects):
+    changed_objects = {}
+
+    # Try and detect which objects have changed
+    for old_object in old_objects:
+        if old_object not in new_objects:
+            if old_object not in changed_objects:
+                changed_objects[old_object] = {'old': old_object}
+            else:
+                changed_objects[old_object]['old'] = old_object
+
+    for new_object in new_objects:
+        if new_object not in old_objects:
+            if new_object not in changed_objects:
+                changed_objects[new_object] = {'new': new_object}
+            else:
+                changed_objects[new_object]['new'] = new_object
+
+    return changed_objects
+
+def get_short_name(obj, summary_handler, default):
+    short_name = default
+
+    if summary_handler is not None:
+        short_name = summary_handler(obj)
+
+    return short_name
+
+
+def parse_generic_change_object_list(change_dictionary, field_name, object_key, change_parser_handler=None, summary_handler=None):
 
     message = ""
 
@@ -3943,14 +4027,17 @@ def parse_generic_change_object_list(change_dictionary, field_name, object_key, 
         new_value = change_dictionary[changed_key_name].get('new')
 
         if old_value is not None and new_value is not None:
-            message += "%s %s modified: %s\n" % (field_name, object_key, changed_key_name)
+            short_name = get_short_name(old_value, summary_handler, changed_key_name)
+            message += "%s %s modified: %s\n" % (field_name, object_key, short_name)
 
             if change_parser_handler is not None:
                 message += change_parser_handler(old_value, new_value, field_name)
         elif old_value is not None and new_value is None:
-            message += "%s %s removed: %s\n" % (field_name, object_key, changed_key_name)
+            short_name = get_short_name(old_value, summary_handler, changed_key_name)
+            message += "%s %s removed: %s\n" % (field_name, object_key, short_name)
         elif old_value is None and new_value is not None:
-            message += "%s %s added: %s\n" % (field_name, object_key, changed_key_name)
+            short_name = get_short_name(new_value, summary_handler, changed_key_name)
+            message += "%s %s added: %s\n" % (field_name, object_key, short_name)
         else:
             message += "Unknown operation on %s %s: %s\n" % (field_name, object_key, changed_key_name)
 
@@ -3959,6 +4046,22 @@ def parse_generic_change_object_list(change_dictionary, field_name, object_key, 
 def campaign_parse_handler(old_value, new_value, base_fqn):
 
     fields = ['name', 'confidence', 'description']
+
+    message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
+
+    return message
+
+def relationships_parse_handler(old_value, new_value, base_fqn):
+
+    fields = ['relationship', 'rel_type', 'rel_reason', 'rel_confidence']
+
+    message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
+
+    return message
+
+def objects_parse_handler(old_value, new_value, base_fqn):
+
+    fields = ['name', 'value']
 
     message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
 
@@ -3982,6 +4085,52 @@ def source_parse_handler(old_value, new_value, base_fqn):
 def campaign_change_handler(old_value, new_value, changed_field):
     changed_campaigns = get_changed_object_list(old_value, new_value, 'name')
     message = parse_generic_change_object_list(changed_campaigns, changed_field, 'name', campaign_parse_handler)
+
+    return message
+
+def relationships_change_handler(old_value, new_value, changed_field):
+    changed_relationships = get_changed_object_list(old_value, new_value, 'date')
+    message = parse_generic_change_object_list(changed_relationships, changed_field, 'instance', relationships_parse_handler, relationships_summary_handler)
+
+    return message
+
+
+def exploit_change_handler(old_value, new_value, changed_field):
+    changed_campaigns = get_changed_object_list(old_value, new_value, 'cve')
+    message = parse_generic_change_object_list(changed_campaigns, changed_field, 'cve')
+
+    return message
+
+def backdoor_change_handler(old_value, new_value, changed_field):
+
+    fields = ['name', 'version']
+
+    old_description = "%s %s" % (changed_field, old_value.name)
+    message = generic_child_fields_change_handler(old_value, new_value, fields, old_description)
+
+    return message
+
+def relationships_summary_handler(object):
+    #target_of_relationship = class_from_id(object.type, object.value)
+
+    # TODO: Print out a meaningful relationship summary, should consolidate
+    # relationships code to generically get the "key" that best describes
+    # a generic mongo object.
+
+    return "%s - %s" % (object.rel_type, object.object_id)
+
+def objects_summary_handler(object):
+    return "%s - %s" % (object.name, object.value)
+
+def objects_change_handler(old_value, new_value, changed_field):
+    changed_objects = get_changed_object_list(old_value, new_value, 'name')
+    message = parse_generic_change_object_list(changed_objects, 'Objects', 'item', objects_parse_handler, objects_summary_handler)
+
+    return message
+
+def screenshots_change_handler(old_value, new_value, changed_field):
+    changed_screenshots = get_changed_primitive_list(old_value, new_value)
+    message = parse_generic_change_object_list(changed_screenshots, changed_field, 'id')
 
     return message
 

@@ -4,6 +4,7 @@ import threading
 from mongoengine.queryset import Q
 
 from crits.core.class_mapper import class_from_id, details_url_from_obj
+from crits.core.form_consts import NotificationType
 from crits.notifications.notification import Notification
 
 
@@ -55,6 +56,10 @@ def get_notification_details(request, newer_than):
         obj = class_from_id(notification.obj_type, notification.obj_id)
         details_url = details_url_from_obj(obj)
         header = generate_notification_header(obj)
+        notification_type = notification.notification_type
+
+        if notification_type is None or notification_type not in NotificationType.ALL:
+            notification_type = NotificationType.ALERT
 
         notification_data = {
             "header": header,
@@ -63,7 +68,7 @@ def get_notification_details(request, newer_than):
             "link": details_url,
             "modified_by": notification.analyst,
             "id": str(notification.id),
-            "type": "alert",
+            "type": notification_type,
         }
 
         notifications_list.append(notification_data)

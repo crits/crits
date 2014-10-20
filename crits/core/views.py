@@ -1444,7 +1444,7 @@ def change_subscription(request, stype, oid):
         message = ""
         if is_user_subscribed(username, stype, oid):
             unsubscribe_user(username, stype, oid)
-            message = ("<span class=\"ui-icon ui-icon-check subscription_link"
+            message = ("<span class=\"ui-icon ui-icon-signal-diag subscription_link"
                        "_disable\" title=\"Subscribe\"></span>")
         else:
             subscribe_user(username, stype, oid)
