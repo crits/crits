@@ -298,7 +298,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if isinstance(aliases, basestring):
             aliases = aliases.split(',')
-        aliases = [a.strip() for a in aliases]
+        aliases = [a.strip() for a in aliases if a != '']
         existing_aliases = None
         if len(aliases) < len(self.aliases):
             self.aliases = aliases
@@ -321,7 +321,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if isinstance(tags, basestring):
             tags = tags.split(',')
-        tags = [t.strip() for t in tags]
+        tags = [t.strip() for t in tags if t != '']
         existing_tags = None
         if tag_type == 'ActorIntendedEffect':
             if len(tags) < len(self.intended_effects):
