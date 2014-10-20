@@ -304,7 +304,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
             self.aliases = aliases
         else:
             existing_aliases = self.aliases
-        if existing_aliases:
+        if existing_aliases is not None:
             for a in aliases:
                 if a not in existing_aliases:
                     existing_aliases.append(a)
