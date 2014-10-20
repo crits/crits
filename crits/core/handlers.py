@@ -3851,6 +3851,8 @@ def audit_entry(self, username, type_, new_doc=False):
                                                        self.id)
 
     changed_field_handler = {
+        "actions": actions_change_handler,
+        "activity": activity_change_handler,
         "analysis": skip_change_handler,
         "backdoor": backdoor_change_handler,
         "bucket_list": bucket_list_change_handler,
@@ -3863,18 +3865,39 @@ def audit_entry(self, username, type_, new_doc=False):
         "tickets": tickets_change_handler,
     }
 
-    def map_field(field):
-        mapped_fields = {
+    def map_field(top_level_type, field):
+
+        general_mapped_fields = {
             "objects": "obj"
         }
 
-        return mapped_fields.get(field, field)
+        specific_mapped_fields = {
+            "Email": {
+                "from": "from_address",
+                "raw_headers": "raw_header",
+            },
+            "Indicator": {
+                "type": "ind_type"
+            }
+        }
+
+        specific_mapped_type = specific_mapped_fields.get(top_level_type)
+
+        # Check for a specific mapped field first, if there isn't one
+        # then just try to use the general mapped fields.
+        if specific_mapped_type is not None:
+            specific_mapped_value = specific_mapped_type.get(field)
+
+            if specific_mapped_value is not None:
+                return specific_mapped_value
+
+        return general_mapped_fields.get(field, field)
 
     for changed_field in changed_fields:
 
         # Fields may be fully qualified, e.g. source.1.instances.0.reference
         # So, split on the '.' character and get the root of the changed field
-        base_changed_field = map_field(changed_field.split('.')[0])
+        base_changed_field = map_field(my_type, changed_field.split('.')[0])
 
         new_value = getattr(self, base_changed_field, '')
         old_obj = class_from_id(my_type, self.id)
@@ -4046,7 +4069,6 @@ def parse_generic_change_object_list(change_dictionary, field_name, object_key, 
 def campaign_parse_handler(old_value, new_value, base_fqn):
 
     fields = ['name', 'confidence', 'description']
-
     message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
 
     return message
@@ -4054,7 +4076,20 @@ def campaign_parse_handler(old_value, new_value, base_fqn):
 def relationships_parse_handler(old_value, new_value, base_fqn):
 
     fields = ['relationship', 'rel_type', 'rel_reason', 'rel_confidence']
+    message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
 
+    return message
+
+def actions_parse_handler(old_value, new_value, base_fqn):
+
+    fields = ['action_type', 'active', 'reason', 'begin_date', 'end_date', 'performed_date']
+    message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
+
+    return message
+
+def activity_parse_handler(old_value, new_value, base_fqn):
+
+    fields = ['description', 'end_date', 'start_date']
     message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
 
     return message
@@ -4062,7 +4097,6 @@ def relationships_parse_handler(old_value, new_value, base_fqn):
 def objects_parse_handler(old_value, new_value, base_fqn):
 
     fields = ['name', 'value']
-
     message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
 
     return message
@@ -4070,7 +4104,6 @@ def objects_parse_handler(old_value, new_value, base_fqn):
 def source_instances_parse_handler(old_value, new_value, base_fqn):
 
     fields = ['method', 'reference']
-
     message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
 
     return message
@@ -4094,6 +4127,17 @@ def relationships_change_handler(old_value, new_value, changed_field):
 
     return message
 
+def actions_change_handler(old_value, new_value, changed_field):
+    changed_actions = get_changed_object_list(old_value, new_value, 'date')
+    message = parse_generic_change_object_list(changed_actions, changed_field, 'instance', actions_parse_handler, actions_summary_handler)
+
+    return message
+
+def activity_change_handler(old_value, new_value, changed_field):
+    changed_activities = get_changed_object_list(old_value, new_value, 'date')
+    message = parse_generic_change_object_list(changed_activities, changed_field, 'instance', activity_parse_handler, activity_summary_handler)
+
+    return message
 
 def exploit_change_handler(old_value, new_value, changed_field):
     changed_campaigns = get_changed_object_list(old_value, new_value, 'cve')
@@ -4118,6 +4162,12 @@ def relationships_summary_handler(object):
     # a generic mongo object.
 
     return "%s - %s" % (object.rel_type, object.object_id)
+
+def actions_summary_handler(object):
+    return "%s - %s" % (object.action_type, str(object.date))
+
+def activity_summary_handler(object):
+    return object.description
 
 def objects_summary_handler(object):
     return "%s - %s" % (object.name, object.value)
