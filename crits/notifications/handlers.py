@@ -253,7 +253,7 @@ def generate_pcap_header(obj):
     return "PCAP: %s" % (obj.filename)
 
 def generate_raw_data_header(obj):
-    return "RawData: %s" % (obj.title)
+    return "RawData: %s (version %s)" % (obj.title, obj.version)
 
 def generate_sample_header(obj):
     return "Sample: %s" % (obj.filename)

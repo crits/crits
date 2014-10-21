@@ -3850,20 +3850,45 @@ def audit_entry(self, username, type_, new_doc=False):
                                                        my_type,
                                                        self.id)
 
-    changed_field_handler = {
-        "actions": actions_change_handler,
-        "activity": activity_change_handler,
-        "analysis": skip_change_handler,
-        "backdoor": backdoor_change_handler,
-        "bucket_list": bucket_list_change_handler,
-        "campaign": campaign_change_handler,
-        "exploit": exploit_change_handler,
-        "obj": objects_change_handler,
-        "relationships": relationships_change_handler,
-        "screenshots": screenshots_change_handler,
-        "source": source_change_handler,
-        "tickets": tickets_change_handler,
-    }
+    def get_changed_field_handler(top_level_type, field):
+        general_mapped_fields = {
+            "actions": actions_change_handler,
+            "analysis": skip_change_handler,
+            "backdoor": backdoor_change_handler,
+            "bucket_list": bucket_list_change_handler,
+            "campaign": campaign_change_handler,
+            "exploit": exploit_change_handler,
+            "obj": objects_change_handler,
+            "relationships": relationships_change_handler,
+            "screenshots": screenshots_change_handler,
+            "source": source_change_handler,
+            "tickets": tickets_change_handler,
+        }
+
+        specific_mapped_fields = {
+            "Indicator": {
+                "activity": indicator_activity_change_handler,
+                "confidence": indicator_confidence_change_handler,
+                "impact": indicator_impact_change_handler,
+            },
+            "RawData": {
+                "tool": generic_single_field_json_change_handler,
+                "highlights": raw_data_highlights_change_handler,
+                "inlines": raw_data_inlines_change_handler,
+            }
+        }
+
+        specific_mapped_type = specific_mapped_fields.get(top_level_type)
+
+        # Check for a specific mapped field first, if there isn't one
+        # then just try to use the general mapped fields.
+        if specific_mapped_type is not None:
+            specific_mapped_handler = specific_mapped_type.get(field)
+
+            if specific_mapped_handler is not None:
+                return specific_mapped_handler
+
+        return general_mapped_fields.get(field)
 
     def map_field(top_level_type, field):
 
@@ -3903,8 +3928,10 @@ def audit_entry(self, username, type_, new_doc=False):
         old_obj = class_from_id(my_type, self.id)
         old_value = getattr(old_obj, base_changed_field, '')
 
-        if base_changed_field in changed_field_handler:
-            change_message = changed_field_handler.get(base_changed_field)(old_value, new_value, base_changed_field)
+        change_handler = get_changed_field_handler(my_type, base_changed_field)
+
+        if change_handler is not None:
+            change_message = change_handler(old_value, new_value, base_changed_field)
 
             if change_message is not None:
                 message += "\n" + change_message[:1].capitalize() + change_message[1:]
@@ -3941,12 +3968,27 @@ def generic_single_field_change_handler(old_value, new_value, changed_field, bas
     else:
         return "%s.%s changed from \"%s\" to \"%s\"\n" % (base_fqn, changed_field, old_value, new_value)
 
+def generic_single_field_json_change_handler(old_value, new_value, changed_field, base_fqn=None):
+    if base_fqn is None:
+        return "%s changed from \"%s\" to \"%s\"\n" % (changed_field, old_value.to_json(), new_value.to_json())
+    else:
+        return "%s.%s changed from \"%s\" to \"%s\"\n" % (base_fqn, changed_field, old_value.to_json(), new_value.to_json())
+
 def generic_child_fields_change_handler(old_value, new_value, fields, base_fqn=None):
     message = ""
 
     for field in fields:
-        if old_value[field] != new_value[field]:
-            change_message = generic_single_field_change_handler(old_value[field], new_value[field], field, base_fqn)
+        old_field_value = ""
+        new_field_value = ""
+
+        if old_value is not None:
+            old_field_value = old_value[field]
+
+        if new_value is not None:
+            new_field_value = new_value[field]
+
+        if old_field_value != new_field_value:
+            change_message = generic_single_field_change_handler(old_field_value, new_field_value, field, base_fqn)
             message += change_message[:1].capitalize() + change_message[1:]
 
     return message
@@ -4080,6 +4122,20 @@ def relationships_parse_handler(old_value, new_value, base_fqn):
 
     return message
 
+def raw_data_highlights_parse_handler(old_value, new_value, base_fqn):
+
+    fields = ['line', 'line_data']
+    message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
+
+    return message
+
+def raw_data_inlines_parse_handler(old_value, new_value, base_fqn):
+
+    fields = ['line', 'comment']
+    message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
+
+    return message
+
 def actions_parse_handler(old_value, new_value, base_fqn):
 
     fields = ['action_type', 'active', 'reason', 'begin_date', 'end_date', 'performed_date']
@@ -4087,7 +4143,7 @@ def actions_parse_handler(old_value, new_value, base_fqn):
 
     return message
 
-def activity_parse_handler(old_value, new_value, base_fqn):
+def indicator_activity_parse_handler(old_value, new_value, base_fqn):
 
     fields = ['description', 'end_date', 'start_date']
     message = generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
@@ -4116,32 +4172,56 @@ def source_parse_handler(old_value, new_value, base_fqn):
     return message
 
 def campaign_change_handler(old_value, new_value, changed_field):
-    changed_campaigns = get_changed_object_list(old_value, new_value, 'name')
-    message = parse_generic_change_object_list(changed_campaigns, changed_field, 'name', campaign_parse_handler)
+    changed_data = get_changed_object_list(old_value, new_value, 'name')
+    message = parse_generic_change_object_list(changed_data, changed_field, 'name', campaign_parse_handler)
 
     return message
 
 def relationships_change_handler(old_value, new_value, changed_field):
-    changed_relationships = get_changed_object_list(old_value, new_value, 'date')
-    message = parse_generic_change_object_list(changed_relationships, changed_field, 'instance', relationships_parse_handler, relationships_summary_handler)
+    changed_data = get_changed_object_list(old_value, new_value, 'date')
+    message = parse_generic_change_object_list(changed_data, changed_field, 'instance', relationships_parse_handler, relationships_summary_handler)
+
+    return message
+
+def raw_data_highlights_change_handler(old_value, new_value, changed_field):
+    changed_data = get_changed_object_list(old_value, new_value, 'date')
+    message = parse_generic_change_object_list(changed_data, changed_field, 'instance', raw_data_highlights_parse_handler, raw_data_highlights_summary_handler)
+
+    return message
+
+def raw_data_inlines_change_handler(old_value, new_value, changed_field):
+    changed_data = get_changed_object_list(old_value, new_value, 'date')
+    message = parse_generic_change_object_list(changed_data, changed_field, 'instance', raw_data_inlines_parse_handler, raw_data_inlines_summary_handler)
 
     return message
 
 def actions_change_handler(old_value, new_value, changed_field):
-    changed_actions = get_changed_object_list(old_value, new_value, 'date')
-    message = parse_generic_change_object_list(changed_actions, changed_field, 'instance', actions_parse_handler, actions_summary_handler)
+    changed_data = get_changed_object_list(old_value, new_value, 'date')
+    message = parse_generic_change_object_list(changed_data, changed_field, 'instance', actions_parse_handler, actions_summary_handler)
 
     return message
 
-def activity_change_handler(old_value, new_value, changed_field):
-    changed_activities = get_changed_object_list(old_value, new_value, 'date')
-    message = parse_generic_change_object_list(changed_activities, changed_field, 'instance', activity_parse_handler, activity_summary_handler)
+def indicator_activity_change_handler(old_value, new_value, changed_field):
+    changed_data = get_changed_object_list(old_value, new_value, 'date')
+    message = parse_generic_change_object_list(changed_data, changed_field, 'instance', indicator_activity_parse_handler, indicator_activity_summary_handler)
+
+    return message
+
+def indicator_confidence_change_handler(old_value, new_value, changed_field):
+    fields = ['rating']
+    message = generic_child_fields_change_handler(old_value, new_value, fields, changed_field)
+
+    return message
+
+def indicator_impact_change_handler(old_value, new_value, changed_field):
+    fields = ['rating']
+    message = generic_child_fields_change_handler(old_value, new_value, fields, changed_field)
 
     return message
 
 def exploit_change_handler(old_value, new_value, changed_field):
-    changed_campaigns = get_changed_object_list(old_value, new_value, 'cve')
-    message = parse_generic_change_object_list(changed_campaigns, changed_field, 'cve')
+    changed_data = get_changed_object_list(old_value, new_value, 'cve')
+    message = parse_generic_change_object_list(changed_data, changed_field, 'cve')
 
     return message
 
@@ -4149,8 +4229,12 @@ def backdoor_change_handler(old_value, new_value, changed_field):
 
     fields = ['name', 'version']
 
-    old_description = "%s %s" % (changed_field, old_value.name)
-    message = generic_child_fields_change_handler(old_value, new_value, fields, old_description)
+    if old_value is not None:
+        old_description = "%s %s" % (changed_field, old_value.name)
+        message = generic_child_fields_change_handler(old_value, new_value, fields, old_description)
+    else:
+        old_description = "%s" % (changed_field)
+        message = generic_child_fields_change_handler(old_value, new_value, fields, old_description)
 
     return message
 
@@ -4163,10 +4247,16 @@ def relationships_summary_handler(object):
 
     return "%s - %s" % (object.rel_type, object.object_id)
 
+def raw_data_highlights_summary_handler(object):
+    return "line %s: %s" % (object.line, str(object.line_data))
+
+def raw_data_inlines_summary_handler(object):
+    return "line %s: %s" % (object.line, object.comment)
+
 def actions_summary_handler(object):
     return "%s - %s" % (object.action_type, str(object.date))
 
-def activity_summary_handler(object):
+def indicator_activity_summary_handler(object):
     return object.description
 
 def objects_summary_handler(object):
