@@ -2,6 +2,22 @@ from bson.objectid import ObjectId
 from django.core.urlresolvers import reverse
 
 
+__obj_type_to_key_descriptor__ = {
+    'Actor': 'name',
+    'Campaign': 'name',
+    'Certificate': 'md5',
+    'Comment': 'object_id',
+    'Domain': 'domain',
+    'Email': 'id',
+    'Event': 'id',
+    'Indicator': 'id',
+    'IP': 'ip',
+    'PCAP': 'md5',
+    'RawData': 'title',
+    'Sample': 'md5',
+    'Target': 'email_address',
+}
+
 def class_from_id(type_, _id):
     """
     Return an instantiated class object.
@@ -121,6 +137,9 @@ def details_url_from_obj(obj):
 
     # TODO: Validate that this works for every object.
     return reverse(details_url, args=(unicode(obj[details_url_key]),))
+
+def key_descriptor_from_obj_type(obj_type):
+    return __obj_type_to_key_descriptor__.get(obj_type)
 
 def class_from_value(type_, value):
     """
