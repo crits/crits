@@ -12,7 +12,7 @@ class ChangeParser():
         found then None is returned.
         """
 
-        specific_mapped_type = __specific_mapped_fields__.get(top_level_type)
+        specific_mapped_type = __specific_field_to_change_handler__.get(top_level_type)
 
         # Check for a specific mapped field first, if there isn't one
         # then just try to use the general mapped fields.
@@ -22,7 +22,11 @@ class ChangeParser():
             if specific_mapped_handler is not None:
                 return specific_mapped_handler
 
-        return __general_mapped_fields__.get(field)
+        return __general_field_to_change_handler__.get(field)
+
+    @staticmethod
+    def get_allowed_sources_handler(top_level_type, field):
+        return __field_to_allowed_sources_handler__.get(field)
 
     ############################################################################
     # Generic change parsers
@@ -68,32 +72,47 @@ class ChangeParser():
 
     @staticmethod
     def generic_list_change_handler(old_value, new_value, changed_field):
+        """
+        Handles the processing of changed fields where the changed field
+        is a list of items. Displays the changed value in unicode format.
+        """
+
         removed_names = [x for x in old_value if x not in new_value and x != '']
         added_names = [x for x in new_value if x not in old_value and x != '']
 
         message = ""
         if len(added_names) > 0:
-            message += "Added to %s: %s. " % (changed_field, str(', '.join(added_names)))
+            message += "Added to %s: %s. " % (changed_field, unicode(', '.join(added_names)))
         if len(removed_names) > 0:
-            message += "Removed from %s: %s. " % (changed_field, str(', '.join(removed_names)))
+            message += "Removed from %s: %s. " % (changed_field, unicode(', '.join(removed_names)))
 
         return message
 
     @staticmethod
     def generic_list_json_change_handler(old_value, new_value, changed_field):
+        """
+        Handles the processing of changed fields where the changed field
+        is a list of items. Displays the changed value in json format via to_json().
+        """
+
         removed_names = [x.to_json() for x in old_value if x not in new_value and x != '']
         added_names = [x.to_json() for x in new_value if x not in old_value and x != '']
 
         message = ""
         if len(added_names) > 0:
-            message += "Added to %s: %s. " % (changed_field, str(', '.join(added_names)))
+            message += "Added to %s: %s. " % (changed_field, unicode(', '.join(added_names)))
         if len(removed_names) > 0:
-            message += "Removed from %s: %s. " % (changed_field, str(', '.join(removed_names)))
+            message += "Removed from %s: %s. " % (changed_field, unicode(', '.join(removed_names)))
 
         return message
 
     @staticmethod
     def generic_single_field_change_handler(old_value, new_value, changed_field, base_fqn=None):
+        """
+        Handles the processing of a changed field where the changed field
+        is displayable in string format.
+        """
+
         if base_fqn is None:
             return "%s changed from \"%s\" to \"%s\"\n" % (changed_field, old_value, new_value)
         else:
@@ -101,6 +120,11 @@ class ChangeParser():
 
     @staticmethod
     def generic_single_field_json_change_handler(old_value, new_value, changed_field, base_fqn=None):
+        """
+        Handles the processing of a changed field where the changed field
+        is displayable in json format via to_json().
+        """
+
         if base_fqn is None:
             return "%s changed from \"%s\" to \"%s\"\n" % (changed_field, old_value.to_json(), new_value.to_json())
         else:
@@ -108,6 +132,8 @@ class ChangeParser():
 
     @staticmethod
     def get_changed_object_list(old_objects, new_objects, object_key):
+
+
         changed_objects = {}
 
         # Try and detect which objects have changed
@@ -189,7 +215,7 @@ class ChangeParser():
     ############################################################################
     @staticmethod
     def actions_summary_handler(object):
-        return "%s - %s" % (object.action_type, str(object.date))
+        return "%s - %s" % (object.action_type, unicode(object.date))
 
     @staticmethod
     def indicator_activity_summary_handler(object):
@@ -201,7 +227,7 @@ class ChangeParser():
 
     @staticmethod
     def raw_data_highlights_summary_handler(object):
-        return "line %s: %s" % (object.line, str(object.line_data))
+        return "line %s: %s" % (object.line, unicode(object.line_data))
 
     @staticmethod
     def raw_data_inlines_summary_handler(object):
@@ -400,7 +426,7 @@ class ChangeParser():
         message = ChangeParser.parse_generic_change_object_list(changed_sources, changed_field, 'name',
                 ChangeParser.source_parse_handler)
 
-        return message
+        return {'message': message, 'source_filter': changed_sources.keys()}
 
     @staticmethod
     def source_instances_parse_handler(old_value, new_value, base_fqn):
@@ -427,6 +453,32 @@ class ChangeParser():
         new_tickets_list = ChangeParser.flatten_objects_to_list(new_value, 'ticket_number')
 
         return ChangeParser.generic_list_change_handler(old_tickets_list, new_tickets_list, changed_field)
+
+
+    ############################################################################
+    # Allowed sources handlers
+    ############################################################################
+    @staticmethod
+    def source_allowed(old_value, new_value):
+        return new_value.source
+
+class MappedMongoFields():
+
+    @staticmethod
+    def get_mapped_mongo_field(top_level_type, field):
+
+        specific_mapped_type = __specific_mongo_to_doc_field__.get(top_level_type)
+
+        # Check for a specific mapped field first, if there isn't one
+        # then just try to use the general mapped fields.
+        if specific_mapped_type is not None:
+            specific_mapped_value = specific_mapped_type.get(field)
+
+            if specific_mapped_value is not None:
+                return specific_mapped_value
+
+        return __general_mongo_to_doc_field__.get(field, field)
+
 
 class NotificationHeaderManager():
     """
@@ -497,9 +549,9 @@ class NotificationHeaderManager():
 
 
 
-__general_mapped_fields__ = {
+__general_field_to_change_handler__ = {
     "actions": ChangeParser.actions_change_handler,
-    "analysis": ChangeParser.generic_single_field_json_change_handler,
+    "analysis": ChangeParser.skip_change_handler,
     "backdoor": ChangeParser.backdoor_change_handler,
     "bucket_list": ChangeParser.bucket_list_change_handler,
     "campaign": ChangeParser.campaign_change_handler,
@@ -511,7 +563,7 @@ __general_mapped_fields__ = {
     "tickets": ChangeParser.tickets_change_handler,
 }
 
-__specific_mapped_fields__ = {
+__specific_field_to_change_handler__ = {
     "Indicator": {
         "activity": ChangeParser.indicator_activity_change_handler,
         "confidence": ChangeParser.indicator_confidence_change_handler,
@@ -538,4 +590,18 @@ __notification_header_handler__ = {
     "Sample": NotificationHeaderManager.generate_sample_header,
     "Screenshot": NotificationHeaderManager.generate_screenshot_header,
     "Target": NotificationHeaderManager.generate_target_header,
+}
+
+__general_mongo_to_doc_field__ = {
+    "objects": "obj"
+}
+
+__specific_mongo_to_doc_field__ = {
+    "Email": {
+        "from": "from_address",
+        "raw_headers": "raw_header",
+    },
+    "Indicator": {
+        "type": "ind_type"
+    }
 }

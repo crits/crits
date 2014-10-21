@@ -13,10 +13,13 @@ from crits.core.form_consts import NotificationType
 from crits.core.user_tools import user_sources
 from crits.core.user_tools import get_subscribed_users
 from crits.notifications.notification import Notification
-from crits.notifications.processor import ChangeParser, NotificationHeaderManager
+from crits.notifications.processor import ChangeParser, MappedMongoFields
+from crits.notifications.processor import NotificationHeaderManager
 
 
-def create_notification(obj, username, message, notification_type=NotificationType.ALERT):
+def create_notification(obj, username, message, source_filter=None,
+                        notification_type=NotificationType.ALERT,
+                        allowed_sources=None):
     """
     Generate an audit entry.
 
@@ -26,6 +29,10 @@ def create_notification(obj, username, message, notification_type=NotificationTy
     :param username: The user creating the notification.
     :type username: str
     :param message: The notification message.
+    :type message: str
+    :param message: The notification type (e.g. alert, error).
+    :type message: str
+    :param message: Filter on who can see this notification.
     :type message: str
     """
 
@@ -64,8 +71,9 @@ def create_notification(obj, username, message, notification_type=NotificationTy
 
             for allowed_source in allowed_sources:
                 if allowed_source in sources:
-                    n.users.append(subscribed_user)
-                    break
+                    if source_filter is None or allowed_source in source_filter:
+                        n.users.append(subscribed_user)
+                        break
     else:
         n.users = get_subscribed_users(n.obj_type, n.obj_id, [])
 
@@ -92,6 +100,143 @@ def create_notification(obj, username, message, notification_type=NotificationTy
             notification_lock.notifyAll()
         finally:
             notification_lock.release()
+
+def generate_audit_notification(username, operation_type, obj, changed_fields, what_changed):
+    """
+    Generate an audit notification on the specific change, if applicable.
+    This is called during an audit of the object, before the actual save
+    to the database occurs.
+
+    :param username: The user creating the notification.
+    :type username: str
+    :param operation_type: The type of operation (i.e. save or delete).
+    :type operation_type: str
+    :param obj: The object.
+    :type obj: class which inherits from
+               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :param changed_fields: A list of field names that were changed.
+    :type changed_fields: list of str
+    :param message: A message summarizing what changed.
+    :type message: str
+    """
+
+    obj_type = obj._meta['crits_type']
+
+    supported_notification = __supported_notification_types__.get(obj_type)
+
+    # Check if the obj is supported for notifications
+    if supported_notification is None:
+        return
+
+    if operation_type == "save":
+        message = "%s updated the following attributes: %s" % (username,
+                                                               what_changed)
+    elif operation_type == "delete":
+        message = "%s deleted the following %s: %s" % (username,
+                                                       obj_type,
+                                                       obj.id)
+
+    process_result = process_changed_fields(message, changed_fields, obj)
+
+    message = process_result.get('message')
+    source_filter = process_result.get('source_filter')
+
+    if message is not None:
+        message = html_escape(message)
+        create_notification(obj, username, message, source_filter, NotificationType.ALERT)
+
+def combine_source_filters(current_source_filters, new_source_filters):
+    """
+    Combines sources together in a restrictive way, e.g. combines sources
+    like a boolean AND operation, e.g. the source must exist in both lists.
+    The only exception is if current_source_filters == None, in which case the
+    new_source_filters will act as the new baseline.
+    """
+
+    combined_source_filters = []
+
+    if current_source_filters is None:
+        return new_source_filters
+    else:
+        for new_source_filter in new_source_filters:
+            if new_source_filter in current_source_filters:
+                combined_source_filters.append(new_source_filter)
+
+    return combined_source_filters
+
+def process_changed_fields(initial_message, changed_fields, obj):
+    """
+    Processes the changed fields to determine what actually changed.
+
+    :param message: An initial message to include.
+    :type message: str
+    :param changed_fields: A list of field names that were changed.
+    :type changed_fields: list of str
+    :param obj: The object.
+    :type obj: class which inherits from
+               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :returns: str: Returns a message indicating what was changed.
+    """
+
+    obj_type = obj._meta['crits_type']
+    message = initial_message
+
+    source_filter = None
+
+    for changed_field in changed_fields:
+
+        # Fields may be fully qualified, e.g. source.1.instances.0.reference
+        # So, split on the '.' character and get the root of the changed field
+        base_changed_field = MappedMongoFields.get_mapped_mongo_field(obj_type, changed_field.split('.')[0])
+
+        new_value = getattr(obj, base_changed_field, '')
+        old_obj = class_from_id(obj_type, obj.id)
+        old_value = getattr(old_obj, base_changed_field, '')
+
+        change_handler = ChangeParser.get_changed_field_handler(obj_type, base_changed_field)
+
+        if change_handler is not None:
+            change_message = change_handler(old_value, new_value, base_changed_field)
+
+            if isinstance(change_message, dict):
+                if change_message.get('source_filter') is not None:
+                    new_source_filter = change_message.get('source_filter')
+                    source_filter = combine_source_filters(source_filter, new_source_filter)
+
+                change_message = change_message.get('message')
+
+            if change_message is not None:
+                message += "\n" + change_message[:1].capitalize() + change_message[1:]
+        else:
+            change_field_handler = ChangeParser.generic_single_field_change_handler
+
+            if isinstance(old_value, BaseList):
+
+                list_value = None
+
+                if len(old_value) > 0:
+                    list_value = old_value[0]
+                elif len(new_value) > 0:
+                    list_value = new_value[0]
+
+                if isinstance(list_value, basestring):
+                    change_field_handler = ChangeParser.generic_list_change_handler
+                elif isinstance(list_value, EmbeddedDocument):
+                    change_field_handler = ChangeParser.generic_list_json_change_handler
+
+            change_message = change_field_handler(old_value, new_value, base_changed_field)
+
+            if isinstance(change_message, dict):
+                if change_message.get('source_filter') is not None:
+                    new_source_filter = change_message.get('source_filter')
+                    combine_source_filters(source_filter, new_source_filter)
+
+                change_message = change_message.get('message')
+
+            if change_message is not None:
+                message += "\n" + change_message[:1].capitalize() + change_message[1:]
+
+    return {'message': message, 'source_filter': source_filter}
 
 def get_notification_details(request, newer_than):
     """
@@ -289,95 +434,6 @@ __supported_notification_types__ = {
     'Sample': 'md5',
     'Target': 'email_address',
 }
-
-def generate_audit_notification(username, operation_type, obj, changed_fields, what_changed):
-
-    obj_type = obj._meta['crits_type']
-
-    supported_notification = __supported_notification_types__.get(obj_type)
-
-    # Check if the obj is supported for notifications
-    if supported_notification is None:
-        return
-
-    if operation_type == "save":
-        message = "%s updated the following attributes: %s" % (username,
-                                                               what_changed)
-    elif operation_type == "delete":
-        message = "%s deleted the following %s: %s" % (username,
-                                                       obj_type,
-                                                       obj.id)
-
-    def map_field(top_level_type, field):
-
-        general_mapped_fields = {
-            "objects": "obj"
-        }
-
-        specific_mapped_fields = {
-            "Email": {
-                "from": "from_address",
-                "raw_headers": "raw_header",
-            },
-            "Indicator": {
-                "type": "ind_type"
-            }
-        }
-
-        specific_mapped_type = specific_mapped_fields.get(top_level_type)
-
-        # Check for a specific mapped field first, if there isn't one
-        # then just try to use the general mapped fields.
-        if specific_mapped_type is not None:
-            specific_mapped_value = specific_mapped_type.get(field)
-
-            if specific_mapped_value is not None:
-                return specific_mapped_value
-
-        return general_mapped_fields.get(field, field)
-
-    for changed_field in changed_fields:
-
-        # Fields may be fully qualified, e.g. source.1.instances.0.reference
-        # So, split on the '.' character and get the root of the changed field
-        base_changed_field = map_field(obj_type, changed_field.split('.')[0])
-
-        new_value = getattr(obj, base_changed_field, '')
-        old_obj = class_from_id(obj_type, obj.id)
-        old_value = getattr(old_obj, base_changed_field, '')
-
-        change_handler = ChangeParser.get_changed_field_handler(obj_type, base_changed_field)
-
-        if change_handler is not None:
-            change_message = change_handler(old_value, new_value, base_changed_field)
-
-            if change_message is not None:
-                message += "\n" + change_message[:1].capitalize() + change_message[1:]
-        else:
-            change_field_handler = ChangeParser.generic_single_field_change_handler
-
-            if isinstance(old_value, BaseList):
-
-                list_value = None
-
-                if len(old_value) > 0:
-                    list_value = old_value[0]
-                elif len(new_value) > 0:
-                    list_value = new_value[0]
-
-                if isinstance(list_value, basestring):
-                    change_field_handler = ChangeParser.generic_list_change_handler
-                elif isinstance(list_value, EmbeddedDocument):
-                    change_field_handler = ChangeParser.generic_list_json_change_handler
-
-            change_message = change_field_handler(old_value, new_value, base_changed_field)
-
-            if change_message is not None:
-                message += "\n" + change_message[:1].capitalize() + change_message[1:]
-
-    message = html_escape(message)
-
-    create_notification(obj, username, message, NotificationType.ALERT)
 
 class NotificationLockManager(object):
     """
