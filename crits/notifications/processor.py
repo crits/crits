@@ -132,7 +132,10 @@ class ChangeParser():
 
     @staticmethod
     def get_changed_object_list(old_objects, new_objects, object_key):
-
+        """
+        Detects which objects have changed by comparing the 'object_key'
+        from both the input old_objects and new_objects parameters.
+        """
 
         changed_objects = {}
 
@@ -155,9 +158,14 @@ class ChangeParser():
 
     @staticmethod
     def get_changed_primitive_list(old_objects, new_objects):
+        """
+        Detects which objects have changed by comparing the value of
+        both the input old_objects and new_objects parameters.
+        """
+
         changed_objects = {}
 
-        # Try and detect which objects have changed
+        # Try and detect which items have changed
         for old_object in old_objects:
             if old_object not in new_objects:
                 if old_object not in changed_objects:
@@ -176,6 +184,12 @@ class ChangeParser():
 
     @staticmethod
     def get_short_name(obj, summary_handler, default):
+        """
+        Generates and returns a human readable short name of the input object
+        by using the input summary_handler parameter. Returns the default
+        parameter if the summary_handler is None.
+        """
+
         short_name = default
 
         if summary_handler is not None:
@@ -186,6 +200,11 @@ class ChangeParser():
     @staticmethod
     def parse_generic_change_object_list(change_dictionary, field_name, object_key,
                                          change_parser_handler=None, summary_handler=None):
+        """
+        Parses a list of complex objects and tries to determine if the object
+        was modified, added, or deleted. Returns a string of the summary of
+        changes.
+        """
 
         message = ""
 
@@ -212,6 +231,9 @@ class ChangeParser():
 
     ############################################################################
     # Summary generation handlers
+    #
+    # These methods generates and returns a human readable short name of
+    # the input object
     ############################################################################
     @staticmethod
     def actions_summary_handler(object):
@@ -245,6 +267,9 @@ class ChangeParser():
 
     ############################################################################
     # Specific Change Handlers/Parsers
+    #
+    # These methods parse the modified field and determine the specific change
+    # that was made.
     ############################################################################
     @staticmethod
     def actions_change_handler(old_value, new_value, changed_field):
@@ -548,7 +573,10 @@ class NotificationHeaderManager():
 
 
 
-
+# Use dictionaries to hold the list of handlers because dictionary
+# lookup time is O(1) whereas a list or a long 'if/else' block is worst
+# case O(n). The consequence of using a dict is that this
+# consumes more memory on startup since the dict needs to be constructed.
 __general_field_to_change_handler__ = {
     "actions": ChangeParser.actions_change_handler,
     "analysis": ChangeParser.skip_change_handler,
