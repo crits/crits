@@ -8,12 +8,12 @@ from mongoengine.base import ValidationError
 from mongoengine.base.datastructures import BaseList
 from mongoengine.queryset import Q
 
-from crits.core.class_mapper import class_from_id, details_url_from_obj, key_descriptor_from_obj_type
+from crits.core.class_mapper import class_from_id, details_url_from_obj
 from crits.core.form_consts import NotificationType
 from crits.core.user_tools import user_sources
 from crits.core.user_tools import get_subscribed_users
 from crits.notifications.notification import Notification
-from crits.notifications.processor import NotificationChangeManager, NotificationHeaderManager
+from crits.notifications.processor import ChangeParser, NotificationHeaderManager
 
 
 def create_notification(obj, username, message, notification_type=NotificationType.ALERT):
