@@ -3163,6 +3163,11 @@ def generate_user_preference(request,section=None,key=None,name=None):
 
     from crits.core.forms import PrefUIForm, NavMenuForm, ToastNotificationConfigForm
 
+    toast_notifications_title = "Toast Notifications"
+
+    if not settings.ENABLE_TOASTS:
+        toast_notifications_title += " (currently globally disabled by an admin)"
+
     preferences = [
         {'section': 'notify',
          'title': 'Notifications',
@@ -3171,7 +3176,7 @@ def generate_user_preference(request,section=None,key=None,name=None):
          'name': 'Email Notifications'
          },
         {'section': 'toast_notifications',
-         'title': 'Toast Notifications',
+         'title': toast_notifications_title,
          'form': ToastNotificationConfigForm(request),
          'formclass': ToastNotificationConfigForm,
         },
