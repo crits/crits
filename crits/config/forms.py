@@ -51,6 +51,9 @@ class ConfigGeneralForm(forms.Form):
                                help_text='*Requires a web server restart.')
     zip7_path = forms.CharField(widget=forms.TextInput, required=True,
                                 help_text='*Requires a web server restart.')
+    enable_toasts = forms.BooleanField(initial=False,
+                                       required=False,
+                                       label="Enable Toast Notifications")
     def __init__(self, *args, **kwargs):
         super(ConfigGeneralForm, self).__init__(*args, **kwargs)
         

@@ -1,7 +1,10 @@
 import json
 
+from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
+from django.shortcuts import render_to_response
+from django.template import RequestContext
 
 from crits.core.user_tools import user_can_view_data
 from crits.notifications.handlers import remove_user_from_notification_id, get_notification_details
@@ -15,18 +18,29 @@ def poll(request):
     that a new notification is available.
     """
 
-    is_toast_enabled = request.user.get_preference('toast_notifications', 'enabled', True)
+    is_user_toast_enabled = request.user.get_preference('toast_notifications', 'enabled', True)
 
-    if is_toast_enabled:
-        newer_than = request.POST.get("newer_than", None)
+    if is_user_toast_enabled and settings.ENABLE_TOASTS:
+        if request.method == 'POST' and request.is_ajax():
+            newer_than = request.POST.get("newer_than", None)
 
-        if newer_than == "":
-            newer_than = None
+            if newer_than == "":
+                newer_than = None
 
-        data = get_notification_details(request, newer_than)
+            data = get_notification_details(request, newer_than)
 
-        return HttpResponse(json.dumps(data),
-                            mimetype="application/json")
+            # discount double check of enabled toasts, settings could
+            # have changed since a long period of blocking.
+            if is_user_toast_enabled and settings.ENABLE_TOASTS:
+                return HttpResponse(json.dumps(data),
+                                    mimetype="application/json")
+            else:
+                return HttpResponse(status=403)
+        else:
+            error = "Expected AJAX POST"
+            return render_to_response("error.html",
+                                      {"error" : error },
+                                      RequestContext(request))
     else:
         # toast notifications are not enabled for this user, return an error
         return HttpResponse(status=403)
@@ -39,9 +53,21 @@ def acknowledge(request):
     that notification listing.
     """
 
-    id = request.POST.get("id", None)
+    is_user_toast_enabled = request.user.get_preference('toast_notifications', 'enabled', True)
 
-    remove_user_from_notification_id(request.user.username, id)
+    if is_user_toast_enabled and settings.ENABLE_TOASTS:
+        if request.method == 'POST' and request.is_ajax():
+            id = request.POST.get("id", None)
 
-    return HttpResponse(json.dumps({}),
-                        mimetype="application/json")
+            remove_user_from_notification_id(request.user.username, id)
+
+            return HttpResponse(json.dumps({}),
+                                mimetype="application/json")
+        else:
+            error = "Expected AJAX POST"
+            return render_to_response("error.html",
+                                      {"error" : error },
+                                      RequestContext(request))
+    else:
+        # toast notifications are not enabled for this user, return an error
+        return HttpResponse(status=403)

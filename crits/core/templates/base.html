@@ -661,8 +661,10 @@
 <!-- end nav -->
 {% endif %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/core.js"></script>
-{% if not request.user.prefs.toast_notifications or request.user.prefs.toast_notifications.enabled != False %}
-<script type="text/javascript" src="{{ STATIC_URL }}js/toast_notifications.js"></script>
+{% if enable_toasts == True %}
+    {% if not request.user.prefs.toast_notifications or request.user.prefs.toast_notifications.enabled != False %}
+        <script type="text/javascript" src="{{ STATIC_URL }}js/toast_notifications.js"></script>
+    {% endif %}
 {% endif %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/dialogs.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/collapsible.js"></script>

@@ -976,6 +976,9 @@ def base_context(request):
                            'company_name',
                            settings.COMPANY_NAME)
     crits_version = settings.CRITS_VERSION
+    enable_toasts = getattr(crits_config,
+                            'enable_toasts',
+                            settings.ENABLE_TOASTS)
     git_branch = getattr(crits_config,
                          'git_branch',
                          settings.GIT_BRANCH)
@@ -1004,6 +1007,7 @@ def base_context(request):
     base_context['instance_name'] = instance_name
     base_context['company_name'] = company_name
     base_context['crits_version'] = crits_version
+    base_context['enable_toasts'] = enable_toasts
     if git_repo_url:
         base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long+"'>"+git_branch+':'+git_hash+"</a>"
     else:
