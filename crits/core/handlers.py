@@ -3757,7 +3757,7 @@ def audit_entry(self, username, type_, new_doc=False):
             pass
 
     # Generate audit notification
-    generate_audit_notification(username, type_, self, changed_fields, what_changed)
+    generate_audit_notification(username, type_, self, changed_fields, what_changed, new_doc)
 
 def ticket_add(type_, id_, ticket):
     """

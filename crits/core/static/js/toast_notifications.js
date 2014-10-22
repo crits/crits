@@ -144,13 +144,17 @@ $(document).ready(function() {
                             notificationType = 'alert';
                         }
 
+
                         if("message" in notification) {
                             var formattedMessage = "";
-                            var messageSegments = notification['message'].split('\n');
+                            var messageSegments = null;
+
+                            if(notification['message'] !== null) {
+                                messageSegments = notification['message'].split('\n')
+                            }
 
                             for(var i in messageSegments) {
-                                if(messageSegments[i].indexOf("updated the following attributes:") === -1 &&
-                                        messageSegments[i].indexOf("deleted the following") === -1) {
+                                if(messageSegments[i].indexOf("updated the following attributes:") === -1) {
 
                                     formattedMessage += messageSegments[i];
 
@@ -160,8 +164,13 @@ $(document).ready(function() {
                                 }
                             }
 
-                            message = "<a href='" + notification['link'] + "' target='_blank'>" + notification['header'] +
-                                    "</a> (by <b>" + modifiedBy + "</b> <span class='noty_modified' data-modified='" +
+                            if(notification['link'] !== null) {
+                                message = "<a href='" + notification['link'] + "' target='_blank'>" + notification['header'] + "</a>";
+                            } else {
+                                message = notification['header'];
+                            }
+
+                            message += " (by <b>" + modifiedBy + "</b> <span class='noty_modified' data-modified='" +
                                     dateModified + "'></span>)<br/>" + formattedMessage;
 
                             generateContainerNoty('div#notifications', notificationType, message, dialogTimeout, id);

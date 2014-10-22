@@ -10,18 +10,17 @@ from mongoengine.queryset import Q
 
 from crits.core.class_mapper import class_from_id, details_url_from_obj
 from crits.core.form_consts import NotificationType
-from crits.core.user_tools import user_sources
-from crits.core.user_tools import get_subscribed_users
+from crits.core.user import CRITsUser
+from crits.core.user_tools import user_sources, get_subscribed_users
 from crits.notifications.notification import Notification
 from crits.notifications.processor import ChangeParser, MappedMongoFields
 from crits.notifications.processor import NotificationHeaderManager
 
 
 def create_notification(obj, username, message, source_filter=None,
-                        notification_type=NotificationType.ALERT,
-                        allowed_sources=None):
+                        notification_type=NotificationType.ALERT):
     """
-    Generate an audit entry.
+    Generate a notification -- based on mongo obj.
 
     :param obj: The object.
     :type obj: class which inherits from
@@ -30,10 +29,10 @@ def create_notification(obj, username, message, source_filter=None,
     :type username: str
     :param message: The notification message.
     :type message: str
-    :param message: The notification type (e.g. alert, error).
-    :type message: str
-    :param message: Filter on who can see this notification.
-    :type message: str
+    :param source_filter: Filter on who can see this notification.
+    :type source_filter: list(str)
+    :param notification_type: The notification type (e.g. alert, error).
+    :type notification_type: str
     """
 
     n = Notification()
@@ -101,7 +100,65 @@ def create_notification(obj, username, message, source_filter=None,
         finally:
             notification_lock.release()
 
-def generate_audit_notification(username, operation_type, obj, changed_fields, what_changed):
+def create_general_notification(username, target_users, header, link_url, message,
+                                notification_type=NotificationType.ALERT):
+    """
+    Generate a general notification -- not based on mongo obj.
+
+    :param obj: The object.
+    :type obj: class which inherits from
+               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :param username: The user creating the notification.
+    :type username: str
+    :param target_users: The list of users who will get the notification.
+    :type target_users: list(str)
+    :param header: The notification header message.
+    :type header: list(str)
+    :param link_url: A link URL for the header, specify None if there is no link.
+    :type link_url: str
+    :param message: The notification message.
+    :type message: str
+    :param notification_type: The notification type (e.g. alert, error).
+    :type notification_type: str
+    """
+
+    if notification_type not in NotificationType.ALL:
+        notification_type = NotificationType.ALERT
+
+    n = Notification()
+    n.analyst = username
+    n.notification_type = notification_type
+    n.notification = message
+    n.header = header
+    n.link_url = link_url
+
+    for target_user in target_users:
+        # Check to make sure the user actually exists
+        user = CRITsUser.objects(username=target_user).first()
+        if user is not None:
+            n.users.append(target_user)
+
+    # don't notify the user creating this notification
+    n.users = [u for u in n.users if u != username]
+    if not len(n.users):
+        return
+    try:
+        n.save()
+    except ValidationError:
+        pass
+
+    # Signal potentially waiting threads that notification information is available
+    for user in n.users:
+        notification_lock = NotificationLockManager.get_notification_lock(user)
+        notification_lock.acquire()
+
+        try:
+            notification_lock.notifyAll()
+        finally:
+            notification_lock.release()
+
+def generate_audit_notification(username, operation_type, obj, changed_fields,
+                                what_changed, is_new_doc=False):
     """
     Generate an audit notification on the specific change, if applicable.
     This is called during an audit of the object, before the actual save
@@ -118,6 +175,8 @@ def generate_audit_notification(username, operation_type, obj, changed_fields, w
     :type changed_fields: list of str
     :param message: A message summarizing what changed.
     :type message: str
+    :param is_new_doc: Indicates if the input obj is newly created.
+    :type is_new_doc: bool
     """
 
     obj_type = obj._meta['crits_type']
@@ -132,9 +191,29 @@ def generate_audit_notification(username, operation_type, obj, changed_fields, w
         message = "%s updated the following attributes: %s" % (username,
                                                                what_changed)
     elif operation_type == "delete":
-        message = "%s deleted the following %s: %s" % (username,
-                                                       obj_type,
-                                                       obj.id)
+        header_description = generate_notification_header(obj)
+        message = "%s deleted the following: %s" % (username,
+                                                    header_description)
+
+    if is_new_doc:
+        sources = []
+
+        if hasattr(obj, 'source'):
+            sources = [s.name for s in obj.source]
+
+        message = None
+        target_users = get_subscribed_users(obj_type, obj.id, sources)
+        header = generate_notification_header(obj)
+        link_url = details_url_from_obj(obj)
+
+        if header is not None:
+            header = "New " + header
+
+        create_general_notification(username,
+                                    target_users,
+                                    header,
+                                    link_url,
+                                    message)
 
     process_result = process_changed_fields(message, changed_fields, obj)
 
@@ -186,6 +265,9 @@ def process_changed_fields(initial_message, changed_fields, obj):
 
     obj_type = obj._meta['crits_type']
     message = initial_message
+
+    if message is None:
+        message = ''
 
     source_filter = None
 
@@ -290,8 +372,21 @@ def get_notification_details(request, newer_than):
 
     for notification in notifications:
         obj = class_from_id(notification.obj_type, notification.obj_id)
-        details_url = details_url_from_obj(obj)
-        header = generate_notification_header(obj)
+
+        if obj is not None:
+            link_url = details_url_from_obj(obj)
+            header = generate_notification_header(obj)
+        else:
+            if notification.header is not None:
+                header = notification.header
+            else:
+                header = "%s %s" % (notification.obj_type, notification.obj_id)
+
+            if notification.link_url is not None:
+                link_url = notification.link_url
+            else:
+                link_url = None
+
         notification_type = notification.notification_type
 
         if notification_type is None or notification_type not in NotificationType.ALL:
@@ -301,7 +396,7 @@ def get_notification_details(request, newer_than):
             "header": header,
             "message": notification.notification,
             "date_modified": str(notification.created),
-            "link": details_url,
+            "link": link_url,
             "modified_by": notification.analyst,
             "id": str(notification.id),
             "type": notification_type,
@@ -550,4 +645,4 @@ def generate_notification_header(obj):
     if generate_notification_header_handler is not None:
         return generate_notification_header_handler(obj)
     else:
-        return "%s: %s" % (type, str(obj.id))
+        return "%s: %s" % (obj._meta['crits_type'], str(obj.id))
