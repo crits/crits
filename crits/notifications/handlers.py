@@ -151,6 +151,12 @@ def combine_source_filters(current_source_filters, new_source_filters):
     like a boolean AND operation, e.g. the source must exist in both lists.
     The only exception is if current_source_filters == None, in which case the
     new_source_filters will act as the new baseline.
+
+    :type current_source_filters: list of source names
+    :param current_source_filters: list(str).
+    :type new_source_filters: list of source names
+    :param new_source_filters: list(str).
+    :returns: str: Returns a list of combined source names.
     """
 
     combined_source_filters = []

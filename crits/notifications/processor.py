@@ -2,14 +2,20 @@
 
 class ChangeParser():
     """
-    Provides many different notification change parsers.
+    Provides many different notification change parsers and utility methods.
     """
 
     @staticmethod
     def get_changed_field_handler(top_level_type, field):
         """
-        Returns a change handler for the field and top level type. If not
-        found then None is returned.
+        Returns a change handler for the field and top level object type. If
+        not found then None is returned.
+
+        :param top_level_type: The top level object type.
+        :type message: str
+        :param field: The field name.
+        :type message: str
+        :returns: function: Returns a change field handler, None if not found
         """
 
         specific_mapped_type = __specific_field_to_change_handler__.get(top_level_type)
@@ -24,9 +30,6 @@ class ChangeParser():
 
         return __general_field_to_change_handler__.get(field)
 
-    @staticmethod
-    def get_allowed_sources_handler(top_level_type, field):
-        return __field_to_allowed_sources_handler__.get(field)
 
     ############################################################################
     # Generic change parsers
@@ -35,6 +38,12 @@ class ChangeParser():
     def flatten_objects_to_list(objects, key):
         """
         Flattens an object list to list values from the input key.
+
+        :type objects: list of complex objects
+        :param objects: list(object).
+        :type key: The name of the field/key to extract for the flattened list
+        :param key: str
+        :returns: str: Returns a list of extracted keys.
         """
 
         return_list = []
@@ -49,6 +58,16 @@ class ChangeParser():
         """
         Handles processing of changed fields where the input is a dictionary of
         values. This will only process the immediate children.
+
+        :type old_value: The old mongo object to compare values against.
+        :param old_value: A Mongo Document
+        :type new_value: The updated/new mongo object to compare values against.
+        :param new_value: A Mongo Document
+        :type fields: list of field names to compare against
+        :param fields: list(str).
+        :type base_fqn: The base descriptor of the object
+        :param base_fqn: str
+        :returns: str: Returns a message summarizing the changes.
         """
 
         message = ""
@@ -75,6 +94,14 @@ class ChangeParser():
         """
         Handles the processing of changed fields where the changed field
         is a list of items. Displays the changed value in unicode format.
+
+        :type old_value: The old mongo object to compare values against.
+        :param old_value: A Mongo Document
+        :type new_value: The updated/new mongo object to compare values against.
+        :param new_value: A Mongo Document
+        :type changed_field: The field name that the comparisons will be against.
+        :param changed_field: str
+        :returns: str: Returns a message summarizing the changes.
         """
 
         removed_names = [x for x in old_value if x not in new_value and x != '']
@@ -93,6 +120,14 @@ class ChangeParser():
         """
         Handles the processing of changed fields where the changed field
         is a list of items. Displays the changed value in json format via to_json().
+
+        :type old_value: The old mongo object to compare values against.
+        :param old_value: A Mongo Document
+        :type new_value: The updated/new mongo object to compare values against.
+        :param new_value: A Mongo Document
+        :type changed_field: The field name that the comparisons will be against.
+        :param changed_field: str
+        :returns: str: Returns a message summarizing the changes.
         """
 
         removed_names = [x.to_json() for x in old_value if x not in new_value and x != '']
@@ -111,6 +146,16 @@ class ChangeParser():
         """
         Handles the processing of a changed field where the changed field
         is displayable in string format.
+
+        :type old_value: The old mongo object to compare values against.
+        :param old_value: A value that can be stringified
+        :type new_value: The updated/new mongo object to compare values against.
+        :param new_value: A value that can be stringified
+        :type changed_field: The field name that the comparisons will be against.
+        :param changed_field: str
+        :type base_fqn: The base descriptor of the object
+        :param base_fqn: str
+        :returns: str: Returns a message summarizing the changes.
         """
 
         if base_fqn is None:
@@ -123,6 +168,16 @@ class ChangeParser():
         """
         Handles the processing of a changed field where the changed field
         is displayable in json format via to_json().
+
+        :type old_value: The old mongo object to compare values against.
+        :param old_value: A Mongo Document
+        :type new_value: The updated/new mongo object to compare values against.
+        :param new_value: A Mongo Document
+        :type changed_field: The field name that the comparisons will be against.
+        :param changed_field: str
+        :type base_fqn: The base descriptor of the object
+        :param base_fqn: str
+        :returns: str: Returns a message summarizing the changes.
         """
 
         if base_fqn is None:
@@ -135,6 +190,15 @@ class ChangeParser():
         """
         Detects which objects have changed by comparing the 'object_key'
         from both the input old_objects and new_objects parameters.
+
+        :type old_objects: A list of the old values.
+        :param old_objects: An iterable segment of a Mongo Document
+        :type new_objects: A list of the new values
+        :param new_objects: An iterable segment of a Mongo Document
+        :type object_key: The field name that will be the key in the returned dict.
+        :param object_key: str
+        :returns: dict(key, dict): Returns a dictionary of changed objects,
+                  in the format of {key: {old, new}}
         """
 
         changed_objects = {}
@@ -161,6 +225,13 @@ class ChangeParser():
         """
         Detects which objects have changed by comparing the value of
         both the input old_objects and new_objects parameters.
+
+        :type old_objects: A list of the old values.
+        :param old_objects: An iterable segment of a Mongo Document
+        :type new_objects: A list of the new values
+        :param new_objects: An iterable segment of a Mongo Document
+        :returns: dict(key, dict): Returns a dictionary of changed objects,
+                  in the format of {key: {old, new}}
         """
 
         changed_objects = {}
@@ -188,6 +259,17 @@ class ChangeParser():
         Generates and returns a human readable short name of the input object
         by using the input summary_handler parameter. Returns the default
         parameter if the summary_handler is None.
+
+        :param obj: The object.
+        :type obj: class which inherits from
+                   :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        :type summary_handler: A summary handler function that will be used
+                               to generate the short name, if not None.
+        :param summary_handler: function
+        :type default: The default value to use if the summary handler is not
+                       able to generate a short name value.
+        :param default: str
+        :returns: str: Returns a short name description.
         """
 
         short_name = default
@@ -204,6 +286,21 @@ class ChangeParser():
         Parses a list of complex objects and tries to determine if the object
         was modified, added, or deleted. Returns a string of the summary of
         changes.
+
+        :type change_dictionary: A dict of changes in the format {key: {old, new}}.
+        :param change_dictionary: dict(key, dict)
+        :type field_name: A description of the field that changed, e.g. its name.
+        :param field_name: str
+        :type object_key: A secondary description of the field that changed, e.g. its name.
+        :param object_key: str
+        :type change_parser_handler: A handler function that determines the
+                                     fields that were changed for the object.
+                                     This is used if the object was modified and
+                                     if the handler function is not None
+        :param change_parser_handler: function
+        :type summary_handler: A handler function that, if not None, generates
+                               a short description of the compared object.
+        :param summary_handler: function
         """
 
         message = ""
@@ -479,13 +576,6 @@ class ChangeParser():
 
         return ChangeParser.generic_list_change_handler(old_tickets_list, new_tickets_list, changed_field)
 
-
-    ############################################################################
-    # Allowed sources handlers
-    ############################################################################
-    @staticmethod
-    def source_allowed(old_value, new_value):
-        return new_value.source
 
 class MappedMongoFields():
 
