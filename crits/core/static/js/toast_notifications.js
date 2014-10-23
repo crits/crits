@@ -1,5 +1,8 @@
 $(document).ready(function() {
     var notyIDToNotyDict = {};
+
+    // this variable is used to calculate the time shift between the server
+    // and client times
     var serverToLocalDateDelta = null;
 
     var timeparts = [
@@ -73,6 +76,9 @@ $(document).ready(function() {
                         $("#close_notifications").show();
                     }
 
+                    // Update the times after showing a new notification
+                    // otherwise the notification might not even be
+                    // displaying a time
                     if(serverToLocalDateDelta !== null) {
                         var currentDate = new Date();
                         var shiftedCurrentDate = new Date(currentDate - serverToLocalDateDelta);
@@ -206,6 +212,9 @@ $(document).ready(function() {
                         }
 
                         var shiftedCurrentDate = new Date(currentDate - serverToLocalDateDelta);
+
+                        // update the notification times after receiving
+                        // new notifications
                         updateNotificationTimes(shiftedCurrentDate);
                     },
                     error: function(data) {
@@ -221,6 +230,8 @@ $(document).ready(function() {
                 });
             } else {
 
+                // still update the notification times, even after giving up
+                // trying to poll for new notifications.
                 if(serverToLocalDateDelta !== null) {
                     var currentDate = new Date();
                     var shiftedCurrentDate = new Date(currentDate - serverToLocalDateDelta);
