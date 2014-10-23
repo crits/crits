@@ -565,67 +565,6 @@ class NotificationLockManager(object):
 
         return cls.__notification_locks__.get(username)
 
-"""
-The following generate_*_header() functions generate a meaningful description
-for that specific object type.
-"""
-def generate_actor_header(obj):
-    return "Actor: %s" % (obj.name)
-
-def generate_backdoor_header(obj):
-    return "Backdoor: %s" % (obj.name)
-
-def generate_campaign_header(obj):
-    return "Campaign: %s" % (obj.name)
-
-def generate_certificate_header(obj):
-    return "Certificate: %s" % (obj.filename)
-
-def generate_domain_header(obj):
-    return "Domain: %s" % (obj.domain)
-
-def generate_email_header(obj):
-    return "Email: %s" % (obj.subject)
-
-def generate_event_header(obj):
-    return "Event: %s" % (obj.title)
-
-def generate_indicator_header(obj):
-    return "Indicator: %s - %s" % (obj.ind_type, obj.value)
-
-def generate_ip_header(obj):
-    return "IP: %s" % (obj.ip)
-
-def generate_pcap_header(obj):
-    return "PCAP: %s" % (obj.filename)
-
-def generate_raw_data_header(obj):
-    return "RawData: %s (version %s)" % (obj.title, obj.version)
-
-def generate_sample_header(obj):
-    return "Sample: %s" % (obj.filename)
-
-def generate_screenshot_header(obj):
-    return "Screenshot: %s" % (obj.filename)
-
-def generate_target_header(obj):
-    return "Target: %s" % (obj.email_address)
-
-notification_header_handler = {
-    "Actor": generate_actor_header,
-    "Campaign": generate_campaign_header,
-    "Certificate": generate_certificate_header,
-    "Domain": generate_domain_header,
-    "Email": generate_email_header,
-    "Event": generate_event_header,
-    "Indicator": generate_indicator_header,
-    "IP": generate_ip_header,
-    "PCAP": generate_pcap_header,
-    "RawData": generate_raw_data_header,
-    "Sample": generate_sample_header,
-    "Screenshot": generate_screenshot_header,
-    "Target": generate_target_header,
-}
 
 def generate_notification_header(obj):
     """
