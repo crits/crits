@@ -63,7 +63,6 @@ class IPHandlerTests(SimpleTestCase):
         prep_db()
         self.factory = RequestFactory()
         self.user = CRITsUser.objects(username=TUSER_NAME).first()
-        self.user.sources.append(TSRC)
         self.user.save()
 
     def tearDown(self):
@@ -104,7 +103,6 @@ class IPViewTests(SimpleTestCase):
         prep_db()
         self.factory = RequestFactory()
         self.user = CRITsUser.objects(username=TUSER_NAME).first()
-        self.user.sources.append(TSRC)
         self.user.save()
         data = {
             'source_reference': IP_REF,

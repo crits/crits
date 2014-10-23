@@ -22,7 +22,7 @@ from crits.actors.handlers import set_actor_name, set_actor_description
 from crits.actors.handlers import update_actor_aliases
 from crits.core import form_consts
 from crits.core.data_tools import json_handler
-from crits.core.user_tools import user_can_view_data, is_admin
+from crits.core.user_tools import user_can_view_data
 
 
 @user_passes_test(user_can_view_data)
@@ -155,13 +155,8 @@ def remove_actor(request, id_):
     """
 
     if request.method == "POST":
-        if is_admin(request.user):
-            actor_remove(id_, request.user.username)
-            return HttpResponseRedirect(reverse('crits.actors.views.actors_listing'))
-        error = 'You do not have permission to remove this item.'
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
+        actor_remove(id_, request.user.username)
+        return HttpResponseRedirect(reverse('crits.actors.views.actors_listing'))
     return render_to_response('error.html',
                               {'error':'Expected AJAX/POST'},
                               RequestContext(request))

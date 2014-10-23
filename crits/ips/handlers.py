@@ -15,7 +15,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
 from crits.core.data_tools import convert_string_to_bool
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, is_user_subscribed, user_sources
+from crits.core.user_tools import is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
 from crits.ips.forms import AddIPForm
 from crits.ips.ip import IP
@@ -377,7 +377,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
             if ':' not in cidr_parts[0] and int(cidr_parts[1]) > 32:
                 raise ValidationError("")
             validate_ipv46_address(cidr_parts[0])
-        except (ValidationError, ValueError) as cidr_error:
+        except (ValidationError, ValueError):
             return {"success" : False, "message" : "Invalid CIDR address. "}
 
     retVal = {}
@@ -482,15 +482,12 @@ def ip_remove(ip_id, username):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    if is_admin(username):
-        ip = IP.objects(id=ip_id).first()
-        if ip:
-            ip.delete(username=username)
-            return {'success': True}
-        else:
-            return {'success':False, 'message':'Could not find IP.'}
+    ip = IP.objects(id=ip_id).first()
+    if ip:
+        ip.delete(username=username)
+        return {'success': True}
     else:
-        return {'success':False, 'message': 'Must be an admin to remove'}
+        return {'success':False, 'message':'Could not find IP.'}
 
 def parse_row_to_bound_ip_form(request, rowData, cache):
     """

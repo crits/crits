@@ -14,7 +14,7 @@ from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, user_sources
+from crits.core.user_tools import user_sources
 from crits.core.user_tools import is_user_subscribed
 from crits.certificates.certificate import Certificate
 from crits.notifications.handlers import remove_user_from_notification
@@ -375,12 +375,9 @@ def delete_cert(md5, username=None):
     :returns: True, False
     """
 
-    if is_admin(username):
-        cert = Certificate.objects(md5=md5).first()
-        if cert:
-            cert.delete(username=username)
-            return True
-        else:
-            return False
+    cert = Certificate.objects(md5=md5).first()
+    if cert:
+        cert.delete(username=username)
+        return True
     else:
         return False

@@ -14,7 +14,7 @@ from crits.core.crits_mongoengine import create_embedded_source, json_handler
 from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, user_sources, is_user_favorite
+from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.pcaps.pcap import PCAP
@@ -382,12 +382,9 @@ def delete_pcap(pcap_md5, username=None):
     :returns: True, False
     """
 
-    if is_admin(username):
-        pcap = PCAP.objects(md5=pcap_md5).first()
-        if pcap:
-            pcap.delete(username=username)
-            return True
-        else:
-            return False
+    pcap = PCAP.objects(md5=pcap_md5).first()
+    if pcap:
+        pcap.delete(username=username)
+        return True
     else:
         return False

@@ -7,7 +7,6 @@ from django.forms.widgets import HiddenInput, SelectMultiple
 from crits.core import form_consts
 from crits.core.handlers import get_source_names, get_item_names, ui_themes
 from crits.core.role import Role
-from crits.core.user_role import UserRole
 from crits.core.user_tools import get_user_organization
 from crits.config.config import CRITsConfig
 from crits import settings
@@ -159,15 +158,6 @@ class PrefUIForm(forms.Form):
         self.fields['theme'].choices = [(t,
                                           t) for t in ui_themes()]
 
-class AddUserRoleForm(forms.Form):
-    """
-    Django form for adding a new user role.
-    """
-
-    error_css_class = 'error'
-    required_css_class = 'required'
-    role = forms.CharField(widget=forms.TextInput, required=True)
-
 class DownloadFileForm(forms.Form):
     """
     Django form for downloading a top-level object.
@@ -256,11 +246,7 @@ class SourceAccessForm(forms.Form):
     roles = forms.MultipleChoiceField(required=True,
                                       widget=SelectMultiple(attrs={'class':'multiselect',
                                                                    'style': 'height: auto;'}))
-    sources = forms.MultipleChoiceField(required=True,
-                                        widget=SelectMultiple(attrs={'class':'multiselect',
-                                                                     'style': 'height: auto;'}))
     organization = forms.ChoiceField(required=True, widget=forms.Select)
-    role = forms.ChoiceField(required=True, widget=forms.Select)
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'textbox'}),
                                required=False)
     totp = forms.BooleanField(initial=False, required=False)
@@ -273,13 +259,6 @@ class SourceAccessForm(forms.Form):
         self.fields['roles'].choices = [(c.name,
                                          c.name) for c in get_item_names(Role,
                                                                          True)]
-        self.fields['sources'].choices = [(c.name,
-                                           c.name) for c in get_source_names(False,
-                                                                             False,
-                                                                             None)]
-        self.fields['role'].choices = [(c.name,
-                                        c.name) for c in get_item_names(UserRole,
-                                                                           True)]
         self.fields['organization'].choices = [(c.name,
                                                 c.name) for c in get_source_names(True,
                                                                                      False,

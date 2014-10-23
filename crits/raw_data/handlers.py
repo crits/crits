@@ -13,7 +13,7 @@ from mongoengine.base import ValidationError
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, user_sources, is_user_favorite
+from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.raw_data.raw_data import RawData, RawDataType
@@ -682,13 +682,10 @@ def delete_raw_data(_id, username=None):
     :returns: bool
     """
 
-    if is_admin(username):
-        raw_data = RawData.objects(id=_id).first()
-        if raw_data:
-            raw_data.delete(username=username)
-            return True
-        else:
-            return False
+    raw_data = RawData.objects(id=_id).first()
+    if raw_data:
+        raw_data.delete(username=username)
+        return True
     else:
         return False
 

@@ -8,13 +8,11 @@
     <td data-field="date">{{campaign.date}}</td>
     {% with hit=obj|default:hit %}
     <td>
-        {% if admin %}
-        <a href="#" title="Delete Campaign" class="ui-icon ui-icon-close deleteClick" 
-	   type="campaign" value="{{campaign.date}}" 
-	   data-del-type="Campaign Association" 
-	   data-del-key="{{ hit.name }}"
-	   action="{% url 'crits.campaigns.views.remove_campaign' relationship.type hit.id %}" key="{{campaign.name}}"></a>
-        {% endif %}
+    <a href="#" title="Delete Campaign" class="ui-icon ui-icon-close deleteClick" 
+   type="campaign" value="{{campaign.date}}" 
+   data-del-type="Campaign Association" 
+   data-del-key="{{ hit.name }}"
+   action="{% url 'crits.campaigns.views.remove_campaign' relationship.type hit.id %}" key="{{campaign.name}}"></a>
         <a href="#" title="Edit Campaign" class="ui-icon ui-icon-pencil dialogClick" dialog="campaign-add" persona="update" action="{% url 'crits.campaigns.views.edit_campaign' relationship.type hit.id %}"></a>
     </td>
     {% endwith %}

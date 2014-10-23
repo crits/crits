@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 
 from crits.core.crits_mongoengine import json_handler
 from crits.core.handlers import get_object_types
-from crits.core.user_tools import user_can_view_data, is_admin
+from crits.core.user_tools import user_can_view_data
 from crits.core import form_consts
 from crits.indicators.forms import NewIndicatorActionForm, UploadIndicatorCSVForm
 from crits.indicators.forms import UploadIndicatorForm, UploadIndicatorTextForm
@@ -304,7 +304,6 @@ def add_update_action(request, method, indicator_id):
             if 'object' in result:
                 result['html'] = render_to_string('indicators_action_row_widget.html',
                                                   {'action': result['object'],
-                                                   'admin': is_admin(username),
                                                    'indicator_id':indicator_id})
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
@@ -329,18 +328,12 @@ def remove_action(request, indicator_id):
 
     if request.method == "POST" and request.is_ajax():
         analyst = request.user.username
-        if is_admin(analyst):
-            date = datetime.datetime.strptime(request.POST['key'],
-                                              settings.PY_DATETIME_FORMAT)
-            date = date.replace(microsecond=date.microsecond/1000*1000)
-            result = action_remove(indicator_id, date, analyst)
-            return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
-        else:
-            error = "You do not have permission to remove this item."
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+        date = datetime.datetime.strptime(request.POST['key'],
+                                            settings.PY_DATETIME_FORMAT)
+        date = date.replace(microsecond=date.microsecond/1000*1000)
+        result = action_remove(indicator_id, date, analyst)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -380,7 +373,6 @@ def add_update_activity(request, method, indicator_id):
             if 'object' in result:
                 result['html'] = render_to_string('indicators_activity_row_widget.html',
                                                   {'activity': result['object'],
-                                                   'admin': is_admin(username),
                                                    'indicator_id':indicator_id})
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
@@ -405,18 +397,13 @@ def remove_activity(request, indicator_id):
 
     if request.method == "POST" and request.is_ajax():
         analyst = request.user.username
-        if is_admin(analyst):
-            date = datetime.datetime.strptime(request.POST['key'],
-                                              settings.PY_DATETIME_FORMAT)
-            date = date.replace(microsecond=date.microsecond/1000*1000)
-            result = activity_remove(indicator_id, date, analyst)
-            return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
-        else:
-            error = "You do not have permission to remove this item."
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+        date = datetime.datetime.strptime(request.POST['key'],
+                                            settings.PY_DATETIME_FORMAT)
+        date = date.replace(microsecond=date.microsecond/1000*1000)
+        result = activity_remove(indicator_id, date, analyst)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
 def update_ci(request, indicator_id, ci_type):

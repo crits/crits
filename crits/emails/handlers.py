@@ -31,7 +31,7 @@ from crits.core.exceptions import ZipFileError
 from crits.core.handlers import class_from_id
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
-from crits.core.user_tools import user_sources, is_admin, is_user_favorite
+from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.domains.handlers import get_domain
 from crits.emails import OleFileIO_PL
@@ -320,7 +320,6 @@ def get_email_detail(email_id, analyst):
                 'campaign_form': campaign_form,
                 'download_form': download_form,
                 'update_data_form': update_data_form,
-                'admin': is_admin(analyst),
                 'service_results': service_results,
                 'rt_url': settings.RT_URL}
     return template, args

@@ -10,7 +10,7 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 
 from crits.core.class_mapper import class_from_type
-from crits.core.user_tools import user_can_view_data, user_is_admin, user_sources
+from crits.core.user_tools import user_can_view_data, user_sources
 from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import do_edit_config, generate_analysis_results_csv
 from crits.services.handlers import generate_analysis_results_jtable
@@ -39,7 +39,7 @@ def analysis_results_listing(request,option=None):
         return generate_analysis_results_csv(request)
     return generate_analysis_results_jtable(request, option)
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def list(request):
     """
     List all services.
@@ -50,7 +50,7 @@ def list(request):
                               RequestContext(request))
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def analysis_result(request, analysis_id):
     """
     Get the TLO type and object_id and redirect to the details page for that
@@ -72,7 +72,7 @@ def analysis_result(request, analysis_id):
                                   {'error': "No TLO found to redirect to."})
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def detail(request, name):
     """
     List all details about a single service.
@@ -90,7 +90,7 @@ def detail(request, name):
                                   RequestContext(request))
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def enable(request, name):
     """
     Enable a service.
@@ -100,7 +100,7 @@ def enable(request, name):
     return HttpResponse(json.dumps(result), mimetype="application/json")
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def disable(request, name):
     """
     Disable a service.
@@ -110,7 +110,7 @@ def disable(request, name):
     return HttpResponse(json.dumps(result), mimetype="application/json")
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def enable_triage(request, name):
     """
     Enable a service to run during triage.
@@ -120,7 +120,7 @@ def enable_triage(request, name):
     return HttpResponse(json.dumps(result), mimetype="application/json")
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def disable_triage(request, name):
     """
     Disable a service from running during triage.
@@ -130,7 +130,7 @@ def disable_triage(request, name):
     return HttpResponse(json.dumps(result), mimetype="application/json")
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def edit_config(request, name):
     """
     Edit a service's configuration.
@@ -262,7 +262,7 @@ def service_run(request, name, crits_type, identifier):
         return HttpResponse(json.dumps(result), mimetype="application/json")
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def delete_task(request, crits_type, identifier, task_id):
     """
     Delete a service task.

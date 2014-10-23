@@ -34,7 +34,7 @@ from crits.core.role import Role
 from crits.core.sector import Sector, SectorObject
 from crits.core.user import CRITsUser, EmbeddedSubscriptions
 from crits.core.user import EmbeddedLoginAttempt
-from crits.core.user_tools import user_sources, is_admin
+from crits.core.user_tools import user_sources
 from crits.core.user_tools import get_subscribed_users, save_user_secret
 from crits.core.user_tools import get_user_email_notification
 
@@ -2094,9 +2094,6 @@ def jtable_ajax_delete(obj,request):
     :returns: bool -- True if item was deleted
     """
 
-    # Only admins can delete
-    if not is_admin(request.user.username):
-        return False
     # Make sure we are supplied _id
     if not "id" in request.POST:
         return False
@@ -2255,9 +2252,8 @@ def build_jtable(jtopts, request):
         jtable['actions']['listAction'] = jtopts['listurl']
 
     # Delete action
-    # If user is admin and deleteurl is set, provide a delete action in jTable
-    if ( is_admin(request.user.username) and
-            'deleteurl' in jtopts and jtopts['deleteurl'] ):
+    # If deleteurl is set, provide a delete action in jTable
+    if 'deleteurl' in jtopts and jtopts['deleteurl']:
         jtable['actions']['deleteAction'] = jtopts['deleteurl']
 
     # We don't have any views available for these actions
@@ -2525,7 +2521,7 @@ def generate_users_jtable(request, option):
         details_url = None
         details_url_key = 'username'
         fields = ['username', 'first_name', 'last_name', 'email',
-                   'last_login', 'organization', 'role', 'is_active',
+                   'last_login', 'organization', 'is_active',
                    'id']
         excludes = ['login_attempts']
         response = jtable_ajax_list(obj_type, details_url, details_url_key,
@@ -2540,7 +2536,7 @@ def generate_users_jtable(request, option):
         'deleteurl': None,
         'searchurl': None,
         'fields': ['username', 'first_name', 'last_name', 'email',
-                   'last_login', 'organization', 'role', 'is_active',
+                   'last_login', 'organization', 'is_active',
                    'id'],
         'hidden_fields': ['id'],
         'linked_fields': []

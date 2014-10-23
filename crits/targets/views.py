@@ -7,7 +7,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from crits.core.user_tools import user_can_view_data, user_is_admin
+from crits.core.user_tools import user_can_view_data
 from crits.targets.forms import TargetInfoForm
 from crits.targets.handlers import upsert_target, get_target_details
 from crits.targets.handlers import remove_target, get_target
@@ -117,7 +117,7 @@ def add_update_target(request):
                                   {"error" : "Expected AJAX POST" },
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def delete_target(request, email_address=None):
     """
     Delete a target.

@@ -13,7 +13,7 @@ from crits.core.crits_mongoengine import create_embedded_source
 from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, is_user_subscribed, user_sources
+from crits.core.user_tools import is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
@@ -392,15 +392,12 @@ def actor_remove(id_, username):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    if is_admin(username):
-        actor = Actor.objects(id=id_).first()
-        if actor:
-            actor.delete(username=username)
-            return {'success': True}
-        else:
-            return {'success':False, 'message':'Could not find Actor.'}
+    actor = Actor.objects(id=id_).first()
+    if actor:
+        actor.delete(username=username)
+        return {'success': True}
     else:
-        return {'success':False, 'message': 'Must be an admin to remove'}
+        return {'success':False, 'message':'Could not find Actor.'}
 
 def create_actor_identifier_type(username, identifier_type):
     """
@@ -576,7 +573,6 @@ def attribute_actor_identifier(id_, identifier_type, identifier=None,
     """
 
     sources = user_sources(analyst)
-    admin = is_admin(analyst)
     actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
@@ -595,7 +591,6 @@ def attribute_actor_identifier(id_, identifier_type, identifier=None,
 
     html = render_to_string('actor_identifiers_widget.html',
                             {'actor_identifiers': actor_identifiers,
-                             'admin': admin,
                              'actor_id': str(actor.id)})
 
     return {'success': True,
@@ -645,7 +640,6 @@ def remove_attribution(id_, identifier=None, analyst=None):
     """
 
     sources = user_sources(analyst)
-    admin = is_admin(analyst)
     actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
@@ -659,7 +653,6 @@ def remove_attribution(id_, identifier=None, analyst=None):
 
     html = render_to_string('actor_identifiers_widget.html',
                             {'actor_identifiers': actor_identifiers,
-                             'admin': admin,
                              'actor_id': str(actor.id)})
 
     return {'success': True,

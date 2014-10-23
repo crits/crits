@@ -274,7 +274,6 @@ def comment_update(cleaned_data, obj_type, obj_id, subscr, analyst):
         message = "Cannot find comment to update!"
         result = {'success': False, 'message': message}
     elif comment.analyst != analyst:
-        # Should admin users be able to edit others comments?
         message = "You cannot edit comments from other analysts!"
         result = {'success': False, 'message': message}
     else:
@@ -313,7 +312,6 @@ def comment_remove(obj_id, analyst, date):
         message = "Could not find comment to remove!"
         result = {'success': False, 'message': message}
     elif comment.analyst != analyst:
-        # Should admin users be able to delete others comments?
         message = "You cannot delete comments from other analysts!"
         result = {'success': False, 'message': message}
     else:

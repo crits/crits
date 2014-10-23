@@ -46,7 +46,7 @@ def user_sources(username):
         try:
             user = CRITsUser.objects(username=username).first()
             if user:
-                return user.sources
+                return user.get_sources_list()
             else:
                 return []
         except Exception:
@@ -91,23 +91,6 @@ def get_user_organization(username):
     else:
         return settings.COMPANY_NAME
 
-def is_admin(username):
-    """
-    Determine if the user is an admin.
-
-    :param username: The user to lookup.
-    :type username: str
-    :returns: True, False
-    """
-
-    from crits.core.user import CRITsUser
-    username = str(username)
-    user = CRITsUser.objects(username=username).first()
-    if user:
-        if user.role == "Administrator":
-            return True
-    return False
-
 def get_user_role(username):
     """
     Get the user role.
@@ -135,20 +118,6 @@ def user_can_view_data(user):
         return user.is_authenticated()
     else:
         return False
-
-def user_is_admin(user):
-    """
-    Determine if the user is an admin and authenticated and active.
-
-    :param user: The user to lookup.
-    :type user: str
-    :returns: True, False
-    """
-
-    if user.is_active:
-        if user.is_authenticated():
-            return is_admin(user)
-    return False
 
 def get_user_list():
     """

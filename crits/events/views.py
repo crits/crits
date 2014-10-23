@@ -9,7 +9,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from crits.core import form_consts
-from crits.core.user_tools import user_can_view_data, user_is_admin
+from crits.core.user_tools import user_can_view_data
 from crits.events.forms import EventForm
 from crits.events.handlers import event_remove, update_event_description
 from crits.events.handlers import update_event_title, update_event_type
@@ -152,7 +152,7 @@ def upload_sample(request, event_id):
                                             args=[event_id]))
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def remove_event(request, _id):
     """
     Remove an Event.

@@ -8,7 +8,6 @@ from django.template import RequestContext
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
-from crits.core.user_tools import user_is_admin
 from crits.certificates.forms import UploadCertificateForm
 from crits.certificates.handlers import update_cert_description, handle_cert_file
 from crits.certificates.handlers import delete_cert, get_certificate_details
@@ -127,7 +126,7 @@ def upload_certificate(request):
                                   {'error': "Expected POST."},
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def remove_certificate(request, md5):
     """
     Remove a Certificate from CRITs.

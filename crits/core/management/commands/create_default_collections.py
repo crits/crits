@@ -13,7 +13,6 @@ from create_sectors import add_sector_objects
 from setconfig import create_config_if_not_exist
 from create_actors_content import add_actor_content
 
-from crits.core.user_role import UserRole
 from crits.domains.domain import TLD
 from crits.samples.exploit import Exploit
 from crits.samples.backdoor import Backdoor
@@ -45,7 +44,6 @@ class Command(BaseCommand):
             print "Dropping enabled. Will drop content before adding!"
         else:
             print "Drop protection enabled. Will not drop existing content!"
-        populate_user_roles(drop)
         populate_exploits(drop)
         populate_backdoors(drop)
         populate_indicator_actions(drop)
@@ -69,29 +67,6 @@ class Command(BaseCommand):
         add_uber_admin_role(drop)
         create_config_if_not_exist()
         create_indexes()
-
-def populate_user_roles(drop):
-    """
-    Populate default set of user roles into the system.
-
-    :param drop: Drop the existing collection before trying to populate.
-    :type: boolean
-    """
-
-    # define your user roles here
-    # note: you MUST have Administrator, Read Only, and a third option
-    # available!
-    user_roles = ['Administrator', 'Analyst', 'Read Only']
-    if drop:
-        UserRole.drop_collection()
-    if len(UserRole.objects()) < 1:
-        for role in user_roles:
-            ur = UserRole()
-            ur.name = role
-            ur.save()
-        print "User Roles: added %s roles!" % len(user_roles)
-    else:
-        print "User Roles: existing documents detected. skipping!"
 
 def populate_exploits(drop):
     """

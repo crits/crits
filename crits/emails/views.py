@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 
 from crits.core import form_consts
-from crits.core.user_tools import user_can_view_data, user_sources, user_is_admin
+from crits.core.user_tools import user_can_view_data, user_sources
 from crits.emails.email import Email
 from crits.emails.forms import EmailYAMLForm, EmailOutlookForm
 from crits.emails.forms import EmailEMLForm, EmailUploadForm, EmailRawUploadForm
@@ -56,7 +56,7 @@ def email_search(request):
     return HttpResponseRedirect(reverse('crits.emails.views.emails_listing')
                                 + "?%s" % urllib.urlencode(query))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def email_del(request, email_id):
     """
     Delete an email.

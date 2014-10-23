@@ -16,7 +16,7 @@ from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list
 from crits.core.handlers import jtable_ajax_delete
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, user_sources, is_user_favorite
+from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.events.event import Event, EventType
 from crits.notifications.handlers import remove_user_from_notification
@@ -319,13 +319,10 @@ def event_remove(_id, username):
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    if is_admin(username):
-        event = Event.objects(id=_id).first()
-        if event:
-            event.delete(username=username)
-        return {'success':True}
-    else:
-        return {'success':False,'message': 'Need to be admin'}
+    event = Event.objects(id=_id).first()
+    if event:
+        event.delete(username=username)
+    return {'success':True}
 
 def update_event_description(event_id, description, analyst):
     """

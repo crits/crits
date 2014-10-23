@@ -173,9 +173,7 @@ $(document).ready(function(){
             update_filenames(my_tags);
         },
         beforeTagRemoved: function(event, ui) {
-            if (is_admin != "True") {
-                return false;
-            }
+            return true;
         },
         afterTagRemoved: function(event, ui) {
             var my_tags = $("#sample_filenames").tagit("assignedTags");

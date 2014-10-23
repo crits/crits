@@ -30,7 +30,7 @@ from crits.core.handlers import csv_export
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
 from crits.core.mongo_tools import get_file
 from crits.core.source_access import SourceAccess
-from crits.core.user_tools import is_admin, user_sources, get_user_organization
+from crits.core.user_tools import user_sources, get_user_organization
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
@@ -459,13 +459,10 @@ def delete_sample(sample_md5, username=None):
     :returns: bool
     """
 
-    if is_admin(username):
-        sample = Sample.objects(md5=sample_md5).first()
-        if sample:
-            sample.delete(username=username)
-            return True
-        else:
-            return False
+    sample = Sample.objects(md5=sample_md5).first()
+    if sample:
+        sample.delete(username=username)
+        return True
     else:
         return False
 

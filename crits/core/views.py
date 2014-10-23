@@ -26,7 +26,7 @@ from crits.comments.forms import AddCommentForm, InlineCommentForm
 from crits.config.config import CRITsConfig
 from crits.core.crits_mongoengine import RelationshipType
 from crits.core.data_tools import json_handler
-from crits.core.forms import SourceAccessForm, AddSourceForm, AddUserRoleForm
+from crits.core.forms import SourceAccessForm, AddSourceForm
 from crits.core.forms import SourceForm, DownloadFileForm, AddReleasabilityForm
 from crits.core.forms import TicketForm, AddRoleForm, RoleCombinePreview
 from crits.core.handlers import add_releasability, add_releasability_instance
@@ -55,14 +55,14 @@ from crits.core.handlers import add_role_source, remove_role_source
 from crits.core.handlers import edit_role_description, edit_role_name
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
-from crits.core.user_tools import user_can_view_data, is_admin, user_sources
-from crits.core.user_tools import user_is_admin, get_user_list, get_nav_template
+from crits.core.user_tools import user_can_view_data, user_sources
+from crits.core.user_tools import get_user_list, get_nav_template
 from crits.core.user_tools import get_user_role, get_user_email_notification
 from crits.core.user_tools import get_user_info, get_user_organization
 from crits.core.user_tools import is_user_subscribed, unsubscribe_user
 from crits.core.user_tools import subscribe_user, subscribe_to_source
 from crits.core.user_tools import unsubscribe_from_source, is_user_subscribed_to_source
-from crits.core.user_tools import add_new_user_role, change_user_password, toggle_active
+from crits.core.user_tools import change_user_password, toggle_active
 from crits.core.user_tools import save_user_secret
 from crits.core.user_tools import toggle_user_preference, update_user_preference
 from crits.core.user_tools import get_api_key_by_name, create_api_key_by_name
@@ -412,7 +412,7 @@ def profile(request, user=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if user and is_admin(request.user.username):
+    if user:
         username = user
     else:
         username = request.user.username
@@ -521,11 +521,6 @@ def source_access(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if not is_admin(request.user.username):
-        error = "You do not have permission to use this feature!"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
     if request.method == 'POST' and request.is_ajax():
         form = SourceAccessForm(request.POST)
         if form.is_valid():
@@ -546,7 +541,7 @@ def source_access(request):
                                   {"error" : error },
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def source_add(request):
     """
     Add a source to CRITs. Should be an AJAX POST.
@@ -580,38 +575,7 @@ def source_add(request):
                               {"error" : 'Expected AJAX POST' },
                               RequestContext(request))
 
-@user_passes_test(user_is_admin)
-def user_role_add(request):
-    """
-    Add a user role to CRITs. Should be an AJAX POST.
-
-    :param request: Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        role_form = AddUserRoleForm(request.POST)
-        analyst = request.user.username
-        if role_form.is_valid() and is_admin(request.user.username):
-            result = add_new_user_role(role_form.cleaned_data['role'],
-                                       analyst)
-            if result:
-                message = {'message': '<div>User role added successfully!</div>',
-                           'success': True}
-            else:
-                message = {'message': '<div>User role  addition failed!</div>',
-                           'success': False}
-        else:
-            message = {'success': False,
-                       'form': role_form.as_table()}
-        return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
-    return render_to_response("error.html",
-                              {"error" : 'Expected AJAX POST'},
-                              RequestContext(request))
-
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def role_add(request):
     """
     Add a role to CRITs. Should be an AJAX POST.
@@ -624,7 +588,7 @@ def role_add(request):
     if request.method == "POST" and request.is_ajax():
         role_form = AddRoleForm(request.POST)
         analyst = request.user.username
-        if role_form.is_valid() and is_admin(request.user.username):
+        if role_form.is_valid():
             name = role_form.cleaned_data['name']
             description = role_form.cleaned_data['description']
             copy_from = role_form.cleaned_data['copy_from']
@@ -647,7 +611,7 @@ def role_add(request):
                               {"error" : 'Expected AJAX POST'},
                               RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def role_graph(request):
     """
     Render the role graph.
@@ -759,22 +723,16 @@ def remove_source(request, obj_type, obj_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        if is_admin(request.user.username):
-            date = datetime.datetime.strptime(request.POST['key'],
-                                              settings.PY_DATETIME_FORMAT)
-            name = request.POST['name']
-            result = source_remove(obj_type,
-                                   obj_id,
-                                   name,
-                                   date,
-                                   '%s' % request.user.username)
-            return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
-        else:
-            error = "You do not have permission to remove this item"
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+        date = datetime.datetime.strptime(request.POST['key'],
+                                            settings.PY_DATETIME_FORMAT)
+        name = request.POST['name']
+        result = source_remove(obj_type,
+                                obj_id,
+                                name,
+                                date,
+                                '%s' % request.user.username)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -792,19 +750,13 @@ def remove_all_source(request, obj_type, obj_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        if is_admin(request.user.username):
-            name = request.POST['key']
-            result = source_remove_all(obj_type,
-                                       obj_id,
-                                       name, '%s' % request.user.username)
-            result['last'] = True
-            return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
-        else:
-            error = "You do not have permission to remove this item"
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+        name = request.POST['key']
+        result = source_remove_all(obj_type,
+                                    obj_id,
+                                    name, '%s' % request.user.username)
+        result['last'] = True
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -1101,7 +1053,6 @@ def base_context(request):
         base_context['role_combine_preview'] = RoleCombinePreview()
         base_context['source_access'] = SourceAccessForm()
         base_context['upload_tlds'] = TLDUpdateForm()
-        base_context['user_role_add'] = AddUserRoleForm()
         base_context['role_add'] = AddRoleForm()
         base_context['new_ticket'] = TicketForm(initial={'date': datetime.datetime.now()})
         base_context['add_actor_identifier_type'] = AddActorIdentifierTypeForm()
@@ -1238,36 +1189,35 @@ def base_context(request):
                                       'hover_text_color': request.user.prefs.nav.get('hover_text_color'),
                                       'hover_background_color': request.user.prefs.nav.get('hover_background_color')}
 
-    if is_admin(request.user.username):
-        try:
-            base_context['source_create'] = AddSourceForm()
-        except Exception, e:
-            logger.warning("Base Context AddSourceForm Error: %s" % e)
-        base_context['category_list'] = [
-                                        {'collection': '', 'name': ''},
-                                        {'collection': settings.COL_BACKDOOR_DETAILS,
-                                            'name': 'Backdoors'},
-                                        {'collection': settings.COL_CAMPAIGNS,
-                                            'name': 'Campaigns'},
-                                        {'collection': settings.COL_EVENT_TYPES,
-                                            'name': 'Event Types'},
-                                        {'collection': settings.COL_EXPLOIT_DETAILS,
-                                            'name': 'Exploits'},
-                                        {'collection': settings.COL_IDB_ACTIONS,
-                                            'name': 'Indicator Actions'},
-                                        {'collection': settings.COL_INTERNAL_LOCATIONS,
-                                            'name': 'Internal Locations'},
-                                        {'collection': settings.COL_OBJECT_TYPES,
-                                            'name': 'Object Types'},
-                                        {'collection': settings.COL_RAW_DATA_TYPES,
-                                            'name': 'Raw Data Types'},
-                                        {'collection': settings.COL_RELATIONSHIP_TYPES,
-                                            'name': 'Relationship Types'},
-                                        {'collection': settings.COL_SOURCE_ACCESS,
-                                            'name': 'Sources'},
-                                        {'collection': settings.COL_USER_ROLES,
-                                            'name': 'User Roles'}
-                                        ]
+    try:
+        base_context['source_create'] = AddSourceForm()
+    except Exception, e:
+        logger.warning("Base Context AddSourceForm Error: %s" % e)
+    base_context['category_list'] = [
+                                    {'collection': '', 'name': ''},
+                                    {'collection': settings.COL_BACKDOOR_DETAILS,
+                                        'name': 'Backdoors'},
+                                    {'collection': settings.COL_CAMPAIGNS,
+                                        'name': 'Campaigns'},
+                                    {'collection': settings.COL_EVENT_TYPES,
+                                        'name': 'Event Types'},
+                                    {'collection': settings.COL_EXPLOIT_DETAILS,
+                                        'name': 'Exploits'},
+                                    {'collection': settings.COL_IDB_ACTIONS,
+                                        'name': 'Indicator Actions'},
+                                    {'collection': settings.COL_INTERNAL_LOCATIONS,
+                                        'name': 'Internal Locations'},
+                                    {'collection': settings.COL_OBJECT_TYPES,
+                                        'name': 'Object Types'},
+                                    {'collection': settings.COL_RAW_DATA_TYPES,
+                                        'name': 'Raw Data Types'},
+                                    {'collection': settings.COL_RELATIONSHIP_TYPES,
+                                        'name': 'Relationship Types'},
+                                    {'collection': settings.COL_SOURCE_ACCESS,
+                                        'name': 'Sources'},
+                                    {'collection': settings.COL_USER_ROLES,
+                                        'name': 'User Roles'}
+                                    ]
 
     return base_context
 
@@ -1284,10 +1234,6 @@ def user_context(request):
     """
 
     context = {}
-    try:
-        context['admin'] = is_admin(request.user.username)
-    except:
-        context['admin'] = False
     # Get user theme
     user = CRITsUser.objects(username=request.user.username).first()
     context['theme'] = user.get_preference('ui', 'theme', 'default')
@@ -1321,7 +1267,7 @@ def get_user_source_list(request):
                                   {"error" : error },
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def user_source_access(request, username=None):
     """
     Get a user's source access list. Should be an AJAX POST.
@@ -1339,13 +1285,10 @@ def user_source_access(request, username=None):
         user = get_user_info(username)
         if user:
             user = user.to_dict()
-            if 'sources' not in user:
-                user['sources'] = ''
             if 'roles' not in user:
                 user['roles'] = ''
         else:
             user = {'username': '',
-                    'sources': '',
                     'roles': '',
                     'organization': settings.COMPANY_NAME}
         form = SourceAccessForm(initial=user)
@@ -1654,7 +1597,7 @@ def change_totp_pin(request):
                                   {"error" : error },
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def control_panel(request):
     """
     Render the control panel.
@@ -1668,7 +1611,7 @@ def control_panel(request):
                                 {},
                                 RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def roles_listing(request, option=None):
     """
     Generate the jtable data for rendering in the list template.
@@ -1682,7 +1625,7 @@ def roles_listing(request, option=None):
 
     return generate_roles_jtable(request, option)
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def users_listing(request, option=None):
     """
     Generate the jtable data for rendering in the list template.
@@ -1696,7 +1639,7 @@ def users_listing(request, option=None):
 
     return generate_users_jtable(request, option)
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def toggle_user_active(request):
     """
     Toggle a user active/inactive. Should be an AJAX POST.
@@ -1722,7 +1665,7 @@ def toggle_user_active(request):
                                   {"error" : error },
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def item_editor(request):
     """
     Render the item editor control panel page.
@@ -1753,7 +1696,7 @@ def item_editor(request):
                               {'counts': counts},
                               RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def items_listing(request, itype, option=None):
     """
     Generate the jtable data for rendering in the list template.
@@ -1769,7 +1712,7 @@ def items_listing(request, itype, option=None):
 
     return generate_items_jtable(request, itype, option)
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def audit_listing(request, option=None):
     """
     Generate the jtable data for rendering in the list template.
@@ -2030,18 +1973,12 @@ def add_update_ticket(request, method, type_=None, id_=None):
 
     if method == "remove" and request.method == "POST" and request.is_ajax():
         analyst = request.user.username
-        if is_admin(analyst):
-            date = datetime.datetime.strptime(request.POST['key'],
-                                              settings.PY_DATETIME_FORMAT)
-            date = date.replace(microsecond=date.microsecond/1000*1000)
-            result = ticket_remove(type_, id_, date, analyst)
-            return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
-        else:
-            error = "You do not have permission to remove this item."
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+        date = datetime.datetime.strptime(request.POST['key'],
+                                            settings.PY_DATETIME_FORMAT)
+        date = date.replace(microsecond=date.microsecond/1000*1000)
+        result = ticket_remove(type_, id_, date, analyst)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
 
     if request.method == "POST" and request.is_ajax():
         form = TicketForm(request.POST)
@@ -2065,7 +2002,6 @@ def add_update_ticket(request, method, type_=None, id_=None):
             if 'object' in result:
                 result['html'] = render_to_string('tickets_row_widget.html',
                                                   {'ticket': result['object'],
-                                                   'admin': is_admin(request.user),
                                                    'crits_config': crits_config,
                                                    'obj_type': type_,
                                                    'obj': class_from_id(type_, id_)})

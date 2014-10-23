@@ -196,9 +196,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         "schema_doc": {
             'username': 'The username of this analyst',
             'organization': 'The name of the organization this user is from',
-            'role': 'The role this user has been granted from a CRITs Admin',
-            'sources': ('List [] of source names this user has been granted'
-                        ' access to view data from'),
+            'roles': ('List [] of roles names this user has been granted'
+                        ' access to.'),
             'subscriptions': {
                 'Campaign': [
                     {
@@ -308,8 +307,6 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     organization = StringField(default=settings.COMPANY_NAME)
     password_reset = EmbeddedDocumentField(EmbeddedPasswordReset, default=EmbeddedPasswordReset())
     roles = ListField(StringField())
-    role = StringField(default="Analyst")
-    sources = ListField(StringField())
     subscriptions = EmbeddedDocumentField(EmbeddedSubscriptions, default=EmbeddedSubscriptions())
     favorites = EmbeddedDocumentField(EmbeddedFavorites, default=EmbeddedFavorites())
     prefs = EmbeddedDocumentField(PreferencesField, default=PreferencesField())
@@ -866,6 +863,11 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         return resp
 
 
+    def get_sources_list(self):
+        if not self._meta['cached_acl']:
+            self.get_access_list(update=True)
+        return [s.name for s in self._meta['cached_acl'].sources]
+
     def get_access_list(self, update=False):
         """
         Generate a single new Role object based off of a combination of all of
@@ -1246,7 +1248,6 @@ class CRITsRemoteUserBackend(CRITsAuthBackend):
         elif not user and config.create_unknown_user:
             # Create the user
             user = CRITsUser.create_user(username=username, password=None)
-            user.sources.append(config.company_name)
             # Attempt to update info from LDAP
             user.update_from_ldap("Auto LDAP update", config)
             user = self._successful_settings(user, e, totp_enabled)

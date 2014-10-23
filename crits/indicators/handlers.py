@@ -23,7 +23,7 @@ from crits.core.crits_mongoengine import json_handler
 from crits.core.forms import SourceForm, DownloadFileForm
 from crits.core.handlers import build_jtable, csv_export
 from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
-from crits.core.user_tools import is_admin, user_sources
+from crits.core.user_tools import user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.domains.domain import Domain
 from crits.domains.handlers import get_domain, upsert_domain
@@ -842,15 +842,12 @@ def indicator_remove(_id, username):
     :returns: dict with keys "success" (boolean) and "message" (list) if failed.
     """
 
-    if is_admin(username):
-        indicator = Indicator.objects(id=_id).first()
-        if indicator:
-            indicator.delete(username=username)
-            return {'success':True}
-        else:
-            return {'success':False,'message':['Cannot find Indicator']}
+    indicator = Indicator.objects(id=_id).first()
+    if indicator:
+        indicator.delete(username=username)
+        return {'success':True}
     else:
-        return {'success':False,'message':['Must be an admin to delete']}
+        return {'success':False,'message':['Cannot find Indicator']}
 
 def action_add(indicator_id, action):
     """

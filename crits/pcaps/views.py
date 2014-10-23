@@ -8,7 +8,6 @@ from django.template import RequestContext
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
-from crits.core.user_tools import user_is_admin
 from crits.pcaps.forms import UploadPcapForm
 from crits.pcaps.handlers import update_pcap_description, handle_pcap_file
 from crits.pcaps.handlers import delete_pcap, get_pcap_details
@@ -128,7 +127,7 @@ def upload_pcap(request):
                                   {'error': "Expected POST."},
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def remove_pcap(request, md5):
     """
     Remove a PCAP from CRITs.

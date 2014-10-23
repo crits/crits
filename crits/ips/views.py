@@ -10,7 +10,7 @@ from django.template import RequestContext
 from crits.core import form_consts
 from crits.core.data_tools import json_handler
 from crits.core.handsontable_tools import form_to_dict
-from crits.core.user_tools import user_can_view_data, is_admin
+from crits.core.user_tools import user_can_view_data
 from crits.ips.forms import AddIPForm
 from crits.ips.handlers import ip_add_update, ip_remove
 from crits.ips.handlers import generate_ip_jtable, get_ip_details
@@ -183,15 +183,10 @@ def remove_ip(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        if is_admin(request.user):
-            result = ip_remove(request.POST['key'],
-                               request.user.username)
-            return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
-        error = 'You do not have permission to remove this item.'
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
+        result = ip_remove(request.POST['key'],
+                            request.user.username)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
     return render_to_response('error.html',
                               {'error':'Expected AJAX/POST'},
                               RequestContext(request))

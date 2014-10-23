@@ -8,7 +8,6 @@ from django.template import RequestContext
 
 from crits.core.handlers import get_item_names
 from crits.core.user_tools import user_can_view_data
-from crits.core.user_tools import user_is_admin
 from crits.raw_data.forms import UploadRawDataFileForm, UploadRawDataForm
 from crits.raw_data.forms import NewRawDataTypeForm
 from crits.raw_data.handlers import update_raw_data_description
@@ -435,7 +434,7 @@ def upload_raw_data(request, link_id=None):
                                   {'error': "Expected POST."},
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def remove_raw_data(request, _id):
     """
     Remove RawData from CRITs.

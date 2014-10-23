@@ -1,5 +1,4 @@
 import json
-import re
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -9,9 +8,9 @@ from crits.config.config import CRITsConfig
 from crits.config.forms import ConfigGeneralForm, ConfigLDAPForm, ConfigSecurityForm, ConfigCritsForm
 from crits.config.forms import ConfigLoggingForm, ConfigServicesForm, ConfigDownloadForm
 from crits.config.handlers import modify_configuration
-from crits.core.user_tools import user_is_admin
+from crits.core.user_tools import user_can_view_data
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def crits_config(request):
     """
     Generate the CRITs Configuration template.
@@ -51,7 +50,7 @@ def crits_config(request):
                                'config_CRITs_form': config_CRITs_form},
                               RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def modify_config(request):
     """
     Modify the CRITs Configuration. Should be an AJAX POST.
@@ -69,7 +68,7 @@ def modify_config(request):
         config_services_form = ConfigServicesForm(request.POST)
         config_download_form = ConfigDownloadForm(request.POST)
         config_CRITs_form = ConfigCritsForm(request.POST)
-        
+
         forms = [config_general_form,
                  config_LDAP_form,
                  config_security_form,
@@ -86,7 +85,7 @@ def modify_config(request):
                        "ConfigDownloadForm": "Downloading",
                        "ConfigCritsForm": "CRITs"
                        }
-        
+
         analyst = request.user.username
         errors = []
         #iterate over all the forms, checking if they're valid
@@ -113,9 +112,9 @@ def modify_config(request):
         else:   #if there is only one tab with errors, make the error message singular
             formsWithErrors = errorStringDict.values()[0]
             message ="Invalid Form: The " + formsWithErrors + " tab has errors."
-        
-        
-        
+
+
+
         message = {'message': message,
                    'errors' : errors}
         return HttpResponse(json.dumps(message), mimetype="application/json")

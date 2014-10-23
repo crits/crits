@@ -15,7 +15,7 @@ from crits.core.data_tools import xor_string, make_stackstrings
 from crits.core.exceptions import ZipFileError
 from crits.core.handlers import get_object_types
 from crits.core.handsontable_tools import form_to_dict
-from crits.core.user_tools import user_can_view_data, user_is_admin
+from crits.core.user_tools import user_can_view_data
 from crits.core.user_tools import get_user_organization
 from crits.objects.forms import AddObjectForm
 from crits.samples.forms import UploadFileForm, NewExploitForm, NewBackdoorForm
@@ -658,7 +658,7 @@ def add_backdoor(request, sample_md5):
     return HttpResponseRedirect(reverse('crits.samples.views.detail',
                                         args=[sample_md5]))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def remove_sample(request, md5):
     """
     Remove a sample from CRITs.

@@ -11,13 +11,11 @@
     <td data-field="analyst">{{identifier.analyst}}</td>
     <td data-field="date">{{identifier.date}}</td>
     <td>
-        {% if admin %}
-        <a href="#" title="Delete Identifier" class="ui-icon ui-icon-close deleteClick" 
-            type="{{actor_id}}" value="{{identifier.id}}" 
-	   data-del-type="Actor Identifier Attribution" 
-	   data-del-key="{{ identifier.id }}"
-	   action="{% url 'crits.actors.views.remove_attributed_identifier' %}" key="{{identifier.id}}"></a>
-        {% endif %}
+    <a href="#" title="Delete Identifier" class="ui-icon ui-icon-close deleteClick" 
+        type="{{actor_id}}" value="{{identifier.id}}" 
+   data-del-type="Actor Identifier Attribution" 
+   data-del-key="{{ identifier.id }}"
+   action="{% url 'crits.actors.views.remove_attributed_identifier' %}" key="{{identifier.id}}"></a>
     </td>
     </tr>
 {% endif %}

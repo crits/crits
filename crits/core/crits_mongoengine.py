@@ -23,7 +23,7 @@ else:
 
 from pprint import pformat
 
-from crits.core.user_tools import user_sources, is_admin
+from crits.core.user_tools import user_sources
 from crits.core.fields import CritsDateTimeField
 from crits.core.class_mapper import class_from_id, class_from_type
 
@@ -1517,7 +1517,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                                 {'campaign': campaign,
                                  'hit': self,
                                  'obj': None,
-                                 'admin': is_admin(analyst),
                                  'relationship': {'type': self._meta['crits_type']}})
         return html
 

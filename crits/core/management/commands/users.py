@@ -21,12 +21,6 @@ class Command(BaseCommand):
                     action='store_true',
                     default=False,
                     help='Add a new user to CRITs.'),
-        make_option('--administrator',
-                    '-A',
-                    dest='admin',
-                    action='store_true',
-                    default=False,
-                    help='Make this user an administrator.'),
         make_option('--clearsecret',
                     '-c',
                     dest='clearsecret',
@@ -77,6 +71,11 @@ class Command(BaseCommand):
                     action='store_true',
                     default=False,
                     help='Assign a new temporary password to a user.'),
+        make_option('--roles',
+                    '-R',
+                    dest='roles',
+                    default='',
+                    help='Assign user to a set of roles.'),
         make_option('--setactive',
                     '-s',
                     dest='setactive',
@@ -109,7 +108,6 @@ class Command(BaseCommand):
         """
 
         adduser = options.get('adduser')
-        admin = options.get('admin')
         clearsecret = options.get('clearsecret')
         deactivate = options.get('deactivate')
         disabletotp = options.get('disabletotp')
@@ -122,6 +120,7 @@ class Command(BaseCommand):
         organization = options.get('organization')
         password = self.temp_password()
         reset = options.get('reset')
+        roles = options.get('roles')
         setactive = options.get('setactive')
         username = options.get('username')
 
@@ -133,8 +132,6 @@ class Command(BaseCommand):
         # If we've found a user with that username and we aren't trying to add a
         # new user...
         if user and not adduser:
-            if admin:
-                user.role = "Administrator"
             if clearsecret:
                 user.secret = ""
             if deactivate and not setactive:
@@ -155,6 +152,8 @@ class Command(BaseCommand):
                 user.organization = organization
             if reset:
                 user.set_password(password)
+            if roles:
+                user.roles = [r.strip() for r in roles.split(',')]
             if setactive and not deactivate:
                 user.is_active = True
             try:
@@ -176,8 +175,8 @@ class Command(BaseCommand):
             user.is_staff = True
             user.save()
             user.organization = organization
-            if admin:
-                user.role = "Administrator"
+            if roles:
+                user.roles = [r.strip() for r in roles.split(',')]
             user.save()
 
             if sendemail:
