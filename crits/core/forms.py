@@ -253,6 +253,9 @@ class SourceAccessForm(forms.Form):
                                 required=True)
     email = forms.CharField(widget=forms.TextInput(attrs={'size': '50'}),
                             required=True)
+    roles = forms.MultipleChoiceField(required=True,
+                                      widget=SelectMultiple(attrs={'class':'multiselect',
+                                                                   'style': 'height: auto;'}))
     sources = forms.MultipleChoiceField(required=True,
                                         widget=SelectMultiple(attrs={'class':'multiselect',
                                                                      'style': 'height: auto;'}))
@@ -267,6 +270,9 @@ class SourceAccessForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(SourceAccessForm, self).__init__(*args, **kwargs)
+        self.fields['roles'].choices = [(c.name,
+                                         c.name) for c in get_item_names(Role,
+                                                                         True)]
         self.fields['sources'].choices = [(c.name,
                                            c.name) for c in get_source_names(False,
                                                                              False,

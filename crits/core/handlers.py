@@ -1177,6 +1177,7 @@ def modify_source_access(analyst, data):
     user.last_name = data['last_name']
     user.email = data['email']
     user.role = data['role']
+    user.roles = data['roles']
     user.sources = data['sources']
     user.organization = data['organization']
     user.totp = data['totp']

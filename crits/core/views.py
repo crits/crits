@@ -1341,9 +1341,12 @@ def user_source_access(request, username=None):
             user = user.to_dict()
             if 'sources' not in user:
                 user['sources'] = ''
+            if 'roles' not in user:
+                user['roles'] = ''
         else:
             user = {'username': '',
                     'sources': '',
+                    'roles': '',
                     'organization': settings.COMPANY_NAME}
         form = SourceAccessForm(initial=user)
         message = {'success': True,
