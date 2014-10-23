@@ -2309,30 +2309,8 @@ def build_jtable(jtopts, request):
                 jtopts['linked_fields'].append("campaign")
         if field in jtopts['linked_fields']:
             fdict['display'] = """function (data) {
-                var col = "%s";
-                var baseurl = "%s";
-                var campbase = "%s";
-                var coltext = "";
-                if (typeof data.record[col] == "string")  {
-                    var items = data.record[col].split('|||');
-                    for (var i = 0; i < items.length; i++) {
-                        if (col == "campaign" && items[i]) {
-                            var campurl = campbase.replace("__CAMPAIGN__",items[i]);
-                            coltext += '<span style="float: left;"><a href="'+baseurl+'?'+col+'='+encodeURIComponent(items[i])+'">'+items[i]+'</a></span><span style="float: top;"><a href="'+campurl+'" class="ui-icon ui-icon-triangle-1-e"></a></span>';
-                        } else {
-                            var decoded = $('<div/>').html(items[i]).text();
-                            coltext += '<a href="'+baseurl+'?'+col+'='+encodeURIComponent(decoded)+'&force_full=1">'+items[i]+'</a>';
-                            if (i !== (items.length - 1)) {
-                                coltext += ", ";
-                            }
-                        }
-                    }
-                } else {
-                    coltext = '<a href="'+baseurl+'?'+col+'='+encodeURIComponent(data.record[col])+'">'+data.record[col]+'</a>'
-                }
-                return coltext;
-            }
-            """ % (field,jtopts['searchurl'],campbase)
+                return link_jtable_column(data, '%s', '%s', '%s');
+            } """ % (field, jtopts['searchurl'], campbase)
 
         jtable['fields'].append(fdict)
     if 'details_link' in jtopts:

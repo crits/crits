@@ -125,7 +125,7 @@ class UploadIndicatorTextForm(forms.Form):
                                                                                True,
                                                                                username)]
         self.fields['source'].initial = get_user_organization(username)
-        dt = "Indicator, Type, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket\n"
+        dt = "Indicator, Type, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action\n"
         self.fields['data'].initial = dt
 
 class UploadIndicatorForm(forms.Form):

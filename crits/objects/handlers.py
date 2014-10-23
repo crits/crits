@@ -1,6 +1,9 @@
 from hashlib import md5
 
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_ipv4_address, validate_ipv6_address
+from django.core.validators import validate_ipv46_address
 from django.template.loader import render_to_string
 from django.template import RequestContext
 from mongoengine.base import ValidationError
@@ -293,6 +296,33 @@ def add_object(type_, oid, object_type, name, source, method,
             results['message'] = "Could not find item to add object to."
             results['success'] = False
             return results
+
+    if name == "URL" and "://" not in value.split('.')[0]:
+        return {"success" : False, "message" : "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://)"}
+    elif object_type == "Address":
+        if "ipv4" in name:
+            try:
+                validate_ipv4_address(value)
+            except DjangoValidationError:
+                return {"success" : False, "message" : "Invalid IPv4 address. "}
+        elif "ipv6" in name:
+            try:
+                validate_ipv6_address(value)
+            except DjangoValidationError:
+                return {"success" : False, "message" : "Invalid IPv6 address. "}
+        elif "cidr" in name:
+            try:
+                if '/' not in value:
+                    raise ValidationError("")
+                cidr_parts = value.split('/')
+                if int(cidr_parts[1]) < 0 or int(cidr_parts[1]) > 128:
+                    raise ValidationError("")
+                if ':' not in cidr_parts[0] and int(cidr_parts[1]) > 32:
+                    raise ValidationError("")
+                validate_ipv46_address(cidr_parts[0])
+            except (ValidationError, ValueError) as cidr_error:
+                return {"success" : False, "message" : "Invalid CIDR address. "}
+
     try:
         cur_len = len(obj.obj)
         if file_:
