@@ -1217,8 +1217,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         if isinstance(campaign_item, EmbeddedCampaign):
-            self.remove_campaign(campaign_name=campaign_name,
-                                 campaign_date=campaign_item.date)
+            self.remove_campaign(campaign_name=campaign_item.name)
             self.add_campaign(campaign_item=campaign_item)
 
     def add_bucket_list(self, tags, analyst, append=True):
