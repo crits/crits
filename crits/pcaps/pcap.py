@@ -1,7 +1,9 @@
-from mongoengine import Document, StringField, IntField
+from mongoengine import Document, StringField, IntField, BooleanField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
 from crits.core.fields import getFileField
 from crits.pcaps.migrate import migrate_pcap
 
@@ -169,3 +171,10 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
                 break
         return pcap
 
+
+class PCAPAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for PCAPs.
+    """
+
+    description_edit = BooleanField(default=False)

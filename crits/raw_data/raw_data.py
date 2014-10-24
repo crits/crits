@@ -4,11 +4,13 @@ import uuid
 from dateutil.parser import parse
 from mongoengine import Document, StringField, IntField, EmbeddedDocument
 from mongoengine import ListField, EmbeddedDocumentField, UUIDField
+from mongoengine import BooleanField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
+from crits.core.crits_mongoengine import CommonAccess
 from crits.core.fields import CritsDateTimeField
 from crits.raw_data.migrate import migrate_raw_data
 
@@ -270,3 +272,22 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
         if db_obj:
             return db_obj
         return rawdata
+
+
+class RawDataAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for RawData.
+    """
+
+    upload_new_version = BooleanField(default=False)
+
+    tool_edit = BooleanField(default=False)
+    tool_description_edit = BooleanField(default=False)
+    data_type_edit = BooleanField(default=False)
+    description_edit = BooleanField(default=False)
+
+    line_comment_add = BooleanField(default=False)
+
+    highlight_add = BooleanField(default=False)
+    highlight_line_date_edit = BooleanField(default=False)
+    highlight_comment_edit = BooleanField(default=False)

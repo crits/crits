@@ -1,7 +1,7 @@
 import datetime
 
 from mongoengine import Document, StringField, ListField, EmbeddedDocumentField
-from mongoengine import BooleanField, DynamicEmbeddedDocument
+from mongoengine import BooleanField, DynamicEmbeddedDocument, EmbeddedDocument
 from difflib import unified_diff
 from django.conf import settings
 from whois_parser import WhoisEntry
@@ -11,6 +11,7 @@ from cybox.core import Observable
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, CritsSourceDocument
+from crits.core.crits_mongoengine import CommonAccess
 from crits.domains.migrate import migrate_domain
 
 class TLD(CritsDocument, Document):
@@ -224,3 +225,14 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
             domain.domain = str(cybox_object.value)
             domain.record_type = str(cybox_object.type_)
             return domain
+
+
+class DomainAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Domains.
+    """
+
+    whois_read = BooleanField(default=False)
+    whois_add = BooleanField(default=False)
+    whois_edit = BooleanField(default=False)
+    whois_delete = BooleanField(default=False)

@@ -1,10 +1,12 @@
 import base64
 
 from mongoengine import Document, StringField, IntField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 
 from crits.certificates.migrate import migrate_certificate
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
 from crits.core.fields import getFileField
 
 from cybox.common.object_properties import CustomProperties, Property
@@ -176,3 +178,9 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
             if isinstance(obj.properties, Artifact):
                 cert.add_file_data(base64.b64decode(obj.properties.data))
         return cert
+
+
+class CertificateAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Certificates.
+    """

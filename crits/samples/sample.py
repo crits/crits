@@ -2,7 +2,7 @@ import datetime
 
 from mongoengine import Document, EmbeddedDocument
 from mongoengine import StringField, ListField
-from mongoengine import EmbeddedDocumentField, IntField
+from mongoengine import EmbeddedDocumentField, IntField, BooleanField
 from django.conf import settings
 from cybox.objects.file_object import File
 from cybox.objects.artifact_object import Artifact, Base64Encoding, ZlibCompression
@@ -12,7 +12,7 @@ from cybox.common import UnsignedLong, Hash
 from crits.samples.backdoor import Backdoor
 from crits.samples.migrate import migrate_sample
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
-from crits.core.crits_mongoengine import CritsSourceDocument
+from crits.core.crits_mongoengine import CritsSourceDocument, CommonAccess
 from crits.core.fields import CritsDateTimeField, getFileField
 
 class EmbeddedExploit(EmbeddedDocument, CritsDocumentFormatter):
@@ -288,3 +288,24 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if isinstance(filenames, list):
             self.filenames = filenames
+
+
+class SampleAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Samples.
+    """
+
+    upload_related_sample = BooleanField(default=False)
+    upload_related_pcap = BooleanField(default=False)
+
+    text_view = BooleanField(default=False)
+    yaml_view = BooleanField(default=False)
+    unrar_sample = BooleanField(default=False)
+    unzip_sample = BooleanField(default=False)
+
+    filename_edit = BooleanField(default=False)
+    filenames_add = BooleanField(default=False)
+    filenames_remove = BooleanField(default=False)
+
+    backdoor_edit = BooleanField(default=False)
+    exploit_add = BooleanField(default=False)

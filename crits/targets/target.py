@@ -1,7 +1,9 @@
 from mongoengine import Document, StringField, IntField, EmailField
+from mongoengine import BooleanField, EmbeddedDocument
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsBaseAttributes
+from crits.core.crits_mongoengine import CritsBaseAttributes, CommonAccess
+from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.user_tools import user_sources
 from crits.emails.email import Email
 from crits.targets.migrate import migrate_target
@@ -70,3 +72,11 @@ class Target(CritsBaseAttributes, Document):
         emails = Email.objects(to=self.email_address,
                                source__name__in=sources)
         return emails
+
+
+class TargetAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Targets.
+    """
+
+    edit_details = BooleanField(default=False)

@@ -1,11 +1,13 @@
 import datetime
 import uuid
 
-from mongoengine import Document, StringField, UUIDField
+from mongoengine import Document, StringField, UUIDField, BooleanField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsSchemaDocument, CritsBaseAttributes
 from crits.core.crits_mongoengine import CritsDocument, CritsSourceDocument
+from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
 from crits.events.migrate import migrate_event
 
 class UnreleasableEventError(Exception):
@@ -160,3 +162,15 @@ class EventType(CritsDocument, CritsSchemaDocument, Document):
 
     name = StringField()
     active = StringField()
+
+
+class EventAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Events.
+    """
+
+    add_sample = BooleanField(default=False)
+
+    description_edit = BooleanField(default=False)
+    title_edit = BooleanField(default=False)
+    type_edit = BooleanField(default=False)

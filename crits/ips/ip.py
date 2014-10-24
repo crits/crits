@@ -1,7 +1,9 @@
 from mongoengine import Document, StringField, ListField, DictField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
 from crits.ips.migrate import migrate_ip
 
 from cybox.objects.address_object import Address
@@ -110,3 +112,8 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
         ip.ip_type = iptype
         return ip
 
+
+class IPAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for IPs.
+    """

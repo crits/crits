@@ -1,7 +1,8 @@
 import datetime
 
 from dateutil.parser import parse as date_parser
-from mongoengine import Document, StringField, ListField
+from mongoengine import Document, StringField, ListField, BooleanField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 from cybox.common import String, DateTime
 from cybox.core import Observable
@@ -9,6 +10,7 @@ from cybox.objects.address_object import Address, EmailAddress
 from cybox.objects.email_message_object import EmailHeader, EmailMessage
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
 from crits.core.fields import CritsDateTimeField
 from crits.emails.migrate import migrate_email
 
@@ -243,3 +245,17 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
             email.raw_header = str(cybox_obj.raw_header)
 
         return email
+
+
+class EmailAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Emails.
+    """
+
+    add_attachment = BooleanField(default=False)
+
+    header_field_edit = BooleanField(default=False)
+    header_field_to_indicator = BooleanField(default=False)
+
+    raw_body_edit = BooleanField(default=False)
+    raw_header_edit = BooleanField(default=False)

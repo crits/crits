@@ -40,6 +40,7 @@ def add_uber_admin_role(drop=False):
         print "Could not find UberAdmin Role. Creating it!"
         role = Role()
         role.name = "UberAdmin"
+        role.description = "Default role with full system access."
     role.add_all_sources()
     role.make_all_true()
     role.save()

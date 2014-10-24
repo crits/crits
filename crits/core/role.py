@@ -7,6 +7,17 @@ from mongoengine import StringField, ListField, BooleanField
 from django.conf import settings
 
 from crits.actors.actor import ActorAccess, ActorIdentifierAccess
+from crits.campaigns.campaign import CampaignAccess
+from crits.certificates.certificate import CertificateAccess
+from crits.domains.domain import DomainAccess
+from crits.emails.email import EmailAccess
+from crits.events.event import EventAccess
+from crits.indicators.indicator import IndicatorAccess
+from crits.ips.ip import IPAccess
+from crits.pcaps.pcap import PCAPAccess
+from crits.raw_data.raw_data import RawDataAccess
+from crits.samples.sample import SampleAccess
+from crits.targets.target import TargetAccess
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.source_access import SourceAccess
@@ -62,6 +73,28 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
     ActorIdentifier = EmbeddedDocumentField(ActorIdentifierAccess,
                                             required=True,
                                             default=ActorIdentifierAccess())
+    Campaign = EmbeddedDocumentField(CampaignAccess, required=True,
+                                     default=CampaignAccess())
+    Certificate = EmbeddedDocumentField(CertificateAccess, required=True,
+                                        default=CertificateAccess())
+    Domain = EmbeddedDocumentField(DomainAccess, required=True,
+                                   default=DomainAccess())
+    Email = EmbeddedDocumentField(EmailAccess, required=True,
+                                  default=EmailAccess())
+    Event = EmbeddedDocumentField(EventAccess, required=True,
+                                  default=EventAccess())
+    Indicator = EmbeddedDocumentField(IndicatorAccess, required=True,
+                                      default=IndicatorAccess())
+    IP = EmbeddedDocumentField(IPAccess, required=True,
+                               default=IPAccess())
+    PCAP = EmbeddedDocumentField(PCAPAccess, required=True,
+                                 default=PCAPAccess())
+    RawData = EmbeddedDocumentField(RawDataAccess, required=True,
+                                    default=RawDataAccess())
+    Sample = EmbeddedDocumentField(SampleAccess, required=True,
+                                   default=SampleAccess())
+    Target = EmbeddedDocumentField(TargetAccess, required=True,
+                                   default=TargetAccess())
 
     # Interfacing
     api_interface = BooleanField(default=False)

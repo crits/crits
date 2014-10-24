@@ -1,6 +1,6 @@
 import datetime
 
-from mongoengine import Document, EmbeddedDocument
+from mongoengine import Document, EmbeddedDocument, BooleanField
 from mongoengine import StringField, ListField
 from mongoengine import EmbeddedDocumentField
 from mongoengine.queryset import Q
@@ -10,7 +10,7 @@ from cybox.core import Observable
 
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
-from crits.core.crits_mongoengine import CritsSourceDocument
+from crits.core.crits_mongoengine import CritsSourceDocument, CommonAccess
 from crits.core.fields import CritsDateTimeField
 from crits.objects.object_mapper import make_cybox_object, make_crits_object
 from crits.indicators.migrate import migrate_indicator
@@ -452,3 +452,23 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
             if t.date == date:
                 del self.activity[c]
             c += 1
+
+
+class IndicatorAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Indicators.
+    """
+
+    type_edit = BooleanField(default=False)
+    confidence_edit = BooleanField(default=False)
+    impact_edit = BooleanField(default=False)
+
+    actions_read = BooleanField(default=False)
+    actions_add = BooleanField(default=False)
+    actions_edit = BooleanField(default=False)
+    actions_delete = BooleanField(default=False)
+
+    activity_read = BooleanField(default=False)
+    activity_add = BooleanField(default=False)
+    activity_edit = BooleanField(default=False)
+    activity_delete = BooleanField(default=False)
