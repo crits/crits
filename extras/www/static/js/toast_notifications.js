@@ -1,6 +1,45 @@
 $(document).ready(function() {
     var notyIDToNotyDict = {};
 
+    // this variable is used to calculate the time shift between the server
+    // and client times
+    var serverToLocalDateDelta = null;
+
+    var timeparts = [
+        {name: 'year', div: 31536000000, mod: 10000},
+        {name: 'day', div: 86400000, mod: 365},
+        {name: 'hour', div: 3600000, mod: 24},
+        {name: 'min', div: 60000, mod: 60},
+        {name: 'sec', div: 1000, mod: 60}
+    ];
+
+    function timeAgoFuzzy(currentDate, comparisonDate) {
+        var
+            i = 0,
+            l = timeparts.length,
+            calc,
+            result = null,
+            interval = currentDate.getTime() - comparisonDate.getTime();
+        while (i < l && result === null) {
+            calc = Math.floor(interval / timeparts[i].div) % timeparts[i].mod;
+            if (calc) {
+                if(timeparts[i].name === 'sec' && calc < 5) {
+                    result = 'just now';
+                }
+                else {
+                    result = calc + ' ' + timeparts[i].name + (calc !== 1 ? 's' : '') + ' ago';
+                }
+            }
+            i += 1;
+        }
+
+        if(result === null) {
+            result = 'just now';
+        }
+
+        return result;
+    }
+
     function generateContainerNoty(container, type, message, timeout, id) {
 
         var n = $(container).noty({
@@ -36,6 +75,15 @@ $(document).ready(function() {
                         $closeNotifications.parent().append($closeNotifications);
                         $("#close_notifications").show();
                     }
+
+                    // Update the times after showing a new notification
+                    // otherwise the notification might not even be
+                    // displaying a time
+                    if(serverToLocalDateDelta !== null) {
+                        var currentDate = new Date();
+                        var shiftedCurrentDate = new Date(currentDate - serverToLocalDateDelta);
+                        updateNotificationTimes(shiftedCurrentDate);
+                    }
                 },
                 onClose: function(self) {
                     var notifications_li = $("#notifications > ul > li");
@@ -66,43 +114,17 @@ $(document).ready(function() {
         notyIDToNotyDict[n.options.id] = {'noty': n, 'mongoID': id};
     }
 
+    function updateNotificationTimes(currentDate) {
+        $("span.noty_modified").each(function() {
+            var modifiedDate = new Date($(this).data("modified"));
+            var dateDifference = timeAgoFuzzy(currentDate, modifiedDate);
+
+            $(this).text(dateDifference);
+        });
+    }
+
     if(typeof notifications_url !== "undefined") {
         var numPollFailures = 0;
-
-        var timeparts = [
-            {name: 'year', div: 31536000000, mod: 10000},
-            {name: 'day', div: 86400000, mod: 365},
-            {name: 'hour', div: 3600000, mod: 24},
-            {name: 'min', div: 60000, mod: 60},
-            {name: 'sec', div: 1000, mod: 60}
-         ];
-
-         function timeAgoFuzzy(currentDate, comparisonDate) {
-            var
-                i = 0,
-                l = timeparts.length,
-                calc,
-                result = null,
-                interval = currentDate.getTime() - comparisonDate.getTime();
-            while (i < l && result === null) {
-                calc = Math.floor(interval / timeparts[i].div) % timeparts[i].mod;
-                if (calc) {
-                    if(timeparts[i].name === 'sec' && calc < 5) {
-                        result = 'just now';
-                    }
-                    else {
-                        result = calc + ' ' + timeparts[i].name + (calc !== 1 ? 's' : '') + ' ago';
-                    }
-                }
-                i += 1;
-            }
-
-            if(result === null) {
-                result = 'just now';
-            }
-
-            return result;
-         }
 
         (function poll(date_param) {
             var newer_than = null;
@@ -114,83 +136,114 @@ $(document).ready(function() {
             // the default timeout to throttle polling attempts.
             var poll_timeout = 3000;
 
-            $.ajax({
-                url: notifications_url,
-                timeout: 120000,
-                dataType: "json",
-                type: "POST",
-                data: {newer_than: newer_than},
-                success: function (data) {
-                    numPollFailures = 0;
-                    var notifications = data['notifications'];
-                    var newest_notification = data['newest_notification'];
-                    var serverTime = data['server_time'];
-                    var dialogTimeout = data['timeout'];
+            // keep polling only if we haven't encountered x consecutive failures.
+            if(numPollFailures < 5) {
+                $.ajax({
+                    url: notifications_url,
+                    timeout: 120000,
+                    dataType: "json",
+                    type: "POST",
+                    data: {newer_than: newer_than},
+                    success: function (data) {
+                        numPollFailures = 0;
+                        var notifications = data['notifications'];
+                        var newest_notification = data['newest_notification'];
+                        var serverTime = data['server_time'];
+                        var dialogTimeout = data['timeout'];
 
-                    if(newest_notification !== null) {
-                        newer_than = newest_notification;
-                    }
-
-                    for(var counter = notifications.length - 1; counter >= 0 ; counter--) {
-                        var message = "";
-
-                        var notification = notifications[counter];
-                        var id = notification['id'];
-                        var modifiedBy = notification['modified_by'];
-                        var dateModified = notification['date_modified'];
-                        var notificationType = notification['type'];
-
-                        if(typeof notificationType === 'undefined') {
-                            notificationType = 'alert';
+                        if(newest_notification !== null) {
+                            newer_than = newest_notification;
                         }
 
-                        if("message" in notification) {
-                            var formattedMessage = "";
-                            var messageSegments = notification['message'].split('\n');
+                        for(var counter = notifications.length - 1; counter >= 0 ; counter--) {
+                            var message = "";
 
-                            for(var i in messageSegments) {
-                                if(messageSegments[i].indexOf("updated the following attributes:") === -1 &&
-                                        messageSegments[i].indexOf("deleted the following") === -1) {
+                            var notification = notifications[counter];
+                            var id = notification['id'];
+                            var modifiedBy = notification['modified_by'];
+                            var dateModified = notification['date_modified'];
+                            var notificationType = notification['type'];
 
-                                    formattedMessage += messageSegments[i];
-
-                                    if(i < messageSegments.length - 1) {
-                                        formattedMessage += "<br>";
-                                    }
-                                }
+                            if(typeof notificationType === 'undefined') {
+                                notificationType = 'alert';
                             }
 
-                            message = "<a href='" + notification['link'] + "' target='_blank'>" + notification['header'] +
-                                    "</a> (by <b>" + modifiedBy + "</b> <span class='noty_modified' data-modified='" +
-                                    dateModified + "'></span>)<br/>" + formattedMessage;
 
-                            generateContainerNoty('div#notifications', notificationType, message, dialogTimeout, id);
+                            if("message" in notification) {
+                                var formattedMessage = "";
+                                var messageSegments = null;
+
+                                if(notification['message'] !== null) {
+                                    messageSegments = notification['message'].split('\n');
+                                }
+
+                                for(var i in messageSegments) {
+                                    if(messageSegments[i].indexOf("updated the following attributes:") === -1) {
+
+                                        formattedMessage += messageSegments[i];
+
+                                        if(i < messageSegments.length - 1) {
+                                            formattedMessage += "<br>";
+                                        }
+                                    }
+                                }
+
+                                if(formattedMessage === "") {
+                                    formattedMessage = messageSegments;
+                                }
+
+                                if(notification['link'] !== null) {
+                                    message = "<a href='" + notification['link'] + "' target='_blank'>" + notification['header'] + "</a>";
+                                } else {
+                                    message = notification['header'];
+                                }
+
+                                message += " (by <b>" + modifiedBy + "</b> <span class='noty_modified' data-modified='" +
+                                        dateModified + "'></span>)<br/>" + formattedMessage;
+
+                                generateContainerNoty('div#notifications', notificationType, message, dialogTimeout, id);
+                            }
                         }
-                    }
 
-                    $("span.noty_modified").each(function() {
-                        var modifiedDate = new Date($(this).data("modified"));
-                        var serverDate = new Date(serverTime);
-                        var dateDifference = timeAgoFuzzy(serverDate, modifiedDate);
+                        var currentDate = new Date();
 
-                        $(this).text(dateDifference);
-                    });
-                },
-                error: function(data) {
-                    // if an error occurred then give the server much more time
-                    // to try and recover from the error before reattempting.
-                    poll_timeout = 60000;
-                    numPollFailures++;
-                },
-                complete: function() {
-                    // keep polling only if we haven't encountered x
-                    // consecutive failures.
-                    if(numPollFailures < 5) {
+                        if(serverToLocalDateDelta === null) {
+                            var serverDate = new Date(serverTime);
+
+                            // calculate the difference between the server
+                            // time and client time.
+                            serverToLocalDateDelta = currentDate - serverDate;
+                        }
+
+                        var shiftedCurrentDate = new Date(currentDate - serverToLocalDateDelta);
+
+                        // update the notification times after receiving
+                        // new notifications
+                        updateNotificationTimes(shiftedCurrentDate);
+                    },
+                    error: function(data) {
+                        // if an error occurred then give the server much more time
+                        // to try and recover from the error before reattempting.
+                        poll_timeout = 60000;
+                        numPollFailures++;
+                    },
+                    complete: function() {
                         // throttle a little bit before polling again
                         setTimeout(poll, poll_timeout, newer_than);
                     }
+                });
+            } else {
+
+                // still update the notification times, even after giving up
+                // trying to poll for new notifications.
+                if(serverToLocalDateDelta !== null) {
+                    var currentDate = new Date();
+                    var shiftedCurrentDate = new Date(currentDate - serverToLocalDateDelta);
+                    updateNotificationTimes(shiftedCurrentDate);
                 }
-            });
+
+                setTimeout(poll, poll_timeout, newer_than);
+            }
         })(); // this function is executed here
     }
 }); //document.ready

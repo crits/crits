@@ -174,7 +174,7 @@ $(document).ready(function() {
                                 var messageSegments = null;
 
                                 if(notification['message'] !== null) {
-                                    messageSegments = notification['message'].split('\n')
+                                    messageSegments = notification['message'].split('\n');
                                 }
 
                                 for(var i in messageSegments) {
@@ -186,6 +186,10 @@ $(document).ready(function() {
                                             formattedMessage += "<br>";
                                         }
                                     }
+                                }
+
+                                if(formattedMessage === "") {
+                                    formattedMessage = messageSegments;
                                 }
 
                                 if(notification['link'] !== null) {
