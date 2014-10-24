@@ -8,6 +8,7 @@
     SSLEngine on
     SSLCertificateFile    /etc/ssl/certs/crits.crt
     SSLCertificateKeyFile /etc/ssl/private/crits.plain.key
+    SSLProtocol All -SSLv2 -SSLv3
 
     DocumentRoot "/data/crits/extras/www"
     Alias /static/ /data/crits/extras/www/static/

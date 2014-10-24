@@ -19,9 +19,9 @@ class AddIPForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    ip = forms.GenericIPAddressField(required=True,
-                                     label=form_consts.IP.IP_ADDRESS,
-                                     widget=forms.TextInput(attrs={'class': 'togglewithip'}))
+    ip = forms.CharField(required=True,
+                         label=form_consts.IP.IP_ADDRESS,
+                         widget=forms.TextInput(attrs={'class': 'togglewithip'}))
     ip_type = forms.ChoiceField(required=True, label=form_consts.IP.IP_TYPE)
     analyst = forms.CharField(required=True, widget=forms.TextInput(attrs={'readonly':'readonly', 'class':'bulkskip'}), label=form_consts.IP.ANALYST)
     campaign = forms.ChoiceField(widget=forms.Select, required=False, label=form_consts.IP.CAMPAIGN)
