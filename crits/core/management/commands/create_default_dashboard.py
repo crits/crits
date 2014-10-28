@@ -71,7 +71,7 @@ def getColumnsForTable(title):
             colFields = ["details","value", "type", "modified", "status", "source", "campaign"]
             colNames = ["Details","Value", "Type", "Added", "Status", "Source", "Campaign"]
         elif  title == "Recent Emails":
-            colFields = ["details","from", "to", "subject", "date", "source", "campaign"]
+            colFields = ["details","from", "to", "subject", "isodate", "source", "campaign"]
             colNames = ["Details","From", "Recip", "Subject", "Date", "Source", "Campaign"]
         elif  title == "Recent Samples":
             colFields = ["details","filename", "size", "filetype", "created",
