@@ -57,7 +57,7 @@ from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, user_sources
 from crits.core.user_tools import get_user_list, get_nav_template
-from crits.core.user_tools import get_user_role, get_user_email_notification
+from crits.core.user_tools import get_user_email_notification
 from crits.core.user_tools import get_user_info, get_user_organization
 from crits.core.user_tools import is_user_subscribed, unsubscribe_user
 from crits.core.user_tools import subscribe_user, subscribe_to_source
@@ -596,8 +596,10 @@ def role_add(request):
                                   copy_from,
                                   description,
                                   analyst)
-            if result:
-                message = {'message': '<div>Role added successfully!</div>',
+            if result['success']:
+                url = reverse('crits.core.views.role_details',
+                              args=[result['id']])
+                message = {'message': '<div><a href="%s">Role</a> added successfully!</div>' % url,
                            'success': True}
             else:
                 message = {'message': '<div>Role addition failed!</div>',
@@ -1171,10 +1173,6 @@ def base_context(request):
             base_context['user_organization'] = get_user_organization(user)
         except Exception, e:
             logger.warning("Base Context get_user_organization Error: %s" % e)
-        try:
-            base_context['user_role'] = get_user_role(user)
-        except Exception, e:
-            logger.warning("Base Context get_user_role Error: %s" % e)
         try:
             base_context['user_source_list'] = user_sources(user)
         except Exception, e:

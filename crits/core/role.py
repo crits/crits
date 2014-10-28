@@ -56,7 +56,7 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
                                              "active",
                                              "description" ],
                          'hidden_fields': [],
-                         'linked_fields': [ "name", ],
+                         'linked_fields': [],
                          'details_link': 'details',
                          'no_sort': ['details']
                        }

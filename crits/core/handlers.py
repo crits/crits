@@ -4322,9 +4322,11 @@ def add_new_role(name, copy_from, description, analyst):
     role._created = True
     try:
         role.save(username=analyst)
-        return True
+        role.reload()
+        return {'success': True,
+                'id': str(role.id)}
     except ValidationError:
-        return False
+        return {'success': False}
 
 def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
                       analyst=None):

@@ -91,20 +91,6 @@ def get_user_organization(username):
     else:
         return settings.COMPANY_NAME
 
-def get_user_role(username):
-    """
-    Get the user role.
-
-    :param username: The user to lookup.
-    :type username: str
-    :returns: str
-    """
-
-    from crits.core.user import CRITsUser
-    username = str(username)
-    user = CRITsUser.objects(username=username).first()
-    return user.role
-
 def user_can_view_data(user):
     """
     Determine if the user is active and authenticated.
