@@ -161,6 +161,13 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
         Makes all ACL options True
         """
 
+        dont_modify = ['name',
+                       'schema_version',
+                       'active',
+                       'id',
+                       'description',
+                       'unsupported_attrs']
+
         for p in self._data.iterkeys():
             if p in settings.CRITS_TYPES.iterkeys():
                 attr = getattr(self, p)
@@ -174,8 +181,7 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
                     for x in s._data.iterkeys():
                         if x != "name":
                             setattr(s, x, True)
-            elif p not in ('name', 'schema_version', 'active', 'id',
-                           'unsupported_attrs'):
+            elif p not in dont_modify:
                 setattr(self, p, True)
 
     def add_all_sources(self):
