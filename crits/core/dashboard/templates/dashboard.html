@@ -156,7 +156,6 @@
                         width: newWidth,
                         sortDirection: $(this).attr('sortDirection'),
                         sortField: $(this).attr('sortField'),
-                        widthInPx: widthInPx,
                         id:$(this).attr('tableId')
                     };
                     data.push(tempDict);
@@ -284,6 +283,17 @@
                 }
             });
         }
+        function reSizeLastColumn(tempCols, tableWidth) {
+            var lastColWidth = tableWidth;
+            for (i in tempCols)
+                if (lastColWidth < 1)
+                    return true;
+                else if (i == tempCols.length-1)
+                    tempCols[tempCols.length-1]['size'] = lastColWidth+"px";
+                else
+                    lastColWidth-=parseInt(tempCols[i]['size']);
+            return false;
+        }
         $(document).ready(function() {          //doc.ready
         	if( navigator.userAgent.indexOf("Chrome") != -1 )
                 buttonBarOffset = '-170px'; 
@@ -332,7 +342,10 @@
         	    //columns used for w2ui table, also for the title column
                 var columns = [];
                 {% for col in table.columns %}
-                    columns.push({{ col | safe }});
+                    var col = {{ col | safe }};
+                    col['sortable'] = false;
+                    col['resizable'] = true;
+                    columns.push(col);
                 {% endfor %}
                 //sets up the w2ui grid
 		        $('#{{table.id}}').w2grid({ 
@@ -346,8 +359,27 @@
 	                   }
 	                ],
 	                records: records,
-	                onColumnResize: function() {
+	                onColumnResize: function(e) {
+	                    var name = $(this).attr('name');
+	                    var tableWidth = $('#'+name).width();
+	                    var tempCols = w2ui[name].columns;
+	                    var cancel = reSizeLastColumn(tempCols, tableWidth);
+	                    e.onComplete = function() {
+	                        if(cancel) {
+	                            var changingColumn = w2ui[name].getColumn(e.field);
+	                            var prevWidth = parseInt(changingColumn.size) - e.resizeBy;
+	                            changingColumn.size = prevWidth + 'px';
+	                            reSizeLastColumn(tempCols, tableWidth);
+	                        }
+	                        w2ui[name].refresh();
+	                        for (i in tempCols) {
+	                            var col = tempCols[i];
+	                            if (col.sizeType != '%')
+	                                col.size = parseInt(col.size)/tableWidth*100+'%';
+	                        }
+	                    };
 	                	toggleOptions(true);
+	                    w2ui[name].refresh();
 	                },
 	                onRefresh: function(e) {
 	                	//show the cog icon immediately after refresh. This is because
@@ -357,6 +389,8 @@
 	                	}, 0);
 	                },
 	                onSort: function(e) {
+	                /*
+	                   No longer used
 	                	//there is an error with the sort event in w2ui where the 
 	                	//direction is sometimes null
 	                	if(e.direction == null) {
@@ -398,6 +432,7 @@
 	                        else //remove the table from the array so it will get new data from now on
 	                        	tablesWithSort.splice(tempIndexOf, 1);
 	                    }
+	                */
 	                }
 	            });
                 //sorts the tables on load
@@ -406,12 +441,7 @@
 	                w2ui['{{table.id}}'].sort('{{table.sortBy.field}}', '{{table.sortBy.direction}}');
 	            {% endif %}
             {% endfor %}
-            //boolean value to determine if AT LEAST one table has a postion set
-            //positionsSet = ($('.draggable[isherebydefault="True"][tempTop]').length > 0);
-            //this logic has been changed with the introduction of multiple dashboards
-            //MUST BE TESTED
             positionsSet = ($('.draggable[tempTop]').length > 0);
-            console.log('IF THERES AN ERROR WITH PLACEMENT, THIS IS WHY' + positionsSet);
             //if no positions have ever been set, disable the destory dashboard button
             if (!positionsSet)
                 $('#destroyPositionsButton').attr('disabled', true);

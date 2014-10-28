@@ -288,7 +288,7 @@ def parseDocObjectsToStrings(records, obj_type):
     return records
 
 def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None, 
-              tableId=None, top=None, left=None, width=0, tableWidth=None, 
+              tableId=None, top=None, left=None, width=0,
               isDefaultOnDashboard=False, maxRows=0, dashboardWidth=0,
               dashboard=None, clone=False):
     """
@@ -307,12 +307,6 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
                 clonedSavedSearch = cloneSavedSearch(newSavedSearch, dashboard.id)
         else:
             newSavedSearch = SavedSearch()
-        #save the column sizes as a percentage instead of pixels
-        if tableWidth:
-            for col in columns:
-                if not "%" in col['size']:
-                    tempSize = col['size'].replace("px", "")
-                    col['size'] = str((float(tempSize)/float(tableWidth))*100)+"%"
         newSavedSearch.tableColumns = columns
         newSavedSearch.name = tableName
         oldDashId = None
@@ -342,14 +336,13 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
             #if the table is growing in height, reset it's position so it doesnt
             #overlap with other tables
             if int(maxRows) > newSavedSearch.maxRows:
-                """
-                if width > 97:
-                    print "You need to shift up all tables below it!"
-                """
                 newSavedSearch.top=-1
             newSavedSearch.maxRows = maxRows;
         if width:
-            newSavedSearch.width = width
+            width = float(width)
+            if not dashboardWidth and newSavedSearch.width and width > newSavedSearch.width:
+                newSavedSearch.top=-1
+            newSavedSearch.width = float(width)
         newSavedSearch.save()
         #if the old dashboard is empty, delete it
         if oldDashId:
@@ -526,8 +519,15 @@ def generate_search_for_saved_table(user, id=None,request=None):
                 'sortBy': savedSearch.sortBy,
                 'setWidth' : savedSearch.width,
                 'maxRows': savedSearch.maxRows,
-                'isDefaultOnDashboard': savedSearch.isDefaultOnDashboard
+                'isDefaultOnDashboard': savedSearch.isDefaultOnDashboard,
                 })
+        if savedSearch.width:
+            args['tableWidth'] = savedSearch.width
+        elif savedSearch.isDefaultOnDashboard:
+            if savedSearch.name == "Counts" or savedSearch.name == "Top Backdoors":
+                args['tableWidth'] = "20%"
+            elif savedSearch.name == "Top Campaigns":
+                args['tableWidth'] = "50%"
         if savedSearch.dashboard:
             args["currentDash"] = str(savedSearch.dashboard)
             args["dashtheme"] = Dashboard.objects(id=savedSearch.dashboard).first().theme

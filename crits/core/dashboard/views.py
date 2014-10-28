@@ -129,7 +129,7 @@ def save_search(request):
     if sortBy:
         sortBy = json.loads(sortBy)
     response = save_data(userId, columns, tableName, searchTerm, objType, sortBy,
-                         tableId, tableWidth=tableWidth, isDefaultOnDashboard=isDefault,
+                         tableId, width=tableWidth, isDefaultOnDashboard=isDefault,
                          maxRows=maxRows, dashboard=dashboard, clone=clone)
     if newDashName:
         response["newDashId"] = str(newDash.id)
@@ -183,8 +183,7 @@ def save_new_dashboard(request):
         response = save_data(userId, table['columns'], table['tableName'],
                              tableId=tableId, left=left, top=top, width=table['width'],
                              isDefaultOnDashboard=isDefault, dashboardWidth=dashboardWidth, 
-                             sortBy=sortBy, tableWidth=table['widthInPx'],
-                             dashboard=dashboard, clone=clone)
+                             sortBy=sortBy, dashboard=dashboard, clone=clone)
         if not response['success']:
             return httpResponse(response)
     return respondWithSuccess("Dashboard saved successfully!")

@@ -5,7 +5,6 @@ class Command(BaseCommand):
     """
     Script Class.
     """
-
     option_list = BaseCommand.option_list + (
         make_option('--drop',
                     '-d',
@@ -20,7 +19,6 @@ class Command(BaseCommand):
         """
         Script Execution.
         """
-        
         drop = options.get('drop')
         if drop:
             print "Dropping enabled"
@@ -30,18 +28,15 @@ class Command(BaseCommand):
 
 def create_dashboard(drop=False):
     from crits.core.dashboard.models import SavedSearch, Dashboard
-
     if drop:
         Dashboard.drop_collection()
         SavedSearch.drop_collection()
-
     defaultDashboard = Dashboard.objects(name="Default", analystId__not__exists=1 , isPublic=True).first()
     if not defaultDashboard:
         defaultDashboard = Dashboard()
         defaultDashboard.name = "Default"
         defaultDashboard.isPublic = True
         defaultDashboard.save()
-    
         for title in ["Counts","Top Backdoors", "Top Campaigns","Recent Indicators",
                   "Recent Emails", "Recent Samples"]:
             savedSearch = SavedSearch()
@@ -53,7 +48,6 @@ def create_dashboard(drop=False):
         print "Default Dashboard Created."
     else:
         print "Default Dashboard already exists."
-    
     
 def getColumnsForTable(title):
         if title == "Counts":
@@ -78,7 +72,6 @@ def getColumnsForTable(title):
                           "modified","exploit","source", "campaign"]
             colNames = ["Details","Filename", "Size", "Filetype", "Added",
                         "Modified", "Exploit","Source", "Campaign"]
-            
         columns = []
         for field, name in zip(colFields, colNames):
             if field == "details":
@@ -89,8 +82,6 @@ def getColumnsForTable(title):
                 "field": field,
                 "caption": name,
                 "size": size,
-                "sortable": "true",
-                "resizable" : "true"
             }
             columns.append(col)
         return columns

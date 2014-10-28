@@ -167,14 +167,14 @@
             indicatorsObject= {
                     url:"{% url 'crits.core.dashboard.views.load_data' obj='Indicator' %}",
                     cols: [
-                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
-                           { field: 'value', caption: 'Value', size:"10%", sortable: true },
-                           { field: 'type', caption: 'Type', size:"10%", sortable: true },
-                           { field: 'created', caption: 'Added', size:"10%", sortable: true },
-                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
-                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
-                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
-                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
+                           { field: 'details', caption: 'Details', size:"5%", sizeType:'%', sortable: false },
+                           { field: 'value', caption: 'Value', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'type', caption: 'Type', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'created', caption: 'Added', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'modified', caption: 'Modified', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'campaign', caption: 'Campaign', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sizeType:'%',sortable: true },
                        ],
                        sortBy: null,
                        data: null,
@@ -320,6 +320,7 @@
         {% else %}
             var maxRows = 5;
         {% endif %}
+        var gridWidth = $('#grid').width();
         //retrieve the data to show and pass it to the showData() method
         function loadData(object) {
             //if the data has not been retrived yet
@@ -537,7 +538,7 @@
                     userId: "{{ user.id }}",
                     tableName:tableName,
                     query: '{{ term }}',
-                    tableWidth: $("#grid").width(),
+                    tableWidth: gridWidth/$('#wrapper').width()*100,
                     object_type: currentlyShownObject.type,
                     columns: JSON.stringify(w2ui['grid'].columns),
                     sortBy: JSON.stringify(currentlyShownObject.sortBy),
@@ -645,6 +646,7 @@
             //remove the button
             $(this).remove();
             //if there are no other removed columns, reshow the trashcan
+            refreshGrid();
             if(removedColumns.length == 0)
                 toggleTrashCan();
             addDroppableEvent();
@@ -715,6 +717,17 @@
                     return objects[i];
                 }
         }
+        function reSizeLastColumn(tempCols) {
+            var lastColWidth = gridWidth;
+            for (i in tempCols)
+                if (lastColWidth < 1)
+                    return true;
+                else if (i == tempCols.length-1)
+                    tempCols[tempCols.length-1]['size'] = lastColWidth+"px";
+                else
+                    lastColWidth-=parseInt(tempCols[i]['size']);
+            return false;
+        }
          //document.ready
         $(document).ready(function() {
             //initialize the tabs
@@ -776,7 +789,33 @@
                         reloadGrid();
                     }
                 },
+                onColumnResize: function(e) {
+                    var tempCols = w2ui['grid'].columns;
+                    var cancel = reSizeLastColumn(tempCols);
+                    e.onComplete = function() {
+                        if(cancel) {
+                            var changingColumn = w2ui['grid'].getColumn(e.field);
+                            var prevWidth = parseInt(changingColumn.size) - e.resizeBy;
+                            changingColumn.size = prevWidth + 'px';
+                            reSizeLastColumn(tempCols);
+                        }
+                        refreshGrid();
+                        for (i in tempCols) {
+                            var col = tempCols[i];
+                            if (col.sizeType != '%')
+                                col.size = parseInt(col.size)/gridWidth*100+'%';
+                        }
+                    };
+                },
             });
+            $('#innerWrapper').resizable({
+                handles: 'e, w',
+                 start: function() {
+                 },
+                 stop: function(e) {
+                     gridWidth = $('#grid').width();
+                 }
+             });
             //load the initial data in the grid
             loadData(currentlyShownObject);
             //on add Tab change. append new tab
@@ -917,23 +956,25 @@
         <div id='garbageContent'></div>
     </div>
     <div class='clear'></div>
-    <div class='{{dashtheme}}-theme'>
-	    <div id="tabs"></div>
-	    <div id="contentWrapper">
-	        <div id="tab-content" >
-	            <div id="grid"></div>
-	            <div id='pagination-wrapper' {%if isDefaultOnDashboard %}style='display:none'{% endif %}>
-	                <div>
-	                    <span class='ui-icon-seek-first ui-icon'></span>
-	                    <span class='ui-icon-seek-prev ui-icon'></span>
-	                </div>
-	                <div id='pagination'></div>
-	                <div>
-	                    <span class='ui-icon-seek-next ui-icon'></span>
-	                    <span class='ui-icon-seek-end ui-icon'></span>
-	                </div>
-	            </div>
-	        </div>
+    <div id='wrapper' class='{{dashtheme}}-theme draggable' style='width:{% if tableWidth %}{{tableWidth}}{% else %}100{% endif %}%;'>
+	    <div id='innerWrapper'>
+		    <div id="tabs"></div>
+		    <div id="contentWrapper">
+		        <div id="tab-content"  >
+		            <div id="grid"></div>
+		            <div id='pagination-wrapper' {%if isDefaultOnDashboard %}style='display:none'{% endif %}>
+		                <div>
+		                    <span class='ui-icon-seek-first ui-icon'></span>
+		                    <span class='ui-icon-seek-prev ui-icon'></span>
+		                </div>
+		                <div id='pagination'></div>
+		                <div>
+		                    <span class='ui-icon-seek-next ui-icon'></span>
+		                    <span class='ui-icon-seek-end ui-icon'></span>
+		                </div>
+		            </div>
+		        </div>
+		    </div>
 	    </div>
 	</div>
     <div class='clear'></div>

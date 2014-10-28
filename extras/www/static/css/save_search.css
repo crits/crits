@@ -4,6 +4,14 @@
 #tabSpan {
   float: right;
 }
+#wrapper {
+	margin: 0 auto;
+}
+#innerWrapper {
+	overflow-x:hidden;
+	overflow-y:auto;  
+	
+}
 #tab-content {
   float:left;
   width:100%;
@@ -54,8 +62,11 @@
 } 
 #pinSearchForm input {
     width:150px !important;
+    margin-bottom:5px;
 } 
-
+#dashboardSelector {
+	margin-bottom:5px;
+}
 #trashWrapper {
   width:100%;
   height:60px;
@@ -110,29 +121,6 @@
 #pagination-wrapper {
     text-align:center;
 }
-
-
-.color-picker, .row-picker {
-    margin:5px;
-    border:1px solid black;
-    width:20px;
-    height:20px;
-}
-
-.color-picker-selected, .row-picker-selected {
-    border-width: 2px;
-    margin:4px;
-}
-#color-picker-wrapper {
-    border:1px solid black;
-    text-align:center;
-    height:75px;
-}
-.color-picker-default-wrapper {
-    padding-top:15px;
-    padding-right:5px;
-}
 #newDashWrapper {
 	display:none;
-	margin-bottom:10px;
 }
