@@ -353,13 +353,21 @@
 <nav id="nav-menu">
   <ul class="main-nav mmenu" style="display: none;">
     <li class='nav_main mmenu_item'>
-      <a id="dashboard" href="{% url 'crits.core.views.dashboard' %}">Dashboard</a>
-      <ul class='dashboard-nav-submenu' class='sub-mmenu'>
-          {% for dash in user.getDashboards %}
-	          <li class='mmenu_item'>
-	              <a href='{% url "crits.core.dashboard.views.dashboard" dash.id %}'>{{dash.name}}</a>
-	          </li>
-	      {% endfor %}
+      <a id="dashboard" href="{% url 'crits.core.views.dashboard' %}">My Dashboards</a>
+      <ul class='sub-mmenu'>
+          <li class='mmenu_item'>
+             <a href="{% url 'crits.core.views.dashboard' %}">Dashboards</a>
+             <ul class='dashboard-nav-submenu' class='sub-mmenu'>
+                 {% for dash in user.getDashboards %}
+                     <li class='mmenu_item'>
+                         <a href='{% url "crits.core.dashboard.views.dashboard" dash.id %}'>{{dash.name}}</a>
+                     </li>
+                 {% endfor %}
+             </ul>
+         </li>
+         <li class='mmenu_item'>
+              <a href="{% url 'crits.core.dashboard.views.saved_searches_list' %}">Searches</a>
+          </li>
       </ul>
     </li>
     {% if user_role %}
@@ -372,9 +380,6 @@
     </li>
     <li class='nav_main mmenu_item'>
       <a href="{% url 'crits.core.views.sector_list' %}">Sector Lists</a>
-    </li>
-    <li class='nav_main mmenu_item'>
-      <a href="{% url 'crits.core.dashboard.views.saved_searches_list' %}">Saved Searches</a>
     </li>
     <li class='nav_objects mmenu_item'>
         <a href="{% url 'crits.actors.views.actors_listing' %}">Actors</a>

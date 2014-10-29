@@ -6,7 +6,7 @@
 
 {% block javascript_includes %}
     <script>
-        var buttonBarOffset = '-200px';
+        var buttonBarOffset = '-252px';
         //used to display the save/undo buttons in the button bar
         var showSaveButton = true;
         //used by the undo button to determine if there is a previous position to
@@ -125,6 +125,9 @@
         $('#destroyPositionsButton').click(function() {
             showResults('');
             $('#destroy-dashboard-dialog').dialog('open');
+        });
+        $('#myDashboardsButton').click(function() {
+        	window.location = $(this).attr('href');
         });
         //action of the undo button
         $('#undoLastMove').click(function() {
@@ -310,9 +313,9 @@
         
         $(document).ready(function() {          //doc.ready
         	if( navigator.userAgent.indexOf("Chrome") != -1 ) 
-                buttonBarOffset = '-170px'; 
+                buttonBarOffset = '-212px'; 
         	else if( navigator.userAgent.indexOf("MSIE") != -1 )
-        		buttonBarOffset = '-191px';
+        		buttonBarOffset = '-243px';
         	$('#buttonBar').css('right',buttonBarOffset);
         	//used to prevent the retrieval of new data for tables on their 
         	//inital sort
@@ -532,9 +535,14 @@
 		            <button style='margin:5px;' id='savePositionsButton' title='Save' disabled>
 		                <i class='fa fa-check'></i>
 		            </button>
-		            <button style='margin:5px;' id='destroyPositionsButton' title='Destroy Dashboard'>
+		            <button style='margin:5px;' id='destroyPositionsButton' title='Reset Dashboard'>
 		                <i class='fa fa-trash-o'></i>
 		            </button>
+		            <div class='divider'>
+			            <button href='{% url "crits.core.dashboard.views.saved_searches_list" %}' style='margin:5px;' id='myDashboardsButton' title='My Dashboards'>
+	                        <i class="fa fa-list"></i>
+	                    </button>
+	                </div>
 		        </div>
 	        </div>
 	    </div>
