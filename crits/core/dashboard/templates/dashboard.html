@@ -294,6 +294,20 @@
                     lastColWidth-=parseInt(tempCols[i]['size']);
             return true;
         }
+        function create_pivot_links(data) {
+            var campBase = "/campaigns/details/__CAMPAIGN__/";
+            var items = data.split('|||');
+            var links = [];
+            for (var i = 0; i < items.length; i++)
+                if (items[i]) {
+                    var campUrl = '<a href="'+campBase.replace("__CAMPAIGN__", items[i])+'">'+items[i]+'</a>';
+                    if (links.indexOf(campUrl) >= 0)
+                    	continue;
+                    links.push(campUrl);
+                }
+            return links;
+        }
+        
         $(document).ready(function() {          //doc.ready
         	if( navigator.userAgent.indexOf("Chrome") != -1 ) 
                 buttonBarOffset = '-170px'; 
@@ -338,6 +352,8 @@
         	    		if(k.indexOf('count') >= 0 || k == 'to' || k == 'length'
         	    				|| k == 'size' || k == 'version')
                             record[k] = parseInt(record[k]);
+        	    		else if(k == 'campaign')
+                            record[k] = create_pivot_links(record[k]);
         	    }
         	    //columns used for w2ui table, also for the title column
                 var columns = [];

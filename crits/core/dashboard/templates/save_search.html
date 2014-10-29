@@ -321,6 +321,21 @@
             var maxRows = 5;
         {% endif %}
         var gridWidth = $('#grid').width();
+        
+        function create_pivot_links(data) {
+            var campBase = "/campaigns/details/__CAMPAIGN__/";
+            var items = data.split('|||');
+            var links = [];
+            for (var i = 0; i < items.length; i++)
+                if (items[i]) {
+                	var campUrl = '<a href="'+campBase.replace("__CAMPAIGN__", items[i])+'">'+items[i]+'</a>';
+                    if (links.indexOf(campUrl) >= 0)
+                        continue;
+                    links.push(campUrl);
+                }
+            return links;
+        }
+        
         //retrieve the data to show and pass it to the showData() method
         function loadData(object) {
             //if the data has not been retrived yet
@@ -360,8 +375,11 @@
                             for (i in records) {
                                 var record = records[i];
                                 for(k in record)
-                                    if(k.indexOf('count') >= 0 || k == "to" || k == "length" || k == "size" || (k == "version" && object.type != "AnalysisResult")) 
+                                    if(k.indexOf('count') >= 0 || k == "to" || k == "length" ||
+                                    		k == "size" || (k == "version" && object.type != "AnalysisResult")) 
                                         record[k] = parseInt(record[k]);
+                                    else if(k == 'campaign')
+                                    	record[k] = create_pivot_links(record[k]);
                             }
                         }
                         showData(records);
