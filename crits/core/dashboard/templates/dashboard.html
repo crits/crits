@@ -104,12 +104,12 @@
         //shows the table options when hovering of ther table
         //(settings and re-search icons)
         $(document).on('mouseleave', '.w2ui-col-group', function() {
-        	$(this).find('.tableOptions').css('visibility', 'hidden');
+        	$(this).find('.tableOptions').hide();
         });
         //hides the table options when hovering of ther table
         //(settings and re-search icons)
         $(document).on('mouseenter', '.w2ui-col-group', function() {
-            $(this).find('.tableOptions').css('visibility', 'visible');
+            $(this).find('.tableOptions').show();
         });
         //jquery animation to slide button bar on/off screen
         $('#toggleButtonBar').click(function() {
@@ -287,15 +287,15 @@
             var lastColWidth = tableWidth;
             for (i in tempCols)
                 if (lastColWidth < 1)
-                    return true;
+                    return false;
                 else if (i == tempCols.length-1)
                     tempCols[tempCols.length-1]['size'] = lastColWidth+"px";
                 else
                     lastColWidth-=parseInt(tempCols[i]['size']);
-            return false;
+            return true;
         }
         $(document).ready(function() {          //doc.ready
-        	if( navigator.userAgent.indexOf("Chrome") != -1 )
+        	if( navigator.userAgent.indexOf("Chrome") != -1 ) 
                 buttonBarOffset = '-170px'; 
         	else if( navigator.userAgent.indexOf("MSIE") != -1 )
         		buttonBarOffset = '-191px';
@@ -307,9 +307,9 @@
         	   //this is used for the column group in the w2grid. It is taken out
         	   //only for neatness
         	    var tableHeader = '{{table.title}}'+
-        	    '<span class="floatleft tableOptions" style="visibility:hidden">'+
+        	    '<span class="tableOptions" style="display:none;position:absolute;left:5px;top:7px;">'+
         	         '<a href=\'{% url "crits.core.dashboard.views.edit_save_search" table.id %}\'>'+
-        	             '<i style="display:none;margin-left:5px;" class="fa fa-cog"></i>'+
+        	             '<i style="margin-left:5px;" class="fa fa-cog"></i>'+
         	         '</a>'+
         	         {% if not table.isHereByDefault %}
         	             '<a class="table-re-search" searchTerm="{{table.searchTerm}}">' +
@@ -360,17 +360,18 @@
 	                ],
 	                records: records,
 	                onColumnResize: function(e) {
-	                    var name = $(this).attr('name');
-	                    var tableWidth = $('#'+name).width();
-	                    var tempCols = w2ui[name].columns;
-	                    var cancel = reSizeLastColumn(tempCols, tableWidth);
 	                    e.onComplete = function() {
-	                        if(cancel) {
+	                    	var name = $(this).attr('name');
+	                        var tableWidth = $('#'+name).width();
+	                        var tempCols = w2ui[name].columns;
+	                        if(!reSizeLastColumn(tempCols, tableWidth)) {
 	                            var changingColumn = w2ui[name].getColumn(e.field);
 	                            var prevWidth = parseInt(changingColumn.size) - e.resizeBy;
 	                            changingColumn.size = prevWidth + 'px';
 	                            reSizeLastColumn(tempCols, tableWidth);
 	                        }
+	                        else
+	                        	toggleOptions(true);
 	                        w2ui[name].refresh();
 	                        for (i in tempCols) {
 	                            var col = tempCols[i];
@@ -378,15 +379,8 @@
 	                                col.size = parseInt(col.size)/tableWidth*100+'%';
 	                        }
 	                    };
-	                	toggleOptions(true);
-	                    w2ui[name].refresh();
 	                },
 	                onRefresh: function(e) {
-	                	//show the cog icon immediately after refresh. This is because
-	                	//refreshing resets its display to none
-	                	setTimeout(function() {
-	                		$('#'+e.target).find('.fa-cog').show();
-	                	}, 0);
 	                },
 	                onSort: function(e) {
 	                /*
@@ -488,9 +482,6 @@
             $itemElems.resizable('disable');
             //set all the postions of the tables
             setPositions();
-            //show the settings cog, this is because the icon was causing spacing
-            //issues if it was shown on load
-            $('.fa-cog').show();
         });
         //on change of the dashboards dropdown, change page
         $('#dashId').change(function() {
