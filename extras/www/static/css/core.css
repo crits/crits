@@ -369,5 +369,12 @@ span.right.link a:link{
 #dashId {
 	border:none!important;
 	font-size: 20px;
-	font-weight: 700;
+	font-weight: 700; 
+}
+.ui-tabs .ui-tabs-nav li.ui-tabs-active {
+	margin-bottom:-2px !important;
+}
+.divider {
+	border-left:1px solid #d3d3d3;
+	display: inline-block;
 }
