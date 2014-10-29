@@ -307,7 +307,14 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
                 clonedSavedSearch = cloneSavedSearch(newSavedSearch, dashboard.id)
         else:
             newSavedSearch = SavedSearch()
-        newSavedSearch.tableColumns = columns
+        cols = []
+        for col in columns:
+            if "field" not in col or "caption" not in col:
+                continue
+            cols.append(col)
+        if not cols:
+            raise("There are no columns to save")
+        newSavedSearch.tableColumns = cols
         newSavedSearch.name = tableName
         oldDashId = None
         if dashboard:
@@ -340,7 +347,7 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
             newSavedSearch.maxRows = maxRows;
         if width:
             width = float(width)
-            if not dashboardWidth and newSavedSearch.width and width > newSavedSearch.width:
+            if not dashboardWidth and newSavedSearch.width and (width > newSavedSearch.width+2 or width < newSavedSearch.width-2):
                 newSavedSearch.top=-1
             newSavedSearch.width = float(width)
         newSavedSearch.save()
