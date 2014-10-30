@@ -27,7 +27,7 @@ class Command(BaseCommand):
         create_dashboard(drop)
 
 def create_dashboard(drop=False):
-    from crits.core.dashboard.models import SavedSearch, Dashboard
+    from crits.dashboards.models import SavedSearch, Dashboard
     if drop:
         Dashboard.drop_collection()
         SavedSearch.drop_collection()

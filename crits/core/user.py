@@ -869,7 +869,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         return resp
 
     def getDashboards(self):
-        from crits.core.dashboard.models import getDashboardsForUser
+        from crits.dashboards.models import getDashboardsForUser
         return getDashboardsForUser(self)
 
 # stolen from MongoEngine and modified to use the CRITsUser class.

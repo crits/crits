@@ -20,7 +20,7 @@
                 Reset: function() {
                     $.ajax({
                         type:'GET',
-                        url: '{% url "crits.core.dashboard.views.destroy_dashboard" %}',
+                        url: '{% url "crits.dashboards.views.destroy_dashboard" %}',
                         data: {dashId: '{{ currentDash }}'},
                         datatype: 'json',
                         success: function(data) {
@@ -51,14 +51,14 @@
 		                Update: function() {  //if the parent still exists, give the option to update
 		                	$.ajax({
 		                        type:"GET",
-		                        url: "{% url 'crits.core.dashboard.views.delete_dashboard'%}",
+		                        url: "{% url 'crits.dashboards.views.delete_dashboard'%}",
 		                        data: {
 		                            id:'{{currentDash}}',
 		                        },
 		                        success: function(data) {
 		                            showResults(data.message, !data.success);
 		                            if (data.success) 
-		                            	window.location = '{% url "crits.core.dashboard.views.dashboard" parent %}';
+		                            	window.location = '{% url "crits.dashboards.views.dashboard" parent %}';
 		                        },
 		                        error: function(data) {
 		                            throwUnexpectedError();
@@ -75,7 +75,7 @@
 	                	if($('#do-not-show-again').is(':checked'))
 		                	$.ajax({
 		                        type:'GET',
-		                        url: '{% url "crits.core.dashboard.views.ignore_parent" currentDash %}',
+		                        url: '{% url "crits.dashboards.views.ignore_parent" currentDash %}',
 		                        datatype: 'json',
 		                        success: function(data) {
 		                        },
@@ -165,7 +165,7 @@
             });
             $.ajax({
                 type:'POST',
-                url: '{% url "crits.core.dashboard.views.save_new_dashboard" %}',
+                url: '{% url "crits.dashboards.views.save_new_dashboard" %}',
                 data: {
                     data: JSON.stringify(data),
                     userId: '{{ user.id }}',
@@ -325,7 +325,7 @@
         	   //only for neatness
         	    var tableHeader = '{{table.title}}'+
         	    '<span class="tableOptions" style="display:none;position:absolute;left:5px;top:7px;">'+
-        	         '<a href=\'{% url "crits.core.dashboard.views.edit_save_search" table.id %}\'>'+
+        	         '<a href=\'{% url "crits.dashboards.views.edit_save_search" table.id %}\'>'+
         	             '<i style="margin-left:5px;" class="fa fa-cog"></i>'+
         	         '</a>'+
         	         {% if not table.isHereByDefault %}
@@ -515,7 +515,7 @@
 	        <div class='floatleft'>
 	            <select id='dashId'>
 	                {% for dash in dashboards %}
-	                    <option {% if dash|is_object_id_equal:currentDash %}selected{% endif %} value='{% url "crits.core.dashboard.views.dashboard" dash.id %}'>
+	                    <option {% if dash|is_object_id_equal:currentDash %}selected{% endif %} value='{% url "crits.dashboards.views.dashboard" dash.id %}'>
 	                        {{dash.name}}{% if dash.isPublic %} (Public){% elif dash.parent %} (Modified){% endif %}
 	                    </option>
                     {% endfor %}	                   
@@ -539,7 +539,7 @@
 		                <i class='fa fa-trash-o'></i>
 		            </button>
 		            <div class='divider'>
-			            <button href='{% url "crits.core.dashboard.views.saved_searches_list" %}' style='margin:5px;' id='myDashboardsButton' title='Config'>
+			            <button href='{% url "crits.dashboards.views.saved_searches_list" %}' style='margin:5px;' id='myDashboardsButton' title='Config'>
 	                        <i class="fa fa-list"></i>
 	                    </button>
 	                </div>

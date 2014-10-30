@@ -18,7 +18,7 @@ from django.utils.html import escape as html_escape
 import cgi
 import datetime
 from django.http import HttpRequest
-from crits.core.dashboard.utilities import getCssForDefaultDashboardTable, constructCssString, constructAttrsString, getHREFLink, get_obj_name_from_title, get_obj_type_from_string
+from crits.dashboards.utilities import getCssForDefaultDashboardTable, constructCssString, constructAttrsString, getHREFLink, get_obj_name_from_title, get_obj_type_from_string
 
 class SavedSearch(CritsDocument, CritsSchemaDocument, DynamicDocument):
     """
@@ -194,7 +194,7 @@ def constructTable(table, records, columns, colNames, css, attrs):
     }
     if table.objType:
         tableObject["objType"] = table.objType
-        tableObject["url"] = reverse("crits.core.dashboard.views.load_data",
+        tableObject["url"] = reverse("crits.dashboards.views.load_data",
                                           kwargs={"obj":table.objType})
     return tableObject
     
@@ -512,7 +512,7 @@ def generate_search_for_saved_table(user, id=None,request=None):
                    "count":str(len(records)),
                    "type":get_obj_name_from_title(savedSearch.name)}
         #special url to get the records of a default dashboard since their queries are different 
-        url = reverse("crits.core.dashboard.views.get_dashboard_table_data", 
+        url = reverse("crits.dashboards.views.get_dashboard_table_data", 
                       kwargs={"tableName":str(savedSearch.name.replace(" ", "_"))})
     args = {'term': term,
             'results': results,

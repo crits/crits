@@ -2715,7 +2715,7 @@ def generate_dashboard(request):
         }, RequestContext(request))
     """
     
-    from crits.core.dashboard.models import get_dashboard
+    from crits.dashboards.models import get_dashboard
 
     args = get_dashboard(request.user)
     return render_to_response('dashboard.html', args, RequestContext(request))

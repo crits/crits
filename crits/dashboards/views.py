@@ -6,8 +6,8 @@ from django.template import RequestContext
 from crits.core.handlers import generate_global_search, generate_dashboard
 from crits.core.views import dashboard
 from django.http import HttpResponse
-from crits.core.dashboard.models import SavedSearch,toggleTableVisibility,get_saved_searches_list,get_dashboard, getHREFLink, get_obj_type_from_string, clear_dashboard, save_data, get_table_data, generate_search_for_saved_table, delete_table, getRecordsForDefaultDashboardTable
-from crits.core.dashboard.models import Dashboard,renameDashboard,changeTheme, deleteDashboard,getDashboardsForUser,createNewDashboard, setDefaultDashboard, cloneDashboard, setPublic, updateChildren
+from crits.dashboards.models import SavedSearch,toggleTableVisibility,get_saved_searches_list,get_dashboard, getHREFLink, get_obj_type_from_string, clear_dashboard, save_data, get_table_data, generate_search_for_saved_table, delete_table, getRecordsForDefaultDashboardTable
+from crits.dashboards.models import Dashboard,renameDashboard,changeTheme, deleteDashboard,getDashboardsForUser,createNewDashboard, setDefaultDashboard, cloneDashboard, setPublic, updateChildren
 import json
 import re
 from django.core.urlresolvers import reverse
@@ -21,7 +21,7 @@ def saved_searches_list(request):
     return render('saved_searches_list.html',  args, request)
 
 @user_passes_test(user_can_view_data)
-def dashboard(request, dashId):
+def dashboard(request, dashId=None):
     """
     renders the dasboard
     """
@@ -135,7 +135,7 @@ def save_search(request):
         response["newDashId"] = str(newDash.id)
         response["newDashName"] = newDash.name
         response["isClone"] = clone
-        response["newDashUrl"] = reverse("crits.core.dashboard.views.dashboard",
+        response["newDashUrl"] = reverse("crits.dashboards.views.dashboard",
                                           kwargs={"dashId":newDash.id})
     return httpResponse(response)
 

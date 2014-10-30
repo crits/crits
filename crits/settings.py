@@ -337,7 +337,7 @@ TEMPLATE_DIRS = (
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'core/static'),
     os.path.join(SITE_ROOT, 'actors/static'),
-    os.path.join(SITE_ROOT, 'core/dashboard/static'),
+    os.path.join(SITE_ROOT, 'dashboards/static'),
     os.path.join(SITE_ROOT, 'campaigns/static'),
     os.path.join(SITE_ROOT, 'certificates/static'),
     os.path.join(SITE_ROOT, 'comments/static'),
@@ -359,7 +359,7 @@ STATICFILES_DIRS = (
 
 INSTALLED_APPS = (
     'crits.core',
-    'crits.core.dashboard',
+    'crits.dashboards',
     'django.contrib.auth',
     'mongoengine.django.mongo_auth',
     'django.contrib.contenttypes',
