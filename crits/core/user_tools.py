@@ -349,11 +349,10 @@ def unsubscribe_user(username, stype, oid):
     from crits.core.user import CRITsUser
     username = str(username)
     user = CRITsUser.objects(username=username).first()
-    c = 0
     for s in user.subscriptions[stype]:
         if str(s._id) == oid:
-            del user.subscriptions[stype][c]
-        c += 1
+            user.subscriptions[stype].remove(s)
+            break
     try:
         user.save()
         return {'success': True}
@@ -400,11 +399,10 @@ def unsubscribe_from_source(username, source):
     from crits.core.user import CRITsUser
     username = str(username)
     user = CRITsUser.objects(username=username).first()
-    c = 0
     for s in user.subscriptions['Source']:
         if s.name == source:
-            del user.subscriptions['Source'][c]
-        c += 1
+            user.subscriptions['Source'].remove(s)
+            break
     try:
         user.save()
         return {'success': True}

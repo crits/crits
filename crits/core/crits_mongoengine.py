@@ -258,10 +258,8 @@ class CritsStatusDocument(BaseDocument):
         if status in ('New', 'In Progress', 'Analyzed', 'Deprecated'):
             self.status = status
             if status == 'Deprecated' and 'actions' in self:
-                i = 0
-                while i < len(self.actions):
-                    self.actions[i].active = "off"
-                    i += 1
+                for action in self.actions:
+                    action.active = "off"
 
 class CritsBaseDocument(BaseDocument):
     """
@@ -1033,19 +1031,15 @@ class EmbeddedTickets(BaseDocument):
 
         if not date:
             return
-        found = False
-        c = 0
         for t in self.tickets:
             if t.date == date:
-                found = True
-                del self.tickets[c]
-            c += 1
-        if found:
-            et = EmbeddedTicket()
-            et.analyst = analyst
-            et.ticket_number = ticket_number
-            et.date = date
-            self.tickets.append(et)
+                self.tickets.remove(t)
+                et = EmbeddedTicket()
+                et.analyst = analyst
+                et.ticket_number = ticket_number
+                et.date = date
+                self.tickets.append(et)
+                break
 
     def delete_ticket(self, date=None):
         """
@@ -1057,11 +1051,10 @@ class EmbeddedTickets(BaseDocument):
 
         if not date:
             return
-        c = 0
         for t in self.tickets:
             if t.date == date:
-                del self.tickets[c]
-            c += 1
+                self.tickets.remove(t)
+                break
 
     def get_tickets(self):
         """
