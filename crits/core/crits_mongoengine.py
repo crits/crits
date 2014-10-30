@@ -1935,7 +1935,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type username: str
         """
 
-        for r in self.relationships:
+        for r in self.relationships[:]:
             if r.relationship_date:
                 self.delete_relationship(rel_id=str(r.object_id),
                                          type_=r.rel_type,
