@@ -271,6 +271,7 @@
                         success: function(data) {
                             showResults(data.message, !data.success);
                             $('#'+dashboard+'Title').text(newName);
+                            $('.dashboard-nav-submenu').find('a[href*="'+dashboard+'"]').text(newName);
                         },
                         error: function(data) {
                         	throwUnexpectedError();
@@ -442,6 +443,7 @@
 	            <ol>
 	                <li>Public dashboards are not shown here unless you are the creator.</li>
 	                <li>To revert back to a public dashboard, delete your modified copy and it will automatically become visible again.</li>
+	                <li>Click the <i class="fa fa-caret-square-o-down"></i> for the dashboard options.</li>
 	           </ol>
 	        </div>
 	    </div>
