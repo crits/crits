@@ -1316,7 +1316,7 @@ def parse_search_term(term, force_full=False):
 
     # decode the term so we aren't dealing with weird encoded characters
     if force_full == False:
-        term = urllib.unquote(term).decode('utf8')
+        term = urllib.unquote(term)
     # setup lexer, parse our term, and define operators
     sh = shlex.shlex(term.strip())
     sh.wordchars += '!@#$%^&*()-_=+[]{}|\:;<,>.?/~`'
