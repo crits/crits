@@ -5,7 +5,7 @@ import HTMLParser
 import json
 import logging
 import re
-import shlex
+import ushlex as shlex
 import urllib
 
 from bson.objectid import ObjectId
