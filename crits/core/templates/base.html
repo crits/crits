@@ -353,10 +353,10 @@
 <nav id="nav-menu">
   <ul class="main-nav mmenu" style="display: none;">
     <li class='nav_main mmenu_item'>
-      <a id="dashboard" href="{% url 'crits.core.views.dashboard' %}">My Dashboards</a>
+      <a id="dashboard" href="{% url 'crits.core.views.dashboard' %}">Dashboards</a>
       <ul class='sub-mmenu'>
           <li class='mmenu_item'>
-             <a href="{% url 'crits.core.views.dashboard' %}">Dashboards</a>
+             <a href="{% url 'crits.core.views.dashboard' %}"> My Dashboards</a>
              <ul class='dashboard-nav-submenu' class='sub-mmenu'>
                  {% for dash in user.getDashboards %}
                      <li class='mmenu_item'>
@@ -366,7 +366,7 @@
              </ul>
          </li>
          <li class='mmenu_item'>
-              <a href="{% url 'crits.core.dashboard.views.saved_searches_list' %}">Searches</a>
+              <a href="{% url 'crits.core.dashboard.views.saved_searches_list' %}">Configurations</a>
           </li>
       </ul>
     </li>

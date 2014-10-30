@@ -17,8 +17,11 @@
 	padding-left:5px;
 }
 .dashboard-settings {
-	margin-left:5px;
 	cursor:pointer!important;
+	font-size:150%;
+	position:absolute;
+	left:5px;
+	top:5px;
 }
 #dashboard-settings-dropdown {
 	position:absolute;
@@ -46,4 +49,20 @@
 }
 .dashbaord {
 	width:100%;
+}
+#help-box {
+	margin-bottom:20px;
+}
+#need-help {
+	float:right;
+	color:red;
+	cursor:pointer;
+}
+#the-help {
+}
+.clear {
+   clear: both;
+}
+.hidden {
+	display:none;
 }

@@ -123,7 +123,6 @@
        			$('#delete-dashboard-dialog').text('Are you sure you want to delete your dashboard? '+
        					'If you choose to continue you will lose all saved searches affiliated with it as well.');
        		$('#delete-dashboard-dialog').dialog('open');
-       			
         });
         //opens the changeName dialog
         $('.changeName').click(function() {
@@ -150,8 +149,8 @@
         function toggleSettingsDialog(show, element, delayed) {
         	if (show) {
         		var position = $(element).offset();
-                $('#dashboard-settings-dropdown').css('left', position.left);
-                $('#dashboard-settings-dropdown').css('top', position.top-20);
+                $('#dashboard-settings-dropdown').css('left', position.left+5);
+                $('#dashboard-settings-dropdown').css('top', position.top-15);
                 var dashboard = $(element).closest('.dashboard');
                 $('#dashboard-settings-dropdown').attr('dash',$(dashboard).attr('id'));
                 {% if user.role == 'Administrator' %}
@@ -184,13 +183,16 @@
 	                    	var oldClass = 'fa-desktop';
 	                    	var newClass = 'fa-ban';
 	                    	var newVisibility = 'False';
+	                    	var newTitle = 'Hidden';
 	                    }
 	                    else {
 	                    	var oldClass = 'fa-ban';
                             var newClass = 'fa-desktop';
 	                    	var newVisibility = 'True';
+	                    	var newTitle = 'Shown on Dashboard';
 	                    }
 	                    $(parent).find('.visibilityIcon').removeClass(oldClass).addClass(newClass);
+	                    $(parent).find('.visibilityIcon').attr('title', newTitle);
 	                    $(parent).attr('isVisible', newVisibility);
                 	}
                 },
@@ -344,6 +346,7 @@
                             showResults(data.message, !data.success);
                             if(data.success) {
                                 $('#'+id).remove();
+                                $('.dashboard-nav-submenu').find('a[href*="'+id+'"]').remove();
                             }
                         },
                         error: function(data) {
@@ -370,10 +373,10 @@
         	//constructs the variables need for each dashboard table
         	{% for dash in dashboards %}
 	            var name = ''+
-	            '<a class="black" id="{{dash.id}}Title" href=\'{% url "crits.core.dashboard.views.dashboard" dash.id %}\'>'+
+	            '<a id="{{dash.id}}Title" href=\'{% url "crits.core.dashboard.views.dashboard" dash.id %}\'>'+
 	                 '{{dash.name}}'+
 	            '</a>' +
-	            '<i dash="{{dash.id}}" class="floatleft fa fa-caret-square-o-down dashboard-settings"></i>';
+	            '<i dash="{{dash.id}}" class="fa fa-caret-square-o-down dashboard-settings"></i>';
 	            var id = '{{dash.id}}';
 	            var records = [];
 	            {% for table in dash.tables %}
@@ -390,14 +393,14 @@
 	                    '<i title="Delete" class="fa fa-trash removeFromDashboard {%if table.isDefaultOnDashboard %}default{% endif %}"></i>' +
 	                    '</div>';
                     {%if table.isDefaultOnDashboard %}
-                        var recordName = '{{table.name}}';
+                        var recordSearch = '';
                     {% else %}
-                        var recordName = '<span searchTerm="{{table.searchTerm}}" class="table-re-search">{{table.name}}</span>';
+                        var recordSearch = '<a searchTerm="{{table.searchTerm}}" class="table-re-search">{{table.searchTerm}}</a>';
                     {% endif %}
 	                var record = {
 	                		recid:'{{table.id}}',
-	                		name: recordName,
-	                		search_term:'{{table.searchTerm}}',
+	                		name: '{{table.name}}',
+	                		search_term:recordSearch,
 	                		obj_type: '{{table.objType}}',
 	                		sort: '{{table.getSortByText}}',
 	                		max_rows: '{{table.maxRows}}',
@@ -423,16 +426,33 @@
                 records: records,
             });
         }
+        
+        $('#need-help').click(function() {
+        	$('#the-help').slideToggle('fast');
+        });
     </script>
 {% endblock %}
 {% block content %}
     <div class='center' id='resultsDiv'></div>
+    {% if dashboards %}
+	    <div id='help-box'>
+	        <span id='need-help'>Need help?</span>
+	        <div class='hidden' id='the-help'>
+	            Some things to Keep in Mind:
+	            <ol>
+	                <li>Public dashboards are not shown here unless you are the creator.</li>
+	                <li>To revert back to a public dashboard, delete your modified copy and it will automatically become visible again.</li>
+	           </ol>
+	        </div>
+	    </div>
+	    <div class='clear'></div>
+	{% endif %}
     {% for dash in dashboards %}
        <div class='margBottom'>
            <div class='dashboard {{dash.theme}}-theme' {%if dash.isModified%}isModified='true'{% endif %} theme='{{dash.theme}}' tempTheme='{{dash.theme}}' isPublicText='Make {%if dash.isPublic%}Private{%else%}Public{%endif%}' id='{{dash.id}}'></div>
        </div>
     {% empty %}
-        <div class='center'>You currently have no searches saved.</div>
+        <div class='center'>You currently have no dashboards saved. To begin, modify & save a public dashboard.</div>
     {% endfor %}
     <div id="removeFromDashboardDialog" title="Delete Saved Search" class='center'>
         <div id='extraNote'>
@@ -455,7 +475,7 @@
         <input type='text' name='newName' id='newName'/>
     </div>
     <div id='delete-dashboard-dialog' title='Delete Dashboard'></div>
-    <div id='change-theme-dialog' title='Change Theme' class='center'>
+    <div id='change-theme-dialog' title='Change Theme' class='hidden center'>
         <div>
             <button theme='default' class='theme-picker theme-picker-default'>A</button> 
             <button theme='valentine' class='theme-picker theme-picker-valentine' >B</button>
