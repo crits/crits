@@ -2,6 +2,7 @@ import json
 import yaml
 
 from bson.objectid import ObjectId
+from dateutil.parser import parse
 from django.http import HttpResponse
 from lxml.etree import tostring
 
@@ -526,6 +527,11 @@ class CRITsAPIResource(MongoEngineResource):
                 if op_index is not None:
                     if op in ('$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin', '$exists'):
                         val = v
+                        if field in ('created', 'modified'):
+                            try:
+                                val = parse(val, fuzzy=True)
+                            except:
+                                pass
                         if op in ('$in', '$nin'):
                             if field == 'source.name':
                                 val = []
@@ -559,6 +565,11 @@ class CRITsAPIResource(MongoEngineResource):
                             querydict[field] = {op: val}
                 elif field in ('size', 'schema_version'):
                     querydict[field] = v_int
+                elif field in ('created', 'modified'):
+                    try:
+                        querydict[field] = parse(v, fuzzy=True)
+                    except:
+                        querydict[field] = v
                 elif field == 'source.name':
                     v = remove_quotes(v)
                     if v in source_list:
