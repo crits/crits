@@ -1,9 +1,18 @@
 .margBottom {
-	margin-bottom:10px;
+	margin-bottom:20px;
 }
 #extraNote {
-	color:red !important;
 	display:none;
+}
+.red { 
+	color:red !important;
+}
+.go-to-search {
+	color:blue;
+	cursor:pointer !important;
+}
+#create-blank-part2 {
+	margin-top:20px;
 }
 .black {
 	color: inherit !important;
@@ -57,8 +66,6 @@
 	float:right;
 	color:red;
 	cursor:pointer;
-}
-#the-help {
 }
 .clear {
    clear: both;

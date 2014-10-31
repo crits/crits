@@ -129,9 +129,9 @@
             $('#change-name-dialog').data('dashboard',currentDropdown).dialog('open');
         });
         //opens the change theme dialog
-        $('.changeTheme').click(function() {
-        	$('#change-theme-dialog').data('dashboard',currentDropdown).dialog('open');
-        });
+        //$('.changeTheme').click(function() {
+        //	$('#change-theme-dialog').data('dashboard',currentDropdown).dialog('open');
+        //});
         //Applys theme to the currently select dashboard so the user can see a preview
         $('.theme-picker').click(function(){
         	var newTheme = $(this).attr('theme');
@@ -288,6 +288,7 @@
             }
         });
         //change theme dialog
+        /*
         $( "#change-theme-dialog" ).dialog({
             modal: true,
             autoOpen: false,
@@ -329,7 +330,7 @@
                 }
                 $('.selectedTheme').removeClass('selectedTheme');
             }
-        });
+        });*/
         //delete dashboard dialog
         $( "#delete-dashboard-dialog" ).dialog({
             modal: true,
@@ -362,6 +363,68 @@
             },
             close: function() {
             }
+        });
+        
+        $('#create-blank-dashboard-dialog').dialog({
+            modal: true,
+            autoOpen: false,
+            width:400,
+            height:175,
+            buttons: [{
+            	id:'continue-create',
+            	text:'Continue',
+            	click: function() {
+            		if($('#continue-create').text() == 'Continue') {
+            			$('#continue-create').find('.ui-button-text').text('Create');
+                        $('#create-blank-part1').hide();
+                        $('#create-blank-part2').show();
+                    }
+                    else {
+                    	var blankDashName = $('#blank-dashboard-name').val();
+                    	if(blankDashName == '') {
+                    		$('#blank-dashboard-name').addClass('error');
+                    	}
+                    	else {
+                    		$.ajax({
+                                type:"GET",
+                                url: "{% url 'crits.dashboards.views.create_blank_dashboard'%}",
+                                data: {
+                                    name:blankDashName,
+                                },
+                                success: function(data) {
+                                    showResults(data.message, !data.success);
+                                    if(data.success)
+                                        location.reload();
+                                },
+                                error: function(data) {
+                                    throwUnexpectedError();
+                                }
+                            });
+                    	    $(this).dialog("close");	
+                    	}
+                    }
+            	}
+            }, 
+            {
+            	text:'Cancel',
+            	click: function() {
+            		$(this).dialog("close");
+            	}
+            }],
+            close: function() {
+            	$('#create-blank-part2').hide();
+                $('#create-blank-part1').show();
+                $('#continue-create').find('.ui-button-text').text('Continue');
+                $('#blank-dashboard-name').removeClass('error');
+                $('#blank-dashboard-name').val('');
+            }
+        });
+        $('.go-to-search').click(function() {
+        	$( "#create-blank-dashboard-dialog" ).dialog('close');
+        	$('#global_search_box').focus();
+        });
+        $('#create-blank-dashboard').click(function() {
+        	$( "#create-blank-dashboard-dialog" ).dialog('open');
         });
         //columns used for every dashboard
         var columns = [{ field: 'name', caption: 'Name', size: '25%', resizable: false},
@@ -409,6 +472,11 @@
                 		}
 	                records.push(record);
                 {% endfor %}
+                if(records.length == 0)
+                	records.push({
+                		recid:0,
+                        name: 'You have no searches saved to this dashboard',
+                	});
 	            setUpW2ui(id, name, columns, records);
 	        {% endfor %}
         });
@@ -443,7 +511,8 @@
 	            <ol>
 	                <li>Public dashboards are not shown here unless you are the creator.</li>
 	                <li>To revert back to a public dashboard, delete your modified copy and it will automatically become visible again.</li>
-	                <li>Click the <i class="fa fa-caret-square-o-down"></i> for the dashboard options.</li>
+	                <li>Click the <i class="fa fa-caret-square-o-down"></i> for the dashboard options:</li>
+	                
 	           </ol>
 	        </div>
 	    </div>
@@ -454,10 +523,24 @@
            <div class='dashboard {{dash.theme}}-theme' {%if dash.isModified%}isModified='true'{% endif %} theme='{{dash.theme}}' tempTheme='{{dash.theme}}' isPublicText='Make {%if dash.isPublic%}Private{%else%}Public{%endif%}' id='{{dash.id}}'></div>
        </div>
     {% empty %}
-        <div class='center'>You currently have no dashboards saved. To begin, modify & save a public dashboard.</div>
+        <div class='center margBottom'>You currently have no dashboards saved. To begin, modify & save a public dashboard or 
+            enter a search phrase <span class='go-to-search'>here</span> and click "Configure for Dashboard" on the results page.</div>
     {% endfor %}
+    <div class='center'>
+        <button id='create-blank-dashboard'>Create Blank Dashboard</button>
+    </div>
+    <div id="create-blank-dashboard-dialog" title="Create Blank Dashboard" class='center'>
+        <div id='create-blank-part1'>
+            Please note, creating a blank dashboard will have no data to show. It would be better to modify & save a public dashboard or 
+            enter a search phrase <span class='go-to-search'>here</span> and click "Configure for Dashboard" on the results page.
+        </div>
+        <div class='hidden' id='create-blank-part2'>
+            <label>Dashboard Name:</label>
+            <input type='text' id='blank-dashboard-name'/>
+        </div>
+    </div>
     <div id="removeFromDashboardDialog" title="Delete Saved Search" class='center'>
-        <div id='extraNote'>
+        <div class='red' id='extraNote'>
             Please note: This is a default table and you cannot truly delete it.
             If you continue, all previous customization will be removed and the table will be set to hidden.
         </div>
@@ -476,7 +559,8 @@
         <label>Name: </label>
         <input type='text' name='newName' id='newName'/>
     </div>
-    <div id='delete-dashboard-dialog' title='Delete Dashboard'></div>
+    <div id='delete-dashboard-dialog' title='Delete Dashboard' class='center'></div>
+    <!-- 
     <div id='change-theme-dialog' title='Change Theme' class='hidden center'>
         <div>
             <button theme='default' class='theme-picker theme-picker-default'>A</button> 
@@ -486,4 +570,5 @@
             <button theme='sunny' class='theme-picker theme-picker-sunny' >E</button>
         </div>
     </div>
+     -->
 {% endblock %}

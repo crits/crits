@@ -572,17 +572,16 @@ def get_saved_searches_list(user):
                 table.searchTerm = ""
                 table.objType = ""
             tables.append(table)
-        if tables:
-            tempDash = {
-                        "name":dash.name,
-                       "id": dash.id,
-                       "theme":dash.theme,
-                       'isPublic':dash.isPublic,
-                       "tables": tables
-                    }
-            if dash.parent:
-                tempDash['isModified'] = True
-            dashboards.append(tempDash)
+        tempDash = {
+                    "name":dash.name,
+                   "id": dash.id,
+                   "theme":dash.theme,
+                   'isPublic':dash.isPublic,
+                   "tables": tables
+                }
+        if dash.parent:
+            tempDash['isModified'] = True
+        dashboards.append(tempDash)
             
     return {"dashboards": dashboards}
     

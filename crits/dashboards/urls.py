@@ -21,4 +21,5 @@ urlpatterns = patterns('',
     (r'^delete_dashboard/$', 'crits.dashboards.views.delete_dashboard'),
     (r'^rename_dashboard/$', 'crits.dashboards.views.rename_dashboard'),
     (r'^change_theme/$', 'crits.dashboards.views.change_theme'),
+    (r'^create_blank_dashboard/$', 'crits.dashboards.views.create_blank_dashboard'),
 )

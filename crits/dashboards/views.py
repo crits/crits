@@ -307,6 +307,16 @@ def change_theme(request):
         respondWithError("An error occured while changing theme. Please try again later. ", True)
     return respondWithSuccess(response)
 
+def create_blank_dashboard(request):
+    """
+    """
+    name = request.GET.get('name', None)
+    if not name:
+        respondWithError("The dashboard must have a name.", True)
+    if not createNewDashboard(request.user.id, name):
+        respondWithError("You already have a dashboard with that name.", True)
+    return respondWithSuccess(name + " created successfully.")
+
 def respondWithError(message, isAjax=False, request=None):
     """
     responds with the errorMessage. If not isAjax, redirects to error.html
