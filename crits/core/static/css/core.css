@@ -222,9 +222,10 @@ A.noclick {
 .relationship_confidence_edit {
     width:75px;
 }
-.ui-state-disabled {
+div.ui-state-disabled {
     opacity: 1 !important;
 }
+
 .w2ui-col-group {
 	background-color:#dbdbdb !important;
 }
