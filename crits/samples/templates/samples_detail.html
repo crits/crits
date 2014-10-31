@@ -14,6 +14,7 @@
     var get_xor = "{% url 'crits.samples.views.xor' sample.md5 %}?key=";
     var update_sample_filename = "{% url 'crits.samples.views.set_sample_filename' %}";
     var update_sample_filenames = "{% url 'crits.samples.views.set_sample_filenames' %}";
+    var is_admin = "{{ admin }}";
 </script>
 
 {% if sample %}
