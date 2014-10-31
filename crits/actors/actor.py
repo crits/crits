@@ -9,7 +9,7 @@ from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocumen
 from crits.core.crits_mongoengine import CritsDocumentFormatter, CommonAccess
 from crits.core.crits_mongoengine import CritsSchemaDocument, CritsDocument
 from crits.core.fields import CritsDateTimeField
-from crits.core.user_tools import user_sources, get_user_organization
+from crits.core.user_tools import user_sources
 
 class ActorThreatType(CritsDocument, CritsSchemaDocument, Document):
     """
@@ -257,22 +257,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
             identifier = ActorIdentifier.objects(name=identifier).first()
 
             if not identifier:
-                identifier = ActorIdentifier()
-                identifier.identifier_type = identifier_type
-                identifier.name = identifier
-
-            # Add the source if it doesn't already exist
-            org = get_user_organization(analyst)
-            found = False
-            for source in identifier.source:
-                if source.name == org:
-                    found = True
-                    break
-            if not found:
-                identifier.add_source(source=org, analyst=analyst)
-
-            identifier.save()
-            identifier.reload()
+                return
 
             found = False
             for ident in self.identifiers:
