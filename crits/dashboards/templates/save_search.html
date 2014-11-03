@@ -779,11 +779,13 @@
                     didDrag = true;
                 },
                 onColumnDragEnd: function(event) {
-                    if(isOverGarbage(event.originalEvent))
-                        throwOutColumn(event);
-                    toggleGarbageHeaderText("Available Columns");
-                    addDroppableEvent();
-                    $('#trashWrapper').removeClass('isDragging');
+                    event.onComplete = function(event) {
+	                    if(isOverGarbage(event.originalEvent))
+	                        throwOutColumn(event);
+	                    toggleGarbageHeaderText("Available Columns");
+	                    addDroppableEvent();
+	                    $('#trashWrapper').removeClass('isDragging');
+                    }
                 },
                 onSort: function(event) {
                     //there was a bug with w2ui where sometimes the sorting event would not have 
