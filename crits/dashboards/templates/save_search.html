@@ -321,7 +321,6 @@
             var maxRows = 5;
         {% endif %}
         var gridWidth = $('#grid').width();
-        
         function create_pivot_links(data) {
             var campBase = "/campaigns/details/__CAMPAIGN__/";
             var items = data.split('|||');
@@ -335,7 +334,6 @@
                 }
             return links;
         }
-        
         //retrieve the data to show and pass it to the showData() method
         function loadData(object) {
             //if the data has not been retrived yet
@@ -671,11 +669,15 @@
         });
         //show message at the bottom of the page
         function showResultsDiv(message, isError) {
+        	var element = $("#resultsDiv");
             if(isError)
-                $("#resultsDiv").addClass("errorDiv");
-            else if($("#resultsDiv").hasClass("errorDiv"))
-                $("#resultsDiv").removeClass("errorDiv");
-            $("#resultsDiv").html(message);
+                $(element).addClass("errorDiv");
+            else if($(element).hasClass("errorDiv"))
+                $(element).removeClass("errorDiv");
+            $(element).html(message);
+            setTimeout(function() {
+            	$(element).html("")
+            },10000);
         }
         //show results in the dialog 
         function showDialogMessage(message) {
@@ -756,7 +758,6 @@
                 onClick: function (event) {
                 	w2ui['grid'].sortData = [];
                     changeGrid(getGridObjectFromTab(event.object));
-                    showResultsDiv("");
                 },
                 onClose: function(event) {
                     var target = event.target;
