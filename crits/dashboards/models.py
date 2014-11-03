@@ -281,6 +281,7 @@ def parseDocObjectsToStrings(records, obj_type):
                 else:
                     doc[key] = ""
             doc[key] = html_escape(doc[key])
+            value = doc[key]
             if type(value) is unicode or type(value) is str:
                 val = ' '.join(value.split())
                 val = val.replace('"',"'")
