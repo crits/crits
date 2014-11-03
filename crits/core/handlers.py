@@ -3413,7 +3413,7 @@ def login_user(username, password, next_url=None, user_agent=None,
                 return response
             response['success'] = True
             if 'message' not in response:
-                response['message'] = reverse('crits.core.views.dashboard')
+                response['message'] = reverse('crits.dashboards.views.dashboard')
             return response
         else:
             logger.info("Attempted login to a disabled account detected: %s" %
