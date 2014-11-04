@@ -647,18 +647,18 @@ def cloneDashboard(userId, dashboard, cloneSearches=False, skip=None):
     cloneSearches will clone all affiliated searches with the dashboard.
     Skip will skip a specific table if cloning searches
     """
-    newDash = Dashboard.objects(analystId=userId,name=dashboard.name).first()
-    if not newDash:
-        newDash = Dashboard()
-        newDash.name = dashboard.name
-        newDash.theme = dashboard.theme
-        newDash.analystId = userId
-        newDash.parent = dashboard.id
-        newDash.save()
-        if cloneSearches:
-            for search in SavedSearch.objects(dashboard = dashboard.id):
-                if skip != str(search.id):
-                    cloneSavedSearch(search, newDash.id)
+    if Dashboard.objects(analystId=userId,name=dashboard.name):
+        return
+    newDash = Dashboard()
+    newDash.name = dashboard.name
+    newDash.theme = dashboard.theme
+    newDash.analystId = userId
+    newDash.parent = dashboard.id
+    newDash.save()
+    if cloneSearches:
+        for search in SavedSearch.objects(dashboard = dashboard.id):
+            if skip != str(search.id):
+                cloneSavedSearch(search, newDash.id)
     return newDash
 
 def cloneSavedSearch(savedSearch, dashId):
