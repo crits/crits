@@ -96,6 +96,8 @@ def save_search(request):
     try:
         if newDashName:
             newDash = createNewDashboard(request.user.id, newDashName)
+            if not newDash:
+                raise(Exception, "Dashboard already exists")
             dashboard = newDash
         elif dashId:
             dashboard = Dashboard.objects(id=dashId).first()

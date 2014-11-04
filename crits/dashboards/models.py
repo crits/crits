@@ -300,12 +300,8 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
     tableWidth - width of table on edit page in order to calculate percentage width of columns
     """
     try:
-        # Unescape searchTerm and any_query before we save them to the database
         if searchTerm:
             searchTerm = HTMLParser.HTMLParser().unescape(searchTerm)
-        if any_query:
-            any_query = HTMLParser.HTMLParser().unescape(any_query)
-
         #if user is editing a table
         if tableId :
             newSavedSearch = SavedSearch.objects(id=tableId).first()
