@@ -13,7 +13,8 @@
         var currentDropdown = null;
         //simulates the 're-search' of a tables search term
         $(document).on('click', '.table-re-search', function() {
-            $('#global_search_box').val($(this).attr('searchTerm'));
+            var st = unescape($(this).attr('searchTerm'));
+            $('#global_search_box').val(st);
             $('#global_search_box').closest('form').submit();
         });
         //event that fires the ajax call to toggle dashboards visibility
