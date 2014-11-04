@@ -19,6 +19,7 @@ import cgi
 import datetime
 from django.http import HttpRequest
 from crits.dashboards.utilities import getCssForDefaultDashboardTable, constructCssString, constructAttrsString, getHREFLink, get_obj_name_from_title, get_obj_type_from_string
+import HTMLParser
 
 class SavedSearch(CritsDocument, CritsSchemaDocument, DynamicDocument):
     """
@@ -299,6 +300,12 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
     tableWidth - width of table on edit page in order to calculate percentage width of columns
     """
     try:
+        # Unescape searchTerm and any_query before we save them to the database
+        if searchTerm:
+            searchTerm = HTMLParser.HTMLParser().unescape(searchTerm)
+        if any_query:
+            any_query = HTMLParser.HTMLParser().unescape(any_query)
+
         #if user is editing a table
         if tableId :
             newSavedSearch = SavedSearch.objects(id=tableId).first()
@@ -640,18 +647,18 @@ def cloneDashboard(userId, dashboard, cloneSearches=False, skip=None):
     cloneSearches will clone all affiliated searches with the dashboard.
     Skip will skip a specific table if cloning searches
     """
-    if Dashboard.objects(analystId=userId,name=dashboard.name):
-        return
-    newDash = Dashboard()
-    newDash.name = dashboard.name
-    newDash.theme = dashboard.theme
-    newDash.analystId = userId
-    newDash.parent = dashboard.id
-    newDash.save()
-    if cloneSearches:
-        for search in SavedSearch.objects(dashboard = dashboard.id):
-            if skip != str(search.id):
-                cloneSavedSearch(search, newDash.id)
+    newDash = Dashboard.objects(analystId=userId,name=dashboard.name).first()
+    if not newDash:
+        newDash = Dashboard()
+        newDash.name = dashboard.name
+        newDash.theme = dashboard.theme
+        newDash.analystId = userId
+        newDash.parent = dashboard.id
+        newDash.save()
+        if cloneSearches:
+            for search in SavedSearch.objects(dashboard = dashboard.id):
+                if skip != str(search.id):
+                    cloneSavedSearch(search, newDash.id)
     return newDash
 
 def cloneSavedSearch(savedSearch, dashId):
