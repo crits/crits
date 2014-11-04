@@ -193,7 +193,7 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
         for s in sources:
             self.add_source(s.name)
 
-    def add_source(self, source):
+    def add_source(self, source, read=False, write=False):
         """
         Add a source to this Role.
 
@@ -209,5 +209,7 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
         if not found:
             src = SourceAccess.objects(name=source).first()
             if src:
-                new_src = EmbeddedSourceACL(name=source)
+                new_src = EmbeddedSourceACL(name=source,
+                                            read=read,
+                                            write=write)
                 self.sources.append(new_src)

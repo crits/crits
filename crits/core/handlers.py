@@ -407,6 +407,12 @@ def add_new_source(source, analyst):
         src = SourceAccess()
         src.name = source
         src.save(username=analyst)
+        r = Role.objects(name=settings.ADMIN_ROLE).first()
+        if r:
+            r.add_source(source,
+                         read=True,
+                         write=True)
+            r.save()
         return True
     except ValidationError:
         return False
@@ -4154,7 +4160,7 @@ def get_role_details(rid, roles, analyst):
     template = None
     if rid:
         role = Role.objects(id=rid).first()
-        if not role or role.name == "UberAdmin":
+        if not role or role.name == settings.ADMIN_ROLE:
             error = ("Either this Role does not exist or you do "
                     "not have permission to view it.")
             template = "error.html"
@@ -4200,8 +4206,9 @@ def edit_role_name(rid, old_name, name, analyst):
     """
 
     name = name.strip()
-    if old_name != "UberAdmin" and name != "UberAdmin":
-        Role.objects(id=rid, name__ne="UberAdmin").update_one(set__name=name)
+    if old_name != settings.ADMIN_ROLE and name != settings.ADMIN_ROLE:
+        Role.objects(id=rid,
+                     name__ne=settings.ADMIN_ROLE).update_one(set__name=name)
         CRITsUser.objects(roles=old_name).update(set__roles__S=name)
         return {'success': True}
     else:
@@ -4221,7 +4228,7 @@ def edit_role_description(rid, description, analyst):
 
     description = description.strip()
     Role.objects(id=rid,
-                 name__ne="UberAdmin").update_one(set__description=description)
+                 name__ne=settings.ADMIN_ROLE).update_one(set__description=description)
     return {'success': True}
 
 def add_role_source(rid, name, analyst):
@@ -4240,7 +4247,7 @@ def add_role_source(rid, name, analyst):
           'read': False,
           'write': False}
     d = {'push__sources': ed}
-    Role.objects(id=rid, name__ne="UberAdmin").update_one(**d)
+    Role.objects(id=rid, name__ne=settings.ADMIN_ROLE).update_one(**d)
 
     html = render_to_string('role_source_item.html',
                             {'source': ed})
@@ -4260,7 +4267,7 @@ def remove_role_source(rid, name, analyst):
     """
 
     d = {'pull__sources': {'name': name}}
-    Role.objects(id=rid, name__ne="UberAdmin").update_one(**d)
+    Role.objects(id=rid, name__ne=settings.ADMIN_ROLE).update_one(**d)
     return {'success': True}
 
 def set_role_value(rid, name, value, analyst):
@@ -4288,10 +4295,10 @@ def set_role_value(rid, name, value, analyst):
     ud = {'set__%s' % name: value}
     if name.startswith("sources"):
         Role.objects(id=rid,
-                     name__ne="UberAdmin",
+                     name__ne=settings.ADMIN_ROLE,
                      sources__name=sname).update_one(**ud)
     else:
-        Role.objects(id=rid,name__ne="UberAdmin").update_one(**ud)
+        Role.objects(id=rid,name__ne=settings.ADMIN_ROLE).update_one(**ud)
 
 def add_new_role(name, copy_from, description, analyst):
     """
@@ -4307,7 +4314,7 @@ def add_new_role(name, copy_from, description, analyst):
     """
 
     name = name.strip()
-    if name == "UberAdmin":
+    if name == settings.ADMIN_ROLE:
         return False
     if copy_from:
         role = Role.objects(id=copy_from).first()

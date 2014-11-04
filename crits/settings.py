@@ -180,6 +180,9 @@ crits_config = coll.find_one({})
 if not crits_config:
     crits_config = {}
 
+# UberAdmin role. Has access to everything, can do everything, etc.
+ADMIN_ROLE = "UberAdmin"
+
 # Populate settings
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts

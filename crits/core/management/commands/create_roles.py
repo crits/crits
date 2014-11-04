@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from crits.core.role import Role
@@ -25,6 +26,9 @@ def add_uber_admin_role(drop=False):
     The 'UberAdmin' role gets full access to *ALL* sources at the time it is
     created.
 
+    If you wish to change the name of this role, you can change the ADMIN_ROLE
+    settings variable.
+
     :param drop: Drop collection before adding.
     :type drop: boolean
     """
@@ -35,11 +39,11 @@ def add_uber_admin_role(drop=False):
     else:
         print ("Drop protection enabled!\n",
                 "Resetting 'UberAdmin' Role to defaults!")
-    role = Role.objects(name="UberAdmin").first()
+    role = Role.objects(name=settings.ADMIN_ROLE).first()
     if not role:
         print "Could not find UberAdmin Role. Creating it!"
         role = Role()
-        role.name = "UberAdmin"
+        role.name = settings.ADMIN_ROLE
         role.description = "Default role with full system access."
     role.add_all_sources()
     role.make_all_true()
