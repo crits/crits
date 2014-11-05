@@ -130,13 +130,16 @@ def details_url_from_obj(obj):
     :class:`crits.core.crits_mongoengine.CritsBaseAttributes` object.
     """
 
-    mapper = obj._meta['jtable_opts']
+    mapper = obj._meta.get('jtable_opts')
 
-    details_url = mapper['details_url']
-    details_url_key = mapper['details_url_key']
+    if mapper is not None:
+        details_url = mapper['details_url']
+        details_url_key = mapper['details_url_key']
 
-    # TODO: Validate that this works for every object.
-    return reverse(details_url, args=(unicode(obj[details_url_key]),))
+        # TODO: Validate that this works for every object.
+        return reverse(details_url, args=(unicode(obj[details_url_key]),))
+    else:
+        return None
 
 def key_descriptor_from_obj_type(obj_type):
     return __obj_type_to_key_descriptor__.get(obj_type)
