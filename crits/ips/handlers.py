@@ -284,9 +284,8 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
         # add new objects if they exist
         if objectsData:
             objectsData = json.loads(objectsData)
-            object_row_counter = 1
 
-            for objectData in objectsData:
+            for object_row_counter, objectData in enumerate(objectsData, 1):
                 new_ip = retVal.get('object')
 
                 if new_ip != None and is_validate_only == False:
@@ -308,8 +307,6 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
                     retVal['success'] = False
                 if object_retVal.get('message'):
                     errors.append(object_retVal['message'])
-
-                object_row_counter += 1
     else:
         errors += "Failed to add IP: " + str(ip)
 

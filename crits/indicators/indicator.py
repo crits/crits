@@ -341,24 +341,20 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if not date:
             return
-        found = False
-        c = 0
         for t in self.actions:
             if t.date == date:
-                found = True
-                del self.actions[c]
-            c += 1
-        if found:
-            ea = EmbeddedAction()
-            ea.action_type = type_
-            ea.active = active
-            ea.analyst = analyst
-            ea.begin_date = begin_date
-            ea.end_date = end_date
-            ea.performed_date = performed_date
-            ea.reason = reason
-            ea.date = date
-            self.actions.append(ea)
+                self.actions.remove(t)
+                ea = EmbeddedAction()
+                ea.action_type = type_
+                ea.active = active
+                ea.analyst = analyst
+                ea.begin_date = begin_date
+                ea.end_date = end_date
+                ea.performed_date = performed_date
+                ea.reason = reason
+                ea.date = date
+                self.actions.append(ea)
+                break
 
     def delete_action(self, date=None):
         """
@@ -370,11 +366,10 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if not date:
             return
-        c = 0
         for t in self.actions:
             if t.date == date:
-                del self.actions[c]
-            c += 1
+                self.actions.remove(t)
+                break
 
     def add_activity(self, analyst, start_date, end_date,
                      description, date=None):
@@ -421,21 +416,17 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if not date:
             return
-        found = False
-        c = 0
         for t in self.activity:
             if t.date == date:
-                found = True
-                del self.activity[c]
-            c += 1
-        if found:
-            ea = EmbeddedActivity()
-            ea.analyst = analyst
-            ea.start_date = start_date
-            ea.end_date = end_date
-            ea.date = date
-            ea.description = description
-            self.activity.append(ea)
+                self.activity.remove(t)
+                ea = EmbeddedActivity()
+                ea.analyst = analyst
+                ea.start_date = start_date
+                ea.end_date = end_date
+                ea.date = date
+                ea.description = description
+                self.activity.append(ea)
+                break
 
     def delete_activity(self, date=None):
         """
@@ -447,8 +438,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if not date:
             return
-        c = 0
         for t in self.activity:
             if t.date == date:
-                del self.activity[c]
-            c += 1
+                self.activity.remove(t)
+                break

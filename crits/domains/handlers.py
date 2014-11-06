@@ -453,9 +453,8 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
             # add new objects if they exist
             if objectsData:
                 objectsData = json.loads(objectsData)
-                object_row_counter = 1
                 current_domain = retrieve_domain(fqdn, cache)
-                for objectData in objectsData:
+                for object_row_counter, objectData in enumerate(objectsData, 1):
                     if current_domain != None:
                         # if the domain exists then try to add objects to it
                         if isinstance(current_domain, Domain) == True:
@@ -475,8 +474,6 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                         retVal['success'] = False
                     if object_retVal.get('message'):
                         errors.append(object_retVal['message'])
-
-                    object_row_counter += 1
 
     return result, errors, retVal
 
