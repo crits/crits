@@ -136,8 +136,10 @@ def details_url_from_obj(obj):
         details_url = mapper['details_url']
         details_url_key = mapper['details_url_key']
 
-        # TODO: Validate that this works for every object.
-        return reverse(details_url, args=(unicode(obj[details_url_key]),))
+        try:
+            return reverse(details_url, args=(unicode(obj[details_url_key]),))
+        except:
+            return None
     else:
         return None
 
