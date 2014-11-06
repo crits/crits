@@ -468,6 +468,7 @@
             {% endif %}
         });
         $(window).load(function() {
+        	/*
         	//refresh all the grids in case they have imaged
             $('.w2ui-grid').each(function() {
             	w2ui[$(this).attr('name')].refresh();
@@ -503,6 +504,12 @@
             $itemElems.resizable('disable');
             //set all the postions of the tables
             setPositions();
+            */
+        	$("#dashboardWrapper .draggable").gridster({
+                widget_margins: [10, 10],
+                widget_base_dimensions: [140, 140]
+            });
+            
         });
         //on change of the dashboards dropdown, change page
         $('#dashId').change(function() {
@@ -551,9 +558,7 @@
 	    <div class='center' style='height:15px;' id='resultsDiv'></div>
 	    <div style='height:100%;width:100%;' id='dashboardWrapper' >
 	       {% for table in tables %}
-	           <div {{table.css|safe}} {{table.attrs|safe}} class='draggable' isHereByDefault='{{table.isHereByDefault}}' tableId='{{table.id}}'>
-	               <div id='{{table.id}}'></div>
-	           </div>
+	           <div data-row='{{forloop.counter}}' data-col='{{forloop.counter}}' data-sizex='1' data-sizey='1' class='draggable'>test</div>
 	       {% endfor %}
 	    </div>
 	    <div class='center' id='destroy-dashboard-dialog' style='display:none;'  title='Destroy Dashboard'>
