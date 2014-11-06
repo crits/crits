@@ -129,14 +129,12 @@ def to_line_table(value):
             <tbody>
     """
     lines = value.split('\n')
-    l = 1
-    for line in lines:
+    for l, line in enumerate(lines, 1):
         lhtml = '<tr class="file_line" data-position="%d">' % l
         lhtml += '\n<td class="add_highlight ui-icon ui-icon-star"></td><td class="line_num">'
         lhtml += '<span class="line_number">%d</span></td>\n' % l
         lhtml += '<td class="line_pre"><pre>%s</pre></td>\n</tr>\n' % cgi.escape(line)
         html += lhtml
-        l += 1
     html += '</tbody>\n</table>\n</div>\n'
     return html
 

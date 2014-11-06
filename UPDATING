@@ -3,6 +3,12 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: dsnellgrove
+Date:   2014-10-30
+
+    The python library "ushlex" has been added as a dependency and will need to
+    be installed.
+
 Author: mgoffin
 Date:   2014-10-04
 

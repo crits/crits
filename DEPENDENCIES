@@ -23,6 +23,8 @@ Optional System Programs
 =========================
 Required Python Libraries
 =========================
+ushlex
+Provides: ushlex
 
 pillow
 Provides: PIL
