@@ -249,6 +249,8 @@ A.noclick {
 .relationship_confidence_edit {
     width:75px;
 }
+.ui-tabs .ui-tabs-nav li.ui-tabs-active {
+	margin-bottom:-2px;
 .ui-state-disabled {
     opacity: 1 !important;
 }

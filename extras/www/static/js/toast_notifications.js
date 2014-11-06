@@ -188,7 +188,7 @@ $(document).ready(function() {
                                     }
                                 }
 
-                                if(formattedMessage === "") {
+                                if(formattedMessage === "" && notification['message'] !== null) {
                                     formattedMessage = messageSegments;
                                 }
 

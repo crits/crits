@@ -787,7 +787,7 @@ $(document).ready(function() {
       //collect object types for search
       // Let's just call this when needed, until search is converted to a dynamic dialog
       if ($('select#object_s').find("option").length === 0)
-          getAllObjectTypes($('select#object_s'));
+      getAllObjectTypes($('select#object_s'));
     });
     $('.notify_enable').click(function(e) {
       e.stopPropagation();
