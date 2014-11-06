@@ -675,9 +675,6 @@
             else if($(element).hasClass("errorDiv"))
                 $(element).removeClass("errorDiv");
             $(element).html(message);
-            setTimeout(function() {
-            	$(element).html("")
-            },10000);
         }
         //show results in the dialog 
         function showDialogMessage(message) {
