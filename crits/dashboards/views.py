@@ -6,8 +6,9 @@ from django.template import RequestContext
 from crits.core.handlers import generate_global_search, generate_dashboard
 from crits.core.views import dashboard
 from django.http import HttpResponse
-from crits.dashboards.models import SavedSearch,toggleTableVisibility,get_saved_searches_list,get_dashboard, getHREFLink, get_obj_type_from_string, clear_dashboard, save_data, get_table_data, generate_search_for_saved_table, delete_table, getRecordsForDefaultDashboardTable
-from crits.dashboards.models import Dashboard,renameDashboard,changeTheme, deleteDashboard,getDashboardsForUser,createNewDashboard, setDefaultDashboard, cloneDashboard, setPublic, updateChildren
+from crits.dashboards.dashboard import SavedSearch, Dashboard
+from crits.dashboards.handlers import toggleTableVisibility,get_saved_searches_list,get_dashboard, getHREFLink, get_obj_type_from_string, clear_dashboard, save_data, get_table_data, generate_search_for_saved_table, delete_table, getRecordsForDefaultDashboardTable
+from crits.dashboards.handlers import renameDashboard,changeTheme, deleteDashboard,getDashboardsForUser,createNewDashboard, setDefaultDashboard, cloneDashboard, setPublic, updateChildren
 import json
 import re
 from django.core.urlresolvers import reverse

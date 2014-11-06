@@ -5,8 +5,9 @@ Recent Samples in that order. The user has the ability to change they're
 positioning, size, columns, and sort order but they are always there and their 
 names cannot be changed.
 """
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument, json_handler, CritsSourceDocument
-from mongoengine import DynamicDocument, ListField, ObjectIdField, StringField, DictField, IntField, BooleanField, Q
+from crits.dashboards.dashboard import SavedSearch, Dashboard
+from crits.core.crits_mongoengine import json_handler
+from mongoengine import Q
 from django.core.urlresolvers import reverse
 from crits.campaigns.campaign import Campaign
 from crits.indicators.indicator import Indicator
@@ -20,38 +21,6 @@ import datetime
 from django.http import HttpRequest
 from crits.dashboards.utilities import getCssForDefaultDashboardTable, constructCssString, constructAttrsString, getHREFLink, get_obj_name_from_title, get_obj_type_from_string
 import HTMLParser
-
-class SavedSearch(CritsDocument, CritsSchemaDocument, DynamicDocument):
-    """
-    savedSearch class
-    """
-    meta = {
-        "collection": "saved_search",
-        "crits_type": "saved_search",
-        "latest_schema_version": 1,
-        "schema_doc": {}
-    }
-    name = StringField(required=True)
-    dashboard = ObjectIdField(required=True)
-    tableColumns = ListField(required=True)
-    sortBy = DictField(required=False)
-    searchTerm = StringField(required=False)
-    objType =  StringField(required=False)
-    top = IntField(required=False, default=-1)
-    left = IntField(required=False, default=-1)
-    width = IntField(required=False)
-    maxRows = IntField(required=False)
-    isDefaultOnDashboard = BooleanField(required=True, default=False)
-    isPinned = BooleanField(required=True, default=True)
-    
-    def getSortByText(self):
-        textString = "None"
-        if self.sortBy:
-            for col in self.tableColumns:
-                if col["field"] == self.sortBy["field"]:
-                    textString = col["caption"] + " - " + self.sortBy['direction'].upper()
-                    break;
-        return textString
 
 def get_dashboard(user,dashId=None):
     """
@@ -589,22 +558,7 @@ def get_saved_searches_list(user):
             
     return {"dashboards": dashboards}
     
-class Dashboard(CritsDocument, CritsSchemaDocument, DynamicDocument):
-    """
-    dashboard class
-    """
-    meta = {
-        "collection": "dashboard",
-        "crits_type": "dashboard",
-        "latest_schema_version": 1,
-        "schema_doc": {}
-    }
-    name = StringField(required=True)
-    analystId = ObjectIdField(required=False)
-    theme = StringField(required=True,default="default")
-    isPublic = BooleanField(required=True, default=False)
-    parent = ObjectIdField(required=False)
-    hasParentChanged = BooleanField(required=True, default=False)
+
     
 def deleteDashboardIfEmpty(dashId):
     """
