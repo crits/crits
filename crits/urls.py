@@ -11,7 +11,7 @@ urlpatterns = patterns('',
         (r'^', include('crits.core.urls')),
 
         # Dashboard
-        (r'^', include('crits.dashboards.urls')),
+        (r'^dashboards/', include('crits.dashboards.urls')),
 
         # Actors
         (r'^actors/', include('crits.actors.urls')),
