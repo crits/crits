@@ -67,7 +67,7 @@ class Command(BaseCommand):
         add_sector_objects(drop)
         add_actor_content(drop)
         create_dashboard(drop)
-	create_config_if_not_exist()
+        create_config_if_not_exist()
         create_indexes()
 
 
