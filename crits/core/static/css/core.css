@@ -379,3 +379,11 @@ span.right.link a:link{
 	border-left:1px solid #d3d3d3;
 	display: inline-block;
 }
+.gridster>* {
+	margin:0 !important;
+}
+.gridster li {
+	list-style-type: none;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}

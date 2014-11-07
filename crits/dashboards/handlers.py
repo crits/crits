@@ -161,6 +161,10 @@ def constructTable(table, records, columns, colNames, css, attrs):
         "sortBy":table.sortBy,
         "maxRows":table.maxRows,
         "isHereByDefault":table.isDefaultOnDashboard,
+        "sizex": table.sizex,
+        "sizey": table.sizey,
+        "row": table.row,
+        "col": table.col
     }
     if table.objType:
         tableObject["objType"] = table.objType
@@ -259,9 +263,9 @@ def parseDocObjectsToStrings(records, obj_type):
     return records
 
 def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None, 
-              tableId=None, top=None, left=None, width=0,
-              isDefaultOnDashboard=False, maxRows=0, dashboardWidth=0,
-              dashboard=None, clone=False):
+              tableId=None, isDefaultOnDashboard=False, maxRows=0,
+              dashboard=None, clone=False, row=0, grid_col=0, sizex=0,
+              sizey=0):
     """
     Saves the customized table in the dashboard. Called by save_search and
     save_new_dashboard via ajax in views.py.
@@ -292,6 +296,7 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
         oldDashId = None
         if dashboard:
             if newSavedSearch.dashboard != dashboard.id:
+                print "fix thisd logic"
                 newSavedSearch.left = -1
                 newSavedSearch.top = -1
                 newSavedSearch.dashboard= dashboard.id
@@ -304,30 +309,26 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
         newSavedSearch.isDefaultOnDashboard = isDefaultOnDashboard
         if sortBy:
             newSavedSearch.sortBy = sortBy
-        if (top or left) and dashboardWidth:
-            newSavedSearch.top = top
-            leftAsPercent = float(left)/float(dashboardWidth)*100
-            #if the new left value is within 2 of previous, dont change.
-            #This is because rounding issues in the HTML were constantly 
-            #shifting the tables over by 1% every save
-            if newSavedSearch.left==-1 or not (leftAsPercent >= newSavedSearch.left-2 and leftAsPercent <= newSavedSearch.left+2):
-                newSavedSearch.left = leftAsPercent
         if maxRows:
             #if the table is growing in height, reset it's position so it doesnt
             #overlap with other tables
             if int(maxRows) > newSavedSearch.maxRows:
                 newSavedSearch.top=-1
             newSavedSearch.maxRows = maxRows;
-        if width:
-            width = float(width)
-            if not dashboardWidth and newSavedSearch.width and (width > newSavedSearch.width+2 or width < newSavedSearch.width-2):
-                newSavedSearch.top=-1
-            newSavedSearch.width = float(width)
+        if sizex:
+            newSavedSearch.sizex = sizex
+        if sizey:
+            newSavedSearch.sizey = sizey
+        if row:
+            newSavedSearch.row = row
+        if col:
+            newSavedSearch.col = grid_col
         newSavedSearch.save()
         #if the old dashboard is empty, delete it
         if oldDashId:
             deleteDashboardIfEmpty(oldDashId)
     except Exception as e:
+        print "ERROR: "
         print e
         return {'success': False,
                 'message': "An unexpected error occurred while saving table. Please refresh and try again"}

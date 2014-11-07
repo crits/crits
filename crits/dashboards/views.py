@@ -150,7 +150,6 @@ def save_new_dashboard(request):
     """
     data = json.loads(request.POST.get('data', ''))
     userId = request.POST.get('userId', None)
-    dashboardWidth = request.POST.get('dashboardWidth', None)
     dashId = request.POST.get('dashId', None)
     user = request.user
     clone = False
@@ -174,19 +173,14 @@ def save_new_dashboard(request):
         isDefault = False
         if table['isDefault'] == "True":
             isDefault = True
-        left = ""
-        if 'left' in table:
-            left = table['left'].replace('px','')
-        top = ""
-        if 'top' in table:
-            top = table['top'].replace('px','')
         sortBy = None
         if 'sortDirection' in table and 'sortField' in table:
             sortBy = {'field':table['sortField'],'direction':table['sortDirection']}
         response = save_data(userId, table['columns'], table['tableName'],
-                             tableId=tableId, left=left, top=top, width=table['width'],
-                             isDefaultOnDashboard=isDefault, dashboardWidth=dashboardWidth, 
-                             sortBy=sortBy, dashboard=dashboard, clone=clone)
+                             tableId=tableId, isDefaultOnDashboard=isDefault, 
+                             sortBy=sortBy, dashboard=dashboard,
+                             clone=clone, row=table['row'], grid_col=table['col'], 
+                             sizex=table['sizex'], sizey=table['sizey'])
         if not response['success']:
             return httpResponse(response)
     return respondWithSuccess("Dashboard saved successfully!")

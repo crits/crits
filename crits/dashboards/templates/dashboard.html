@@ -140,27 +140,26 @@
         $('#savePositionsButton').click(function() {
             showResults('');
             toggleOptions(false);
-            if(!$('.draggable').draggable('option', 'disabled'))
-                removeDraggable();
+            //if(!$('.draggable').draggable('option', 'disabled'))
+            //    removeDraggable();
             var data = [];
             var dashboardWidth = $('#dashboardWrapper').width();
             $('.draggable').each(function() {
                     var gridId = $(this).children().first('div').attr('id');
                     var name = $(this).find('.w2ui-col-group').text().trim();
-                    var newWidth = 0;
-                    var widthInPx = $(this).width();
-                    if ($(this).attr('isResized') == 'true')
-                        newWidth = (widthInPx/dashboardWidth)*100;
+                    var $guardian = $(this).closest('li');
                     var tempDict = {
-                        left: $(this).css('left'),
-                        top: $(this).css('top'),
                         tableName: name,
                         columns: w2ui[gridId].columns,
                         isDefault: $(this).attr('isHereByDefault'),
                         width: newWidth,
                         sortDirection: $(this).attr('sortDirection'),
                         sortField: $(this).attr('sortField'),
-                        id:$(this).attr('tableId')
+                        id:$(this).attr('tableId'),
+                        sizex:$guardian.data('sizex'),
+                        sizey:$guardian.data('sizey'),
+                        row:$guardian.data('row'),
+                        col:$guardian.data('col')
                     };
                     data.push(tempDict);
             });
@@ -199,20 +198,17 @@
         //Toggles the draggable/resizeable abilities of the tables
         $('#togglePackeryButton').click(function() {
             showResults('');
-            if($('.draggable').draggable('option', 'disabled')) {
-                $('.draggable').draggable('enable');
-                $('.draggable').resizable('enable');
+            if($gridster.drag_api['disabled'] == true) {
+            	$gridster.enable();
                 $('.content ').css('background-color','rgba(238,238,238,.9)');
                 $('.content ').css('box-shadow','1px 1px 2px 2px #eeeeee');
             }
-            else {
+            else 
                 removeDraggable();
-            }
         });
         //removes the draggable/resizeable abilities of the table
         function removeDraggable() {
-            $('.draggable').draggable('disable');
-            $('.draggable').resizable('disable');
+        	$gridster.disable();
             $('.content ').css('background-color','white');
             $('.content ').css('box-shadow','0px 0px 0px 0px #eeeeee');
         }
@@ -311,7 +307,6 @@
                 }
             return links;
         }
-        
         $(document).ready(function() {          //doc.ready
         	if( navigator.userAgent.indexOf("Chrome") != -1 ) 
                 buttonBarOffset = '-212px'; 
@@ -404,50 +399,6 @@
 	                onRefresh: function(e) {
 	                },
 	                onSort: function(e) {
-	                /*
-	                   No longer used
-	                	//there is an error with the sort event in w2ui where the 
-	                	//direction is sometimes null
-	                	if(e.direction == null) {
-	                        e.preventDefault();
-	                        var sortDirection = $('#'+e.target).closest('.draggable').attr('sortDirection');
-	                        var sortField = $('#'+e.target).closest('.draggable').attr('sortField');
-	                        if(sortDirection && sortField == e.field && sortDirection == 'asc')
-	                            e.direction = 'desc';
-	                        else 
-	                            e.direction = 'asc';
-	                        w2ui[e.target].sort(e.field, e.direction);
-	                    }
-	                    else {
-	                        $('#'+e.target).closest('.draggable').attr('sortDirection', e.direction);
-	                        $('#'+e.target).closest('.draggable').attr('sortField', e.field);
-	                        //this is used to prevent the retrieval of data on the inital sort
-	                        var tempIndexOf = tablesWithSort.indexOf('{{table.id}}');
-	                        if(tempIndexOf < 0) {
-		                        toggleOptions(true);
-		                        {% if not table.isHereByDefault %}
-			                        var ajaxData = {
-			                                sortBy: JSON.stringify({
-			                                	field: e.field,
-			                                    direction: e.direction
-			                                }),
-			                                q : '{{ table.searchTerm }}',
-			                                search_type: 'global',
-			                                generalSearch: 'Search',
-			                                pageNumber: 1,
-			                                maxRows: '{{table.maxRows}}',
-			                                jtStartIndex: 0,
-			                                index: 'crits.'+'{{table.objType}}'.toLowerCase()+'s',
-			                                jtPageSize: {{table.maxRows}},
-			                                jtSorting: e.field + ' ' + e.direction.toUpperCase()
-		                            };
-			                        getNewData(ajaxData, '{{table.url}}', e.target);
-			                    {% endif %}
-	                        }
-	                        else //remove the table from the array so it will get new data from now on
-	                        	tablesWithSort.splice(tempIndexOf, 1);
-	                    }
-	                */
 	                }
 	            });
                 //sorts the tables on load
@@ -467,49 +418,40 @@
                 $('#parent-has-changed-dialog').dialog('open');
             {% endif %}
         });
+        var dashWidth;
+        var dashHeight;
+        var $gridster;
         $(window).load(function() {
-        	/*
+        	dashWidth = $('#dashboardWrapper').width();
+            dashHeight = $('#dashboardWrapper').height();
+            console.log(dashWidth  + " " + dashHeight);
+            $('#dashboardWrapper ul').height(dashHeight);
+            $(function(){
+                $gridster = $('#dashboardWrapper ul').gridster({
+                    widget_margins: [(dashWidth*.01/5), (dashHeight*.01/5)],
+                    widget_base_dimensions: [(dashWidth*.08/5), (dashHeight*.08/5)],
+                    min_cols: 20,
+                    min_rows: 20,
+                    resize: {
+                        enabled: true,
+                        axes: ['x'],
+                        stop: function(e, ui, $widget) {
+                            w2ui[$widget.find('.w2ui-grid').attr('name')].refresh();
+                            toggleOptions(true);
+                        }
+                    },
+                    draggable: {
+                    	stop: function(event, ui) {
+                    		toggleOptions(true);
+                    	}
+                    }
+                }).data('gridster');
+            });
+        	$gridster.disable();
         	//refresh all the grids in case they have imaged
             $('.w2ui-grid').each(function() {
             	w2ui[$(this).attr('name')].refresh();
             });
-            //declaring packery is done in window.load because
-            //when screenshots are involved, the tables become overlapped if
-            //they havent been loaded yet
-            var $container = $('#dashboardWrapper').packery({
-                'gutter':15,
-                'rowheight':15,
-                'columnheight':15
-            });
-            var $itemElems = $container.find('.draggable');
-            $container.packery( 'bindUIDraggableEvents', $itemElems );
-            //initialize draggable
-            $itemElems.draggable({
-                start: function() {
-                    toggleOptions(true);
-                }
-            });
-            $itemElems.draggable('disable');
-          //initialize resizable
-            $itemElems.resizable({
-               handles: 'e, w',
-                start: function() {
-                    $(this).attr('isResized', true);
-                    toggleOptions(true);
-                },
-                stop: function(e) {
-                	$container.packery( 'fit', e.target );
-                }
-            });
-            $itemElems.resizable('disable');
-            //set all the postions of the tables
-            setPositions();
-            */
-        	$("#dashboardWrapper .draggable").gridster({
-                widget_margins: [10, 10],
-                widget_base_dimensions: [140, 140]
-            });
-            
         });
         //on change of the dashboards dropdown, change page
         $('#dashId').change(function() {
@@ -556,10 +498,16 @@
 	        </div>
 	    </div>
 	    <div class='center' style='height:15px;' id='resultsDiv'></div>
-	    <div style='height:100%;width:100%;' id='dashboardWrapper' >
-	       {% for table in tables %}
-	           <div data-row='{{forloop.counter}}' data-col='{{forloop.counter}}' data-sizex='1' data-sizey='1' class='draggable'>test</div>
-	       {% endfor %}
+	    <div style='height:100%;width:100%;' id='dashboardWrapper'  class='gridster'>
+		       <ul>
+		       {% for table in tables %}
+		          <li data-sizex='{{table.sizex}}' data-sizey='{{table.sizey}}' data-row='{{table.row}}' data-col='{{table.col}}'>
+		           <div {{table.attrs|safe}}  class='draggable' isHereByDefault='{{table.isHereByDefault}}' tableId='{{table.id}}'>
+		               <div id='{{table.id}}'></div>
+		           </div>
+		           </li>
+		       {% endfor %}
+		       </ul>
 	    </div>
 	    <div class='center' id='destroy-dashboard-dialog' style='display:none;'  title='Destroy Dashboard'>
 	        Are you sure you want to reset your dashboard? Your tables will
