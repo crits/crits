@@ -18,6 +18,7 @@ class CRITsService(CritsDocument, CritsSchemaDocument, Document):
         "schema_doc": {
             'name': 'Name of the service',
             'config': 'Dicionary of configuration items',
+            'compatability_mode': 'If this service should run in compatability mode',
             'description': 'Description of the service',
             'enabled': 'If this service is enabled',
             'run_on_triage': 'If this service runs on upload',
@@ -29,6 +30,7 @@ class CRITsService(CritsDocument, CritsSchemaDocument, Document):
 
     name = StringField(required=True)
     config = EmbeddedDocumentField(AnalysisConfig)
+    compatability_mode = BooleanField()
     description = StringField()
     enabled = BooleanField()
     run_on_triage = BooleanField()

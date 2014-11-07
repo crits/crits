@@ -220,5 +220,5 @@ A.noclick {
     width:75px;
 }
 .ui-tabs .ui-tabs-nav li.ui-tabs-active {
-	margin-bottom:-2px;
+    margin-bottom:-2px !important;
 }

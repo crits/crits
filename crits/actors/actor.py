@@ -9,7 +9,7 @@ from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocumen
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsSchemaDocument, CritsDocument
 from crits.core.fields import CritsDateTimeField
-from crits.core.user_tools import user_sources, get_user_organization
+from crits.core.user_tools import user_sources
 
 class ActorThreatType(CritsDocument, CritsSchemaDocument, Document):
     """
@@ -257,22 +257,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
             identifier = ActorIdentifier.objects(name=identifier).first()
 
             if not identifier:
-                identifier = ActorIdentifier()
-                identifier.identifier_type = identifier_type
-                identifier.name = identifier
-
-            # Add the source if it doesn't already exist
-            org = get_user_organization(analyst)
-            found = False
-            for source in identifier.source:
-                if source.name == org:
-                    found = True
-                    break
-            if not found:
-                identifier.add_source(source=org, analyst=analyst)
-
-            identifier.save()
-            identifier.reload()
+                return
 
             found = False
             for ident in self.identifiers:
@@ -298,13 +283,13 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if isinstance(aliases, basestring):
             aliases = aliases.split(',')
-        aliases = [a.strip() for a in aliases]
+        aliases = [a.strip() for a in aliases if a != '']
         existing_aliases = None
         if len(aliases) < len(self.aliases):
             self.aliases = aliases
         else:
             existing_aliases = self.aliases
-        if existing_aliases:
+        if existing_aliases is not None:
             for a in aliases:
                 if a not in existing_aliases:
                     existing_aliases.append(a)
@@ -321,7 +306,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if isinstance(tags, basestring):
             tags = tags.split(',')
-        tags = [t.strip() for t in tags]
+        tags = [t.strip() for t in tags if t != '']
         existing_tags = None
         if tag_type == 'ActorIntendedEffect':
             if len(tags) < len(self.intended_effects):

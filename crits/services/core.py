@@ -100,6 +100,7 @@ class ServiceManager(object):
             service_version = service_class.version
             service_description = service_class.description
             supported_types = service_class.supported_types
+            compatability_mode = service_class.compatability_mode
 
             logger.debug("Found service subclass: %s version %s" %
                             (service_name, service_version))
@@ -155,6 +156,7 @@ class ServiceManager(object):
                 svc_obj.description = service_description
                 svc_obj.version = service_version
                 svc_obj.supported_types = supported_types
+                svc_obj.compatability_mode = compatability_mode
                 svc_obj.save()
                 self._services[service_class.name] = service_class
         # For anything in the database that did not import properly, mark the
@@ -303,6 +305,11 @@ class Service(object):
 
     # Change to, i.e. ['md5'] if only a hash is needed.
     required_fields = ['filedata']
+
+    # Set to a boolean. Currently, if set to False then if the
+    # settings.SERVICE_MODEL is thread_pool or process_pool, then the service
+    # will instead run in thread or process respectively.
+    compatability_mode = False
 
     # use a custom template for results
     template = None

@@ -375,10 +375,8 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         valid_ind_types[name.lower().replace(' - ', '-')] = name
 
     # Start line-by-line import
-    processed = 1 #first line was header row
     added = 0
-    for d in data:
-        processed += 1
+    for processed, d in enumerate(data, 1):
         ind = {}
         ind['value'] = d.get('Indicator', '').lower().strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
