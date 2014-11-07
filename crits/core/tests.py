@@ -397,13 +397,3 @@ class DashboardViewTests(SimpleTestCase):
         self.req.user.mark_active()
         response = views.dashboard(self.req)
         self.assertEqual(response.status_code, 200)
-
-    def testDashboard(self):
-        response = views.dashboard(self.req)
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue("#count_listing" in response.content)
-        self.assertTrue("#backdoor_listing" in response.content)
-        self.assertTrue("#campaign_listing" in response.content)
-        self.assertTrue("#indicator_listing" in response.content)
-        self.assertTrue("#email_listing" in response.content)
-        self.assertTrue("#sample_listing" in response.content)

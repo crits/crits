@@ -232,6 +232,7 @@ def global_search_listing(request):
                                   {"error" : 'No valid search criteria'},
                                   RequestContext(request))
     args = generate_global_search(request)
+    
     if 'Result' in args and args['Result'] == "ERROR":
         return render_to_response("error.html",
                                   {"error": args['Message']},

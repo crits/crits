@@ -1,0 +1,75 @@
+.margBottom {
+	margin-bottom:20px;
+}
+#extraNote {
+	display:none;
+}
+.red { 
+	color:red !important;
+}
+.go-to-search {
+	color:blue;
+	cursor:pointer !important;
+}
+#create-blank-part2 {
+	margin-top:20px;
+}
+.black {
+	color: inherit !important;
+}
+.editWrapper i {
+    width:30px;
+    cursor:pointer!important;
+    font-size: 150%;
+}
+.editWrapper {
+	padding-left:5px;
+}
+.dashboard-settings {
+	cursor:pointer!important;
+	font-size:150%;
+	position:absolute;
+	left:5px;
+	top:5px;
+}
+#dashboard-settings-dropdown {
+	position:absolute;
+	display:none;
+	width:100px;
+	border:1px solid black;
+	background-color:white;
+}
+.dashboard-settings-option {
+	cursor:pointer;
+	text-align:center;
+	line-height:25px;
+	height:25px;
+	border-bottom:1px solid black;
+}
+.dashboard-settings-option-last {
+	border:none !important;
+}
+.error {
+    border: 1px red solid !important;
+    background-color: rgba(255, 0, 0, 0.1) !important;
+}
+#resultsDiv {
+	height:20px;
+}
+.dashbaord {
+	width:100%;
+}
+#help-box {
+	margin-bottom:20px;
+}
+#need-help {
+	float:right;
+	color:red;
+	cursor:pointer;
+}
+.clear {
+   clear: both;
+}
+.hidden {
+	display:none;
+}

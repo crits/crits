@@ -218,6 +218,7 @@ RT_URL =                 crits_config.get('rt_url', None)
 SECURE_COOKIE =          crits_config.get('secure_cookie', True)
 SERVICE_DIRS =           tuple(crits_config.get('service_dirs', []))
 SERVICE_MODEL =          crits_config.get('service_model', SERVICE_MODEL)
+SERVICE_POOL_SIZE =      int(crits_config.get('service_pool_size', 12))
 SESSION_TIMEOUT =        int(crits_config.get('session_timeout', 12)) * 60 * 60
 SPLUNK_SEARCH_URL =      crits_config.get('splunk_search_url', None)
 TEMP_DIR =               crits_config.get('temp_dir', '/tmp')
@@ -313,6 +314,7 @@ TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, '../documentation'),
     os.path.join(SITE_ROOT, 'core/templates'),
     os.path.join(SITE_ROOT, 'actors/templates'),
+    os.path.join(SITE_ROOT, 'core/dashboard/templates'),
     os.path.join(SITE_ROOT, 'campaigns/templates'),
     os.path.join(SITE_ROOT, 'certificates/templates'),
     os.path.join(SITE_ROOT, 'comments/templates'),
@@ -337,6 +339,7 @@ TEMPLATE_DIRS = (
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'core/static'),
     os.path.join(SITE_ROOT, 'actors/static'),
+    os.path.join(SITE_ROOT, 'dashboards/static'),
     os.path.join(SITE_ROOT, 'campaigns/static'),
     os.path.join(SITE_ROOT, 'certificates/static'),
     os.path.join(SITE_ROOT, 'comments/static'),
@@ -358,6 +361,7 @@ STATICFILES_DIRS = (
 
 INSTALLED_APPS = (
     'crits.core',
+    'crits.dashboards',
     'django.contrib.auth',
     'mongoengine.django.mongo_auth',
     'django.contrib.contenttypes',
