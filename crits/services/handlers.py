@@ -9,6 +9,8 @@ from threading import Thread
 
 from mongoengine.base import ValidationError
 
+from multiprocessing.pool import Pool, ThreadPool
+
 from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render_to_response
@@ -102,6 +104,23 @@ def generate_analysis_results_jtable(request, option):
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
+
+def service_work_handler(service_instance, final_config):
+    """
+    Handles a unit of work for a service by calling the service's "execute"
+    method. This function is generally called by processes/threads. Also
+    this function is needed because it is picklable and passing in the
+    service_instance.execute method is not picklable because it is an
+    instance method.
+
+    :param service_instance: The service instance that the work will be performed in
+    :type service_instance: crits.services.core.Service
+    :param service_instance: The service's configuration settings
+    :type service_instance: dict
+    """
+
+    service_instance.execute(final_config)
+
 
 def run_service(name, crits_type, identifier, analyst, obj=None,
                 execute='local', custom_config={}):
@@ -207,6 +226,22 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
     elif execute == 'thread':
         t = Thread(target=service_instance.execute, args=(final_config,))
         t.start()
+    elif execute == 'process_pool':
+        if __service_process_pool__ is not None and service.compatability_mode != True:
+            __service_process_pool__.apply_async(func=service_work_handler,
+                                                 args=(service_instance, final_config,))
+        else:
+            logger.warning("Could not run %s on %s, execute=%s, running in process mode" % (name, obj.id, execute))
+            p = Process(target=service_instance.execute, args=(final_config,))
+            p.start()
+    elif execute == 'thread_pool':
+        if __service_thread_pool__ is not None and service.compatability_mode != True:
+            __service_thread_pool__.apply_async(func=service_work_handler,
+                                                args=(service_instance, final_config,))
+        else:
+            logger.warning("Could not run %s on %s, execute=%s, running in thread mode" % (name, obj.id, execute))
+            t = Thread(target=service_instance.execute, args=(final_config,))
+            t.start()
     elif execute == 'local':
         service_instance.execute(final_config)
 
@@ -624,8 +659,21 @@ def update_analysis_results(task):
         tdict = task.to_dict()
         tdict['analysis_id'] = tdict['id']
         del tdict['id']
+
         #TODO: find a better way to do this.
         new_dict = {}
         for k in tdict.iterkeys():
             new_dict['set__%s' % k] = tdict[k]
         AnalysisResult.objects(id=ar.id).update_one(**new_dict)
+
+# The service pools need to be defined down here because the functions
+# that are used by the services must already be defined.
+if settings.SERVICE_MODEL == 'thread_pool':
+    __service_thread_pool__ = ThreadPool(processes=settings.SERVICE_POOL_SIZE)
+    __service_process_pool__ = None
+elif settings.SERVICE_MODEL == 'process_pool':
+    __service_thread_pool__ = None
+    __service_process_pool__ = Pool(processes=settings.SERVICE_POOL_SIZE)
+else:
+    __service_thread_pool__ = None
+    __service_process_pool__ = None
