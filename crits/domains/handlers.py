@@ -19,7 +19,7 @@ from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.domains.domain import Domain, TLD
-from crits.domains.forms import AddDomainForm, UpdateWhoisForm, DiffWhoisForm
+from crits.domains.forms import AddDomainForm
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict, validate_and_add_new_handler_object
@@ -59,41 +59,8 @@ def get_domain_details(domain, analyst):
         args = {'error': error}
         return template, args
 
-    forms = {}
-    #populate whois data into whois form
-    # and create data object (keyed on date) for updating form on date select
-    whois_data = {'':''} #blank info for "Add New" option
-    initial_data = {'data':' '}
-    raw_data = {}
-    whois = getattr(dmain, 'whois', None)
-    if whois:
-        for w in whois:
-            #build data as a display-friendly string
-            w.date = datetime.datetime.strftime(w.date,
-                                                settings.PY_DATETIME_FORMAT)
-            from whois_parser import WhoisEntry
-            #prettify the whois data
-            w.data = unicode(WhoisEntry.from_dict(w.data))
-            if 'text' not in w: #whois data was added with old data format
-                w.text = w.data
-            #also save our text blob for easy viewing of the original data
-            whois_data[w.date] = (w.data, w.text)
-        #show most recent entry first
-        initial_data = {'data':whois[-1].data, 'date': whois[-1].date}
-        raw_data = {'data':whois[-1].text, 'date': whois[-1].date}
-
-    whois_len = len(whois_data)-1 #subtract one to account for blank "Add New" entry
-    whois_data = json.dumps(whois_data)
-
     dmain.sanitize_sources(username="%s" % analyst,
                            sources=allowed_sources)
-
-    forms['whois'] = UpdateWhoisForm(initial_data,
-                                     domain=domain)
-    forms['raw_whois'] = UpdateWhoisForm(raw_data,
-                                         domain=domain,
-                                         allow_adding=False)
-    forms['diff_whois'] = DiffWhoisForm(domain=domain)
 
     # remove pending notifications for user
     remove_user_from_notification("%s" % analyst, dmain.id, 'Domain')
@@ -143,11 +110,8 @@ def get_domain_details(domain, analyst):
             'subscription': subscription,
             'screenshots': screenshots,
             'domain': dmain,
-            'forms': forms,
-            'whois_data': whois_data,
             'service_list': service_list,
-            'service_results': service_results,
-            'whois_len': whois_len}
+            'service_results': service_results}
 
     return template, args
 
@@ -499,110 +463,6 @@ def edit_domain_name(domain, new_domain, analyst):
         return True
     except ValidationError:
         return False
-
-def add_whois(domain, data, date, analyst, editable):
-    """
-    Add whois information to a domain.
-
-    :param domain: The domain for the whois entry.
-    :type domain: str
-    :param data: The whois data.
-    :type data: str
-    :param date: The date for the whois data.
-    :type date: datetime.datetime
-    :param analyst: The user editing the domain name.
-    :type analyst: str
-    :param editable: If this entry can be modified.
-    :type editable: boolean
-    :returns: dict with keys:
-              "success" (boolean),
-              "whois" (str) if successful,
-              "message" (str) if failed.
-    """
-
-    domain = Domain.objects(domain=domain).first()
-    if not domain:
-        return {'success': False,
-                'message': "No matching domain found."}
-    try:
-        whois_entry = domain.add_whois(data, analyst, date, editable)
-        domain.save(username=analyst)
-        return {"success": True, 'whois': whois_entry, 'id': str(domain.id)}
-    except ValidationError, e:
-        return {"success": False, "message": e, 'id': str(domain.id)}
-
-def edit_whois(domain, data, date, analyst):
-    """
-    Edit whois information for a domain.
-
-    :param domain: The domain for the whois entry.
-    :type domain: str
-    :param data: The whois data.
-    :type data: str
-    :param date: The date for the whois data.
-    :type date: datetime.datetime
-    :param analyst: The user editing the domain name.
-    :type analyst: str
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str) if failed.
-    """
-
-    domain = Domain.objects(domain=domain).first()
-    if not domain:
-        return {'success': False,
-                'message': "No matching domain found."}
-    try:
-        domain.edit_whois(data, date)
-        domain.save(username=analyst)
-        return {'success': True}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
-
-def delete_whois(domain, date, analyst):
-    """
-    Remove whois information for a domain.
-
-    :param domain: The domain for the whois entry.
-    :type domain: str
-    :param date: The date for the whois data.
-    :type date: datetime.datetime
-    :param analyst: The user editing the domain name.
-    :type analyst: str
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str) if failed.
-    """
-
-    domain = Domain.objects(domain=domain).first()
-    if not domain:
-        return {'success': False,
-                'message': "No matching domain found."}
-    try:
-        domain.delete_whois(date)
-        domain.save(username=analyst)
-        return {'success': True}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
-
-def whois_diff(domain, from_date, to_date):
-    """
-    Diff whois entries.
-
-    :param domain: The domain to get whois information for.
-    :type domain: str
-    :param from_date: The date for the first whois entry.
-    :type from_date: datetime.datetime
-    :param to_date: The date for the second whois entry.
-    :type to_date: datetime.datetime
-    :returns: dict if failed, str on success.
-    """
-
-    domain = Domain.objects(domain=domain).first()
-    if not domain:
-        return {'success': False,
-                'message': "No matching domain found."}
-    return domain.whois_diff(from_date, to_date)
 
 def upsert_domain(sdomain, domain, source, username=None, campaign=None,
                   confidence=None, bucket_list=None, ticket=None, cache={}):
