@@ -16,8 +16,8 @@ from crits.core.handsontable_tools import form_to_dict
 from crits.core.user_tools import user_can_view_data
 from crits.domains.forms import TLDUpdateForm, AddDomainForm, UpdateWhoisForm
 from crits.domains.handlers import get_domain, edit_domain_name
-from crits.domains.handlers import add_new_domain get_domain_details
-from crits.domains.handlers import update_tlds generate_domain_jtable
+from crits.domains.handlers import add_new_domain, get_domain_details
+from crits.domains.handlers import update_tlds, generate_domain_jtable
 from crits.domains.handlers import generate_domain_csv, process_bulk_add_domain
 from crits.objects.forms import AddObjectForm
 from crits.core.handlers import get_object_types
