@@ -17,7 +17,7 @@ $(document).ready(function() {
                     }
                 }
             });
-            return value;
+            return $('<div/>').text(value).html();
         }(value, settings, this);
         },
         {
