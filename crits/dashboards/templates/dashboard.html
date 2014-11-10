@@ -140,8 +140,8 @@
         $('#savePositionsButton').click(function() {
             showResults('');
             toggleOptions(false);
-            //if(!$('.draggable').draggable('option', 'disabled'))
-            //    removeDraggable();
+            if(! $gridster.drag_api['disabled'] == true)
+                removeDraggable();
             var data = [];
             var dashboardWidth = $('#dashboardWrapper').width();
             $('.draggable').each(function() {
@@ -156,12 +156,13 @@
                         sortDirection: $(this).attr('sortDirection'),
                         sortField: $(this).attr('sortField'),
                         id:$(this).attr('tableId'),
-                        sizex:$guardian.data('sizex'),
-                        sizey:$guardian.data('sizey'),
-                        row:$guardian.data('row'),
-                        col:$guardian.data('col')
+                        sizex:$guardian.attr('data-sizex'),
+                        sizey:$guardian.attr('data-sizey'),
+                        row:$guardian.attr('data-row'),
+                        col:$guardian.attr('data-col')
                     };
                     data.push(tempDict);
+                    console.log(tempDict);
             });
             $.ajax({
                 type:'POST',
@@ -234,19 +235,6 @@
                             lowestTablePos = tempLowestTablePos + tableHeight;
                     }
                 });
-            if (unpositionedTables.length > 0)
-                setUnPostionedTables(0, unpositionedTables, lowestTablePos);
-        }
-        //Recursive method to place tables without positions set
-        function setUnPostionedTables(index, tables, lowestTablePos) {
-            var table = tables[index];
-            //If a table has no set postions, then put it 20px below the lowest table
-            $(table).css('top', lowestTablePos+20);
-            if (index < tables.length-1) {
-                lowestTablePos += $(table).height();
-                index++;
-                setUnPostionedTables(index, tables, lowestTablePos);
-            }
         }
         //Logic to show the save/undo buttons
         function toggleOptions(show) {
@@ -418,13 +406,10 @@
                 $('#parent-has-changed-dialog').dialog('open');
             {% endif %}
         });
-        var dashWidth;
-        var dashHeight;
         var $gridster;
         $(window).load(function() {
         	dashWidth = $('#dashboardWrapper').width();
-            dashHeight = $('#dashboardWrapper').height();
-            console.log(dashWidth  + " " + dashHeight);
+        	dashHeight = $('#dashboardWrapper').height();
             $('#dashboardWrapper ul').height(dashHeight);
             $(function(){
                 $gridster = $('#dashboardWrapper ul').gridster({
@@ -452,12 +437,37 @@
             $('.w2ui-grid').each(function() {
             	w2ui[$(this).attr('name')].refresh();
             });
+            var gridster_basey = $gridster.options.widget_base_dimensions[1];
+            var gridster_baseMarginy = $gridster.options.widget_margins[1];
+            correctGridsterSizeY(gridster_basey, gridster_baseMarginy);
         });
         //on change of the dashboards dropdown, change page
         $('#dashId').change(function() {
         	if($(this).val().indexOf('{{currentDash}}') <= 0) 
         		window.location = $(this).val();
         });
+        
+        function correctGridsterSizeY(baseY, margY) {
+        	var constant = 26;
+        	$('.gridster li').each(function() {
+        		var maxNeededHeight = $(this).find('.draggable').height();
+        		var currentSizeY = $(this).attr('data-sizey');
+        		for (var i = 1; i < 100; i++) {
+        			console.log(gridster_getTestHeight(i), maxNeededHeight);
+        			if (gridster_getTestHeight(i) > (maxNeededHeight-constant)) {
+        				console.log('resizing', i);
+        				if (i != currentSizeY)
+        				    $gridster.resize_widget($(this), null, i);
+        				else
+        					console.log('dont have to');
+        				break;
+        			}
+        		}
+        	});
+        	function gridster_getTestHeight(x) { 
+        		return (x*baseY) + ((x-1) * margY)*2;
+        	}
+        }
     </script>
 {% endblock %}
 {% block content %}
@@ -498,10 +508,10 @@
 	        </div>
 	    </div>
 	    <div class='center' style='height:15px;' id='resultsDiv'></div>
-	    <div style='height:100%;width:100%;' id='dashboardWrapper'  class='gridster'>
-		       <ul>
+	    <div style='height:100%;width:100%;' id='dashboardWrapper'>
+		       <ul class='gridster'>
 		       {% for table in tables %}
-		          <li data-sizex='{{table.sizex}}' data-sizey='{{table.sizey}}' data-row='{{table.row}}' data-col='{{table.col}}'>
+		          <li name='{{table.title}}' data-sizex='{{table.sizex}}' data-sizey='{{table.sizey}}' data-row='{{table.row}}' data-col='{{table.col}}'>
 		           <div {{table.attrs|safe}}  class='draggable' isHereByDefault='{{table.isHereByDefault}}' tableId='{{table.id}}'>
 		               <div id='{{table.id}}'></div>
 		           </div>

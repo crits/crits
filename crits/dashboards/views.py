@@ -123,7 +123,7 @@ def save_search(request):
     columns = json.loads(request.GET.get("columns", ""))
     sortBy = request.GET.get("sortBy", None)
     isDefault = request.GET.get("isDefaultOnDashboard", "False")
-    tableWidth = request.GET.get("tableWidth", None)
+    sizex = request.GET.get("sizex", None)
     maxRows = request.GET.get("maxRows", None)
     if isDefault == "True" or isDefault =="true":
         isDefault = True
@@ -132,8 +132,9 @@ def save_search(request):
     if sortBy:
         sortBy = json.loads(sortBy)
     response = save_data(userId, columns, tableName, searchTerm, objType, sortBy,
-                         tableId, width=tableWidth, isDefaultOnDashboard=isDefault,
-                         maxRows=maxRows, dashboard=dashboard, clone=clone)
+                         tableId, sizex=sizex, isDefaultOnDashboard=isDefault,
+                         maxRows=maxRows,
+                         dashboard=dashboard, clone=clone)
     if newDashName:
         response["newDashId"] = str(newDash.id)
         response["newDashName"] = newDash.name

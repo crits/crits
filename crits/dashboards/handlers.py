@@ -309,20 +309,30 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
         newSavedSearch.isDefaultOnDashboard = isDefaultOnDashboard
         if sortBy:
             newSavedSearch.sortBy = sortBy
+        if sizex:
+            newSavedSearch.sizex = sizex
+        elif not newSavedSearch.sizex:
+            newSavedSearch.sizex = 50
+        if sizey:
+            newSavedSearch.sizey = sizey
+        elif maxRows and maxRows != newSavedSearch.maxRows:
+            newSavedSearch.sizey = int(maxRows)+1
+        elif not newSavedSearch.sizey:
+            newSavedSearch.sizey = 7
+        if row:
+            newSavedSearch.row = row
+        elif not newSavedSearch.row:
+            newSavedSearch.row = 1
+        if grid_col:
+            newSavedSearch.col = grid_col
+        elif not newSavedSearch.col:
+            newSavedSearch.col = 1
         if maxRows:
             #if the table is growing in height, reset it's position so it doesnt
             #overlap with other tables
             if int(maxRows) > newSavedSearch.maxRows:
                 newSavedSearch.top=-1
             newSavedSearch.maxRows = maxRows;
-        if sizex:
-            newSavedSearch.sizex = sizex
-        if sizey:
-            newSavedSearch.sizey = sizey
-        if row:
-            newSavedSearch.row = row
-        if col:
-            newSavedSearch.col = grid_col
         newSavedSearch.save()
         #if the old dashboard is empty, delete it
         if oldDashId:

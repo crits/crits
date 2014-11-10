@@ -387,3 +387,6 @@ span.right.link a:link{
 	padding-top: 10px;
 	padding-bottom: 10px;
 }
+ul.gridster {
+    padding-left: 0px !important;
+}
