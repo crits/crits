@@ -612,11 +612,22 @@
         //remove the column being dragged
         function throwOutColumn(event) {
             if(w2ui['grid'].columns.length > 1) {
-                var colIndex = $(event.target).attr("col");
-                var col = w2ui['grid'].columns[colIndex];
-                w2ui['grid'].removeColumn(col.field);
-                addToRemovedColumns(col);
-                toggleTrashCan();
+                var col_caption = $(event.target).text();
+                var col;
+                for (var i in w2ui['grid'].columns) {
+                    col = w2ui['grid'].columns[i];
+                    if (col.caption.trim() == col_caption.trim())
+                        break;
+                    else
+                        col = null;
+                }
+                if (col) {
+                    w2ui['grid'].removeColumn(col.field);
+                    addToRemovedColumns(col);
+                    toggleTrashCan();
+                }
+                else
+                    showResultsDiv("An error occured while removing your column. Please refresh and try again.", true);
             }
             else 
                 showResultsDiv("You cannot have a table with no columns!", true);
