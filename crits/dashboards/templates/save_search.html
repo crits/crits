@@ -678,6 +678,18 @@
                 toggleTrashCan();
             addDroppableEvent();
         });
+        
+        $('#garbageHeader').click(function() {
+        	if(removedColumns.length > 0) {
+	        	for (i in removedColumns)
+	                w2ui['grid'].addColumn(removedColumns[i]);
+	        	removedColumns = [];
+	        	$('.removedColumn').remove();
+	        	toggleTrashCan();
+	            addDroppableEvent();
+        	}
+        });
+        
         //show message at the bottom of the page
         function showResultsDiv(message, isError) {
         	var element = $("#resultsDiv");
@@ -981,7 +993,7 @@
 	        <div id='trashCan'>
 	            <i id='trashCanImg' class="fa fa-trash fa-4x"></i>
 	        </div>
-	        <div class='center' id='garbageHeader'><b>Available Columns:</b></div>
+	        <div title='Click To Empty' class='center' id='garbageHeader'><b>Available Columns:</b></div>
 	        <div id='garbageContent'></div>
 	    </div>
 	    <div class='clear'></div>
