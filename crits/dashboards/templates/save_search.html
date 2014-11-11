@@ -557,7 +557,7 @@
                     userId: "{{ user.id }}",
                     tableName:tableName,
                     query: '{{ term }}',
-                    sizex: $('#gridster-li').data('sizex'),
+                    sizex: $('#gridster-li').attr('data-sizex'),
                     object_type: currentlyShownObject.type,
                     columns: JSON.stringify(w2ui['grid'].columns),
                     sortBy: JSON.stringify(currentlyShownObject.sortBy),
@@ -980,9 +980,6 @@
 	    	else
 	    		$('#newDashWrapper').hide();
 	    });
-        $(window).load(function() {
-        	
-        });
         function setUpGridster() {
             var dashWidth = $('#container').width();
             var dashHeight = $('#container').height();
