@@ -678,18 +678,16 @@
                 toggleTrashCan();
             addDroppableEvent();
         });
-        
         $('#garbageHeader').click(function() {
-        	if(removedColumns.length > 0) {
-	        	for (i in removedColumns)
-	                w2ui['grid'].addColumn(removedColumns[i]);
-	        	removedColumns = [];
-	        	$('.removedColumn').remove();
-	        	toggleTrashCan();
-	            addDroppableEvent();
-        	}
+            if(removedColumns.length > 0) {
+                for (i in removedColumns)
+                    w2ui['grid'].addColumn(removedColumns[i]);
+                removedColumns = [];
+                $('.removedColumn').remove();
+                toggleTrashCan();
+                addDroppableEvent();
+            }
         });
-        
         //show message at the bottom of the page
         function showResultsDiv(message, isError) {
         	var element = $("#resultsDiv");
