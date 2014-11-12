@@ -2587,7 +2587,7 @@ def generate_dashboard(request):
     from crits.dashboards.handlers import get_dashboard
     args = get_dashboard(request.user)
     return render_to_response('dashboard.html', args, RequestContext(request))
-    
+
 def dns_timeline(query, analyst, sources):
     """
     Query for domains, format that data for timeline view, and return them.
