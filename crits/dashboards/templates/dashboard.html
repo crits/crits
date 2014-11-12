@@ -162,7 +162,6 @@
                         col:$guardian.attr('data-col')
                     };
                     data.push(tempDict);
-                    console.log(tempDict);
             });
             $.ajax({
                 type:'POST',
@@ -408,30 +407,27 @@
         });
         var $gridster;
         $(window).load(function() {
-        	dashWidth = $('#dashboardWrapper').width();
-        	dashHeight = $('#dashboardWrapper').height();
-            $('#dashboardWrapper ul').height(dashHeight);
-            $(function(){
-                $gridster = $('#dashboardWrapper ul').gridster({
-                    widget_margins: [(dashWidth*.01/5), (dashHeight*.01/5)],
-                    widget_base_dimensions: [(dashWidth*.08/5), (dashHeight*.08/5)],
-                    min_cols: 20,
-                    min_rows: 20,
-                    resize: {
-                        enabled: true,
-                        axes: ['x'],
-                        stop: function(e, ui, $widget) {
-                            w2ui[$widget.find('.w2ui-grid').attr('name')].refresh();
-                            toggleOptions(true);
-                        }
-                    },
-                    draggable: {
-                    	stop: function(event, ui) {
-                    		toggleOptions(true);
-                    	}
+            dashWidth = $('#dashboardWrapper').width()*.99;
+            dashHeight = $('#dashboardWrapper').height();
+            $gridster = $('#dashboardWrapper ul').gridster({
+                widget_margins: [3, 3],
+                widget_base_dimensions: [(dashWidth-294)/50, (dashHeight-294)/50],
+                min_cols: 50,
+                min_rows: 50,
+                resize: {
+                    enabled: true,
+                    axes: ['x'],
+                    stop: function(e, ui, $widget) {
+                        w2ui[$widget.find('.w2ui-grid').attr('name')].refresh();
+                        toggleOptions(true);
                     }
-                }).data('gridster');
-            });
+                },
+                draggable: {
+                    stop: function(event, ui) {
+                        toggleOptions(true);
+                    }
+                }
+            }).data('gridster');
         	$gridster.disable();
         	//refresh all the grids in case they have imaged
             $('.w2ui-grid').each(function() {
@@ -446,20 +442,15 @@
         	if($(this).val().indexOf('{{currentDash}}') <= 0) 
         		window.location = $(this).val();
         });
-        
         function correctGridsterSizeY(baseY, margY) {
         	var constant = 26;
         	$('.gridster li').each(function() {
         		var maxNeededHeight = $(this).find('.draggable').height();
         		var currentSizeY = $(this).attr('data-sizey');
         		for (var i = 1; i < 100; i++) {
-        			console.log(gridster_getTestHeight(i), maxNeededHeight);
         			if (gridster_getTestHeight(i) > (maxNeededHeight-constant)) {
-        				console.log('resizing', i);
         				if (i != currentSizeY)
         				    $gridster.resize_widget($(this), null, i);
-        				else
-        					console.log('dont have to');
         				break;
         			}
         		}

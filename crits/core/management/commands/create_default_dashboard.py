@@ -45,24 +45,24 @@ def create_dashboard(drop=False):
             savedSearch.isDefaultOnDashboard = True
             savedSearch.tableColumns = getColumnsForTable(title)
             if title == "Counts" or title == "Top Backdoors":
-                savedSearch.sizex = 8
+                savedSearch.sizex = 10
             elif title == "Top Campaigns":
                 savedSearch.sizex = 25
             else:
                 savedSearch.sizex = 50
             if title == "Counts":
-                savedSearch.sizey = 12
+                savedSearch.sizey = 13
             else:
-                savedSearch.sizey = 7
+                savedSearch.sizey = 8
                 
             if title == "Counts" or title == "Top Backdoors" or title == "Top Campaigns":
                 savedSearch.row = 1
             elif title == "Recent Indicators":
-                savedSearch.row = 6
+                savedSearch.row = 15
             elif title == "Recent Emails":
-                savedSearch.row = 8
+                savedSearch.row = 23
             else:
-                savedSearch.row = 10
+                savedSearch.row = 31
                 
             if title == "Top Backdoors":
                 savedSearch.col = 10

@@ -981,24 +981,23 @@
 	    		$('#newDashWrapper').hide();
 	    });
         function setUpGridster() {
-            var dashWidth = $('#container').width();
+            var dashWidth = $('#container').width()*.99;
             var dashHeight = $('#container').height();
-            $('#contentWrapper ul').height(dashHeight);
-	        $gridster = $('#innerWrapper ul').gridster({
-	            widget_margins: [(dashWidth*.01/5), (dashHeight*.01/5)],
-	            widget_base_dimensions: [(dashWidth*.08/5), (dashHeight*.08/5)],
-	            min_cols: 20,
-	            min_rows: 20,
-	            resize: {
-	                enabled: true,
-	                axes: ['x'],
-	                stop: function(e, ui, $widget) {
-	                    w2ui['grid'].refresh();
-	                }
-	            }
-	        }).data('gridster');
-	        $gridster.disable();
-	        isGridsterInitalized = true;
+            $gridster = $('#innerWrapper ul').gridster({
+                widget_margins: [3, 3],
+                widget_base_dimensions: [(dashWidth-294)/50, (dashHeight-294)/50],
+                min_cols: 50,
+                min_rows: 50,
+                resize: {
+                    enabled: true,
+                    axes: ['x'],
+                    stop: function(e, ui, $widget) {
+                        w2ui['grid'].refresh();
+                    }
+                }
+            }).data('gridster');
+            $gridster.disable();
+            isGridsterInitalized = true;
         }
     </script>
 {% endblock %}
