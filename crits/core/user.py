@@ -320,8 +320,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     REQUIRED_FIELDS = ['email']
 
     defaultDashboard = ObjectIdField(required=False, default=None)
-    
-    
+
+
     def migrate(self):
         """
         Migrate to latest schema version.
@@ -873,8 +873,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         return getDashboardsForUser(self)
 
     def get_sources_list(self):
-        if not self._meta['cached_acl']:
-            self.get_access_list(update=True)
+        # We always update to make sure we catch changes to a user's role list.
+        self.get_access_list(update=True)
         return [s.name for s in self._meta['cached_acl'].sources]
 
     def get_access_list(self, update=False):
@@ -1206,7 +1206,7 @@ Please contact a site administrator to resolve.
         backend = auth.get_backends()[0]
         user.backend = "%s.%s" % (backend.__module__, backend.__class__.__name__)
         return user
-    
+
 
 class CRITsRemoteUserBackend(CRITsAuthBackend):
     """
