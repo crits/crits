@@ -37,8 +37,7 @@ def add_uber_admin_role(drop=False):
         print "Drop protection disabled. Dropping all Roles!"
         Role.drop_collection()
     else:
-        print ("Drop protection enabled!\n",
-                "Resetting 'UberAdmin' Role to defaults!")
+        print "Drop protection enabled!\nResetting 'UberAdmin' Role to defaults!"
     role = Role.objects(name=settings.ADMIN_ROLE).first()
     if not role:
         print "Could not find UberAdmin Role. Creating it!"
