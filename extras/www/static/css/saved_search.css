@@ -1,0 +1,131 @@
+#tabSelect, .right{
+    width:105px;
+}
+#tabSpan {
+  float: right;
+  border-bottom: 2px solid #d6d5d7;
+}
+#tab-content {
+  float:left;
+  width:100%;
+  clear: none; 
+}
+.hidden {
+  display:none;
+}
+.headSpan {
+   padding-left: 3px;
+}
+.clear {
+   clear: both;
+}
+.error {
+    border: 1px red solid !important;
+    background-color: rgba(255, 0, 0, 0.1) !important;
+}
+#resultsDiv {
+  margin-top:10px;
+  color: green;
+  height:15px;
+}
+.errorDiv {
+  color:red !important;
+}
+#trashCan {
+	opacity: 0.1;
+	position: absolute;
+	left:48%;
+	top:8px;
+}
+.isDragging {
+	border: 1px solid black;
+}
+.isDragging #garbageHeader{
+	height:60px;
+    border: none;
+    border-right:1px solid black;
+    background-color:white;
+}
+#pinSearchForm {
+	text-align:left;
+}
+#pinSearchForm label {
+	display: inline-block;
+	width:80px !important;
+} 
+#trashWrapper {
+  width:100%;
+  height:60px;
+  display:inline-block;
+  position: relative;
+  background-color:rgba(0,0,0,.1);
+}
+#garbageContent {
+	margin-top:20px;
+}
+.removedColumn {
+  width:150px;
+  z-index:2;
+  margin-left:5px;
+}
+#garbageHeader {
+	float:left;
+    line-height: 58px;
+  width:160px;
+  border:1px solid black;
+  height:58px;
+  display:inline-block;
+}
+.submit {
+    width:180px;
+    padding: 4px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    color: #000;
+    background-color: #fff;
+}
+#removeFromDashboardDialog {
+  display:none;
+}
+.highlighted {
+    background-image: -webkit-linear-gradient(rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0.1)) !important;
+	background-image: -moz-linear-gradient(rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0.1)) !important;
+	background-image: -ms-linear-gradient(rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0.1)) !important;
+	background-image: -o-linear-gradient(rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0.1)) !important;
+	background-image: linear-gradient(rgba(255, 0, 0, 0.3), rgba(255, 0, 0, 0.1)) !important;
+}
+.ui-dialog-buttonset {
+	float:none !important;
+	text-align:center;
+}
+.ui-dialog-buttonset button {
+	width:65px;
+}
+#pagination-wrapper div, #pagination-wrapper span{
+	display:inline-block;
+}
+#pagination-wrapper {
+	text-align:center;
+}
+
+
+.color-picker, .row-picker {
+	margin:5px;
+	border:1px solid black;
+	width:20px;
+	height:20px;
+}
+
+.color-picker-selected, .row-picker-selected {
+	border-width: 2px;
+	margin:4px;
+}
+#color-picker-wrapper {
+	border:1px solid black;
+	text-align:center;
+	height:75px;
+}
+.color-picker-default-wrapper {
+	padding-top:15px;
+	padding-right:5px;
+}

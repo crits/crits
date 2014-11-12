@@ -53,8 +53,8 @@ class ConfigGeneralForm(forms.Form):
                                 help_text='*Requires a web server restart.')
     def __init__(self, *args, **kwargs):
         super(ConfigGeneralForm, self).__init__(*args, **kwargs)
-        
-        
+
+
 class ConfigLDAPForm(forms.Form):
     required_css_class = 'required'
     ldap_tls = forms.BooleanField(initial=False,
@@ -71,7 +71,7 @@ class ConfigLDAPForm(forms.Form):
                                               "at each login")
     def __init__(self, *args, **kwargs):
         super(ConfigLDAPForm, self).__init__(*args, **kwargs)
-        
+
 class ConfigSecurityForm(forms.Form):
     required_css_class = 'required'
     allowed_hosts = forms.CharField(widget=forms.TextInput,
@@ -121,7 +121,7 @@ class ConfigSecurityForm(forms.Form):
                                        required=False)
     def __init__(self, *args, **kwargs):
         super(ConfigSecurityForm, self).__init__(*args, **kwargs)
-        
+
 class ConfigLoggingForm(forms.Form):
     required_css_class = 'required'
     log_directory = forms.CharField(widget=forms.TextInput,
@@ -142,7 +142,7 @@ class ConfigLoggingForm(forms.Form):
                                   help_text='*Requires a web server restart.')
     def __init__(self, *args, **kwargs):
         super(ConfigLoggingForm, self).__init__(*args, **kwargs)
-        
+
 class ConfigServicesForm(forms.Form):
     required_css_class = 'required'
     service_dirs = forms.CharField(widget=forms.Textarea(attrs={'cols': '25',
@@ -152,20 +152,27 @@ class ConfigServicesForm(forms.Form):
                                    help_text=('List of absolute directory '
                                               'paths.<br />'
                                               '*Requires a web server restart.'))
-    service_model = forms.ChoiceField(choices=[('process',
-                                              'process'),
-                                             ('thread',
-                                              'thread'),
-                                             ('local',
-                                              'local')],
+    service_model = forms.ChoiceField(choices=[
+                                               ('process', 'process'),
+                                               ('thread', 'thread'),
+                                               ('process_pool', 'process_pool'),
+                                               ('thread_pool', 'thread_pool'),
+                                               ('local', 'local')],
                                       widget=forms.Select(),
                                       required=True,
                                       initial='process',
-                                      help_text='*Requires a web server restart.')
+                                      help_text=('Warning: Using process_pool '
+                                                 'may be memory intensive.<br />'
+                                                 '*Requires a web server restart.'))
+    service_pool_size = forms.IntegerField(required=True,
+                                           min_value=1,
+                                           initial="12",
+                                           help_text=('Service Thread/Process Pool Size<br />'
+                                                      '*Requires a web server restart.'))
     def __init__(self, *args, **kwargs):
-        super(ConfigServicesForm, self).__init__(*args, **kwargs)       
-        
-        
+        super(ConfigServicesForm, self).__init__(*args, **kwargs)
+
+
 class ConfigDownloadForm(forms.Form):
     required_css_class = 'required'
     depth_max = forms.CharField(widget=forms.TextInput,
@@ -181,8 +188,8 @@ class ConfigDownloadForm(forms.Form):
                               initial="50",
                               help_text='Maximum relationships an object can have while downloading')
     def __init__(self, *args, **kwargs):
-        super(ConfigDownloadForm, self).__init__(*args, **kwargs) 
-        
+        super(ConfigDownloadForm, self).__init__(*args, **kwargs)
+
 class ConfigCritsForm(forms.Form):
     required_css_class = 'required'
     company_name = forms.CharField(widget=forms.TextInput, required=True)
@@ -216,7 +223,7 @@ class ConfigCritsForm(forms.Form):
     instance_name = forms.CharField(widget=forms.TextInput, required=True)
     instance_url = forms.CharField(widget=forms.TextInput, required=True)
     def __init__(self, *args, **kwargs):
-        super(ConfigCritsForm, self).__init__(*args, **kwargs) 
-        self.fields['crits_version'].widget.attrs['readonly'] = True   
+        super(ConfigCritsForm, self).__init__(*args, **kwargs)
+        self.fields['crits_version'].widget.attrs['readonly'] = True
 
 

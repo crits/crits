@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="/css/chardinjs.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/jquery.mmenu.all.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/w2ui-1.4.min.css" type="text/css"/>
+    <link rel="stylesheet" href="/css/font-awesome-4.2.0/css/font-awesome.min.css" type="text/css"/>
     <link rel="stylesheet" href="/js/jtable/themes/jqueryui/jtable_jqueryui.min.css" type="text/css" />
     <link rel="stylesheet" href="{{ STATIC_URL }}css/core.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="{{ STATIC_URL }}css/jtable-custom.css" type="text/css" media="screen" />
@@ -30,6 +31,7 @@
     <script type="text/javascript" src="/js/jquery-1.10.2.min.js"></script>
     <script type="text/javascript" src="/js/jquery-ui-1.10.3.custom.min.js"></script>
     <script type="text/javascript" src="/js/w2ui-1.4.min.js"></script>
+    <script type="text/javascript" src="/js/packery.pkgd.min.js"></script>
     <script type="text/javascript" src="/js/jquery.highlight-3.js"></script>
     <script type="text/javascript" src="/js/datetimewidget.js"></script>
     <script type="text/javascript" src="/js/jquery.tablesorter.min.js"></script>
@@ -344,7 +346,22 @@
 <nav id="nav-menu">
   <ul class="main-nav mmenu" style="display: none;">
     <li class='nav_main mmenu_item'>
-      <a id="dashboard" href="{% url 'crits.core.views.dashboard' %}">Dashboard</a>
+      <a id="dashboard" href="{% url 'crits.dashboards.views.dashboard' %}">Dashboards</a>
+      <ul class='sub-mmenu'>
+          <li class='mmenu_item'>
+             <a href="{% url 'crits.dashboards.views.dashboard' %}"> My Dashboards</a>
+             <ul class='dashboard-nav-submenu' class='sub-mmenu'>
+                 {% for dash in user.getDashboards %}
+                     <li class='mmenu_item'>
+                         <a href='{% url "crits.dashboards.views.dashboard" dash.id %}'>{{dash.name}}</a>
+                     </li>
+                 {% endfor %}
+             </ul>
+         </li>
+         <li class='mmenu_item'>
+              <a href="{% url 'crits.dashboards.views.saved_searches_list' %}">Configurations</a>
+          </li>
+      </ul>
     </li>
     <li class='nav_main mmenu_item'>
       <a href="{% url 'crits.core.views.profile' %}">My CRITs</a>
@@ -450,9 +467,6 @@
         {% endif %}
         <li class='mmenu_item'>
           <a href="{% url 'crits.samples.views.sources' %}">Source Samples</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href="{% url 'crits.samples.views.yarahits_listing' %}">Yara Hits</a>
         </li>
         <li class='mmenu_item'>
           <a href="{% url 'crits.samples.views.backdoors_listing' %}">Backdoors</a>

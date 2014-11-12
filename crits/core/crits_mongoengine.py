@@ -258,10 +258,8 @@ class CritsStatusDocument(BaseDocument):
         if status in ('New', 'In Progress', 'Analyzed', 'Deprecated'):
             self.status = status
             if status == 'Deprecated' and 'actions' in self:
-                i = 0
-                while i < len(self.actions):
-                    self.actions[i].active = "off"
-                    i += 1
+                for action in self.actions:
+                    action.active = "off"
 
 class CritsBaseDocument(BaseDocument):
     """
@@ -884,40 +882,38 @@ class CritsSourceDocument(BaseDocument):
                    'message': "Must leave at least one source for access controls.  "
                    "If you wish to change the source, please assign a new source and then remove the old."}
 
-        if source:
-            if date or remove_all:
-                for c, s in enumerate(self.source):
-                    if s.name == source:
-                        if remove_all:
-                            if len(self.source) > 1:
-                                del self.source[c]
-                                message = "Deleted source %s" % source
+        if not source:
+            return {'success': False,
+                    'message': 'No source to locate'}
+        if not remove_all and not date:
+            return {'success': False,
+                    'message': 'Not removing all and no date to find.'}
+        for s in self.source:
+            if s.name == source:
+                if remove_all:
+                    if len(self.source) > 1:
+                        self.source.remove(s)
+                        message = "Deleted source %s" % source
+                        return {'success': True,
+                                'message': message}
+                    else:
+                        return keepone
+                else:
+                    for si in s.instances:
+                        if si.date == date:
+                            if len(s.instances) > 1:
+                                s.instances.remove(si)
+                                message = "Deleted instance of  %s" % source
                                 return {'success': True,
                                         'message': message}
                             else:
-                                return keepone
-                        else:
-                            for i, si in enumerate(s.instances):
-                                if si.date == date:
-                                    if len(s.instances) > 1:
-                                        del self.source[c].instances[i]
-                                        message = "Deleted instance of  %s" % source
-                                        return {'success': True,
-                                                'message': message}
-                                    else:
-                                        if len(self.source) > 1:
-                                            del self.source[c]
-                                            message = "Deleted source %s" % source
-                                            return {'success': True,
-                                                    'message': message}
-                                        else:
-                                            return keepone
-            else:
-                return {'success': False,
-                        'message': 'Not removing all and no date to find.'}
-        else:
-            return {'success': False,
-                    'message': 'No source to locate'}
+                                if len(self.source) > 1:
+                                    self.source.remove(s)
+                                    message = "Deleted source %s" % source
+                                    return {'success': True,
+                                            'message': message}
+                                else:
+                                    return keepone
 
     def sanitize_sources(self, username=None, sources=None):
         """
@@ -1033,19 +1029,15 @@ class EmbeddedTickets(BaseDocument):
 
         if not date:
             return
-        found = False
-        c = 0
         for t in self.tickets:
             if t.date == date:
-                found = True
-                del self.tickets[c]
-            c += 1
-        if found:
-            et = EmbeddedTicket()
-            et.analyst = analyst
-            et.ticket_number = ticket_number
-            et.date = date
-            self.tickets.append(et)
+                self.tickets.remove(t)
+                et = EmbeddedTicket()
+                et.analyst = analyst
+                et.ticket_number = ticket_number
+                et.date = date
+                self.tickets.append(et)
+                break
 
     def delete_ticket(self, date=None):
         """
@@ -1057,11 +1049,10 @@ class EmbeddedTickets(BaseDocument):
 
         if not date:
             return
-        c = 0
         for t in self.tickets:
             if t.date == date:
-                del self.tickets[c]
-            c += 1
+                self.tickets.remove(t)
+                break
 
     def get_tickets(self):
         """
@@ -1201,9 +1192,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type campaign_date: datetime.datetime.
         """
 
-        for c, campaign in enumerate(self.campaign):
+        for campaign in self.campaign:
             if campaign.name == campaign_name or campaign.date == campaign_date:
-                del self.campaign[c]
+                self.campaign.remove(campaign)
+                break
 
     def edit_campaign(self, campaign_name=None, campaign_item=None):
         """
@@ -1415,13 +1407,14 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type value: str
         """
 
-        for c, o in enumerate(self.obj):
+        for o in self.obj:
             if (o.name == name and
-                o.object_type == object_type and
-                o.value == value):
+                    o.object_type == object_type and
+                    o.value == value):
                 from crits.objects.handlers import delete_object_file
-                del self.obj[c]
+                self.obj.remove(o)
                 delete_object_file(value)
+                break
 
     def delete_all_objects(self):
         """
@@ -1941,7 +1934,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type username: str
         """
 
-        for r in self.relationships:
+        for r in self.relationships[:]:
             if r.relationship_date:
                 self.delete_relationship(rel_id=str(r.object_id),
                                          type_=r.rel_type,
@@ -2114,11 +2107,9 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         if isinstance(instance, Releasability.ReleaseInstance):
-            rels = self.releasability
-            for c, r in enumerate(rels):
+            for r in self.releasability:
                 if r.name == name:
-                    rels[c].instances.append(instance)
-            self.releasability = rels
+                    r.instances.append(instance)
 
     def remove_releasability(self, name=None, *args, **kwargs):
         """
@@ -2129,11 +2120,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         if isinstance(name, basestring):
-            rels = self.releasability
-            for c, r in enumerate(rels):
+            for r in self.releasability:
                 if r.name == name and len(r.instances) == 0:
-                    del rels[c]
-            self.releasability = rels
+                    self.releasability.remove(r)
+                    break
 
     def remove_releasability_instance(self, name=None, date=None, *args, **kwargs):
         """
@@ -2145,15 +2135,13 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type date: datetime.datetime
         """
 
-        rels = self.releasability
-        for c, r in enumerate(rels):
+        if not isinstance(date, datetime.datetime):
+            date = parse(date, fuzzy=True)
+        for r in self.releasability:
             if r.name == name:
-                for cc, i in enumerate(r.instances):
-                    if not isinstance(date, datetime.datetime):
-                        date = parse(date, fuzzy=True)
-                    if i.date == date:
-                        del rels[c].instances[cc]
-        self.releasability = rels
+                for ri in r.instances:
+                    if ri.date == date:
+                        r.instances.remove(ri)
 
     def sanitize_relationships(self, username=None, sources=None):
         """

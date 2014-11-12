@@ -61,7 +61,10 @@ from crits.core.crits_mongoengine import CritsDocumentFormatter, UnsupportedAttr
 from crits.core.user_migrate import migrate_user
 from crits.core.role import Role
 
+
+
 logger = logging.getLogger(__name__)
+
 
 class EmbeddedSubscription(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -316,6 +319,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
+    defaultDashboard = ObjectIdField(required=False, default=None)
+    
+    
     def migrate(self):
         """
         Migrate to latest schema version.
@@ -862,6 +868,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         l.unbind()
         return resp
 
+    def getDashboards(self):
+        from crits.dashboards.handlers import getDashboardsForUser
+        return getDashboardsForUser(self)
 
     def get_sources_list(self):
         if not self._meta['cached_acl']:
@@ -1197,7 +1206,7 @@ Please contact a site administrator to resolve.
         backend = auth.get_backends()[0]
         user.backend = "%s.%s" % (backend.__module__, backend.__class__.__name__)
         return user
-
+    
 
 class CRITsRemoteUserBackend(CRITsAuthBackend):
     """

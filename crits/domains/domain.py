@@ -144,13 +144,11 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
         if not date:
             return
 
-        c = 0
         for w in self.whois:
             if w.date == date:
                 whois_entry = WhoisEntry(data).to_dict()
-                self.whois[c].data = whois_entry
-                self.whois[c].text = data
-            c += 1
+                w.data = whois_entry
+                w.text = data
 
     def delete_whois(self, date):
         """
@@ -163,11 +161,10 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
         if not date:
             return
 
-        c = 0
         for w in self.whois:
             if w.date == date:
-                del self.whois[c]
-            c += 1
+                self.whois.remove(w)
+                break
 
     def whois_diff(self, from_date, to_date):
         """
