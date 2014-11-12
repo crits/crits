@@ -314,12 +314,6 @@
         var lastSort = null;
         //used for pagination
         var currentPage = 1;
-        //used for pinning and removing tables
-        {% if maxRows %}
-            var maxRows = parseInt("{{maxRows}}");
-        {% else %}
-            var maxRows = 5;
-        {% endif %}
         var gridWidth = $('#grid').width();
         var isGridsterInitalized = false;
         function create_pivot_links(data) {
@@ -549,7 +543,6 @@
 	        {% endif %}
             if(error)
             	return false;
-            var tempMaxRows = $('#maxRows').val();
             //set up the data to be sent via ajax
             var data = {
             		newDashName: newDashName,
@@ -562,7 +555,7 @@
                     columns: JSON.stringify(w2ui['grid'].columns),
                     sortBy: JSON.stringify(currentlyShownObject.sortBy),
                     isDefaultOnDashboard: '{{isDefaultOnDashboard}}',
-                    maxRows: tempMaxRows,
+                    maxRows: $('#maxRows').val(),
                     {% if tableId %}
                             tableId: '{{tableId}}'
                     {% endif %}
@@ -589,7 +582,6 @@
                     {%if not tableId%}
                        $("#pinSearchForm")[0].reset();
                     {%endif %}
-                 maxRows = tempMaxRows;
                 },
                 error: function(data) {
                     showResultsDiv("An unexpected error occurred while saving table. Please refresh and try again.", true);
@@ -993,6 +985,7 @@
                     axes: ['x'],
                     stop: function(e, ui, $widget) {
                         w2ui['grid'].refresh();
+                        gridWidth = $('#grid').width();
                     }
                 }
             }).data('gridster');
@@ -1020,12 +1013,12 @@
 	        <div id='garbageContent'></div>
 	    </div>
 	    <div class='clear'></div>
-	    <div id='wrapper' class='{{dashtheme}}-theme draggable' style='width:{% if tableWidth %}{{tableWidth}}{% else %}100{% endif %}%;'>
+	    <div id='wrapper' class='{{dashtheme}}-theme draggable' style='width:100%;'>
 		    <div id='innerWrapper'>
 			    <div id="tabs"></div>
 			    <div id="contentWrapper">
 			        <ul class='gridster'>
-                        <li id='gridster-li' data-sizex='50' data-sizey='40' data-col='1' data-row='1'>
+                        <li id='gridster-li' data-sizex='{% if sizex %}{{sizex}}{% else %}50{% endif %}' data-sizey='40' data-col='1' data-row='1'>
 					        <div id="tab-content"  >
 					            <div id="grid"></div>
 					            <div id='pagination-wrapper' {%if isDefaultOnDashboard %}style='display:none'{% endif %}>

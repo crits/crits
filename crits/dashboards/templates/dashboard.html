@@ -7,13 +7,10 @@
 {% block javascript_includes %}
     <script>
         var buttonBarOffset = '-252px';
-        //used to display the save/undo buttons in the button bar
+        //used to display the save
         var showSaveButton = true;
-        //used by the undo button to determine if there is a previous position to
-        //return to
-        var positionsSet = true;
         //Dialog box opened when attemped to destroy dashboard
-        $('#destroy-dashboard-dialog').dialog({
+        $('#reset-dashboard-dialog').dialog({
             modal: true,
             autoOpen: false,
             buttons: {
@@ -122,19 +119,13 @@
                 right: slideVal
             }, 250);
         });
-        //action of the destory dashboard button
-        $('#destroyPositionsButton').click(function() {
+        //action of the reset dashboard button
+        $('#resetPositionsButton').click(function() {
             showResults('');
-            $('#destroy-dashboard-dialog').dialog('open');
+            $('#reset-dashboard-dialog').dialog('open');
         });
         $('#myDashboardsButton').click(function() {
         	window.location = $(this).attr('href');
-        });
-        //action of the undo button
-        $('#undoLastMove').click(function() {
-            showResults('');
-            toggleOptions(false);
-            setPositions();
         });
         //action of the save position button. Ajax call
         $('#savePositionsButton').click(function() {
@@ -159,7 +150,8 @@
                         sizex:$guardian.attr('data-sizex'),
                         sizey:$guardian.attr('data-sizey'),
                         row:$guardian.attr('data-row'),
-                        col:$guardian.attr('data-col')
+                        col:$guardian.attr('data-col'),
+                        id:$(this).attr('tableId')
                     };
                     data.push(tempDict);
             });
@@ -175,18 +167,6 @@
                 datatype: 'json',
                 success: function(data) {
                     showResults(data.message, !data.success);
-                    //resets the postions of the tables for the undo button 
-                    $('.draggable').each(function() {
-                        var tempTop = $(this).css('top');
-                        var tempLeft = $(this).css('left');
-                        $(this).attr('tempTop', tempTop);
-                        $(this).attr('tempLeft', tempLeft);
-                        $(this).attr('isResized', false);
-                    });
-                    //show the destroy dashboard button if its hidden
-                    if (!positionsSet)
-                        $('#destroyPositionsButton').removeAttr('disabled');
-                    positionsSet = true;
                     showSaveButton = true;
                 },
                 error: function(data) {
@@ -196,7 +176,7 @@
             });
         });
         //Toggles the draggable/resizeable abilities of the tables
-        $('#togglePackeryButton').click(function() {
+        $('#toggleGridsterButton').click(function() {
             showResults('');
             if($gridster.drag_api['disabled'] == true) {
             	$gridster.enable();
@@ -212,43 +192,16 @@
             $('.content ').css('background-color','white');
             $('.content ').css('box-shadow','0px 0px 0px 0px #eeeeee');
         }
-        //sets the postions of the tables to be equal to their tempTop/tempLeft
-        //values. Called on load and when the undo button is clicked
-        function setPositions() {
-            var itemElems = $('#dashboardWrapper').packery('getItemElements');
-            var unpositionedTables = [];
-            var lowestTablePos = 0;
-            if (positionsSet)
-                $( itemElems ).each( function( i, elem ) {
-                    var isDefault = ($(elem).attr('isherebydefault') == 'True');
-                    var tempLeft = $(elem).attr('tempLeft');
-                    var tempTop= $(elem).attr('tempTop');
-                    if (!tempTop)
-                        unpositionedTables.push(elem);
-                    else {
-                        $(elem).css('left', tempLeft);
-                        $(elem).css('top', tempTop);
-                        var tempLowestTablePos = parseInt(tempTop);
-                        var tableHeight = $(elem).height();
-                        if (tempLowestTablePos + tableHeight > lowestTablePos)
-                            lowestTablePos = tempLowestTablePos + tableHeight;
-                    }
-                });
-        }
-        //Logic to show the save/undo buttons
+        //Logic to show the save
         function toggleOptions(show) {
         	//if caller wants to show the options and they are not already showing
             if(show && showSaveButton) {
                 $('#savePositionsButton').removeAttr('disabled');
-                if (positionsSet)
-                    $('#undoLastMove').removeAttr('disabled');
                 showSaveButton = false;
             }
         	//if the caller wants to hide the options and they are not already hidden
             else if (!show && !showSaveButton) {
                 $('#savePositionsButton').attr('disabled', 'true');
-                if (positionsSet)
-                    $('#undoLastMove').attr('disabled', 'true');
                 showSaveButton = true;
             }
         }
@@ -394,12 +347,7 @@
 	                w2ui['{{table.id}}'].sort('{{table.sortBy.field}}', '{{table.sortBy.direction}}');
 	            {% endif %}
             {% endfor %}
-            positionsSet = ($('.draggable[tempTop]').length > 0);
-            //if no positions have ever been set, disable the destory dashboard button
-            if (!positionsSet)
-                $('#destroyPositionsButton').attr('disabled', true);
             $('#savePositionsButton').attr('disabled', 'true');
-            $('#undoLastMove').attr('disabled', 'true');
             //open dialog on load if the parent of the dashboard has been changed
             {% if parentHasChanged %}
                 $('#parent-has-changed-dialog').dialog('open');
@@ -429,7 +377,6 @@
                 }
             }).data('gridster');
         	$gridster.disable();
-        	//refresh all the grids in case they have imaged
             $('.w2ui-grid').each(function() {
             	w2ui[$(this).attr('name')].refresh();
             });
@@ -463,72 +410,70 @@
 {% endblock %}
 {% block content %}
     <div class='{{dashTheme}}-theme'>
-	    <div style='position:relative;height:36px;overflow-x:hidden'>
-	        <div class='floatleft'>
-	            <select id='dashId'>
-	                {% for dash in dashboards %}
-	                    <option {% if dash|is_object_id_equal:currentDash %}selected{% endif %} value='{% url "crits.dashboards.views.dashboard" dash.id %}'>
-	                        {{dash.name}}{% if dash.isPublic %} (Public){% elif dash.parent %} (Modified){% endif %}
-	                    </option>
+        <div style='position:relative;height:36px;overflow-x:hidden'>
+            <div class='floatleft'>
+                <select id='dashId'>
+                    {% for dash in dashboards %}
+                        <option {% if dash|is_object_id_equal:currentDash %}selected{% endif %} value='{% url "crits.dashboards.views.dashboard" dash.id %}'>
+                            {{dash.name}}{% if dash.isPublic %} (Public){% elif dash.parent %} (Modified){% endif %}
+                        </option>
                     {% endfor %}	                   
-	            </select>
-	        </div>
-	        <div id='buttonBar' style='position:absolute;right:-250px;'>
-	            <div style='float:left;margin-top:6px;'>
-	                <i id='toggleButtonBar' class='fa fa-chevron-left fa-2x'></i>
-	            </div>
-	            <div style='float:right;border:1px solid black;background-color:rgba(155,155,155,.1);'>
-		            <button style='margin:5px;' id='togglePackeryButton' title='Toggle Edit Mode'>
-		               <i class='fa fa-arrows'></i>
-		            </button>
-		            <button style='margin:5px;' id='undoLastMove' title='Undo' disabled>
-		               <i class='fa fa-undo'></i>
-		            </button>
-		            <button style='margin:5px;' id='savePositionsButton' title='Save' disabled>
-		                <i class='fa fa-check'></i>
-		            </button>
-		            <button style='margin:5px;' id='destroyPositionsButton' title='Reset'>
-		                <i class='fa fa-trash-o'></i>
-		            </button>
-		            <div class='divider'>
-			            <button href='{% url "crits.dashboards.views.saved_searches_list" %}' style='margin:5px;' id='myDashboardsButton' title='Config'>
-	                        <i class="fa fa-list"></i>
-	                    </button>
-	                </div>
-		        </div>
-	        </div>
-	    </div>
-	    <div class='center' style='height:15px;' id='resultsDiv'></div>
-	    <div style='height:100%;width:100%;' id='dashboardWrapper'>
-		       <ul class='gridster'>
-		       {% for table in tables %}
-		          <li name='{{table.title}}' data-sizex='{{table.sizex}}' data-sizey='{{table.sizey}}' data-row='{{table.row}}' data-col='{{table.col}}'>
-		           <div {{table.attrs|safe}}  class='draggable' isHereByDefault='{{table.isHereByDefault}}' tableId='{{table.id}}'>
-		               <div id='{{table.id}}'></div>
-		           </div>
-		           </li>
-		       {% endfor %}
-		       </ul>
-	    </div>
-	    <div class='center' id='destroy-dashboard-dialog' style='display:none;'  title='Destroy Dashboard'>
-	        Are you sure you want to reset your dashboard? Your tables will
-	        not be removed but all their positions and sizes will be reset.
-	    </div>
-	    
-	    {% if parentHasChanged %}
-	        <div class='center' id='parent-has-changed-dialog' style='display:none;'  title='Update Dashboard'>
-	            {% if parent %}
-	                The original version of this dashboard has been changed. Would you like to update yours to
-	                display these changes? Please note if you update, all of your changes will be overwritten.
-	            {% else %}
-	                Please note the original version of this dashboard has either been deleted or made private
-	                and you will no longer receive updates about it. 
-	            {% endif %}
-	            <div></div>
-	            <label for='do-not-show-again'>Do not show again</label>
-	            <input type="checkbox" id='do-not-show-again' name='do-not-show-again'/>
-	        </div>
-	    {% endif %}
-	    
-	</div>
+                </select>
+            </div>
+            <div id='buttonBar' style='position:absolute;right:-250px;'>
+                <div style='float:left;margin-top:6px;'>
+                    <i id='toggleButtonBar' class='fa fa-chevron-left fa-2x'></i>
+                </div>
+                <div style='float:right;border:1px solid black;background-color:rgba(155,155,155,.1);'>
+                    <button style='margin:5px;' id='toggleGridsterButton' title='Toggle Edit Mode'>
+                       <i class='fa fa-arrows'></i>
+                    </button>
+                    <button style='margin:5px;' id='savePositionsButton' title='Save' disabled>
+                        <i class='fa fa-check'></i>
+                    </button>
+                    <button style='margin:5px;' id='addSearchButton' title='Add Search'>
+                        <i class='fa fa-search-plus'></i>
+                    </button>
+                    <button style='margin:5px;' id='resetPositionsButton' title='Reset'>
+                        <i class='fa fa-trash-o'></i>
+                    </button>
+                    <div class='divider'>
+                        <button href='{% url "crits.dashboards.views.saved_searches_list" %}' style='margin:5px;' id='myDashboardsButton' title='Config'>
+                            <i class="fa fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class='center' style='height:15px;' id='resultsDiv'></div>
+        <div style='height:100%;width:100%;' id='dashboardWrapper'>
+            <ul class='gridster'>
+                {% for table in tables %}
+                    <li name='{{table.title}}' data-sizex='{{table.sizex}}' data-sizey='{{table.sizey}}' data-row='{{table.row}}' data-col='{{table.col}}'>
+                        <div {{table.attrs|safe}}  class='draggable' isHereByDefault='{{table.isHereByDefault}}' tableId='{{table.id}}'>
+                            <div id='{{table.id}}'></div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class='center' id='reset-dashboard-dialog' style='display:none;'  title='Destroy Dashboard'>
+            Are you sure you want to reset your dashboard? Your tables will
+            not be removed but all their positions and sizes will be reset.
+        </div>
+        {% if parentHasChanged %}
+            <div class='center' id='parent-has-changed-dialog' style='display:none;'  title='Update Dashboard'>
+                {% if parent %}
+                    The original version of this dashboard has been changed. Would you like to update yours to
+                    display these changes? Please note if you update, all of your changes will be overwritten.
+                {% else %}
+                    Please note the original version of this dashboard has either been deleted or made private
+                    and you will no longer receive updates about it.
+                {% endif %}
+                <div></div>
+                <label for='do-not-show-again'>Do not show again</label>
+                <input type="checkbox" id='do-not-show-again' name='do-not-show-again'/>
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}

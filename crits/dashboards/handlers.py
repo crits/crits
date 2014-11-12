@@ -118,18 +118,6 @@ def constructSavedTable(table, records):
     Creates all the needed parameters to be passed into constructTable.
     Called by createTableObject.
     """
-    attrs = {}
-    if table.left > -1:
-        attrs['tempLeft'] = str(table.left)+"%"
-    if table.top > -1:
-        attrs['tempTop'] = str(table.top)+"px"
-    css = {}
-    if table.width:
-        css['width'] = str(table.width)+"%"
-    elif table.isDefaultOnDashboard:
-        css = getCssForDefaultDashboardTable(table.name)
-    else:
-        css['width'] = "100%"
     columns = []
     colNames = []
     for column in table.tableColumns:
@@ -141,9 +129,9 @@ def constructSavedTable(table, records):
                 colNames.append(v)
             col[str(k)] = str(v)
         columns.append(col)
-    return constructTable(table, records, columns, colNames, css, attrs)
+    return constructTable(table, records, columns, colNames)
 
-def constructTable(table, records, columns, colNames, css, attrs):
+def constructTable(table, records, columns, colNames):
     """
     Creates and returns the dict object representing the table. This is the
     final method called in the creation of a table and is used for both
@@ -154,9 +142,7 @@ def constructTable(table, records, columns, colNames, css, attrs):
         "records": records,
         "columns": columns,
         "colNames": colNames,
-        "css": constructCssString(css),
         "id" : table.id,
-        "attrs": constructAttrsString(attrs),
         "searchTerm":table.searchTerm,
         "sortBy":table.sortBy,
         "maxRows":table.maxRows,
@@ -269,8 +255,6 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
     """
     Saves the customized table in the dashboard. Called by save_search and
     save_new_dashboard via ajax in views.py.
-    width - css style used on dashboard
-    tableWidth - width of table on edit page in order to calculate percentage width of columns
     """
     try:
         if searchTerm:
@@ -294,12 +278,8 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
         newSavedSearch.tableColumns = cols
         newSavedSearch.name = tableName
         oldDashId = None
-        if dashboard:
-            if newSavedSearch.dashboard != dashboard.id:
-                print "fix thisd logic"
-                newSavedSearch.left = -1
-                newSavedSearch.top = -1
-                newSavedSearch.dashboard= dashboard.id
+        if dashboard and newSavedSearch.dashboard != dashboard.id:
+            newSavedSearch.dashboard= dashboard.id
         #if it is not a deault dashboard table, it must have a searchterm and objtype
         if searchTerm:
             newSavedSearch.searchTerm = searchTerm
@@ -328,10 +308,6 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
         elif not newSavedSearch.col:
             newSavedSearch.col = 1
         if maxRows:
-            #if the table is growing in height, reset it's position so it doesnt
-            #overlap with other tables
-            if int(maxRows) > newSavedSearch.maxRows:
-                newSavedSearch.top=-1
             newSavedSearch.maxRows = maxRows;
         newSavedSearch.save()
         #if the old dashboard is empty, delete it
@@ -346,10 +322,10 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
 
 def clear_dashboard(dashId):
     """
-    Clears all the set positions and widths of the tables on the dashboard
+    Clears all the set positions and sizez of the tables on the dashboard
     """
     try:
-        SavedSearch.objects(dashboard=dashId).update(unset__left=1,unset__top=1,unset__width=1)
+        SavedSearch.objects(dashboard=dashId).update(unset__col=1,unset__row=1,unset__sizex=1)
     except:
         return {'success': False, 
                 'message': "An unexpected error occurred while resetting dash. Please refresh and try again"}
@@ -362,13 +338,10 @@ def delete_table(id, tableHeight=0):
     """
     try:
         savedSearch = SavedSearch.objects(id=id).first()
-        #if savedSearch.top > -1 and (not savedSearch.width or savedSearch.width>=97):
-        #    SavedSearch.objects(dashboard=savedSearch.dashId,top__gt=savedSearch.top).update(dec__top=tableHeight)
         tableName = savedSearch.name
         if savedSearch.isDefaultOnDashboard:
-            savedSearch.left = -1
-            savedSearch.top = -1
-            savedSearch.width = 0
+            savedSearch.col = 1
+            savedSearch.row = 1
             savedSearch.isPinned = False
             savedSearch.save()
         else:
@@ -508,17 +481,10 @@ def generate_search_for_saved_table(user, id=None,request=None):
                 'tableName': savedSearch.name,
                 'columns': savedSearch.tableColumns,
                 'sortBy': savedSearch.sortBy,
-                'setWidth' : savedSearch.width,
+                'sizex' : savedSearch.sizex,
                 'maxRows': savedSearch.maxRows,
                 'isDefaultOnDashboard': savedSearch.isDefaultOnDashboard,
                 })
-        if savedSearch.width:
-            args['tableWidth'] = savedSearch.width
-        elif savedSearch.isDefaultOnDashboard:
-            if savedSearch.name == "Counts" or savedSearch.name == "Top Backdoors":
-                args['tableWidth'] = "20%"
-            elif savedSearch.name == "Top Campaigns":
-                args['tableWidth'] = "50%"
         if savedSearch.dashboard:
             args["currentDash"] = str(savedSearch.dashboard)
             args["dashtheme"] = Dashboard.objects(id=savedSearch.dashboard).first().theme
@@ -536,10 +502,7 @@ def toggleTableVisibility(id, isVisible):
     if isVisible:
         message += "visible"
     else:
-        table.left = -1
-        table.top = -1
         message += "hidden"
-        
     table.isPinned = isVisible
     table.save()
     return {'success': True,'message': message}

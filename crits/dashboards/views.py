@@ -168,9 +168,6 @@ def save_new_dashboard(request):
         elif dashboard.isPublic:
             updateChildren(dashboard.id)
     for table in data:
-        tableId = ""
-        if "id" in table:
-            tableId = table['id']
         isDefault = False
         if table['isDefault'] == "True":
             isDefault = True
@@ -178,7 +175,7 @@ def save_new_dashboard(request):
         if 'sortDirection' in table and 'sortField' in table:
             sortBy = {'field':table['sortField'],'direction':table['sortDirection']}
         response = save_data(userId, table['columns'], table['tableName'],
-                             tableId=tableId, isDefaultOnDashboard=isDefault, 
+                             tableId=table['id'], isDefaultOnDashboard=isDefault, 
                              sortBy=sortBy, dashboard=dashboard,
                              clone=clone, row=table['row'], grid_col=table['col'], 
                              sizex=table['sizex'], sizey=table['sizey'])
