@@ -332,6 +332,8 @@ def clear_dashboard(dashId):
                     search.sizex = 10
                 elif title == "Top Campaigns":
                     search.sizex = 25
+                else:
+                    search.sizex = 50
                 if title == "Counts":
                     search.sizey = 13
                 if title == "Recent Indicators":
