@@ -342,10 +342,14 @@ def clear_dashboard(dashId):
                     search.row = 23
                 elif title == "Recent Samples":
                     search.row = 31
+                else: 
+                    search.row = 1
                 if title == "Top Backdoors":
                     search.col = 10
                 elif title == "Top Campaigns":
                     search.col = 20
+                else:
+                    search.col = 1
                 search.save()
             else:
                 search.update(unset__col=1,unset__row=1,unset__sizex=1)
