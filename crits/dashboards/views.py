@@ -315,6 +315,10 @@ def create_blank_dashboard(request):
         respondWithError("You already have a dashboard with that name.", True)
     return respondWithSuccess(name + " created successfully.")
 
+@user_passes_test(user_can_view_data)
+def add_search(request):
+    return respondWithSuccess("You did it!")
+
 def respondWithError(message, isAjax=False, request=None):
     """
     responds with the errorMessage. If not isAjax, redirects to error.html

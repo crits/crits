@@ -111,13 +111,30 @@
         });
         //jquery animation to slide button bar on/off screen
         $('#toggleButtonBar').click(function() {
-            showResults('');
+        	var delay = 0;
+        	if($('#other-searches-dropdown').is(':visible')) 
+        		delay = 200;
+        	window.setTimeout(function() {
+        		slideButtonBar()
+       		}, delay);
+        });
+        function slideButtonBar() {
+        	showResults('');
             var slideVal = buttonBarOffset;
             if ($('#buttonBar').css('right') == slideVal)
                 slideVal = '0px';
             $('#buttonBar').animate({
                 right: slideVal
             }, 250);
+        }
+        $('#addSearchButton').click(function() {
+            $('#other-searches-dropdown').slideToggle('fast');
+        });
+        $(document).click(function(e) {
+            if($(e.target).hasClass('dont-toggle'))
+                return true;
+            if($('#other-searches-dropdown').is(':visible')) 
+                $('#other-searches-dropdown').slideToggle('fast');
         });
         //action of the reset dashboard button
         $('#resetPositionsButton').click(function() {
@@ -454,22 +471,22 @@
                 <div style='float:left;margin-top:6px;'>
                     <i id='toggleButtonBar' class='fa fa-chevron-left fa-2x'></i>
                 </div>
-                <div style='float:right;border:1px solid black;background-color:rgba(155,155,155,.1);'>
-                    <button style='margin:5px;' id='toggleGridsterButton' title='Toggle Edit Mode'>
-                       <i class='fa fa-arrows'></i>
+                <div style='float:right;border:1px solid #adadad;background-color:#efefef;'>
+                    <button class='edit-button dont-toggle' id='toggleGridsterButton' title='Toggle Edit Mode'>
+                       <i class='fa fa-arrows dont-toggle'></i>
                     </button>
-                    <button style='margin:5px;' id='savePositionsButton' title='Save' disabled>
-                        <i class='fa fa-check'></i>
+                    <button class='edit-button dont-toggle' id='savePositionsButton' title='Save' disabled>
+                        <i class='fa fa-check dont-toggle'></i>
                     </button>
-                    <button style='margin:5px;' id='addSearchButton' title='Add Search' disabled>
-                        <i class='fa fa-search-plus'></i>
+                    <button class='edit-button dont-toggle' id='addSearchButton' title='Add Search'>
+                        <i class='fa fa-search-plus dont-toggle'></i>
                     </button>
-                    <button style='margin:5px;' id='resetPositionsButton' title='Reset'>
-                        <i class='fa fa-trash-o'></i>
+                    <button class='edit-button dont-toggle' id='resetPositionsButton' title='Reset'>
+                        <i class='fa fa-trash-o dont-toggle'></i>
                     </button>
                     <div class='divider'>
-                        <button href='{% url "crits.dashboards.views.saved_searches_list" %}' style='margin:5px;' id='myDashboardsButton' title='Config'>
-                            <i class="fa fa-list"></i>
+                        <button class='edit-button dont-toggle' href='{% url "crits.dashboards.views.saved_searches_list" %}' id='myDashboardsButton' title='Config'>
+                            <i class="fa fa-list dont-toggle"></i>
                         </button>
                     </div>
                 </div>
@@ -506,4 +523,11 @@
             </div>
         {% endif %}
     </div>
+    <div id='other-searches-dropdown'>
+          {% for search in otherSearches %}
+              <div class='other-search' search-id='{{search.id}}' title='{{search.name}} ({{search.dash}})'>{{search.name}} ({{search.dash}})</div>
+          {% empty %}
+              <div class='other-search'>its empty</div>
+          {% endfor %}
+      </div>
 {% endblock %}

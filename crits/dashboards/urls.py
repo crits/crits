@@ -22,4 +22,5 @@ urlpatterns = patterns('crits.dashboards.views',
     (r'^rename_dashboard/$', 'rename_dashboard'),
     (r'^change_theme/$', 'change_theme'),
     (r'^create_blank_dashboard/$', 'create_blank_dashboard'),
+    (r'^add_search/$', 'add_search'),
 )

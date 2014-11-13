@@ -52,13 +52,25 @@ def get_dashboard(user,dashId=None):
     savedTables = SavedSearch.objects(dashboard=dashId, isPinned=True)
     for table in savedTables:
         tables.append(createTableObject(user, table=table))
+        
+    otherSearches = []
+    for dash in Dashboard.objects(id__ne=dashId, analystId=user.id):
+        for search in SavedSearch.objects(dashboard=dash.id):
+            print "test"
+            otherSearches.append({
+                            "id":search.id,
+                            "dash":dash.name,
+                            "name":search.name
+                            })
+        
     return {"success": True,
             "tables": tables,
             "dashboards": getDashboardsForUser(user),
             "currentDash": str(dashId),
             'parentHasChanged':dashboard.hasParentChanged,
             'parent':dashboard.parent,
-            'dashTheme':dashboard.theme}
+            'dashTheme':dashboard.theme,
+            "otherSearches":otherSearches}
     
 def createTableObject(user, title="", dashboard=None, table=None):
     """
