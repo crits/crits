@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from optparse import make_option
+from crits.dashboards.models import SavedSearch
 
 class Command(BaseCommand):
     """
@@ -14,12 +15,43 @@ class Command(BaseCommand):
         migrate_all_searches()
         
 def migrate_all_searches():
-    from crits.dashboards.models import SavedSearch
     multiplier = 2
     for search in SavedSearch.objects():
         if "left" in search and search.left > 0:
-            search.col = search.left/2
+            search.col = search.left/multiplier
+        elif search.isDefaultOnDashboard:
+             convert_default_searches(search, "left")
         if "width" in search:
-            search.sizex = search.width/2
+            search.sizex = search.width/multiplier
+        elif search.isDefaultOnDashboard:
+             convert_default_searches(search, "width")
+        if search.isDefaultOnDashboard:
+            convert_default_searches(search, "top")
         search.save()
         search.update(unset__left=1, unset__top=1, unset__width=1)
+        
+def convert_default_searches(search, field):
+    title = search.name
+    if field == "width":
+        if title == "Counts" or title == "Top Backdoors":
+            search.sizex = 10
+        elif title == "Top Campaigns":
+            search.sizex = 25
+    elif field == "left":
+        if title == "Top Backdoors":
+            search.col = 10
+        elif title == "Top Campaigns":
+            search.col = 20
+        else:
+            search.col = 1
+    elif field == "top":
+        if title == "Counts" or title == "Top Backdoors" or title == "Top Campaigns":
+            search.row = 1
+        elif title == "Recent Indicators":
+            search.row = 15
+        elif title == "Recent Emails":
+            search.row = 23
+        else:
+            search.row = 31
+         
+    
