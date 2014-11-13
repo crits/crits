@@ -846,15 +846,15 @@
                     };
                 },
                 onRefresh: function() {
-                	if (w2ui['grid']) {
-	                	var cols = w2ui['grid'].columns;
-	                	for(var i in cols) {
-	                		var value = true;
-	                		if (i == cols.length-1)
-	                			value = false;
-	                		cols[i].resizable = value;
-	                	}
-                	}
+                    if (w2ui['grid']) {
+                        var cols = w2ui['grid'].columns;
+                        for(var i in cols) {
+                            var value = true;
+                            if (i == cols.length-1)
+                                value = false;
+                            cols[i].resizable = value;
+                        }
+                    }
                 }
             });
             $('#innerWrapper').resizable({
