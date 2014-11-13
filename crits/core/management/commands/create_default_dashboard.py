@@ -48,28 +48,18 @@ def create_dashboard(drop=False):
                 savedSearch.sizex = 10
             elif title == "Top Campaigns":
                 savedSearch.sizex = 25
-            else:
-                savedSearch.sizex = 50
             if title == "Counts":
                 savedSearch.sizey = 13
-            else:
-                savedSearch.sizey = 8
-                
-            if title == "Counts" or title == "Top Backdoors" or title == "Top Campaigns":
-                savedSearch.row = 1
-            elif title == "Recent Indicators":
+            if title == "Recent Indicators":
                 savedSearch.row = 15
             elif title == "Recent Emails":
                 savedSearch.row = 23
-            else:
+            elif title == "Recent Samples":
                 savedSearch.row = 31
-                
             if title == "Top Backdoors":
                 savedSearch.col = 10
             elif title == "Top Campaigns":
                 savedSearch.col = 20
-            else:
-                savedSearch.col = 1
                 
             savedSearch.save()
         print "Default Dashboard Created."

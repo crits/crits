@@ -42,16 +42,14 @@ def convert_default_searches(search, field):
             search.col = 10
         elif title == "Top Campaigns":
             search.col = 20
-        else:
-            search.col = 1
     elif field == "top":
-        if title == "Counts" or title == "Top Backdoors" or title == "Top Campaigns":
-            search.row = 1
-        elif title == "Recent Indicators":
+        if title == "Recent Indicators":
             search.row = 15
         elif title == "Recent Emails":
             search.row = 23
-        else:
+        elif title == "Recent Samples":
             search.row = 31
+        if title == "Counts":
+            search.sizey == 13
          
     

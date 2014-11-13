@@ -325,8 +325,30 @@ def clear_dashboard(dashId):
     Clears all the set positions and sizez of the tables on the dashboard
     """
     try:
-        SavedSearch.objects(dashboard=dashId).update(unset__col=1,unset__row=1,unset__sizex=1)
-    except:
+        for search in SavedSearch.objects(dashboard=dashId):
+            if search.isDefaultOnDashboard:
+                title = search.name
+                if title == "Counts" or title == "Top Backdoors":
+                    search.sizex = 10
+                elif title == "Top Campaigns":
+                    search.sizex = 25
+                if title == "Counts":
+                    search.sizey = 13
+                if title == "Recent Indicators":
+                    search.row = 15
+                elif title == "Recent Emails":
+                    search.row = 23
+                elif title == "Recent Samples":
+                    search.row = 31
+                if title == "Top Backdoors":
+                    search.col = 10
+                elif title == "Top Campaigns":
+                    search.col = 20
+                search.save()
+            else:
+                search.update(unset__col=1,unset__row=1,unset__sizex=1)
+    except Exception as e:
+        print e
         return {'success': False, 
                 'message': "An unexpected error occurred while resetting dash. Please refresh and try again"}
     return {'success': True, 
