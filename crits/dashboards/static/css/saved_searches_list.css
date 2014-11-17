@@ -73,3 +73,31 @@
 .hidden {
 	display:none;
 }
+.cloned-search-row {
+	width:98%;
+	background-color:white;
+}
+.clone-field {
+	float:left;
+	display: inline-block;
+	border:1px solid #d6d5d7;
+	height:25px;
+	line-height: 100%;
+	box-sizing: border-box;
+	border-spacing: 0;
+    border-collapse: collapse;
+    padding: 5px;
+    vertical-align:middle;
+}
+.clone-name {
+    width:30%;
+}
+.clone-term {
+    width:25%;
+}
+.clone-sort, .clone-mRows, .clone-edit {
+    width:10%;
+}
+.clone-type {
+	width:15%;
+}
