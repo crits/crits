@@ -383,6 +383,11 @@
             var gridster_basey = $gridster.options.widget_base_dimensions[1];
             var gridster_baseMarginy = $gridster.options.widget_margins[1];
             correctGridsterSizeY(gridster_basey, gridster_baseMarginy);
+            //this fixed bug in chrome that causes the tables to appear whited out on load
+            window.setTimeout(function() {
+                $('#toggleGridsterButton').click();
+                $('#toggleGridsterButton').click();
+            }, 10);
         });
         //on change of the dashboards dropdown, change page
         $('#dashId').change(function() {
