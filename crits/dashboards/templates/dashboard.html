@@ -170,7 +170,7 @@
                                         '<div id="'+id+'"></div></div></li>', search.sizex, search.sizey, search.col, search.row );
                             constructW2ui(title, editUrl, isDefault, isAdvanced, searchTerm,
                                     records, columns, id, sortField, sortDirection);
-                            correctGridsterSizeY();
+                            resizeGridster();
                         }
                     },
                     error: function(data) {
@@ -179,6 +179,8 @@
                     }
                 });
                 $(this).remove();
+                if($('.other-search').length == 0)
+                    $('#other-searches-dropdown').append('<div class="other-search">All of your searches are shown</div>');
             }
         });
         $(document).click(function(e) {
@@ -471,6 +473,16 @@
             }, 10);
         });
         $(window).resize(function() {
+            resizeGridster()
+        });
+        var delay = (function(){
+            var timer = 0;
+            return function(callback, ms){
+                clearTimeout (timer);
+                timer = setTimeout(callback, ms);
+            };
+        })();
+        function resizeGridster() {
             delay(function(){
                 dashWidth = $('#dashboardWrapper').width()*.99;
                 dashHeight = $('#dashboardWrapper').height();
@@ -485,14 +497,7 @@
                     correctGridsterSizeY();
                 }, 250);
             }, 500);
-        });
-        var delay = (function(){
-            var timer = 0;
-            return function(callback, ms){
-                clearTimeout (timer);
-                timer = setTimeout(callback, ms);
-            };
-        })();
+        }
         //on change of the dashboards dropdown, change page
         $('#dashId').change(function() {
             if($(this).val().indexOf('{{currentDash}}') <= 0)
@@ -591,7 +596,7 @@
           {% for search in otherSearches %}
               <div class='other-search' search-id='{{search.id}}' title='{{search.name}} ({{search.dash}})'>{{search.name}} ({{search.dash}})</div>
           {% empty %}
-              <div class='other-search'>its empty</div>
+              <div class='other-search'>All of your searches are shown</div>
           {% endfor %}
       </div>
 {% endblock %}
