@@ -394,16 +394,18 @@ ul.gridster {
 	z-index:11;
 }
 #other-searches-dropdown {
+	max-height:400px;
+	overflow-y:auto;
 	right:10px;
-	top:43px;
+	top:48px;
 	border:1px solid #adadad;
 	border-top:none;
 	display:none;
 	z-index:11;
 	position:absolute;
 	border-radius:0 0 5px 5px;
-	width:210px;
-	background-color: #EFEFEF;
+	width:250px;
+	background-color: #EEE;
 }
 #other-searches-dropdown .other-search {
     padding:5px;
@@ -414,11 +416,23 @@ ul.gridster {
 }
 #other-searches-dropdown .other-search:hover {
     border-radius:5px;
-    background: -webkit-linear-gradient(#ddd, #efefef, #ddd); /* For Safari 5.1 to 6.0 */
-    background: -o-linear-gradient(#ddd, #efefef, #ddd); /* For Opera 11.1 to 12.0 */
-    background: -moz-linear-gradient(#ddd, #efefef, #ddd); /* For Firefox 3.6 to 15 */
-    background: linear-gradient(#ddd, #efefef, #ddd); /* Standard syntax (must be last) */
+    background: -webkit-linear-gradient(#ddd, #dedede, #ddd); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#ddd, #dedede, #ddd); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#ddd, #dedede, #ddd); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#ddd, #dedede, #ddd); /* Standard syntax (must be last) */
+    -webkit-box-shadow:    1px 1px 1px 1px #adadad;
+    -moz-box-shadow: 1px 1px 1px 1px #adadad;
+    box-shadow:    1px 1px 1px 1px #adadad;
 }
 .edit-button {
 	margin:5px;
+}
+.shadowed {
+    -webkit-box-shadow: 2px 3px 5px 1px #adadad;;
+    -moz-box-shadow: 2px 3px 5px 1px #adadad;;
+    box-shadow: 2px 3px 5px 1px #adadad;
+    z-index:12;
+}
+#buttonBar i, #buttonBar button{
+	cursor:pointer;
 }

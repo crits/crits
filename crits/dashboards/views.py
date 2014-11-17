@@ -8,7 +8,7 @@ from crits.core.views import dashboard
 from django.http import HttpResponse
 from crits.dashboards.dashboard import SavedSearch, Dashboard
 from crits.dashboards.handlers import toggleTableVisibility,get_saved_searches_list,get_dashboard, getHREFLink, get_obj_type_from_string, clear_dashboard, save_data, get_table_data, generate_search_for_saved_table, delete_table, getRecordsForDefaultDashboardTable
-from crits.dashboards.handlers import renameDashboard,changeTheme, deleteDashboard,getDashboardsForUser,createNewDashboard, setDefaultDashboard, cloneDashboard, setPublic, updateChildren
+from crits.dashboards.handlers import add_existing_search_to_dashboard, renameDashboard,changeTheme, deleteDashboard,getDashboardsForUser,createNewDashboard, setDefaultDashboard, cloneDashboard, setPublic, updateChildren
 import json
 import re
 from django.core.urlresolvers import reverse
@@ -66,7 +66,7 @@ def delete_save_search(request):
     if not id:
         return respondWithError("Saved search cannot be found."\
                                 " Please refresh and try again", True)
-    response = delete_table(id)
+    response = delete_table(request.user.id, id)
     
     return httpResponse(response)
 
@@ -125,7 +125,7 @@ def save_search(request):
     isDefault = request.GET.get("isDefaultOnDashboard", "False")
     sizex = request.GET.get("sizex", None)
     maxRows = request.GET.get("maxRows", None)
-    if isDefault == "True" or isDefault =="true":
+    if isDefault.lower() == "true":
         isDefault = True
     else:
         isDefault = False
@@ -169,7 +169,7 @@ def save_new_dashboard(request):
             updateChildren(dashboard.id)
     for table in data:
         isDefault = False
-        if table['isDefault'] == "True":
+        if table['isDefault'].lower() == "true":
             isDefault = True
         sortBy = None
         if 'sortDirection' in table and 'sortField' in table:
@@ -317,7 +317,11 @@ def create_blank_dashboard(request):
 
 @user_passes_test(user_can_view_data)
 def add_search(request):
-    return respondWithSuccess("You did it!")
+    id = request.GET.get('id', None)
+    dashboard = request.GET.get('dashboard', None)
+    if not id or not dashboard:
+        return respondWithError('An error occurred while adding search. Please refresh and try again', True)
+    return httpResponse(add_existing_search_to_dashboard(id, dashboard, request.user))
 
 def respondWithError(message, isAjax=False, request=None):
     """

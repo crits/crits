@@ -52,17 +52,18 @@ def get_dashboard(user,dashId=None):
     savedTables = SavedSearch.objects(dashboard=dashId, isPinned=True)
     for table in savedTables:
         tables.append(createTableObject(user, table=table))
-        
-    otherSearches = []
+    otherDashboardIds = []
+    otherDashboards = {}
     for dash in Dashboard.objects(id__ne=dashId, analystId=user.id):
-        for search in SavedSearch.objects(dashboard=dash.id):
-            print "test"
-            otherSearches.append({
-                            "id":search.id,
-                            "dash":dash.name,
-                            "name":search.name
-                            })
-        
+        otherDashboardIds.append(dash.id)
+        otherDashboards[dash.id] = dash.name
+    otherSearches = []
+    for search in SavedSearch.objects(dashboard__in=otherDashboardIds) :
+        otherSearches.append({
+                        "id":search.id,
+                        "dash":otherDashboards[search.dashboard],
+                        "name":search.name
+                        })
     return {"success": True,
             "tables": tables,
             "dashboards": getDashboardsForUser(user),
@@ -70,9 +71,10 @@ def get_dashboard(user,dashId=None):
             'parentHasChanged':dashboard.hasParentChanged,
             'parent':dashboard.parent,
             'dashTheme':dashboard.theme,
-            "otherSearches":otherSearches}
+            "otherSearches":otherSearches,
+            "userId": dashboard.analystId}
     
-def createTableObject(user, title="", dashboard=None, table=None):
+def createTableObject(user, title="", table=None):
     """
     Parent method in creating the table object, called by get_dashboard 
     for each table
@@ -154,7 +156,7 @@ def constructTable(table, records, columns, colNames):
         "records": records,
         "columns": columns,
         "colNames": colNames,
-        "id" : table.id,
+        "id" : str(table.id),
         "searchTerm":table.searchTerm,
         "sortBy":table.sortBy,
         "maxRows":table.maxRows,
@@ -392,27 +394,35 @@ def clear_dashboard(dashId):
     return {'success': True, 
             'message': "Dashboard Reset"}
 
-def delete_table(id, tableHeight=0):
+def delete_table(userId, id):
     """
     Deletes a table from the db. Only can be called via the saved_search.html
     """
     try:
         savedSearch = SavedSearch.objects(id=id).first()
         tableName = savedSearch.name
+        doDelete = True
+        message = tableName+" deleted successfully!"
         if savedSearch.isDefaultOnDashboard:
-            savedSearch.col = 1
-            savedSearch.row = 1
-            savedSearch.isPinned = False
-            savedSearch.save()
-        else:
+            dashboards = []
+            for dash in Dashboard.objects(analystId=userId):
+                dashboards.append(dash.id)
+            if SavedSearch.objects(dashboard__in=dashboards, isDefaultOnDashboard=True, name=tableName).count() == 1:
+                savedSearch.col = 1
+                savedSearch.row = 1
+                savedSearch.isPinned = False
+                savedSearch.save()
+                doDelete = False
+                message = tableName+" is now hidden."
+        if doDelete:
             dashId = savedSearch.dashboard
             savedSearch.delete()
             deleteDashboardIfEmpty(dashId)
     except Exception as e:
         print e
         return {'success': False,
-                'message': "Saved search cannot be found. Please refresh and try again."}
-    return {'success': True,'message': tableName+" deleted successfully!"}
+                'message': "Search could not be found. Please refresh and try again."}
+    return {'success': True,'message': message, 'wasDeleted': doDelete}
 
 def get_table_data(request=None,obj=None,user=None,searchTerm="",
                    search_type=None, includes=[], excludes=[], maxRows=25, 
@@ -744,4 +754,13 @@ def changeTheme(id, theme):
         return False
     return "Dashboard updated successfully."
     
-    
+def add_existing_search_to_dashboard(id, dashboard, user):
+    search = SavedSearch.objects(id = id).first()
+    if not search:
+        return {"success":False,
+                "message":"Could not find search. Please refresh and try again."}
+    else:
+        search = cloneSavedSearch(search, dashboard)
+        return {"success":True,
+                "message": search.name+" has been added to your dashboard.",
+                "newSearch": createTableObject(user, table=search)}

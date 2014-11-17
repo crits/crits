@@ -6,7 +6,7 @@
 
 {% block javascript_includes %}
     <script>
-        var buttonBarOffset = '-252px';
+        var buttonBarOffset = '-254px';
         //used to display the save
         var showSaveButton = true;
         //Dialog box opened when attemped to destroy dashboard
@@ -130,6 +130,57 @@
         $('#addSearchButton').click(function() {
             $('#other-searches-dropdown').slideToggle('fast');
         });
+        $('.other-search').click(function() {
+            var searchId = $(this).attr('search-id');
+            if (searchId) {
+                $.ajax({
+                    type:'GET',
+                    url: '{% url "crits.dashboards.views.add_search" %}',
+                    data: {
+                        id:searchId,
+                        dashboard:'{{currentDash}}'
+                    },
+                    datatype: 'json',
+                    success: function(data) {
+                        showResults(data.message, !data.success);
+                        if(data.success) {
+                            var search = data.newSearch;
+                            var isDefault = search.isHereByDefault;
+                            var isAdvanced = search.isAdvanced;
+                            var searchTerm = search.searchTerm;
+                            var sortField = null;
+                            var sortDirection = null;
+                            if (search.sortBy.field && search.sortBy.direction) {
+                                var sortField = search.sortBy.field;
+                                var sortDirection = search.sortBy.direction;
+                            }
+                            if (isAdvanced)
+                                searchTerm = search.any_query;
+                            var id = search.id;
+                            var title = search.title;
+                            var editUrl = '/dashboards/edit_saved_search/'+id+'/';
+                            var records =  search.records;
+                            var columns =  search.columns;
+                            for (var i in columns) {
+                                columns[i].sortable = false;
+                                columns[i].resizable = (i != (columns.length-1))
+                            }
+                            $gridster.add_widget('<li><div class="draggable" isHereByDefault="'+isDefault+'"'+
+                                    ' isAdvanced="'+isAdvanced+'" tableId="'+id+'">'+
+                                        '<div id="'+id+'"></div></div></li>', search.sizex, search.sizey, search.col, search.row );
+                            constructW2ui(title, editUrl, isDefault, isAdvanced, searchTerm,
+                                    records, columns, id, sortField, sortDirection);
+                            correctGridsterSizeY();
+                        }
+                    },
+                    error: function(data) {
+                         showResults('An unexpected error occurred while adding search.'+
+                                 ' Please refresh and try again.', true);
+                    }
+                });
+                $(this).remove();
+            }
+        });
         $(document).click(function(e) {
             if($(e.target).hasClass('dont-toggle'))
                 return true;
@@ -190,7 +241,7 @@
                 },
                 error: function(data) {
                      showResults('An unexpected error occurred while saving dashboard.'+
-                    		 'Please refresh and try again.', true);
+                             ' Please refresh and try again.', true);
                 }
             });
         });
@@ -267,104 +318,53 @@
             return links;
         }
         $(document).ready(function() {          //doc.ready
-        	if( navigator.userAgent.indexOf("Chrome") != -1 ) 
-                buttonBarOffset = '-212px'; 
-        	else if( navigator.userAgent.indexOf("MSIE") != -1 )
-        		buttonBarOffset = '-243px';
-        	$('#buttonBar').css('right',buttonBarOffset);
-        	//used to prevent the retrieval of new data for tables on their 
-        	//inital sort
-        	var tablesWithSort = [];
-        	{% for table in tables %}
-        	   //this is used for the column group in the w2grid. It is taken out
-        	   //only for neatness
-        	    var tableHeader = '{{table.title}}'+
-        	    '<span class="tableOptions" style="display:none;position:absolute;left:5px;top:7px;">'+
-        	         '<a href=\'{% url "crits.dashboards.views.edit_save_search" table.id %}\'>'+
-        	             '<i style="margin-left:5px;" class="fa fa-cog"></i>'+
-        	         '</a>'+
-        	         {% if not table.isHereByDefault %}
-        	             '<a class="table-re-search" searchTerm="{{table.searchTerm}}">' +
-        	                 '<i style="display:inline;margin-left:5px;" class="fa fa-search-plus"></i>' +
-        	             '</a>'+
-	        	     {% endif %}
-        	    '</span>';
-        	    //These are the records for the w2ui grid, they are taken out from
-        	    //below for neatness and because the ints are initally strings,
-        	    //which causes sorting errors
-        	    var records =  [
-        	        {% for record in table.records %}
-                        {
-                            {% for k,v in record.items  %}
-                                {% if k in table.colNames or k = 'recid' %}
-                                    {{k}}:"{{v|safe}}",
-                                {% endif %}
-                            {% endfor %}
-                        },
-                    {% endfor %}
-                ];
-        	    //converts necessary strings to ints
-        	    for(i in records) {
-        	    	var record = records[i];
-        	    	for (k in record)
-        	    		if(k.indexOf('count') >= 0 || k == 'to' || k == 'length'
-        	    				|| k == 'size' || k == 'version')
-                            record[k] = parseInt(record[k]);
-        	    		else if(k == 'campaign')
-                            record[k] = create_pivot_links(record[k]);
-        	    }
-        	    //columns used for w2ui table, also for the title column
-                var columns = [];
-                {% for col in table.columns %}
-                    var col = {{ col | safe }};
-                    col['sortable'] = false;
-                    col['resizable'] = true;
-                    columns.push(col);
-                {% endfor %}
-                columns[columns.length-1].resizable=false;
-                //sets up the w2ui grid
-		        $('#{{table.id}}').w2grid({ 
-	                name: '{{table.id}}', 
-	                reorderColumns: false,
-	                fixedBody : false,
-	                columns: columns,
-	                columnGroups:[{
-	                        caption: tableHeader,
-	                        span: columns.length
-	                   }
-	                ],
-	                records: records,
-	                onColumnResize: function(e) {
-	                    e.onComplete = function() {
-	                    	var name = $(this).attr('name');
-	                        var tableWidth = $('#'+name).width();
-	                        var tempCols = w2ui[name].columns;
-	                        if(!reSizeLastColumn(tempCols, tableWidth)) {
-	                            var changingColumn = w2ui[name].getColumn(e.field);
-	                            var prevWidth = parseInt(changingColumn.size) - e.resizeBy;
-	                            changingColumn.size = prevWidth + 'px';
-	                            reSizeLastColumn(tempCols, tableWidth);
-	                        }
-	                        else
-	                        	toggleOptions(true);
-	                        w2ui[name].refresh();
-	                        for (i in tempCols) {
-	                            var col = tempCols[i];
-	                            if (col.sizeType != '%')
-	                                col.size = parseInt(col.size)/tableWidth*100+'%';
-	                        }
-	                    };
-	                },
-	                onRefresh: function(e) {
-	                },
-	                onSort: function(e) {
-	                }
-	            });
-                //sorts the tables on load
-		        {% if table.sortBy %}
-		            tablesWithSort.push('{{table.id}}');
-	                w2ui['{{table.id}}'].sort('{{table.sortBy.field}}', '{{table.sortBy.direction}}');
+            if( navigator.userAgent.indexOf("Chrome") != -1 ) {
+                buttonBarOffset = '-214px';
+                $('#other-searches-dropdown').width('210px');
+                $('#other-searches-dropdown').css('top','45px');
+                }
+            else if( navigator.userAgent.indexOf("MSIE") != -1 ) {
+                buttonBarOffset = '-244px';
+                $('#other-searches-dropdown').width('240px');
+                $('#other-searches-dropdown').css('top','47px');
+            }
+            $('#buttonBar').css('right',buttonBarOffset);
+            {% for table in tables %}
+                var isDefault = false;
+                var isAdvanced = false;;
+                var sortField = null;
+                var sortDirection = null;
+                var searchTerm = '{{table.searchTerm}}';
+                var id = '{{table.id}}';
+	            var title = '{{table.title}}';
+	            var editUrl = '{% url "crits.dashboards.views.edit_save_search" table.id %}';
+	            {% if table.sortBy %}
+	                var sortField = '{{table.sortBy.field}}';
+	                var sortDirection = '{{table.sortBy.field}}';
 	            {% endif %}
+	            {% if table.isHereByDefault %}
+	                isDefault = true;
+	            {% endif %}
+	            var records =  [
+	                {% for record in table.records %}
+	                    {
+	                        {% for k,v in record.items  %}
+	                            {% if k in table.colNames or k = 'recid' %}
+	                                {{k}}:"{{v|safe}}",
+	                            {% endif %}
+	                        {% endfor %}
+	                    },
+	                {% endfor %}
+	            ];
+	            var columns = [];
+	            {% for col in table.columns %}
+	                var col = {{ col | safe }};
+	                col['sortable'] = false;
+	                col['resizable'] = true;
+	                columns.push(col);
+	            {% endfor %}
+	            constructW2ui(title, editUrl, isDefault, isAdvanced, searchTerm,
+	                    records, columns, id, sortField, sortDirection)
             {% endfor %}
             $('#savePositionsButton').attr('disabled', 'true');
             //open dialog on load if the parent of the dashboard has been changed
@@ -372,6 +372,70 @@
                 $('#parent-has-changed-dialog').dialog('open');
             {% endif %}
         });
+        function constructW2ui(title, editUrl, isDefault, isAdvanced, searchTerm,
+                     records, columns, id, sortField, sortDirection) {
+            var tableHeader = title+
+            '<span class="tableOptions" style="display:none;position:absolute;left:5px;top:7px;">'+
+                 '<a href="'+editUrl+'">'+
+                     '<i style="margin-left:5px;" class="fa fa-cog"></i>'+
+                 '</a>';
+             if (!isDefault) {
+                if (isAdvanced)
+                    tableHeader+='<a class="table-advanced-re-search" searchTerm="'+searchTerm+'">';
+                else
+                    tableHeader+='<a class="table-re-search" searchTerm="'+searchTerm+'">';
+                tableHeader+='<i style="display:inline;margin-left:5px;" class="fa fa-search-plus"></i></a>';
+             }
+             tableHeader+='</span>';
+            //converts necessary strings to ints
+            for(i in records) {
+                var record = records[i];
+                for (k in record)
+                    if(k.indexOf('count') >= 0 || k == 'to' || k == 'length'
+                            || k == 'size' || k == 'version')
+                        record[k] = parseInt(record[k]);
+                    else if(k == 'campaign')
+                        record[k] = create_pivot_links(record[k]);
+            }
+            //Turns off sorting of the last column
+            columns[columns.length-1].resizable=false;
+            //sets up the w2ui grid
+            $('#'+id).w2grid({
+                name: id,
+                reorderColumns: false,
+                fixedBody : false,
+                columns: columns,
+                columnGroups:[{
+                        caption: tableHeader,
+                        span: columns.length
+                   }
+                ],
+                records: records,
+                onColumnResize: function(e) {
+                    e.onComplete = function() {
+                        var name = $(this).attr('name');
+                        var tableWidth = $('#'+name).width();
+                        var tempCols = w2ui[name].columns;
+                        if(!reSizeLastColumn(tempCols, tableWidth)) {
+                            var changingColumn = w2ui[name].getColumn(e.field);
+                            var prevWidth = parseInt(changingColumn.size) - e.resizeBy;
+                            changingColumn.size = prevWidth + 'px';
+                            reSizeLastColumn(tempCols, tableWidth);
+                        }
+                        else
+                            toggleOptions(true);
+                        w2ui[name].refresh();
+                        for (i in tempCols) {
+                            var col = tempCols[i];
+                            if (col.sizeType != '%')
+                                col.size = parseInt(col.size)/tableWidth*100+'%';
+                        }
+                    };
+                },
+            });
+            if (sortDirection && sortField)
+                w2ui[id].sort(sortField, sortDirection);
+        }
         var $gridster;
         $(window).load(function() {
             dashWidth = $('#dashboardWrapper').width()*.99;
@@ -431,8 +495,8 @@
         })();
         //on change of the dashboards dropdown, change page
         $('#dashId').change(function() {
-        	if($(this).val().indexOf('{{currentDash}}') <= 0) 
-        		window.location = $(this).val();
+            if($(this).val().indexOf('{{currentDash}}') <= 0)
+                window.location = $(this).val();
         });
         function correctGridsterSizeY() {
             var baseY = $gridster.options.widget_base_dimensions[1];
@@ -457,7 +521,7 @@
 {% endblock %}
 {% block content %}
     <div class='{{dashTheme}}-theme'>
-        <div style='position:relative;height:36px;overflow-x:hidden'>
+        <div style='position:relative;height:40px;overflow-x:hidden'>
             <div class='floatleft'>
                 <select id='dashId'>
                     {% for dash in dashboards %}
@@ -471,14 +535,14 @@
                 <div style='float:left;margin-top:6px;'>
                     <i id='toggleButtonBar' class='fa fa-chevron-left fa-2x'></i>
                 </div>
-                <div style='float:right;border:1px solid #adadad;background-color:#efefef;'>
+                <div class='shadowed' style='float:right;border:1px solid #adadad;background-color:#eaeaea;'>
                     <button class='edit-button dont-toggle' id='toggleGridsterButton' title='Toggle Edit Mode'>
                        <i class='fa fa-arrows dont-toggle'></i>
                     </button>
                     <button class='edit-button dont-toggle' id='savePositionsButton' title='Save' disabled>
                         <i class='fa fa-check dont-toggle'></i>
                     </button>
-                    <button class='edit-button dont-toggle' id='addSearchButton' title='Add Search'>
+                    <button class='edit-button dont-toggle' id='addSearchButton' title='Add Search' {% ifnotequal userId user.id %} disabled {% endifnotequal %} >
                         <i class='fa fa-search-plus dont-toggle'></i>
                     </button>
                     <button class='edit-button dont-toggle' id='resetPositionsButton' title='Reset'>

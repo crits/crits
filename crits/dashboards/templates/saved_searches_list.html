@@ -225,7 +225,7 @@
                         success: function(data) {
                             showResults(data.message, !data.success);
                             var element = $( "#removeFromDashboardDialog" ).data('element');
-                            if($(element).hasClass('default')) {
+                            if(!data.wasDeleted) {
                             	var parent = $(element).closest('.editWrapper');
                             	$(parent).find('.visibilityIcon').remove();
                             	$(parent).prepend('<i title="Hidden" class="fa fa-ban visibilityIcon"></i>');
@@ -542,8 +542,9 @@
     </div>
     <div id="removeFromDashboardDialog" title="Delete Saved Search" class='center'>
         <div class='red' id='extraNote'>
-            Please note: This is a default table and you cannot truly delete it.
-            If you continue, all previous customization will be removed and the table will be set to hidden.
+            Please note: This is a default table and you cannot re-create it.
+            If this is your <b>only</b> copy it will be set to hidden instead
+            of being deleted in order to prevent total loss of data.
         </div>
         <div>Are you sure you want to delete this search?</div>
     </div>
