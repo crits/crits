@@ -380,36 +380,59 @@
             $('.w2ui-grid').each(function() {
             	w2ui[$(this).attr('name')].refresh();
             });
-            var gridster_basey = $gridster.options.widget_base_dimensions[1];
-            var gridster_baseMarginy = $gridster.options.widget_margins[1];
-            correctGridsterSizeY(gridster_basey, gridster_baseMarginy);
+            correctGridsterSizeY();
             //this fixed bug in chrome that causes the tables to appear whited out on load
             window.setTimeout(function() {
                 $('#toggleGridsterButton').click();
                 $('#toggleGridsterButton').click();
             }, 10);
         });
+        $(window).resize(function() {
+            delay(function(){
+                dashWidth = $('#dashboardWrapper').width()*.99;
+                dashHeight = $('#dashboardWrapper').height();
+                $gridster.resize_widget_dimensions({
+                    widget_base_dimensions: [(dashWidth-294)/50, (dashHeight-294)/50]
+                });
+                $gridster.drag_api.set_limits(dashWidth);
+                window.setTimeout(function() {
+                    $('.w2ui-grid').each(function() {
+                        w2ui[$(this).attr('name')].refresh();
+                    });
+                    correctGridsterSizeY();
+                }, 250);
+            }, 500);
+        });
+        var delay = (function(){
+            var timer = 0;
+            return function(callback, ms){
+                clearTimeout (timer);
+                timer = setTimeout(callback, ms);
+            };
+        })();
         //on change of the dashboards dropdown, change page
         $('#dashId').change(function() {
         	if($(this).val().indexOf('{{currentDash}}') <= 0) 
         		window.location = $(this).val();
         });
-        function correctGridsterSizeY(baseY, margY) {
-        	var constant = 26;
-        	$('.gridster li').each(function() {
-        		var maxNeededHeight = $(this).find('.draggable').height();
-        		var currentSizeY = $(this).attr('data-sizey');
-        		for (var i = 1; i < 100; i++) {
-        			if (gridster_getTestHeight(i) > (maxNeededHeight-constant)) {
-        				if (i != currentSizeY)
-        				    $gridster.resize_widget($(this), null, i);
-        				break;
-        			}
-        		}
-        	});
-        	function gridster_getTestHeight(x) { 
-        		return (x*baseY) + ((x-1) * margY)*2;
-        	}
+        function correctGridsterSizeY() {
+            var baseY = $gridster.options.widget_base_dimensions[1];
+            var margY = $gridster.options.widget_margins[1];
+            var constant = 26;
+            $('.gridster li').each(function() {
+                var maxNeededHeight = $(this).find('.draggable').height();
+                var currentSizeY = $(this).attr('data-sizey');
+                for (var i = 1; i < 100; i++) {
+                    if (gridster_getTestHeight(i) > (maxNeededHeight-constant)) {
+                        if (i != currentSizeY)
+                            $gridster.resize_widget($(this), null, i);
+                        break;
+                    }
+                }
+            });
+            function gridster_getTestHeight(x) {
+                return (x*baseY) + ((x-1) * margY)*2;
+            }
         }
     </script>
 {% endblock %}
