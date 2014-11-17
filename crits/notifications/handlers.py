@@ -8,7 +8,7 @@ from mongoengine.base import ValidationError
 from mongoengine.base.datastructures import BaseList
 from mongoengine.queryset import Q
 
-from crits.core.class_mapper import class_from_id, details_url_from_obj
+from crits.core.class_mapper import class_from_id
 from crits.core.form_consts import NotificationType
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_sources, get_subscribed_users
@@ -204,7 +204,7 @@ def generate_audit_notification(username, operation_type, obj, changed_fields,
         message = None
         target_users = get_subscribed_users(obj_type, obj.id, sources)
         header = generate_notification_header(obj)
-        link_url = details_url_from_obj(obj)
+        link_url = obj.get_details_url()
 
         if header is not None:
             header = "New " + header
@@ -374,7 +374,7 @@ def get_notification_details(request, newer_than):
         obj = class_from_id(notification.obj_type, notification.obj_id)
 
         if obj is not None:
-            link_url = details_url_from_obj(obj)
+            link_url = obj.get_details_url()
             header = generate_notification_header(obj)
         else:
             if notification.header is not None:

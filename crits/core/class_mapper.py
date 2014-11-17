@@ -1,5 +1,4 @@
 from bson.objectid import ObjectId
-from django.core.urlresolvers import reverse
 
 
 __obj_type_to_key_descriptor__ = {
@@ -121,25 +120,6 @@ def class_from_id(type_, _id):
         return Target.objects(id=_id).first()
     elif type_ == 'UserRole':
         return UserRole.objects(id=_id).first()
-    else:
-        return None
-
-def details_url_from_obj(obj):
-    """
-    Generic function that generates a details url for a
-    :class:`crits.core.crits_mongoengine.CritsBaseAttributes` object.
-    """
-
-    mapper = obj._meta.get('jtable_opts')
-
-    if mapper is not None:
-        details_url = mapper['details_url']
-        details_url_key = mapper['details_url_key']
-
-        try:
-            return reverse(details_url, args=(unicode(obj[details_url_key]),))
-        except:
-            return None
     else:
         return None
 
