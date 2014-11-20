@@ -102,3 +102,9 @@ celery:
     - name: celery==3.0.12
     - requires:
       - cmd: python-pip
+
+ushlex:
+  pip.installed:
+    - name: ushlex==0.99
+    - requires:
+      - cmd: python-pip

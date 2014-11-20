@@ -612,11 +612,22 @@
         //remove the column being dragged
         function throwOutColumn(event) {
             if(w2ui['grid'].columns.length > 1) {
-                var colIndex = $(event.target).attr("col");
-                var col = w2ui['grid'].columns[colIndex];
-                w2ui['grid'].removeColumn(col.field);
-                addToRemovedColumns(col);
-                toggleTrashCan();
+                var col_caption = $(event.target).text();
+                var col;
+                for (var i in w2ui['grid'].columns) {
+                    col = w2ui['grid'].columns[i];
+                    if (col.caption.trim() == col_caption.trim())
+                        break;
+                    else
+                        col = null;
+                }
+                if (col) {
+                    w2ui['grid'].removeColumn(col.field);
+                    addToRemovedColumns(col);
+                    toggleTrashCan();
+                }
+                else
+                    showResultsDiv("An error occured while removing your column. Please refresh and try again.", true);
             }
             else 
                 showResultsDiv("You cannot have a table with no columns!", true);
@@ -666,6 +677,16 @@
             if(removedColumns.length == 0)
                 toggleTrashCan();
             addDroppableEvent();
+        });
+        $('#garbageHeader').click(function() {
+            if(removedColumns.length > 0) {
+                for (i in removedColumns)
+                    w2ui['grid'].addColumn(removedColumns[i]);
+                removedColumns = [];
+                $('.removedColumn').remove();
+                toggleTrashCan();
+                addDroppableEvent();
+            }
         });
         //show message at the bottom of the page
         function showResultsDiv(message, isError) {
@@ -824,6 +845,17 @@
                         }
                     };
                 },
+                onRefresh: function() {
+                    if (w2ui['grid']) {
+                        var cols = w2ui['grid'].columns;
+                        for(var i in cols) {
+                            var value = true;
+                            if (i == cols.length-1)
+                                value = false;
+                            cols[i].resizable = value;
+                        }
+                    }
+                }
             });
             $('#innerWrapper').resizable({
                 handles: 'e, w',
@@ -970,7 +1002,7 @@
 	        <div id='trashCan'>
 	            <i id='trashCanImg' class="fa fa-trash fa-4x"></i>
 	        </div>
-	        <div class='center' id='garbageHeader'><b>Available Columns:</b></div>
+	        <div title='Click To Empty' class='center' id='garbageHeader'><b>Available Columns:</b></div>
 	        <div id='garbageContent'></div>
 	    </div>
 	    <div class='clear'></div>
