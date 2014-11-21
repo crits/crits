@@ -1212,6 +1212,62 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
         return {'success': False,
                 'message': "Could not find %s to add relationships" % type_}
 
+def create_indicator_from_domain(type_, id_, value, analyst):
+    """
+    Add indicators from raw data.
+
+    :param type_: The indicator type to add.
+    :type type_: str
+    :param id_: The ObjectId of the RawData object.
+    :type id_: str
+    :param value: The value of the indicator to add.
+    :type value: str
+    :param analyst: The user adding this indicator.
+    :type analyst: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str),
+              "value" (str)
+    """
+
+    domain = Domain.objects(id=id_).first()
+    if not domain:
+        return {'success': False,
+                'message': 'Could not find domain'}
+    source = domain.source
+    bucket_list = domain.bucket_list
+    campaign = None
+    campaign_confidence = None
+    if len(domain.campaign) > 0:
+        campaign = domain.campaign[0].name
+        campaign_confidence = domain.campaign[0].confidence
+    result = handle_indicator_ind(value, source, reference=None, ctype=type_,
+                                  analyst=analyst,
+                                  add_domain=True,
+                                  add_relationship=True,
+                                  campaign=campaign,
+                                  campaign_confidence=campaign_confidence,
+                                  bucket_list=bucket_list)
+    if result['success']:
+        ind = Indicator.objects(id=result['objectid']).first()
+        if ind:
+            domain.add_relationship(rel_item=ind,
+                                      rel_type="Related_To",
+                                      analyst=analyst)
+            domain.save(username=analyst)
+            for rel in domain.relationships:
+                if rel.rel_type == "Event":
+                    ind.add_relationship(rel_id=rel.object_id,
+                                        type_=rel.rel_type,
+                                        rel_type="Related_To",
+                                        analyst=analyst)
+            ind.save(username=analyst)
+        domain.reload()
+        rels = domain.sort_relationships("%s" % analyst, meta=True)
+        return {'success': True, 'message': rels, 'value': id_}
+    else:
+        return {'success': False, 'message': result['message']}
+
 def create_indicator_from_raw(type_, id_, value, analyst):
     """
     Add indicators from raw data.
