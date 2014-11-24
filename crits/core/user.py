@@ -875,7 +875,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             uatr = None
             uatr = l.search_s(config.ldap_userdn,
                               ldap.SCOPE_SUBTREE,
-                              "(|(cn='+self.username+')(uid='+self.username+'))
+                              "(|(cn='+self.username+')(uid='+self.username+'))"
                               )[0][1]
             resp['first_name'] = uatr['givenName'][0]
             resp['last_name'] = uatr['sn'][0]
