@@ -146,7 +146,6 @@
                         if(data.success) {
                             var search = data.newSearch;
                             var isDefault = search.isHereByDefault;
-                            var isAdvanced = search.isAdvanced;
                             var searchTerm = search.searchTerm;
                             var sortField = null;
                             var sortDirection = null;
@@ -154,8 +153,6 @@
                                 var sortField = search.sortBy.field;
                                 var sortDirection = search.sortBy.direction;
                             }
-                            if (isAdvanced)
-                                searchTerm = search.any_query;
                             var id = search.id;
                             var title = search.title;
                             var editUrl = '/dashboards/edit_saved_search/'+id+'/';
@@ -165,10 +162,9 @@
                                 columns[i].sortable = false;
                                 columns[i].resizable = (i != (columns.length-1))
                             }
-                            $gridster.add_widget('<li><div class="draggable" isHereByDefault="'+isDefault+'"'+
-                                    ' isAdvanced="'+isAdvanced+'" tableId="'+id+'">'+
+                            $gridster.add_widget('<li><div class="draggable" isHereByDefault="'+isDefault+'" tableId="'+id+'">'+
                                         '<div id="'+id+'"></div></div></li>', search.sizex, search.sizey, search.col, search.row );
-                            constructW2ui(title, editUrl, isDefault, isAdvanced, searchTerm,
+                            constructW2ui(title, editUrl, isDefault, searchTerm,
                                     records, columns, id, sortField, sortDirection);
                             resizeGridster();
                         }
@@ -333,7 +329,6 @@
             $('#buttonBar').css('right',buttonBarOffset);
             {% for table in tables %}
                 var isDefault = false;
-                var isAdvanced = false;;
                 var sortField = null;
                 var sortDirection = null;
                 var searchTerm = '{{table.searchTerm}}';
@@ -365,7 +360,7 @@
 	                col['resizable'] = true;
 	                columns.push(col);
 	            {% endfor %}
-	            constructW2ui(title, editUrl, isDefault, isAdvanced, searchTerm,
+	            constructW2ui(title, editUrl, isDefault, searchTerm,
 	                    records, columns, id, sortField, sortDirection)
             {% endfor %}
             $('#savePositionsButton').attr('disabled', 'true');
@@ -374,7 +369,7 @@
                 $('#parent-has-changed-dialog').dialog('open');
             {% endif %}
         });
-        function constructW2ui(title, editUrl, isDefault, isAdvanced, searchTerm,
+        function constructW2ui(title, editUrl, isDefault, searchTerm,
                      records, columns, id, sortField, sortDirection) {
             var tableHeader = title+
             '<span class="tableOptions" style="display:none;position:absolute;left:5px;top:7px;">'+
@@ -382,11 +377,8 @@
                      '<i style="margin-left:5px;" class="fa fa-cog"></i>'+
                  '</a>';
              if (!isDefault) {
-                if (isAdvanced)
-                    tableHeader+='<a class="table-advanced-re-search" searchTerm="'+searchTerm+'">';
-                else
-                    tableHeader+='<a class="table-re-search" searchTerm="'+searchTerm+'">';
-                tableHeader+='<i style="display:inline;margin-left:5px;" class="fa fa-search-plus"></i></a>';
+                    tableHeader+='<a class="table-re-search" searchTerm="'+searchTerm+'">'+
+                        '<i style="display:inline;margin-left:5px;" class="fa fa-search-plus"></i></a>';
              }
              tableHeader+='</span>';
             //converts necessary strings to ints
@@ -592,11 +584,11 @@
             </div>
         {% endif %}
     </div>
-    <div id='other-searches-dropdown'>
+    <div id='other-searches-dropdown' class='dropdown-gray'>
           {% for search in otherSearches %}
-              <div class='other-search' search-id='{{search.id}}' title='{{search.name}} ({{search.dash}})'>{{search.name}} ({{search.dash}})</div>
+              <div class='other-search dropdown-gray-option' search-id='{{search.id}}' title='{{search.name}} ({{search.dash}})'>{{search.name}} ({{search.dash}})</div>
           {% empty %}
-              <div class='other-search'>All of your searches are shown</div>
+              <div class='other-search dropdown-gray-option'>All of your searches are shown</div>
           {% endfor %}
       </div>
 {% endblock %}

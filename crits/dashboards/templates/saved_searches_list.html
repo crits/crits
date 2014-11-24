@@ -44,14 +44,6 @@
                 currentDropdown = dashId;
         	}
         });
-        //Adds shaded gray background when hovering over settings option
-        $(document).on('mouseenter', '.dashboard-settings-option', function() {
-        	$(this).css('background-color', '#ddd');
-        });
-        //removes the shaded gray background when leaving settings option
-        $(document).on('mouseleave', '.dashboard-settings-option', function() {
-            $(this).css('background-color', 'white');
-        });
         //closes the settings dialog if it is open
         $(document).click(function(e) {
         	if($(e.target).hasClass('dashboard-settings'))
@@ -616,14 +608,14 @@
 	        </div>
 	        <div>Are you sure you want to delete this search?</div>
 	    </div>
-	    <div id='dashboard-settings-dropdown'>
-		    <div class='dashboard-settings-option makeDefault'>Make Default</div>
-		    {% if user.role == 'Administrator' %}<div class='dashboard-settings-option toggleIsPublic'></div>{% endif %}
-		    <div class='dashboard-settings-option changeName'>Change Name</div>
+	    <div id='dashboard-settings-dropdown' class='dropdown-gray'>
+		    <div class='dashboard-settings-option dropdown-gray-option makeDefault'>Make Default</div>
+		    {% if user.role == 'Administrator' %}<div class='dashboard-settings-option dropdown-gray-option toggleIsPublic'></div>{% endif %}
+		    <div class='dashboard-settings-option dropdown-gray-option changeName'>Change Name</div>
 		    <!-- 
 		    <div class='dashboard-settings-option changeTheme'>Change Theme</div>
 		     -->
-		    <div class='dashboard-settings-option dashboard-settings-option-last deleteDashboard'>Delete</div>
+		    <div class='dashboard-settings-option dropdown-gray-option deleteDashboard'>Delete</div>
 	    </div>
 	    <div id='change-name-dialog' title='Rename Dashboard' class='center'>
 	        <label>Name: </label>
