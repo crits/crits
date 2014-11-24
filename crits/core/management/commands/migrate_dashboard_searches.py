@@ -28,8 +28,7 @@ def migrate_all_searches():
         if search.isDefaultOnDashboard:
             convert_default_searches(search, "top")
         search.save()
-        search.update(unset__left=1, unset__top=1, unset__width=1)
-        
+    SavedSearch.objects().update(unset__left=1, unset__top=1, unset__width=1)
 def convert_default_searches(search, field):
     title = search.name
     if field == "width":
