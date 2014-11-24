@@ -167,35 +167,39 @@
         }
         //ajax call to change a tables visibilty to hidden or pinned
         function toggleTablesVisibility(element) {
-        	var parent = $(element).closest('.editWrapper');
-        	var isVisible = $(parent).attr('isVisible')
-        	$.ajax({
+            var parent = $(element).closest('.editWrapper');
+            var id = $(parent).attr('tableId');
+            var isVisible = $(parent).attr('isVisible')
+            $.ajax({
                 type:'GET',
                 url: '{% url "crits.dashboards.views.toggle_table_visibility" %}',
                 data: {
-                	tableId: $(parent).attr('tableId'),
-                	isVisible:  isVisible
+                    tableId: id,
+                    isVisible:  isVisible
                 },
                 datatype: 'json',
                 success: function(data) {
-                	showResults(data.message, !data.success);
-                	if (data.success) {
-	                    if(isVisible == 'True') {
-	                    	var oldClass = 'fa-desktop';
-	                    	var newClass = 'fa-ban';
-	                    	var newVisibility = 'False';
-	                    	var newTitle = 'Hidden';
-	                    }
-	                    else {
-	                    	var oldClass = 'fa-ban';
+                    showResults(data.message, !data.success);
+                    if (data.success) {
+                        if(isVisible == 'True') {
+                            var oldClass = 'fa-desktop';
+                            var newClass = 'fa-ban';
+                            var newVisibility = 'False';
+                            var newTitle = 'Hidden';
+                        }
+                        else {
+                            var oldClass = 'fa-ban';
                             var newClass = 'fa-desktop';
-	                    	var newVisibility = 'True';
-	                    	var newTitle = 'Shown on Dashboard';
-	                    }
-	                    $(parent).find('.visibilityIcon').removeClass(oldClass).addClass(newClass);
-	                    $(parent).find('.visibilityIcon').attr('title', newTitle);
-	                    $(parent).attr('isVisible', newVisibility);
-                	}
+                            var newVisibility = 'True';
+                            var newTitle = 'Shown on Dashboard';
+                        }
+                        $(parent).find('.visibilityIcon').removeClass(oldClass).addClass(newClass);
+                        $(parent).find('.visibilityIcon').attr('title', newTitle);
+                        $(parent).attr('isVisible', newVisibility);
+                        var dashName = $(parent).closest('.w2ui-grid').attr('name');
+                        //this resets the javascript object values stored in w2ui
+                        w2ui[dashName].get(id).edit = $(parent).parent().html();
+                    }
                 },
                 error: function(data) {
                 	throwUnexpectedError();
@@ -462,59 +466,65 @@
                     {% else %}
                         var recordSearch = '<a searchTerm="{{table.searchTerm}}" class="table-re-search">{{table.searchTerm}}</a>';
                     {% endif %}
-	                var record = {
-	                		recid:'{{table.id}}',
-	                		name: '{{table.name}}',
-	                		search_term:recordSearch,
-	                		obj_type: '{{table.objType}}',
-	                		sort: '{{table.getSortByText}}',
-	                		max_rows: '{{table.maxRows}}',
-	                		edit: editString
-                		}
-	                records.push(record);
+                    var record = {
+                        recid:'{{table.id}}',
+                        name: '{{table.name}}',
+                        search_term:recordSearch,
+                        obj_type: '{{table.objType}}',
+                        sort: '{{table.getSortByText}}',
+                        max_rows: '{{table.maxRows}}',
+                        edit: editString
+                    }
+                    records.push(record);
                 {% endfor %}
                 if(records.length == 0)
-                	records.push({
-                		recid:0,
+                    records.push({
+                        recid:0,
                         name: 'You have no searches saved to this dashboard',
-                	});
-	            setUpW2ui(id, name, columns, records);
-	        {% endfor %}
-	        for (var i in w2ui) {
-	        	var eventsToPrevent = [ 'click', 'dblClick', 'select', 'unselect'];
-	        	if (w2ui[i].records) {
-		        	w2ui[i].on('*', function (event) {
-		        	    if (eventsToPrevent.indexOf(event.type) >= 0)
-		        	    	event.preventDefault();
-		        	    else
-		        	    	console.log(event);
-		            });
-		        	$('#grid_'+w2ui[i].name+'_records tr').draggable({
-		        		helper: function() {
-		        			var clone = $('#clones-search-row-wrapper').children().clone();
-		        			var columns = ['name', 'term', 'type', 'sort', 'mRows', 'edit'];
-		        			$(clone).attr('recid',$(this).attr('recid'));
-		        			$(clone).attr('dashId',$(this).closest('.dashboard').attr('id'));
-		        			for(var i in columns)
-		        				$(clone).find('.clone-'+columns[i]).html($(this).find('td[col='+i+']').html());
-		        			return clone;
-		        			
-		        		},
-		        		appendTo: '#wrapper',
-		        	});
-	        	}
-	        }
-	        $('.dashboard').droppable({
-	        	drop: function(e, ui) {
-	        		var newDash = ui.helper.attr('dashId');
-	        		if($(this).closest('.dashboard').attr('id') != newDash) {
-	        			var search = ui.helper.attr('recid');
-	        			alert("here i am");
-	        		}
-	        		else
-	        			alert("DO not switch");
-	        	}
-	        })
+                    });
+                setUpW2ui(id, name, columns, records);
+            {% endfor %}
+            for (var i in w2ui) {
+                var eventsToPrevent = [ 'click', 'dblClick', 'select', 'unselect'];
+                if (w2ui[i].records) {
+                    w2ui[i].on('*', function (event) {
+                        if (eventsToPrevent.indexOf(event.type) >= 0)
+                            event.preventDefault();
+                    });
+                    //bindDraggable(w2ui[i].name);
+               }
+            }
+            $('.dashboard').droppable({
+                drop: function(e, ui) {
+                    var oldDash = ui.helper.attr('dashId');
+                    var newDash = $(this).closest('.dashboard').attr('id');
+                    if(oldDash != newDash) {
+                        var search = ui.helper.attr('recid');
+                        $.ajax({
+                            type:'GET',
+                            url: '{% url "crits.dashboards.views.switch_dashboard" %}',
+                            data: {
+                                id: search,
+                                dashboard: newDash
+                            },
+                            datatype: 'json',
+                            success: function(data) {
+                                showResults(data.message, !data.success);
+                                if (data.success) {
+                                    var newRecord = w2ui[oldDash].get(search);
+                                    w2ui[newDash].add(newRecord);
+                                    w2ui[oldDash].remove(search);
+                                    //removes the empty row if it exists
+                                    w2ui[newDash].remove(0);
+                                }
+                            },
+                            error: function(data) {
+                                throwUnexpectedError();
+                            }
+                        });
+                    }
+               }
+            })
         });
         //funcion set up w2ui grid
         function setUpW2ui(id, name, columns, records) {
@@ -529,13 +539,31 @@
                    }
                 ],
                 records: records,
-                onClick: function(e) {
-                	e.preventDefault();
-                	//console.log(e);
+                onRefresh: function(e) {
+                    window.setTimeout(function() {
+                        bindDraggable(e.target);
+                    }, 0);
                 }
             });
         }
-        
+        //binds draggable to the tr of the w2ui. This is necessary because everytime the 
+        //grid is refreshed, it loses all manually added classes
+        function bindDraggable(w2ui) {
+            $('#grid_'+w2ui+'_records tr').draggable({
+                cursor:'move',
+                delay: '200',
+                helper: function() {
+                    var clone = $('#clones-search-row-wrapper').children().clone();
+                    var columns = ['name', 'term', 'type', 'sort', 'mRows', 'edit'];
+                    $(clone).attr('recid',$(this).attr('recid'));
+                    $(clone).attr('dashId',$(this).closest('.dashboard').attr('id'));
+                    for(var i in columns)
+                        $(clone).find('.clone-'+columns[i]).html($(this).find('td[col='+i+']').html());
+                    return clone;
+                },
+                appendTo: '#wrapper',
+            });
+        }
         $('#need-help').click(function() {
         	$('#the-help').slideToggle('fast');
         });
@@ -552,8 +580,8 @@
 		            <ol>
 		                <li>Public dashboards are not shown here unless you are the creator.</li>
 		                <li>To revert back to a public dashboard, delete your modified copy and it will automatically become visible again.</li>
-		                <li>Click the <i class="fa fa-caret-square-o-down"></i> for the dashboard options:</li>
-		                
+		                <li>Click the <i class="fa fa-caret-square-o-down"></i> for the dashboard options.</li>
+		                <li>Try dragging a row to move a search onto a different dashboard.</li>
 		           </ol>
 		        </div>
 		    </div>

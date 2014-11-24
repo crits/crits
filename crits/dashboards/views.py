@@ -8,7 +8,7 @@ from crits.core.views import dashboard
 from django.http import HttpResponse
 from crits.dashboards.dashboard import SavedSearch, Dashboard
 from crits.dashboards.handlers import toggleTableVisibility,get_saved_searches_list,get_dashboard, getHREFLink, get_obj_type_from_string, clear_dashboard, save_data, get_table_data, generate_search_for_saved_table, delete_table, getRecordsForDefaultDashboardTable
-from crits.dashboards.handlers import add_existing_search_to_dashboard, renameDashboard,changeTheme, deleteDashboard,getDashboardsForUser,createNewDashboard, setDefaultDashboard, cloneDashboard, setPublic, updateChildren
+from crits.dashboards.handlers import switch_existing_search_to_dashboard, add_existing_search_to_dashboard, renameDashboard,changeTheme, deleteDashboard,getDashboardsForUser,createNewDashboard, setDefaultDashboard, cloneDashboard, setPublic, updateChildren
 import json
 import re
 from django.core.urlresolvers import reverse
@@ -322,6 +322,14 @@ def add_search(request):
     if not id or not dashboard:
         return respondWithError('An error occurred while adding search. Please refresh and try again', True)
     return httpResponse(add_existing_search_to_dashboard(id, dashboard, request.user))
+
+@user_passes_test(user_can_view_data)
+def switch_dashboard(request):
+    id = request.GET.get('id', None)
+    dashboard = request.GET.get('dashboard', None)
+    if not id or not dashboard:
+        return respondWithError('An error occurred while switching search. Please refresh and try again', True)
+    return httpResponse(switch_existing_search_to_dashboard(id, dashboard))
 
 def respondWithError(message, isAjax=False, request=None):
     """

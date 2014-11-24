@@ -764,3 +764,10 @@ def add_existing_search_to_dashboard(id, dashboard, user):
         return {"success":True,
                 "message": search.name+" has been added to your dashboard.",
                 "newSearch": createTableObject(user, table=search)}
+
+def switch_existing_search_to_dashboard(id, dashboard):
+    if SavedSearch.objects(id=id).update(set__dashboard=dashboard) == 1:
+        return {"success":True,
+                "message": "Search Switched Sucessfully"}
+    return {"success":False,
+            "message": "Could not find search. Please refresh and try again."}

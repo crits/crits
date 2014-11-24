@@ -101,3 +101,6 @@
 .clone-type {
 	width:15%;
 }
+tr.ui-draggable *{
+	cursor:pointer !important;
+}
