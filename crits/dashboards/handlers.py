@@ -322,34 +322,54 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
 
 def clear_dashboard(dashId):
     """
-    Clears all the set positions and sizez of the tables on the dashboard
+    Clears all the set positions and sizes of the tables on the dashboard
     """
+    default_tables = {
+                        "Counts": {
+                            "sizex": 10,
+                            "sizey": 8,
+                            "row": 1,
+                            "col": 1
+                        },
+                        "Top Backdoors": {
+                            "sizex": 10,
+                            "sizey": 8,
+                            "row": 1,
+                            "col": 10
+                        },
+                        "Top Campaigns": {
+                            "sizex": 25,
+                            "sizey": 13,
+                            "row": 1,
+                            "col": 20
+                        },
+                        "Recent Indicators": {
+                            "sizex": 50,
+                            "sizey": 8,
+                            "row": 15,
+                            "col": 1
+                        },
+                        "Recent Emails": {
+                            "sizex": 50,
+                            "sizey": 8,
+                            "row": 23,
+                            "col": 1
+                        },
+                        "Recent Samples": {
+                            "sizex": 50,
+                            "sizey": 8,
+                            "row": 31,
+                            "col": 1
+                        },
+                      }
     try:
         for search in SavedSearch.objects(dashboard=dashId):
             if search.isDefaultOnDashboard:
-                title = search.name
-                if title == "Counts" or title == "Top Backdoors":
-                    search.sizex = 10
-                elif title == "Top Campaigns":
-                    search.sizex = 25
-                else:
-                    search.sizex = 50
-                if title == "Counts":
-                    search.sizey = 13
-                if title == "Recent Indicators":
-                    search.row = 15
-                elif title == "Recent Emails":
-                    search.row = 23
-                elif title == "Recent Samples":
-                    search.row = 31
-                else: 
-                    search.row = 1
-                if title == "Top Backdoors":
-                    search.col = 10
-                elif title == "Top Campaigns":
-                    search.col = 20
-                else:
-                    search.col = 1
+                tempDict = default_tables[search.name]
+                search.sizex = tempDict["sizex"]
+                search.sizey = tempDict["sizey"]
+                search.row = tempDict["row"]
+                search.col = tempDict["col"]
                 search.save()
             else:
                 search.update(unset__col=1,unset__row=1,unset__sizex=1)
