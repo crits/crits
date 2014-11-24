@@ -835,6 +835,28 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         cn = "cn="
         if config.ldap_usercn:
             cn = config.ldap_usercn
+        # two-step ldap binding
+        if len(config.ldap_bind_dn) > 0:
+            try:
+            	logger.info("binding with bind_dn: %s" % config.ldap_bind_dn)
+            	l.simple_bind_s(config.ldap_bind_dn, config.ldap_bind_password)
+            	filter = '(|(cn='+self.username+')(uid='+self.username+'))'
+            	# use the retrieved dn for the second bind
+            	un = l.search_s(config.ldap_userdn,ldap.SCOPE_SUBTREE,filter,['dn'])[0][0]
+            except Exception, e:
+            	logger.error("Error binding to LDAP for: %s" % config.ldap_bind_dn)
+            	logger.error("ERR: %s" % e)
+            l.unbind()
+            if len(ldap_server) == 2:
+                l = ldap.initialize('%s:%s' % (url.unparse(),
+                                               ldap_server[1]))
+            else:
+                l = ldap.initialize(url.unparse())
+            l.protocol_version = 3
+            l.set_option(ldap.OPT_REFERRALS, 0)
+            l.set_option(ldap.OPT_TIMEOUT, 10)
+        else:
+            un = self.username
         # setup auth for custom cn's
         if len(config.ldap_usercn) > 0:
             un = "%s%s,%s" % (config.ldap_usercn,
@@ -842,8 +864,6 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                               config.ldap_userdn)
         elif "@" in config.ldap_userdn:
             un = "%s%s" % (self.username, config.ldap_userdn)
-        else:
-            un = self.username
 	try:
             # Try auth bind first
             l.simple_bind_s(un, password)
@@ -855,7 +875,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             uatr = None
             uatr = l.search_s(config.ldap_userdn,
                               ldap.SCOPE_SUBTREE,
-                              "(%s%s)" % (cn, self.username)
+                              "(|(cn='+self.username+')(uid='+self.username+'))
                               )[0][1]
             resp['first_name'] = uatr['givenName'][0]
             resp['last_name'] = uatr['sn'][0]
@@ -952,6 +972,28 @@ class CRITsAuthBackend(object):
                     l.protocol_version = 3
                     l.set_option(ldap.OPT_REFERRALS, 0)
                     l.set_option(ldap.OPT_TIMEOUT, 10)
+                    # two-step ldap binding
+                    if len(config.ldap_bind_dn) > 0:
+                    	try:
+                    		logger.info("binding with bind_dn: %s" % config.ldap_bind_dn)
+                    		l.simple_bind_s(config.ldap_bind_dn, config.ldap_bind_password)
+                    		filter = '(|(cn='+fusername+')(uid='+fusername+'))'
+                    		# use the retrieved dn for the second bind
+                        	un = l.search_s(config.ldap_userdn,ldap.SCOPE_SUBTREE,filter,['dn'])[0][0]
+                        except Exception, e:
+            			logger.error("Error binding to LDAP for: %s" % config.ldap_bind_dn)
+            			logger.error("ERR: %s" % e)
+                        l.unbind()
+                        if len(ldap_server) == 2:
+                            l = ldap.initialize('%s:%s' % (url.unparse(),
+                                                           ldap_server[1]))
+                        else:
+                            l = ldap.initialize(url.unparse())
+                        l.protocol_version = 3
+                        l.set_option(ldap.OPT_REFERRALS, 0)
+                        l.set_option(ldap.OPT_TIMEOUT, 10)
+                    else:
+                        un = fusername
                     # setup auth for custom cn's
                     if len(config.ldap_usercn) > 0:
                         un = "%s%s,%s" % (config.ldap_usercn,
@@ -959,8 +1001,6 @@ class CRITsAuthBackend(object):
                                           config.ldap_userdn)
                     elif "@" in config.ldap_userdn:
                         un = "%s%s" % (fusername, config.ldap_userdn)
-                    else:
-                        un = fusername
                     logger.info("Logging in user: %s" % un)
                     l.simple_bind_s(un, password)
                     user = self._successful_settings(user, e, totp_enabled)
