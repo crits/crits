@@ -58,7 +58,7 @@ def get_dashboard(user,dashId=None):
         otherDashboardIds.append(dash.id)
         otherDashboards[dash.id] = dash.name
     otherSearches = []
-    for search in SavedSearch.objects(dashboard__in=otherDashboardIds) :
+    for search in SavedSearch.objects(dashboard__in=otherDashboardIds, isPinned=True) :
         otherSearches.append({
                         "id":search.id,
                         "dash":otherDashboards[search.dashboard],

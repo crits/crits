@@ -212,11 +212,12 @@
             autoOpen: false,
             buttons: {
                 Yes: function() {
+                    var id = $(this).data('element').closest('.editWrapper').attr('tableId');
                     $.ajax({
                         type:"GET",
                         url: "{% url 'crits.dashboards.views.delete_save_search'%}",
                         data: {
-                        	id:$(this).data('element').closest('.editWrapper').attr('tableId')
+                        	id:id
                         },
                         success: function(data) {
                             showResults(data.message, !data.success);
@@ -226,6 +227,7 @@
                             	$(parent).find('.visibilityIcon').remove();
                             	$(parent).prepend('<i title="Hidden" class="fa fa-ban visibilityIcon"></i>');
                             	$(parent).attr('isVisible', 'False');
+                            	w2ui[$(element).closest('.dashboard').attr('id')].get(id).edit = $(parent).parent().html();
                             }
                             else {
                                 var recid = $(element).closest('tr').attr('recid');
