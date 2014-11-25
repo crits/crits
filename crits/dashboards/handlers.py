@@ -19,7 +19,7 @@ from django.utils.html import escape as html_escape
 import cgi
 import datetime
 from django.http import HttpRequest
-from crits.dashboards.utilities import getCssForDefaultDashboardTable, constructCssString, constructAttrsString, getHREFLink, get_obj_name_from_title, get_obj_type_from_string
+from crits.dashboards.utilities import getHREFLink, get_obj_name_from_title, get_obj_type_from_string
 import HTMLParser
 
 def get_dashboard(user,dashId=None):
