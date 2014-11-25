@@ -117,7 +117,11 @@
   <!-- start page -->
   <div class="wholepage">
     <!-- start header -->
-    <div class='top'>
+    {% if crits_config.debug %}
+    <div class="top" style="background: url('/new_images/top_bar_bg_dev.png') repeat-x;">
+    {% else %}
+    <div class="top">
+    {% endif %}
       {% if request.user.is_authenticated %}
       <div id="show_nav_menu" class="top_item" title="Navigation Menu">
     <span class="nav-menu-icon"></span>
@@ -173,7 +177,11 @@
     </div>
     <!-- end content -->
     <!-- start footer -->
+    {% if crits_config.debug %}
+    <div class="bottom" style="background: url('/new_images/top_bar_bg_dev.png') repeat-x;">
+    {% else %}
     <div class="bottom">
+    {% endif %}
       <span class="right">
     <b>CRITs&trade;</b> Copyright &copy; 2014 The MITRE Corporation. All Rights Reserved.
       </span>
