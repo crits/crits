@@ -1,5 +1,7 @@
 import json
 import uuid
+from HTMLParser import HTMLParser
+import urllib2
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -343,6 +345,13 @@ def update_event_description(event_id, description, analyst):
     if not description:
         return {'success': False, 'message': "No description to change"}
     event = Event.objects(id=event_id).first()
+    if not event:
+        return {'success': False, 'message': "No event found"}
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser()
+    description = h.unescape(description)
+    description = urllib2.unquote(description)
     event.description = description
     try:
         event.save(username=analyst)
