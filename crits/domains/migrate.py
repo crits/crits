@@ -15,7 +15,6 @@ def migrate_2_to_3(self):
         migrate_1_to_2(self)
 
     if self.schema_version == 2:
-        # XXX: Find whois data and move it.
         self.schema_version = 3
         self.save()
         self.reload()
