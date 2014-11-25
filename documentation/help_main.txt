@@ -319,6 +319,21 @@ item of the relevant kind. For instance, click the \"+\" next to the
 \"IP\" menu item allows you to quickly create a new IP-type
 indicator.
 
+Dashboards
+-------------------------------------------
+
+Dashboards can be created and custmized to your liking. The easiest way
+to create your own is to alter a public dashboard and save it. This will
+replace the public dashboard with your modified copy of it. You can revert
+back to the public one at any time by simplying deleting your modified copy 
+on the Dashboard Configurations page.
+
+Additionally, you may add your own tables to the dashboard by clicking
+"Configure for Dashboard" on the search results page. Onced clicked, you 
+will be brought to a page where you can customize your table and then choose
+which dashboard you want to pin it to. You also have the option of creating 
+a new dashboard.
+
 Profile Information
 -------------------------------------------
 

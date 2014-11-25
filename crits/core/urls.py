@@ -40,8 +40,7 @@ urlpatterns = patterns('',
     (r'^get_item_data/$', 'crits.core.views.get_item_data'),
 
     # Default landing page
-    (r'^$', 'crits.core.views.dashboard'),
-    (r'^dashboard/$', 'crits.core.views.dashboard'),
+    (r'^$', 'crits.dashboards.views.dashboard'),
     (r'^counts/list/$', 'crits.core.views.counts_listing'),
     (r'^counts/list/(?P<option>\S+)/$', 'crits.core.views.counts_listing'),
 
@@ -93,6 +92,7 @@ urlpatterns = patterns('',
     # User API Authentication
     (r'^get_api_key/$', 'crits.core.views.get_api_key'),
     (r'^create_api_key/$', 'crits.core.views.create_api_key'),
+    (r'^make_default_api_key/$', 'crits.core.views.make_default_api_key'),
     (r'^revoke_api_key/$', 'crits.core.views.revoke_api_key'),
 
 )

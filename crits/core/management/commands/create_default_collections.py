@@ -11,6 +11,7 @@ from create_relationship_types import add_relationship_types
 from create_sectors import add_sector_objects
 from setconfig import create_config_if_not_exist
 from create_actors_content import add_actor_content
+from create_default_dashboard import create_dashboard
 
 from crits.core.user_role import UserRole
 from crits.domains.domain import TLD
@@ -65,8 +66,10 @@ class Command(BaseCommand):
         add_event_types(drop)
         add_sector_objects(drop)
         add_actor_content(drop)
+        create_dashboard(drop)
         create_config_if_not_exist()
         create_indexes()
+
 
 def populate_user_roles(drop):
     """

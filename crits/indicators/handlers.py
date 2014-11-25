@@ -282,20 +282,44 @@ def get_indicator_type_value_pair(field):
     # specific field type is not supported
     return (None, None)
 
-def get_verified_field(row, field, valid_values, default=None):
+def get_verified_field(data, valid_values, field=None, default=None):
     """
-    Validate and correct a key's value from a dictionary
+    Validate and correct string value(s) in a dictionary key or list,
+    or a string by itself.
+
+    :param data: The data to be verified and corrected.
+    :type data: dict, list of strings, or str
+    :param valid_values: Key with simplified string, value with actual string
+    :type valid_values: dict
+    :param field: The dictionary key containing the data.
+    :type field: str
+    :param default: A value to use if an invalid item cannot be corrected
+    :type default: str
+    :returns: the validated/corrected value(str), list of values(list) or ''
     """
 
-    value = row.get(field, '').strip()
-    if value.lower() in valid_values:
-        return valid_values[value.lower()]
-    elif default is not None:
-        return default
+    if isinstance(data, dict):
+        data = data.get(field, '')
+    if isinstance(data, list):
+        value_list = data
     else:
+        value_list = [data]
+    for i, item in enumerate(value_list):
+        if isinstance(item, basestring):
+            item = item.lower().strip().replace(' - ', '-')
+            if item in valid_values:
+                value_list[i] = valid_values[item]
+                continue
+        if default is not None:
+            item = default
+            continue
         return ''
+    if isinstance(data, list):
+        return value_list
+    else:
+        return value_list[0]
 
-def handle_indicator_csv(csv_data, source, reference, ctype, username,
+def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                          add_domain=False):
     """
     Handle adding Indicators in CSV format (file or blob).
@@ -304,6 +328,8 @@ def handle_indicator_csv(csv_data, source, reference, ctype, username,
     :type csv_data: str or file handle
     :param source: The name of the source for these indicators.
     :type source: str
+    :param method: The method of acquisition of this indicator.
+    :type method: str
     :param reference: The reference to this data.
     :type reference: str
     :param ctype: The CSV type.
@@ -322,7 +348,7 @@ def handle_indicator_csv(csv_data, source, reference, ctype, username,
         cdata = csv_data.encode('ascii')
     data = csv.DictReader(StringIO(cdata), skipinitialspace=True)
     result = {'success': True}
-    result_message = "Indicators added successfully!"
+    result_message = ""
     # Compute permitted values in CSV
     valid_ratings = {
         'unknown': 'unknown',
@@ -336,55 +362,81 @@ def handle_indicator_csv(csv_data, source, reference, ctype, username,
         'high': 'high'}
     valid_campaigns = {}
     for c in Campaign.objects(active='on'):
-        valid_campaigns[c['name'].lower()] = c['name']
+        valid_campaigns[c['name'].lower().replace(' - ', '-')] = c['name']
+    valid_actions = {}
+    for a in IndicatorAction.objects(active='on'):
+        valid_actions[a['name'].lower().replace(' - ', '-')] = a['name']
     valid_ind_types = {}
     for obj in ObjectType.objects(datatype__enum__exists=False, datatype__file__exists=False):
         if obj['object_type'] == obj['name']:
             name = obj['object_type']
         else:
             name = "%s - %s" % (obj['object_type'], obj['name'])
-        valid_ind_types[name.lower()] = name
+        valid_ind_types[name.lower().replace(' - ', '-')] = name
 
     # Start line-by-line import
-    processed = 0
-    for d in data:
-        processed += 1
+    added = 0
+    for processed, d in enumerate(data, 1):
         ind = {}
         ind['value'] = d.get('Indicator', '').lower().strip()
-        ind['type'] = get_verified_field(d, 'Type', valid_ind_types)
+        ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
         if not ind['value'] or not ind['type']:
             # Mandatory value missing or malformed, cannot process csv row
             i = ""
             result['success'] = False
             if not ind['value']:
-                i += "No valid Indicator value. "
+                i += "No valid Indicator value "
             if not ind['type']:
-                i += "No valid Indicator type. "
-            result_message += "Cannot process row: %s. %s<br />" % (processed, i)
+                i += "No valid Indicator type "
+            result_message += "Cannot process row %s: %s<br />" % (processed, i)
             continue
-        campaign = get_verified_field(d, 'Campaign', valid_campaigns)
+        campaign = get_verified_field(d, valid_campaigns, 'Campaign')
         if campaign:
             ind['campaign'] = campaign
-            ind['campaign_confidence'] = get_verified_field(d, 'Campaign Confidence',
-                                                            valid_campaign_confidence,
+            ind['campaign_confidence'] = get_verified_field(d, valid_campaign_confidence,
+                                                            'Campaign Confidence',
                                                             default='low')
-        ind['confidence'] = get_verified_field(d, 'Confidence', valid_ratings,
+        actions = d.get('Action', '')
+        if actions:
+            actions = get_verified_field(actions.split(','), valid_actions)
+            if not actions:
+                result['success'] = False
+                result_message += "Cannot process row %s: Invalid Action<br />" % processed
+                continue
+        ind['confidence'] = get_verified_field(d, valid_ratings, 'Confidence',
                                                default='unknown')
-        ind['impact'] = get_verified_field(d, 'Impact', valid_ratings,
+        ind['impact'] = get_verified_field(d, valid_ratings, 'Impact',
                                            default='unknown')
         ind[form_consts.Common.BUCKET_LIST_VARIABLE_NAME] = d.get(form_consts.Common.BUCKET_LIST, '')
         ind[form_consts.Common.TICKET_VARIABLE_NAME] = d.get(form_consts.Common.TICKET, '')
         try:
-            handle_indicator_insert(ind, source, reference, analyst=username,
-                                    add_domain=add_domain)
+            response = handle_indicator_insert(ind, source, reference, analyst=username,
+                                               method=method, add_domain=add_domain)
         except Exception, e:
             result['success'] = False
-            result['message'] = str(e)
-            return result
+            result_message += "Failure processing row %s: %s<br />" % (processed, str(e))
+            continue
+        if response['success']:
+            if actions:
+                action = {'active': 'on',
+                          'analyst': username,
+                          'begin_date': '',
+                          'end_date': '',
+                          'performed_date': '',
+                          'reason': '',
+                          'date': datetime.datetime.now()}
+                for action_type in actions:
+                    action['action_type'] = action_type
+                    action_add(response.get('objectid'), action)
+        else:
+            result['success'] = False
+            result_message += "Failure processing row %s: %s<br />" % (processed, response['message'])
+            continue
+        added += 1
     if processed < 1:
         result['success'] = False
         result_message = "Could not find any valid CSV rows to parse!"
-    result['message'] = result_message
+    result['message'] = "Successfully added %s Indicator(s).<br />%s" % (added, result_message)
     return result
 
 def handle_indicator_ind(value, source, reference, ctype, analyst,
@@ -502,7 +554,12 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
               "is_new_indicator" (boolean) if successful.
     """
 
-    is_new_indicator = False;
+    if ind['type'] == "URI - URL" and "://" not in ind['value'].split('.')[0]:
+        return {"success" : False, "message" : "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://) "}
+
+    is_new_indicator = False
+    dmain = None
+    ip = None
     rank = {
              'unknown': 0,
              'benign': 1,
@@ -520,7 +577,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)
-        is_new_indicator = True;
+        is_new_indicator = True
 
     if 'campaign' in ind:
         if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:
@@ -548,18 +605,20 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     bucket_list = None
     if form_consts.Common.BUCKET_LIST_VARIABLE_NAME in ind:
         bucket_list = ind[form_consts.Common.BUCKET_LIST_VARIABLE_NAME]
-        indicator.add_bucket_list(bucket_list, analyst)
+        if bucket_list:
+            indicator.add_bucket_list(bucket_list, analyst)
 
     ticket = None
     if form_consts.Common.TICKET_VARIABLE_NAME in ind:
         ticket = ind[form_consts.Common.TICKET_VARIABLE_NAME]
-        indicator.add_ticket(ticket, analyst)
+        if ticket:
+            indicator.add_ticket(ticket, analyst)
 
     if isinstance(source, list):
         for s in source:
-            indicator.add_source(source_item=s)
+            indicator.add_source(source_item=s, method=method, reference=reference)
     elif isinstance(source, EmbeddedSource):
-        indicator.add_source(source_item=source)
+        indicator.add_source(source_item=source, method=method, reference=reference)
     elif isinstance(source, basestring):
         s = EmbeddedSource()
         s.name = source
@@ -571,8 +630,6 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         s.instances = [instance]
         indicator.add_source(s)
 
-    indicator.save(username=analyst)
-
     if add_domain or add_relationship:
         ind_type = indicator.ind_type
         ind_value = indicator.value
@@ -582,7 +639,6 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                 domain_or_ip = urlparse.urlparse(ind_value).hostname
             elif ind_type == "URI - Domain Name":
                 domain_or_ip = ind_value
-            #try:
             (sdomain, fqdn) = get_domain(domain_or_ip)
             if sdomain == "no_tld_found_error" and ind_type == "URI - URL":
                 try:
@@ -597,23 +653,12 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                             '%s' % analyst, None,
                                             bucket_list=bucket_list, cache=cache)
                     if not success['success']:
-                        indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
-                                         % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
-                        message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
-                        return {'success':False, 'message':message + success['message'],
-                                'id': str(indicator.id)}
+                        return {'success':False, 'message': success['message']}
 
                 if not success or not 'object' in success:
                     dmain = Domain.objects(domain=domain_or_ip).first()
                 else:
                     dmain = success['object']
-                if dmain:
-                    dmain.add_relationship(rel_item=indicator,
-                                           rel_type='Related_To',
-                                           analyst="%s" % analyst,
-                                           get_rels=False)
-                    dmain.save(username=analyst)
-                    indicator.save(username=analyst)
 
         if ind_type.startswith("Address - ip") or ind_type == "Address - cidr" or url_contains_ip:
             if url_contains_ip:
@@ -630,23 +675,29 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                         indicator_reference=reference,
                                         cache=cache)
                 if not success['success']:
-                    indicator_link = '<a href=\"%s\">View indicator</a>.</div>' \
-                                     % (reverse('crits.indicators.views.indicator', args=[indicator.id]));
-                    message = "Indicator was added, but an error occurred. " + indicator_link + "<br>"
-                    return {'success':False, 'message':message + success['message'],
-                            'id': str(indicator.id)}
+                    return {'success':False, 'message': success['message']}
 
             if not success or not 'object' in success:
                 ip = IP.objects(ip=indicator.value).first()
             else:
                 ip = success['object']
-            if ip:
-                ip.add_relationship(rel_item=indicator,
-                                    rel_type='Related_To',
-                                    analyst="%s" % analyst,
-                                    get_rels=False)
-                ip.save(username=analyst)
-                indicator.save(username=analyst)
+
+    indicator.save(username=analyst)
+
+    if dmain:
+        dmain.add_relationship(rel_item=indicator,
+                               rel_type='Related_To',
+                               analyst="%s" % analyst,
+                               get_rels=False)
+        dmain.save(username=analyst)
+    if ip:
+        ip.add_relationship(rel_item=indicator,
+                            rel_type='Related_To',
+                            analyst="%s" % analyst,
+                            get_rels=False)
+        ip.save(username=analyst)
+
+    indicator.save(username=analyst)
 
     # run indicator triage
     if is_new_indicator:

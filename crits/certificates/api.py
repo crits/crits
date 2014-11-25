@@ -62,6 +62,7 @@ class CertificateResource(CRITsAPIResource):
 
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', None)
+        reference = bundle.data.get('reference', None)
         description = bundle.data.get('reference', None)
         relationship = bundle.data.get('relationship', None)
         related_id = bundle.data.get('related_id', None)
@@ -79,6 +80,7 @@ class CertificateResource(CRITsAPIResource):
                                   related_md5=related_md5,
                                   related_type = related_type,
                                   method=method,
+                                  reference=reference,
                                   relationship=relationship,
                                   bucket_list=bucket_list,
                                   ticket=ticket)

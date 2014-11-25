@@ -41,6 +41,7 @@ from crits.samples.forms import BackdoorForm, ExploitForm, XORSearchForm
 from crits.samples.forms import UnrarSampleForm, UploadFileForm
 from crits.samples.sample import Sample
 from crits.samples.yarahit import YaraHit
+from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import run_triage, get_supported_services
 from crits.stats.handlers import generate_yara_hits
 
@@ -1083,11 +1084,11 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         # this will handle adding a new source, or an instance automatically
         sample.add_source(s)
     elif isinstance(source, EmbeddedSource):
-        sample.add_source(source)
+        sample.add_source(source, method=method, reference=reference)
     elif isinstance(source, list) and len(source) > 0:
         for s in source:
             if isinstance(s, EmbeddedSource):
-                sample.add_source(s)
+                sample.add_source(s, method=method, reference=reference)
 
     if bucket_list:
         sample.add_bucket_list(bucket_list, user)
@@ -1119,7 +1120,7 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         sample.reload()
 
         # run sample triage:
-        if len(sample.analysis) < 1 and data:
+        if len(AnalysisResult.objects(object_id=str(sample.id))) < 1 and data:
             run_triage(sample, user)
 
         # update relationship if a related top-level object is supplied
@@ -1385,9 +1386,8 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
             # add new objects if they exist
             if objectsData:
                 objectsData = json.loads(objectsData)
-                object_row_counter = 1
 
-                for objectData in objectsData:
+                for object_row_counter, objectData in enumerate(objectsData, 1):
                     if sample.get('object') != None and is_validate_only == False:
                         objectDict = object_array_to_dict(objectData, "Sample",
                                                           sample.get('object').id)
@@ -1413,8 +1413,6 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
 
                     if object_retVal.get('message'):
                         errors.append(object_retVal['message'])
-
-                    object_row_counter += 1
     else:
         errors += "Failed to add Sample: " + md5
 

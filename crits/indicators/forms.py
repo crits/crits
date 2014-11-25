@@ -3,6 +3,7 @@ from django import forms
 from django.forms.widgets import RadioSelect
 
 from crits.campaigns.campaign import Campaign
+from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.widgets import CalWidget, ExtendedChoiceField
 from crits.core.handlers import get_source_names, get_item_names, get_object_types
@@ -82,9 +83,14 @@ class UploadIndicatorCSVForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     filedata = forms.FileField()
-    reference = forms.CharField(widget=forms.TextInput(attrs={'size': '90'}),
-                                required=False)
-    source = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.Indicator.SOURCE)
+    method = forms.CharField(required=False, widget=forms.TextInput,
+                             label=form_consts.Indicator.SOURCE_METHOD)
+    reference = forms.CharField(required=False,
+                                widget=forms.TextInput(attrs={'size': '90'}),
+                                label=form_consts.Indicator.SOURCE_REFERENCE)
 
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorCSVForm, self).__init__(*args, **kwargs)
@@ -101,9 +107,14 @@ class UploadIndicatorTextForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    source = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
-    reference = forms.CharField(widget=forms.TextInput(attrs={'size': '90'}),
-                                required=False)
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.Indicator.SOURCE)
+    method = forms.CharField(required=False, widget=forms.TextInput,
+                             label=form_consts.Indicator.SOURCE_METHOD)
+    reference = forms.CharField(required=False,
+                                widget=forms.TextInput(attrs={'size': '90'}),
+                                label=form_consts.Indicator.SOURCE_REFERENCE)
     data = forms.CharField(required=True,
                            widget=forms.Textarea(attrs={'cols':'80',
                                                         'rows':'20'}))
@@ -114,7 +125,7 @@ class UploadIndicatorTextForm(forms.Form):
                                                                                True,
                                                                                username)]
         self.fields['source'].initial = get_user_organization(username)
-        dt = "Indicator, Type, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket\n"
+        dt = "Indicator, Type, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action\n"
         self.fields['data'].initial = dt
 
 class UploadIndicatorForm(forms.Form):
@@ -131,9 +142,14 @@ class UploadIndicatorForm(forms.Form):
     impact = forms.ChoiceField(required=True, widget=forms.Select)
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
-    source = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
-    reference = forms.CharField(widget=forms.TextInput(attrs={'size': '90'}),
-                                required=False, label="Source Reference")
+    source = forms.ChoiceField(required=True,
+                               widget=forms.Select(attrs={'class': 'no_clear'}),
+                               label=form_consts.Indicator.SOURCE)
+    method = forms.CharField(required=False, widget=forms.TextInput,
+                             label=form_consts.Indicator.SOURCE_METHOD)
+    reference = forms.CharField(required=False,
+                                widget=forms.TextInput(attrs={'size': '90'}),
+                                label=form_consts.Indicator.SOURCE_REFERENCE)
 
     def __init__(self, username, choices=None, *args, **kwargs):
         super(UploadIndicatorForm, self).__init__(*args, **kwargs)

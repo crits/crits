@@ -1,0 +1,580 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% load is_object_id_equal from filters %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block javascript_includes %}
+    <script>
+        var buttonBarOffset = '-252px';
+        //used to display the save/undo buttons in the button bar
+        var showSaveButton = true;
+        //used by the undo button to determine if there is a previous position to
+        //return to
+        var positionsSet = true;
+        //Dialog box opened when attemped to destroy dashboard
+        $('#destroy-dashboard-dialog').dialog({
+            modal: true,
+            autoOpen: false,
+            buttons: {
+                Reset: function() {
+                    $.ajax({
+                        type:'GET',
+                        url: '{% url "crits.dashboards.views.destroy_dashboard" %}',
+                        data: {dashId: '{{ currentDash }}'},
+                        datatype: 'json',
+                        success: function(data) {
+                            showResults(data.message, !data.success);
+                            if(data.success)
+                                location.reload();
+                        },
+                        error: function(data) {
+                            showResults('An unexpected error occurred while destroying dashboard.'+
+                            		'Please refresh and try again.', true);
+                        }
+                    });
+                    $(this).dialog('close');
+                },
+                Cancel: function() {
+                    $(this).dialog('close');
+                }
+            }
+        });
+        //dialog to notify user that the parent dashboard has been changed
+        {% if parentHasChanged %}
+	        $('#parent-has-changed-dialog').dialog({
+	            modal: true,
+	            autoOpen: false,
+	            width:500,
+	            buttons: {
+	            	{% if parent %}
+		                Update: function() {  //if the parent still exists, give the option to update
+		                	$.ajax({
+		                        type:"GET",
+		                        url: "{% url 'crits.dashboards.views.delete_dashboard'%}",
+		                        data: {
+		                            id:'{{currentDash}}',
+		                        },
+		                        success: function(data) {
+		                            showResults(data.message, !data.success);
+		                            if (data.success) 
+		                            	window.location = '{% url "crits.dashboards.views.dashboard" parent %}';
+		                        },
+		                        error: function(data) {
+		                            throwUnexpectedError();
+		                        }
+		                    });
+		                    $(this).dialog('close');
+		                },
+		                'Ignore Changes': 
+	                {% else %}
+		                Okay: //if the parent does not exist anymore, dismiss notification
+	                {% endif %} 
+	                    function() {
+	                	//if do not show again is checked then send ajax call to ignore parent
+	                	if($('#do-not-show-again').is(':checked'))
+		                	$.ajax({
+		                        type:'GET',
+		                        url: '{% url "crits.dashboards.views.ignore_parent" currentDash %}',
+		                        datatype: 'json',
+		                        success: function(data) {
+		                        },
+		                        error: function(data) {
+		                            showResults('An error occurred while updating dashboard.', true);
+		                        }
+		                    });
+	                    $(this).dialog('close');
+	                }
+	            }
+	        });
+        {% endif %}
+        ////shows message in the results div
+        function showResults(message, isError) {
+            var color = 'green';
+            if (isError)
+                color = 'red';
+            $('#resultsDiv').css('color', color);
+            $('#resultsDiv').text(message);
+        }
+        //simulates the 're-search' of a tables search term
+        $(document).on('click', '.table-re-search', function() {
+            var st = unescape($(this).attr('searchTerm'));
+            $('#global_search_box').val(st);
+            $('#global_search_box').closest('form').submit();
+        });
+        //shows the table options when hovering of ther table
+        //(settings and re-search icons)
+        $(document).on('mouseleave', '.w2ui-col-group', function() {
+        	$(this).find('.tableOptions').hide();
+        });
+        //hides the table options when hovering of ther table
+        //(settings and re-search icons)
+        $(document).on('mouseenter', '.w2ui-col-group', function() {
+            $(this).find('.tableOptions').show();
+        });
+        //jquery animation to slide button bar on/off screen
+        $('#toggleButtonBar').click(function() {
+            showResults('');
+            var slideVal = buttonBarOffset;
+            if ($('#buttonBar').css('right') == slideVal)
+                slideVal = '0px';
+            $('#buttonBar').animate({
+                right: slideVal
+            }, 250);
+        });
+        //action of the destory dashboard button
+        $('#destroyPositionsButton').click(function() {
+            showResults('');
+            $('#destroy-dashboard-dialog').dialog('open');
+        });
+        $('#myDashboardsButton').click(function() {
+        	window.location = $(this).attr('href');
+        });
+        //action of the undo button
+        $('#undoLastMove').click(function() {
+            showResults('');
+            toggleOptions(false);
+            setPositions();
+        });
+        //action of the save position button. Ajax call
+        $('#savePositionsButton').click(function() {
+            showResults('');
+            toggleOptions(false);
+            if(!$('.draggable').draggable('option', 'disabled'))
+                removeDraggable();
+            var data = [];
+            var dashboardWidth = $('#dashboardWrapper').width();
+            $('.draggable').each(function() {
+                    var gridId = $(this).children().first('div').attr('id');
+                    var name = $(this).find('.w2ui-col-group').text().trim();
+                    var newWidth = 0;
+                    var widthInPx = $(this).width();
+                    if ($(this).attr('isResized') == 'true')
+                        newWidth = (widthInPx/dashboardWidth)*100;
+                    var tempDict = {
+                        left: $(this).css('left'),
+                        top: $(this).css('top'),
+                        tableName: name,
+                        columns: w2ui[gridId].columns,
+                        isDefault: $(this).attr('isHereByDefault'),
+                        width: newWidth,
+                        sortDirection: $(this).attr('sortDirection'),
+                        sortField: $(this).attr('sortField'),
+                        id:$(this).attr('tableId')
+                    };
+                    data.push(tempDict);
+            });
+            $.ajax({
+                type:'POST',
+                url: '{% url "crits.dashboards.views.save_new_dashboard" %}',
+                data: {
+                    data: JSON.stringify(data),
+                    userId: '{{ user.id }}',
+                    dashboardWidth: dashboardWidth,
+                    dashId: '{{currentDash}}'
+                },
+                datatype: 'json',
+                success: function(data) {
+                    showResults(data.message, !data.success);
+                    //resets the postions of the tables for the undo button 
+                    $('.draggable').each(function() {
+                        var tempTop = $(this).css('top');
+                        var tempLeft = $(this).css('left');
+                        $(this).attr('tempTop', tempTop);
+                        $(this).attr('tempLeft', tempLeft);
+                        $(this).attr('isResized', false);
+                    });
+                    //show the destroy dashboard button if its hidden
+                    if (!positionsSet)
+                        $('#destroyPositionsButton').removeAttr('disabled');
+                    positionsSet = true;
+                    showSaveButton = true;
+                },
+                error: function(data) {
+                     showResults('An unexpected error occurred while saving dashboard.'+
+                    		 'Please refresh and try again.', true);
+                }
+            });
+        });
+        //Toggles the draggable/resizeable abilities of the tables
+        $('#togglePackeryButton').click(function() {
+            showResults('');
+            if($('.draggable').draggable('option', 'disabled')) {
+                $('.draggable').draggable('enable');
+                $('.draggable').resizable('enable');
+                $('.content ').css('background-color','rgba(238,238,238,.9)');
+                $('.content ').css('box-shadow','1px 1px 2px 2px #eeeeee');
+            }
+            else {
+                removeDraggable();
+            }
+        });
+        //removes the draggable/resizeable abilities of the table
+        function removeDraggable() {
+            $('.draggable').draggable('disable');
+            $('.draggable').resizable('disable');
+            $('.content ').css('background-color','white');
+            $('.content ').css('box-shadow','0px 0px 0px 0px #eeeeee');
+        }
+        //sets the postions of the tables to be equal to their tempTop/tempLeft
+        //values. Called on load and when the undo button is clicked
+        function setPositions() {
+            var itemElems = $('#dashboardWrapper').packery('getItemElements');
+            var unpositionedTables = [];
+            var lowestTablePos = 0;
+            if (positionsSet)
+                $( itemElems ).each( function( i, elem ) {
+                    var isDefault = ($(elem).attr('isherebydefault') == 'True');
+                    var tempLeft = $(elem).attr('tempLeft');
+                    var tempTop= $(elem).attr('tempTop');
+                    if (!tempTop)
+                        unpositionedTables.push(elem);
+                    else {
+                        $(elem).css('left', tempLeft);
+                        $(elem).css('top', tempTop);
+                        var tempLowestTablePos = parseInt(tempTop);
+                        var tableHeight = $(elem).height();
+                        if (tempLowestTablePos + tableHeight > lowestTablePos)
+                            lowestTablePos = tempLowestTablePos + tableHeight;
+                    }
+                });
+            if (unpositionedTables.length > 0)
+                setUnPostionedTables(0, unpositionedTables, lowestTablePos);
+        }
+        //Recursive method to place tables without positions set
+        function setUnPostionedTables(index, tables, lowestTablePos) {
+            var table = tables[index];
+            //If a table has no set postions, then put it 20px below the lowest table
+            $(table).css('top', lowestTablePos+20);
+            if (index < tables.length-1) {
+                lowestTablePos += $(table).height();
+                index++;
+                setUnPostionedTables(index, tables, lowestTablePos);
+            }
+        }
+        //Logic to show the save/undo buttons
+        function toggleOptions(show) {
+        	//if caller wants to show the options and they are not already showing
+            if(show && showSaveButton) {
+                $('#savePositionsButton').removeAttr('disabled');
+                if (positionsSet)
+                    $('#undoLastMove').removeAttr('disabled');
+                showSaveButton = false;
+            }
+        	//if the caller wants to hide the options and they are not already hidden
+            else if (!show && !showSaveButton) {
+                $('#savePositionsButton').attr('disabled', 'true');
+                if (positionsSet)
+                    $('#undoLastMove').attr('disabled', 'true');
+                showSaveButton = true;
+            }
+        }
+        //gets new data for the passed in table, called when the table is sorted
+        function getNewData(ajaxData, url, table) {
+        	$.ajax({
+                type:'GET',
+                url: url,
+                data: ajaxData,
+                datatype: 'json',
+                success: function(data) {
+               		var records = data['Records'];
+                	if(records.length>0) {
+	                	w2ui[table].records = records;
+	                	w2ui[table].refresh();
+                	}
+                },
+                error: function(data) {
+                }
+            });
+        }
+        function reSizeLastColumn(tempCols, tableWidth) {
+            var lastColWidth = tableWidth;
+            for (i in tempCols)
+                if (lastColWidth < 1)
+                    return false;
+                else if (i == tempCols.length-1)
+                    tempCols[tempCols.length-1]['size'] = lastColWidth+"px";
+                else
+                    lastColWidth-=parseInt(tempCols[i]['size']);
+            return true;
+        }
+        function create_pivot_links(data) {
+            var campBase = "/campaigns/details/__CAMPAIGN__/";
+            var items = data.split('|||');
+            var links = [];
+            for (var i = 0; i < items.length; i++)
+                if (items[i]) {
+                    var campUrl = '<a href="'+campBase.replace("__CAMPAIGN__", items[i])+'">'+items[i]+'</a>';
+                    if (links.indexOf(campUrl) >= 0)
+                    	continue;
+                    links.push(campUrl);
+                }
+            return links;
+        }
+        
+        $(document).ready(function() {          //doc.ready
+        	if( navigator.userAgent.indexOf("Chrome") != -1 ) 
+                buttonBarOffset = '-212px'; 
+        	else if( navigator.userAgent.indexOf("MSIE") != -1 )
+        		buttonBarOffset = '-243px';
+        	$('#buttonBar').css('right',buttonBarOffset);
+        	//used to prevent the retrieval of new data for tables on their 
+        	//inital sort
+        	var tablesWithSort = [];
+        	{% for table in tables %}
+        	   //this is used for the column group in the w2grid. It is taken out
+        	   //only for neatness
+        	    var tableHeader = '{{table.title}}'+
+        	    '<span class="tableOptions" style="display:none;position:absolute;left:5px;top:7px;">'+
+        	         '<a href=\'{% url "crits.dashboards.views.edit_save_search" table.id %}\'>'+
+        	             '<i style="margin-left:5px;" class="fa fa-cog"></i>'+
+        	         '</a>'+
+        	         {% if not table.isHereByDefault %}
+        	             '<a class="table-re-search" searchTerm="{{table.searchTerm}}">' +
+        	                 '<i style="display:inline;margin-left:5px;" class="fa fa-search-plus"></i>' +
+        	             '</a>'+
+	        	     {% endif %}
+        	    '</span>';
+        	    //These are the records for the w2ui grid, they are taken out from
+        	    //below for neatness and because the ints are initally strings,
+        	    //which causes sorting errors
+        	    var records =  [
+        	        {% for record in table.records %}
+                        {
+                            {% for k,v in record.items  %}
+                                {% if k in table.colNames or k = 'recid' %}
+                                    {{k}}:"{{v|safe}}",
+                                {% endif %}
+                            {% endfor %}
+                        },
+                    {% endfor %}
+                ];
+        	    //converts necessary strings to ints
+        	    for(i in records) {
+        	    	var record = records[i];
+        	    	for (k in record)
+        	    		if(k.indexOf('count') >= 0 || k == 'to' || k == 'length'
+        	    				|| k == 'size' || k == 'version')
+                            record[k] = parseInt(record[k]);
+        	    		else if(k == 'campaign')
+                            record[k] = create_pivot_links(record[k]);
+        	    }
+        	    //columns used for w2ui table, also for the title column
+                var columns = [];
+                {% for col in table.columns %}
+                    var col = {{ col | safe }};
+                    col['sortable'] = false;
+                    col['resizable'] = true;
+                    columns.push(col);
+                {% endfor %}
+                columns[columns.length-1].resizable=false;
+                //sets up the w2ui grid
+		        $('#{{table.id}}').w2grid({ 
+	                name: '{{table.id}}', 
+	                reorderColumns: false,
+	                fixedBody : false,
+	                columns: columns,
+	                columnGroups:[{
+	                        caption: tableHeader,
+	                        span: columns.length
+	                   }
+	                ],
+	                records: records,
+	                onColumnResize: function(e) {
+	                    e.onComplete = function() {
+	                    	var name = $(this).attr('name');
+	                        var tableWidth = $('#'+name).width();
+	                        var tempCols = w2ui[name].columns;
+	                        if(!reSizeLastColumn(tempCols, tableWidth)) {
+	                            var changingColumn = w2ui[name].getColumn(e.field);
+	                            var prevWidth = parseInt(changingColumn.size) - e.resizeBy;
+	                            changingColumn.size = prevWidth + 'px';
+	                            reSizeLastColumn(tempCols, tableWidth);
+	                        }
+	                        else
+	                        	toggleOptions(true);
+	                        w2ui[name].refresh();
+	                        for (i in tempCols) {
+	                            var col = tempCols[i];
+	                            if (col.sizeType != '%')
+	                                col.size = parseInt(col.size)/tableWidth*100+'%';
+	                        }
+	                    };
+	                },
+	                onRefresh: function(e) {
+	                },
+	                onSort: function(e) {
+	                /*
+	                   No longer used
+	                	//there is an error with the sort event in w2ui where the 
+	                	//direction is sometimes null
+	                	if(e.direction == null) {
+	                        e.preventDefault();
+	                        var sortDirection = $('#'+e.target).closest('.draggable').attr('sortDirection');
+	                        var sortField = $('#'+e.target).closest('.draggable').attr('sortField');
+	                        if(sortDirection && sortField == e.field && sortDirection == 'asc')
+	                            e.direction = 'desc';
+	                        else 
+	                            e.direction = 'asc';
+	                        w2ui[e.target].sort(e.field, e.direction);
+	                    }
+	                    else {
+	                        $('#'+e.target).closest('.draggable').attr('sortDirection', e.direction);
+	                        $('#'+e.target).closest('.draggable').attr('sortField', e.field);
+	                        //this is used to prevent the retrieval of data on the inital sort
+	                        var tempIndexOf = tablesWithSort.indexOf('{{table.id}}');
+	                        if(tempIndexOf < 0) {
+		                        toggleOptions(true);
+		                        {% if not table.isHereByDefault %}
+			                        var ajaxData = {
+			                                sortBy: JSON.stringify({
+			                                	field: e.field,
+			                                    direction: e.direction
+			                                }),
+			                                q : '{{ table.searchTerm }}',
+			                                search_type: 'global',
+			                                generalSearch: 'Search',
+			                                pageNumber: 1,
+			                                maxRows: '{{table.maxRows}}',
+			                                jtStartIndex: 0,
+			                                index: 'crits.'+'{{table.objType}}'.toLowerCase()+'s',
+			                                jtPageSize: {{table.maxRows}},
+			                                jtSorting: e.field + ' ' + e.direction.toUpperCase()
+		                            };
+			                        getNewData(ajaxData, '{{table.url}}', e.target);
+			                    {% endif %}
+	                        }
+	                        else //remove the table from the array so it will get new data from now on
+	                        	tablesWithSort.splice(tempIndexOf, 1);
+	                    }
+	                */
+	                }
+	            });
+                //sorts the tables on load
+		        {% if table.sortBy %}
+		            tablesWithSort.push('{{table.id}}');
+	                w2ui['{{table.id}}'].sort('{{table.sortBy.field}}', '{{table.sortBy.direction}}');
+	            {% endif %}
+            {% endfor %}
+            positionsSet = ($('.draggable[tempTop]').length > 0);
+            //if no positions have ever been set, disable the destory dashboard button
+            if (!positionsSet)
+                $('#destroyPositionsButton').attr('disabled', true);
+            $('#savePositionsButton').attr('disabled', 'true');
+            $('#undoLastMove').attr('disabled', 'true');
+            //open dialog on load if the parent of the dashboard has been changed
+            {% if parentHasChanged %}
+                $('#parent-has-changed-dialog').dialog('open');
+            {% endif %}
+        });
+        $(window).load(function() {
+        	//refresh all the grids in case they have imaged
+            $('.w2ui-grid').each(function() {
+            	w2ui[$(this).attr('name')].refresh();
+            });
+            //declaring packery is done in window.load because
+            //when screenshots are involved, the tables become overlapped if
+            //they havent been loaded yet
+            var $container = $('#dashboardWrapper').packery({
+                'gutter':15,
+                'rowheight':15,
+                'columnheight':15
+            });
+            var $itemElems = $container.find('.draggable');
+            $container.packery( 'bindUIDraggableEvents', $itemElems );
+            //initialize draggable
+            $itemElems.draggable({
+                start: function() {
+                    toggleOptions(true);
+                }
+            });
+            $itemElems.draggable('disable');
+          //initialize resizable
+            $itemElems.resizable({
+               handles: 'e, w',
+                start: function() {
+                    $(this).attr('isResized', true);
+                    toggleOptions(true);
+                },
+                stop: function(e) {
+                	$container.packery( 'fit', e.target );
+                }
+            });
+            $itemElems.resizable('disable');
+            //set all the postions of the tables
+            setPositions();
+        });
+        //on change of the dashboards dropdown, change page
+        $('#dashId').change(function() {
+        	if($(this).val().indexOf('{{currentDash}}') <= 0) 
+        		window.location = $(this).val();
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <div class='{{dashTheme}}-theme'>
+	    <div style='position:relative;height:36px;overflow-x:hidden'>
+	        <div class='floatleft'>
+	            <select id='dashId'>
+	                {% for dash in dashboards %}
+	                    <option {% if dash|is_object_id_equal:currentDash %}selected{% endif %} value='{% url "crits.dashboards.views.dashboard" dash.id %}'>
+	                        {{dash.name}}{% if dash.isPublic %} (Public){% elif dash.parent %} (Modified){% endif %}
+	                    </option>
+                    {% endfor %}	                   
+	            </select>
+	        </div>
+	        <div id='buttonBar' style='position:absolute;right:-250px;'>
+	            <div style='float:left;margin-top:6px;'>
+	                <i id='toggleButtonBar' class='fa fa-chevron-left fa-2x'></i>
+	            </div>
+	            <div style='float:right;border:1px solid black;background-color:rgba(155,155,155,.1);'>
+		            <button style='margin:5px;' id='togglePackeryButton' title='Toggle Edit Mode'>
+		               <i class='fa fa-arrows'></i>
+		            </button>
+		            <button style='margin:5px;' id='undoLastMove' title='Undo' disabled>
+		               <i class='fa fa-undo'></i>
+		            </button>
+		            <button style='margin:5px;' id='savePositionsButton' title='Save' disabled>
+		                <i class='fa fa-check'></i>
+		            </button>
+		            <button style='margin:5px;' id='destroyPositionsButton' title='Reset'>
+		                <i class='fa fa-trash-o'></i>
+		            </button>
+		            <div class='divider'>
+			            <button href='{% url "crits.dashboards.views.saved_searches_list" %}' style='margin:5px;' id='myDashboardsButton' title='Config'>
+	                        <i class="fa fa-list"></i>
+	                    </button>
+	                </div>
+		        </div>
+	        </div>
+	    </div>
+	    <div class='center' style='height:15px;' id='resultsDiv'></div>
+	    <div style='height:100%;width:100%;' id='dashboardWrapper' >
+	       {% for table in tables %}
+	           <div {{table.css|safe}} {{table.attrs|safe}} class='draggable' isHereByDefault='{{table.isHereByDefault}}' tableId='{{table.id}}'>
+	               <div id='{{table.id}}'></div>
+	           </div>
+	       {% endfor %}
+	    </div>
+	    <div class='center' id='destroy-dashboard-dialog' style='display:none;'  title='Destroy Dashboard'>
+	        Are you sure you want to reset your dashboard? Your tables will
+	        not be removed but all their positions and sizes will be reset.
+	    </div>
+	    
+	    {% if parentHasChanged %}
+	        <div class='center' id='parent-has-changed-dialog' style='display:none;'  title='Update Dashboard'>
+	            {% if parent %}
+	                The original version of this dashboard has been changed. Would you like to update yours to
+	                display these changes? Please note if you update, all of your changes will be overwritten.
+	            {% else %}
+	                Please note the original version of this dashboard has either been deleted or made private
+	                and you will no longer receive updates about it. 
+	            {% endif %}
+	            <div></div>
+	            <label for='do-not-show-again'>Do not show again</label>
+	            <input type="checkbox" id='do-not-show-again' name='do-not-show-again'/>
+	        </div>
+	    {% endif %}
+	    
+	</div>
+{% endblock %}

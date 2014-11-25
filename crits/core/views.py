@@ -64,7 +64,7 @@ from crits.core.user_tools import add_new_user_role, change_user_password, toggl
 from crits.core.user_tools import save_user_secret
 from crits.core.user_tools import toggle_user_preference, update_user_preference
 from crits.core.user_tools import get_api_key_by_name, create_api_key_by_name
-from crits.core.user_tools import revoke_api_key_by_name
+from crits.core.user_tools import revoke_api_key_by_name, make_default_api_key_by_name
 from crits.core.class_mapper import class_from_id
 from crits.domains.forms import TLDUpdateForm, AddDomainForm
 from crits.emails.forms import EmailUploadForm, EmailEMLForm, EmailYAMLForm, EmailRawUploadForm, EmailOutlookForm
@@ -232,6 +232,7 @@ def global_search_listing(request):
                                   {"error" : 'No valid search criteria'},
                                   RequestContext(request))
     args = generate_global_search(request)
+    
     if 'Result' in args and args['Result'] == "ERROR":
         return render_to_response("error.html",
                                   {"error": args['Message']},
@@ -1902,6 +1903,32 @@ def create_api_key(request):
                                             'message': 'Need a name.'}),
                                 mimetype="application/json")
         result = create_api_key_by_name(username, name)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def make_default_api_key(request):
+    """
+    Set an API key as default for a user. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        username = request.user.username
+        name = request.POST.get('name', None)
+        if not name:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': 'Need a name.'}),
+                                mimetype="application/json")
+        result = make_default_api_key_by_name(username, name)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
     else:

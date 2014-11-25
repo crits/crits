@@ -1,6 +1,9 @@
 import json
 
+from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.core.validators import validate_ipv4_address, validate_ipv6_address
+from django.core.validators import validate_ipv46_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -281,9 +284,8 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
         # add new objects if they exist
         if objectsData:
             objectsData = json.loads(objectsData)
-            object_row_counter = 1
 
-            for objectData in objectsData:
+            for object_row_counter, objectData in enumerate(objectsData, 1):
                 new_ip = retVal.get('object')
 
                 if new_ip != None and is_validate_only == False:
@@ -305,8 +307,6 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
                     retVal['success'] = False
                 if object_retVal.get('message'):
                     errors.append(object_retVal['message'])
-
-                object_row_counter += 1
     else:
         errors += "Failed to add IP: " + str(ip)
 
@@ -353,6 +353,29 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
               "message" (str),
               "object" (if successful) :class:`crits.ips.ip.IP`
     """
+
+    if "Address - ipv4" in ip_type:
+        try:
+            validate_ipv4_address(ip_address)
+        except ValidationError:
+            return {"success" : False, "message" : "Invalid IPv4 address. "}
+    elif "Address - ipv6" in ip_type:
+        try:
+            validate_ipv6_address(ip_address)
+        except ValidationError:
+            return {"success" : False, "message" : "Invalid IPv6 address. "}
+    elif "cidr" in ip_type:
+        try:
+            if '/' not in ip_address:
+                raise ValidationError("")
+            cidr_parts = ip_address.split('/')
+            if int(cidr_parts[1]) < 0 or int(cidr_parts[1]) > 128:
+                raise ValidationError("")
+            if ':' not in cidr_parts[0] and int(cidr_parts[1]) > 32:
+                raise ValidationError("")
+            validate_ipv46_address(cidr_parts[0])
+        except (ValidationError, ValueError) as cidr_error:
+            return {"success" : False, "message" : "Invalid CIDR address. "}
 
     retVal = {}
     is_item_new = False

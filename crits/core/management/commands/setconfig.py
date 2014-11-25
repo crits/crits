@@ -91,7 +91,7 @@ class Command(BaseCommand):
            rt_url:\t\t\t<string>
            secure_cookie:\t\t<boolean> (ex: True, true, yes, or 1)
            service_dirs:\t\t<list of full directory paths>
-           service_model:\t\t<process/thread/local>
+           service_model:\t\t<process/thread/process_pool/thread_pool/local>
            session_timeout:\t\t<integer>
            splunk_search_url:\t\t<string>
            temp_dir:\t\t\t<full directory path>
@@ -220,7 +220,7 @@ def set_config_attribute(crits_config, attr, value):
             else:
                 raise CE('%s is a boolean True/False.' % attr)
         if attr in ('depth_max', 'invalid_login_attempts', 'rel_max',
-                    'session_timeout', 'total_max'):
+                    'session_timeout', 'service_pool_size', 'total_max'):
             try:
                 value = int(value)
             except:
@@ -241,8 +241,8 @@ def set_config_attribute(crits_config, attr, value):
                 if not os.path.exists(v):
                     raise CE('Not a valid path: %s' % v)
         if attr == "service_model":
-            if value not in ('process', 'thread', 'local'):
-                raise CE('service_model must be process, thread, or local')
+            if value not in ('process', 'thread', 'process_pool', 'thread_pool', 'local'):
+                raise CE('service_model must be process, thread, process_pool, thread_pool, or local')
         if attr in ('totp_web', 'totp_cli'):
             if value not in ('Optional', 'Disabled', 'Required'):
                 raise CE('totp_web/cli must be Optional, Required, or Disabled')

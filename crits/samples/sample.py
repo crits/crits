@@ -59,7 +59,6 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
                 'date': 'The date this backdoor was added'
             },
             'campaign': 'List [] of campaigns using this file',
-            'analysis': 'List [] of analysis results from tools for this file',
             'source': 'List [] of sources that provided this file',
             'created': 'ISODate of when this file was uploaded',
             'modified': 'ISODate of when the file metadata was last modified',

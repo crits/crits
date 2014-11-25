@@ -283,8 +283,8 @@ def generate_raw_data_jtable(request, option):
 def handle_raw_data_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
-                         link_id=None, method=None, copy_rels=False,
-                         bucket_list=None, ticket=None):
+                         link_id=None, method=None, reference=None,
+                         copy_rels=False, bucket_list=None, ticket=None):
     """
     Add RawData.
 
@@ -312,6 +312,8 @@ def handle_raw_data_file(data, source_name, user=None,
     :type link_id: str
     :param method: The method of acquiring this RawData.
     :type method: str
+    :param reference: A reference to the source of this RawData.
+    :type reference: str
     :param copy_rels: Copy relationships from the previous version to this one.
     :type copy_rels: bool
     :param bucket_list: Bucket(s) to add to this RawData
@@ -355,7 +357,7 @@ def handle_raw_data_file(data, source_name, user=None,
     # create source
     source = create_embedded_source(source_name,
                                     date=timestamp,
-                                    reference='',
+                                    reference=reference,
                                     method=method,
                                     analyst=user)
 
@@ -528,16 +530,14 @@ def update_raw_data_highlight_comment(_id, comment, line, analyst):
     if not raw_data:
         return None
     else:
-        i = 0
         for highlight in raw_data.highlights:
             if highlight.line == int(line):
-                raw_data.highlights[i].comment = comment
+                highlight.comment = comment
                 try:
                     raw_data.save(username=analyst)
                     return {'success': True}
                 except ValidationError, e:
                     return {'success': False, 'message': str(e)}
-            i += 1
         return {'success': False, 'message': 'Could not find highlight.'}
 
 def update_raw_data_highlight_date(_id, date, line, analyst):
@@ -559,16 +559,14 @@ def update_raw_data_highlight_date(_id, date, line, analyst):
     if not raw_data:
         return None
     else:
-        i = 0
         for highlight in raw_data.highlights:
             if highlight.line == int(line):
-                raw_data.highlights[i].line_date = parse(date, fuzzy=True)
+                highlight.line_date = parse(date, fuzzy=True)
                 try:
                     raw_data.save(username=analyst)
                     return {'success': True}
                 except ValidationError, e:
                     return {'success': False, 'message': str(e)}
-            i += 1
         return {'success': False, 'message': 'Could not find highlight.'}
 
 def new_inline_comment(_id, comment, line_num, analyst):
