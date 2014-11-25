@@ -916,7 +916,7 @@ class CRITsAuthBackend(object):
             # the user has exceeded the login threshold for this time period
             # don't go any further. Track the invalid login and return.
             if (((user.totp and totp_enabled == 'Optional') or
-                    totp_enabled == 'Required') and
+                    (user.totp and totp_enabled == 'Required')) and
                     self._exceeded_login_threshold(user)):
                 e.success = False
                 self.track_login_attempt(user, e)
@@ -1058,7 +1058,7 @@ Please contact a site administrator to resolve.
 
         # If login requires TOTP, don't log this as a success yet
         if ((user.totp and totp_enabled == 'Optional') or
-            totp_enabled == 'Required'):
+            (user.totp and totp_enabled == 'Required')):
             return user
         e.success = True
         # only track the last 50 login attempts
