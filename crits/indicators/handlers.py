@@ -1214,7 +1214,7 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
 
 def create_indicator_from_domain(type_, id_, value, analyst):
     """
-    Add indicators from raw data.
+    Add indicators from domain.
 
     :param type_: The indicator type to add.
     :type type_: str
