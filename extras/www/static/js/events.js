@@ -17,7 +17,7 @@ $(document).ready(function() {
                     }
                 }
             });
-            return $('<div/>').text(value).html();
+            return value.replace(/&(?!amp;|quot;|apos;|gt;|lt;)|["'><]/g, function (s) { return escape(s); });
         }(value, settings, this);
         },
         {
