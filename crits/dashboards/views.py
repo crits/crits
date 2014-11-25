@@ -181,7 +181,10 @@ def save_new_dashboard(request):
                              sizex=table['sizex'], sizey=table['sizey'])
         if not response['success']:
             return httpResponse(response)
-    return respondWithSuccess("Dashboard saved successfully!")
+    return httpResponse({"success":True,
+                         "clone":clone,
+                         "dashId": str(dashboard.id),
+                         "message":"Dashboard saved successfully!"})
 
 @user_passes_test(user_can_view_data)
 def get_dashboard_table_data(request, tableName):

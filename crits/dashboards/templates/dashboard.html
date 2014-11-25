@@ -166,7 +166,10 @@
                 datatype: 'json',
                 success: function(data) {
                     showResults(data.message, !data.success);
-                    showSaveButton = true;
+                    if (data.clone)
+                        window.location = '/dashboards/id/'+data.dashId+'/';
+                    else
+                        showSaveButton = true;
                 },
                 error: function(data) {
                      showResults('An unexpected error occurred while saving dashboard.'+
