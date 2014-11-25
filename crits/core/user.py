@@ -843,9 +843,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             	filter = '(|(cn='+self.username+')(uid='+self.username+'))'
             	# use the retrieved dn for the second bind
             	un = l.search_s(config.ldap_userdn,ldap.SCOPE_SUBTREE,filter,['dn'])[0][0]
-            except Exception, e:
+            except Exception, err:
             	logger.error("Error binding to LDAP for: %s" % config.ldap_bind_dn)
-            	logger.error("ERR: %s" % e)
+            	logger.error("ERR: %s" % err)
             l.unbind()
             if len(ldap_server) == 2:
                 l = ldap.initialize('%s:%s' % (url.unparse(),
@@ -980,9 +980,9 @@ class CRITsAuthBackend(object):
                     		filter = '(|(cn='+fusername+')(uid='+fusername+'))'
                     		# use the retrieved dn for the second bind
                         	un = l.search_s(config.ldap_userdn,ldap.SCOPE_SUBTREE,filter,['dn'])[0][0]
-                        except Exception, e:
+                        except Exception, err:
             			logger.error("Error binding to LDAP for: %s" % config.ldap_bind_dn)
-            			logger.error("ERR: %s" % e)
+            			logger.error("ERR: %s" % err)
                         l.unbind()
                         if len(ldap_server) == 2:
                             l = ldap.initialize('%s:%s' % (url.unparse(),
