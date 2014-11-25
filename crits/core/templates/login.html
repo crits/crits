@@ -71,15 +71,14 @@
     <div id="login_form" class="login_box">
         <form id="login_form_container" method="POST" action="javascript:processLogin();">
         <table class="vertical">
-            <thead>
-            </thead>
+            <thead></thead>
             <tbody>
                 {% if show_auth %}
                 <tr id="login_uname">
                     <td class="key">
                         Username
                     </td>
-                    <td>
+                    <td style="width: 76%">
                         <input id="l_username" type="textbox" size="40" name="username" class="textbox" autofocus>
                     </td>
                 </tr>
@@ -92,6 +91,7 @@
                     </td>
                 </tr>
                 {% endif %}
+                {% if not crits_config.totp_web == "Disabled" %}
                 <tr id="login_tkn">
                     <td class="key">
                         Token
@@ -105,6 +105,7 @@
                         </p>
                     </td>
                 </tr>
+                {% endif %}
             </tbody>
         </table>
         <br />
