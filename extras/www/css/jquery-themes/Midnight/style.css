@@ -121,12 +121,10 @@ div.logo {
 
 img.login_logo {
     position: absolute;
-    top: 50%;
+    top: 20%;
     left: 50%;
-    width: 145px;
-    height: 150px;
-    margin-top: -300px;
-    margin-left: -72px;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
 }
 
 div.logo a img {
@@ -1374,9 +1372,8 @@ a.nav_icon:hover {
     top: 50%;
     left: 50%;
     width: 650px;
-    height: 200px;
-    margin-top: -100px;
-    margin-left: -300px;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
     text-align: center;
 }
 
