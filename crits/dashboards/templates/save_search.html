@@ -369,7 +369,8 @@
                                 var record = records[i];
                                 for(k in record)
                                     if(k.indexOf('count') >= 0 || k == "to" || k == "length" ||
-                                    		k == "size" || (k == "version" && object.type != "AnalysisResult")) 
+                                            k == "size" || k == 'results' ||
+                                            (k == "version" && object.type != "AnalysisResult")) 
                                         record[k] = parseInt(record[k]);
                                     else if(k == 'campaign')
                                     	record[k] = create_pivot_links(record[k]);
