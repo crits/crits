@@ -376,6 +376,8 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
             validate_ipv46_address(cidr_parts[0])
         except (ValidationError, ValueError) as cidr_error:
             return {"success": False, "message": "Invalid CIDR address."}
+    else:
+        return {"success": False, "message": "Invalid IP type."}
 
     retVal = {}
     is_item_new = False
