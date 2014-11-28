@@ -349,6 +349,8 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     if source:
         for s in source:
             actor.add_source(s)
+    else:
+        return {"success" : False, "message" : "Missing source information."}
 
     if not isinstance(aliases, list):
         aliases = aliases.split(',')
