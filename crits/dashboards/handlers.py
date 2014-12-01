@@ -341,7 +341,7 @@ def clear_dashboard(dashId):
     default_tables = {
                         "Counts": {
                             "sizex": 10,
-                            "sizey": 8,
+                            "sizey": 13,
                             "row": 1,
                             "col": 1
                         },
@@ -353,7 +353,7 @@ def clear_dashboard(dashId):
                         },
                         "Top Campaigns": {
                             "sizex": 25,
-                            "sizey": 13,
+                            "sizey": 8,
                             "row": 1,
                             "col": 20
                         },

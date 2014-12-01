@@ -370,11 +370,10 @@ span.right.link a:link{
 #dashId {
 	border:none!important;
 	font-size: 20px;
-	font-weight: 700;
+	font-weight: 700; 
 }
-
 .ui-tabs .ui-tabs-nav li.ui-tabs-active {
-    margin-bottom:-2px !important;
+	margin-bottom:-2px !important;
 }
 .divider {
 	border-left:1px solid #ababab;
@@ -391,7 +390,7 @@ span.right.link a:link{
 ul.gridster {
     padding-left: 0px !important;
 }
-.top.responsive {
+.top.responsive, .z-11 {
 	z-index:11;
 }
 .edit-button {
@@ -440,4 +439,16 @@ ul.gridster {
     -webkit-box-shadow:    1px 1px 1px 1px #adadad;
     -moz-box-shadow: 1px 1px 1px 1px #adadad;
     box-shadow:    1px 1px 1px 1px #adadad;
+}
+.edit-button {
+	margin:5px;
+}
+.shadowed {
+    -webkit-box-shadow: 2px 3px 5px 1px #adadad;;
+    -moz-box-shadow: 2px 3px 5px 1px #adadad;;
+    box-shadow: 2px 3px 5px 1px #adadad;
+    z-index:12;
+}
+#buttonBar i, #buttonBar button{
+	cursor:pointer;
 }

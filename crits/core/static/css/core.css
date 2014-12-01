@@ -390,7 +390,7 @@ span.right.link a:link{
 ul.gridster {
     padding-left: 0px !important;
 }
-.top.responsive {
+.top.responsive, .z-11 {
 	z-index:11;
 }
 .edit-button {
