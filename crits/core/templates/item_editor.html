@@ -14,6 +14,8 @@
 	        id="backdoor_button"><span>Backdoors ({{ counts.Backdoor }})</span></a></li>
 	    <li><a href="{% url 'crits.core.views.items_listing' 'Campaign' 'inline' %}"
 	        id="campaign_button"><span>Campaigns ({{ counts.Campaign }})</span></a></li>
+            <li><a href="{% url 'crits.core.views.items_listing' 'DisassemblyType' 'inline' %}"
+                id="disassemblytype_button"><span>Disassembly Types ({{ counts.DisassemblyType }})</span></a></li>
 	    <li><a href="{% url 'crits.core.views.items_listing' 'EventType' 'inline' %}"
 	        id="eventtype_button"><span>Event Types ({{ counts.EventType }})</span></a></li>
 	    <li><a href="{% url 'crits.core.views.items_listing' 'Exploit' 'inline' %}"

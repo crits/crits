@@ -23,6 +23,7 @@ class Sector(CritsDocument, CritsSchemaDocument, Document):
             'Actor': 'Integer',
             'Campaign': 'Integer',
             'Certificate': 'Integer',
+            'Disassembly': 'Integer',
             'Domain': 'Integer',
             'Email': 'Integer',
             'Target': 'Integer',
@@ -39,6 +40,7 @@ class Sector(CritsDocument, CritsSchemaDocument, Document):
     Actor = IntField(default=0)
     Campaign = IntField(default=0)
     Certificate = IntField(default=0)
+    Disassembly = IntField(default=0)
     Domain = IntField(default=0)
     Email = IntField(default=0)
     Event = IntField(default=0)

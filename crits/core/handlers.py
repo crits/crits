@@ -40,6 +40,7 @@ from crits.actors.actor import Actor
 from crits.campaigns.campaign import Campaign
 from crits.certificates.certificate import Certificate
 from crits.comments.comment import Comment
+from crits.disassembly.disassembly import Disassembly
 from crits.domains.domain import Domain
 from crits.events.event import Event
 from crits.ips.ip import IP
@@ -80,6 +81,7 @@ def get_favorites(analyst):
         'Campaign': 'name',
         'Certificate': 'filename',
         'Comment': 'object_id',
+        'Disassembly': 'md5',
         'Domain': 'domain',
         'Email': 'id',
         'Event': 'title',
@@ -186,6 +188,7 @@ def get_data_for_item(item_type, item_id):
         'Actor': ['name', ],
         'Campaign': ['name', ],
         'Certificate': ['filename', ],
+        'Disassembly': ['md5', ],
         'Domain': ['domain', ],
         'Email': ['from_address', 'date', ],
         'Event': ['title', 'event_type', ],
@@ -748,6 +751,7 @@ def alter_bucket_list(obj, buckets, val):
                            Actor=0,
                            Campaign=0,
                            Certificate=0,
+                           Disassembly=0,
                            Domain=0,
                            Email=0,
                            Event=0,
@@ -791,6 +795,7 @@ def generate_bucket_jtable(request, option):
                                               'Actor',
                                               'Campaign',
                                               'Certificate',
+                                              'Disassembly',
                                               'Domain',
                                               'Email',
                                               'Event',
@@ -803,9 +808,9 @@ def generate_bucket_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
-              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target',
-              'Promote']
+    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Disassembly',
+              'Domain', 'Email', 'Event', 'Indicator', 'IP', 'PCAP', 'RawData',
+              'Sample', 'Target', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
@@ -823,11 +828,13 @@ def generate_bucket_jtable(request, option):
             url = reverse('crits.core.views.bucket_promote')
         else:
             lower = ctype.lower()
-            if lower != "rawdata":
-                url = reverse('crits.%ss.views.%ss_listing' % (lower, lower))
-            else:
+            if lower == "rawdata":
                 lower = "raw_data"
                 url = reverse('crits.%s.views.%s_listing' % (lower, lower))
+            elif lower == "disassembly":
+                url = reverse('crits.%s.views.%s_listing' % (lower, lower))
+            else:
+                url = reverse('crits.%ss.views.%ss_listing' % (lower, lower))
 
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
@@ -1493,6 +1500,12 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                     {'value': search_query},
                     {'objects.value': search_query}
                 ]
+        elif type_ == "Disassembly":
+            search_list = [
+                    {'md5': search_query},
+                    {'data': search_query},
+                    {'objects.value': search_query},
+                ]
         elif type_ == "Domain":
             search_list = [
                     {'domain': search_query},
@@ -1552,6 +1565,17 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                                  {'x_originating_ip': search_query}]}
             elif search_type == "reference":
                 query = {'source.instances.reference': search_query}
+            else:
+                query = defaultquery
+        elif type_ == "Disassembly":
+            if search_type == "data":
+                query = {'data': search_query}
+            elif search_type == "data_type":
+                query = {'data_type': search_query}
+            elif search_type == "title":
+                query = {'title': search_query}
+            elif search_type == "tool":
+                query = {'tool.name': search_query}
             else:
                 query = defaultquery
         elif type_ == "RawData":
@@ -2056,6 +2080,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     "Actor": 'crits.actors.views.actor_detail',
                     "Campaign": 'crits.campaigns.views.campaign_details',
                     "Certificate": 'crits.certificates.views.certificate_details',
+                    "Disassembly": 'crits.disassembly.views.disassembly_details',
                     "Domain": 'crits.domains.views.domain_detail',
                     "Email": 'crits.emails.views.email_detail',
                     "Event": 'crits.events.views.view_event',
@@ -2366,6 +2391,9 @@ def generate_items_jtable(request, itype, option):
     elif itype == 'Campaign':
         fields = ['name', 'description', 'active', 'id']
         click = "function () {window.parent.$('#new-campaign').click();}"
+    elif itype == 'DisassemblyType':
+        fields = ['name', 'active', 'id']
+        click = "function () {window.parent.$('#disassembly_type_add').click();}"
     elif itype == 'EventType':
         fields = ['name', 'active', 'id']
     elif itype == 'Exploit':
@@ -3264,6 +3292,7 @@ def generate_global_search(request):
                     [Campaign, "crits.campaigns.views.campaigns_listing"],
                     [Certificate, "crits.certificates.views.certificates_listing"],
                     [Comment, "crits.comments.views.comments_listing"],
+                    [Disassembly, "crits.disassembly.views.disassembly_listing"],
                     [Domain, "crits.domains.views.domains_listing"],
                     [Email, "crits.emails.views.emails_listing"],
                     [Event, "crits.events.views.events_listing"],
@@ -3457,6 +3486,7 @@ def details_from_id(type_, id_):
     type_map = {'Actor': 'crits.actors.views.actor_detail',
                 'Campaign': 'crits.campaigns.views.campaign_details',
                 'Certificate': 'crits.certificates.views.certificate_details',
+                'Disassembly': 'crits.disassembly.views.disassembly_details',
                 'Domain': 'crits.domains.views.domain_detail',
                 'Email': 'crits.emails.views.email_detail',
                 'Event': 'crits.events.views.view_event',
@@ -3544,6 +3574,7 @@ def audit_entry(self, username, type_, new_doc=False):
         'Campaign': 'name',
         'Certificate': 'md5',
         'Comment': 'object_id',
+        'Disassembly': 'md5',
         'Domain': 'domain',
         'Email': 'id',
         'Event': 'id',
@@ -3763,6 +3794,7 @@ def alter_sector_list(obj, sectors, val):
                            Actor=0,
                            Campaign=0,
                            Certificate=0,
+                           Disassembly=0,
                            Domain=0,
                            Email=0,
                            Event=0,
@@ -3806,6 +3838,7 @@ def generate_sector_jtable(request, option):
                                               'Actor',
                                               'Campaign',
                                               'Certificate',
+                                              'Disassembly',
                                               'Domain',
                                               'Email',
                                               'Event',
@@ -3818,8 +3851,9 @@ def generate_sector_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
-              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target']
+    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Disassembly',
+              'Domain', 'Email', 'Event', 'Indicator', 'IP', 'PCAP', 'RawData',
+              'Sample', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',

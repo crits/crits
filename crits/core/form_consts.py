@@ -16,6 +16,7 @@ class Common():
     Actor = "Actor"
     Campaign = "Campaign"
     Certificate = "Certificate"
+    Disassembly = "Disassembly"
     Domain = "Domain"
     Email = "Email"
     Event = "Event"
@@ -95,6 +96,13 @@ class IP():
     IP_METHOD = "IP Source Method"
     IP_REFERENCE = "IP Source Reference"
     CACHED_RESULTS = "ip_cached_results"
+
+class Disassembly():
+    """
+    Constants for Disassembly.
+    """
+
+    SOURCE = Common.SOURCE
 
 
 class Domain():
@@ -240,6 +248,7 @@ def get_source_field_for_class(otype):
 
     class_to_source_field_map = {
         Common.Certificate: Certificate.SOURCE,
+        Common.Disassembly: Disassembly.SOURCE,
         Common.Domain: Domain.DOMAIN_SOURCE,
         Common.Email: Email.SOURCE,
         Common.Event: Event.SOURCE,

@@ -7,6 +7,7 @@ from optparse import make_option
 from create_indexes import create_indexes
 from create_event_types import add_event_types
 from create_object_types import add_object_types
+from create_disassembly_types import add_disassembly_types
 from create_relationship_types import add_relationship_types
 from create_sectors import add_sector_objects
 from setconfig import create_config_if_not_exist
@@ -61,6 +62,7 @@ class Command(BaseCommand):
         # (not recommended), then be sure to add them above so they will be
         # added back if this script were to be used again.
         populate_tlds(drop)
+        add_disassembly_types(drop)
         add_relationship_types(drop)
         add_object_types(drop)
         add_event_types(drop)
@@ -157,6 +159,7 @@ def populate_indicator_actions(drop):
     else:
         print "Indicator Actions: existing documents detected. skipping!"
 
+
 def populate_raw_data_types(drop):
     """
     Populate default set of raw data types into the system.
@@ -177,6 +180,7 @@ def populate_raw_data_types(drop):
         print "Raw Data Types: added %s types!" % len(data_types)
     else:
         print "Raw Data Types: existing documents detected. skipping!"
+
 
 def populate_tlds(drop):
     """

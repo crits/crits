@@ -95,6 +95,7 @@ def get_user_allowed_comments(comments, sources):
     docs = {'Actor': {},
             'Campaign':{},
             'Certificate':{},
+            'Disassembly':{},
             'Domain':{},
             'Email':{},
             'Event':{},

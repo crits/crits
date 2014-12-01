@@ -203,6 +203,7 @@ class DownloadFileForm(forms.Form):
         super(DownloadFileForm, self).__init__(*args, **kwargs)
         self.fields['objects'].choices = [('Actor', 'Actors'),
                                           ('Certificate', 'Certificates'),
+                                          ('Disassembly', 'Disassemblies'),
                                           ('Domain', 'Domains'),
                                           ('Email', 'Emails'),
                                           ('Indicator', 'Indicators'),

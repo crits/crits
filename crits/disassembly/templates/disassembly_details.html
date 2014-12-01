@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% load filters %}
+
+{% block title %} Disassembly Details {% endblock %}
+
+{% block content %}
+
+<script>
+    var disassembly_id = "{{ disassembly.id }}";
+    var link_id = "{{ disassembly.link_id|stringformat:"s" }}/"
+    var details_by_link = "{% url 'crits.disassembly.views.details_by_link' disassembly.link_id|stringformat:"s" %}"
+    var update_disassembly_description = "{% url 'crits.disassembly.views.set_disassembly_description' disassembly.id %}";
+    var update_disassembly_tool_details = "{% url 'crits.disassembly.views.set_disassembly_tool_details' disassembly.id %}";
+    var update_disassembly_tool_name = "{% url 'crits.disassembly.views.set_disassembly_tool_name' disassembly.id %}";
+    var update_disassembly_type = "{% url 'crits.disassembly.views.set_disassembly_type' disassembly.id %}";
+    var get_disassembly_type_dropdown = "{% url 'crits.disassembly.views.get_disassembly_type_dropdown' %}";
+    var get_disassembly_versions = "{% url 'crits.disassembly.views.get_disassembly_versions' disassembly.id|stringformat:"s" %}";
+</script>
+
+{% if disassembly %}
+<div id="tabnav" class="tabnav" style="font-size:90%;">
+    <ul style="font-size: 125%;">
+    <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ disassembly.analysis|length }})</span></a></li>
+    {% include 'services_tab_list_widget.html' %}
+</ul>
+
+<div id="details_section">
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        <li><a href="#" id="new-disassembly-ver" class="dialogClick" dialog="new-disassembly" persona="new" title="New Disassembly" data-action="{% url 'crits.disassembly.views.upload_disassembly' disassembly.link_id|stringformat:"s" %}">Upload New Version</a></li>
+        {% if admin %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="disassembly" action='{% url "crits.disassembly.views.remove_disassembly" disassembly.id %}'>Delete Disassembly</a></li>
+        {% endif %}
+    </ul>
+    </span>
+    <div class="content_box content_details">
+        <h3 class="titleheader">
+            <span id="disassembly_name" title="Copy to clipboard" data-name="{{ disassembly.filename }}">"{{ disassembly.filename }}" Details<span>
+        </h3>
+        <table class="vertical" width="100%">
+        <thead>
+        </thead>
+        <tbody>
+            <tr>
+            <td class='key'>ID</td>
+            <td>{{ disassembly.id }}</td>
+            </tr>
+            <tr>
+            <td class='key'>Created</td>
+            <td>{{ disassembly.created }}</td>
+            </tr>
+            <tr>
+            <td class='key'>Tool</td>
+            {% if disassembly.tool.name %}
+                <td>
+                    <span class="edit_underline" id="disassembly_tool_name">{{disassembly.tool.name}}</span>
+                </td>
+            {% else %}
+                <td>
+                    <span class="edit_underline" id="disassembly_tool_name">None</span>
+                </td>
+            {% endif %}
+            </tr>
+            <tr>
+            <td class='key'>Tool Version</td>
+            <td id="disassembly_tool_version">{{ disassembly.tool.version }}</td>
+            </tr>
+            <tr>
+            <td class='key'>Tool Details</td>
+            {% if disassembly.tool.details %}
+                <td>
+                    <span class="edit_underline" id="disassembly_tool_details">{{disassembly.tool.details}}</span>
+                </td>
+            {% else %}
+                <td>
+                    <span class="edit_underline" id="disassembly_tool_details">None</span>
+                </td>
+            {% endif %}
+            </tr>
+            <tr>
+                <td class='key'>Data Type</td>
+                    <span style="float: right;" class="object_status_response"></span>
+                </td>
+                <td>
+                    <span class="edit" id="disassembly_type" action="{% url 'crits.disassembly.views.set_disassembly_type' subscription.id %}">{{disassembly.disassembly_type}}</span>
+                </td>
+            </tr>
+            <tr>
+            <tr>
+            <td class='key'>Version</td>
+            <td>
+                <select id="jump_versions" data-link="{{ disassembly.link_id }}"
+                    data-length={{ versions }} data-version={{ disassembly.version }}>
+                </select>
+            </td>
+            </tr>
+            <tr>
+            <tr>
+            <td class='key'>Description</td>
+            {% if disassembly.description %}
+                <td>
+                    <span class="edit_underline" id="disassembly_description">{{disassembly.description}}</span>
+                </td>
+            {% else %}
+                <td>
+                    <span class="edit_underline" id="disassembly_description">None</span>
+                </td>
+            {% endif %}
+            </tr>
+            <tr>
+                <td class="key">Status
+                    <span style="float: right;" class="object_status_response"></span>
+                </td>
+                <td>
+                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{disassembly.status}}</span>
+                </td>
+            </tr>
+            {% with sectors=disassembly.sectors %}
+                {% include "sector_widget.html" %}
+            {% endwith %}
+            <tr>
+            {% with sources=disassembly.source obj_id=disassembly.id obj_type=subscription.type %}
+                {% include "sources_listing_widget.html" %}
+            {% endwith %}
+            </tr>
+            <tr>
+                {% with releasability=disassembly.releasability %}
+                    {% include 'releasability_list_widget.html' %}
+                {% endwith %}
+            </tr>
+        </tbody>
+        </table>
+    </div>
+    <div id="detail_floaters">
+        {% include 'details_options_widget.html' %}
+        {% with bucket_list=disassembly.bucket_list %}
+            {% include 'bucket_list_widget.html' %}
+        {% endwith %}
+    </div>
+    <div>
+      {% with obj=disassembly obj_type=subscription.type %}
+         {% include 'tickets_listing_widget.html' %}
+      {% endwith %}
+    </div>
+    <div>
+        {% with hit=disassembly col=COL_DISASSEMBLY %}
+            {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% include 'relationships_listing_widget.html' %}
+    </div>
+    <div>
+        {% include 'objects_listing_widget.html' %}
+    </div>
+    <div>
+    {% include 'screenshot_widget.html' %}
+    </div>
+    <div>
+        {% include "comments_listing_widget.html" %}
+    </div>
+</div>
+{% with item=disassembly %}
+    {% include "services_analysis_section.html" with crits_type="Disassembly" identifier=disassembly.id %}
+{% endwith %}
+{% include 'services_tab_tabs_widget.html' %}
+</div>
+
+{% else %}
+<h3>Disassembly not found. If you just uploaded Disassembly, try refreshing as the system might not have completed processing your upload yet.</h3>
+
+{% endif %}
+
+{% endblock %}
+
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/disassembly.js"></script>
+{% endblock %}
+
