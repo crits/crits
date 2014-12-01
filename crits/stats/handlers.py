@@ -254,7 +254,7 @@ def target_user_stats():
         function () {
             try {
                 this.to.forEach(function(z) {
-                    emit(z, {count: 1});
+                    emit(z.toLowerCase(), {count: 1});
                 });
             } catch(err) {}
         }
