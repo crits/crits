@@ -11,6 +11,7 @@
 {% endcomment %}
 {% block javascript_includes %}
     <script>
+        var $gridster;
         //tabs to be shown
         {%if not isDefaultOnDashboard%}
             var tabs = [{% for result in results %}
@@ -452,8 +453,10 @@
         //if all the images have been loaded, refresh the grid
         function refreshGridIfLastImage(img) {
             imgCount--;
-            if (imgCount == 0)
+            if (imgCount == 0) {
                 refreshGrid();
+                correctGridsterSizeY();
+            }
         }
         //show the data passed into it on the grid
         function showData(data) {
@@ -473,6 +476,7 @@
             }
             if (!isGridsterInitalized)
                 setUpGridster();
+            correctGridsterSizeY();
         }
         //refreshes the grid and then readds the droppable event
         function refreshGrid() {
@@ -772,6 +776,7 @@
                 onClick: function (event) {
                 	w2ui['grid'].sortData = [];
                     changeGrid(getGridObjectFromTab(event.object));
+                    showResultsDiv("");
                 },
                 onClose: function(event) {
                     var target = event.target;
@@ -882,6 +887,28 @@
                 w2ui['grid'].sort("{{sortBy.field}}", "{{sortBy.direction}}");
             {% endif %}
         });         //document.ready
+        $(window).load(function() {
+            window.setTimeout(function() {
+                refreshGrid();
+            }, 2000);
+        });
+        function correctGridsterSizeY() {
+            var baseY = $gridster.options.widget_base_dimensions[1];
+            var margY = $gridster.options.widget_margins[1];
+            var $this = $('#gridster-li');
+            var maxNeededHeight = $('#tab-content').height();
+            var currentSizeY = $this.attr('data-sizey');
+            for (var i = 1; i < 100; i++) {
+                if (gridster_getTestHeight(i) > maxNeededHeight) {
+                    if (i != currentSizeY)
+                        $gridster.resize_widget($this, null, i);
+                    break;
+                }
+            }
+            function gridster_getTestHeight(x) {
+                return (x*baseY) + ((x-1) * margY)*2;
+            }
+        }
         $("#pinToDashboard").click(function(e) {
             e.preventDefault();
             $("#pinToDashboardDialog").dialog("open");
