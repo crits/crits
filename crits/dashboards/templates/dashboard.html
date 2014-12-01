@@ -6,7 +6,7 @@
 
 {% block javascript_includes %}
     <script>
-        var buttonBarOffset = '-254px';
+        var buttonBarOffset;
         //used to display the save
         var showSaveButton = true;
         //Dialog box opened when attemped to destroy dashboard
@@ -316,17 +316,6 @@
             return links;
         }
         $(document).ready(function() {          //doc.ready
-            if( navigator.userAgent.indexOf("Chrome") != -1 ) {
-                buttonBarOffset = '-214px';
-                $('#other-searches-dropdown').width('210px');
-                $('#other-searches-dropdown').css('top','45px');
-                }
-            else if( navigator.userAgent.indexOf("MSIE") != -1 ) {
-                buttonBarOffset = '-244px';
-                $('#other-searches-dropdown').width('240px');
-                $('#other-searches-dropdown').css('top','47px');
-            }
-            $('#buttonBar').css('right',buttonBarOffset);
             {% for table in tables %}
                 var isDefault = false;
                 var sortField = null;
@@ -432,6 +421,18 @@
         }
         var $gridster;
         $(window).load(function() {
+            /*
+            The following is necessary because the buttons are displayed differently
+            in each browser and the therefore the buttonBarOffset needs to be different.
+            */
+            buttonBarOffset = $('#buttons').width();
+            $('#other-searches-dropdown').width(buttonBarOffset);
+            //calculates what the offset should be for the button bar
+            buttonBarOffset = '-'+parseInt(buttonBarOffset+4)+'px';
+            //sets the absolue postioning of the other searches dropdown
+            $('#other-searches-dropdown').css('top',parseInt($('#buttonBar').height()+12)+'px');
+            //sets the button bars position
+            $('#buttonBar').css('right',buttonBarOffset);
             dashWidth = $('#dashboardWrapper').width()*.99;
             dashHeight = $('#dashboardWrapper').height();
             $gridster = $('#dashboardWrapper ul').gridster({
@@ -459,7 +460,7 @@
                     w2ui[$(this).attr('name')].refresh();
                 });
                 correctGridsterSizeY();
-            }, 0);
+            }, 10);
             //this fixed bug in chrome that causes the tables to appear whited out on load
             window.setTimeout(function() {
                 $('#toggleGridsterButton').click();
@@ -530,11 +531,11 @@
                     {% endfor %}	                   
                 </select>
             </div>
-            <div id='buttonBar' style='position:absolute;right:-250px;'>
-                <div style='float:left;margin-top:6px;'>
+            <div id='buttonBar' style='position:absolute;right:-300px;'>
+                <div style='float:left;margin-top:6px;margin-right:2px;'>
                     <i id='toggleButtonBar' class='fa fa-chevron-left fa-2x'></i>
                 </div>
-                <div class='shadowed' style='float:right;border:1px solid #adadad;background-color:#eaeaea;'>
+                <div class='shadowed' id='buttons' style='float:right;border:1px solid #adadad;background-color:#eaeaea;'>
                     <button class='edit-button dont-toggle' id='toggleGridsterButton' title='Toggle Edit Mode'>
                        <i class='fa fa-arrows dont-toggle'></i>
                     </button>
