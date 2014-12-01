@@ -453,11 +453,13 @@
                     }
                 }
             }).data('gridster');
-        	$gridster.disable();
-            $('.w2ui-grid').each(function() {
-            	w2ui[$(this).attr('name')].refresh();
-            });
-            correctGridsterSizeY();
+            $gridster.disable();
+            window.setTimeout(function() {
+                $('.w2ui-grid').each(function() {
+                    w2ui[$(this).attr('name')].refresh();
+                });
+                correctGridsterSizeY();
+            }, 0);
             //this fixed bug in chrome that causes the tables to appear whited out on load
             window.setTimeout(function() {
                 $('#toggleGridsterButton').click();
