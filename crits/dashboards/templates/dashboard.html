@@ -367,6 +367,7 @@
                     col['resizable'] = true;
                     columns.push(col);
                 {% endfor %}
+                columns[columns.length-1].resizable=false;
                 //sets up the w2ui grid
 		        $('#{{table.id}}').w2grid({ 
 	                name: '{{table.id}}', 

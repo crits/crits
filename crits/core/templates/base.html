@@ -117,50 +117,56 @@
   <!-- start page -->
   <div class="wholepage">
     <!-- start header -->
-    <div class='top'>
+    {% if crits_config.debug %}
+    <div class="top" style="background: url('/new_images/top_bar_bg_dev.png') repeat-x;">
+    {% else %}
+    <div class="top">
+    {% endif %}
       {% if request.user.is_authenticated %}
       <div id="show_nav_menu" class="top_item" title="Navigation Menu">
-    <span class="nav-menu-icon"></span>
+        <span class="nav-menu-icon"></span>
       </div>
       <div id="show_username" class='top_item'>
-    <p data-intro="Your Profile" data-position="bottom"><a href="{% url 'crits.core.views.profile' %}">{{ user.first_name }} {{ user.last_name }}</a>
-      </p>
+        <p data-intro="Your Profile" data-position="bottom">
+          <a href="{% url 'crits.core.views.profile' %}">{{ user.first_name }} {{ user.last_name }}</a>
+        </p>
       </div>
       {% if user_notifications and user_notifications > 0 %}
       <div class='top_item' data-intro="Notifications" data-position="bottom">
-    <span class="ui-state-default ui-corner-all" style="border: 0px;">
-      <a href="{% url 'crits.core.views.profile' %}#notifications_button" class="ui-icon ui-icon-info notify_enable" title="Notifications ({{ user_notifications }})" style="margin-top: 3px;"></a>
-    </span>
+        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+          <a href="{% url 'crits.core.views.profile' %}#notifications_button" class="ui-icon ui-icon-info notify_enable" title="Notifications ({{ user_notifications }})" style="margin-top: 3px;"></a>
+        </span>
       </div>
       {% endif %}
 
       {% include "subscription_widget.html" %}
 
       <div class='top_item' id="clipboard_container">
-    <span id="clipboard_icon" class="ui-icon ui-icon-clipboard clipboard_icon_empty clipboard_qtip" data-intro="Clipboard" data-position="right"></span>
-    <div id="selected_item_topbar" class="clipboard_qtip_body" style="display: none;">Your clipboard is empty.</div>
+        <span id="clipboard_icon" class="ui-icon ui-icon-clipboard clipboard_icon_empty clipboard_qtip" data-intro="Clipboard" data-position="right"></span>
+        <div id="selected_item_topbar" class="clipboard_qtip_body" style="display: none;">Your clipboard is empty.</div>
       </div>
       <div class='top_item' id="favorites_container">
-    <a href="#" class="favorites_button" action="{% url 'crits.core.views.favorites' %}"><span class="ui-icon ui-icon-star favorites_icon favorites_icon_inactive" data-intro="Favorites" data-position="left"></a><div id="favorites_results" style="a:link {color:#FF0000;}; color: #FFFFFF; display: none;"></div></span>
+        <a href="#" class="favorites_button" action="{% url 'crits.core.views.favorites' %}">
+          <span class="ui-icon ui-icon-star favorites_icon favorites_icon_inactive" data-intro="Favorites" data-position="left"></span>
+        </a>
+        <div id="favorites_results" style="a:link {color:#FF0000;}; color: #FFFFFF; display: none;"></div>
       </div>
       <div class="top_item" style="float: right;" title="Advanced Search">
-    <span class="search-menu-icon"></span>
+        <span class="search-menu-icon"></span>
       </div>
       <div class='top_item' id="help_overlay_container">
-    <span id="help_overlay" class="help_overlay_icon" data-intro="Press ? for Shortcut Keys." data-position='bottom' title="Overlay Help"></span>
+        <span id="help_overlay" class="help_overlay_icon" data-intro="Press ? for Shortcut Keys." data-position='bottom' title="Overlay Help"></span>
       </div>
 
-      <!-- Begin search section -->
+      <!-- search section -->
       <div id="show_search" class='search'>
-    <form style='display: inline;' method="get" id="search" action="{% url 'crits.core.views.global_search_listing' %}" data-intro="Global Search" data-position="bottom">
-      <input id="global_search_box" type="text" size="40" name="q" class="global_search_box" placeholder=" Global Quick Search"/>
-          <input type="hidden" name='search_type' value='global'>
-    </form>
+        <form style='display: inline;' method="get" id="search" action="{% url 'crits.core.views.global_search_listing' %}" data-intro="Global Search" data-position="bottom">
+          <input id="global_search_box" type="text" size="40" name="q" class="global_search_box" placeholder=" Global Quick Search" />
+          <input type="hidden" name='search_type' value='global' />
+        </form>
       </div>
     </div>
     {% endif %}
-
-
     <!-- end header -->
     <!-- start content -->
     <div class='content'>
@@ -168,28 +174,32 @@
     </div>
     <!-- end content -->
     <!-- start footer -->
+    {% if crits_config.debug %}
+    <div class="bottom" style="background: url('/new_images/top_bar_bg_dev.png') repeat-x;">
+    {% else %}
     <div class="bottom">
+    {% endif %}
       <span class="right">
-    <b>CRITs&trade;</b> Copyright &copy; 2014 The MITRE Corporation. All Rights Reserved.
+        <b>CRITs&trade;</b> Copyright &copy; 2014 The MITRE Corporation. All Rights Reserved.
       </span>
       {% if request.user.is_authenticated %}
       <span class="right" data-intro="Data Classification" data-position="top">
-    <b>{{ classification }}</b>
+        <b>{{ classification }}</b>
       </span>
-      <span class="left" data-intro="CRITs DB Version" {% if not hide_git_hash%}id='versionNum' {% endif %} data-position="top" >
+      <span class="left" data-intro="CRITs DB Version" {% if not hide_git_hash%}id='versionNum' {% endif %} data-position="top">
         <b>Version:</b> {{ crits_version }}
       </span>
       <span class="left" data-intro="Hosting Organization" data-position="top">
-    <b>Hosted by:</b> {{ company_name }}
+        <b>Hosted by:</b> {{ company_name }}
       </span>
       <span class="left" data-intro="Instance Information" data-position="top">
-    <b>{{ instance_name }} Instance</b> (DB: {{mongo_database }})
+        <b>{{ instance_name }} Instance</b> (DB: {{mongo_database }})
       </span>
       <span class='left'>
-    <b>Last login:</b> {{ user.last_login|date }}
+        <b>Last login:</b> {{ user.last_login|date }}
       </span>
       <span class='left'>
-    <div id="pageLoadTiming"></div>
+        <div id="pageLoadTiming"></div>
       </span>
       {% endif %}
     </div>
