@@ -644,7 +644,7 @@ class CRITsAPIResource(MongoEngineResource):
         :returns: NotImplementedError if the resource doesn't override.
         """
 
-        raise NotImplementedError('You cannot currently delete objects through the API.')
+        return super(CRITsAPIResource, self).obj_delete_list(bundle=bundle, **kwargs)
 
     def obj_delete(self, bundle, **kwargs):
         """

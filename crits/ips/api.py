@@ -5,6 +5,9 @@ from tastypie.exceptions import BadRequest
 
 from crits.ips.ip import IP
 from crits.ips.handlers import ip_add_update
+from crits.ips.handlers import ip_remove
+from crits.campaigns.handlers import campaign_remove
+from crits.core.handlers import source_remove_all
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
@@ -13,12 +16,12 @@ class IPResource(CRITsAPIResource):
     """
     Class to handle everything related to the IP API.
 
-    Currently supports GET and POST.
+    Currently supports GET, POST, and DELETE.
     """
 
     class Meta:
         object_class = IP
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'delete')
         resource_name = "ips"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
@@ -93,4 +96,68 @@ class IPResource(CRITsAPIResource):
             content['url'] = url
         if result['success']:
             content['return_code'] = 0
+        self.crits_response(content)
+
+
+    def obj_delete_list(self, bundle, **kwargs):
+        """
+        Handles deleting an IP associated with an IP ID from CRITs.
+        Variables must be sent in the URL and not as a POST body.
+
+        If a campaign or source is provided with the IP ID, then this will just delete those references form the IP record.
+        If the request provides only an IP ID, then this will delete the entire record.
+        This assumes that the client has deteremined whether there are multiple campaign/source associations or not.
+
+        :param bundle: Bundle containing the information to delete the IP.
+        :type bundle: Tastypie Bundle object.
+        :returns: HttpResponse.
+        """
+        analyst = bundle.request.user.username
+
+        ip_id = bundle.request.REQUEST["ip_id"]
+
+        content = {'return_code': 1,
+                   'type': 'IP'}
+
+        if not ip_id:
+            content['message'] = "You must provide an IP ID."
+            self.crits_response(content)
+
+        result = {}
+
+        campaign = ""
+        try:
+          campaign = bundle.request.REQUEST.get("campaign")
+        except KeyError, e:
+          campaign = ""
+
+        source = ""
+        try:
+          source = bundle.request.REQUEST.get("source")
+        except KeyError, e:
+          source = ""
+
+        if campaign != None and campaign != "":
+            result = campaign_remove("IP",ip_id,campaign,analyst)
+            if not result['success']:
+              if result.get('message'):
+                 content['message'] = result.get('message')
+              self.crits_response(content)
+
+        if source != None and source != "":
+            result = source_remove_all("IP",ip_id,source,analyst)
+            if not result['success']:
+              if result.get('message'):
+                 content['message'] = result.get('message')
+              self.crits_response(content)
+
+        if ((source == None or source == "") and (campaign == None or campaign == "")):
+            result = ip_remove(ip_id,analyst)
+
+        if result.get('message'):
+            content['message'] = result.get('message') + " " + campaign + " " + source
+
+        if result.get('success'):
+            content['return_code'] = 0
+
         self.crits_response(content)

@@ -5,9 +5,19 @@ from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 
 from crits.domains.domain import Domain
-from crits.domains.handlers import add_new_domain, add_whois
+from crits.domains.handlers import add_new_domain, add_whois, generate_domain_jtable
+
+from crits.campaigns.handlers import campaign_remove
+from crits.core.handlers import source_remove_all
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
+
+
+class temp_request(object):
+    """
+    This is an empty class for creating a fake POST request in obj_delete_list
+    """
+    pass
 
 
 class DomainResource(CRITsAPIResource):
@@ -17,7 +27,7 @@ class DomainResource(CRITsAPIResource):
 
     class Meta:
         object_class = Domain
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'delete')
         resource_name = "domains"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
@@ -117,6 +127,89 @@ class DomainResource(CRITsAPIResource):
             content['return_code'] = 0
 
         self.crits_response(content)
+
+
+    def obj_delete_list(self, bundle, **kwargs):
+        """
+        This will delete a specific domain ID.
+        Variables must be sent in the URL and not as a POST body.
+
+        If a campaign or source is provided with the domain ID, then this will just delete those references from the domain record.
+        If the request contains only the domain ID, then the entire record will be deleted.
+        This assumes that the client has deteremined whether there are multiple campaign/source associations or not.
+
+
+        :param bundle: Bundle containing the information to create the Domain.
+        :type bundle: Tastypie Bundle object.
+        :returns: HttpResponse.
+        """
+
+        analyst = bundle.request.user.username
+        id = bundle.request.REQUEST["id"]
+
+        if not id:
+          content['message'] = 'You must provide a domain ID.'
+          self.crits_response(content)
+
+        content = {'return_code': 1,
+                   'type': 'Domain'}
+
+        result = {}
+
+        campaign = ""
+        try:
+          campaign = bundle.request.REQUEST.get("campaign")
+        except KeyError, e:
+          campaign = ""
+
+        source = ""
+        try:
+          source = bundle.request.REQUEST.get("source")
+        except KeyError, e:
+          source = ""
+
+        if campaign != None and campaign != "":
+            result = campaign_remove("Domain",id,campaign,analyst)
+            if not result['success']:
+              if result.get('message'):
+                 content['message'] = result.get('message')
+              self.crits_response(content)
+
+        if source != None and source != "":
+            result = source_remove_all("Domain",id,source,analyst)
+            if not result['success']:
+              if result.get('message'):
+                 content['message'] = result.get('message')
+              self.crits_response(content)
+
+        if ((source == None or source == "") and (campaign == None or campaign == "")):
+          """
+          Mongo Engine won't accept a DELETE request with a POST request body.
+          Therefore, DELETE requests must send the variables in the URL similar to GET requests.
+          However, the jtable code expects a POST request format.
+          This code will covert the GET format of a DELETE request to a POST format using temp_request so that it will be accepted by the jtable code.
+          """
+
+          fake_request = temp_request()
+          fake_request.user = temp_request()
+          fake_request.user.username = analyst
+          fake_request.POST = {}
+          fake_request.POST['id'] = id
+
+          jtable_result = generate_domain_jtable(fake_request,"jtdelete")
+          content['message'] = jtable_result.content
+
+          if 'OK' in content['message']:
+            content['return_code'] = 0
+
+        if result.get('message'):
+            content['message'] = result.get('message') + " " + campaign + " " + source
+
+        if result.get('success'):
+            content['return_code'] = 0
+
+        self.crits_response(content)
+
 
 class WhoIsResource(CRITsAPIResource):
     """
