@@ -131,12 +131,19 @@ class DomainResource(CRITsAPIResource):
 
     def obj_delete_list(self, bundle, **kwargs):
         """
-        This will delete a specific domain ID.
-        Variables must be sent in the URL and not as a POST body.
+        This will delete a specific domain ID record or it will delete the
+        campaign and source references within the domain ID's record.
 
-        If a campaign or source is provided with the domain ID, then this will just delete those references from the domain record.
-        If the request contains only the domain ID, then the entire record will be deleted.
-        This assumes that the client has deteremined whether there are multiple campaign/source associations or not.
+        Variables must be sent in the URL and not in the message body.
+
+        If a campaign or source is provided with the domain ID, then this will
+        just delete those references from the domain record.
+
+        If the request contains only the domain ID, then the entire record will
+        be deleted.
+
+        This code assumes that the client has already deteremined whether there
+        are multiple campaign/source associations or not.
 
 
         :param bundle: Bundle containing the information to create the Domain.
@@ -184,10 +191,17 @@ class DomainResource(CRITsAPIResource):
 
         if ((source == None or source == "") and (campaign == None or campaign == "")):
           """
-          Mongo Engine won't accept a DELETE request with a POST request body.
-          Therefore, DELETE requests must send the variables in the URL similar to GET requests.
+          The django-tastypie-mongoengine won't accept a DELETE request with
+          parameters that are passed in the request body.
+
+          Therefore, DELETE requests must send the variables in the URL similar
+          to GET requests.
+
           However, the jtable code expects a POST request format.
-          This code will covert the GET format of a DELETE request to a POST format using temp_request so that it will be accepted by the jtable code.
+
+          This code will covert the GET format of the DELETE request to a POST
+          format using temp_request so that it will be accepted by the jtable
+          code.
           """
 
           fake_request = temp_request()

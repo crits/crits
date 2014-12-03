@@ -101,12 +101,19 @@ class IPResource(CRITsAPIResource):
 
     def obj_delete_list(self, bundle, **kwargs):
         """
-        Handles deleting an IP associated with an IP ID from CRITs.
+        This will delete a specific IP record or it will delete the
+        campaign and source references within the IP's record.
+
         Variables must be sent in the URL and not as a POST body.
 
-        If a campaign or source is provided with the IP ID, then this will just delete those references form the IP record.
-        If the request provides only an IP ID, then this will delete the entire record.
-        This assumes that the client has deteremined whether there are multiple campaign/source associations or not.
+        If a campaign or source is provided with the IP ID, then this will only
+        delete those references form the IP record.
+
+        If the request provides only an IP ID, then this will delete the entire
+        record.
+
+        This assumes that the client has already deteremined whether there are
+        multiple campaign/source associations or not.
 
         :param bundle: Bundle containing the information to delete the IP.
         :type bundle: Tastypie Bundle object.
