@@ -165,7 +165,7 @@ class UploadIndicatorForm(forms.Form):
                              {'datatype':c[1].keys()[0],
                               'datatype_value':c[1].values()[0]}
                              ) for c in get_object_types(active=True,
-                                                         query={'datatype.file':{'$exists':0}})]
+                                                         query={'datatype.file':{'$exists':0}, 'datatype.enum':{'$exists':0}})]
 
         self.fields['indicator_type'].choices = choices
         self.fields['indicator_type'].widget.attrs = {'class':'object-types'}

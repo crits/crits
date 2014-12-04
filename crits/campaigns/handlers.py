@@ -95,7 +95,14 @@ def get_campaign_details(campaign_name, analyst):
     addresses = {}
     for email in emails:
         for to in email['to']:
-            addresses[to] = 1
+            # This might be a slow operation since we're looking up all "to"
+            # targets, could possibly bulk search this.
+            target = Target.objects(email_address__iexact=to).first()
+
+            if target is not None:
+                addresses[target.email_address] = 1
+            else:
+                addresses[to] = 1
     uniq_addrs = addresses.keys()
     counts['Target'] = Target.objects(email_address__in=uniq_addrs).count()
 

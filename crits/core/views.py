@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
@@ -232,7 +232,12 @@ def global_search_listing(request):
                                   {"error" : 'No valid search criteria'},
                                   RequestContext(request))
     args = generate_global_search(request)
-    
+
+    # If we matched a single ObjectID
+    if 'url' in args:
+        return redirect(args['url'], args['key'])
+
+    # For all other searches
     if 'Result' in args and args['Result'] == "ERROR":
         return render_to_response("error.html",
                                   {"error": args['Message']},
