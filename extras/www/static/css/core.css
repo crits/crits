@@ -405,6 +405,10 @@ ul.gridster {
 #buttonBar i, #buttonBar button{
     cursor:pointer;
 }
+#buttonBar button {
+    min-width:20px;
+    -webkit-border-radius: 0px !important;
+}
 #other-searches-dropdown {
 	max-height:400px;
 	overflow-y:auto;
