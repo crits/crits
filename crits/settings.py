@@ -201,6 +201,7 @@ if crits_config.get('email_port', None):
 ENABLE_API =             crits_config.get('enable_api', False)
 GIT_REPO_URL =           crits_config.get('git_repo_url', '')
 HTTP_PROXY =             crits_config.get('http_proxy', None)
+USER_AGENT =             crits_config.get('user_agent', 'Mozilla/5.0 (Windows NT 6.3; rv:99.0) Gecko/20100101 Firefox/99.0 CRITs')
 INSTANCE_NAME =          crits_config.get('instance_name', 'My Instance')
 INSTANCE_URL =           crits_config.get('instance_url', '')
 INVALID_LOGIN_ATTEMPTS = crits_config.get('invalid_login_attempts', 3) - 1
