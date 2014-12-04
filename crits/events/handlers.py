@@ -351,7 +351,6 @@ def update_event_description(event_id, description, analyst):
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
     h = HTMLParser()
     description = h.unescape(description)
-    description = urllib2.unquote(description)
     event.description = description
     try:
         event.save(username=analyst)
