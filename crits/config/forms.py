@@ -30,6 +30,11 @@ class ConfigGeneralForm(forms.Form):
         widget=forms.TextInput,
         help_text='*Requires a web server restart.',
         required=False)
+    user_agent = forms.CharField(
+        widget=forms.TextInput,
+        required=False,
+        label="User-Agent String for outbound requests",
+        help_text='*Requires a web server restart.')
     language_code = forms.CharField(
         widget=forms.TextInput,
         help_text='*Requires a web server restart.',
