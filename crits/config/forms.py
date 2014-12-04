@@ -22,6 +22,9 @@ class ConfigGeneralForm(forms.Form):
                                     help_text='*Requires a web server restart.')
     http_proxy = forms.CharField(widget=forms.TextInput, required=False,
                                  help_text='*Requires a web server restart.')
+    user_agent = forms.CharField(widget=forms.TextInput, required=False,
+                                 label="User-Agent String for outbound requests",
+                                 help_text='*Requires a web server restart.')
     language_code = forms.CharField(widget=forms.TextInput,
                                     required=True,
                                     initial='en-us',
