@@ -4,12 +4,20 @@
 <div class="content_box">
 <a name="{{ analysis.service_name }}-{{ analysis.analysis_id }}"></a>
 <h3 class="titleheader">
-    <span class="collapsible">{{ analysis.service_name }} (v.{{ analysis.version}}) - 
-   {{ analysis.status|capfirst }}</span>
-   <span style="float: right;" class="ui-icon ui-icon-triangle-1-s
-       collapsible"></span>
+    <span class="collapsible">
+        {% if analysis.status == "error" %}
+        <img src="/new_images/red_circle.png" class="analysisindicator" title="Error">
+        {% elif analysis.status == "started" %}
+        <img src="/new_images/loader_circle.gif" class="analysisindicator" title="Running">
+        {% elif not analysis.results %}
+        <img src="/new_images/yellow_circle.png" class="analysisindicator" title="No Results">
+        {% else %}
+        <img src="/new_images/green_circle.png" class="analysisindicator" title="Complete">
+        {% endif %}
+        {{ analysis.service_name }} (v.{{ analysis.version}})</span>
+   <span style="float: right;" class="ui-icon ui-icon-triangle-1-s collapsible"></span>
 </h3>
-<div>
+<div style="display: none;">
     <p>
     <a id="info_button" href="#" style="display: inline">Info</a>
     | <a id="log_button" href="#" style="display: inline">Log</a>

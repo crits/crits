@@ -3231,6 +3231,25 @@ def generate_global_search(request):
               "results" (list),
               "Result" (str of "OK" or "ERROR")
     """
+    # Perform rapid search for ObjectID strings
+    searchtext = request.GET['q']
+    if ObjectId.is_valid(searchtext):
+        for obj_type, url, key in [
+                ['Actor', 'crits.actors.views.actor_detail', 'id'],
+                ['Campaign', 'crits.campaigns.views.campaign_details', 'name'],
+                ['Certificate', 'crits.certificates.views.certificate_details', 'md5'],
+                ['Domain', 'crits.domains.views.domain_detail', 'domain'],
+                ['Email', 'crits.emails.views.email_detail', 'id'],
+                ['Event', 'crits.events.views.view_event', 'id'],
+                ['Indicator', 'crits.indicators.views.indicator', 'id'],
+                ['IP', 'crits.ips.views.ip_detail', 'ip'],
+                ['PCAP', 'crits.pcaps.views.pcap_details', 'md5'],
+                ['RawData', 'crits.raw_data.views.raw_data_details', 'id'],
+                ['Sample', 'crits.samples.views.detail', 'md5'],
+                ['Target', 'crits.targets.views.target_info', 'email_address']]:
+            obj = class_from_id(obj_type, searchtext)
+            if obj:
+                return {'url': url, 'key': obj[key]}
 
     # Importing here to prevent a circular import with Services and runscript.
     from crits.services.analysis_result import AnalysisResult
