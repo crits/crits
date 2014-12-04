@@ -17,7 +17,16 @@ $(document).ready(function() {
                     }
                 }
             });
-            return value.replace(/&(?!amp;|quot;|apos;|gt;|lt;)|["'><]/g, function (s) { return escape(s); });
+            var escapes = {
+                '&': '&amp;',
+                '"': '&quot;',
+                "'": '&apos;',
+                '>': '&gt;',
+                '<': '&lt;'
+            };
+
+            return value.replace(/&(?!amp;|quot;|apos;|gt;|lt;)|["'><]/g,
+                                 function (s) { return escapes[s]; });
         }(value, settings, this);
         },
         {
