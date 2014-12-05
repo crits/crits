@@ -153,6 +153,13 @@ $.noty.themes.crits = {
 
 $(document).ready(function() {
     var notyIDToNotyDict = {};
+    var isShowToastNotifications = true;
+    var notificationQueue = [];
+    var isUnloadQueue = true;
+
+    if(initial_notifications_display === 'hide') {
+        isShowToastNotifications = false;
+    }
 
     // this variable is used to calculate the time shift between the server
     // and client times
@@ -194,6 +201,38 @@ $(document).ready(function() {
     }
 
     function generateContainerNoty(container, type, message, timeout, id) {
+        console.log("message; " + message)
+        if(isShowToastNotifications === false) {
+            var $closeNotifications = $("#notifications_count");
+
+            if($closeNotifications.length === 0) {
+                $("#notifications").append('<div id="notifications_count" class="noty_message"></div>');
+                $("#notifications_count").click(function() {
+                    isShowToastNotifications = true;
+                    console.log('click');
+                    if(isUnloadQueue === true) {
+                        isUnloadQueue = false;
+
+                        while(notificationQueue.length > 0) {
+                            var args = notificationQueue.shift();
+
+                            console.log("1")
+                            generateContainerNoty.apply(this, args);
+                            console.log("2")
+                        }
+                    } else {
+                        console.log("not unloading")
+                    }
+
+                    $("#notifications_count").remove();
+                });
+            }
+
+            notificationQueue.push([container, type, message, timeout, id]);
+            $('#notifications_count').text("New Notifications(" + notificationQueue.length + ")");
+
+            return;
+        }
 
         var n = $(container).noty({
             text        : message,
@@ -209,7 +248,7 @@ $(document).ready(function() {
 
                     if(newer_notifications_location === 'top') {
                         // This line of code will reverse the ordering so that the
-                        // newest notificatoins are on the top of the <ul> element
+                        // newest notifications are on the top of the <ul> element
                         $('#notifications > ul').prepend($('#' + this.options.id).parent());
                     }
 

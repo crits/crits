@@ -10,7 +10,7 @@
     text-align: center;
 }
 
-#close_notifications {
+#close_notifications, #notifications_count {
     background-color: white;
     border-style: solid;
     border-width: thin;
