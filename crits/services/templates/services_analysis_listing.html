@@ -9,23 +9,6 @@
         <li>No services enabled.</li>
     {% endfor %} </ul>
     </span>
-    <div class='content_box'>
-        <h3 class='titleheader'>
-        {% if item.filename %}
-            <span>Analysis of '{{ item.filename }}' - {{ relationship.value }}</span>
-        {% elif item.title %}
-            <span>Analysis of '{{ item.title }}' - {{ relationship.value }}</span>
-        {% endif %}
-        </h3>
-        <ul style="list-style: none;">
-        {% for analysis in service_results %}
-            <li class="analysis_result_summary_item">
-                <a href="#{{ analysis.service_name}}-{{ analysis.analysis_id }}">
-                    {{ analysis.service_name }} ({{ analysis.status }})</a>
-            </li>
-        {% endfor %}
-        </ul>
-    </div>
 
     {% for analysis in service_results %}
         {% if analysis.analysis_id %}

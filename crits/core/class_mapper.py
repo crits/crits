@@ -222,7 +222,7 @@ def class_from_value(type_, value):
     elif type_ == 'Screenshot':
         return Screenshot.objects(id=value).first()
     elif type_ == 'Target':
-        return Target.objects(email_address=value).first()
+        return Target.objects(email_address__iexact=value).first()
     else:
         return None
 
