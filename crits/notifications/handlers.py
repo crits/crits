@@ -204,7 +204,10 @@ def generate_audit_notification(username, operation_type, obj, changed_fields,
         message = None
         target_users = get_subscribed_users(obj_type, obj.id, sources)
         header = generate_notification_header(obj)
-        link_url = obj.get_details_url()
+        link_url = None
+
+        if hasattr(obj, 'get_details_url'):
+            link_url = obj.get_details_url()
 
         if header is not None:
             header = "New " + header

@@ -1171,6 +1171,9 @@ def base_context(request):
         if nav_template != None:
             base_context['nav_template'] = nav_template
 
+        base_context['newer_notifications_location'] = request.user.prefs.toast_notifications.get('newer_notifications_location', 'top')
+        base_context['initial_notifications_display'] = request.user.prefs.toast_notifications.get('initial_notifications_display', 'show')
+
         base_context['nav_config'] = {'text_color': request.user.prefs.nav.get('text_color'),
                                       'background_color': request.user.prefs.nav.get('background_color'),
                                       'hover_text_color': request.user.prefs.nav.get('hover_text_color'),

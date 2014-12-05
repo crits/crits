@@ -159,6 +159,14 @@ class ToastNotificationConfigForm(forms.Form):
                                              initial="sticky",
                                              required=False,
                                              label="Acknowledgement Type")
+    newer_notifications_location = forms.ChoiceField(widget=forms.Select,
+                                                     initial="top",
+                                                     required=False,
+                                                     label="Newer Notifications Located")
+    initial_notifications_display = forms.ChoiceField(widget=forms.Select,
+                                                      initial="show",
+                                                      required=False,
+                                                      label="On New Notifications")
     timeout = forms.IntegerField(min_value = 5,
                                  max_value = 3600,
                                  initial=30,
@@ -178,6 +186,12 @@ class ToastNotificationConfigForm(forms.Form):
 
         self.fields['acknowledgement_type'].choices = [("sticky", "sticky"),
                                                        ("timeout", "timeout")]
+
+        self.fields['newer_notifications_location'].choices = [("top", "top"),
+                                                               ("bottom", "bottom")]
+
+        self.fields['initial_notifications_display'].choices = [("show", "show"),
+                                                                ("hide", "hide")]
 
 class AddUserRoleForm(forms.Form):
     """
