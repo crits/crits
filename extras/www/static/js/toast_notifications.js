@@ -200,30 +200,34 @@ $(document).ready(function() {
         return result;
     }
 
+    function showNotificationsCount(container, type, message, timeout, id) {
+        var $closeNotifications = $("#notifications_count");
+
+        if($closeNotifications.length === 0) {
+            $("#notifications").append('<div id="notifications_count" class="noty_message"></div>');
+            $("#notifications_count").click(function() {
+                isShowToastNotifications = true;
+                if(isUnloadQueue === true) {
+                    isUnloadQueue = false;
+
+                    while(notificationQueue.length > 0) {
+                        var args = notificationQueue.shift();
+
+                        generateContainerNoty.apply(this, args);
+                    }
+                }
+
+                $("#notifications_count").remove();
+            });
+        }
+
+        notificationQueue.push([container, type, message, timeout, id]);
+        $('#notifications_count').text("New Notifications(" + notificationQueue.length + ")");
+    }
+
     function generateContainerNoty(container, type, message, timeout, id) {
         if(isShowToastNotifications === false) {
-            var $closeNotifications = $("#notifications_count");
-
-            if($closeNotifications.length === 0) {
-                $("#notifications").append('<div id="notifications_count" class="noty_message"></div>');
-                $("#notifications_count").click(function() {
-                    isShowToastNotifications = true;
-                    if(isUnloadQueue === true) {
-                        isUnloadQueue = false;
-
-                        while(notificationQueue.length > 0) {
-                            var args = notificationQueue.shift();
-
-                            generateContainerNoty.apply(this, args);
-                        }
-                    }
-
-                    $("#notifications_count").remove();
-                });
-            }
-
-            notificationQueue.push([container, type, message, timeout, id]);
-            $('#notifications_count').text("New Notifications(" + notificationQueue.length + ")");
+            showNotificationsCount();
 
             return;
         }
@@ -259,6 +263,8 @@ $(document).ready(function() {
                                 $.noty.close($(this).attr("id"));
                             });
                             $("#close_notifications").hide();
+
+                            updateQueueSize($.noty.queue.length - $("#notifications").find(".noty_bar").length);
                         });
 
                     } else {
@@ -300,11 +306,24 @@ $(document).ready(function() {
 
                         delete notyIDToNotyDict[n.options.id];
                     }
+
+                    updateQueueSize($.noty.queue.length - 1);
                 }
             }
         });
 
+        updateQueueSize($.noty.queue.length);
+
         notyIDToNotyDict[n.options.id] = {'noty': n, 'mongoID': id};
+    }
+
+    function updateQueueSize(queueLength) {
+        if(queueLength > 0) {
+            var closeBarMessage = "[Close All]<br>(" + queueLength + " hidden notifications)";
+            $("#close_notifications").html(closeBarMessage);
+        } else {
+            $("#close_notifications").html("[Close All]");
+        }
     }
 
     function updateNotificationTimes(currentDate) {
