@@ -201,7 +201,6 @@ $(document).ready(function() {
     }
 
     function generateContainerNoty(container, type, message, timeout, id) {
-        console.log("message; " + message)
         if(isShowToastNotifications === false) {
             var $closeNotifications = $("#notifications_count");
 
@@ -209,19 +208,14 @@ $(document).ready(function() {
                 $("#notifications").append('<div id="notifications_count" class="noty_message"></div>');
                 $("#notifications_count").click(function() {
                     isShowToastNotifications = true;
-                    console.log('click');
                     if(isUnloadQueue === true) {
                         isUnloadQueue = false;
 
                         while(notificationQueue.length > 0) {
                             var args = notificationQueue.shift();
 
-                            console.log("1")
                             generateContainerNoty.apply(this, args);
-                            console.log("2")
                         }
-                    } else {
-                        console.log("not unloading")
                     }
 
                     $("#notifications_count").remove();

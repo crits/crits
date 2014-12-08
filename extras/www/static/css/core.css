@@ -8,12 +8,15 @@
     padding-bottom: 10px;
     padding-right: 10px;
     text-align: center;
+    z-index: 99;
 }
 
 #close_notifications, #notifications_count {
     background-color: white;
     border-style: solid;
     border-width: thin;
+    padding-right: 40px;
+    padding-left: 40px;
 }
 
 span.noty_modified {

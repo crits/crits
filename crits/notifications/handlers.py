@@ -398,7 +398,7 @@ def get_notification_details(request, newer_than):
         notification_data = {
             "header": header,
             "message": notification.notification,
-            "date_modified": str(notification.created),
+            "date_modified": str(notification.created.strftime("%Y/%m/%d %H:%M:%S")),
             "link": link_url,
             "modified_by": notification.analyst,
             "id": str(notification.id),
@@ -410,7 +410,7 @@ def get_notification_details(request, newer_than):
     return {
         'notifications': notifications_list,
         'newest_notification': latest_notification_time,
-        'server_time': str(datetime.datetime.now()),
+        'server_time': str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")),
         'timeout': timeout,
     }
 
