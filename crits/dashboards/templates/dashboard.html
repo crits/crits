@@ -357,7 +357,10 @@
             {% if parentHasChanged %}
                 $('#parent-has-changed-dialog').dialog('open');
             {% endif %}
-        });
+            $('.top.responsive').mouseenter(function() {
+                $('#dashId:focus').blur();
+            });
+        });             //end doc.ready
         function constructW2ui(title, editUrl, isDefault, searchTerm,
                      records, columns, id, sortField, sortDirection) {
             var tableHeader = title+
