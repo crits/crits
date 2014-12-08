@@ -8,7 +8,6 @@
     padding-bottom: 10px;
     padding-right: 10px;
     text-align: center;
-    z-index: 99;
 }
 
 #close_notifications, #notifications_count {
