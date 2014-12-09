@@ -38,8 +38,6 @@ def modify_configuration(forms, analyst):
     config.merge(data, overwrite=True)
     try:
         config.save(username=analyst)
-
-        settings.ENABLE_TOASTS = data['enable_toasts']
         return {'message': "Success!"}
     except Exception, e:
         return {'message': "Failure: %s" % e}
