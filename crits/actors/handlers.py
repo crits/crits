@@ -288,7 +288,7 @@ def get_actor_by_name(allowed_sources, actor):
     return actor
 
 def add_new_actor(name, aliases=None, description=None, source=None,
-                  source_method=None, source_reference=None, campaign=None,
+                  source_method='', source_reference='', campaign=None,
                   confidence=None, analyst=None, bucket_list=None, ticket=None):
     """
     Add an Actor to CRITs.
@@ -469,7 +469,7 @@ def update_actor_tags(actor_id, tag_type, tags, username):
         return {'success': True}
 
 def add_new_actor_identifier(identifier_type, identifier=None, source=None,
-                             source_method=None, source_reference=None,
+                             source_method='', source_reference='',
                              analyst=None):
     """
     Add an Actor Identifier to CRITs.

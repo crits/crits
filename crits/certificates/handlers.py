@@ -205,7 +205,7 @@ def generate_cert_jtable(request, option):
 
 def handle_cert_file(filename, data, source_name, user=None,
                      description=None, related_id=None, related_md5=None,
-                     related_type=None, method=None, reference=None,
+                     related_type=None, method='', reference='',
                      relationship=None, bucket_list=None, ticket=None):
     """
     Add a Certificate.

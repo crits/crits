@@ -790,8 +790,8 @@ class CritsSourceDocument(BaseDocument):
 
     source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
 
-    def add_source(self, source_item=None, source=None, method=None,
-                   reference=None, date=None, analyst=None):
+    def add_source(self, source_item=None, source=None, method='',
+                   reference='', date=None, analyst=None):
         """
         Add a source instance to this top-level object.
 
@@ -839,8 +839,8 @@ class CritsSourceDocument(BaseDocument):
             else: # else, add as new source
                 self.source.append(source_item)
 
-    def edit_source(self, source=None, date=None, method=None,
-                    reference=None, analyst=None):
+    def edit_source(self, source=None, date=None, method='',
+                    reference='', analyst=None):
         """
         Edit a source instance from this top-level object.
 
@@ -1461,8 +1461,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 break
 
     def update_object_source(self, object_type, name, value,
-                             new_source=None, new_method=None,
-                             new_reference=None, analyst=None):
+                             new_source=None, new_method='',
+                             new_reference='', analyst=None):
         """
         Update the source for an object on this top-level object.
 
@@ -2321,7 +2321,7 @@ def json_handler(obj):
         return str(obj)
 
 def create_embedded_source(name, source_instance=None, date=None,
-                           reference=None, method=None, analyst=None):
+                           reference='', method='', analyst=None):
     """
     Create an EmbeddedSource object. If source_instance is provided it will be
     used, otherwise date, reference, and method will be used.

@@ -57,7 +57,7 @@ class STIXParser():
         self.failed = [] # track STIX/CybOX items that failed import
         self.saved_artifacts = {}
 
-    def parse_stix(self, reference=None, make_event=False, source=''):
+    def parse_stix(self, reference='', make_event=False, source=''):
         """
         Parse the document.
 

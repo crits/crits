@@ -1063,7 +1063,7 @@ def ci_update(indicator_id, ci_type, value, analyst):
         return {'success':False, 'message': 'Invalid CI type'}
 
 def add_indicators_for_domain(domain, fqdn, source, analyst,
-                              reference=None, ip=None, bucket_list=None,
+                              reference='', ip=None, bucket_list=None,
                               ticket=None, cache={}):
     """
     Add indicators for a domain.
@@ -1241,7 +1241,7 @@ def create_indicator_from_raw(type_, id_, value, analyst):
     if len(raw_data.campaign) > 0:
         campaign = raw_data.campaign[0].name
         campaign_confidence = raw_data.campaign[0].confidence
-    result = handle_indicator_ind(value, source, reference=None, ctype=type_,
+    result = handle_indicator_ind(value, source, reference='', ctype=type_,
                                   analyst=analyst,
                                   add_domain=True,
                                   add_relationship=True,
@@ -1297,7 +1297,7 @@ def create_indicator_from_event(type_, id_, value, analyst):
     if len(event.campaign) > 0:
         campaign = event.campaign[0].name
         campaign_confidence = event.campaign[0].confidence
-    result = handle_indicator_ind(value, source, reference=None, ctype=type_,
+    result = handle_indicator_ind(value, source, reference='', ctype=type_,
                                   analyst=analyst,
                                   add_domain=True,
                                   add_relationship=True,
