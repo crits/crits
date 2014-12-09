@@ -102,33 +102,21 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
                 'analyst': 'Analyst who provided this impact level'
             },
             'source': ('List [] of source information about who provided this'
-                    ' indicator')
+                       ' indicator')
         },
         "jtable_opts": {
-                         'details_url': 'crits.indicators.views.indicator',
-                         'details_url_key': 'id',
-                         'default_sort': "created DESC",
-                         'searchurl': 'crits.indicators.views.indicators_listing',
-                          'fields': [ "value", "ind_type", "created",
-                                      "modified", "source", "campaign",
-                                      "status", "id" ],
-                          'jtopts_fields': [ "details",
-                                             "value",
-                                             "type",
-                                             "created",
-                                             "modified",
-                                             "source",
-                                             "campaign",
-                                             "status",
-                                             "favorite",
-                                             "id" ],
-                         'hidden_fields': [],
-                         'linked_fields': [ "value", "source", "campaign",
-                                            "type", "status" ],
-                         'details_link': 'details',
-                         'no_sort': ['details']
-                       }
-
+            'details_url': 'crits.indicators.views.indicator',
+            'details_url_key': 'id',
+            'default_sort': "created DESC",
+            'searchurl': 'crits.indicators.views.indicators_listing',
+            'fields': ["value", "ind_type", "created", "modified", "source",
+                       "campaign", "status", "id"],
+            'jtopts_fields': ["details", "value", "type", "created", "modified",
+                              "source", "campaign", "status", "favorite", "id"],
+            'hidden_fields': [],
+            'linked_fields': ["value", "source", "campaign", "type", "status"],
+            'details_link': 'details', 'no_sort': ['details'],
+        }
     }
 
     actions = ListField(EmbeddedDocumentField(EmbeddedAction))
@@ -147,7 +135,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         migrate_indicator(self)
 
-    def to_csv(self, fields=[],headers=False):
+    def to_csv(self, fields=[], headers=False):
         """
         Generate a CSV row for this Indicator.
 
@@ -169,10 +157,10 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
     def to_stix_indicator(self):
         """
-            Creates a STIX Indicator object from a CybOX object.
+        Creates a STIX Indicator object from a CybOX object.
 
-            Returns the STIX Indicator and the original CRITs object's
-            releasability list.
+        Returns the STIX Indicator and the original CRITs object's
+        releasability list.
         """
         from stix.indicator import Indicator as S_Ind
         from stix.common.identity import Identity
@@ -317,7 +305,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         self.actions.append(ea)
 
     def edit_action(self, type_, active, analyst, begin_date,
-                   end_date, performed_date, reason, date=None):
+                    end_date, performed_date, reason, date=None):
         """
         Edit an action for an Indicator.
 
