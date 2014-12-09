@@ -155,6 +155,11 @@ class ToastNotificationConfigForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     enabled = forms.BooleanField(initial=True, required=False)
+    max_visible_notifications = forms.IntegerField(min_value = 1,
+                                                   max_value = 10,
+                                                   initial=5,
+                                                   required=False,
+                                                   label="Max Visible Notifications")
     acknowledgement_type = forms.ChoiceField(widget=forms.Select,
                                              initial="sticky",
                                              required=False,

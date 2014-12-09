@@ -227,7 +227,7 @@ $(document).ready(function() {
 
     function generateContainerNoty(container, type, message, timeout, id) {
         if(isShowToastNotifications === false) {
-            showNotificationsCount();
+            showNotificationsCount(container, type, message, timeout, id);
 
             return;
         }
@@ -239,7 +239,7 @@ $(document).ready(function() {
             layout      : 'topCenter',
             timeout     : timeout,
             theme       : 'crits',
-            maxVisible  : 10,
+            maxVisible  : max_visible_notifications,
             closeWith   : ['button'],
             callback: {
                 onShow: function() {
@@ -322,7 +322,7 @@ $(document).ready(function() {
             var closeBarMessage = "[Close All]<br>(" + queueLength + " hidden notifications)";
             $("#close_notifications").html(closeBarMessage);
         } else {
-            $("#close_notifications").html("[Close All]");
+            $("#close_notifications").text("[Close All]");
         }
     }
 
