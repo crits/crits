@@ -1,7 +1,5 @@
 from django.core.urlresolvers import reverse
-from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.raw_data.raw_data import RawData
 from crits.raw_data.handlers import handle_raw_data_file

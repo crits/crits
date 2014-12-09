@@ -1,5 +1,4 @@
 import json
-import re
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
 from django.shortcuts import render_to_response

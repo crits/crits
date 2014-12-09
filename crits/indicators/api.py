@@ -1,9 +1,7 @@
 import datetime
 
 from django.core.urlresolvers import reverse
-from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.indicators.indicator import Indicator
 from crits.indicators.handlers import handle_indicator_ind, activity_add

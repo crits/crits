@@ -1,7 +1,5 @@
 from django.core.urlresolvers import reverse
-from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.pcaps.pcap import PCAP
 from crits.pcaps.handlers import handle_pcap_file

@@ -1,7 +1,5 @@
 from django.core.urlresolvers import reverse
-from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.ips.ip import IP
 from crits.ips.handlers import ip_add_update
