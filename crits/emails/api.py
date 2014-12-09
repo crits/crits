@@ -1,7 +1,5 @@
 from django.core.urlresolvers import reverse
-from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.emails.email import Email
 from crits.emails.handlers import handle_pasted_eml, handle_yaml, handle_eml

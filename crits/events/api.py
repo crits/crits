@@ -1,7 +1,5 @@
 from django.core.urlresolvers import reverse
-from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.events.event import Event, EventType
 from crits.events.handlers import add_new_event

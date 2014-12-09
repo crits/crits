@@ -1,5 +1,4 @@
 from django.core.urlresolvers import reverse
-from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 
 from crits.actors.actor import Actor, ActorIdentifier

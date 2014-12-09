@@ -1,8 +1,6 @@
 from django.core.urlresolvers import reverse
 from mongoengine import Document
-from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.standards.handlers import import_standards_doc
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
