@@ -164,6 +164,10 @@ class ToastNotificationConfigForm(forms.Form):
                                              initial="sticky",
                                              required=False,
                                              label="Acknowledgement Type")
+    notification_anchor_location = forms.ChoiceField(widget=forms.Select,
+                                                     initial="bottom_right",
+                                                     required=False,
+                                                     label="Anchor Location")
     newer_notifications_location = forms.ChoiceField(widget=forms.Select,
                                                      initial="top",
                                                      required=False,
@@ -191,6 +195,9 @@ class ToastNotificationConfigForm(forms.Form):
 
         self.fields['acknowledgement_type'].choices = [("sticky", "sticky"),
                                                        ("timeout", "timeout")]
+
+        self.fields['notification_anchor_location'].choices = [("top_right", "top_right"),
+                                                               ("bottom_right", "bottom_right")]
 
         self.fields['newer_notifications_location'].choices = [("top", "top"),
                                                                ("bottom", "bottom")]

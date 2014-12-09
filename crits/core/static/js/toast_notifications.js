@@ -271,7 +271,22 @@ $(document).ready(function() {
                         // move the close notifications to the bottom, because
                         // it will reset to the top after all the notifications
                         // have been closed.
-                        $closeNotifications.parent().append($closeNotifications);
+                        if(notification_anchor_location === "bottom_right") {
+                            $("#notifications").css({
+                                top: "auto",
+                                bottom: "30px"
+                            });
+
+                            $closeNotifications.parent().append($closeNotifications);
+                        } else if(notification_anchor_location === "top_right") {
+                            $("#notifications").css({
+                                top: "30px",
+                                bottom: "auto"
+                            });
+
+                            $closeNotifications.parent().prepend($closeNotifications);
+                        }
+
                         $("#close_notifications").show();
                     }
 

@@ -76,6 +76,7 @@
             var initial_notifications_display = "{{ initial_notifications_display }}";
             var notifications_url = "{% url 'crits.notifications.views.poll' %}";
             var notifications_ack_url = "{% url 'crits.notifications.views.acknowledge' %}";
+            var notification_anchor_location = "{{ notification_anchor_location }}";
         {% endif %}
 
         var get_relationship_type_dropdown = "{% url 'crits.relationships.views.get_relationship_type_dropdown' %}";
