@@ -1070,7 +1070,7 @@ class EmbeddedCampaign(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     analyst = StringField()
-    confidence = StringField(default='low')
+    confidence = StringField(default='low', choices=('low', 'medium', 'high'))
     date = CritsDateTimeField(default=datetime.datetime.now)
     description = StringField()
     name = StringField(required=True)
@@ -1166,14 +1166,15 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         if isinstance(campaign_item, EmbeddedCampaign):
             if campaign_item.name != None and campaign_item.name.strip() != '':
+                campaign_item.confidence = campaign_item.confidence.strip().lower()
+                if campaign_item.confidence == '':
+                    campaign_item.confidence = 'low'
                 for c, campaign in enumerate(self.campaign):
                     if campaign.name == campaign_item.name:
                         if not update:
                             return {'success': False, 'message': 'This Campaign is already assigned.'}
                         con = {'low': 1, 'medium': 2, 'high': 3}
-                        if not con.get(campaign_item.confidence):
-                            campaign_item.confidence = 'low'
-                        if con.get(campaign.confidence, 0) < con[campaign_item.confidence]:
+                        if con.get(campaign.confidence, 0) < con.get(campaign_item.confidence):
                             self.campaign[c].confidence = campaign_item.confidence
                             self.campaign[c].analyst = campaign_item.analyst
                         break
