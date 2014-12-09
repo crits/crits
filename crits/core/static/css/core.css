@@ -3,7 +3,7 @@
 #notifications {
     /* fixate the notifications div at the bottom right of the screen */
     position: fixed;
-    top: 30px;
+    bottom: 30px;
     right: 20px;
     padding-bottom: 10px;
     padding-right: 10px;
