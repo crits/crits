@@ -192,6 +192,7 @@ def parse_comment(comment):
                        '\'': '&apos;',
                        '>': '&gt;',
                        '<': '&lt;',}.get(c, c) for c in comment)
+    comment = comment.replace('\n', '<br>') # make newlines html linebreaks
 
     # get users
     for i in re_user.finditer(comment):
