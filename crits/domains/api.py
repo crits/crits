@@ -5,19 +5,15 @@ from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 
 from crits.domains.domain import Domain
-from crits.domains.handlers import add_new_domain, add_whois, generate_domain_jtable
+from crits.domains.handlers import add_new_domain, add_whois
 
 from crits.campaigns.handlers import campaign_remove
 from crits.core.handlers import source_remove_all
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
+from crits.core.user_tools import is_admin
 
-
-class temp_request(object):
-    """
-    This is an empty class for creating a fake POST request in obj_delete_list
-    """
-    pass
+import json
 
 
 class DomainResource(CRITsAPIResource):
@@ -27,7 +23,7 @@ class DomainResource(CRITsAPIResource):
 
     class Meta:
         object_class = Domain
-        allowed_methods = ('get', 'post', 'delete')
+        allowed_methods = ('get', 'post', 'delete', 'patch')
         resource_name = "domains"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
@@ -131,51 +127,112 @@ class DomainResource(CRITsAPIResource):
 
     def obj_delete_list(self, bundle, **kwargs):
         """
-        This will delete a specific domain ID record or it will delete the
-        campaign and source references within the domain ID's record.
+        This will delete a specific domain ID record. While obj_delete_list
+        implies the ability to delete multiple records, this currently only
+        supports deleting a single record.
 
         Variables must be sent in the URL and not in the message body.
 
-        If a campaign or source is provided with the domain ID, then this will
-        just delete those references from the domain record.
-
-        If the request contains only the domain ID, then the entire record will
-        be deleted.
-
-        This code assumes that the client has already deteremined whether there
-        are multiple campaign/source associations or not.
-
-
-        :param bundle: Bundle containing the information to create the Domain.
+        :param bundle: Bundle containing the information to delete the Domain.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
         """
 
+        content = {'return_code': 1,
+                   'type': 'Domain'}
+
         analyst = bundle.request.user.username
-        id = bundle.request.REQUEST["id"]
+        id = bundle.request.REQUEST["d_id"]
+
+        obj_type = Domain
 
         if not id:
           content['message'] = 'You must provide a domain ID.'
           self.crits_response(content)
 
+        if not is_admin(analyst):
+          content['message'] = 'You must be an admin to delete domains.'
+          self.crits_response(content)
+
+        doc = obj_type.objects(id=id).first()
+
+        if not doc:
+          content['message'] = 'Unable to locate the domain associated with the provided ID.'
+          self.crits_response(content)
+
+        if "delete_all_relationships" in dir(doc):
+          doc.delete_all_relationships()
+
+        # For samples/pcaps
+        if "filedata" in dir(doc):
+          doc.filedata.delete()
+
+        doc.delete(username=analyst)
+         
+        content['return_code'] = 0
+
+        self.crits_response(content)
+
+
+
+    def patch_list(self, bundle, **kwargs):
+        """
+        This will delete the campaign and source references within the domain
+        ID's record. While "patch_list" implies the ability to modify multiple
+        records, this function currently only supports modifying a single
+        record.
+
+        The patch_list method is for any modification to a record. The
+        action parameter is hard coded to delete because that is the only
+        modification that is currently supported.
+
+        The data must be sent as JSON within the body of the request.
+
+        This code assumes that the client has already deteremined whether there
+        are multiple campaign/source associations.
+
+        :param bundle: Bundle containing the information to modify the Domain.
+        :type bundle: Tastypie Bundle object.
+        :returns: HttpResponse.
+        """
+
         content = {'return_code': 1,
                    'type': 'Domain'}
+
+        analyst = bundle.user.username
+        data = json.loads(bundle.body)
+        action = "delete"
+
+        try:
+            id = data.get("d_id")
+        except KeyError, e:
+            content['message'] = "You must provide a domain ID."
+            self.crits_response(content)
+
+        if not id:
+            content['message'] = 'You must provide a domain ID.' + str(length) + '-' + str(body)
+            self.crits_response(content)
 
         result = {}
 
         campaign = ""
         try:
-          campaign = bundle.request.REQUEST.get("campaign")
+          campaign = data.get("campaign")
         except KeyError, e:
           campaign = ""
 
         source = ""
         try:
-          source = bundle.request.REQUEST.get("source")
+          source = data.get("source")
         except KeyError, e:
           source = ""
 
+        if ((source == None or source == "") and (campaign == None or campaign == "")):
+            content['message'] = "A campaign or source must be provided."
+            self.crits_response(content)
+
         if campaign != None and campaign != "":
+          if action == "delete":
             result = campaign_remove("Domain",id,campaign,analyst)
             if not result['success']:
               if result.get('message'):
@@ -183,46 +240,19 @@ class DomainResource(CRITsAPIResource):
               self.crits_response(content)
 
         if source != None and source != "":
+          if action == "delete":
             result = source_remove_all("Domain",id,source,analyst)
             if not result['success']:
               if result.get('message'):
                  content['message'] = result.get('message')
               self.crits_response(content)
 
-        if ((source == None or source == "") and (campaign == None or campaign == "")):
-          """
-          The django-tastypie-mongoengine won't accept a DELETE request with
-          parameters that are passed in the request body.
-
-          Therefore, DELETE requests must send the variables in the URL similar
-          to GET requests.
-
-          However, the jtable code expects a POST request format.
-
-          This code will covert the GET format of the DELETE request to a POST
-          format using temp_request so that it will be accepted by the jtable
-          code.
-          """
-
-          fake_request = temp_request()
-          fake_request.user = temp_request()
-          fake_request.user.username = analyst
-          fake_request.POST = {}
-          fake_request.POST['id'] = id
-
-          jtable_result = generate_domain_jtable(fake_request,"jtdelete")
-          content['message'] = jtable_result.content
-
-          if 'OK' in content['message']:
-            content['return_code'] = 0
-
-        if result.get('message'):
-            content['message'] = result.get('message') + " " + campaign + " " + source
-
         if result.get('success'):
             content['return_code'] = 0
 
+
         self.crits_response(content)
+
 
 
 class WhoIsResource(CRITsAPIResource):
