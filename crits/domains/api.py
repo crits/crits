@@ -203,6 +203,10 @@ class DomainResource(CRITsAPIResource):
         data = json.loads(bundle.body)
         action = "delete"
 
+        if not is_admin(analyst):
+          content['message'] = 'You must be an admin to delete domains.'
+          self.crits_response(content)
+
         try:
             id = data.get("d_id")
         except KeyError, e:
@@ -210,7 +214,7 @@ class DomainResource(CRITsAPIResource):
             self.crits_response(content)
 
         if not id:
-            content['message'] = 'You must provide a domain ID.' + str(length) + '-' + str(body)
+            content['message'] = 'You must provide a domain ID.'
             self.crits_response(content)
 
         result = {}
@@ -249,7 +253,6 @@ class DomainResource(CRITsAPIResource):
 
         if result.get('success'):
             content['return_code'] = 0
-
 
         self.crits_response(content)
 

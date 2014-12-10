@@ -10,6 +10,7 @@ from crits.campaigns.handlers import campaign_remove
 from crits.core.handlers import source_remove_all
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
+from crits.core.user_tools import is_admin
 
 import json
 
@@ -157,6 +158,10 @@ class IPResource(CRITsAPIResource):
         analyst = bundle.user.username
         data = json.loads(bundle.body)
         action = "delete"
+
+        if not is_admin(analyst):
+          content['message'] = 'You must be an admin to delete IPs.'
+          self.crits_response(content)
 
         try:
             ip_id = data.get("ip_id")
