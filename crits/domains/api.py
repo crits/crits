@@ -172,14 +172,12 @@ class DomainResource(CRITsAPIResource):
         self.crits_response(content)
    
 
-    def patch_list(self, bundle, **kwargs):
+    def patch_detail(self, bundle, **kwargs):
         """
         This will delete the campaign and source references within the domain
-        ID's record. While "patch_list" implies the ability to modify multiple
-        records, this function currently only supports modifying a single
-        record.
+        ID's record.
 
-        The patch_list method is for any modification to a record. The
+        The patch_detail method is for any modification to a record. The
         action parameter is hard coded to delete because that is the only
         modification that is currently supported.
 
