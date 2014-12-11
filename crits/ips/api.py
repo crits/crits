@@ -122,13 +122,13 @@ class IPResource(CRITsAPIResource):
 
         path = bundle.request.path
         parts = path.split("/")
-        ip_id = parts[(len(parts) - 2)]
+        id = parts[(len(parts) - 2)]
 
-        if not ip_id:
+        if not id:
             content['message'] = "You must provide an IP ID."
             self.crits_response(content)
 
-        result = ip_remove(ip_id,analyst)
+        result = ip_remove(id,analyst)
 
         if result.get('success'):
             content['return_code'] = 0
@@ -165,13 +165,11 @@ class IPResource(CRITsAPIResource):
           content['message'] = 'You must be an admin to delete IPs.'
           self.crits_response(content)
 
-        try:
-            ip_id = data.get("id")
-        except KeyError, e:
-            content['message'] = "You must provide an IP ID."
-            self.crits_response(content)
+        path = bundle.path
+        parts = path.split("/")
+        id = parts[(len(parts) - 2)]
 
-        if not ip_id:
+        if not id:
             content['message'] = "You must provide an IP ID."
             self.crits_response(content)
 
@@ -195,7 +193,7 @@ class IPResource(CRITsAPIResource):
 
         if campaign != None and campaign != "":
           if action == "delete":
-            result = campaign_remove("IP",ip_id,campaign,analyst)
+            result = campaign_remove("IP",id,campaign,analyst)
             if not result['success']:
               if result.get('message'):
                  content['message'] = result.get('message')
@@ -203,7 +201,7 @@ class IPResource(CRITsAPIResource):
 
         if source != None and source != "":
           if action == "delete":
-            result = source_remove_all("IP",ip_id,source,analyst)
+            result = source_remove_all("IP",id,source,analyst)
             if not result['success']:
               if result.get('message'):
                  content['message'] = result.get('message')

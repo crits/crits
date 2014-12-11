@@ -202,11 +202,9 @@ class DomainResource(CRITsAPIResource):
           content['message'] = 'You must be an admin to delete domains.'
           self.crits_response(content)
 
-        try:
-            id = data.get("id")
-        except KeyError, e:
-            content['message'] = "You must provide a domain ID."
-            self.crits_response(content)
+        path = bundle.path
+        parts = path.split("/")
+        id = parts[(len(parts) - 2)]
 
         if not id:
             content['message'] = 'You must provide a domain ID.'
