@@ -125,35 +125,33 @@ class DomainResource(CRITsAPIResource):
         self.crits_response(content)
 
 
-    def obj_delete_list(self, bundle, **kwargs):
+    def obj_delete(self, bundle, **kwargs):
         """
-        This will delete a specific domain ID record. While obj_delete_list
-        implies the ability to delete multiple records, this currently only
-        supports deleting a single record.
+        This will delete a specific domain ID record.
 
-        Variables must be sent in the URL and not in the message body.
+        The domain ID must be part of the URL (/api/v1/domains/{id}/)
 
         :param bundle: Bundle containing the information to delete the Domain.
         :type bundle: Tastypie Bundle object.
         :returns: HttpResponse.
         """
-
         content = {'return_code': 1,
                    'type': 'Domain'}
 
         analyst = bundle.request.user.username
-        id = bundle.request.REQUEST["d_id"]
+        if not is_admin(analyst):
+          content['message'] = 'You must be an admin to delete domains.'
+          self.crits_response(content)
 
-        obj_type = Domain
+        path = bundle.request.path
+        parts = path.split("/")
+        id = parts[(len(parts) - 2)]
 
         if not id:
           content['message'] = 'You must provide a domain ID.'
           self.crits_response(content)
 
-        if not is_admin(analyst):
-          content['message'] = 'You must be an admin to delete domains.'
-          self.crits_response(content)
-
+        obj_type = Domain
         doc = obj_type.objects(id=id).first()
 
         if not doc:
@@ -172,8 +170,7 @@ class DomainResource(CRITsAPIResource):
         content['return_code'] = 0
 
         self.crits_response(content)
-
-
+   
 
     def patch_list(self, bundle, **kwargs):
         """
@@ -208,7 +205,7 @@ class DomainResource(CRITsAPIResource):
           self.crits_response(content)
 
         try:
-            id = data.get("d_id")
+            id = data.get("id")
         except KeyError, e:
             content['message'] = "You must provide a domain ID."
             self.crits_response(content)

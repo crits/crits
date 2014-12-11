@@ -101,13 +101,11 @@ class IPResource(CRITsAPIResource):
         self.crits_response(content)
 
 
-    def obj_delete_list(self, bundle, **kwargs):
+    def obj_delete(self, bundle, **kwargs):
         """
-        This will delete a specific IP record. While the obj_delete_list
-        implies the ability to delete multiple records, this currently only
-        supports deleting a single record. 
+        This will delete a specific IP record. 
 
-        Variables must be sent in the URL and not as a POST body.
+	The IP ID must be part of the URL (/api/v1/ips/{id}/)
 
         :param bundle: Bundle containing the information to delete the IP.
         :type bundle: Tastypie Bundle object.
@@ -118,7 +116,13 @@ class IPResource(CRITsAPIResource):
 
         analyst = bundle.request.user.username
 
-        ip_id = bundle.request.REQUEST["ip_id"]
+        if not is_admin(analyst):
+          content['message'] = 'You must be an admin to delete IPs.'
+          self.crits_response(content)
+
+        path = bundle.request.path
+        parts = path.split("/")
+        ip_id = parts[(len(parts) - 2)]
 
         if not ip_id:
             content['message'] = "You must provide an IP ID."
@@ -130,6 +134,7 @@ class IPResource(CRITsAPIResource):
             content['return_code'] = 0
 
         self.crits_response(content)
+
 
 
     def patch_list(self, bundle, **kwargs):
@@ -164,7 +169,7 @@ class IPResource(CRITsAPIResource):
           self.crits_response(content)
 
         try:
-            ip_id = data.get("ip_id")
+            ip_id = data.get("id")
         except KeyError, e:
             content['message'] = "You must provide an IP ID."
             self.crits_response(content)

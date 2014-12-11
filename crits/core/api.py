@@ -640,19 +640,19 @@ class CRITsAPIResource(MongoEngineResource):
         """
         Delete list of objects in CRITs. Should be overridden by each
         individual top-level resource.
+
+        :returns: NotImplementedError if the resource doesn't override.
         """
 
-        return super(CRITsAPIResource, self).obj_delete_list(bundle=bundle, **kwargs)
+        raise NotImplementedError('You cannot currently update this object through the API.')
 
     def obj_delete(self, bundle, **kwargs):
         """
         Delete an object in CRITs. Should be overridden by each
         individual top-level resource.
-
-        :returns: NotImplementedError if the resource doesn't override.
         """
 
-        raise NotImplementedError('You cannot currently delete this object through the API.')
+        return super(CRITsAPIResource, self).obj_delete_list(bundle=bundle, **kwargs)
 
 
     def patch_list(self, bundle, **kwargs):
