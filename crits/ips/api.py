@@ -2,6 +2,7 @@ from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
+from mongoengine.base import ValidationError
 
 from crits.ips.ip import IP
 from crits.ips.handlers import ip_add_update
@@ -101,26 +102,26 @@ class IPResource(CRITsAPIResource):
         self.crits_response(content)
 
 
-    def obj_delete(self, bundle, **kwargs):
+    def delete_detail(self, request, **kwargs):
         """
         This will delete a specific IP record. 
 
 	The IP ID must be part of the URL (/api/v1/ips/{id}/)
 
-        :param bundle: Bundle containing the information to delete the IP.
-        :type bundle: Tastypie Bundle object.
+        :param request: The incoming request.
+        :type request: :class:`django.http.HttpRequest`
         :returns: HttpResponse.
         """
         content = {'return_code': 1,
                    'type': 'IP'}
 
-        analyst = bundle.request.user.username
+        analyst = request.user.username
 
         if not is_admin(analyst):
           content['message'] = 'You must be an admin to delete IPs.'
           self.crits_response(content)
 
-        path = bundle.request.path
+        path = request.path
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 
@@ -128,7 +129,11 @@ class IPResource(CRITsAPIResource):
             content['message'] = "You must provide an IP ID."
             self.crits_response(content)
 
-        result = ip_remove(id,analyst)
+        try:
+          result = ip_remove(id,analyst)
+        except ValidationError,ve:
+          content['message'] = "Could not locate IP ID."
+          self.crits_response(content)
 
         if result.get('success'):
             content['return_code'] = 0
@@ -136,7 +141,7 @@ class IPResource(CRITsAPIResource):
         self.crits_response(content)
 
 
-    def patch_detail(self, bundle, **kwargs):
+    def patch_detail(self, request, **kwargs):
         """
         This will delete the campaign and source references within the IP
         ID's record. 
@@ -150,22 +155,22 @@ class IPResource(CRITsAPIResource):
         This code assumes that the client has already deteremined whether there
         are multiple campaign/source associations.
 
-        :param bundle: Bundle containing the information to delete the IP.
-        :type bundle: Tastypie Bundle object.
+        :param request: The incoming request.
+        :type request: :class:`django.http.HttpRequest`
         :returns: HttpResponse.
         """
         content = {'return_code': 1,
                    'type': 'IP'}
 
-        analyst = bundle.user.username
-        data = json.loads(bundle.body)
+        analyst = request.user.username
+        data = json.loads(request.body)
         action = "delete"
 
         if not is_admin(analyst):
-          content['message'] = 'You must be an admin to delete IPs.'
+          content['message'] = 'You must be an admin to modify IPs.'
           self.crits_response(content)
 
-        path = bundle.path
+        path = request.path
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 

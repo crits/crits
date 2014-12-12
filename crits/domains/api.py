@@ -3,6 +3,7 @@ from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
+from mongoengine.base import ValidationError
 
 from crits.domains.domain import Domain
 from crits.domains.handlers import add_new_domain, add_whois
@@ -125,25 +126,25 @@ class DomainResource(CRITsAPIResource):
         self.crits_response(content)
 
 
-    def obj_delete(self, bundle, **kwargs):
+    def delete_detail(self, request, **kwargs):
         """
         This will delete a specific domain ID record.
 
         The domain ID must be part of the URL (/api/v1/domains/{id}/)
 
-        :param bundle: Bundle containing the information to delete the Domain.
-        :type bundle: Tastypie Bundle object.
+        :param request: The incoming request.
+        :type request: :class:`django.http.HttpRequest`
         :returns: HttpResponse.
         """
         content = {'return_code': 1,
                    'type': 'Domain'}
 
-        analyst = bundle.request.user.username
+        analyst = request.user.username
         if not is_admin(analyst):
           content['message'] = 'You must be an admin to delete domains.'
           self.crits_response(content)
 
-        path = bundle.request.path
+        path = request.path
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 
@@ -152,7 +153,12 @@ class DomainResource(CRITsAPIResource):
           self.crits_response(content)
 
         obj_type = Domain
-        doc = obj_type.objects(id=id).first()
+
+        try:
+          doc = obj_type.objects(id=id).first()
+        except ValidationError, ve:
+          content['message'] = 'Domain ID not found!'
+          self.crits_response(content)
 
         if not doc:
           content['message'] = 'Unable to locate the domain associated with the provided ID.'
@@ -172,7 +178,7 @@ class DomainResource(CRITsAPIResource):
         self.crits_response(content)
    
 
-    def patch_detail(self, bundle, **kwargs):
+    def patch_detail(self, request, **kwargs):
         """
         This will delete the campaign and source references within the domain
         ID's record.
@@ -186,23 +192,23 @@ class DomainResource(CRITsAPIResource):
         This code assumes that the client has already deteremined whether there
         are multiple campaign/source associations.
 
-        :param bundle: Bundle containing the information to modify the Domain.
-        :type bundle: Tastypie Bundle object.
+        :param request: The incoming request.
+        :type request: :class:`django.http.HttpRequest`
         :returns: HttpResponse.
         """
 
         content = {'return_code': 1,
                    'type': 'Domain'}
 
-        analyst = bundle.user.username
-        data = json.loads(bundle.body)
+        analyst = request.user.username
+        data = json.loads(request.body)
         action = "delete"
 
         if not is_admin(analyst):
-          content['message'] = 'You must be an admin to delete domains.'
+          content['message'] = 'You must be an admin to modify domains.'
           self.crits_response(content)
 
-        path = bundle.path
+        path = request.path
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 
