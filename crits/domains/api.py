@@ -237,17 +237,31 @@ class DomainResource(CRITsAPIResource):
         if campaign != None and campaign != "":
           if action == "delete":
             result = campaign_remove("Domain",id,campaign,analyst)
+
+            if result == None:
+              content['message'] = 'Could not remove campaign.'
+              self.crits_response(content)
+
             if not result['success']:
               if result.get('message'):
                  content['message'] = result.get('message')
+              else:
+                 content['message'] = 'Could notremove campaign.'
               self.crits_response(content)
 
         if source != None and source != "":
           if action == "delete":
             result = source_remove_all("Domain",id,source,analyst)
+
+            if result == None:
+              content['message'] = 'Could not remove source.'
+              self.crits_response(content)
+
             if not result['success']:
               if result.get('message'):
                  content['message'] = result.get('message')
+              else:
+                 content['message'] = 'Could not find source.'
               self.crits_response(content)
 
         if result.get('success'):

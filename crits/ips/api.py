@@ -199,17 +199,31 @@ class IPResource(CRITsAPIResource):
         if campaign != None and campaign != "":
           if action == "delete":
             result = campaign_remove("IP",id,campaign,analyst)
+
+            if result == None:
+              content['message'] = 'Could not remove campaign.'
+              self.crits_response(content)
+
             if not result['success']:
               if result.get('message'):
                  content['message'] = result.get('message')
+              else:
+                 content['message'] = 'Could not remove campaign.'
               self.crits_response(content)
 
         if source != None and source != "":
           if action == "delete":
             result = source_remove_all("IP",id,source,analyst)
+
+            if result == None:
+              content['message'] = 'Could not remove source.'
+              self.crits_response(content)
+
             if not result['success']:
               if result.get('message'):
                  content['message'] = result.get('message')
+              else:
+                 content['message'] = 'Could not remove source.'
               self.crits_response(content)
 
         if result.get('success'):
