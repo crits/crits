@@ -667,12 +667,12 @@ class CRITsAPIResource(MongoEngineResource):
         :returns: NotImplementedError if the resource doesn't override.
         """
 
-        raise NotImplementedError('You cannot currently patch objects through the API.')
+        raise NotImplementedError('You cannot currently patch this object through the API.')
 
 
     def patch_list(self, bundle, **kwargs):
         """
-        Patch an object in CRITs. Should be overridden by each
+        Patch a list of objects in CRITs. Should be overridden by each
         individual top-level resource.
 
         :returns: NotImplementedError if the resource doesn't override.
