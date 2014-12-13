@@ -246,7 +246,7 @@ class DomainResource(CRITsAPIResource):
               if result.get('message'):
                  content['message'] = result.get('message')
               else:
-                 content['message'] = 'Could notremove campaign.'
+                 content['message'] = 'Could not remove campaign.'
               self.crits_response(content)
 
         if source != None and source != "":
