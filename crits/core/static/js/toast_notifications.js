@@ -250,10 +250,28 @@ $(document).ready(function() {
                         $('#notifications > ul').prepend($('#' + this.options.id).parent());
                     }
 
+                    if(notification_anchor_location === "bottom_right") {
+                        $("#notifications").css({
+                            top: "auto",
+                            bottom: "30px"
+                        });
+                    } else if(notification_anchor_location === "top_right") {
+                        $("#notifications").css({
+                            top: "30px",
+                            bottom: "auto"
+                        });
+                    }
+
                     var $closeNotifications = $("#close_notifications");
 
                     if($closeNotifications.length === 0) {
-                        $("#notifications").append('<div id="close_notifications" class="noty_message">[Close All]</div>');
+                        var closeNotificationsElem = '<div id="close_notifications" class="noty_message">[Close All]</div>';
+
+                        if(notification_anchor_location === "bottom_right") {
+                            $("#notifications").append(closeNotificationsElem);
+                        } else if(notification_anchor_location === "top_right") {
+                            $("#notifications").prepend(closeNotificationsElem);
+                        }
 
                         $("#close_notifications").click(function() {
                             $("#notifications").find(".noty_bar").each(function() {
@@ -272,18 +290,8 @@ $(document).ready(function() {
                         // it will reset to the top after all the notifications
                         // have been closed.
                         if(notification_anchor_location === "bottom_right") {
-                            $("#notifications").css({
-                                top: "auto",
-                                bottom: "30px"
-                            });
-
                             $closeNotifications.parent().append($closeNotifications);
                         } else if(notification_anchor_location === "top_right") {
-                            $("#notifications").css({
-                                top: "30px",
-                                bottom: "auto"
-                            });
-
                             $closeNotifications.parent().prepend($closeNotifications);
                         }
 
