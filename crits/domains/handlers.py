@@ -317,6 +317,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
         ip_result = None
 
         if retVal['success']:
+            new_domain = retVal['object']
             add_ip = data.get('add_ip')
             if add_ip:
                 ip = data.get('ip')
@@ -330,7 +331,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     ip_reference = data.get('ip_reference')
                 from crits.ips.handlers import ip_add_update
                 ip_result = ip_add_update(ip,
-                                          None,
+                                          'Address - ipv4-addr',
                                           ip_source,
                                           ip_method,
                                           ip_reference,
@@ -343,7 +344,6 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     errors.append(ip_result['message'])
                 else:
                     #add a relationship with the new IP address
-                    new_domain = retVal['object']
                     new_ip = ip_result['object']
                     if new_domain and new_ip:
                         new_domain.add_relationship(rel_item=new_ip,
@@ -366,28 +366,35 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                 retVal['warning'] = message
 
             #add indicators
-            # add_indicators_for_domain handles adding relationships as well
             if data.get('add_indicators'):
-                analyst = username
-                from crits.indicators.handlers import add_indicators_for_domain
+                from crits.indicators.handlers import create_indicator_from_obj
                 if ip_result and ip_result['success']:
                     obj = ip_result['object']
-                    errors += add_indicators_for_domain(sdomain,
-                                                        fqdn,
-                                                        source,
-                                                        analyst,
-                                                        reference,
-                                                        obj,
-                                                        bucket_list=bucket_list,
-                                                        ticket=ticket)['errors']
+                    result = create_indicator_from_obj('Address - ipv4-addr',
+                                                       'IP',
+                                                       obj.id,
+                                                       obj.ip,
+                                                       username)
+                    if result['success'] == False:
+                        errors.append(result['message'])
                 else:
-                    errors += add_indicators_for_domain(sdomain,
-                                                        fqdn,
-                                                        source,
-                                                        analyst,
-                                                        reference,
-                                                        bucket_list=bucket_list,
-                                                        ticket=ticket)['errors']
+                    result = create_indicator_from_obj('URI - Domain Name',
+                                                       'Domain',
+                                                       new_domain.id,
+                                                       sdomain,
+                                                       username)
+                    if result['success'] == False:
+                        errors.append(result['message'])
+                    # If we have an FQDN (ie: it is not the same as sdomain)
+                    # then add that also.
+                    if fqdn != sdomain:
+                        result = create_indicator_from_obj('URI - Domain Name',
+                                                           'Domain',
+                                                           new_domain.id,
+                                                           fqdn,
+                                                           username)
+                        if result['success'] == False:
+                            errors.append(result['message'])
             result = True
 
         elif 'message' in retVal: #database error? (!c_dom)

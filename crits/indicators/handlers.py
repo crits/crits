@@ -1067,79 +1067,6 @@ def ci_update(indicator_id, ci_type, value, analyst):
     else:
         return {'success': False, 'message': 'Invalid CI type'}
 
-def add_indicators_for_domain(domain, fqdn, source, analyst,
-                              reference=None, ip=None, bucket_list=None,
-                              ticket=None, cache={}):
-    """
-    Add indicators for a domain.
-
-    :param domain: The domain to add as an Indicator.
-    :type domain: str
-    :param fqdn: The fully qualified domain (if domain is a root domain).
-    :type fqdn: str
-    :param source: The source for the indicator.
-    :type source: str
-    :param analyst: The user adding these indicators.
-    :type analyst: str
-    :param reference: The reference to this data.
-    :type reference: str
-    :param ip: An IP address to also generate an indicator out of because it is
-               associated with this domain.
-    :type ip: :class:`crits.ips.ip.IP`
-    :param bucket_list: Buckets to associate with this indicator.
-    :type bucket_list: str
-    :param ticket: Ticket to associate with this indicator.
-    :type ticket: str
-    :param cache: Cached data, typically for performance enhancements
-                  during bulk operations.
-    :type cache: dict
-    :returns: dict with keys "success" (int) and "errors" (list)
-    """
-
-    errors = []
-    #add fqdn indicator (Well, could be root, but doesn't matter here. We'll check later.)
-    fqdn_result = handle_indicator_ind(fqdn,
-                                       source,
-                                       reference,
-                                       'URI - Domain Name',
-                                       analyst,
-                                       add_relationship=True,
-                                       bucket_list=bucket_list,
-                                       ticket=ticket,
-                                       cache=cache)
-    if not fqdn_result['success']:
-        errors += fqdn_result['message']
-    if ip:
-        #add ip ind and associate with fqdn ind--this will assoc. with
-        #   whatever original domain value the user supplied, whether
-        #   FQDN or root
-        ip_ind = handle_indicator_ind(ip.ip,
-                                      ip.source,
-                                      reference,
-                                      'Address - ipv4-addr',
-                                      analyst,
-                                      add_relationship=True,
-                                      bucket_list=bucket_list,
-                                      ticket=ticket,
-                                      cache=cache)
-        if not ip_ind['success']:
-            errors += ip_ind['message']
-
-    if domain != fqdn: #fqdn, so add root indicator as well
-        root_ind = handle_indicator_ind(domain,
-                                        source,
-                                        reference,
-                                        'URI - Domain Name',
-                                        analyst,
-                                        add_relationship=True,
-                                        bucket_list=bucket_list,
-                                        ticket=ticket,
-                                        cache=cache)
-        if not root_ind['success']:
-            errors.append(u"Error: Root domain indicator could not be added")
-
-    return {'success': len(errors) == 0, 'errors': errors}
-
 def create_indicator_and_ip(type_, id_, ip, analyst):
     """
     Add indicators for an IP address.
@@ -1219,7 +1146,7 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
 
 def create_indicator_from_obj(ind_type, obj_type, id_, value, analyst):
     """
-    Add indicators from domain.
+    Add indicators from CRITs object.
 
     :param ind_type: The indicator type to add.
     :type ind_type: str
