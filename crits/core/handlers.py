@@ -17,9 +17,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.html import escape as html_escape
 from django.utils.http import urlencode
-from mongoengine import Document, EmbeddedDocument
 from mongoengine.base import ValidationError
-from mongoengine.base.datastructures import BaseList
 from operator import itemgetter
 
 from crits.config.config import CRITsConfig
@@ -28,7 +26,6 @@ from crits.core.bucket import Bucket
 from crits.core.class_mapper import class_from_id, class_from_type, key_descriptor_from_obj_type
 from crits.core.crits_mongoengine import Releasability, json_handler
 from crits.core.crits_mongoengine import CritsSourceDocument
-from crits.core.form_consts import NotificationType
 from crits.core.source_access import SourceAccess
 from crits.core.data_tools import create_zip, format_file
 from crits.core.mongo_tools import mongo_connector, get_file
@@ -36,7 +33,7 @@ from crits.core.sector import Sector, SectorObject
 from crits.core.user import CRITsUser, EmbeddedSubscriptions
 from crits.core.user import EmbeddedLoginAttempt
 from crits.core.user_tools import user_sources, is_admin
-from crits.core.user_tools import get_subscribed_users, save_user_secret
+from crits.core.user_tools import save_user_secret
 from crits.core.user_tools import get_user_email_notification
 
 from crits.actors.actor import Actor
@@ -46,7 +43,6 @@ from crits.comments.comment import Comment
 from crits.domains.domain import Domain
 from crits.events.event import Event
 from crits.ips.ip import IP
-from crits.notifications.notification import Notification
 from crits.notifications.handlers import get_user_notifications, generate_audit_notification
 from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
@@ -2524,7 +2520,7 @@ def generate_dashboard(request):
     from crits.dashboards.handlers import get_dashboard
     args = get_dashboard(request.user)
     return render_to_response('dashboard.html', args, RequestContext(request))
-    
+
 def dns_timeline(query, analyst, sources):
     """
     Query for domains, format that data for timeline view, and return them.
@@ -2974,7 +2970,8 @@ def generate_user_preference(request,section=None,key=None,name=None):
 
     toast_notifications_title = "Toast Notifications"
 
-    if not settings.ENABLE_TOASTS:
+    config = CRITsConfig.objects().first()
+    if not config.enable_toasts:
         toast_notifications_title += " (currently globally disabled by an admin)"
 
     preferences = [
