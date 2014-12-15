@@ -1217,13 +1217,15 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
         return {'success': False,
                 'message': "Could not find %s to add relationships" % type_}
 
-def create_indicator_from_domain(type_, id_, value, analyst):
+def create_indicator_from_obj(ind_type, obj_type, id_, value, analyst):
     """
     Add indicators from domain.
 
-    :param type_: The indicator type to add.
-    :type type_: str
-    :param id_: The ObjectId of the RawData object.
+    :param ind_type: The indicator type to add.
+    :type ind_type: str
+    :param obj_type: The CRITs type of the parent object.
+    :type obj_type: str
+    :param id_: The ObjectId of the parent object.
     :type id_: str
     :param value: The value of the indicator to add.
     :type value: str
@@ -1235,18 +1237,17 @@ def create_indicator_from_domain(type_, id_, value, analyst):
               "value" (str)
     """
 
-    domain = Domain.objects(id=id_).first()
-    if not domain:
-        return {'success': False,
-                'message': 'Could not find domain'}
-    source = domain.source
-    bucket_list = domain.bucket_list
+    obj = class_from_id(obj_type, id_)
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+    source = obj.source
+    bucket_list = obj.bucket_list
     campaign = None
     campaign_confidence = None
-    if len(domain.campaign) > 0:
-        campaign = domain.campaign[0].name
-        campaign_confidence = domain.campaign[0].confidence
-    result = handle_indicator_ind(value, source, reference=None, ctype=type_,
+    if len(obj.campaign) > 0:
+        campaign = obj.campaign[0].name
+        campaign_confidence = obj.campaign[0].confidence
+    result = handle_indicator_ind(value, source, reference=None, ctype=ind_type,
                                   analyst=analyst,
                                   add_domain=True,
                                   add_relationship=True,
@@ -1256,125 +1257,19 @@ def create_indicator_from_domain(type_, id_, value, analyst):
     if result['success']:
         ind = Indicator.objects(id=result['objectid']).first()
         if ind:
-            domain.add_relationship(rel_item=ind,
-                                      rel_type="Related_To",
-                                      analyst=analyst)
-            domain.save(username=analyst)
-            for rel in domain.relationships:
-                if rel.rel_type == "Event":
-                    ind.add_relationship(rel_id=rel.object_id,
-                                        type_=rel.rel_type,
-                                        rel_type="Related_To",
-                                        analyst=analyst)
-            ind.save(username=analyst)
-        domain.reload()
-        rels = domain.sort_relationships("%s" % analyst, meta=True)
-        return {'success': True, 'message': rels, 'value': id_}
-    else:
-        return {'success': False, 'message': result['message']}
-
-def create_indicator_from_raw(type_, id_, value, analyst):
-    """
-    Add indicators from raw data.
-
-    :param type_: The indicator type to add.
-    :type type_: str
-    :param id_: The ObjectId of the RawData object.
-    :type id_: str
-    :param value: The value of the indicator to add.
-    :type value: str
-    :param analyst: The user adding this indicator.
-    :type analyst: str
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str),
-              "value" (str)
-    """
-
-    raw_data = RawData.objects(id=id_).first()
-    if not raw_data:
-        return {'success': False,
-                'message': 'Could not find raw data'}
-    source = raw_data.source
-    bucket_list = raw_data.bucket_list
-    campaign = None
-    campaign_confidence = None
-    if len(raw_data.campaign) > 0:
-        campaign = raw_data.campaign[0].name
-        campaign_confidence = raw_data.campaign[0].confidence
-    result = handle_indicator_ind(value, source, reference=None, ctype=type_,
-                                  analyst=analyst,
-                                  add_domain=True,
-                                  add_relationship=True,
-                                  campaign=campaign,
-                                  campaign_confidence=campaign_confidence,
-                                  bucket_list=bucket_list)
-    if result['success']:
-        ind = Indicator.objects(id=result['objectid']).first()
-        if ind:
-            raw_data.add_relationship(rel_item=ind,
-                                      rel_type="Related_To",
-                                      analyst=analyst)
-            raw_data.save(username=analyst)
-            for rel in raw_data.relationships:
+            obj.add_relationship(rel_item=ind,
+                                 rel_type="Related_To",
+                                 analyst=analyst)
+            obj.save(username=analyst)
+            for rel in obj.relationships:
                 if rel.rel_type == "Event":
                     ind.add_relationship(rel_id=rel.object_id,
                                          type_=rel.rel_type,
                                          rel_type="Related_To",
                                          analyst=analyst)
             ind.save(username=analyst)
-        raw_data.reload()
-        rels = raw_data.sort_relationships("%s" % analyst, meta=True)
-        return {'success': True, 'message': rels, 'value': id_}
-    else:
-        return {'success': False, 'message': result['message']}
-
-def create_indicator_from_event(type_, id_, value, analyst):
-    """
-    Add indicators from an Event description.
-
-    :param type_: The indicator type to add.
-    :type type_: str
-    :param id_: The ObjectId of the Event object.
-    :type id_: str
-    :param value: The value of the indicator to add.
-    :type value: str
-    :param analyst: The user adding this indicator.
-    :type analyst: str
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str),
-              "value" (str)
-    """
-
-    event = Event.objects(id=id_).first()
-    if not event:
-        return {'success': False,
-                'message': 'Could not find event'}
-    source = event.source
-    bucket_list = event.bucket_list
-    campaign = None
-    campaign_confidence = None
-    if len(event.campaign) > 0:
-        campaign = event.campaign[0].name
-        campaign_confidence = event.campaign[0].confidence
-    result = handle_indicator_ind(value, source, reference=None, ctype=type_,
-                                  analyst=analyst,
-                                  add_domain=True,
-                                  add_relationship=True,
-                                  campaign=campaign,
-                                  campaign_confidence=campaign_confidence,
-                                  bucket_list=bucket_list)
-    if result['success']:
-        ind = Indicator.objects(id=result['objectid']).first()
-        if ind:
-            event.add_relationship(rel_item=ind,
-                                   rel_type="Related_To",
-                                   analyst=analyst)
-            event.save(username=analyst)
-            ind.save(username=analyst)
-        event.reload()
-        rels = event.sort_relationships("%s" % analyst, meta=True)
+        obj.reload()
+        rels = obj.sort_relationships("%s" % analyst, meta=True)
         return {'success': True, 'message': rels, 'value': id_}
     else:
         return {'success': False, 'message': result['message']}
