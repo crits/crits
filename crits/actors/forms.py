@@ -17,33 +17,42 @@ class AddActorForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
 
-    name = forms.CharField(required=True, label=form_consts.Actor.NAME)
-    aliases = forms.CharField(required=False, label=form_consts.Actor.ALIASES)
-    description = forms.CharField(required=False,
-                                  label=form_consts.Actor.DESCRIPTION)
-    campaign = forms.ChoiceField(widget=forms.Select, required=False,
-                                 label=form_consts.Actor.CAMPAIGN)
-    confidence = forms.ChoiceField(required=False,
-                                   label=form_consts.Actor.CAMPAIGN_CONFIDENCE)
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'bulknoinitial'}),
-                               label=form_consts.Actor.SOURCE)
-    source_method = forms.CharField(required=False,
-                                    label=form_consts.Actor.SOURCE_METHOD)
-    source_reference = forms.CharField(widget=forms.TextInput(attrs={'size':'90'}),
-                                       required=False,
-                                       label=form_consts.Actor.SOURCE_REFERENCE)
+    name = forms.CharField(label=form_consts.Actor.NAME, required=True)
+    aliases = forms.CharField(label=form_consts.Actor.ALIASES, required=False)
+    description = forms.CharField(
+        label=form_consts.Actor.DESCRIPTION,
+        required=False,)
+    campaign = forms.ChoiceField(
+        widget=forms.Select,
+        label=form_consts.Actor.CAMPAIGN,
+        required=False)
+    confidence = forms.ChoiceField(
+        label=form_consts.Actor.CAMPAIGN_CONFIDENCE,
+        required=False)
+    source = forms.ChoiceField(
+        widget=forms.Select(attrs={'class': 'bulknoinitial'}),
+        label=form_consts.Actor.SOURCE,
+        required=True)
+    source_method = forms.CharField(
+        label=form_consts.Actor.SOURCE_METHOD,
+        required=False)
+    source_reference = forms.CharField(
+        widget=forms.TextInput(attrs={'size': '90'}),
+        label=form_consts.Actor.SOURCE_REFERENCE,
+        required=False)
 
     def __init__(self, username, *args, **kwargs):
         super(AddActorForm, self).__init__(*args, **kwargs)
 
         self.fields['campaign'].choices = [('', '')] + [
-                (c.name, c.name) for c in get_item_names(Campaign, True)]
-        self.fields['confidence'].choices = [('', ''),
-                                             ('low', 'low'),
-                                             ('medium', 'medium'),
-                                             ('high', 'high')]
-        self.fields['source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]
+            (c.name, c.name) for c in get_item_names(Campaign, True)]
+        self.fields['confidence'].choices = [
+            ('', ''),
+            ('low', 'low'),
+            ('medium', 'medium'),
+            ('high', 'high')]
+        self.fields['source'].choices = [
+            (c.name, c.name) for c in get_source_names(True, True, username)]
         self.fields['source'].initial = get_user_organization(username)
 
         add_bucketlist_to_form(self)
@@ -70,24 +79,28 @@ class AddActorIdentifierForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    identifier_type = forms.ChoiceField(required=True,
-                                        label="Identifier Type")
+    identifier_type = forms.ChoiceField(label="Identifier Type", required=True)
     identifier = forms.CharField(widget=forms.TextInput, required=True)
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'bulknoinitial'}),
-                               label=form_consts.Actor.SOURCE)
-    source_method = forms.CharField(required=False,
-                                    label=form_consts.Actor.SOURCE_METHOD)
-    source_reference = forms.CharField(widget=forms.TextInput(attrs={'size':'90'}),
-                                       required=False,
-                                       label=form_consts.Actor.SOURCE_REFERENCE)
+    source = forms.ChoiceField(
+        widget=forms.Select(attrs={'class': 'bulknoinitial'}),
+        label=form_consts.Actor.SOURCE,
+        required=True)
+    source_method = forms.CharField(
+        label=form_consts.Actor.SOURCE_METHOD,
+        required=False)
+    source_reference = forms.CharField(
+        widget=forms.TextInput(attrs={'size': '90'}),
+        label=form_consts.Actor.SOURCE_REFERENCE,
+        required=False)
 
 
     def __init__(self, username, *args, **kwargs):
         super(AddActorIdentifierForm, self).__init__(*args, **kwargs)
 
-        self.fields['identifier_type'].choices = [ (c.name, c.name) for c in get_item_names(ActorThreatIdentifier, True)]
-        self.fields['source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]
+        self.fields['identifier_type'].choices = [
+            (c.name, c.name) for c in get_item_names(ActorThreatIdentifier, True)]
+        self.fields['source'].choices = [
+            (c.name, c.name) for c in get_source_names(True, True, username)]
         self.fields['source'].initial = get_user_organization(username)
 
 
@@ -109,16 +122,14 @@ class AttributeIdentifierForm(forms.Form):
     required_css_class = 'required'
     # The fields will be populated on-the-fly when the form is
     # rendered so we won't populate them here.
-    identifier_type = forms.ChoiceField(required=True,
-                                        label="Identifier Type")
-    identifier = forms.ChoiceField(required=True,
-                                   label="Identifier")
-    confidence = forms.ChoiceField(required=True,
-                                   label="Confidence")
+    identifier_type = forms.ChoiceField(label="Identifier Type", required=True)
+    identifier = forms.ChoiceField(label="Identifier", required=True)
+    confidence = forms.ChoiceField(label="Confidence", required=True)
 
     def __init__(self, *args, **kwargs):
         super(AttributeIdentifierForm, self).__init__(*args, **kwargs)
 
-        self.fields['confidence'].choices = [('low', 'low'),
-                                             ('medium', 'medium'),
-                                             ('high', 'high')]
+        self.fields['confidence'].choices = [
+            ('low', 'low'),
+            ('medium', 'medium'),
+            ('high', 'high')]

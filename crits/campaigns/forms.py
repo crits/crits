@@ -28,9 +28,10 @@ class TTPForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    ttp = forms.CharField(widget=forms.Textarea(attrs={'cols': '35',
-                                                       'rows': '5'}),
-                          required=True)
+    ttp = forms.CharField(
+        widget=forms.Textarea(attrs={'cols': '35',
+                                     'rows': '5'}),
+        required=True)
 
 class CampaignForm(forms.Form):
     """
@@ -42,18 +43,21 @@ class CampaignForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    name = forms.ChoiceField(required=True, widget=forms.Select)
-    confidence = forms.ChoiceField(required=True, widget=forms.Select)
+    name = forms.ChoiceField(widget=forms.Select, required=True)
+    confidence = forms.ChoiceField(widget=forms.Select, required=True)
     description = forms.CharField(widget=forms.Textarea(), required=False)
     date = forms.CharField(widget=HiddenInput, required=False)
-    related = forms.BooleanField(initial=False, required=False,
-                                 help_text="Apply to all first level related objects.")
+    related = forms.BooleanField(
+        help_text="Apply to all first level related objects.",
+        initial=False,
+        required=False)
 
     def __init__(self, *args, **kwargs):
         super(CampaignForm, self).__init__(*args, **kwargs)
-        self.fields['confidence'].choices = [('low', 'low'),
-                                             ('medium', 'medium'),
-                                             ('high', 'high')]
-        self.fields['name'].choices = [(c.name,
-                                        c.name) for c in get_item_names(Campaign,
-                                                                           True)]
+        self.fields['confidence'].choices = [
+            ('low', 'low'),
+            ('medium', 'medium'),
+            ('high', 'high'),
+        ]
+        self.fields['name'].choices = [
+            (c.name, c.name) for c in get_item_names(Campaign, True)]
