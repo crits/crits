@@ -368,6 +368,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
             #add indicators
             if data.get('add_indicators'):
                 from crits.indicators.handlers import create_indicator_from_obj
+                # If we have an IP object, add an indicator for that.
                 if ip_result and ip_result['success']:
                     obj = ip_result['object']
                     result = create_indicator_from_obj('Address - ipv4-addr',
@@ -377,24 +378,25 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                                                        username)
                     if result['success'] == False:
                         errors.append(result['message'])
-                else:
+
+                # Add an indicator for the domain.
+                result = create_indicator_from_obj('URI - Domain Name',
+                                                   'Domain',
+                                                   new_domain.id,
+                                                   sdomain,
+                                                   username)
+                if result['success'] == False:
+                    errors.append(result['message'])
+                # If we have an FQDN (ie: it is not the same as sdomain)
+                # then add that also.
+                if fqdn != sdomain:
                     result = create_indicator_from_obj('URI - Domain Name',
                                                        'Domain',
                                                        new_domain.id,
-                                                       sdomain,
+                                                       fqdn,
                                                        username)
                     if result['success'] == False:
                         errors.append(result['message'])
-                    # If we have an FQDN (ie: it is not the same as sdomain)
-                    # then add that also.
-                    if fqdn != sdomain:
-                        result = create_indicator_from_obj('URI - Domain Name',
-                                                           'Domain',
-                                                           new_domain.id,
-                                                           fqdn,
-                                                           username)
-                        if result['success'] == False:
-                            errors.append(result['message'])
             result = True
 
         elif 'message' in retVal: #database error? (!c_dom)
