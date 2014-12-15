@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from crits.config.config import CRITsConfig
 
 def modify_configuration(forms, analyst):
@@ -14,14 +16,14 @@ def modify_configuration(forms, analyst):
     config = CRITsConfig.objects().first()
     if not config:
         config = CRITsConfig()
-        
+
     data = None
     for form in forms:
         if not data:
             data = form.cleaned_data
         else:
             data.update(form.cleaned_data)
-        
+
    # data = config_form.cleaned_data
     allowed_hosts_list = data['allowed_hosts'].split(',')
     allowed_hosts = ()

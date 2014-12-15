@@ -51,11 +51,11 @@ def migrate_1_to_2(self):
                     if 'end_date' in a:
                         end_date = a['end_date']
                     self.add_activity(
-                        analyst = analyst,
-                        start_date = start_date,
-                        end_date = end_date,
-                        date = date,
-                        description = description
+                        analyst=analyst,
+                        start_date=start_date,
+                        end_date=end_date,
+                        date=date,
+                        description=description
                     )
             # campaign
             if 'campaign' in old_analysis:
@@ -73,11 +73,11 @@ def migrate_1_to_2(self):
                     if not 'name' in c:
                         c['name'] = name
                     ec = EmbeddedCampaign(
-                        analyst = c['analyst'],
-                        description = c['description'],
-                        date = c['date'],
-                        confidence = c['confidence'],
-                        name = c['name']
+                        analyst=c['analyst'],
+                        description=c['description'],
+                        date=c['date'],
+                        confidence=c['confidence'],
+                        name=c['name']
                     )
                     self.add_campaign(ec)
             # confidence
@@ -88,10 +88,7 @@ def migrate_1_to_2(self):
                     analyst = confidence['analyst']
                 if 'rating' in confidence:
                     rating = confidence['rating']
-                self.set_confidence(
-                    analyst = analyst,
-                    rating = rating
-                )
+                self.set_confidence(analyst=analyst, rating=rating)
             # impact
             if 'impact' in old_analysis:
                 impact = old_analysis['impact']
@@ -100,10 +97,7 @@ def migrate_1_to_2(self):
                     analyst = impact['analyst']
                 if 'rating' in impact:
                     rating = impact['rating']
-                self.set_impact(
-                    analyst = analyst,
-                    rating = rating
-                )
+                self.set_impact(analyst=analyst, rating=rating)
         self.schema_version = 2
 
 def migrate_0_to_1(self):

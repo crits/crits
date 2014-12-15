@@ -35,7 +35,7 @@ class Campaign(CritsBaseAttributes, Document):
             'email_count': 'Emails tagged with Campaign. Added by MapReduce',
             'event_count': 'Events tagged with Campaign. Added by MapReduce',
             'indicator_count': ('Indicators tagged with Campaign. Added by '
-                            'MapReduce'),
+                                'MapReduce'),
             'ip_count': 'IPs tagged with Campaign. Added by MapReduce',
             'name': 'Name this Campaign goes by',
             'pcap_count': 'PCAPs tagged with Campaign. Added by MapReduce',
@@ -43,27 +43,22 @@ class Campaign(CritsBaseAttributes, Document):
             'ttps': 'List [] of TTPs this Campaign is associated with',
         },
         "jtable_opts": {
-                         'details_url': 'crits.campaigns.views.campaign_details',
-                         'details_url_key': 'name',
-                         'default_sort': "name ASC",
-                         'searchurl': 'crits.campaigns.views.campaigns_listing',
-                         'fields': [ "name", "aliases", "indicator_count",
-                                     "email_count", "domain_count",
-                                     "sample_count", "event_count",
-                                     "ip_count", "pcap_count", "modified",
-                                     "id", "status"],
-                         'jtopts_fields': [ "details", "name", "aliases",
-                                            "status", "indicator_count",
-                                            "email_count", "domain_count",
-                                            "sample_count", "event_count",
-                                            "ip_count", "pcap_count",
-                                            "modified", "favorite", "id"],
-                         'hidden_fields': [],
-                         'linked_fields': [],
-                         'details_link': 'details',
-                         'no_sort': ['details']
-                       }
-
+            'details_url': 'crits.campaigns.views.campaign_details',
+            'details_url_key': 'name',
+            'default_sort': "name ASC",
+            'searchurl': 'crits.campaigns.views.campaigns_listing',
+            'fields': ["name", "aliases", "indicator_count", "email_count",
+                       "domain_count", "sample_count", "event_count",
+                       "ip_count", "pcap_count", "modified", "id", "status"],
+            'jtopts_fields': ["details", "name", "aliases", "status",
+                              "indicator_count", "email_count", "domain_count",
+                              "sample_count", "event_count", "ip_count",
+                              "pcap_count", "modified", "favorite", "id"],
+            'hidden_fields': [],
+            'linked_fields': [],
+            'details_link': 'details',
+            'no_sort': ['details']
+        }
     }
 
     active = StringField(default="on")
