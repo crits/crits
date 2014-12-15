@@ -45,7 +45,22 @@ class Comment(CritsDocument, CritsSchemaDocument, CritsSourceDocument, Document)
             },
             'source': ('List [] of source information about who provided this'
                        ' comment')
+        },
+        "jtable_opts": {
+            'details_url': '',
+            'details_url_key': 'id',
+            'default_sort': 'date DESC',
+            'search_url': '',
+            'fields': ["obj_type", "comment", "url_key", "created",
+                       "analyst", "source", "id"],
+            'jtopts_fields': ["details", "obj_type", "comment", "date",
+                              "analyst", "source", "id"],
+            'hidden_fields': ["id", ],
+            'linked_fields': ["analyst", "source"],
+            'details_link': 'details',
+            'no_sort': ['details', ],
         }
+
     }
     # This is not a date field!
     # It exists to provide default values for created and edit_date
