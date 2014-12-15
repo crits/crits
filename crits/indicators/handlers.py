@@ -8,7 +8,7 @@ from cStringIO import StringIO
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.urlresolvers import reverse
-from django.core.validators import validate_ipv46_address
+from django.core.validators import validate_ipv4_address, validate_ipv46_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -663,6 +663,11 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         if ind_type.startswith("Address - ip") or ind_type == "Address - cidr" or url_contains_ip:
             if url_contains_ip:
                 ind_value = domain_or_ip
+                try:
+                    validate_ipv4_address(domain_or_ip)
+                    ind_type = 'Address - ipv4-addr'
+                except DjangoValidationError:
+                    ind_type = 'Address - ipv6-addr'
             success = None
             if add_domain:
                 success = ip_add_update(ind_value,
