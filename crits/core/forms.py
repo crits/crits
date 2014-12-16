@@ -147,6 +147,64 @@ class PrefUIForm(forms.Form):
         self.fields['theme'].choices = [(t,
                                           t) for t in ui_themes()]
 
+class ToastNotificationConfigForm(forms.Form):
+    """
+    Django form for the user toast notifications.
+    """
+
+    error_css_class = 'error'
+    required_css_class = 'required'
+    enabled = forms.BooleanField(initial=True, required=False)
+    max_visible_notifications = forms.IntegerField(min_value = 1,
+                                                   max_value = 10,
+                                                   initial=5,
+                                                   required=False,
+                                                   label="Max Visible Notifications")
+    acknowledgement_type = forms.ChoiceField(widget=forms.Select,
+                                             initial="sticky",
+                                             required=False,
+                                             label="Acknowledgement Type")
+    notification_anchor_location = forms.ChoiceField(widget=forms.Select,
+                                                     initial="bottom_right",
+                                                     required=False,
+                                                     label="Anchor Location")
+    newer_notifications_location = forms.ChoiceField(widget=forms.Select,
+                                                     initial="top",
+                                                     required=False,
+                                                     label="Newer Notifications Located")
+    initial_notifications_display = forms.ChoiceField(widget=forms.Select,
+                                                      initial="show",
+                                                      required=False,
+                                                      label="On New Notifications")
+    timeout = forms.IntegerField(min_value = 5,
+                                 max_value = 3600,
+                                 initial=30,
+                                 required=False,
+                                 label="Timeout (in seconds)",
+                                 help_text="Used only if Acknowledgement Type is set to 'timeout'")
+
+    def __init__(self, request, *args, **kwargs):
+        super(ToastNotificationConfigForm, self).__init__(*args, **kwargs)
+
+        prefs = request.user.prefs
+
+        if hasattr(prefs, 'toast_notifications'):
+            for k in prefs.toast_notifications:
+                if k in self.fields:
+                    self.fields[k].initial = prefs.toast_notifications[k]
+
+        self.fields['acknowledgement_type'].choices = [("sticky", "sticky"),
+                                                       ("timeout", "timeout")]
+
+        self.fields['notification_anchor_location'].choices = [("top_right", "top_right"),
+                                                               ("bottom_right", "bottom_right")]
+
+        self.fields['newer_notifications_location'].choices = [("top", "top"),
+                                                               ("bottom", "bottom")]
+
+        self.fields['initial_notifications_display'].choices = [("show", "show"),
+                                                                ("hide", "hide")]
+
 class AddUserRoleForm(forms.Form):
     """
     Django form for adding a new user role.

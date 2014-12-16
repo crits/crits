@@ -8,7 +8,7 @@ from cStringIO import StringIO
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.urlresolvers import reverse
-from django.core.validators import validate_ipv46_address
+from django.core.validators import validate_ipv4_address, validate_ipv46_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -18,7 +18,7 @@ from crits.campaigns.forms import CampaignForm
 from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id
-from crits.core.crits_mongoengine import EmbeddedSource,EmbeddedCampaign
+from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
 from crits.core.crits_mongoengine import json_handler
 from crits.core.forms import SourceForm, DownloadFileForm
 from crits.core.handlers import build_jtable, csv_export
@@ -51,7 +51,7 @@ def generate_indicator_csv(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    response = csv_export(request,Indicator)
+    response = csv_export(request, Indicator)
     return response
 
 def generate_indicator_jtable(request, option):
@@ -83,7 +83,7 @@ def generate_indicator_jtable(request, option):
                             content_type="application/json")
     if option == "jtdelete":
         response = {"Result": "ERROR"}
-        if jtable_ajax_delete(obj_type,request):
+        if jtable_ajax_delete(obj_type, request):
             response = {"Result": "OK"}
         return HttpResponse(json.dumps(response,
                                        default=json_handler),
@@ -104,7 +104,7 @@ def generate_indicator_jtable(request, option):
         'details_link': mapper['details_link'],
         'no_sort': mapper['no_sort']
     }
-    jtable = build_jtable(jtopts,request)
+    jtable = build_jtable(jtopts, request)
     jtable['toolbar'] = [
         {
             'tooltip': "'All Indicators'",
@@ -146,7 +146,7 @@ def generate_indicator_jtable(request, option):
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
-                                   'button' : '%ss_tab' % type_},
+                                   'button': '%ss_tab' % type_},
                                   RequestContext(request))
     else:
         return render_to_response("%s_listing.html" % type_,
@@ -193,17 +193,17 @@ def get_indicator_details(indicator_id, analyst):
 
     # subscription
     subscription = {
-            'type': 'Indicator',
-            'id': indicator_id,
-            'subscribed': is_user_subscribed("%s" % analyst,
-                                             'Indicator',
-                                             indicator_id),
+        'type': 'Indicator',
+        'id': indicator_id,
+        'subscribed': is_user_subscribed("%s" % analyst,
+                                         'Indicator',
+                                         indicator_id),
     }
 
     # relationship
     relationship = {
-            'type': 'Indicator',
-            'value': indicator_id,
+        'type': 'Indicator',
+        'value': indicator_id,
     }
 
     #objects
@@ -214,7 +214,7 @@ def get_indicator_details(indicator_id, analyst):
 
     #comments
     comments = {'comments': indicator.get_comments(),
-                'url_key':indicator_id}
+                'url_key': indicator_id}
 
     #screenshots
     screenshots = indicator.get_screenshots(analyst)
@@ -230,7 +230,7 @@ def get_indicator_details(indicator_id, analyst):
 
     args = {'objects': objects,
             'relationships': relationships,
-            'comments':comments,
+            'comments': comments,
             'relationship': relationship,
             'subscription': subscription,
             "indicator": indicator,
@@ -485,11 +485,11 @@ def handle_indicator_ind(value, source, reference, ctype, analyst,
     result = None
 
     if value == None or value.strip() == "":
-        result = {'success':  False,
-                  'message':  "Can't create indicator with an empty value field"}
+        result = {'success': False,
+                  'message': "Can't create indicator with an empty value field"}
     elif ctype == None or ctype.strip() == "":
-        result = {'success':  False,
-                  'message':  "Can't create indicator with an empty type field"}
+        result = {'success': False,
+                  'message': "Can't create indicator with an empty type field"}
     else:
         ind = {}
         ind['type'] = ctype.strip()
@@ -555,18 +555,18 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     """
 
     if ind['type'] == "URI - URL" and "://" not in ind['value'].split('.')[0]:
-        return {"success" : False, "message" : "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://) "}
+        return {"success": False, "message": "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://) "}
 
     is_new_indicator = False
     dmain = None
     ip = None
     rank = {
-             'unknown': 0,
-             'benign': 1,
-             'low': 2,
-             'medium': 3,
-             'high': 4
-           }
+        'unknown': 0,
+        'benign': 1,
+        'low': 2,
+        'medium': 3,
+        'high': 4,
+    }
 
     indicator = Indicator.objects(ind_type=ind['type'],
                                   value=ind['value']).first()
@@ -653,7 +653,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                             '%s' % analyst, None,
                                             bucket_list=bucket_list, cache=cache)
                     if not success['success']:
-                        return {'success':False, 'message': success['message']}
+                        return {'success': False, 'message': success['message']}
 
                 if not success or not 'object' in success:
                     dmain = Domain.objects(domain=domain_or_ip).first()
@@ -663,6 +663,11 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         if ind_type.startswith("Address - ip") or ind_type == "Address - cidr" or url_contains_ip:
             if url_contains_ip:
                 ind_value = domain_or_ip
+                try:
+                    validate_ipv4_address(domain_or_ip)
+                    ind_type = 'Address - ipv4-addr'
+                except DjangoValidationError:
+                    ind_type = 'Address - ipv6-addr'
             success = None
             if add_domain:
                 success = ip_add_update(ind_value,
@@ -675,7 +680,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                         indicator_reference=reference,
                                         cache=cache)
                 if not success['success']:
-                    return {'success':False, 'message': success['message']}
+                    return {'success': False, 'message': success['message']}
 
             if not success or not 'object' in success:
                 ip = IP.objects(ip=indicator.value).first()
@@ -728,10 +733,10 @@ def does_indicator_relationship_exist(field, indicator_relationships):
             with its values. Returns false otherwise.
     """
 
-    (type, value) = get_indicator_type_value_pair(field)
+    type, value = get_indicator_type_value_pair(field)
 
     if indicator_relationships != None:
-        if(type != None and value != None):
+        if type != None and value != None:
             for indicator_relationship in indicator_relationships:
 
                 if indicator_relationship == None:
@@ -844,11 +849,11 @@ def indicator_remove(_id, username):
         indicator = Indicator.objects(id=_id).first()
         if indicator:
             indicator.delete(username=username)
-            return {'success':True}
+            return {'success': True}
         else:
-            return {'success':False,'message':['Cannot find Indicator']}
+            return {'success': False, 'message': ['Cannot find Indicator']}
     else:
-        return {'success':False,'message':['Must be an admin to delete']}
+        return {'success': False, 'message': ['Must be an admin to delete']}
 
 def action_add(indicator_id, action):
     """
@@ -1060,7 +1065,7 @@ def ci_update(indicator_id, ci_type, value, analyst):
         except ValidationError, e:
             return {'success': False, "message": e}
     else:
-        return {'success':False, 'message': 'Invalid CI type'}
+        return {'success': False, 'message': 'Invalid CI type'}
 
 def add_indicators_for_domain(domain, fqdn, source, analyst,
                               reference=None, ip=None, bucket_list=None,
@@ -1133,7 +1138,7 @@ def add_indicators_for_domain(domain, fqdn, source, analyst,
         if not root_ind['success']:
             errors.append(u"Error: Root domain indicator could not be added")
 
-    return {'success': len(errors)==0, 'errors':errors}
+    return {'success': len(errors) == 0, 'errors': errors}
 
 def create_indicator_and_ip(type_, id_, ip, analyst):
     """
@@ -1163,26 +1168,26 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
         # setup IP
         if ip_class:
             ip_class.add_relationship(rel_item=obj_class,
-                                    rel_type="Related_To",
-                                    analyst=analyst)
+                                      rel_type="Related_To",
+                                      analyst=analyst)
         else:
             ip_class = IP()
             ip_class.ip = ip
             ip_class.source = obj_class.source
             ip_class.save(username=analyst)
             ip_class.add_relationship(rel_item=obj_class,
-                                    rel_type="Related_To",
-                                    analyst=analyst)
+                                      rel_type="Related_To",
+                                      analyst=analyst)
 
         # setup Indicator
         message = ""
         if ind_class:
             message = ind_class.add_relationship(rel_item=obj_class,
-                                                rel_type="Related_To",
-                                                analyst=analyst)
+                                                 rel_type="Related_To",
+                                                 analyst=analyst)
             ind_class.add_relationship(rel_item=ip_class,
-                                    rel_type="Related_To",
-                                    analyst=analyst)
+                                       rel_type="Related_To",
+                                       analyst=analyst)
         else:
             ind_class = Indicator()
             ind_class.source = obj_class.source
@@ -1190,11 +1195,11 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
             ind_class.value = ip
             ind_class.save(username=analyst)
             message = ind_class.add_relationship(rel_item=obj_class,
-                                                rel_type="Related_To",
-                                                analyst=analyst)
+                                                 rel_type="Related_To",
+                                                 analyst=analyst)
             ind_class.add_relationship(rel_item=ip_class,
-                                    rel_type="Related_To",
-                                    analyst=analyst)
+                                       rel_type="Related_To",
+                                       analyst=analyst)
 
         # save
         try:
@@ -1258,9 +1263,9 @@ def create_indicator_from_raw(type_, id_, value, analyst):
             for rel in raw_data.relationships:
                 if rel.rel_type == "Event":
                     ind.add_relationship(rel_id=rel.object_id,
-                                        type_=rel.rel_type,
-                                        rel_type="Related_To",
-                                        analyst=analyst)
+                                         type_=rel.rel_type,
+                                         rel_type="Related_To",
+                                         analyst=analyst)
             ind.save(username=analyst)
         raw_data.reload()
         rels = raw_data.sort_relationships("%s" % analyst, meta=True)

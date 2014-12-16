@@ -315,7 +315,7 @@
                     <th>MD5</th>
                     <th>Date Subscribed</th>
                     <th>
-                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-signal-diag subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
                         <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
                     </th>
                 </tr>
@@ -355,7 +355,7 @@
                     <th>MD5</th>
                     <th>Date Subscribed</th>
                     <th>
-                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-signal-diag subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
                         <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
                     </th>
                 </tr>
@@ -397,7 +397,7 @@
                     <th>Subject</th>
                     <th>Date Subscribed</th>
                     <th>
-                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-signal-diag subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
                         <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
                     </th>
                 </tr>
@@ -439,7 +439,7 @@
                     <th>Type</th>
                     <th>Date Subscribed</th>
                     <th>
-                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-signal-diag subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
                         <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
                     </th>
                 </tr>
@@ -479,7 +479,7 @@
                     <th>Description</th>
                     <th>Date Subscribed</th>
                     <th>
-                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-signal-diag subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
                         <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
                     </th>
                 </tr>
@@ -518,7 +518,7 @@
                     <th>Domain</th>
                     <th>Date Subscribed</th>
                     <th>
-                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-signal-diag subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
                         <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
                     </th>
                 </tr>
@@ -556,7 +556,7 @@
                     <th>IP</th>
                     <th>Date Subscribed</th>
                     <th>
-                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-signal-diag subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
                         <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
                     </th>
                 </tr>
@@ -594,7 +594,7 @@
                     <th>Campaign</th>
                     <th>Date Subscribed</th>
                     <th>
-                        <span class="ui-icon ui-icon-check subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
+                        <span class="ui-icon ui-icon-signal-diag subscription_link_enable" title="Subscribe" style="display: inline-block;"></span>
                         <span class="ui-icon ui-icon-close subscription_link_disable" title="Unsubscribe" style="display: inline-block;"></span>
                     </th>
                 </tr>
@@ -731,6 +731,7 @@
             <table class='chart'>
             <thead>
                 <tr>
+                <th>Type</th>
                 <th>Link</th>
                 <th>Notification</th>
                 <th>Date</th>
@@ -740,9 +741,26 @@
             <tbody>
             {% for notification in notifications %}
                 <tr>
-                <td>{{ notification.obj_type }}</td>
-                <td><a href="{% url 'crits.core.views.details' notification.obj_type notification.obj_id %}">View {{ notification.obj_type }}</a></td>
-                <td>{{ notification.notification }}</td>
+                {% if notification.obj_type %}
+                    <td>{{ notification.obj_type }}</td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+
+                {% if notification.obj_type and notification.obj_id %}
+                    <td><a href="{% url 'crits.core.views.details' notification.obj_type notification.obj_id %}">View {{ notification.obj_type }}</a></td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+
+                {% if notification.notification %}
+                    <td>{{ notification.notification }}</td>
+                {% elif notification.header %}
+                    <td>{{ notification.header }}</td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+
                 <td>{{ notification.created }}</td>
                 <td><span class="delete_notification ui-icon ui-icon-close" action="{% url 'crits.core.views.delete_user_notification' notification.obj_type notification.obj_id %}"></span></td>
                 </tr>

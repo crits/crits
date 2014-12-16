@@ -46,7 +46,7 @@ def get_campaign_details(campaign_name, analyst):
     campaign_detail = Campaign.objects(name=campaign_name).first()
     if not campaign_detail:
         template = "error.html"
-        args = {"error" : 'No data exists for this campaign.'}
+        args = {"error": 'No data exists for this campaign.'}
         return template, args
 
     ttp_form = TTPForm()
@@ -56,11 +56,11 @@ def get_campaign_details(campaign_name, analyst):
 
     # subscription
     subscription = {
-            'type': 'Campaign',
-            'id': campaign_detail.id,
-            'subscribed': is_user_subscribed("%s" % analyst,
-                                             'Campaign',
-                                             campaign_detail.id),
+        'type': 'Campaign',
+        'id': campaign_detail.id,
+        'subscribed': is_user_subscribed("%s" % analyst,
+                                         'Campaign',
+                                         campaign_detail.id),
     }
 
     #objects
@@ -71,31 +71,35 @@ def get_campaign_details(campaign_name, analyst):
                                                        meta=True)
 
     # relationship
-    relationship = {
-            'type': 'Campaign',
-            'value': campaign_detail.id
-    }
+    relationship = {'type': 'Campaign', 'value': campaign_detail.id}
 
     #comments
     comments = {'comments': campaign_detail.get_comments(),
-                'url_key':campaign_name}
+                'url_key': campaign_name}
 
     #screenshots
     screenshots = campaign_detail.get_screenshots(analyst)
 
     # Get item counts
-    formatted_query = {'campaign.name':campaign_name}
+    formatted_query = {'campaign.name': campaign_name}
     counts = {}
-    for col_obj in [Sample,PCAP,Indicator,Email,Domain,IP,Event]:
+    for col_obj in [Sample, PCAP, Indicator, Email, Domain, IP, Event]:
         counts[col_obj._meta['crits_type']] = col_obj.objects(source__name__in=sources,
                                                               __raw__=formatted_query).count()
 
     # Item counts for targets
-    emails = Email.objects(source__name__in=sources,__raw__=formatted_query)
+    emails = Email.objects(source__name__in=sources, __raw__=formatted_query)
     addresses = {}
     for email in emails:
         for to in email['to']:
-            addresses[to] = 1
+            # This might be a slow operation since we're looking up all "to"
+            # targets, could possibly bulk search this.
+            target = Target.objects(email_address__iexact=to).first()
+
+            if target is not None:
+                addresses[target.email_address] = 1
+            else:
+                addresses[to] = 1
     uniq_addrs = addresses.keys()
     counts['Target'] = Target.objects(email_address__in=uniq_addrs).count()
 
@@ -135,12 +139,12 @@ def get_campaign_stats(campaign):
     data_list = []
     if stat:
         for result in stat["results"]:
-            if campaign == result["campaign"] or campaign=="all":
+            if campaign == result["campaign"] or campaign == "all":
                 data = {}
                 data["label"] = result["campaign"]
                 data["data"] = []
                 for k in sorted(result["value"].keys()):
-                    data["data"].append([k,result["value"][k]])
+                    data["data"].append([k, result["value"][k]])
                 data_list.append(data)
     return data_list
 
@@ -153,7 +157,7 @@ def generate_campaign_csv(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    response = csv_export(request,Campaign)
+    response = csv_export(request, Campaign)
     return response
 
 def generate_campaign_jtable(request, option):
@@ -209,14 +213,14 @@ def generate_campaign_jtable(request, option):
     jtopts = {
         'title': "Campaigns",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_),
+        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_, type_),
                            args=('jtlist',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
         'hidden_fields': mapper['hidden_fields'],
         'linked_fields': mapper['linked_fields']
     }
-    jtable = build_jtable(jtopts,request)
+    jtable = build_jtable(jtopts, request)
     jtable['toolbar'] = [
         {
             'tooltip': "'All Campaigns'",
@@ -251,7 +255,7 @@ def generate_campaign_jtable(request, option):
         {
             'tooltip': "'Refresh campaign stats'",
             'text': "'Refresh Stats'",
-            'click': "function () {$.get('"+reverse('crits.%ss.views.%ss_listing' % (type_,type_))+"', {'refresh': 'yes'}, function () { $('#campaign_listing').jtable('reload');});}"
+            'click': "function () {$.get('" + reverse('crits.%ss.views.%ss_listing' % (type_, type_)) + "', {'refresh': 'yes'}, function () { $('#campaign_listing').jtable('reload');});}"
         },
         {
             'tooltip': "'Add Campaign'",
@@ -261,19 +265,19 @@ def generate_campaign_jtable(request, option):
 
     ]
     # Make count fields clickable to search those listings
-    for ctype in ["indicator","email","domain","sample","event","ip","pcap"]:
-        url = reverse('crits.%ss.views.%ss_listing' % (ctype,ctype))
+    for ctype in ["indicator", "email", "domain", "sample", "event", "ip", "pcap"]:
+        url = reverse('crits.%ss.views.%ss_listing' % (ctype, ctype))
         for field in jtable['fields']:
-            if field['fieldname'].startswith("'"+ctype):
+            if field['fieldname'].startswith("'" + ctype):
                 field['display'] = """ function (data) {
                 return '<a href="%s?campaign='+data.record.name+'">'+data.record.%s_count+'</a>';
             }
-            """ % (url,ctype)
+            """ % (url, ctype)
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
-                                   'button' : '%ss_tab' % type_},
+                                   'button': '%ss_tab' % type_},
                                   RequestContext(request))
     else:
         return render_to_response("%s_listing.html" % type_,
@@ -333,7 +337,7 @@ def add_campaign(name, description, aliases, analyst, bucket_list=None,
                 'message': 'Campaign created successfully!',
                 'id': str(campaign.id)}
     except ValidationError, e:
-        return {'success':False, 'message': "Invalid value: %s" % e}
+        return {'success': False, 'message': "Invalid value: %s" % e}
 
 def remove_campaign(name, analyst):
     """
@@ -377,11 +381,11 @@ def add_ttp(cid, ttp, analyst):
         try:
             campaign.add_ttp(new_ttp)
             campaign.save(username=analyst)
-            return {'success':True, 'campaign': campaign}
+            return {'success': True, 'campaign': campaign}
         except ValidationError, e:
-            return {'success':False, 'message': "Invalid value: %s" % e}
+            return {'success': False, 'message': "Invalid value: %s" % e}
     else:
-        return {'success':False, 'message': "Could not find Campaign"}
+        return {'success': False, 'message': "Could not find Campaign"}
 
 def edit_ttp(cid, old_ttp, new_ttp, analyst):
     """
@@ -403,11 +407,11 @@ def edit_ttp(cid, old_ttp, new_ttp, analyst):
         try:
             campaign.edit_ttp(old_ttp, new_ttp)
             campaign.save(username=analyst)
-            return {'success':True}
+            return {'success': True}
         except ValidationError, e:
-            return {'success':False, 'message': "Invalid value: %s" % e}
+            return {'success': False, 'message': "Invalid value: %s" % e}
     else:
-        return {'success':False, 'message': "Could not find Campaign"}
+        return {'success': False, 'message': "Could not find Campaign"}
 
 def remove_ttp(cid, ttp, analyst):
     """
@@ -430,11 +434,11 @@ def remove_ttp(cid, ttp, analyst):
         try:
             campaign.remove_ttp(ttp)
             campaign.save(username=analyst)
-            return {'success':True, 'campaign': campaign}
+            return {'success': True, 'campaign': campaign}
         except ValidationError, e:
-            return {'success':False, 'message': "Invalid value: %s" % e}
+            return {'success': False, 'message': "Invalid value: %s" % e}
     else:
-        return {'success':False, 'message': "Could not find Campaign"}
+        return {'success': False, 'message': "Could not find Campaign"}
 
 def update_campaign_description(cid, description, analyst):
     """
@@ -527,7 +531,6 @@ def deactivate_campaign(name, analyst):
     else:
         return {'success': False}
 
-
 def campaign_addto_related(crits_object, campaign, analyst):
     """
     Add this Campaign to all related top-level objects.
@@ -607,8 +610,8 @@ def campaign_add(campaign_name, confidence, description, related,
             html = obj.format_campaign(campaign, analyst)
             return {'success': True, 'html': html, 'message': result['message']}
         except ValidationError, e:
-            return {'success':False, 'message': "Invalid value: %s" % e}
-    return {'success':False, 'message': result['message']}
+            return {'success': False, 'message': "Invalid value: %s" % e}
+    return {'success': False, 'message': result['message']}
 
 def campaign_edit(ctype, oid, campaign_name, confidence,
                   description, date, related, analyst):
@@ -656,7 +659,7 @@ def campaign_edit(ctype, oid, campaign_name, confidence,
         html = crits_object.format_campaign(campaign, analyst)
         return {'success': True, 'html': html}
     except ValidationError, e:
-        return {'success':False, 'message': "Invalid value: %s" % e}
+        return {'success': False, 'message': "Invalid value: %s" % e}
 
 def campaign_remove(ctype, oid, campaign, analyst):
     """
@@ -684,4 +687,4 @@ def campaign_remove(ctype, oid, campaign, analyst):
         crits_object.save(username=analyst)
         return {'success': True}
     except ValidationError, e:
-        return {'success':False, 'message': "Invalid value: %s" % e}
+        return {'success': False, 'message': "Invalid value: %s" % e}

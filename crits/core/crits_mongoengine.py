@@ -7,6 +7,7 @@ import csv
 from bson import json_util, ObjectId
 from dateutil.parser import parse
 from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
 from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
@@ -1070,7 +1071,7 @@ class EmbeddedCampaign(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     analyst = StringField()
-    confidence = StringField(default='low')
+    confidence = StringField(default='low', choices=('low', 'medium', 'high'))
     date = CritsDateTimeField(default=datetime.datetime.now)
     description = StringField()
     name = StringField(required=True)
@@ -1166,14 +1167,15 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         if isinstance(campaign_item, EmbeddedCampaign):
             if campaign_item.name != None and campaign_item.name.strip() != '':
+                campaign_item.confidence = campaign_item.confidence.strip().lower()
+                if campaign_item.confidence == '':
+                    campaign_item.confidence = 'low'
                 for c, campaign in enumerate(self.campaign):
                     if campaign.name == campaign_item.name:
                         if not update:
                             return {'success': False, 'message': 'This Campaign is already assigned.'}
                         con = {'low': 1, 'medium': 2, 'high': 3}
-                        if not con.get(campaign_item.confidence):
-                            campaign_item.confidence = 'low'
-                        if con.get(campaign.confidence, 0) < con[campaign_item.confidence]:
+                        if con.get(campaign.confidence, 0) < con.get(campaign_item.confidence):
                             self.campaign[c].confidence = campaign_item.confidence
                             self.campaign[c].analyst = campaign_item.analyst
                         break
@@ -2234,6 +2236,24 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         from crits.services.analysis_result import AnalysisResult
 
         return AnalysisResult.objects(object_id=str(self.id))
+
+    def get_details_url(self):
+        """
+        Generic function that generates a details url for a
+        :class:`crits.core.crits_mongoengine.CritsBaseAttributes` object.
+        """
+
+        mapper = self._meta.get('jtable_opts')
+        if mapper is not None:
+            details_url = mapper['details_url']
+            details_url_key = mapper['details_url_key']
+
+            try:
+                return reverse(details_url, args=(unicode(self[details_url_key]),))
+            except Exception as e:
+                return None
+        else:
+            return None
 
 
 # Needs to be here to prevent circular imports with CritsBaseAttributes

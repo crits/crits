@@ -37,6 +37,7 @@ class CRITsConfig(CritsDocument, Document):
     email_host = StringField(default='')
     email_port = StringField(default='')
     enable_api = BooleanField(default=False)
+    enable_toasts = BooleanField(default=False)
     git_repo_url = StringField(default='https://github.com/crits/crits')
     http_proxy = StringField(default='')
     instance_name = StringField(default='My Instance')
