@@ -1817,6 +1817,7 @@ Unique POST Parameters:
 :tags: A comma-separated list of tags for the screenshot.
 :oid: The ObjectId of the top-level object the screenshot(s) is/are for.
 :otype: The type of the top-level object the screenshot(s) is/are for.
+:description: Description of the screenshot.
 
 Service API
 -------------------------------------------
