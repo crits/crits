@@ -419,7 +419,7 @@ def generate_email_jtable(request, option):
         },
         {
             'tooltip': "'Upload Outlook Email'",
-            'text': "'Add Outlook'",
+            'text': "'Upload .msg'",
             'click': "function () {$('#new-email-outlook').click()}",
         },
     ]
