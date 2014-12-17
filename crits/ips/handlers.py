@@ -354,6 +354,9 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
               "object" (if successful) :class:`crits.ips.ip.IP`
     """
 
+    if not source:
+        return {"success" : False, "message" : "Missing source information."}
+
     if "Address - ipv4" in ip_type:
         try:
             validate_ipv4_address(ip_address)
