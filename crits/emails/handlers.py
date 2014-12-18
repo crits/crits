@@ -290,7 +290,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "originating_ip",
-                "String",
+                "Address - ipv4-addr",
                 email.originating_ip,
                 "Originating IP",
                 True, True, True, False, True,
