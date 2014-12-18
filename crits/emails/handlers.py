@@ -417,6 +417,11 @@ def generate_email_jtable(request, option):
             'text': "'Add Email'",
             'click': "function () {$('#new-email-fields').click()}",
         },
+        {
+            'tooltip': "'Upload Outlook Email'",
+            'text': "'Upload .msg'",
+            'click': "function () {$('#new-email-outlook').click()}",
+        },
     ]
     if option == "inline":
         return render_to_response("jtable.html",
