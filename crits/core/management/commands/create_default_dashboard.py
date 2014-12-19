@@ -44,6 +44,23 @@ def create_dashboard(drop=False):
             savedSearch.dashboard = defaultDashboard.id
             savedSearch.isDefaultOnDashboard = True
             savedSearch.tableColumns = getColumnsForTable(title)
+            if title == "Counts" or title == "Top Backdoors":
+                savedSearch.sizex = 10
+            elif title == "Top Campaigns":
+                savedSearch.sizex = 25
+            if title == "Counts":
+                savedSearch.sizey = 13
+            if title == "Recent Indicators":
+                savedSearch.row = 15
+            elif title == "Recent Emails":
+                savedSearch.row = 23
+            elif title == "Recent Samples":
+                savedSearch.row = 31
+            if title == "Top Backdoors":
+                savedSearch.col = 10
+            elif title == "Top Campaigns":
+                savedSearch.col = 20
+                
             savedSearch.save()
         print "Default Dashboard Created."
     else:
