@@ -341,7 +341,7 @@ class LoginTests(SimpleTestCase):
         # These should all start and end with a /
         paths = [
             "/",
-            "/dashboard/",
+            "/dashboards/",
             #"/nourl/",  # Does not work, see issue #1147.
             "/samples/details/d41d8cd98f00b204e9800998ecf8427e/",
         ]
