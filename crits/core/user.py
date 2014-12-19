@@ -146,6 +146,10 @@ class PreferencesField(DynamicEmbeddedDocument):
                                             "hover_text_color": "#39F",
                                             "hover_background_color": "#6F6F6F"})
 
+    toast_notifications = DictField(required=True, default={"enabled": True,
+                                                            "acknowledgement_type": "sticky",
+                                                            "initial_notifications_display": "show",
+                                                            "newer_notifications_location": "top"})
 
 class EmbeddedPasswordReset(EmbeddedDocument, CritsDocumentFormatter):
     """

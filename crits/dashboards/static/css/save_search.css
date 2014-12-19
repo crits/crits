@@ -7,9 +7,15 @@
 #wrapper {
 	margin: 0 auto;
 }
+#container {
+	height:100%;
+}
 #innerWrapper {
-	overflow-x:hidden;
-	overflow-y:auto;  
+	//overflow-x:hidden;
+	//overflow-y:auto;  
+}
+#contentWrapper {
+	margin-top:-13px;
 }
 #tab-content {
   float:left;

@@ -1006,6 +1006,9 @@ def base_context(request):
                            'company_name',
                            settings.COMPANY_NAME)
     crits_version = settings.CRITS_VERSION
+    enable_toasts = getattr(crits_config,
+                            'enable_toasts',
+                            settings.ENABLE_TOASTS)
     git_branch = getattr(crits_config,
                          'git_branch',
                          settings.GIT_BRANCH)
@@ -1034,6 +1037,7 @@ def base_context(request):
     base_context['instance_name'] = instance_name
     base_context['company_name'] = company_name
     base_context['crits_version'] = crits_version
+    base_context['enable_toasts'] = enable_toasts
     if git_repo_url:
         base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long+"'>"+git_branch+':'+git_hash+"</a>"
     else:
@@ -1188,6 +1192,11 @@ def base_context(request):
         if nav_template != None:
             base_context['nav_template'] = nav_template
 
+        base_context['newer_notifications_location'] = request.user.prefs.toast_notifications.get('newer_notifications_location', 'top')
+        base_context['initial_notifications_display'] = request.user.prefs.toast_notifications.get('initial_notifications_display', 'show')
+        base_context['max_visible_notifications'] = request.user.prefs.toast_notifications.get('max_visible_notifications', 5)
+        base_context['notification_anchor_location'] = request.user.prefs.toast_notifications.get('notification_anchor_location', 'bottom_right')
+
         base_context['nav_config'] = {'text_color': request.user.prefs.nav.get('text_color'),
                                       'background_color': request.user.prefs.nav.get('background_color'),
                                       'hover_text_color': request.user.prefs.nav.get('hover_text_color'),
@@ -1219,8 +1228,6 @@ def base_context(request):
                                         'name': 'Relationship Types'},
                                     {'collection': settings.COL_SOURCE_ACCESS,
                                         'name': 'Sources'},
-                                    {'collection': settings.COL_USER_ROLES,
-                                        'name': 'User Roles'}
                                     ]
 
     return base_context
@@ -1466,7 +1473,7 @@ def change_subscription(request, stype, oid):
         message = ""
         if is_user_subscribed(username, stype, oid):
             unsubscribe_user(username, stype, oid)
-            message = ("<span class=\"ui-icon ui-icon-check subscription_link"
+            message = ("<span class=\"ui-icon ui-icon-signal-diag subscription_link"
                        "_disable\" title=\"Subscribe\"></span>")
         else:
             subscribe_user(username, stype, oid)

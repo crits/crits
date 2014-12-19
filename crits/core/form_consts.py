@@ -150,6 +150,17 @@ class Indicator():
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
+class NotificationType():
+    ALERT = 'alert'
+    ERROR = 'error'
+    INFORMATION = 'information'
+    NOTIFICATION = 'notification'
+    SUCCESS = 'success'
+    WARNING = 'warning'
+
+    ALL = [ALERT, ERROR, INFORMATION, NOTIFICATION, SUCCESS, WARNING]
+
+
 class Object():
     """
     Constants for Objects.

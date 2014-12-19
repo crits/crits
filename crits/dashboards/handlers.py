@@ -19,7 +19,7 @@ from django.utils.html import escape as html_escape
 import cgi
 import datetime
 from django.http import HttpRequest
-from crits.dashboards.utilities import getCssForDefaultDashboardTable, constructCssString, constructAttrsString, getHREFLink, get_obj_name_from_title, get_obj_type_from_string
+from crits.dashboards.utilities import getHREFLink, get_obj_name_from_title, get_obj_type_from_string
 import HTMLParser
 
 def get_dashboard(user,dashId=None):
@@ -52,15 +52,29 @@ def get_dashboard(user,dashId=None):
     savedTables = SavedSearch.objects(dashboard=dashId, isPinned=True)
     for table in savedTables:
         tables.append(createTableObject(user, table=table))
+    otherDashboardIds = []
+    otherDashboards = {}
+    for dash in Dashboard.objects(id__ne=dashId, analystId=user.id):
+        otherDashboardIds.append(dash.id)
+        otherDashboards[dash.id] = dash.name
+    otherSearches = []
+    for search in SavedSearch.objects(dashboard__in=otherDashboardIds, isPinned=True) :
+        otherSearches.append({
+                        "id":search.id,
+                        "dash":otherDashboards[search.dashboard],
+                        "name":search.name
+                        })
     return {"success": True,
             "tables": tables,
             "dashboards": getDashboardsForUser(user),
             "currentDash": str(dashId),
             'parentHasChanged':dashboard.hasParentChanged,
             'parent':dashboard.parent,
-            'dashTheme':dashboard.theme}
+            'dashTheme':dashboard.theme,
+            "otherSearches":otherSearches,
+            "userId": dashboard.analystId}
     
-def createTableObject(user, title="", dashboard=None, table=None):
+def createTableObject(user, title="", table=None):
     """
     Parent method in creating the table object, called by get_dashboard 
     for each table
@@ -118,18 +132,6 @@ def constructSavedTable(table, records):
     Creates all the needed parameters to be passed into constructTable.
     Called by createTableObject.
     """
-    attrs = {}
-    if table.left > -1:
-        attrs['tempLeft'] = str(table.left)+"%"
-    if table.top > -1:
-        attrs['tempTop'] = str(table.top)+"px"
-    css = {}
-    if table.width:
-        css['width'] = str(table.width)+"%"
-    elif table.isDefaultOnDashboard:
-        css = getCssForDefaultDashboardTable(table.name)
-    else:
-        css['width'] = "100%"
     columns = []
     colNames = []
     for column in table.tableColumns:
@@ -141,9 +143,9 @@ def constructSavedTable(table, records):
                 colNames.append(v)
             col[str(k)] = str(v)
         columns.append(col)
-    return constructTable(table, records, columns, colNames, css, attrs)
+    return constructTable(table, records, columns, colNames)
 
-def constructTable(table, records, columns, colNames, css, attrs):
+def constructTable(table, records, columns, colNames):
     """
     Creates and returns the dict object representing the table. This is the
     final method called in the creation of a table and is used for both
@@ -154,13 +156,15 @@ def constructTable(table, records, columns, colNames, css, attrs):
         "records": records,
         "columns": columns,
         "colNames": colNames,
-        "css": constructCssString(css),
-        "id" : table.id,
-        "attrs": constructAttrsString(attrs),
+        "id" : str(table.id),
         "searchTerm":table.searchTerm,
         "sortBy":table.sortBy,
         "maxRows":table.maxRows,
         "isHereByDefault":table.isDefaultOnDashboard,
+        "sizex": table.sizex,
+        "sizey": table.sizey,
+        "row": table.row,
+        "col": table.col
     }
     if table.objType:
         tableObject["objType"] = table.objType
@@ -259,14 +263,12 @@ def parseDocObjectsToStrings(records, obj_type):
     return records
 
 def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None, 
-              tableId=None, top=None, left=None, width=0,
-              isDefaultOnDashboard=False, maxRows=0, dashboardWidth=0,
-              dashboard=None, clone=False):
+              tableId=None, isDefaultOnDashboard=False, maxRows=0,
+              dashboard=None, clone=False, row=0, grid_col=0, sizex=0,
+              sizey=0):
     """
     Saves the customized table in the dashboard. Called by save_search and
     save_new_dashboard via ajax in views.py.
-    width - css style used on dashboard
-    tableWidth - width of table on edit page in order to calculate percentage width of columns
     """
     try:
         if searchTerm:
@@ -290,11 +292,8 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
         newSavedSearch.tableColumns = cols
         newSavedSearch.name = tableName
         oldDashId = None
-        if dashboard:
-            if newSavedSearch.dashboard != dashboard.id:
-                newSavedSearch.left = -1
-                newSavedSearch.top = -1
-                newSavedSearch.dashboard= dashboard.id
+        if dashboard and newSavedSearch.dashboard != dashboard.id:
+            newSavedSearch.dashboard= dashboard.id
         #if it is not a deault dashboard table, it must have a searchterm and objtype
         if searchTerm:
             newSavedSearch.searchTerm = searchTerm
@@ -304,30 +303,32 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
         newSavedSearch.isDefaultOnDashboard = isDefaultOnDashboard
         if sortBy:
             newSavedSearch.sortBy = sortBy
-        if (top or left) and dashboardWidth:
-            newSavedSearch.top = top
-            leftAsPercent = float(left)/float(dashboardWidth)*100
-            #if the new left value is within 2 of previous, dont change.
-            #This is because rounding issues in the HTML were constantly 
-            #shifting the tables over by 1% every save
-            if newSavedSearch.left==-1 or not (leftAsPercent >= newSavedSearch.left-2 and leftAsPercent <= newSavedSearch.left+2):
-                newSavedSearch.left = leftAsPercent
+        if sizex:
+            newSavedSearch.sizex = sizex
+        elif not newSavedSearch.sizex:
+            newSavedSearch.sizex = 50
+        if sizey:
+            newSavedSearch.sizey = sizey
+        elif maxRows and maxRows != newSavedSearch.maxRows:
+            newSavedSearch.sizey = int(maxRows)+1
+        elif not newSavedSearch.sizey:
+            newSavedSearch.sizey = 7
+        if row:
+            newSavedSearch.row = row
+        elif not newSavedSearch.row:
+            newSavedSearch.row = 1
+        if grid_col:
+            newSavedSearch.col = grid_col
+        elif not newSavedSearch.col:
+            newSavedSearch.col = 1
         if maxRows:
-            #if the table is growing in height, reset it's position so it doesnt
-            #overlap with other tables
-            if int(maxRows) > newSavedSearch.maxRows:
-                newSavedSearch.top=-1
             newSavedSearch.maxRows = maxRows;
-        if width:
-            width = float(width)
-            if not dashboardWidth and newSavedSearch.width and (width > newSavedSearch.width+2 or width < newSavedSearch.width-2):
-                newSavedSearch.top=-1
-            newSavedSearch.width = float(width)
         newSavedSearch.save()
         #if the old dashboard is empty, delete it
         if oldDashId:
             deleteDashboardIfEmpty(oldDashId)
     except Exception as e:
+        print "ERROR: "
         print e
         return {'success': False,
                 'message': "An unexpected error occurred while saving table. Please refresh and try again"}
@@ -335,40 +336,93 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
 
 def clear_dashboard(dashId):
     """
-    Clears all the set positions and widths of the tables on the dashboard
+    Clears all the set positions and sizes of the tables on the dashboard
     """
+    default_tables = {
+                        "Counts": {
+                            "sizex": 10,
+                            "sizey": 13,
+                            "row": 1,
+                            "col": 1
+                        },
+                        "Top Backdoors": {
+                            "sizex": 10,
+                            "sizey": 8,
+                            "row": 1,
+                            "col": 10
+                        },
+                        "Top Campaigns": {
+                            "sizex": 25,
+                            "sizey": 8,
+                            "row": 1,
+                            "col": 20
+                        },
+                        "Recent Indicators": {
+                            "sizex": 50,
+                            "sizey": 8,
+                            "row": 15,
+                            "col": 1
+                        },
+                        "Recent Emails": {
+                            "sizex": 50,
+                            "sizey": 8,
+                            "row": 23,
+                            "col": 1
+                        },
+                        "Recent Samples": {
+                            "sizex": 50,
+                            "sizey": 8,
+                            "row": 31,
+                            "col": 1
+                        },
+                      }
     try:
-        SavedSearch.objects(dashboard=dashId).update(unset__left=1,unset__top=1,unset__width=1)
-    except:
+        for search in SavedSearch.objects(dashboard=dashId):
+            if search.isDefaultOnDashboard:
+                tempDict = default_tables[search.name]
+                search.sizex = tempDict["sizex"]
+                search.sizey = tempDict["sizey"]
+                search.row = tempDict["row"]
+                search.col = tempDict["col"]
+                search.save()
+            else:
+                search.update(unset__col=1,unset__row=1,unset__sizex=1)
+    except Exception as e:
+        print e
         return {'success': False, 
                 'message': "An unexpected error occurred while resetting dash. Please refresh and try again"}
     return {'success': True, 
             'message': "Dashboard Reset"}
 
-def delete_table(id, tableHeight=0):
+def delete_table(userId, id):
     """
     Deletes a table from the db. Only can be called via the saved_search.html
     """
     try:
         savedSearch = SavedSearch.objects(id=id).first()
-        #if savedSearch.top > -1 and (not savedSearch.width or savedSearch.width>=97):
-        #    SavedSearch.objects(dashboard=savedSearch.dashId,top__gt=savedSearch.top).update(dec__top=tableHeight)
         tableName = savedSearch.name
+        doDelete = True
+        message = tableName+" deleted successfully!"
         if savedSearch.isDefaultOnDashboard:
-            savedSearch.left = -1
-            savedSearch.top = -1
-            savedSearch.width = 0
-            savedSearch.isPinned = False
-            savedSearch.save()
-        else:
+            dashboards = []
+            for dash in Dashboard.objects(analystId=userId):
+                dashboards.append(dash.id)
+            if SavedSearch.objects(dashboard__in=dashboards, isDefaultOnDashboard=True, name=tableName).count() == 1:
+                savedSearch.col = 1
+                savedSearch.row = 1
+                savedSearch.isPinned = False
+                savedSearch.save()
+                doDelete = False
+                message = tableName+" is now hidden."
+        if doDelete:
             dashId = savedSearch.dashboard
             savedSearch.delete()
             deleteDashboardIfEmpty(dashId)
     except Exception as e:
         print e
         return {'success': False,
-                'message': "Saved search cannot be found. Please refresh and try again."}
-    return {'success': True,'message': tableName+" deleted successfully!"}
+                'message': "Search could not be found. Please refresh and try again."}
+    return {'success': True,'message': message, 'wasDeleted': doDelete}
 
 def get_table_data(request=None,obj=None,user=None,searchTerm="",
                    search_type=None, includes=[], excludes=[], maxRows=25, 
@@ -497,17 +551,10 @@ def generate_search_for_saved_table(user, id=None,request=None):
                 'tableName': savedSearch.name,
                 'columns': savedSearch.tableColumns,
                 'sortBy': savedSearch.sortBy,
-                'setWidth' : savedSearch.width,
+                'sizex' : savedSearch.sizex,
                 'maxRows': savedSearch.maxRows,
                 'isDefaultOnDashboard': savedSearch.isDefaultOnDashboard,
                 })
-        if savedSearch.width:
-            args['tableWidth'] = savedSearch.width
-        elif savedSearch.isDefaultOnDashboard:
-            if savedSearch.name == "Counts" or savedSearch.name == "Top Backdoors":
-                args['tableWidth'] = "20%"
-            elif savedSearch.name == "Top Campaigns":
-                args['tableWidth'] = "50%"
         if savedSearch.dashboard:
             args["currentDash"] = str(savedSearch.dashboard)
             args["dashtheme"] = Dashboard.objects(id=savedSearch.dashboard).first().theme
@@ -525,10 +572,7 @@ def toggleTableVisibility(id, isVisible):
     if isVisible:
         message += "visible"
     else:
-        table.left = -1
-        table.top = -1
         message += "hidden"
-        
     table.isPinned = isVisible
     table.save()
     return {'success': True,'message': message}
@@ -710,4 +754,20 @@ def changeTheme(id, theme):
         return False
     return "Dashboard updated successfully."
     
-    
+def add_existing_search_to_dashboard(id, dashboard, user):
+    search = SavedSearch.objects(id = id).first()
+    if not search:
+        return {"success":False,
+                "message":"Could not find search. Please refresh and try again."}
+    else:
+        search = cloneSavedSearch(search, dashboard)
+        return {"success":True,
+                "message": search.name+" has been added to your dashboard.",
+                "newSearch": createTableObject(user, table=search)}
+
+def switch_existing_search_to_dashboard(id, dashboard):
+    if SavedSearch.objects(id=id).update(set__dashboard=dashboard) == 1:
+        return {"success":True,
+                "message": "Search Switched Sucessfully"}
+    return {"success":False,
+            "message": "Could not find search. Please refresh and try again."}
