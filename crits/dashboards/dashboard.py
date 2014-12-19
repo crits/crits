@@ -24,6 +24,11 @@ class SavedSearch(CritsDocument, CritsSchemaDocument, DynamicDocument):
     isDefaultOnDashboard = BooleanField(required=True, default=False)
     isPinned = BooleanField(required=True, default=True)
     
+    sizex = IntField(required=True, default=50)
+    sizey = IntField(required=True, default=8)
+    row = IntField(required=True, default=1)
+    col = IntField(required=True, default=1)
+
     def getSortByText(self):
         textString = "None"
         if self.sortBy:

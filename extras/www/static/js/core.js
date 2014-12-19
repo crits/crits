@@ -1280,7 +1280,7 @@ $(document).ready(function() {
             url: get_search_help_url,
             success: function(data) {
                 if (data.template) {
-                    var rdiv = $("<div id='global_search_help' />");
+                    var rdiv = $("<div id='global_search_help' class='z-11' />");
                     $('body').append(rdiv);
                     $('#global_search_help')
                     .css('position', 'absolute')
