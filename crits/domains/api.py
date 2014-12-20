@@ -58,6 +58,7 @@ class DomainResource(CRITsAPIResource):
         # Also add IP information
         add_ip = bundle.data.get('add_ip', None)
         ip = bundle.data.get('ip', None)
+        ip_type = bundle.data.get('ip_type', None)
         same_source = bundle.data.get('same_source', None)
         ip_source = bundle.data.get('ip_source', None)
         ip_method = bundle.data.get('ip_method', None)
@@ -79,6 +80,7 @@ class DomainResource(CRITsAPIResource):
                 'ip_reference': ip_reference,
                 'add_ip': add_ip,
                 'ip': ip,
+                'ip_type': ip_type,
                 'add_indicators': add_indicators,
                 'bucket_list': bucket_list,
                 'ticket': ticket}
