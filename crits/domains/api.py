@@ -152,6 +152,12 @@ class DomainResource(CRITsAPIResource):
           content['message'] = 'You must provide a domain ID.'
           self.crits_response(content)
 
+        try:
+          int(id,16)
+        except ValueError:
+          content['message'] = 'Invalid ID in the URL.'
+          self.crits_response(content)
+
         obj_type = Domain
 
         try:
@@ -215,6 +221,12 @@ class DomainResource(CRITsAPIResource):
         if not id:
             content['message'] = 'You must provide a domain ID.'
             self.crits_response(content)
+
+        try:
+          int(id,16)
+        except ValueError:
+          content['message'] = 'Invalid ID in the URL.'
+          self.crits_response(content)
 
         result = {}
 

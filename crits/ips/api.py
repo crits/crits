@@ -130,6 +130,12 @@ class IPResource(CRITsAPIResource):
             self.crits_response(content)
 
         try:
+          int(id,16)
+        except ValueError:
+          content['message'] = 'Invalid ID in the URL.'
+          self.crits_response(content)
+
+        try:
           result = ip_remove(id,analyst)
         except ValidationError,ve:
           content['message'] = "Could not locate IP ID."
@@ -177,6 +183,12 @@ class IPResource(CRITsAPIResource):
         if not id:
             content['message'] = "You must provide an IP ID."
             self.crits_response(content)
+
+        try:
+          int(id,16)
+        except ValueError:
+          content['message'] = 'Invalid ID in the URL.'
+          self.crits_response(content)
 
         result = {}
 
