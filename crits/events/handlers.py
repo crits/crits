@@ -274,10 +274,14 @@ def add_new_event(title, description, event_type, source, method, reference,
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
+    if not source:
+        return {'success': False, 'message': "Missing source information."}
+
     event = Event()
     event.title = title
     event.description = description
     event.set_event_type(event_type)
+
     s = create_embedded_source(name=source,
                                reference=reference,
                                method=method,

@@ -105,6 +105,7 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
         :type tags: str, list
         """
 
+        tag_list = []
         if isinstance(tags, basestring):
             tag_list = [t.strip() for t in tags.split(',') if len(t.strip())]
         if isinstance(tags, list):

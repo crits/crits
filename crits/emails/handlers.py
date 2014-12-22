@@ -909,6 +909,10 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             'attachments': {}
           }
 
+    if not sourcename:
+        result['reason'] = "Missing source information."
+        return result
+
     msg_import = {'raw_header': ''}
     reImap = re.compile(r"(\*\s\d+\sFETCH\s.+?\r\n)(.+)\).*?OK\s(UID\sFETCH\scompleted|Success)", re.M | re.S)
 

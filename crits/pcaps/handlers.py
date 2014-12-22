@@ -268,6 +268,9 @@ def handle_pcap_file(filename, data, source_name, user=None,
         }
         return status
 
+    if not source_name:
+        return {"success" : False, "message" : "Missing source information."}
+
     related_obj = None
     if related_id or related_md5:
         if related_id:
