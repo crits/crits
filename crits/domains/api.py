@@ -8,11 +8,10 @@ from mongoengine.base import ValidationError
 from crits.domains.domain import Domain
 from crits.domains.handlers import add_new_domain, add_whois
 
-from crits.campaigns.handlers import campaign_remove
-from crits.core.handlers import source_remove_all
+from crits.core.handlers import source_remove_all, delete_id
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
-from crits.core.user_tools import is_admin
+from crits.core.user_tools import is_admin, user_sources
 
 import json
 
@@ -139,8 +138,8 @@ class DomainResource(CRITsAPIResource):
         content = {'return_code': 1,
                    'type': 'Domain'}
 
-        analyst = request.user.username
-        if not is_admin(analyst):
+        username = request.user.username
+        if not is_admin(username):
           content['message'] = 'You must be an admin to delete domains.'
           self.crits_response(content)
 
@@ -160,34 +159,19 @@ class DomainResource(CRITsAPIResource):
 
         obj_type = Domain
 
-        try:
-          doc = obj_type.objects(id=id).first()
-        except ValidationError, ve:
-          content['message'] = 'Domain ID not found!'
-          self.crits_response(content)
-
-        if not doc:
-          content['message'] = 'Unable to locate the domain associated with the provided ID.'
-          self.crits_response(content)
-
-        if "delete_all_relationships" in dir(doc):
-          doc.delete_all_relationships()
-
-        # For samples/pcaps
-        if "filedata" in dir(doc):
-          doc.filedata.delete()
-
-        doc.delete(username=analyst)
-         
-        content['return_code'] = 0
+        result, message = delete_id(username,obj_type,id)
+        
+        if result: 
+          content['return_code'] = 0
+        else:
+          content['message'] = message
 
         self.crits_response(content)
    
 
     def patch_detail(self, request, **kwargs):
         """
-        This will delete the campaign and source references within the domain
-        ID's record.
+        This will delete source references within the domain ID's record.
 
         The patch_detail method is for any modification to a record. The
         action parameter is hard coded to delete because that is the only
@@ -196,7 +180,7 @@ class DomainResource(CRITsAPIResource):
         The data must be sent as JSON within the body of the request.
 
         This code assumes that the client has already deteremined whether there
-        are multiple campaign/source associations.
+        are multiple source associations.
 
         :param request: The incoming request.
         :type request: :class:`django.http.HttpRequest`
@@ -228,13 +212,15 @@ class DomainResource(CRITsAPIResource):
           content['message'] = 'Invalid ID in the URL.'
           self.crits_response(content)
 
-        result = {}
+        sources = user_sources(analyst)
+        obj_type = Domain
+        doc = obj_type.objects(id=id,source__name__in=sources).first()
 
-        campaign = ""
-        try:
-          campaign = data.get("campaign")
-        except KeyError, e:
-          campaign = ""
+        if not doc:
+          content['message'] = 'The provided ID is not available to the provided account.'
+          self.crits_response(content)
+
+        result = {}
 
         source = ""
         try:
@@ -242,27 +228,15 @@ class DomainResource(CRITsAPIResource):
         except KeyError, e:
           source = ""
 
-        if ((source == None or source == "") and (campaign == None or campaign == "")):
-            content['message'] = "A campaign or source must be provided."
+        if source == None or source == "":
+            content['message'] = "A source must be provided."
             self.crits_response(content)
-
-        if campaign != None and campaign != "":
-          if action == "delete":
-            result = campaign_remove("Domain",id,campaign,analyst)
-
-            if result == None:
-              content['message'] = 'Could not remove campaign.'
-              self.crits_response(content)
-
-            if not result['success']:
-              if result.get('message'):
-                 content['message'] = result.get('message')
-              else:
-                 content['message'] = 'Could not remove campaign.'
-              self.crits_response(content)
 
         if source != None and source != "":
           if action == "delete":
+            if not (source in sources):
+                 content['message'] = 'You are not authorized to remove this source'
+                 self.crits_response(content)
             result = source_remove_all("Domain",id,source,analyst)
 
             if result == None:

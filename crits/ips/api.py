@@ -6,12 +6,10 @@ from mongoengine.base import ValidationError
 
 from crits.ips.ip import IP
 from crits.ips.handlers import ip_add_update
-from crits.ips.handlers import ip_remove
-from crits.campaigns.handlers import campaign_remove
-from crits.core.handlers import source_remove_all
+from crits.core.handlers import source_remove_all, delete_id
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
-from crits.core.user_tools import is_admin
+from crits.core.user_tools import is_admin, user_sources
 
 import json
 
@@ -115,9 +113,9 @@ class IPResource(CRITsAPIResource):
         content = {'return_code': 1,
                    'type': 'IP'}
 
-        analyst = request.user.username
+        username = request.user.username
 
-        if not is_admin(analyst):
+        if not is_admin(username):
           content['message'] = 'You must be an admin to delete IPs.'
           self.crits_response(content)
 
@@ -135,22 +133,21 @@ class IPResource(CRITsAPIResource):
           content['message'] = 'Invalid ID in the URL.'
           self.crits_response(content)
 
-        try:
-          result = ip_remove(id,analyst)
-        except ValidationError,ve:
-          content['message'] = "Could not locate IP ID."
-          self.crits_response(content)
+        obj_type = IP
 
-        if result.get('success'):
-            content['return_code'] = 0
+        result, message = delete_id(username,obj_type,id)
+
+        if result:
+          content['return_code'] = 0
+        else:
+          content['message'] = message
 
         self.crits_response(content)
 
 
     def patch_detail(self, request, **kwargs):
         """
-        This will delete the campaign and source references within the IP
-        ID's record. 
+        This will delete the source references within the IP ID's record. 
 
         The patch_detail method is for any modification to a record. The
         action parameter is hard coded to delete because that is the only
@@ -159,7 +156,7 @@ class IPResource(CRITsAPIResource):
         The data must be sent as JSON within the body of the request.
 
         This code assumes that the client has already deteremined whether there
-        are multiple campaign/source associations.
+        are multiple source associations.
 
         :param request: The incoming request.
         :type request: :class:`django.http.HttpRequest`
@@ -190,13 +187,15 @@ class IPResource(CRITsAPIResource):
           content['message'] = 'Invalid ID in the URL.'
           self.crits_response(content)
 
-        result = {}
+        sources = user_sources(analyst)
+        obj_type = IP
+        doc = obj_type.objects(id=id,source__name__in=sources).first()
 
-        campaign = ""
-        try:
-          campaign = data.get("campaign")
-        except KeyError, e:
-          campaign = ""
+        if not doc:
+          content['message'] = 'The provided ID is not available to the provided account.'
+          self.crits_response(content)
+
+        result = {}
 
         source = ""
         try:
@@ -204,27 +203,16 @@ class IPResource(CRITsAPIResource):
         except KeyError, e:
           source = ""
 
-        if ((source == None or source == "") and (campaign == None or campaign == "")):
-            content['message'] = "A campaign or source must be provided."
+        if source == None or source == "":
+            content['message'] = "A source must be provided."
             self.crits_response(content)
-
-        if campaign != None and campaign != "":
-          if action == "delete":
-            result = campaign_remove("IP",id,campaign,analyst)
-
-            if result == None:
-              content['message'] = 'Could not remove campaign.'
-              self.crits_response(content)
-
-            if not result['success']:
-              if result.get('message'):
-                 content['message'] = result.get('message')
-              else:
-                 content['message'] = 'Could not remove campaign.'
-              self.crits_response(content)
 
         if source != None and source != "":
           if action == "delete":
+            if not (source in sources):
+                 content['message'] = 'You are not authorized to remove this source'
+                 self.crits_response(content)
+
             result = source_remove_all("IP",id,source,analyst)
 
             if result == None:
