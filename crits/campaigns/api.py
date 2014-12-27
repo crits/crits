@@ -7,9 +7,8 @@ from crits.campaigns.campaign import Campaign
 from crits.campaigns.handlers import add_campaign, campaign_remove, remove_campaign
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
+from crits.core.class_mapper import class_from_type
 from crits.core.user_tools import is_admin, user_sources
-from crits.domains.domain import Domain
-from crits.ips.ip import IP
 
 
 import json
@@ -97,8 +96,8 @@ class CampaignResource(CRITsAPIResource):
         modification that is currently supported.
 
         The data must be sent as JSON within the body of the request.
-	The obj_type will specify what will be removed ("IP","Domain").
-        The obj_id is the ID of the obj_type that will be removed.
+	The crits_type will specify what will be removed ("IP","Domain").
+        The crits_id is the ID of the obj_type that will be removed.
 
         :param request: The incoming request.
         :type request: :class:`django.http.HttpRequest`
@@ -132,27 +131,30 @@ class CampaignResource(CRITsAPIResource):
 
         obj_type = ""
         try:
-          obj_type = data.get("obj_type")
+          obj_type = data.get("crits_type")
         except KeyError, e:
-          content['message'] = "An object type must be provided."
+          content['message'] = "A crits_type must be provided."
           self.crits_response(content)
 
         obj_id = ""
         try:
-          obj_id = data.get("obj_id")
+          obj_id = data.get("crits_id")
         except KeyError, e:
-          content['message'] = "An object id must be provided."
+          content['message'] = "A crits_id must be provided."
+          self.crits_response(content)
+
+        try:
+          int(obj_id,16)
+        except ValueError:
+          content['message'] = 'Invalid crits_id.'
+          self.crits_response(content)
+
+        obj = class_from_type(obj_type)
+        if obj == None:
+          content['message'] = 'Invalid crits_type'
           self.crits_response(content)
 
         sources = user_sources(analyst)
-        if obj_type == "IP":
-          obj = IP
-        elif obj_type == "Domain":
-          obj = Domain
-        else:
-          content['message'] = "Unrecognized object type."
-          self.crits_response(content)
-
         doc = obj.objects(id=obj_id,source__name__in=sources).first()
 
         if not doc:
@@ -164,14 +166,14 @@ class CampaignResource(CRITsAPIResource):
         result = campaign_remove(obj_type,obj_id,campaign.name,analyst)
 
         if result == None:
-           content['message'] = 'Could not remove campaign.'
+           content['message'] = 'Could not remove the campaign.'
            self.crits_response(content)
 
         if not result['success']:
            if result.get('message'):
               content['message'] = result.get('message')
            else:
-              content['message'] = 'Could not remove campaign.'
+              content['message'] = 'Could not remove the campaign.'
         else:
            content['return_code'] = 0
 
@@ -193,7 +195,7 @@ class CampaignResource(CRITsAPIResource):
 
         username = request.user.username
         if not is_admin(username):
-          content['message'] = 'You must be an admin to delete domains.'
+          content['message'] = 'You must be an admin to delete campaigns.'
           self.crits_response(content)
 
         path = request.path
