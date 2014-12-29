@@ -7,6 +7,8 @@ import pymongo
 
 import magic
 
+import re
+
 class MongoError(Exception):
     """
     Generic MongoError exception.
@@ -411,3 +413,25 @@ def format_error(e):
 
     from crits.core.handlers import format_error as fe
     return fe(e)
+
+
+def validate_objectid(id):
+    """
+    Validates that the provided string is an ObjectId.
+    Returns true if the id matches the ObjectId format.
+
+    :param id: The ObjectId string
+    :type id: str
+    :returns: bool
+    """
+
+    if id == None:
+      return False
+
+    if type(id) != str and type(id) != unicode:
+      return False
+
+    if re.match("^[a-fA-F0-9]{24}$",id) == None:
+      return False
+
+    return True
