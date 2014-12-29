@@ -349,6 +349,8 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     if source:
         for s in source:
             actor.add_source(s)
+    else:
+        return {"success" : False, "message" : "Missing source information."}
 
     if not isinstance(aliases, list):
         aliases = aliases.split(',')
@@ -514,6 +516,8 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
     if source:
         for s in source:
             actor_identifier.add_source(s)
+    else:
+        return {"success" : False, "message" : "Missing source information."}
 
     actor_identifier.save(username=analyst)
     actor_identifier.reload()

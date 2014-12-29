@@ -484,6 +484,9 @@ def handle_indicator_ind(value, source, reference, ctype, analyst,
 
     result = None
 
+    if not source:
+        return {"success" : False, "message" : "Missing source information."}
+
     if value == None or value.strip() == "":
         result = {'success': False,
                   'message': "Can't create indicator with an empty value field"}

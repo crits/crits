@@ -53,15 +53,26 @@ def upsert_target(data, analyst):
         target = Target()
         target.email_address = data['email_address']
 
-    target.department = data['department']
-    target.division = data['division']
-    target.organization_id = data['organization_id']
-    target.firstname = data['firstname']
-    target.lastname = data['lastname']
-    target.note = data['note']
-    target.title = data['title']
-    bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
-    ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+    bucket_list = False
+    ticket = False
+    if 'department' in data:
+        target.department = data['department']
+    if 'division' in data:
+        target.division = data['division']
+    if 'organization_id' in data:
+        target.organization_id = data['organization_id']
+    if 'firstname' in data:
+        target.firstname = data['firstname']
+    if 'lastname' in data:
+        target.lastname = data['lastname']
+    if 'note' in data:
+        target.note = data['note']
+    if 'title' in data:
+        target.title = data['title']
+    if 'bucket_list' in data:
+        bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
+    if 'ticket' in data:
+        ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
 
     if bucket_list:
         target.add_bucket_list(bucket_list, analyst)

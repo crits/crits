@@ -321,6 +321,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
             add_ip = data.get('add_ip')
             if add_ip:
                 ip = data.get('ip')
+                ip_type = data.get('ip_type')
                 if data.get('same_source'):
                     ip_source = data.get('domain_source')
                     ip_method = data.get('domain_method')
@@ -331,7 +332,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     ip_reference = data.get('ip_reference')
                 from crits.ips.handlers import ip_add_update
                 ip_result = ip_add_update(ip,
-                                          'Address - ipv4-addr',
+                                          ip_type,
                                           ip_source,
                                           ip_method,
                                           ip_reference,
