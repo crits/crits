@@ -97,7 +97,7 @@ class CampaignResource(CRITsAPIResource):
         modification that is currently supported.
 
         The data must be sent as JSON within the body of the request.
-	The crits_type will specify what will be removed ("IP","Domain").
+        The crits_type will specify what will be removed ("IP","Domain").
         The crits_id is the ID of the obj_type that will be removed.
 
         :param request: The incoming request.

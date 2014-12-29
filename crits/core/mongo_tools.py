@@ -428,7 +428,7 @@ def validate_objectid(id):
     if id == None:
       return False
 
-    if id == "":
+    if type(id) != str and type(id) != unicode:
       return False
 
     if re.match("^[a-fA-F0-9]{24}$",id) == None:
