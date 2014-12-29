@@ -9,6 +9,7 @@ from crits.ips.handlers import ip_add_update
 from crits.core.handlers import source_remove_all, delete_id
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
+from crits.core.mongo_tools import validate_objectid
 from crits.core.user_tools import is_admin, user_sources
 
 import json
@@ -123,14 +124,8 @@ class IPResource(CRITsAPIResource):
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 
-        if not id:
-            content['message'] = "You must provide an IP ID."
-            self.crits_response(content)
-
-        try:
-          int(id,16)
-        except ValueError:
-          content['message'] = 'Invalid ID in the URL.'
+        if not validate_objectid(id):
+          content['message'] = 'You must provide a valid IP ID.'
           self.crits_response(content)
 
         obj_type = IP
@@ -177,14 +172,8 @@ class IPResource(CRITsAPIResource):
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 
-        if not id:
-            content['message'] = "You must provide an IP ID."
-            self.crits_response(content)
-
-        try:
-          int(id,16)
-        except ValueError:
-          content['message'] = 'Invalid ID in the URL.'
+        if not validate_objectid(id):
+          content['message'] = 'You must provide a valid IP ID.'
           self.crits_response(content)
 
         sources = user_sources(analyst)
@@ -204,7 +193,7 @@ class IPResource(CRITsAPIResource):
           source = ""
 
         if source == None or source == "":
-            content['message'] = "A source must be provided."
+            content['message'] = 'A source must be provided.'
             self.crits_response(content)
 
         if source != None and source != "":

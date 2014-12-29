@@ -8,6 +8,7 @@ from crits.campaigns.handlers import add_campaign, campaign_remove, remove_campa
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 from crits.core.class_mapper import class_from_type
+from crits.core.mongo_tools import validate_objectid
 from crits.core.user_tools import is_admin, user_sources
 
 
@@ -119,33 +120,25 @@ class CampaignResource(CRITsAPIResource):
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
  
-        if not id:
-            content['message'] = 'You must provide a campaign ID.'
-            self.crits_response(content)
-
-        try:
-          int(id,16)
-        except ValueError:
-          content['message'] = 'Invalid ID in the URL.'
+        if not validate_objectid(id):
+          content['message'] = 'You must provide a valid campaign ID.'
           self.crits_response(content)
 
         obj_type = ""
         try:
           obj_type = data.get("crits_type")
         except KeyError, e:
-          content['message'] = "A crits_type must be provided."
+          content['message'] = 'A crits_type must be provided.'
           self.crits_response(content)
 
         obj_id = ""
         try:
           obj_id = data.get("crits_id")
         except KeyError, e:
-          content['message'] = "A crits_id must be provided."
+          content['message'] = 'A crits_id must be provided.'
           self.crits_response(content)
 
-        try:
-          int(obj_id,16)
-        except ValueError:
+        if not validate_objectid(obj_id):
           content['message'] = 'Invalid crits_id.'
           self.crits_response(content)
 
@@ -202,14 +195,8 @@ class CampaignResource(CRITsAPIResource):
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 
-        if not id:
-          content['message'] = 'You must provide a campaign ID.'
-          self.crits_response(content)
-
-        try:
-          int(id,16)
-        except ValueError:
-          content['message'] = 'Invalid ID in the URL.'
+        if not validate_objectid(id):
+          content['message'] = 'You must provide a valid campaign ID.'
           self.crits_response(content)
 
         campaign = Campaign.objects(id=id).first()

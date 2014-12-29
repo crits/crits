@@ -11,6 +11,7 @@ from crits.domains.handlers import add_new_domain, add_whois
 from crits.core.handlers import source_remove_all, delete_id
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
+from crits.core.mongo_tools import validate_objectid
 from crits.core.user_tools import is_admin, user_sources
 
 import json
@@ -147,14 +148,8 @@ class DomainResource(CRITsAPIResource):
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 
-        if not id:
-          content['message'] = 'You must provide a domain ID.'
-          self.crits_response(content)
-
-        try:
-          int(id,16)
-        except ValueError:
-          content['message'] = 'Invalid ID in the URL.'
+        if not validate_objectid(id):
+          content['message'] = 'You must provide a valid domain ID.'
           self.crits_response(content)
 
         obj_type = Domain
@@ -202,14 +197,8 @@ class DomainResource(CRITsAPIResource):
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 
-        if not id:
-            content['message'] = 'You must provide a domain ID.'
-            self.crits_response(content)
-
-        try:
-          int(id,16)
-        except ValueError:
-          content['message'] = 'Invalid ID in the URL.'
+        if not validate_objectid(id):
+          content['message'] = 'You must provide a valid domain ID.'
           self.crits_response(content)
 
         sources = user_sources(analyst)
@@ -229,7 +218,7 @@ class DomainResource(CRITsAPIResource):
           source = ""
 
         if source == None or source == "":
-            content['message'] = "A source must be provided."
+            content['message'] = 'A source must be provided.'
             self.crits_response(content)
 
         if source != None and source != "":
