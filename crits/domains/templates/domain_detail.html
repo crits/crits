@@ -9,19 +9,10 @@
 
 {% block content %}
 
-<!-- NOTE: other javascript is loaded at the bottom of the page to speed up page load.
-    The following js uses django template tags which need to be loaded before the page's html in order to
-    work properly in the static js files. -->
-<script type="text/javascript">
-    var whois_data = $.parseJSON("{{ whois_data|escapejs }}");
-    var whois_update_url = "{% url 'crits.domains.views.update_whois' domain.domain %}";
-</script>
-
 <div id="tabnav" class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    <li><a href="#whois_section" id="whois_button"><span>Whois ({{ whois_len }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     </ul>
 
@@ -114,66 +105,6 @@
 
     </div> <!-- details_section -->
 
-    <div id="whois_section" style="display: table;">
-    <div id="tabnav_whois" class="tabnav" style="font-size: 90%;">
-        <ul style="font-size: 110%;">
-        <li><a href="#whois_detail" id="whois_detail_button"><span>Whois Detail</span></a></li>
-        <li><a href="#whois_raw" id="whois_raw_button"><span>Raw Whois</span></a></li>
-        <li><a href="#whois_diff" id="whois_diff_button"><span>Whois Diff</span></a></li>
-        </ul>
-    <div id="whois_detail" style="display: table;">
-        <div class="content_box">
-      <div class="content_body">
-        <h3 class="titleheader">
-          <span>Whois for {{ domain.domain }}</span>
-      </h3>
-            {% if forms.whois %}
-                <form id="form-add-whois" style="display: inline;" method="POST" enctype="multipart/form-data">
-                    <table class="form">
-                    {{ forms.whois.as_table }}
-                    </table>
-                    <button class="form_submit_button" type="submit">Save Whois</button>  <!-- name="svalue"  -->
-                </form>
-                <button class="form_submit_button" type="button" onclick="getWhois()">Get Whois</button>
-                <div>Note: WHOIS parsing is best effort and may require manual editing after saving. See the "raw" view for the original data entered.</div>
-            {% endif %}
-        </div><!-- content_body -->
-        </div><!-- content_box -->
-    </div> <!-- whois_detail -->
-    <div id="whois_raw" style="display: table;">
-        <div class="content_body">
-        <h3 class="titleheader">
-            <span>Raw Whois for {{domain.domain}}</span>
-        </h3>
-        {% if forms.raw_whois %}
-        <form id="form-raw-whois" style="display: inline;" method="GET" enctype="multipart/form-data">
-            <table class="form">
-            {{ forms.raw_whois.as_table }}
-            </table>
-        </form>
-        {% endif %}
-        </div>
-    </div>
-    <div id="whois_diff" style="display: table;">
-        <div class="content_box">
-        <h3 class="titleheader">
-            <span>Diff Whois for {{domain.domain}}</span>
-        </h3>
-        <div class="content_body">
-            {% if forms.diff_whois %}
-                <form id="form-diff-whois" style="display: inline;" method="GET" enctype="multipart/form-data">
-                    <table class="form">
-                    {{forms.diff_whois.as_table}}
-                    </table>
-                    <button class="form_submit_button" type="submit">Diff Whois</button>
-                    <div id="id_diff_data" style="padding: 5px;"></div>
-                </form>
-            {% endif %}
-        </div> <!--content_body-->
-        </div><!--content_box-->
-    </div><!--whois_diff-->
-    </div><!-- whois_section -->
-    </div> <!--tabnav_whois-->
     {% with item=domain %}
         {% include "services_analysis_section.html" with crits_type="Domain" identifier=domain.id %}
     {% endwith %}

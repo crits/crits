@@ -1541,10 +1541,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         query = {'$or': search_list}
     else:
         if type_ == "Domain":
-            if search_type == "whois.data":
-                query = {'whois.text': search_query}
-            else:
-                query = {'domain': search_query}
+            query = {'domain': search_query}
         elif type_ == "Email":
             if search_type == "ip":
                 query = {'$or': [{'originating_ip': search_query},
