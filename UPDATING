@@ -3,6 +3,21 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: wxs
+Date:   2014-12-30
+
+    The WHOIS feature for Domain objects has been removed from core and put
+    into a service. If you do not have any WHOIS information for existing
+    domains in your database you can ignore this update. If you do have WHOIS
+    information a script has been provided which will run the WHOIS service
+    with default configuration against all domains which have WHOIS
+    information already. It is recommended that you use this script to create
+    service analysis results for these domains.
+
+    python manage.py runscript whois_service migrate -- -v -n
+
+    Please use the -h argument to the script to get extra help.
+
 Author: dsnellgrove
 Date:   2014-10-30
 
