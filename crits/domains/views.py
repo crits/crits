@@ -14,11 +14,11 @@ from crits.core import form_consts
 from crits.core.data_tools import json_handler
 from crits.core.handsontable_tools import form_to_dict
 from crits.core.user_tools import user_can_view_data
-from crits.domains.forms import TLDUpdateForm, AddDomainForm, UpdateWhoisForm
+from crits.domains.forms import TLDUpdateForm, AddDomainForm
 from crits.domains.handlers import get_domain, edit_domain_name
-from crits.domains.handlers import add_whois, edit_whois, add_new_domain
-from crits.domains.handlers import get_domain_details, update_tlds
-from crits.domains.handlers import generate_domain_jtable, generate_domain_csv, process_bulk_add_domain
+from crits.domains.handlers import add_new_domain, get_domain_details
+from crits.domains.handlers import update_tlds, generate_domain_jtable
+from crits.domains.handlers import generate_domain_csv, process_bulk_add_domain
 from crits.objects.forms import AddObjectForm
 from crits.core.handlers import get_object_types
 
@@ -166,84 +166,6 @@ def edit_domain(request, domain):
             return HttpResponse(new_name)
         else:
             return HttpResponse(domain)
-    else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST' },
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def get_whois(request, domain):
-    """
-    Get whois data for a domain. Should be an AJAX POST.
-
-    :param request: Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :param domain: The domain to query for.
-    :type domain: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    #TODO: get whois data from a non-attributable source
-    return update_whois(request, domain, editable=False)
-
-@user_passes_test(user_can_view_data)
-def update_whois(request, domain, editable=True):
-    """
-    Edit whois data for a domain. Should be an AJAX POST.
-
-    :param request: Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :param domain: The domain to query for.
-    :type domain: str
-    :param editable: We are editing.
-    :type editable: boolean
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST' and request.is_ajax():
-        form = UpdateWhoisForm(request.POST, domain=domain)
-        date = request.POST.get('date')
-        analyst = request.user.username
-        if date:
-            # kind of hackish, but lets us ensure a newly added date
-            # doesn't get flagged as a non-available option
-            # during validation
-            if date not in form.fields['date'].choices:
-                form.fields['date'].choices.append((date, date))
-        if form.is_valid():
-            whois_data = form.cleaned_data['data']
-            result = None
-            if date:
-                date = datetime.datetime.strptime(date,
-                                                  settings.PY_DATETIME_FORMAT)
-                result = edit_whois(domain,
-                                    whois_data,
-                                    date,
-                                    analyst)
-            else: #adding a new entry
-                date = datetime.datetime.now()
-                result = add_whois(domain,
-                                    whois_data,
-                                    date,
-                                    analyst,
-                                    editable)
-            if result['success']:
-                date = datetime.datetime.strftime(date,
-                                                  settings.PY_DATETIME_FORMAT)
-                return HttpResponse(json.dumps({'success': True,
-                                                'data': str(result['whois']),
-                                                'date': date,
-                                                'analyst': analyst}),
-                                    mimetype="application/json")
-            else:
-                return HttpResponse(json.dumps({'success':False,
-                                                'message':result['message']}),
-                                    mimetype="application/json")
-        else:
-            #TODO: return and repopulate form with error messages
-            return HttpResponse(json.dumps({'success': False,
-                                            'form': form.as_table()}),
-                                mimetype="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST' },
