@@ -211,8 +211,8 @@ class CampaignResource(CRITsAPIResource):
 
         # Remove associations
         formatted_query = {'campaign.name': campaign.name}
-        for col_obj in [Sample, PCAP, Indicator, Email, Domain, IP, Event]:
-          objects = col_obj.objects(source__name__in=sources, __raw__=formatted_query)
+        for obj_type in [Sample, PCAP, Indicator, Email, Domain, IP, Event]:
+          objects = obj_type.objects(source__name__in=sources, __raw__=formatted_query)
           for obj in objects:
             result = campaign_remove(obj._meta['crits_type'],obj.id,campaign.name,analyst)
 
