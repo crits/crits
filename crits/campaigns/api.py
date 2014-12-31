@@ -4,13 +4,20 @@ from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 
 from crits.campaigns.campaign import Campaign
+from crits.domains.domain import Domain
+from crits.emails.email import Email
+from crits.events.event import Event
+from crits.indicators.indicator import Indicator
+from crits.ips.ip import IP
+from crits.pcaps.pcap import PCAP
+from crits.samples.sample import Sample
+
 from crits.campaigns.handlers import add_campaign, campaign_remove, remove_campaign
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 from crits.core.class_mapper import class_from_type
 from crits.core.mongo_tools import validate_objectid
 from crits.core.user_tools import is_admin, user_sources
-
 
 import json
 
@@ -186,8 +193,8 @@ class CampaignResource(CRITsAPIResource):
         content = {'return_code': 1,
                    'type': 'Campaign'}
 
-        username = request.user.username
-        if not is_admin(username):
+        analyst = request.user.username
+        if not is_admin(analyst):
           content['message'] = 'You must be an admin to delete campaigns.'
           self.crits_response(content)
 
@@ -200,7 +207,16 @@ class CampaignResource(CRITsAPIResource):
           self.crits_response(content)
 
         campaign = Campaign.objects(id=id).first()
-        result = remove_campaign(campaign.name, username)
+        sources = user_sources(analyst)
+
+        # Remove associations
+        formatted_query = {'campaign.name': campaign.name}
+        for col_obj in [Sample, PCAP, Indicator, Email, Domain, IP, Event]:
+          objects = col_obj.objects(source__name__in=sources, __raw__=formatted_query)
+          for obj in objects:
+            result = campaign_remove(obj._meta['crits_type'],obj.id,campaign.name,analyst)
+
+        result = remove_campaign(campaign.name, analyst)
 
         if result['success']:
           content['return_code'] = 0

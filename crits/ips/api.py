@@ -114,9 +114,9 @@ class IPResource(CRITsAPIResource):
         content = {'return_code': 1,
                    'type': 'IP'}
 
-        username = request.user.username
+        analyst = request.user.username
 
-        if not is_admin(username):
+        if not is_admin(analyst):
           content['message'] = 'You must be an admin to delete IPs.'
           self.crits_response(content)
 
@@ -130,7 +130,7 @@ class IPResource(CRITsAPIResource):
 
         obj_type = IP
 
-        result, message = delete_id(username,obj_type,id)
+        result, message = delete_id(analyst,obj_type,id)
 
         if result:
           content['return_code'] = 0

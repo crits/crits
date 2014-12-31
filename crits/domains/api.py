@@ -139,8 +139,8 @@ class DomainResource(CRITsAPIResource):
         content = {'return_code': 1,
                    'type': 'Domain'}
 
-        username = request.user.username
-        if not is_admin(username):
+        analyst = request.user.username
+        if not is_admin(analyst):
           content['message'] = 'You must be an admin to delete domains.'
           self.crits_response(content)
 
@@ -154,7 +154,7 @@ class DomainResource(CRITsAPIResource):
 
         obj_type = Domain
 
-        result, message = delete_id(username,obj_type,id)
+        result, message = delete_id(analyst,obj_type,id)
         
         if result: 
           content['return_code'] = 0
