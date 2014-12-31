@@ -206,7 +206,7 @@ class DomainResource(CRITsAPIResource):
         doc = obj_type.objects(id=id,source__name__in=sources).first()
 
         if not doc:
-          content['message'] = 'The provided ID is not available to the provided account.'
+          content['message'] = 'The user account does not have access to this domain record.'
           self.crits_response(content)
 
         result = {}

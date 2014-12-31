@@ -425,9 +425,6 @@ def validate_objectid(id):
     :returns: bool
     """
 
-    if id == None:
-      return False
-
     if type(id) != str and type(id) != unicode:
       return False
 
