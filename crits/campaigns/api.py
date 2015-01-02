@@ -2,6 +2,7 @@ from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
+from bson.objectid import ObjectId
 
 from crits.campaigns.campaign import Campaign
 from crits.domains.domain import Domain
@@ -16,7 +17,6 @@ from crits.campaigns.handlers import add_campaign, campaign_remove, remove_campa
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 from crits.core.class_mapper import class_from_type
-from crits.core.mongo_tools import validate_objectid
 from crits.core.user_tools import is_admin, user_sources
 
 import json
@@ -127,7 +127,7 @@ class CampaignResource(CRITsAPIResource):
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
  
-        if not validate_objectid(id):
+        if not ObjectId.is_valid(id):
           content['message'] = 'You must provide a valid campaign ID.'
           self.crits_response(content)
 
@@ -145,7 +145,7 @@ class CampaignResource(CRITsAPIResource):
           content['message'] = 'A crits_id must be provided.'
           self.crits_response(content)
 
-        if not validate_objectid(obj_id):
+        if not ObjectId.is_valid(obj_id):
           content['message'] = 'Invalid crits_id.'
           self.crits_response(content)
 
@@ -183,6 +183,7 @@ class CampaignResource(CRITsAPIResource):
     def delete_detail(self, request, **kwargs):
         """
         This will delete a specific campaign ID record.
+	It will also delete all the campaign references in the TLOs.
 
         The campaign ID must be part of the URL (/api/v1/campaigns/{id}/)
 
@@ -202,7 +203,7 @@ class CampaignResource(CRITsAPIResource):
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 
-        if not validate_objectid(id):
+        if not ObjectId.is_valid(id):
           content['message'] = 'You must provide a valid campaign ID.'
           self.crits_response(content)
 

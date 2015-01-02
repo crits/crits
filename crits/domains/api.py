@@ -4,6 +4,7 @@ from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 from mongoengine.base import ValidationError
+from bson.objectid import ObjectId
 
 from crits.domains.domain import Domain
 from crits.domains.handlers import add_new_domain, add_whois
@@ -11,7 +12,6 @@ from crits.domains.handlers import add_new_domain, add_whois
 from crits.core.handlers import source_remove_all, delete_id
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
-from crits.core.mongo_tools import validate_objectid
 from crits.core.user_tools import is_admin, user_sources
 
 import json
@@ -148,7 +148,7 @@ class DomainResource(CRITsAPIResource):
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 
-        if not validate_objectid(id):
+        if not ObjectId.is_valid(id):
           content['message'] = 'You must provide a valid domain ID.'
           self.crits_response(content)
 
@@ -197,7 +197,7 @@ class DomainResource(CRITsAPIResource):
         parts = path.split("/")
         id = parts[(len(parts) - 2)]
 
-        if not validate_objectid(id):
+        if not ObjectId.is_valid(id):
           content['message'] = 'You must provide a valid domain ID.'
           self.crits_response(content)
 
