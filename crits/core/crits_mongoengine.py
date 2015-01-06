@@ -7,6 +7,7 @@ import csv
 from bson import json_util, ObjectId
 from dateutil.parser import parse
 from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
 from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
@@ -2235,6 +2236,24 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         from crits.services.analysis_result import AnalysisResult
 
         return AnalysisResult.objects(object_id=str(self.id))
+
+    def get_details_url(self):
+        """
+        Generic function that generates a details url for a
+        :class:`crits.core.crits_mongoengine.CritsBaseAttributes` object.
+        """
+
+        mapper = self._meta.get('jtable_opts')
+        if mapper is not None:
+            details_url = mapper['details_url']
+            details_url_key = mapper['details_url_key']
+
+            try:
+                return reverse(details_url, args=(unicode(self[details_url_key]),))
+            except Exception as e:
+                return None
+        else:
+            return None
 
 
 # Needs to be here to prevent circular imports with CritsBaseAttributes

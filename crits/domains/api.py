@@ -5,7 +5,7 @@ from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 
 from crits.domains.domain import Domain
-from crits.domains.handlers import add_new_domain, add_whois
+from crits.domains.handlers import add_new_domain
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
@@ -58,6 +58,7 @@ class DomainResource(CRITsAPIResource):
         # Also add IP information
         add_ip = bundle.data.get('add_ip', None)
         ip = bundle.data.get('ip', None)
+        ip_type = bundle.data.get('ip_type', None)
         same_source = bundle.data.get('same_source', None)
         ip_source = bundle.data.get('ip_source', None)
         ip_method = bundle.data.get('ip_method', None)
@@ -79,6 +80,7 @@ class DomainResource(CRITsAPIResource):
                 'ip_reference': ip_reference,
                 'add_ip': add_ip,
                 'ip': ip,
+                'ip_type': ip_type,
                 'add_indicators': add_indicators,
                 'bucket_list': bucket_list,
                 'ticket': ticket}
@@ -116,61 +118,4 @@ class DomainResource(CRITsAPIResource):
         if result:
             content['return_code'] = 0
 
-        self.crits_response(content)
-
-class WhoIsResource(CRITsAPIResource):
-    """
-    Domain Whois API Resource Class.
-    """
-
-    class Meta:
-        object_class = Domain
-        allowed_methods = ('post',)
-        resource_name = "whois"
-        authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
-                                             CRITsSessionAuthentication())
-        authorization = authorization.Authorization()
-        serializer = CRITsSerializer()
-
-    def obj_create(self, bundle, **kwargs):
-        """
-        Handles adding WhoIs entries to domains through the API.
-
-        :param bundle: Bundle containing the information to create the Domain.
-        :type bundle: Tastypie Bundle object.
-        :returns: HttpResponse.
-        :raises BadRequest: If a domain name is not provided or creation fails.
-        """
-
-        analyst = bundle.request.user.username
-        domain = bundle.data.get('domain', None)
-        date = bundle.data.get('date', None)
-        whois = bundle.data.get('whois', None)
-
-        if not domain:
-            raise BadRequest('Need a Domain Name.')
-        if not date:
-            raise BadRequest('Need a date for this entry.')
-        if not whois:
-            raise BadRequest('Need whois data.')
-
-        try:
-            date = parse(date, fuzzy=True)
-        except Exception, e:
-            raise BadRequest('Cannot parse date: %s' % str(e))
-
-        result = add_whois(domain, whois, date, analyst, True)
-
-        content = {'return_code': 0,
-                   'type': 'Domain',
-                   'message': result.get('message', ''),
-                   'id': result.get('id', '')}
-        if result.get('id'):
-            url = reverse('api_dispatch_detail',
-                          kwargs={'resource_name': 'domains',
-                                  'api_name': 'v1',
-                                  'pk': result.get('id')})
-            content['url'] = url
-        if not result['success']:
-            content['return_code'] = 1
         self.crits_response(content)

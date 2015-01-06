@@ -15,12 +15,11 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_IPS,
         "crits_type": 'IP',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "schema_doc": {
             'ip': 'The IP address',
             'type': ('The type of IP address based on a subset of CybOX Address'
                     ' Object Types'),
-            'whois': 'List [] of dictionaries of whois data on given dates',
         },
         "jtable_opts": {
                          'details_url': 'crits.ips.views.ip_detail',
@@ -49,7 +48,6 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
 
     ip = StringField(required=True)
     ip_type = StringField(default="Address - ipv4-addr", db_field="type")
-    whois = ListField(DictField)
 
     def migrate(self):
         migrate_ip(self)

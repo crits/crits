@@ -1550,6 +1550,7 @@ Unique POST Parameters:
 :add_ip: Tell the API that you are also adding an IP related to this domain.
 :domain: The domain name.
 :ip: The IP you want to relate to this domain.
+:ip_type: The type of the IP ('Address - ipv4-addr' is most common).
 :ip_source: The source of the IP.
 :ip_method: The method in which you acquired this IP from the source.
 :ip_reference: The reference about this IP source.
@@ -1816,6 +1817,7 @@ Unique POST Parameters:
 :tags: A comma-separated list of tags for the screenshot.
 :oid: The ObjectId of the top-level object the screenshot(s) is/are for.
 :otype: The type of the top-level object the screenshot(s) is/are for.
+:description: Description of the screenshot.
 
 Service API
 -------------------------------------------
@@ -1891,17 +1893,3 @@ Unique POST Parameters:
 :organization_id: The ID of the organization if they have one.
 :title: The job title of the Target.
 :note: Notes about the Target.
-
-
-WhoIs API
--------------------------------------------
-
-POST:
-
-        /api/v1/whois/
-
-Unique POST Parameters:
-
-:domain: The domain this WhoIs info is for.
-:date: The date for the WhoIs entry.
-:whois: The WhoIs entry.

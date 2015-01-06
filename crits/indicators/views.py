@@ -25,8 +25,7 @@ from crits.indicators.handlers import activity_add, activity_update, activity_re
 from crits.indicators.handlers import ci_update, create_indicator_and_ip
 from crits.indicators.handlers import set_indicator_type, get_indicator_details
 from crits.indicators.handlers import generate_indicator_jtable, generate_indicator_csv
-from crits.indicators.handlers import create_indicator_from_raw
-from crits.indicators.handlers import create_indicator_from_event
+from crits.indicators.handlers import create_indicator_from_obj
 
 
 @user_passes_test(user_can_view_data)
@@ -491,9 +490,9 @@ def indicator_and_ip(request):
     return HttpResponse(json.dumps(result), mimetype="application/json")
 
 @user_passes_test(user_can_view_data)
-def indicator_from_raw(request):
+def indicator_from_obj(request):
     """
-    Create an Indicator from RawData. Should be an AJAX POST.
+    Create an Indicator from an Object. Should be an AJAX POST.
 
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
@@ -501,19 +500,21 @@ def indicator_from_raw(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        type_ = request.POST.get('type', None)
+        ind_type = request.POST.get('ind_type', None)
+        obj_type = request.POST.get('obj_type', None)
         id_ = request.POST.get('oid', None)
         value = request.POST.get('value', None)
-        if not type_ or not id_ or not value:
+        if not ind_type or not obj_type or not id_ or not value:
             result = {'success': False,
-                      'message': "Need type, oid, and value"}
+                      'message': "Need indicator type, object type, oid, and value."}
         else:
-            result = create_indicator_from_raw(type_,
+            result = create_indicator_from_obj(ind_type,
+                                               obj_type,
                                                id_,
                                                value,
                                                request.user.username)
             if result['success']:
-                relationship = {'type': type_,
+                relationship = {'type': ind_type,
                                 'value': result['value']}
                 message = render_to_string('relationships_listing_widget.html',
                                            {'relationships': result['message'],
@@ -522,54 +523,12 @@ def indicator_from_raw(request):
                 result = {'success': True, 'message': message}
             else:
                 result = {
-                    'success': False,
-                    'message': "Error adding relationship: %s" % result['message'],
+                    'success':  False,
+                    'message':  "Error adding relationship: %s" % result['message']
                 }
     else:
         result = {
-            'success': False,
-            'message': "Expected AJAX POST",
-        }
-    return HttpResponse(json.dumps(result), mimetype="application/json")
-
-@user_passes_test(user_can_view_data)
-def indicator_from_event(request):
-    """
-    Create an Indicator from an Event description. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        type_ = request.POST.get('type', None)
-        id_ = request.POST.get('oid', None)
-        value = request.POST.get('value', None)
-        if not type_ or not id_ or not value:
-            result = {'success': False,
-                      'message': "Need type, oid, and value"}
-        else:
-            result = create_indicator_from_event(type_,
-                                                 id_,
-                                                 value,
-                                                 request.user.username)
-            if result['success']:
-                relationship = {'type': type_,
-                                'value': result['value']}
-                message = render_to_string('relationships_listing_widget.html',
-                                           {'relationships': result['message'],
-                                            'relationship': relationship},
-                                           RequestContext(request))
-                result = {'success': True, 'message': message}
-            else:
-                result = {
-                    'success': False,
-                    'message': "Error adding relationship: %s" % result['message'],
-                }
-    else:
-        result = {
-            'success': False,
-            'message': "Expected AJAX POST",
+            'success':  False,
+            'message':  "Expected AJAX POST"
         }
     return HttpResponse(json.dumps(result), mimetype="application/json")

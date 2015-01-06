@@ -1227,6 +1227,8 @@ def handle_uploaded_file(f, source, method="", reference=None, file_format=None,
     """
 
     samples = list()
+    if not source:
+        return [{'success': False, 'message': "Missing source information."}]
     if method:
         method = " - " + method
     if f:
