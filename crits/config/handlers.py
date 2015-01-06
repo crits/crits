@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from crits.config.config import CRITsConfig
 
 def modify_configuration(forms, analyst):

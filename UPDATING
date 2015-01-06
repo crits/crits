@@ -3,6 +3,39 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: wxs
+Date:   2014-12-30
+
+    The WHOIS feature for Domain objects has been removed from core and put
+    into a service. If you do not have any WHOIS information for existing
+    domains in your database you can ignore this update. If you do have WHOIS
+    information a script has been provided which will run the WHOIS service
+    with default configuration against all domains which have WHOIS
+    information already. It is recommended that you use this script to create
+    service analysis results for these domains.
+
+    The WHOIS service supports three different query modes: live, pydat and
+    domaintools. If you wish to use the domaintools or pydat modes you must
+    configure the service first and then specify your runtime options to the
+    migrate script using the -c option.
+
+    If you only want to do live queries then run this:
+
+    python manage.py runscript whois_service migrate -- -v
+
+    If you want to do a pydat lookup then run this:
+
+    python manage.py runscript whois_service migrate -- -v -c "{'pydat_query': True}"
+
+    If you want to do a domaintools lookup then run this:
+
+    python manage.py runscript whois_service migrate -- -v -c "{'dt_query': True}"
+    The config options can be combined too. So all three modes would be:
+
+    "{'dt_query': True, 'pydat_query': True, 'live_query': True}"
+
+    Please use the -h argument to the script to get extra help.
+
 Author: dsnellgrove
 Date:   2014-10-30
 

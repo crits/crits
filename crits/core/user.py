@@ -145,6 +145,10 @@ class PreferencesField(DynamicEmbeddedDocument):
                                             "hover_text_color": "#39F",
                                             "hover_background_color": "#6F6F6F"})
 
+    toast_notifications = DictField(required=True, default={"enabled": True,
+                                                            "acknowledgement_type": "sticky",
+                                                            "initial_notifications_display": "show",
+                                                            "newer_notifications_location": "top"})
 
 class EmbeddedPasswordReset(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -320,8 +324,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     REQUIRED_FIELDS = ['email']
 
     defaultDashboard = ObjectIdField(required=False, default=None)
-    
-    
+
+
     def migrate(self):
         """
         Migrate to latest schema version.
@@ -1069,7 +1073,7 @@ Please contact a site administrator to resolve.
         backend = auth.get_backends()[0]
         user.backend = "%s.%s" % (backend.__module__, backend.__class__.__name__)
         return user
-    
+
 
 class CRITsRemoteUserBackend(CRITsAuthBackend):
     """

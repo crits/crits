@@ -8,7 +8,7 @@ from crits.core.views import dashboard
 from django.http import HttpResponse
 from crits.dashboards.dashboard import SavedSearch, Dashboard
 from crits.dashboards.handlers import toggleTableVisibility,get_saved_searches_list,get_dashboard, getHREFLink, get_obj_type_from_string, clear_dashboard, save_data, get_table_data, generate_search_for_saved_table, delete_table, getRecordsForDefaultDashboardTable
-from crits.dashboards.handlers import renameDashboard,changeTheme, deleteDashboard,getDashboardsForUser,createNewDashboard, setDefaultDashboard, cloneDashboard, setPublic, updateChildren
+from crits.dashboards.handlers import switch_existing_search_to_dashboard, add_existing_search_to_dashboard, renameDashboard,changeTheme, deleteDashboard,getDashboardsForUser,createNewDashboard, setDefaultDashboard, cloneDashboard, setPublic, updateChildren
 import json
 import re
 from django.core.urlresolvers import reverse
@@ -66,7 +66,7 @@ def delete_save_search(request):
     if not id:
         return respondWithError("Saved search cannot be found."\
                                 " Please refresh and try again", True)
-    response = delete_table(id)
+    response = delete_table(request.user.id, id)
     
     return httpResponse(response)
 
@@ -123,17 +123,18 @@ def save_search(request):
     columns = json.loads(request.GET.get("columns", ""))
     sortBy = request.GET.get("sortBy", None)
     isDefault = request.GET.get("isDefaultOnDashboard", "False")
-    tableWidth = request.GET.get("tableWidth", None)
+    sizex = request.GET.get("sizex", None)
     maxRows = request.GET.get("maxRows", None)
-    if isDefault == "True" or isDefault =="true":
+    if isDefault.lower() == "true":
         isDefault = True
     else:
         isDefault = False
     if sortBy:
         sortBy = json.loads(sortBy)
     response = save_data(userId, columns, tableName, searchTerm, objType, sortBy,
-                         tableId, width=tableWidth, isDefaultOnDashboard=isDefault,
-                         maxRows=maxRows, dashboard=dashboard, clone=clone)
+                         tableId, sizex=sizex, isDefaultOnDashboard=isDefault,
+                         maxRows=maxRows,
+                         dashboard=dashboard, clone=clone)
     if newDashName:
         response["newDashId"] = str(newDash.id)
         response["newDashName"] = newDash.name
@@ -150,7 +151,6 @@ def save_new_dashboard(request):
     """
     data = json.loads(request.POST.get('data', ''))
     userId = request.POST.get('userId', None)
-    dashboardWidth = request.POST.get('dashboardWidth', None)
     dashId = request.POST.get('dashId', None)
     user = request.user
     clone = False
@@ -168,28 +168,23 @@ def save_new_dashboard(request):
         elif dashboard.isPublic:
             updateChildren(dashboard.id)
     for table in data:
-        tableId = ""
-        if "id" in table:
-            tableId = table['id']
         isDefault = False
-        if table['isDefault'] == "True":
+        if table['isDefault'].lower() == "true":
             isDefault = True
-        left = ""
-        if 'left' in table:
-            left = table['left'].replace('px','')
-        top = ""
-        if 'top' in table:
-            top = table['top'].replace('px','')
         sortBy = None
         if 'sortDirection' in table and 'sortField' in table:
             sortBy = {'field':table['sortField'],'direction':table['sortDirection']}
         response = save_data(userId, table['columns'], table['tableName'],
-                             tableId=tableId, left=left, top=top, width=table['width'],
-                             isDefaultOnDashboard=isDefault, dashboardWidth=dashboardWidth, 
-                             sortBy=sortBy, dashboard=dashboard, clone=clone)
+                             tableId=table['id'], isDefaultOnDashboard=isDefault, 
+                             sortBy=sortBy, dashboard=dashboard,
+                             clone=clone, row=table['row'], grid_col=table['col'], 
+                             sizex=table['sizex'], sizey=table['sizey'])
         if not response['success']:
             return httpResponse(response)
-    return respondWithSuccess("Dashboard saved successfully!")
+    return httpResponse({"success":True,
+                         "clone":clone,
+                         "dashId": str(dashboard.id),
+                         "message":"Dashboard saved successfully!"})
 
 @user_passes_test(user_can_view_data)
 def get_dashboard_table_data(request, tableName):
@@ -319,6 +314,22 @@ def create_blank_dashboard(request):
     if not createNewDashboard(request.user.id, name):
         respondWithError("You already have a dashboard with that name.", True)
     return respondWithSuccess(name + " created successfully.")
+
+@user_passes_test(user_can_view_data)
+def add_search(request):
+    id = request.GET.get('id', None)
+    dashboard = request.GET.get('dashboard', None)
+    if not id or not dashboard:
+        return respondWithError('An error occurred while adding search. Please refresh and try again', True)
+    return httpResponse(add_existing_search_to_dashboard(id, dashboard, request.user))
+
+@user_passes_test(user_can_view_data)
+def switch_dashboard(request):
+    id = request.GET.get('id', None)
+    dashboard = request.GET.get('dashboard', None)
+    if not id or not dashboard:
+        return respondWithError('An error occurred while switching search. Please refresh and try again', True)
+    return httpResponse(switch_existing_search_to_dashboard(id, dashboard))
 
 def respondWithError(message, isAjax=False, request=None):
     """

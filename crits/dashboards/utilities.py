@@ -15,41 +15,6 @@ from crits.screenshots.screenshot import Screenshot
 from crits.targets.target import Target
 
 
-def getCssForDefaultDashboardTable(title):
-    """
-    Creates a dict of css styles for the default dashbaord tables.
-    """
-    css = {}
-    if title == "Counts" or title == "Top Backdoors":
-        css["width"] = "20%"
-        css["float"] = "left"
-    elif title == "Top Campaigns":
-        css["width"] = "50%"
-        css["float"] = "left"
-    else:
-        css["width"] = "100%"
-        css["clear"] = "both"
-    return css
-
-def constructCssString(css):
-    """
-    Converts a dict of css properties into a string for HTML use
-    """
-    cssString = "style='"
-    for k,v in css.iteritems():
-        cssString += k + ":" + v + ";"
-    cssString += "'"
-    return cssString
-    
-def constructAttrsString(dict):
-    """
-    Converts a dict of attributes into a string for HTML use
-    """
-    string = ""
-    for k,v in dict.iteritems():
-        string += k + "=" + str(v) + " "
-    return string
-
 def getHREFLink(object, object_type):
     """
     Creates the URL for the details button used by all object types

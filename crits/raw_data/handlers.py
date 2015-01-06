@@ -333,6 +333,9 @@ def handle_raw_data_file(data, source_name, user=None,
         }
         return status
 
+    if not source_name:
+        return {"success" : False, "message" : "Missing source information."}
+
     rdt = RawDataType.objects(name=data_type).first()
     if not rdt:
         status = {

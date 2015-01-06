@@ -6,6 +6,7 @@ from django.conf.urls import include, patterns
 
 
 urlpatterns = patterns('',
+
     (r'^', include('crits.core.urls')),                        # Core
     (r'^dashboards/', include('crits.dashboards.urls')),       # Dashboard
     (r'^actors/', include('crits.actors.urls')),               # Actors
@@ -17,6 +18,7 @@ urlpatterns = patterns('',
     (r'^events/', include('crits.events.urls')),               # Events
     (r'^indicators/', include('crits.indicators.urls')),       # Indicators
     (r'^ips/', include('crits.ips.urls')),                     # IPs
+    (r'^notifications/', include('crits.notifications.urls')), # Notifications
     (r'^objects/', include('crits.objects.urls')),             # Objects
     (r'^pcaps/', include('crits.pcaps.urls')),                 # PCAPs
     (r'^raw_data/', include('crits.raw_data.urls')),           # Raw Data
@@ -34,7 +36,7 @@ if settings.ENABLE_API:
     from crits.actors.api import ActorResource, ActorIdentifierResource
     from crits.campaigns.api import CampaignResource
     from crits.certificates.api import CertificateResource
-    from crits.domains.api import DomainResource, WhoIsResource
+    from crits.domains.api import DomainResource
     from crits.emails.api import EmailResource
     from crits.events.api import EventResource
     from crits.indicators.api import IndicatorResource, IndicatorActivityResource
@@ -55,7 +57,6 @@ if settings.ENABLE_API:
     v1_api.register(CampaignResource())
     v1_api.register(CertificateResource())
     v1_api.register(DomainResource())
-    v1_api.register(WhoIsResource())
     v1_api.register(EmailResource())
     v1_api.register(EventResource())
     v1_api.register(IndicatorResource())

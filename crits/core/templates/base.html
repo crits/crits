@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/css/timeglider.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/tablesorter.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/jquery.qtip.min.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/css/jquery.gridster.min.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/ui.multiselect.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/jquery.tagit.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/chardinjs.css" type="text/css" media="screen" />
@@ -38,6 +39,7 @@
     <script type="text/javascript" src="/js/jquery.jeditable.min.js"></script>
     <script type="text/javascript" src="/js/jquery.jeditable.datepicker.js"></script>
     <script type="text/javascript" src="/js/jquery.qtip.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.gridster.js"></script>
     <script type="text/javascript" src="/js/jquery.mmenu.min.all.js"></script>
 
     <script type="text/javascript" src="/js/ui.multiselect.js"></script>
@@ -48,6 +50,7 @@
     <script type="text/javascript" src="/js/chardinjs.min.js"></script>
     <script src="/js/jtable/jquery.jtable.top-paging.min.js" type="text/javascript"></script>
     <script src="/js/tag-it.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/js/noty/jquery.noty.packaged.min.js" type="text/javascript" charset="utf-8"></script>
 
     {% if nav_template %}
         {% include nav_template %}
@@ -68,8 +71,17 @@
 
         var favorite_url = "{% url 'crits.core.views.toggle_favorite' %}";
         var obj_types_url = "{% url 'crits.objects.views.get_object_type_dropdown' %}";
-        var get_relationship_type_dropdown = "{% url 'crits.relationships.views.get_relationship_type_dropdown' %}";
 
+        {% if enable_toasts == True %}
+            var max_visible_notifications = "{{ max_visible_notifications }}";
+            var newer_notifications_location = "{{ newer_notifications_location }}";
+            var initial_notifications_display = "{{ initial_notifications_display }}";
+            var notifications_url = "{% url 'crits.notifications.views.poll' %}";
+            var notifications_ack_url = "{% url 'crits.notifications.views.acknowledge' %}";
+            var notification_anchor_location = "{{ notification_anchor_location }}";
+        {% endif %}
+
+        var get_relationship_type_dropdown = "{% url 'crits.relationships.views.get_relationship_type_dropdown' %}";
         var get_search_help_url = "{% url 'crits.core.views.get_search_help' %}";
         {% if subscription.type %}
             var subscription_type = "{{ subscription.type }}";
@@ -174,6 +186,9 @@
     <!-- start content -->
     <div class='content'>
       {% block content %}{% endblock %}
+
+      <!-- toast notifications div -->
+      <div class='z-11' id="notifications"></div>
     </div>
     <!-- end content -->
     <!-- start footer -->
@@ -293,7 +308,6 @@
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="domain" selected="selected">Domain</option>
-          <option value="whois.data" selected="selected">Whois</option>
         </select>
         <input class="inputbutton" type="submit" name="search" value="Search" />
       </form>
@@ -677,6 +691,11 @@
 <!-- end nav -->
 {% endif %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/core.js"></script>
+{% if enable_toasts == True %}
+    {% if not request.user.prefs.toast_notifications or request.user.prefs.toast_notifications.enabled != False %}
+        <script type="text/javascript" src="{{ STATIC_URL }}js/toast_notifications.js"></script>
+    {% endif %}
+{% endif %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/dialogs.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/collapsible.js"></script>
 

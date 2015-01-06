@@ -76,6 +76,11 @@ class ConfigGeneralForm(forms.Form):
         widget=forms.TextInput,
         help_text='*Requires a web server restart.',
         required=True)
+    enable_toasts = forms.BooleanField(initial=False,
+        label="Enable Toast Notifications",
+        help_text='*Requires a web server restart.',
+        required=False)
+
     def __init__(self, *args, **kwargs):
         super(ConfigGeneralForm, self).__init__(*args, **kwargs)
 

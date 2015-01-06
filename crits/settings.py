@@ -199,6 +199,7 @@ if crits_config.get('email_host', None):
 if crits_config.get('email_port', None):
     EMAIL_PORT =        int(crits_config.get('email_port', None))
 ENABLE_API =                crits_config.get('enable_api', False)
+ENABLE_TOASTS =             crits_config.get('enable_toasts', False)
 GIT_REPO_URL =              crits_config.get('git_repo_url', '')
 HTTP_PROXY =                crits_config.get('http_proxy', None)
 USER_AGENT =                crits_config.get('user_agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X10.10; rv:99.0) Gecko/20100101 Firefox/99.0 CRITs')
