@@ -183,7 +183,7 @@ class CampaignResource(CRITsAPIResource):
     def delete_detail(self, request, **kwargs):
         """
         This will delete a specific campaign ID record.
-	It will also delete all the campaign references in the TLOs.
+        It will also delete all the campaign references in the TLOs.
 
         The campaign ID must be part of the URL (/api/v1/campaigns/{id}/)
 

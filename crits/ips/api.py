@@ -105,7 +105,7 @@ class IPResource(CRITsAPIResource):
         """
         This will delete a specific IP record. 
 
-	The IP ID must be part of the URL (/api/v1/ips/{id}/)
+        The IP ID must be part of the URL (/api/v1/ips/{id}/)
 
         :param request: The incoming request.
         :type request: :class:`django.http.HttpRequest`
