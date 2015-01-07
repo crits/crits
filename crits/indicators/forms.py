@@ -155,8 +155,8 @@ class UploadIndicatorForm(forms.Form):
         required=True)
     confidence = forms.ChoiceField(widget=forms.Select, required=True)
     impact = forms.ChoiceField(widget=forms.Select, required=True)
-    campaign = forms.ChoiceField(widget=forms.Select, required=True)
-    campaign_confidence = forms.ChoiceField(widget=forms.Select, required=True)
+    campaign = forms.ChoiceField(widget=forms.Select, required=False)
+    campaign_confidence = forms.ChoiceField(widget=forms.Select, required=False)
     source = forms.ChoiceField(
         widget=forms.Select(attrs={'class': 'no_clear'}),
         label=form_consts.Indicator.SOURCE,
