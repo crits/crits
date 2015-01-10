@@ -345,7 +345,7 @@ def make_ascii_strings(md5=None, data=None):
     strings_data = 'ASCII Strings\n'
     strings_data += "-" * 30
     strings_data += "\n"
-    ascii_regex = re.compile('([%s]{4,})' % string.printable)
+    ascii_regex = re.compile('([ -~]{4,})')
     matches = ascii_regex.findall(data)
     strings_data += '\n'.join([x for x in matches])
     return strings_data + "\n\n\n\n"
