@@ -787,7 +787,7 @@ $(document).ready(function() {
       //collect object types for search
       // Let's just call this when needed, until search is converted to a dynamic dialog
       if ($('select#object_s').find("option").length === 0)
-      getAllObjectTypes($('select#object_s'));
+          getAllObjectTypes($('select#object_s'));
     });
     $('.notify_enable').click(function(e) {
       e.stopPropagation();
@@ -1280,7 +1280,7 @@ $(document).ready(function() {
             url: get_search_help_url,
             success: function(data) {
                 if (data.template) {
-                    var rdiv = $("<div id='global_search_help' />");
+                    var rdiv = $("<div id='global_search_help' class='z-11' />");
                     $('body').append(rdiv);
                     $('#global_search_help')
                     .css('position', 'absolute')

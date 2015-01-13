@@ -284,9 +284,8 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
         # add new objects if they exist
         if objectsData:
             objectsData = json.loads(objectsData)
-            object_row_counter = 1
 
-            for objectData in objectsData:
+            for object_row_counter, objectData in enumerate(objectsData, 1):
                 new_ip = retVal.get('object')
 
                 if new_ip != None and is_validate_only == False:
@@ -308,8 +307,6 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
                     retVal['success'] = False
                 if object_retVal.get('message'):
                     errors.append(object_retVal['message'])
-
-                object_row_counter += 1
     else:
         errors += "Failed to add IP: " + str(ip)
 
@@ -357,16 +354,19 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
               "object" (if successful) :class:`crits.ips.ip.IP`
     """
 
+    if not source:
+        return {"success" : False, "message" : "Missing source information."}
+
     if "Address - ipv4" in ip_type:
         try:
             validate_ipv4_address(ip_address)
         except ValidationError:
-            return {"success" : False, "message" : "Invalid IPv4 address. "}
+            return {"success": False, "message": "Invalid IPv4 address."}
     elif "Address - ipv6" in ip_type:
         try:
             validate_ipv6_address(ip_address)
         except ValidationError:
-            return {"success" : False, "message" : "Invalid IPv6 address. "}
+            return {"success": False, "message": "Invalid IPv6 address."}
     elif "cidr" in ip_type:
         try:
             if '/' not in ip_address:
@@ -378,7 +378,9 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
                 raise ValidationError("")
             validate_ipv46_address(cidr_parts[0])
         except (ValidationError, ValueError) as cidr_error:
-            return {"success" : False, "message" : "Invalid CIDR address. "}
+            return {"success": False, "message": "Invalid CIDR address."}
+    else:
+        return {"success": False, "message": "Invalid IP type."}
 
     retVal = {}
     is_item_new = False
@@ -417,6 +419,8 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
     if source:
         for s in source:
             ip_object.add_source(s)
+    else:
+        return {"success" : False, "message" : "Missing source information."}
 
     if bucket_list:
         ip_object.add_bucket_list(bucket_list, analyst)

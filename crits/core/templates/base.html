@@ -16,11 +16,13 @@
     <link rel="stylesheet" href="/css/timeglider.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/tablesorter.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/jquery.qtip.min.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/css/jquery.gridster.min.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/ui.multiselect.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/jquery.tagit.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/chardinjs.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/jquery.mmenu.all.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="/css/w2ui-1.4.min.css" type="text/css"/>
+    <link rel="stylesheet" href="/css/font-awesome-4.2.0/css/font-awesome.min.css" type="text/css"/>
     <link rel="stylesheet" href="/js/jtable/themes/jqueryui/jtable_jqueryui.min.css" type="text/css" />
     <link rel="stylesheet" href="{{ STATIC_URL }}css/core.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="{{ STATIC_URL }}css/jtable-custom.css" type="text/css" media="screen" />
@@ -30,12 +32,14 @@
     <script type="text/javascript" src="/js/jquery-1.10.2.min.js"></script>
     <script type="text/javascript" src="/js/jquery-ui-1.10.3.custom.min.js"></script>
     <script type="text/javascript" src="/js/w2ui-1.4.min.js"></script>
+    <script type="text/javascript" src="/js/packery.pkgd.min.js"></script>
     <script type="text/javascript" src="/js/jquery.highlight-3.js"></script>
     <script type="text/javascript" src="/js/datetimewidget.js"></script>
     <script type="text/javascript" src="/js/jquery.tablesorter.min.js"></script>
     <script type="text/javascript" src="/js/jquery.jeditable.min.js"></script>
     <script type="text/javascript" src="/js/jquery.jeditable.datepicker.js"></script>
     <script type="text/javascript" src="/js/jquery.qtip.min.js"></script>
+    <script type="text/javascript" src="/js/jquery.gridster.js"></script>
     <script type="text/javascript" src="/js/jquery.mmenu.min.all.js"></script>
 
     <script type="text/javascript" src="/js/ui.multiselect.js"></script>
@@ -46,6 +50,7 @@
     <script type="text/javascript" src="/js/chardinjs.min.js"></script>
     <script src="/js/jtable/jquery.jtable.top-paging.min.js" type="text/javascript"></script>
     <script src="/js/tag-it.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/js/noty/jquery.noty.packaged.min.js" type="text/javascript" charset="utf-8"></script>
 
     {% if nav_template %}
         {% include nav_template %}
@@ -66,8 +71,17 @@
 
         var favorite_url = "{% url 'crits.core.views.toggle_favorite' %}";
         var obj_types_url = "{% url 'crits.objects.views.get_object_type_dropdown' %}";
-        var get_relationship_type_dropdown = "{% url 'crits.relationships.views.get_relationship_type_dropdown' %}";
 
+        {% if enable_toasts == True %}
+            var max_visible_notifications = "{{ max_visible_notifications }}";
+            var newer_notifications_location = "{{ newer_notifications_location }}";
+            var initial_notifications_display = "{{ initial_notifications_display }}";
+            var notifications_url = "{% url 'crits.notifications.views.poll' %}";
+            var notifications_ack_url = "{% url 'crits.notifications.views.acknowledge' %}";
+            var notification_anchor_location = "{{ notification_anchor_location }}";
+        {% endif %}
+
+        var get_relationship_type_dropdown = "{% url 'crits.relationships.views.get_relationship_type_dropdown' %}";
         var get_search_help_url = "{% url 'crits.core.views.get_search_help' %}";
         {% if subscription.type %}
             var subscription_type = "{{ subscription.type }}";
@@ -115,23 +129,26 @@
   <!-- start page -->
   <div class="wholepage">
     <!-- start header -->
-    <div class='top'>
+    {% if crits_config.debug %}
+    <div class="top" style="background: url('/new_images/top_bar_bg_dev.png') repeat-x;">
+    {% else %}
+    <div class="top">
+    {% endif %}
       {% if request.user.is_authenticated %}
       <div id="show_nav_menu" class="top_item" title="Navigation Menu">
-    <span class="nav-menu-icon"></span>
+        <span class="nav-menu-icon"></span>
       </div>
       <div id="show_username" class='top_item'>
-    <p data-intro="Your Profile" data-position="bottom"><a href="{% url 'crits.core.views.profile' %}">{{ user.first_name }} {{ user.last_name }}</a>
-      {% if user_role %}
-      &nbsp;({{ user_role }})
-      {% endif %}
-      </p>
+        <p data-intro="Your Profile" data-position="bottom">
+          <a href="{% url 'crits.core.views.profile' %}">{{ user.first_name }} {{ user.last_name }}</a>
+          {% if user_role %}&nbsp;({{ user_role }}){% endif %}
+        </p>
       </div>
       {% if user_notifications and user_notifications > 0 %}
       <div class='top_item' data-intro="Notifications" data-position="bottom">
-    <span class="ui-state-default ui-corner-all" style="border: 0px;">
-      <a href="{% url 'crits.core.views.profile' %}#notifications_button" class="ui-icon ui-icon-info notify_enable" title="Notifications ({{ user_notifications }})" style="margin-top: 3px;"></a>
-    </span>
+        <span class="ui-state-default ui-corner-all" style="border: 0px;">
+          <a href="{% url 'crits.core.views.profile' %}#notifications_button" class="ui-icon ui-icon-info notify_enable" title="Notifications ({{ user_notifications }})" style="margin-top: 3px;"></a>
+        </span>
       </div>
       {% endif %}
 
@@ -139,61 +156,69 @@
 
       {% if user_role %}
       <div class='top_item' id="clipboard_container">
-    <span id="clipboard_icon" class="ui-icon ui-icon-clipboard clipboard_icon_empty clipboard_qtip" data-intro="Clipboard" data-position="right"></span>
-    <div id="selected_item_topbar" class="clipboard_qtip_body" style="display: none;">Your clipboard is empty.</div>
+        <span id="clipboard_icon" class="ui-icon ui-icon-clipboard clipboard_icon_empty clipboard_qtip" data-intro="Clipboard" data-position="right"></span>
+        <div id="selected_item_topbar" class="clipboard_qtip_body" style="display: none;">Your clipboard is empty.</div>
       </div>
       <div class='top_item' id="favorites_container">
-    <a href="#" class="favorites_button" action="{% url 'crits.core.views.favorites' %}"><span class="ui-icon ui-icon-star favorites_icon favorites_icon_inactive" data-intro="Favorites" data-position="left"></a><div id="favorites_results" style="a:link {color:#FF0000;}; color: #FFFFFF; display: none;"></div></span>
+        <a href="#" class="favorites_button" action="{% url 'crits.core.views.favorites' %}">
+          <span class="ui-icon ui-icon-star favorites_icon favorites_icon_inactive" data-intro="Favorites" data-position="left"></span>
+        </a>
+        <div id="favorites_results" style="a:link {color:#FF0000;}; color: #FFFFFF; display: none;"></div>
       </div>
       <div class="top_item" style="float: right;" title="Advanced Search">
-    <span class="search-menu-icon"></span>
+        <span class="search-menu-icon"></span>
       </div>
       <div class='top_item' id="help_overlay_container">
-    <span id="help_overlay" class="help_overlay_icon" data-intro="Press ? for Shortcut Keys." data-position='bottom' title="Overlay Help"></span>
+        <span id="help_overlay" class="help_overlay_icon" data-intro="Press ? for Shortcut Keys." data-position='bottom' title="Overlay Help"></span>
       </div>
       {% endif %}
 
-      <!-- Begin search section -->
+      <!-- search section -->
       <div id="show_search" class='search'>
-    <form style='display: inline;' method="get" id="search" action="{% url 'crits.core.views.global_search_listing' %}" data-intro="Global Search" data-position="bottom">
-      <input id="global_search_box" type="text" size="40" name="q" class="global_search_box" placeholder=" Global Quick Search"/>
-          <input type="hidden" name='search_type' value='global'>
-    </form>
+        <form style='display: inline;' method="get" id="search" action="{% url 'crits.core.views.global_search_listing' %}" data-intro="Global Search" data-position="bottom">
+          <input id="global_search_box" type="text" size="40" name="q" class="global_search_box" placeholder=" Global Quick Search" />
+          <input type="hidden" name='search_type' value='global' />
+        </form>
       </div>
     </div>
     {% endif %}
-
-
     <!-- end header -->
     <!-- start content -->
     <div class='content'>
       {% block content %}{% endblock %}
+
+      <!-- toast notifications div -->
+      <div class='z-11' id="notifications"></div>
     </div>
     <!-- end content -->
     <!-- start footer -->
+    {% if crits_config.debug %}
+    <div class="bottom" style="background: url('/new_images/top_bar_bg_dev.png') repeat-x;">
+    {% else %}
     <div class="bottom">
+    {% endif %}
       <span class="right">
-    <b>CRITs&trade;</b> Copyright &copy; 2014 The MITRE Corporation. All Rights Reserved.
+        <b>CRITs&trade;</b> Copyright &copy; 2014 The MITRE Corporation. All Rights Reserved.
       </span>
       {% if request.user.is_authenticated %}
       <span class="right" data-intro="Data Classification" data-position="top">
-    <b>{{ classification }}</b>
+        <b>{{ classification }}</b>
       </span>
-      <span class="left" data-intro="CRITs DB Version" {% if not hide_git_hash%}id='versionNum' {% endif %} data-position="top" >
+      <span class="left" data-intro="CRITs DB Version" {% if not hide_git_hash%}id='versionNum' {% endif %} data-position="top">
         <b>Version:</b> {{ crits_version }}
       </span>
       <span class="left" data-intro="Hosting Organization" data-position="top">
-    <b>Hosted by:</b> {{ company_name }}
+        <b>Hosted by:</b> {{ company_name }}
       </span>
       <span class="left" data-intro="Instance Information" data-position="top">
-    <b>{{ instance_name }} Instance</b> (DB: {{mongo_database }})
+        <b>{{ instance_name }} Instance</b> (DB: {{mongo_database }})
       </span>
       {% if user_role %}
       <span class='left'>
-    <b>Last login:</b> {{ user.last_login|date }}
+        <b>Last login:</b> {{ user.last_login|date }}
       </span>
       <span class='left'>
-    <div id="pageLoadTiming"></div>
+        <div id="pageLoadTiming"></div>
       </span>
       {% endif %}
       {% endif %}
@@ -283,7 +308,6 @@
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="domain" selected="selected">Domain</option>
-          <option value="whois.data" selected="selected">Whois</option>
         </select>
         <input class="inputbutton" type="submit" name="search" value="Search" />
       </form>
@@ -351,7 +375,22 @@
 <nav id="nav-menu">
   <ul class="main-nav mmenu" style="display: none;">
     <li class='nav_main mmenu_item'>
-      <a id="dashboard" href="{% url 'crits.core.views.dashboard' %}">Dashboard</a>
+      <a id="dashboard" href="{% url 'crits.dashboards.views.dashboard' %}">Dashboards</a>
+      <ul class='sub-mmenu'>
+          <li class='mmenu_item'>
+             <a href="{% url 'crits.dashboards.views.dashboard' %}"> My Dashboards</a>
+             <ul class='dashboard-nav-submenu' class='sub-mmenu'>
+                 {% for dash in user.getDashboards %}
+                     <li class='mmenu_item'>
+                         <a href='{% url "crits.dashboards.views.dashboard" dash.id %}'>{{dash.name}}</a>
+                     </li>
+                 {% endfor %}
+             </ul>
+         </li>
+         <li class='mmenu_item'>
+              <a href="{% url 'crits.dashboards.views.saved_searches_list' %}">Configurations</a>
+          </li>
+      </ul>
     </li>
     {% if user_role %}
     <li class='nav_main mmenu_item'>
@@ -459,9 +498,6 @@
         {% endif %}
         <li class='mmenu_item'>
           <a href="{% url 'crits.samples.views.sources' %}">Source Samples</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href="{% url 'crits.samples.views.yarahits_listing' %}">Yara Hits</a>
         </li>
         <li class='mmenu_item'>
           <a href="{% url 'crits.samples.views.backdoors_listing' %}">Backdoors</a>
@@ -655,6 +691,11 @@
 <!-- end nav -->
 {% endif %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/core.js"></script>
+{% if enable_toasts == True %}
+    {% if not request.user.prefs.toast_notifications or request.user.prefs.toast_notifications.enabled != False %}
+        <script type="text/javascript" src="{{ STATIC_URL }}js/toast_notifications.js"></script>
+    {% endif %}
+{% endif %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/dialogs.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/collapsible.js"></script>
 

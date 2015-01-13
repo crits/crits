@@ -4,7 +4,6 @@ from mongoengine import Document, StringField, ListField, EmbeddedDocumentField
 from mongoengine import BooleanField, DynamicEmbeddedDocument
 from difflib import unified_diff
 from django.conf import settings
-from whois_parser import WhoisEntry
 
 from cybox.objects.domain_name_object import DomainName
 from cybox.core import Observable
@@ -46,13 +45,12 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_DOMAINS,
         "crits_type": 'Domain',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "schema_doc": {
             'analyst': 'Analyst who added/modified this domain',
             'domain': 'The domain name of this domain',
             'type': 'Record type of this domain',
             'watchlistEnabled': 'Boolean - whether this is a domain to watch',
-            'whois': 'List [] of dictionaries of whois data on given dates',
         },
         "jtable_opts": {
                          'details_url': 'crits.domains.views.domain_detail',
@@ -80,7 +78,6 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
     domain = StringField(required=True)
     record_type = StringField(default="A", db_field="type")
     watchlistEnabled = BooleanField(default=False)
-    whois = ListField(EmbeddedDocumentField(EmbeddedWhoIs))
     analyst = StringField()
 
     def migrate(self):
@@ -101,97 +98,6 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
         # - would require adding relationships between the two as well
         return super(self.__class__, self)._custom_save(force_insert, validate,
             clean, write_concern, cascade, cascade_kwargs, _refs, username)
-
-    def add_whois(self, data, analyst, date=None, editable=True):
-        """
-        Add whois information to the domain.
-
-        :param data: The contents of the whois.
-        :type data: str
-        :param analyst: The user adding the whois.
-        :type analyst: str
-        :param date: The date for this whois entry.
-        :type date: datetime.datetime
-        :param editable: If this entry can be modified.
-        :type editable: boolean
-        :returns: :class:`crits.core.domains.domain.WhoisEntry`
-        """
-
-        if not date:
-            date = datetime.datetime.now()
-        whois_entry = WhoisEntry(data).to_dict()
-
-        e = EmbeddedWhoIs()
-        e.date = date
-        e.analyst = analyst
-        e.editable = editable
-        e.text = data
-        e.data = whois_entry
-        self.whois.append(e)
-        return whois_entry
-
-    def edit_whois(self, data, date=None):
-        """
-        Edit whois information for the domain.
-
-        :param data: The contents of the whois.
-        :type data: str
-        :param date: The date for this whois entry.
-        :type date: datetime.datetime
-        """
-
-        if not date:
-            return
-
-        c = 0
-        for w in self.whois:
-            if w.date == date:
-                whois_entry = WhoisEntry(data).to_dict()
-                self.whois[c].data = whois_entry
-                self.whois[c].text = data
-            c += 1
-
-    def delete_whois(self, date):
-        """
-        Remove whois information from the domain.
-
-        :param date: The date for this whois entry.
-        :type date: datetime.datetime
-        """
-
-        if not date:
-            return
-
-        c = 0
-        for w in self.whois:
-            if w.date == date:
-                del self.whois[c]
-            c += 1
-
-    def whois_diff(self, from_date, to_date):
-        """
-        Generate a diff between two whois entries.
-
-        :param from_date: The date for the first whois entry.
-        :type date: datetime.datetime
-        :param to_date: The date for the second whois entry.
-        :type date: datetime.datetime
-        :returns: str, None
-        """
-
-        from_whois = None
-        to_whois = None
-        for w in self.whois:
-            if w.date == from_date:
-                from_whois = str(WhoisEntry.from_dict(w.data)).splitlines(True)
-            if w.date == to_date:
-                to_whois = str(WhoisEntry.from_dict(w.data)).splitlines(True)
-        if not from_whois or not to_whois:
-            return None
-        return unified_diff(from_whois,
-                            to_whois,
-                            fromfile=from_date,
-                            tofile=to_date)
 
     def to_cybox_observable(self):
         """

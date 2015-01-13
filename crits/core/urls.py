@@ -40,8 +40,7 @@ urlpatterns = patterns('',
     (r'^get_item_data/$', 'crits.core.views.get_item_data'),
 
     # Default landing page
-    (r'^$', 'crits.core.views.dashboard'),
-    (r'^dashboard/$', 'crits.core.views.dashboard'),
+    (r'^$', 'crits.dashboards.views.dashboard'),
     (r'^counts/list/$', 'crits.core.views.counts_listing'),
     (r'^counts/list/(?P<option>\S+)/$', 'crits.core.views.counts_listing'),
 

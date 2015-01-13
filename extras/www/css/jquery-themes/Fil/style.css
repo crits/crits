@@ -105,12 +105,13 @@ div.logo {
 
 img.login_logo {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 0;
+    right: 0;
+    bottom: 60%;
+    left: 0;
     width: 145px;
     height: 150px;
-    margin-top: -300px;
-    margin-left: -72px;
+    margin: auto;
 }
 
 div.logo a img {
@@ -1337,12 +1338,13 @@ a.nav_icon:hover {
 
 .login_box {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 200px;
+    right: 0;
+    bottom: 0;
+    left: 0;
     width: 650px;
-    height: 200px;
-    margin-top: -100px;
-    margin-left: -300px;
+    height: 300px;
+    margin: auto;
     text-align: center;
 }
 

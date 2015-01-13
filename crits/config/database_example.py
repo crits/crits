@@ -35,3 +35,7 @@ FILE_DB = GRIDFS # Set to S3 (NO QUOTES) to use S3. You'll also want to set
 # S3 credentials (if needed)
 #AWS_ACCESS_KEY_ID = ""
 #AWS_SECRET_ACCESS_KEY = ""
+
+# If your S3 location is somewhere other than s3.amazonaws.com, then you
+# can specify a different hostname here. (if needed)
+#S3_HOSTNAME = ""

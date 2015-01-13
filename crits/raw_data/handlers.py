@@ -333,6 +333,9 @@ def handle_raw_data_file(data, source_name, user=None,
         }
         return status
 
+    if not source_name:
+        return {"success" : False, "message" : "Missing source information."}
+
     rdt = RawDataType.objects(name=data_type).first()
     if not rdt:
         status = {
@@ -530,16 +533,14 @@ def update_raw_data_highlight_comment(_id, comment, line, analyst):
     if not raw_data:
         return None
     else:
-        i = 0
         for highlight in raw_data.highlights:
             if highlight.line == int(line):
-                raw_data.highlights[i].comment = comment
+                highlight.comment = comment
                 try:
                     raw_data.save(username=analyst)
                     return {'success': True}
                 except ValidationError, e:
                     return {'success': False, 'message': str(e)}
-            i += 1
         return {'success': False, 'message': 'Could not find highlight.'}
 
 def update_raw_data_highlight_date(_id, date, line, analyst):
@@ -561,16 +562,14 @@ def update_raw_data_highlight_date(_id, date, line, analyst):
     if not raw_data:
         return None
     else:
-        i = 0
         for highlight in raw_data.highlights:
             if highlight.line == int(line):
-                raw_data.highlights[i].line_date = parse(date, fuzzy=True)
+                highlight.line_date = parse(date, fuzzy=True)
                 try:
                     raw_data.save(username=analyst)
                     return {'success': True}
                 except ValidationError, e:
                     return {'success': False, 'message': str(e)}
-            i += 1
         return {'success': False, 'message': 'Could not find highlight.'}
 
 def new_inline_comment(_id, comment, line_num, analyst):

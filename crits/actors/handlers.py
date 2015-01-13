@@ -27,7 +27,7 @@ def generate_actor_identifier_csv(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    response = csv_export(request,ActorIdentifier)
+    response = csv_export(request, ActorIdentifier)
     return response
 
 def generate_actor_csv(request):
@@ -39,7 +39,7 @@ def generate_actor_csv(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    response = csv_export(request,Actor)
+    response = csv_export(request, Actor)
     return response
 
 def generate_actor_identifier_jtable(request, option):
@@ -71,7 +71,7 @@ def generate_actor_identifier_jtable(request, option):
                             content_type="application/json")
     if option == "jtdelete":
         response = {"Result": "ERROR"}
-        if jtable_ajax_delete(obj_type,request):
+        if jtable_ajax_delete(obj_type, request):
             obj_id = request.POST.get('id', None)
             if obj_id:
                 # Remove this identifier from any Actors who reference it.
@@ -95,7 +95,7 @@ def generate_actor_identifier_jtable(request, option):
         'details_link': mapper['details_link'],
         'no_sort': mapper['no_sort']
     }
-    jtable = build_jtable(jtopts,request)
+    jtable = build_jtable(jtopts, request)
     for field in jtable['fields']:
         if field['fieldname'] == "'name'":
             url = reverse('crits.actors.views.actors_listing')
@@ -115,7 +115,7 @@ def generate_actor_identifier_jtable(request, option):
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
-                                   'button' : '%ss_tab' % type_},
+                                   'button': '%ss_tab' % type_},
                                   RequestContext(request))
     else:
         return render_to_response("%s_listing.html" % type_,
@@ -152,7 +152,7 @@ def generate_actor_jtable(request, option):
                             content_type="application/json")
     if option == "jtdelete":
         response = {"Result": "ERROR"}
-        if jtable_ajax_delete(obj_type,request):
+        if jtable_ajax_delete(obj_type, request):
             response = {"Result": "OK"}
         return HttpResponse(json.dumps(response,
                                        default=json_handler),
@@ -171,7 +171,7 @@ def generate_actor_jtable(request, option):
         'details_link': mapper['details_link'],
         'no_sort': mapper['no_sort']
     }
-    jtable = build_jtable(jtopts,request)
+    jtable = build_jtable(jtopts, request)
     jtable['toolbar'] = [
         {
             'tooltip': "'Add Actor'",
@@ -183,7 +183,7 @@ def generate_actor_jtable(request, option):
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
-                                   'button' : '%ss_tab' % type_},
+                                   'button': '%ss_tab' % type_},
                                   RequestContext(request))
     else:
         return render_to_response("%s_listing.html" % type_,
@@ -217,17 +217,17 @@ def get_actor_details(id_, analyst):
         # remove pending notifications for user
         remove_user_from_notification("%s" % analyst, actor.id, 'Actor')
 
-        download_form = DownloadFileForm(initial={"obj_type":'Actor',
-                                                    "obj_id": actor.id})
+        download_form = DownloadFileForm(initial={"obj_type": 'Actor',
+                                                  "obj_id": actor.id})
 
         # generate identifiers
         actor_identifiers = actor.generate_identifiers_list(analyst)
 
         # subscription
         subscription = {
-                'type': 'Actor',
-                'id': actor.id,
-                'subscribed': is_user_subscribed("%s" % analyst, 'Actor', actor.id),
+            'type': 'Actor',
+            'id': actor.id,
+            'subscribed': is_user_subscribed("%s" % analyst, 'Actor', actor.id),
         }
 
         #objects
@@ -238,13 +238,13 @@ def get_actor_details(id_, analyst):
 
         # relationship
         relationship = {
-                'type': 'Actor',
-                'value': actor.id
+            'type': 'Actor',
+            'value': actor.id
         }
 
         #comments
         comments = {'comments': actor.get_comments(),
-                    'url_key':actor.id}
+                    'url_key': actor.id}
 
         #screenshots
         screenshots = actor.get_screenshots(analyst)
@@ -270,7 +270,7 @@ def get_actor_details(id_, analyst):
                 'screenshots': screenshots,
                 'actor': actor,
                 'actor_id': id_,
-                'comments':comments}
+                'comments': comments}
     return template, args
 
 def get_actor_by_name(allowed_sources, actor):
@@ -349,6 +349,8 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     if source:
         for s in source:
             actor.add_source(s)
+    else:
+        return {"success" : False, "message" : "Missing source information."}
 
     if not isinstance(aliases, list):
         aliases = aliases.split(',')
@@ -373,7 +375,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     resp_url = reverse('crits.actors.views.actor_detail', args=[actor.id])
 
     retVal['message'] = ('Success! Click here to view the new Actor: '
-                            '<a href="%s">%s</a>' % (resp_url, actor.name))
+                         '<a href="%s">%s</a>' % (resp_url, actor.name))
 
     retVal['success'] = True
     retVal['object'] = actor
@@ -398,9 +400,9 @@ def actor_remove(id_, username):
             actor.delete(username=username)
             return {'success': True}
         else:
-            return {'success':False, 'message':'Could not find Actor.'}
+            return {'success': False, 'message': 'Could not find Actor.'}
     else:
-        return {'success':False, 'message': 'Must be an admin to remove'}
+        return {'success': False, 'message': 'Must be an admin to remove'}
 
 def create_actor_identifier_type(username, identifier_type):
     """
@@ -514,6 +516,8 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
     if source:
         for s in source:
             actor_identifier.add_source(s)
+    else:
+        return {"success" : False, "message" : "Missing source information."}
 
     actor_identifier.save(username=analyst)
     actor_identifier.reload()

@@ -102,33 +102,21 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
                 'analyst': 'Analyst who provided this impact level'
             },
             'source': ('List [] of source information about who provided this'
-                    ' indicator')
+                       ' indicator')
         },
         "jtable_opts": {
-                         'details_url': 'crits.indicators.views.indicator',
-                         'details_url_key': 'id',
-                         'default_sort': "created DESC",
-                         'searchurl': 'crits.indicators.views.indicators_listing',
-                          'fields': [ "value", "ind_type", "created",
-                                      "modified", "source", "campaign",
-                                      "status", "id" ],
-                          'jtopts_fields': [ "details",
-                                             "value",
-                                             "type",
-                                             "created",
-                                             "modified",
-                                             "source",
-                                             "campaign",
-                                             "status",
-                                             "favorite",
-                                             "id" ],
-                         'hidden_fields': [],
-                         'linked_fields': [ "value", "source", "campaign",
-                                            "type", "status" ],
-                         'details_link': 'details',
-                         'no_sort': ['details']
-                       }
-
+            'details_url': 'crits.indicators.views.indicator',
+            'details_url_key': 'id',
+            'default_sort': "created DESC",
+            'searchurl': 'crits.indicators.views.indicators_listing',
+            'fields': ["value", "ind_type", "created", "modified", "source",
+                       "campaign", "status", "id"],
+            'jtopts_fields': ["details", "value", "type", "created", "modified",
+                              "source", "campaign", "status", "favorite", "id"],
+            'hidden_fields': [],
+            'linked_fields': ["value", "source", "campaign", "type", "status"],
+            'details_link': 'details', 'no_sort': ['details'],
+        }
     }
 
     actions = ListField(EmbeddedDocumentField(EmbeddedAction))
@@ -147,7 +135,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         migrate_indicator(self)
 
-    def to_csv(self, fields=[],headers=False):
+    def to_csv(self, fields=[], headers=False):
         """
         Generate a CSV row for this Indicator.
 
@@ -169,10 +157,10 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
     def to_stix_indicator(self):
         """
-            Creates a STIX Indicator object from a CybOX object.
+        Creates a STIX Indicator object from a CybOX object.
 
-            Returns the STIX Indicator and the original CRITs object's
-            releasability list.
+        Returns the STIX Indicator and the original CRITs object's
+        releasability list.
         """
         from stix.indicator import Indicator as S_Ind
         from stix.common.identity import Identity
@@ -317,7 +305,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         self.actions.append(ea)
 
     def edit_action(self, type_, active, analyst, begin_date,
-                   end_date, performed_date, reason, date=None):
+                    end_date, performed_date, reason, date=None):
         """
         Edit an action for an Indicator.
 
@@ -341,24 +329,20 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if not date:
             return
-        found = False
-        c = 0
         for t in self.actions:
             if t.date == date:
-                found = True
-                del self.actions[c]
-            c += 1
-        if found:
-            ea = EmbeddedAction()
-            ea.action_type = type_
-            ea.active = active
-            ea.analyst = analyst
-            ea.begin_date = begin_date
-            ea.end_date = end_date
-            ea.performed_date = performed_date
-            ea.reason = reason
-            ea.date = date
-            self.actions.append(ea)
+                self.actions.remove(t)
+                ea = EmbeddedAction()
+                ea.action_type = type_
+                ea.active = active
+                ea.analyst = analyst
+                ea.begin_date = begin_date
+                ea.end_date = end_date
+                ea.performed_date = performed_date
+                ea.reason = reason
+                ea.date = date
+                self.actions.append(ea)
+                break
 
     def delete_action(self, date=None):
         """
@@ -370,11 +354,10 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if not date:
             return
-        c = 0
         for t in self.actions:
             if t.date == date:
-                del self.actions[c]
-            c += 1
+                self.actions.remove(t)
+                break
 
     def add_activity(self, analyst, start_date, end_date,
                      description, date=None):
@@ -421,21 +404,17 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if not date:
             return
-        found = False
-        c = 0
         for t in self.activity:
             if t.date == date:
-                found = True
-                del self.activity[c]
-            c += 1
-        if found:
-            ea = EmbeddedActivity()
-            ea.analyst = analyst
-            ea.start_date = start_date
-            ea.end_date = end_date
-            ea.date = date
-            ea.description = description
-            self.activity.append(ea)
+                self.activity.remove(t)
+                ea = EmbeddedActivity()
+                ea.analyst = analyst
+                ea.start_date = start_date
+                ea.end_date = end_date
+                ea.date = date
+                ea.description = description
+                self.activity.append(ea)
+                break
 
     def delete_activity(self, date=None):
         """
@@ -447,8 +426,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if not date:
             return
-        c = 0
         for t in self.activity:
             if t.date == date:
-                del self.activity[c]
-            c += 1
+                self.activity.remove(t)
+                break

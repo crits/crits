@@ -129,14 +129,12 @@ def to_line_table(value):
             <tbody>
     """
     lines = value.split('\n')
-    l = 1
-    for line in lines:
+    for l, line in enumerate(lines, 1):
         lhtml = '<tr class="file_line" data-position="%d">' % l
         lhtml += '\n<td class="add_highlight ui-icon ui-icon-star"></td><td class="line_num">'
         lhtml += '<span class="line_number">%d</span></td>\n' % l
         lhtml += '<td class="line_pre"><pre>%s</pre></td>\n</tr>\n' % cgi.escape(line)
         html += lhtml
-        l += 1
     html += '</tbody>\n</table>\n</div>\n'
     return html
 
@@ -174,10 +172,16 @@ def absVal(value):
     :returns: int
     """
     return abs(value)
-
 @register.filter
 @stringfilter
 def url_target_blank(var):
     """Follow the 'urlize' filter with this to make the URL open in a new tab."""
     return mark_safe(re.sub("<a([^>]+)(?<!target=)>",'<a target="_blank"\\1>',var))
-    
+
+@register.filter
+def is_object_id_equal(obj1, obj2):
+    if "id" in obj1:
+        obj1 = obj1.id
+    if "id" in obj2:
+        obj2 = obj2.id
+    return str(obj1) == str(obj2)

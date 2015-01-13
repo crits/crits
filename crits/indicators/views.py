@@ -25,8 +25,7 @@ from crits.indicators.handlers import activity_add, activity_update, activity_re
 from crits.indicators.handlers import ci_update, create_indicator_and_ip
 from crits.indicators.handlers import set_indicator_type, get_indicator_details
 from crits.indicators.handlers import generate_indicator_jtable, generate_indicator_csv
-from crits.indicators.handlers import create_indicator_from_raw
-from crits.indicators.handlers import create_indicator_from_event
+from crits.indicators.handlers import create_indicator_from_obj
 
 
 @user_passes_test(user_can_view_data)
@@ -52,7 +51,7 @@ def indicator(request, indicator_id):
                               RequestContext(request))
 
 @user_passes_test(user_can_view_data)
-def indicators_listing(request,option=None):
+def indicators_listing(request, option=None):
     """
     Generate Indicator Listing template.
 
@@ -94,7 +93,7 @@ def new_indicator_action(request):
         return HttpResponse(json.dumps(message),
                             mimetype="application/json")
     return render_to_response('error.html',
-                              {'error':'Expected AJAX POST'})
+                              {'error': 'Expected AJAX POST'})
 
 @user_passes_test(user_can_view_data)
 def remove_indicator(request, _id):
@@ -128,7 +127,7 @@ def indicator_search(request):
     """
 
     query = {}
-    query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
+    query[request.GET.get('search_type', '')] = request.GET.get('q', '').strip()
     #return render_to_response('error.html', {'error': query})
     return HttpResponseRedirect(reverse('crits.indicators.views.indicators_listing')
                                 + "?%s" % urllib.urlencode(query))
@@ -147,69 +146,71 @@ def upload_indicator(request):
     if request.method == "POST":
         username = request.user.username
         failed_msg = ''
-        result = None;
+        result = None
 
         if request.POST['svalue'] == "Upload CSV":
-            form = UploadIndicatorCSVForm(username,
-                                          request.POST,
-                                          request.FILES)
+            form = UploadIndicatorCSVForm(
+                username,
+                request.POST,
+                request.FILES)
             if form.is_valid():
-                result = handle_indicator_csv(request.FILES['filedata'],
-                                              request.POST['source'],
-                                              request.POST['method'],
-                                              request.POST['reference'],
-                                              "file",
-                                              username,
-                                              add_domain=True)
+                result = handle_indicator_csv(
+                    request.FILES['filedata'],
+                    request.POST['source'],
+                    request.POST['method'],
+                    request.POST['reference'],
+                    "file",
+                    username, add_domain=True)
                 if result['success']:
                     message = {'message': ('<div>%s <a href="%s">Go to all indicators</a>'
                                            '.</div>' % (result['message'],
-                                           reverse('crits.indicators.views.indicators_listing')))}
+                                                        reverse('crits.indicators.views.indicators_listing')))}
                 else:
                     failed_msg = '<div>%s</div>' % result['message']
 
         if request.POST['svalue'] == "Upload Text":
-            form = UploadIndicatorTextForm(username,
-                                           request.POST)
+            form = UploadIndicatorTextForm(username, request.POST)
             if form.is_valid():
-                result = handle_indicator_csv(request.POST['data'],
-                                              request.POST['source'],
-                                              request.POST['method'],
-                                              request.POST['reference'],
-                                              "ti",
-                                              username,
-                                              add_domain=True)
+                result = handle_indicator_csv(
+                    request.POST['data'],
+                    request.POST['source'],
+                    request.POST['method'],
+                    request.POST['reference'],
+                    "ti",
+                    username,
+                    add_domain=True)
                 if result['success']:
                     message = {'message': ('<div>%s <a href="%s">Go to all indicators</a>'
                                            '.</div>' % (result['message'],
-                                           reverse('crits.indicators.views.indicators_listing')))}
+                                                        reverse('crits.indicators.views.indicators_listing')))}
                 else:
                     failed_msg = '<div>%s</div>' % result['message']
 
         if request.POST['svalue'] == "Upload Indicator":
-            all_ind_type_choices = [(c[0],
-                                     c[0],
-                                     {'datatype': c[1].keys()[0],
-                                      'datatype_value': c[1].values()[0]}) for c in get_object_types(active=False, query={'datatype.file':{'$exists':0}})]
-            form = UploadIndicatorForm(username,
-                                       all_ind_type_choices,
-                                       request.POST)
+            all_ind_type_choices = [
+                (c[0], c[0], {'datatype': c[1].keys()[0], 'datatype_value': c[1].values()[0]})
+                for c in get_object_types(active=False, query={'datatype.file': {'$exists': 0}})]
+            form = UploadIndicatorForm(
+                username,
+                all_ind_type_choices,
+                request.POST)
             if form.is_valid():
-                result = handle_indicator_ind(request.POST['value'],
-                                              request.POST['source'],
-                                              request.POST['reference'],
-                                              request.POST['indicator_type'],
-                                              username,
-                                              request.POST['method'],
-                                              add_domain=True,
-                                              campaign=request.POST['campaign'],
-                                              campaign_confidence=request.POST['campaign_confidence'],
-                                              confidence=request.POST['confidence'],
-                                              impact=request.POST['impact'],
-                                              bucket_list=request.POST[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
-                                              ticket=request.POST[form_consts.Common.TICKET_VARIABLE_NAME])
+                result = handle_indicator_ind(
+                    request.POST['value'],
+                    request.POST['source'],
+                    request.POST['reference'],
+                    request.POST['indicator_type'],
+                    username,
+                    request.POST['method'],
+                    add_domain=True,
+                    campaign=request.POST['campaign'],
+                    campaign_confidence=request.POST['campaign_confidence'],
+                    confidence=request.POST['confidence'],
+                    impact=request.POST['impact'],
+                    bucket_list=request.POST[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
+                    ticket=request.POST[form_consts.Common.TICKET_VARIABLE_NAME])
                 if result['success']:
-                    indicator_link = '<a href=\"%s\">Go to this indicator</a> or <a href="%s">all indicators</a>.</div>' % (reverse('crits.indicators.views.indicator', args=[result['objectid']]), reverse('crits.indicators.views.indicators_listing'));
+                    indicator_link = '<a href=\"%s\">Go to this indicator</a> or <a href="%s">all indicators</a>.</div>' % (reverse('crits.indicators.views.indicator', args=[result['objectid']]), reverse('crits.indicators.views.indicators_listing'))
 
                     if result.get('is_new_indicator', False) == False:
                         message = {'message': ('<div>Warning: Updated indicator since indicator already exists! ' + indicator_link)}
@@ -220,7 +221,7 @@ def upload_indicator(request):
 
         if result == None or not result['success']:
             failed_msg += ('<a href="%s">Go to all indicators</a>'
-                          '.</div>' % reverse('crits.indicators.views.indicators_listing'))
+                           '.</div>' % reverse('crits.indicators.views.indicators_listing'))
             message = {'message': failed_msg, 'form': form.as_table()}
         elif result != None:
             message['success'] = result['success']
@@ -261,7 +262,7 @@ def update_indicator_type(request, indicator_id):
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
-                                  {"error": error },
+                                  {"error": error},
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)
@@ -284,20 +285,20 @@ def add_update_action(request, method, indicator_id):
         if form.is_valid():
             data = form.cleaned_data
             add = {
-                    'action_type': data['action_type'],
-                    'begin_date': data['begin_date'] if data['begin_date'] else '',
-                    'end_date': data['end_date'] if data['end_date'] else '',
-                    'performed_date': data['performed_date'] if data['performed_date'] else '',
-                    'active': data['active'],
-                    'reason': data['reason'],
-                    'analyst': username
-                    }
+                'action_type': data['action_type'],
+                'begin_date': data['begin_date'] if data['begin_date'] else '',
+                'end_date': data['end_date'] if data['end_date'] else '',
+                'performed_date': data['performed_date'] if data['performed_date'] else '',
+                'active': data['active'],
+                'reason': data['reason'],
+                'analyst': username,
+            }
             if method == "add":
                 add['date'] = datetime.datetime.now()
                 result = action_add(indicator_id, add)
             else:
                 date = datetime.datetime.strptime(data['date'],
-                                                         settings.PY_DATETIME_FORMAT)
+                                                  settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
                 result = action_update(indicator_id, add)
@@ -305,13 +306,13 @@ def add_update_action(request, method, indicator_id):
                 result['html'] = render_to_string('indicators_action_row_widget.html',
                                                   {'action': result['object'],
                                                    'admin': is_admin(username),
-                                                   'indicator_id':indicator_id})
+                                                   'indicator_id': indicator_id})
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
                                 mimetype='application/json')
         else: #invalid form
-            return HttpResponse(json.dumps({'success':False,
-                                            'form':form.as_table()}),
+            return HttpResponse(json.dumps({'success': False,
+                                            'form': form.as_table()}),
                                 mimetype='application/json')
     return HttpResponse({})
 
@@ -363,17 +364,17 @@ def add_update_activity(request, method, indicator_id):
         if form.is_valid():
             data = form.cleaned_data
             add = {
-                    'start_date': data['start_date'] if data['start_date'] else '',
-                    'end_date': data['end_date'] if data['end_date'] else '',
-                    'description': data['description'],
-                    'analyst': username
-                    }
+                'start_date': data['start_date'] if data['start_date'] else '',
+                'end_date': data['end_date'] if data['end_date'] else '',
+                'description': data['description'],
+                'analyst': username,
+            }
             if method == "add":
                 add['date'] = datetime.datetime.now()
                 result = activity_add(indicator_id, add)
             else:
                 date = datetime.datetime.strptime(data['date'],
-                                                         settings.PY_DATETIME_FORMAT)
+                                                  settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
                 result = activity_update(indicator_id, add)
@@ -381,13 +382,12 @@ def add_update_activity(request, method, indicator_id):
                 result['html'] = render_to_string('indicators_activity_row_widget.html',
                                                   {'activity': result['object'],
                                                    'admin': is_admin(username),
-                                                   'indicator_id':indicator_id})
-            return HttpResponse(json.dumps(result,
-                                           default=json_handler),
+                                                   'indicator_id': indicator_id})
+            return HttpResponse(json.dumps(result, default=json_handler),
                                 mimetype='application/json')
         else: #invalid form
-            return HttpResponse(json.dumps({'success':False,
-                                            'form':form.as_table()}),
+            return HttpResponse(json.dumps({'success': False,
+                                            'form': form.as_table()}),
                                 mimetype='application/json')
     return HttpResponse({})
 
@@ -479,20 +479,20 @@ def indicator_and_ip(request):
                 result = {'success': True, 'message': message}
             else:
                 result = {
-                    'success':  False,
-                    'message':  "Error adding relationship: %s" % result['message']
+                    'success': False,
+                    'message': "Error adding relationship: %s" % result['message'],
                 }
     else:
         result = {
-            'success':  False,
-            'message':  "Expected AJAX POST"
+            'success': False,
+            'message': "Expected AJAX POST",
         }
     return HttpResponse(json.dumps(result), mimetype="application/json")
 
 @user_passes_test(user_can_view_data)
-def indicator_from_raw(request):
+def indicator_from_obj(request):
     """
-    Create an Indicator from RawData. Should be an AJAX POST.
+    Create an Indicator from an Object. Should be an AJAX POST.
 
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
@@ -500,61 +500,21 @@ def indicator_from_raw(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        type_ = request.POST.get('type', None)
+        ind_type = request.POST.get('ind_type', None)
+        obj_type = request.POST.get('obj_type', None)
         id_ = request.POST.get('oid', None)
         value = request.POST.get('value', None)
-        if not type_ or not id_ or not value:
+        if not ind_type or not obj_type or not id_ or not value:
             result = {'success': False,
-                      'message': "Need type, oid, and value"}
+                      'message': "Need indicator type, object type, oid, and value."}
         else:
-            result = create_indicator_from_raw(type_,
+            result = create_indicator_from_obj(ind_type,
+                                               obj_type,
                                                id_,
                                                value,
                                                request.user.username)
             if result['success']:
-                relationship = {'type': type_,
-                                'value': result['value']}
-                message = render_to_string('relationships_listing_widget.html',
-                                           {'relationships': result['message'],
-                                            'relationship': relationship},
-                                           RequestContext(request))
-                result = {'success': True, 'message': message}
-            else:
-                result = {
-                    'success':  False,
-                    'message':  "Error adding relationship: %s" % result['message']
-                }
-    else:
-        result = {
-            'success':  False,
-            'message':  "Expected AJAX POST"
-        }
-    return HttpResponse(json.dumps(result), mimetype="application/json")
-
-@user_passes_test(user_can_view_data)
-def indicator_from_event(request):
-    """
-    Create an Indicator from an Event description. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        type_ = request.POST.get('type', None)
-        id_ = request.POST.get('oid', None)
-        value = request.POST.get('value', None)
-        if not type_ or not id_ or not value:
-            result = {'success': False,
-                      'message': "Need type, oid, and value"}
-        else:
-            result = create_indicator_from_event(type_,
-                                                 id_,
-                                                 value,
-                                                 request.user.username)
-            if result['success']:
-                relationship = {'type': type_,
+                relationship = {'type': ind_type,
                                 'value': result['value']}
                 message = render_to_string('relationships_listing_widget.html',
                                            {'relationships': result['message'],

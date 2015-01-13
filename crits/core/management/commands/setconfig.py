@@ -68,6 +68,7 @@ class Command(BaseCommand):
            email_host:\t\t\t<string>
            email_port:\t\t\t<string>
            enable_api:\t\t\t<boolean> (ex: True, true, yes, or 1)
+           enable_toasts:\t\t\t<boolean> (ex: True, true, yes, or 1)
            git_repo_url:\t\t<string>
            http_proxy:\t\t\t<string>
            instance_name:\t\t<string>
@@ -91,7 +92,7 @@ class Command(BaseCommand):
            rt_url:\t\t\t<string>
            secure_cookie:\t\t<boolean> (ex: True, true, yes, or 1)
            service_dirs:\t\t<list of full directory paths>
-           service_model:\t\t<process/thread/local>
+           service_model:\t\t<process/thread/process_pool/thread_pool/local>
            session_timeout:\t\t<integer>
            splunk_search_url:\t\t<string>
            temp_dir:\t\t\t<full directory path>
@@ -210,7 +211,7 @@ def set_config_attribute(crits_config, attr, value):
 
     if hasattr(crits_config, attr):
         if attr in ("enable_api", "create_unknown_user", "debug", "ldap_auth",
-                    "ldap_tls", "remote_user", "secure_cookie",
+                    "ldap_tls", "remote_user", "secure_cookie", "enable_toasts",
                     "ldap_update_on_login", "query_caching",
                     "crits_email_end_tag"):
             if value in ('True', 'true', 'yes', '1'):
@@ -220,7 +221,7 @@ def set_config_attribute(crits_config, attr, value):
             else:
                 raise CE('%s is a boolean True/False.' % attr)
         if attr in ('depth_max', 'invalid_login_attempts', 'rel_max',
-                    'session_timeout', 'total_max'):
+                    'session_timeout', 'service_pool_size', 'total_max'):
             try:
                 value = int(value)
             except:
@@ -241,8 +242,8 @@ def set_config_attribute(crits_config, attr, value):
                 if not os.path.exists(v):
                     raise CE('Not a valid path: %s' % v)
         if attr == "service_model":
-            if value not in ('process', 'thread', 'local'):
-                raise CE('service_model must be process, thread, or local')
+            if value not in ('process', 'thread', 'process_pool', 'thread_pool', 'local'):
+                raise CE('service_model must be process, thread, process_pool, thread_pool, or local')
         if attr in ('totp_web', 'totp_cli'):
             if value not in ('Optional', 'Disabled', 'Required'):
                 raise CE('totp_web/cli must be Optional, Required, or Disabled')

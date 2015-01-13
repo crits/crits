@@ -60,7 +60,10 @@ from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, UnsupportedAttrs
 from crits.core.user_migrate import migrate_user
 
+
+
 logger = logging.getLogger(__name__)
+
 
 class EmbeddedSubscription(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -142,6 +145,10 @@ class PreferencesField(DynamicEmbeddedDocument):
                                             "hover_text_color": "#39F",
                                             "hover_background_color": "#6F6F6F"})
 
+    toast_notifications = DictField(required=True, default={"enabled": True,
+                                                            "acknowledgement_type": "sticky",
+                                                            "initial_notifications_display": "show",
+                                                            "newer_notifications_location": "top"})
 
 class EmbeddedPasswordReset(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -315,6 +322,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     api_keys = ListField(EmbeddedDocumentField(EmbeddedAPIKey))
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
+
+    defaultDashboard = ObjectIdField(required=False, default=None)
+
 
     def migrate(self):
         """
@@ -862,6 +872,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         l.unbind()
         return resp
 
+    def getDashboards(self):
+        from crits.dashboards.handlers import getDashboardsForUser
+        return getDashboardsForUser(self)
 
 # stolen from MongoEngine and modified to use the CRITsUser class.
 class CRITsAuthBackend(object):

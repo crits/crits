@@ -341,7 +341,7 @@ class LoginTests(SimpleTestCase):
         # These should all start and end with a /
         paths = [
             "/",
-            "/dashboard/",
+            "/dashboards/",
             #"/nourl/",  # Does not work, see issue #1147.
             "/samples/details/d41d8cd98f00b204e9800998ecf8427e/",
         ]
@@ -397,13 +397,3 @@ class DashboardViewTests(SimpleTestCase):
         self.req.user.mark_active()
         response = views.dashboard(self.req)
         self.assertEqual(response.status_code, 200)
-
-    def testDashboard(self):
-        response = views.dashboard(self.req)
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue("#count_listing" in response.content)
-        self.assertTrue("#backdoor_listing" in response.content)
-        self.assertTrue("#campaign_listing" in response.content)
-        self.assertTrue("#indicator_listing" in response.content)
-        self.assertTrue("#email_listing" in response.content)
-        self.assertTrue("#sample_listing" in response.content)

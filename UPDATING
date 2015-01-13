@@ -3,6 +3,72 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: wxs
+Date:   2014-12-30
+
+    The WHOIS feature for Domain objects has been removed from core and put
+    into a service. If you do not have any WHOIS information for existing
+    domains in your database you can ignore this update. If you do have WHOIS
+    information a script has been provided which will run the WHOIS service
+    with default configuration against all domains which have WHOIS
+    information already. It is recommended that you use this script to create
+    service analysis results for these domains.
+
+    The WHOIS service supports three different query modes: live, pydat and
+    domaintools. If you wish to use the domaintools or pydat modes you must
+    configure the service first and then specify your runtime options to the
+    migrate script using the -c option.
+
+    If you only want to do live queries then run this:
+
+    python manage.py runscript whois_service migrate -- -v
+
+    If you want to do a pydat lookup then run this:
+
+    python manage.py runscript whois_service migrate -- -v -c "{'pydat_query': True}"
+
+    If you want to do a domaintools lookup then run this:
+
+    python manage.py runscript whois_service migrate -- -v -c "{'dt_query': True}"
+    The config options can be combined too. So all three modes would be:
+
+    "{'dt_query': True, 'pydat_query': True, 'live_query': True}"
+
+    Please use the -h argument to the script to get extra help.
+
+Author: dsnellgrove
+Date:   2014-10-30
+
+    The python library "ushlex" has been added as a dependency and will need to
+    be installed.
+
+Author: dbuchta
+Date:   2014-10-14
+
+    Dashboards are now saved objects in the db containing a list of tables 
+    affiliated with it. They also have a name and have the option to be 
+    public. These can all by changed on the Dashboard Configurations page
+    although only an admin can make a dashboard public. When a user other
+    then the original creator saves a public dashboard, it creates a clone
+    with their own customization applied and the public one is removed
+    from the user's list of dashboards. In order to revert the clone back to 
+    the public, simply delete it and public one will show again. Users also 
+    have the choice of picking their default dashboard from the Dashboard 
+    Configurations page.
+    
+    A key feature to these new dashboards are users having the ability to save
+    their favorite searches. This can be done by entering your search criteria 
+    in the Global Quick Search and clicking the "Configure for Dashboard" button
+    on the search results page. Once clicked, you will be redirected to another
+    page where you can customize the table to your liking, name it, and choose 
+    which dashboard to pin it to, or to  create a new one.
+    
+    In order for the dashboard to work correctly, the initial default dashboard
+    must be created in the database. This can be done with the following 
+    management command:
+    
+        python manage.py create_default_dashboard
+        
 Author: mgoffin
 Date:   2014-10-04
 

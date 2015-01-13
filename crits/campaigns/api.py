@@ -61,12 +61,12 @@ class CampaignResource(CRITsAPIResource):
             content['message'] = 'Need a Campaign name.'
             self.crits_response(content)
 
-        result =  add_campaign(name,
-                               description,
-                               aliases,
-                               analyst,
-                               bucket_list,
-                               ticket)
+        result = add_campaign(name,
+                              description,
+                              aliases,
+                              analyst,
+                              bucket_list,
+                              ticket)
         if result.get('id'):
             url = reverse('api_dispatch_detail',
                           kwargs={'resource_name': 'campaigns',

@@ -1227,6 +1227,8 @@ def handle_uploaded_file(f, source, method="", reference=None, file_format=None,
     """
 
     samples = list()
+    if not source:
+        return [{'success': False, 'message': "Missing source information."}]
     if method:
         method = " - " + method
     if f:
@@ -1386,9 +1388,8 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
             # add new objects if they exist
             if objectsData:
                 objectsData = json.loads(objectsData)
-                object_row_counter = 1
 
-                for objectData in objectsData:
+                for object_row_counter, objectData in enumerate(objectsData, 1):
                     if sample.get('object') != None and is_validate_only == False:
                         objectDict = object_array_to_dict(objectData, "Sample",
                                                           sample.get('object').id)
@@ -1414,8 +1415,6 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
 
                     if object_retVal.get('message'):
                         errors.append(object_retVal['message'])
-
-                    object_row_counter += 1
     else:
         errors += "Failed to add Sample: " + md5
 

@@ -46,22 +46,33 @@ def upsert_target(data, analyst):
     if 'email_address' not in data:
         return {'success': False,
                 'message': "No email address to look up"}
-    target = Target.objects(email_address=data['email_address']).first()
+    target = Target.objects(email_address__iexact=data['email_address']).first()
     is_new = False
     if not target:
         is_new = True
         target = Target()
         target.email_address = data['email_address']
 
-    target.department = data['department']
-    target.division = data['division']
-    target.organization_id = data['organization_id']
-    target.firstname = data['firstname']
-    target.lastname = data['lastname']
-    target.note = data['note']
-    target.title = data['title']
-    bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
-    ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+    bucket_list = False
+    ticket = False
+    if 'department' in data:
+        target.department = data['department']
+    if 'division' in data:
+        target.division = data['division']
+    if 'organization_id' in data:
+        target.organization_id = data['organization_id']
+    if 'firstname' in data:
+        target.firstname = data['firstname']
+    if 'lastname' in data:
+        target.lastname = data['lastname']
+    if 'note' in data:
+        target.note = data['note']
+    if 'title' in data:
+        target.title = data['title']
+    if 'bucket_list' in data:
+        bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
+    if 'ticket' in data:
+        ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
 
     if bucket_list:
         target.add_bucket_list(bucket_list, analyst)
@@ -95,7 +106,7 @@ def remove_target(email_address=None, analyst=None):
     if not email_address:
         return {'success': False,
                 'message': "No email address to look up"}
-    target = Target.objects(email_address=email_address).first()
+    target = Target.objects(email_address__iexact=email_address).first()
     if not target:
         return {'success': False,
                 'message': "No target matching this email address."}
@@ -114,7 +125,7 @@ def get_target(email_address=None):
 
     if not email_address:
         return None
-    target = Target.objects(email_address=email_address).first()
+    target = Target.objects(email_address__iexact=email_address).first()
     return target
 
 def get_target_details(email_address, analyst):
@@ -133,7 +144,7 @@ def get_target_details(email_address, analyst):
         template = "error.html"
         args = {'error': "Must provide an email address."}
         return template, args
-    target = Target.objects(email_address=email_address).first()
+    target = Target.objects(email_address__iexact=email_address).first()
     if not target:
         target = Target()
         target.email_address = email_address
@@ -219,7 +230,15 @@ def get_campaign_targets(campaign,user):
     addresses = {}
     for email in emails:
         for to in email['to']:
-            addresses[to] = 1
+
+            # This might be a slow operation since we're looking up all "to"
+            # targets, could possibly bulk search this.
+            target = Target.objects(email_address__iexact=to).first()
+
+            if target is not None:
+                addresses[target.email_address] = 1
+            else:
+                addresses[to] = 1
     uniq_addrs = addresses.keys()
     return uniq_addrs
 

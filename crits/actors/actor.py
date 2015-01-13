@@ -132,21 +132,17 @@ class ActorIdentifier(CritsDocument, CritsSchemaDocument, CritsSourceDocument,
             'active': 'Enabled in the UI (on/off)'
         },
         "jtable_opts": {
-                         'details_url': '',
-                         'details_url_key': '',
-                         'default_sort': "created DESC",
-                         'searchurl': 'crits.actors.views.actor_identifiers_listing',
-                         'fields': [ "name", "created", "source",
-                                    "identifier_type", "id"],
-                         'jtopts_fields': [ "name",
-                                            "identifier_type",
-                                            "created",
-                                            "source"],
-                         'hidden_fields': [],
-                         'linked_fields': ["name", "source"],
-                         'details_link': '',
-                         'no_sort': ['']
-                       }
+            'details_url': '',
+            'details_url_key': '',
+            'default_sort': "created DESC",
+            'searchurl': 'crits.actors.views.actor_identifiers_listing',
+            'fields': ["name", "created", "source", "identifier_type", "id"],
+            'jtopts_fields': ["name", "identifier_type", "created", "source"],
+            'hidden_fields': [],
+            'linked_fields': ["name", "source"],
+            'details_link': '',
+            'no_sort': [''],
+        }
     }
 
     active = StringField(default="on")
@@ -175,27 +171,19 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
         "schema_doc": {
         },
         "jtable_opts": {
-                         'details_url': 'crits.actors.views.actor_detail',
-                         'details_url_key': 'id',
-                         'default_sort': "modified DESC",
-                         'searchurl': 'crits.actors.views.actors_listing',
-                         'fields': [ "name", "description", "modified",
-                                     "source", "campaign", "status", "id"],
-                         'jtopts_fields': [ "details",
-                                            "name",
-                                            "description",
-                                            "modified",
-                                            "source",
-                                            "campaign",
-                                            "status",
-                                            "favorite",
-                                            "id"],
-                         'hidden_fields': [],
-                         'linked_fields': ["source", "campaign"],
-                         'details_link': 'details',
-                         'no_sort': ['details']
-                       }
-
+            'details_url': 'crits.actors.views.actor_detail',
+            'details_url_key': 'id',
+            'default_sort': "modified DESC",
+            'searchurl': 'crits.actors.views.actors_listing',
+            'fields': ["name", "description", "modified", "source", "campaign",
+                       "status", "id"],
+            'jtopts_fields': ["details", "name", "description", "modified",
+                              "source", "campaign", "status", "favorite", "id"],
+            'hidden_fields': [],
+            'linked_fields': ["source", "campaign"],
+            'details_link': 'details',
+            'no_sort': ['details'],
+        }
     }
 
     name = StringField(required=True)
@@ -283,13 +271,13 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if isinstance(aliases, basestring):
             aliases = aliases.split(',')
-        aliases = [a.strip() for a in aliases]
+        aliases = [a.strip() for a in aliases if a != '']
         existing_aliases = None
         if len(aliases) < len(self.aliases):
             self.aliases = aliases
         else:
             existing_aliases = self.aliases
-        if existing_aliases:
+        if existing_aliases is not None:
             for a in aliases:
                 if a not in existing_aliases:
                     existing_aliases.append(a)
@@ -306,7 +294,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if isinstance(tags, basestring):
             tags = tags.split(',')
-        tags = [t.strip() for t in tags]
+        tags = [t.strip() for t in tags if t != '']
         existing_tags = None
         if tag_type == 'ActorIntendedEffect':
             if len(tags) < len(self.intended_effects):

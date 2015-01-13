@@ -290,7 +290,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "originating_ip",
-                "String",
+                "Address - ipv4-addr",
                 email.originating_ip,
                 "Originating IP",
                 True, True, True, False, True,
@@ -416,6 +416,11 @@ def generate_email_jtable(request, option):
             'tooltip': "'Add Email'",
             'text': "'Add Email'",
             'click': "function () {$('#new-email-fields').click()}",
+        },
+        {
+            'tooltip': "'Upload Outlook Email'",
+            'text': "'Upload .msg'",
+            'click': "function () {$('#new-email-outlook').click()}",
         },
     ]
     if option == "inline":
@@ -904,6 +909,10 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             'data': None,
             'attachments': {}
           }
+
+    if not sourcename:
+        result['reason'] = "Missing source information."
+        return result
 
     msg_import = {'raw_header': ''}
     reImap = re.compile(r"(\*\s\d+\sFETCH\s.+?\r\n)(.+)\).*?OK\s(UID\sFETCH\scompleted|Success)", re.M | re.S)

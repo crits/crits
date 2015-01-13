@@ -20,9 +20,13 @@ def s3_connector(bucket):
     :returns: :class:`boto.s3.connection.S3Connection`, S3Error
     """
 
+    S3_hostname = getattr(settings, 'S3_HOSTNAME', S3Connection.DefaultHost)
     try:
-        conn = S3Connection(settings.AWS_ACCESS_KEY_ID,
-                            settings.AWS_SECRET_ACCESS_KEY)
+        conn = S3Connection(aws_access_key_id = settings.AWS_ACCESS_KEY_ID,
+                            aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY,
+                            is_secure = True,
+                            host = S3_hostname)
+
         mybucket = conn.get_bucket(bucket)
         return mybucket
     except boto.exception.S3ResponseError as e:
@@ -40,8 +44,11 @@ def s3_create_bucket(bucket):
     """
 
     try:
-        conn = S3Connection(settings.AWS_ACCESS_KEY_ID,
-                            settings.AWS_SECRET_ACCESS_KEY)
+        S3_hostname = getattr(settings, 'S3_HOSTNAME', S3Connection.DefaultHost)
+        conn = S3Connection(aws_access_key_id = settings.AWS_ACCESS_KEY_ID,
+                            aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY,
+                            is_secure = True,
+                            host = S3_hostname)
         conn.create_bucket(bucket)
     except boto.exception.S3CreateError as e:
         raise S3Error("Error creating bucket in S3: %s" % e)

@@ -5,7 +5,7 @@ import HTMLParser
 import json
 import logging
 import re
-import shlex
+import ushlex as shlex
 import urllib
 
 from bson.objectid import ObjectId
@@ -23,7 +23,7 @@ from operator import itemgetter
 from crits.config.config import CRITsConfig
 from crits.core.audit import AuditLog
 from crits.core.bucket import Bucket
-from crits.core.class_mapper import class_from_id, class_from_type
+from crits.core.class_mapper import class_from_id, class_from_type, key_descriptor_from_obj_type
 from crits.core.crits_mongoengine import Releasability, json_handler
 from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.source_access import SourceAccess
@@ -33,7 +33,7 @@ from crits.core.sector import Sector, SectorObject
 from crits.core.user import CRITsUser, EmbeddedSubscriptions
 from crits.core.user import EmbeddedLoginAttempt
 from crits.core.user_tools import user_sources, is_admin
-from crits.core.user_tools import get_subscribed_users, save_user_secret
+from crits.core.user_tools import save_user_secret
 from crits.core.user_tools import get_user_email_notification
 
 from crits.actors.actor import Actor
@@ -43,8 +43,7 @@ from crits.comments.comment import Comment
 from crits.domains.domain import Domain
 from crits.events.event import Event
 from crits.ips.ip import IP
-from crits.notifications.notification import Notification
-from crits.notifications.handlers import get_user_notifications
+from crits.notifications.handlers import get_user_notifications, generate_audit_notification
 from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
 from crits.emails.email import Email
@@ -54,6 +53,7 @@ from crits.targets.target import Target
 from crits.indicators.indicator import Indicator
 
 from crits.core.totp import valid_totp
+
 
 logger = logging.getLogger(__name__)
 
@@ -1316,7 +1316,7 @@ def parse_search_term(term, force_full=False):
 
     # decode the term so we aren't dealing with weird encoded characters
     if force_full == False:
-        term = urllib.unquote(term).decode('utf8')
+        term = urllib.unquote(term)
     # setup lexer, parse our term, and define operators
     sh = shlex.shlex(term.strip())
     sh.wordchars += '!@#$%^&*()-_=+[]{}|\:;<,>.?/~`'
@@ -1541,10 +1541,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         query = {'$or': search_list}
     else:
         if type_ == "Domain":
-            if search_type == "whois.data":
-                query = {'whois.text': search_query}
-            else:
-                query = {'domain': search_query}
+            query = {'domain': search_query}
         elif type_ == "Email":
             if search_type == "ip":
                 query = {'$or': [{'originating_ip': search_query},
@@ -1848,7 +1845,6 @@ def get_query(col_obj,request):
     :type request: :class:`django.http.HttpRequest`
     :returns: dict -- The MongoDB query
     """
-
     keymaps = {
             "actor_identifier": "identifiers.identifier_id",
             "campaign": "campaign.name",
@@ -2514,204 +2510,13 @@ def generate_users_jtable(request, option):
 def generate_dashboard(request):
     """
     Generate the Dashboard.
-
     :param request: The request for this jtable.
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
-    query = {}
-    sources = user_sources(request.user.username)
-    query["source.name"] = {"$in": sources}
-    #limit = 5
-
-    # indicators
-    type_ = "indicator"
-    indicator_jtopts = {
-        'title': "Recent Indicators",
-        'paging': "false",
-        'default_sort': "created DESC",
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_),
-                           args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_),
-                             args=('jtdelete',)),
-        'searchurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_)),
-        'fields': ["details","value","type","created","status","source","campaign","id"],
-        'hidden_fields': [],
-        'no_sort': ['value',
-                    'details',
-                    'type',
-                    'added',
-                    'status',
-                    'source',
-                    'campaign',
-                    'id'],
-        'linked_fields': ["value","source","campaign","type","status"]
-    }
-    indicator_jtopts['listurl'] = indicator_jtopts['listurl'] + "?jtLimit=5"
-    indicator_jtable = build_jtable(indicator_jtopts,request)
-    indicator_jtid = '%s_listing' % type_
-    indicator_button = '%ss_tab' % type_
-
-    # emails
-    type_ = "email"
-    email_jtopts = {
-        'title': "Recent Emails",
-        'paging': "false",
-        'default_sort': "isodate DESC",
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_),
-                           args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_),
-                             args=('jtdelete',)),
-        'searchurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_)),
-        'fields': ["details",
-                   "from",
-                   "recip",
-                   "subject",
-                   "isodate",
-                   "source",
-                   "campaign",
-                   "id"],
-        'hidden_fields': [],
-        'no_sort': ['from','recip','subject','source','campaign','details','id'],
-        'linked_fields': ["source","campaign","from","subject"]
-    }
-    email_jtopts['listurl'] = email_jtopts['listurl'] + "?jtLimit=5"
-    email_jtable = build_jtable(email_jtopts,request)
-    email_jtid = '%s_listing' % type_
-    email_button = '%ss_tab' % type_
-
-    # samples
-    type_ = "sample"
-    sample_jtopts = {
-        'title': "Recent Samples",
-        'paging': "false",
-        'default_sort': "created DESC",
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_),
-                           args=('jtlist_by_org',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_),
-                             args=('jtdelete',)),
-        'searchurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_)),
-        'fields': ["details",
-                   "filename",
-                   "size",
-                   "filetype",
-                   "created",
-                   "modified",
-                   "exploit",
-                   "source",
-                   "campaign",
-                   "md5",
-                   "id"],
-        'hidden_fields': ["md5"],
-        'no_sort': ['filename',
-                    'details',
-                    'size',
-                    "filetype",
-                    "modified",
-                    "exploit",
-                    "campaign",
-                    "source",
-                    "md5",
-                    "id"],
-        'linked_fields': ["source","campaign","filetype","exploit"]
-    }
-    sample_jtopts['listurl'] = sample_jtopts['listurl'] + "?jtLimit=5"
-    sample_jtable = build_jtable(sample_jtopts,request)
-    sample_jtid = '%s_listing' % type_
-    sample_button = '%ss_tab' % type_
-
-    # campaigns
-    type_ = "campaign"
-    campaign_jtopts = {
-        'title': "Top Campaigns",
-        'paging': "false",
-        'default_sort': "email_count DESC, indicator_count DESC",
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_),
-                           args=('jtlist',)),
-        'deleteurl': None,
-        'searchurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_)),
-        'fields': ["name",
-                   "email_count",
-                   "indicator_count",
-                   "sample_count",
-                   "domain_count",
-                   "ip_count",
-                   "event_count",
-                   "pcap_count","id"],
-        'no_sort': ["name","id"],
-        'hidden_fields': ["id"],
-        'linked_fields': []
-    }
-    campaign_jtopts['listurl'] = campaign_jtopts['listurl'] + "?jtLimit=5"
-    campaign_jtable = build_jtable(campaign_jtopts,request)
-    campaign_jtid = '%s_listing' % type_
-    campaign_button = '%ss_tab' % type_
-
-    # backdoors
-    type_ = "backdoor"
-    backdoor_jtopts = {
-        'title': "Top Backdoors",
-        'paging': 'false',
-        'default_sort': "sample_count DESC",
-        'listurl': reverse('crits.samples.views.%ss_listing' % (type_,),
-                           args=('jtlist',)),
-        'deleteurl': None,
-        'searchurl': reverse('crits.samples.views.%ss_listing' % (type_,)),
-        'fields': ["name","sample_count","id"],
-        'hidden_fields': ["id"],
-        'no_sort': ["name","sample_count"],
-        'linked_fields': []
-    }
-    backdoor_jtopts['listurl'] = backdoor_jtopts['listurl'] + "?jtLimit=5"
-    backdoor_jtable = build_jtable(backdoor_jtopts,request)
-    backdoor_jtid = '%s_listing' % type_
-    backdoor_button = '%ss_tab' % type_
-
-    # counts
-    type_ = "count"
-    count_jtopts = {
-        'title': "Counts",
-        'default_sort': "count DESC",
-        'paging' : "false",
-        'listurl': reverse('crits.core.views.%ss_listing' % (type_,),
-                           args=('jtlist',)),
-        'deleteurl': None,
-        'searchurl': None,
-        'fields': ["type","count","id"],
-        'hidden_fields': ["id"],
-        'no_sort': ['type','count'],
-        'details_link': '__disabled__',
-        'linked_fields': []
-    }
-    count_jtable = build_jtable(count_jtopts,request)
-    count_jtid = '%s_listing' % type_
-    count_button = '%ss_tab' % type_
-
-    title = "Dashboard"
-
-    return render_to_response('dashboard.html', {
-        'indicator_jtable':indicator_jtable,
-        'indicator_jtid':indicator_jtid,
-        'indicator_button':indicator_button,
-        'email_jtable':email_jtable,
-        'email_jtid':email_jtid,
-        'email_button':email_button,
-        'sample_jtable':sample_jtable,
-        'sample_jtid':sample_jtid,
-        'sample_button':sample_button,
-        'campaign_jtable':campaign_jtable,
-        'campaign_jtid':campaign_jtid,
-        'campaign_button':campaign_button,
-        'backdoor_jtable':backdoor_jtable,
-        'backdoor_jtid':backdoor_jtid,
-        'backdoor_button':backdoor_button,
-        'count_jtable':count_jtable,
-        'count_jtid':count_jtid,
-        'count_button':count_button,
-        'title': title,
-        'rt_url': settings.RT_URL
-        }, RequestContext(request))
+    from crits.dashboards.handlers import get_dashboard
+    args = get_dashboard(request.user)
+    return render_to_response('dashboard.html', args, RequestContext(request))
 
 def dns_timeline(query, analyst, sources):
     """
@@ -3158,7 +2963,13 @@ def generate_user_preference(request,section=None,key=None,name=None):
     # Returned as an array to maintain the order
     # could also have a key/value and a ordered array
 
-    from crits.core.forms import PrefUIForm, NavMenuForm
+    from crits.core.forms import PrefUIForm, NavMenuForm, ToastNotificationConfigForm
+
+    toast_notifications_title = "Toast Notifications"
+
+    config = CRITsConfig.objects().first()
+    if not config.enable_toasts:
+        toast_notifications_title += " (currently globally disabled by an admin)"
 
     preferences = [
         {'section': 'notify',
@@ -3167,7 +2978,11 @@ def generate_user_preference(request,section=None,key=None,name=None):
          'enabled': get_user_email_notification(request.user.username),
          'name': 'Email Notifications'
          },
-
+        {'section': 'toast_notifications',
+         'title': toast_notifications_title,
+         'form': ToastNotificationConfigForm(request),
+         'formclass': ToastNotificationConfigForm,
+        },
         {'section': 'ui',
          'title': 'UI Settings',
          'form': PrefUIForm(request),
@@ -3402,7 +3217,7 @@ def login_user(username, password, next_url=None, user_agent=None,
                 return response
             response['success'] = True
             if 'message' not in response:
-                response['message'] = reverse('crits.core.views.dashboard')
+                response['message'] = reverse('crits.dashboards.views.dashboard')
             return response
         else:
             logger.info("Attempted login to a disabled account detected: %s" %
@@ -3425,6 +3240,25 @@ def generate_global_search(request):
               "results" (list),
               "Result" (str of "OK" or "ERROR")
     """
+    # Perform rapid search for ObjectID strings
+    searchtext = request.GET['q']
+    if ObjectId.is_valid(searchtext):
+        for obj_type, url, key in [
+                ['Actor', 'crits.actors.views.actor_detail', 'id'],
+                ['Campaign', 'crits.campaigns.views.campaign_details', 'name'],
+                ['Certificate', 'crits.certificates.views.certificate_details', 'md5'],
+                ['Domain', 'crits.domains.views.domain_detail', 'domain'],
+                ['Email', 'crits.emails.views.email_detail', 'id'],
+                ['Event', 'crits.events.views.view_event', 'id'],
+                ['Indicator', 'crits.indicators.views.indicator', 'id'],
+                ['IP', 'crits.ips.views.ip_detail', 'ip'],
+                ['PCAP', 'crits.pcaps.views.pcap_details', 'md5'],
+                ['RawData', 'crits.raw_data.views.raw_data_details', 'id'],
+                ['Sample', 'crits.samples.views.detail', 'md5'],
+                ['Target', 'crits.targets.views.target_info', 'email_address']]:
+            obj = class_from_id(obj_type, searchtext)
+            if obj:
+                return {'url': url, 'key': obj[key]}
 
     # Importing here to prevent a circular import with Services and runscript.
     from crits.services.analysis_result import AnalysisResult
@@ -3679,7 +3513,6 @@ def details_from_id(type_, id_):
     else:
         return None
 
-
 def audit_entry(self, username, type_, new_doc=False):
     """
     Generate an audit entry.
@@ -3703,31 +3536,22 @@ def audit_entry(self, username, type_, new_doc=False):
     # don't audit audits
     if my_type in ("AuditLog", "Service"):
         return
-    changed = [f for f in self._get_changed_fields() if f not in ("modified",
+    changed_fields = [f.split('.')[0] for f in self._get_changed_fields() if f not in ("modified",
                                                                   "save",
                                                                   "delete")]
 
-    if new_doc and not changed:
+    # Remove any duplicate fields
+    changed_fields = list(set(changed_fields))
+
+    if new_doc and not changed_fields:
         what_changed = "new document"
     else:
-        what_changed = ', '.join(changed)
-    field_dict = {
-        'Actor': 'name',
-        'Campaign': 'name',
-        'Certificate': 'md5',
-        'Comment': 'object_id',
-        'Domain': 'domain',
-        'Email': 'id',
-        'Event': 'id',
-        'Indicator': 'id',
-        'IP': 'ip',
-        'PCAP': 'md5',
-        'RawData': 'title',
-        'Sample': 'md5',
-        'Target': 'email_address'
-    }
-    if my_type in field_dict:
-        value = getattr(self, field_dict[my_type], '')
+        what_changed = ', '.join(changed_fields)
+
+    key_descriptor = key_descriptor_from_obj_type(my_type)
+
+    if key_descriptor is not None:
+        value = getattr(self, key_descriptor, '')
     else:
         value = ""
 
@@ -3754,43 +3578,8 @@ def audit_entry(self, username, type_, new_doc=False):
         except ValidationError:
             pass
 
-    # Generate notification
-    if type_ == "save":
-        message = "%s updated the following attributes: %s" % (username,
-                                                               what_changed)
-    elif type_ == "delete":
-        message = "%s deleted the following %s: %s" % (username,
-                                                       my_type,
-                                                       self.id)
-
-    if my_type in field_dict:
-        n = Notification()
-        n.analyst = username
-        if my_type == 'Comment':
-            n.obj_id = self.obj_id
-            n.obj_type = self.obj_type
-            n.notification = "%s added a comment." % username
-        else:
-            n.notification = message
-            n.obj_id = self.id
-            n.obj_type = my_type
-        if hasattr(self, 'source'):
-            sources = [s.name for s in self.source]
-            n.users = get_subscribed_users(n.obj_type, n.obj_id, sources)
-        else:
-            n.users = []
-        if my_type == 'Comment':
-            for u in self.users:
-                if u not in n.users:
-                    n.users.append(u)
-        # don't notify the user creating this notification
-        n.users = [u for u in n.users if u != username]
-        if not len(n.users):
-            return
-        try:
-            n.save()
-        except ValidationError:
-            pass
+    # Generate audit notification
+    generate_audit_notification(username, type_, self, changed_fields, what_changed, new_doc)
 
 def ticket_add(type_, id_, ticket):
     """

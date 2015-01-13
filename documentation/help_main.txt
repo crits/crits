@@ -319,6 +319,21 @@ item of the relevant kind. For instance, click the \"+\" next to the
 \"IP\" menu item allows you to quickly create a new IP-type
 indicator.
 
+Dashboards
+-------------------------------------------
+
+Dashboards can be created and custmized to your liking. The easiest way
+to create your own is to alter a public dashboard and save it. This will
+replace the public dashboard with your modified copy of it. You can revert
+back to the public one at any time by simplying deleting your modified copy 
+on the Dashboard Configurations page.
+
+Additionally, you may add your own tables to the dashboard by clicking
+"Configure for Dashboard" on the search results page. Onced clicked, you 
+will be brought to a page where you can customize your table and then choose
+which dashboard you want to pin it to. You also have the option of creating 
+a new dashboard.
+
 Profile Information
 -------------------------------------------
 
@@ -1535,6 +1550,7 @@ Unique POST Parameters:
 :add_ip: Tell the API that you are also adding an IP related to this domain.
 :domain: The domain name.
 :ip: The IP you want to relate to this domain.
+:ip_type: The type of the IP ('Address - ipv4-addr' is most common).
 :ip_source: The source of the IP.
 :ip_method: The method in which you acquired this IP from the source.
 :ip_reference: The reference about this IP source.
@@ -1801,6 +1817,7 @@ Unique POST Parameters:
 :tags: A comma-separated list of tags for the screenshot.
 :oid: The ObjectId of the top-level object the screenshot(s) is/are for.
 :otype: The type of the top-level object the screenshot(s) is/are for.
+:description: Description of the screenshot.
 
 Service API
 -------------------------------------------
@@ -1876,17 +1893,3 @@ Unique POST Parameters:
 :organization_id: The ID of the organization if they have one.
 :title: The job title of the Target.
 :note: Notes about the Target.
-
-
-WhoIs API
--------------------------------------------
-
-POST:
-
-        /api/v1/whois/
-
-Unique POST Parameters:
-
-:domain: The domain this WhoIs info is for.
-:date: The date for the WhoIs entry.
-:whois: The WhoIs entry.

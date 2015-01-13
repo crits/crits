@@ -19,6 +19,9 @@ class Notification(CritsDocument, CritsSchemaDocument, Document):
         "latest_schema_version": 1,
         "schema_doc": {
             'notification': 'The notification body',
+            'notification_type': 'The type of notification, e.g. alert, error',
+            'header': 'The notification header, optional',
+            'link_url': 'A link URL for the header, optional',
             'status': 'New/Processed - used to determine whether or not to notify',
             'obj_type': 'The type of the object this notification is for',
             'obj_id': 'The MongoDB ObjectId for the object this notification is for',
@@ -33,10 +36,13 @@ class Notification(CritsDocument, CritsSchemaDocument, Document):
 
     analyst = StringField()
     notification = StringField()
+    notification_type = StringField()
+    header = StringField()
     created = CritsDateTimeField(default=date, db_field="date")
     obj_id = ObjectIdField()
     obj_type = StringField()
     status = StringField(default="new")
+    link_url = StringField()
     users = ListField(StringField())
 
     def set_status(self, status):

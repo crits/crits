@@ -1,0 +1,96 @@
+.margBottom {
+	margin-bottom:20px;
+}
+#extraNote {
+	display:none;
+}
+.red { 
+	color:red !important;
+}
+.go-to-search {
+	color:blue;
+	cursor:pointer !important;
+}
+#create-blank-part2 {
+	margin-top:20px;
+}
+.black {
+	color: inherit !important;
+}
+.editWrapper i {
+    width:30px;
+    cursor:pointer!important;
+    font-size: 150%;
+}
+.editWrapper {
+	padding-left:5px;
+}
+.dashboard-settings {
+	cursor:pointer!important;
+	font-size:150%;
+	position:absolute;
+	left:5px;
+	top:5px;
+}
+.error {
+    border: 1px red solid !important;
+    background-color: rgba(255, 0, 0, 0.1) !important;
+}
+#resultsDiv {
+	height:20px;
+}
+.dashbaord {
+	width:100%;
+}
+#help-box {
+	margin-bottom:20px;
+}
+#need-help {
+	float:right;
+	color:red;
+	cursor:pointer;
+}
+.clear {
+   clear: both;
+}
+.hidden {
+	display:none;
+}
+.cloned-search-row {
+	width:98%;
+	background-color:white;
+}
+.clone-field {
+	float:left;
+	display: inline-block;
+	border:1px solid #d6d5d7;
+	height:25px;
+	line-height: 100%;
+	box-sizing: border-box;
+	border-spacing: 0;
+    border-collapse: collapse;
+    padding: 5px;
+    vertical-align:middle;
+}
+.clone-name {
+    width:30%;
+}
+.clone-term {
+    width:25%;
+}
+.clone-sort, .clone-mRows, .clone-edit {
+    width:10%;
+}
+.clone-type {
+	width:15%;
+}
+tr.ui-draggable *{
+	cursor:pointer !important;
+}
+#dashboard-settings-dropdown {
+    border-radius:0 0 5px 5px;
+    width:100px;
+}
+#dashboard-settings-dropdown .dashboard-settings-option:hover {
+    width:89px !important;
+}
