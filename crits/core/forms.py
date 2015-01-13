@@ -376,6 +376,9 @@ class SourceForm(forms.Form):
                              required=False)
     reference = forms.CharField(widget=forms.TextInput(attrs={'size': '90'}),
                                 required=False)
+    tlp = forms.ChoiceField(required=True,
+                            widget=forms.Select,
+                            label=form_consts.Common.TLP)
     analyst = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
     def __init__(self, username, *args, **kwargs):
@@ -385,6 +388,9 @@ class SourceForm(forms.Form):
                                                                              True,
                                                                              username)]
         self.fields['name'].initial = get_user_organization(username)
+        self.fields['tlp'].choices = [
+            (t, t) for t in ('red', 'amber', 'green', 'white')]
+        self.fields['tlp'].initial = 'red'
 
 
 class TicketForm(forms.Form):

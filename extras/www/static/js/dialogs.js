@@ -1062,7 +1062,6 @@ var stdDialogs = {
       "backdoor_add": {title: "Backdoor"},
       "exploit_add": {title: "Exploit"},
       "source_create": {title: "Source"},
-      "user_role": {title: "User Role"},
       "role_combine_preview": {title: "Role Combinator"},
       "new-role": {title: "Role", open: new_role_dialog},
 
@@ -1129,7 +1128,7 @@ var stdDialogs = {
   // action to the form's submit action by default, but I don't want
   // to make that sort of global change before 3.0.
   var singleInputDialogs = "#dialog-actor-identifier-type,#dialog-ticket,"+
-      "#dialog-backdoor_add,#dialog-source_create,#dialog-user_role,#dialog-exploit_add," +
+      "#dialog-backdoor_add,#dialog-source_create,#dialog-exploit_add," +
       "#dialog-indicator_action_add,#dialog-raw_data_type_add,#dialog-role";
   $(singleInputDialogs).on("dialogopen", fix_form_submit(addEditSubmit));
 

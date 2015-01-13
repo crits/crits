@@ -137,31 +137,6 @@ def get_user_info(username=None):
     else:
         return username
 
-def add_new_user_role(name, analyst):
-    """
-    Add a new user role to the system.
-
-    :param name: The name of the role.
-    :type name: str
-    :param analyst: The user adding the role.
-    :type analyst: str
-    :returns: True, False
-    """
-
-    from crits.core.user_role import UserRole
-    name = name.strip()
-    role = UserRole.objects(name=name).first()
-    if not role:
-        role = UserRole()
-        role.name = name
-        try:
-            role.save(username=analyst)
-            return True
-        except ValidationError:
-            return False
-    else:
-        return False
-
 def get_user_email_notification(username):
     """
     Get user email notification preference.

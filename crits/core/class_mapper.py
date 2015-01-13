@@ -38,7 +38,6 @@ def class_from_id(type_, _id):
     from crits.comments.comment import Comment
     from crits.core.crits_mongoengine import RelationshipType
     from crits.core.source_access import SourceAccess
-    from crits.core.user_role import UserRole
     from crits.core.role import Role
     from crits.domains.domain import Domain
     from crits.emails.email import Email
@@ -121,8 +120,6 @@ def class_from_id(type_, _id):
         return Screenshot.objects(id=_id).first()
     elif type_ == 'Target':
         return Target.objects(id=_id).first()
-    elif type_ == 'UserRole':
-        return UserRole.objects(id=_id).first()
     else:
         return None
 
@@ -228,7 +225,6 @@ def class_from_type(type_):
     from crits.comments.comment import Comment
     from crits.core.crits_mongoengine import RelationshipType
     from crits.core.source_access import SourceAccess
-    from crits.core.user_role import UserRole
     from crits.core.role import Role
     from crits.domains.domain import Domain
     from crits.emails.email import Email
@@ -300,7 +296,5 @@ def class_from_type(type_):
         return Screenshot
     elif type_ == 'Target':
         return Target
-    elif type_ == 'UserRole':
-        return UserRole
     else:
         return None

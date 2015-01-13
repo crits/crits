@@ -78,6 +78,9 @@ urlpatterns = patterns('',
     (r'^timeline/(?P<data_type>\S+)/(?P<extra_data>\S+)/$', 'crits.core.views.timeline'),
     (r'^timeline/$', 'crits.core.views.timeline'),
 
+    # TLP
+    (r'^tlp/mod/$', 'crits.core.views.tlp_modify'),
+
     # User Stuff
     (r'^profile/(?P<user>\S+)/$', 'crits.core.views.profile'),
     (r'^profile/$', 'crits.core.views.profile'),

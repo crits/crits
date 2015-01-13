@@ -780,6 +780,7 @@ class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
         date = CritsDateTimeField(default=datetime.datetime.now)
         method = StringField()
         reference = StringField()
+        tlp = StringField(default='red', choices=('white', 'green', 'amber', 'red'))
 
     instances = ListField(EmbeddedDocumentField(SourceInstance))
     name = StringField()
@@ -792,7 +793,7 @@ class CritsSourceDocument(BaseDocument):
     source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
 
     def add_source(self, source_item=None, source=None, method=None,
-                   reference=None, date=None, analyst=None):
+                   reference=None, date=None, analyst=None, tlp=None):
         """
         Add a source instance to this top-level object.
 
@@ -808,9 +809,13 @@ class CritsSourceDocument(BaseDocument):
         :type date: datetime.datetime
         :param analyst: The user adding the source instance.
         :type analyst: str
+        :param tlp: The TLP level this data was shared under.
+        :type tlp: str
         """
 
         s = None
+        if tlp not in ('white', 'green', 'amber', 'red'):
+            tlp = 'red'
         if source and analyst:
             if not date:
                 date = datetime.datetime.now()
@@ -821,16 +826,18 @@ class CritsSourceDocument(BaseDocument):
             i.reference = reference
             i.method = method
             i.analyst = analyst
+            i.tlp = tlp
             s.instances = [i]
         if not isinstance(source_item, EmbeddedSource):
             source_item = s
 
         if isinstance(source_item, EmbeddedSource):
             match = None
-            if method or reference: # if method or reference is given, use it
+            if method or reference or tlp: # use method, reference, and tlp
                 for instance in source_item.instances:
                     instance.method = method or instance.method
                     instance.reference = reference or instance.reference
+                    instance.tlp = tlp or instance.tlp
             for c, s in enumerate(self.source):
                 if s.name == source_item.name: # find index of matching source
                     match = c
@@ -841,7 +848,7 @@ class CritsSourceDocument(BaseDocument):
                 self.source.append(source_item)
 
     def edit_source(self, source=None, date=None, method=None,
-                    reference=None, analyst=None):
+                    reference=None, analyst=None, tlp=None):
         """
         Edit a source instance from this top-level object.
 
@@ -855,8 +862,12 @@ class CritsSourceDocument(BaseDocument):
         :type reference: str
         :param analyst: The user editing the source instance.
         :type analyst: str
+        :param tlp: The TLP this data was shared under.
+        :type tlp: str
         """
 
+        if tlp not in ('white', 'green', 'amber', 'red'):
+            tlp = 'red'
         if source and date:
             for c, s in enumerate(self.source):
                 if s.name == source:
@@ -865,6 +876,7 @@ class CritsSourceDocument(BaseDocument):
                             self.source[c].instances[i].method = method
                             self.source[c].instances[i].reference = reference
                             self.source[c].instances[i].analyst = analyst
+                            self.source[c].instances[i].tlp = tlp
 
     def remove_source(self, source=None, date=None, remove_all=False):
         """
@@ -1152,6 +1164,18 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     releasability = ListField(EmbeddedDocumentField(Releasability))
     screenshots = ListField(StringField())
     sectors = ListField(StringField())
+    tlp = StringField(default='red', choices=('white', 'green', 'amber', 'red'))
+
+    def set_tlp(self, tlp):
+        """
+        Set the TLP of this TLO.
+
+        :param tlp: The TLP to set.
+        """
+
+        if tlp not in ('white', 'green', 'amber', 'red'):
+            tlp = 'red'
+        self.tlp = tlp
 
     def add_campaign(self, campaign_item=None, update=True):
         """
@@ -2249,7 +2273,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
             try:
                 return reverse(details_url, args=(unicode(self[details_url_key]),))
-            except Exception as e:
+            except Exception:
                 return None
         else:
             return None

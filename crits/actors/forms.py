@@ -40,6 +40,10 @@ class AddActorForm(forms.Form):
         widget=forms.TextInput(attrs={'size': '90'}),
         label=form_consts.Actor.SOURCE_REFERENCE,
         required=False)
+    source_tlp = forms.ChoiceField(
+        widget=forms.Select,
+        label=form_consts.Common.SOURCE_TLP,
+        required=False)
 
     def __init__(self, username, *args, **kwargs):
         super(AddActorForm, self).__init__(*args, **kwargs)
@@ -54,6 +58,9 @@ class AddActorForm(forms.Form):
         self.fields['source'].choices = [
             (c.name, c.name) for c in get_source_names(True, True, username)]
         self.fields['source'].initial = get_user_organization(username)
+        self.fields['source_tlp'].choices = [
+            (t ,t) for t in ('red', 'amber', 'green', 'white')]
+        self.fields['source_tlp'].initial = 'red'
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

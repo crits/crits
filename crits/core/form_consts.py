@@ -5,7 +5,9 @@ class Common():
     SOURCE = "Source"
     SOURCE_REFERENCE = "Source Reference"
     SOURCE_METHOD = "Source Method"
+    SOURCE_TLP = "Source TLP"
     TICKET = "Ticket"
+    TLP = "Sharing TLP"
 
     CLASS_ATTRIBUTE = "class"
 

@@ -4281,3 +4281,33 @@ def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
             data['children'].append(user_dict)
 
     return data
+
+def modify_tlp(itype, oid, tlp, analyst):
+    """
+    Modify the TLP for a top-level object.
+
+    :param itype: The CRITs type of the top-level object to modify.
+    :type itype: str
+    :param oid: The ObjectId to search for.
+    :type oid: str
+    :param tlp: The TLP to set.
+    :type sectors: str
+    :param analyst: The user making the modifications.
+    """
+
+    obj = class_from_id(itype, oid)
+    if not obj:
+        return
+
+    obj.set_tlp(tlp)
+
+    try:
+        obj.save(username=analyst)
+        if obj.tlp == tlp:
+            return {'success': True}
+        else:
+            return {'success': False,
+                    'message': "Cannot set this TLP level."}
+    except ValidationError:
+        return {'success': False,
+                'message': "Invalid TLP level."}

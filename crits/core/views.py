@@ -53,6 +53,7 @@ from crits.core.handlers import ticket_add, ticket_update, ticket_remove
 from crits.core.handlers import add_new_role, render_role_graph
 from crits.core.handlers import add_role_source, remove_role_source
 from crits.core.handlers import edit_role_description, edit_role_name
+from crits.core.handlers import modify_tlp
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, user_sources
@@ -2212,3 +2213,24 @@ def bucket_autocomplete(request):
         if term:
             return get_bucket_autocomplete(term)
     return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def tlp_modify(request):
+    """
+    Modify the TLP for a top-level object. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        tlp = request.POST['tlp']
+        oid = request.POST['oid']
+        itype = request.POST['itype']
+        results = modify_tlp(itype, oid, tlp, request.user.username)
+        return HttpResponse(json.dumps(results), mimetype="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST.'},
+                                  RequestContext(request))
