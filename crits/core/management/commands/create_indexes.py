@@ -133,8 +133,9 @@ def create_indexes():
                                unique=True)
 
     notifications = mongo_connector(settings.COL_NOTIFICATIONS)
+    notifications.ensure_index("obj_id", background=True)
     # auto-expire notifications after 30 days
-    notifications.ensure_index("obj_id", background=True,
+    notifications.ensure_index("date", background=True,
                                expireAfterSeconds=2592000)
     notifications.ensure_index("users", background=True)
 
