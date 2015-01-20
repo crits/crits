@@ -4,7 +4,6 @@ import os
 from django.conf import settings
 from django.conf.urls import include, patterns
 
-
 urlpatterns = patterns('',
 
     (r'^', include('crits.core.urls')),                        # Core
@@ -29,6 +28,12 @@ urlpatterns = patterns('',
     (r'^standards/', include('crits.standards.urls')),         # Standards
     (r'^targets/', include('crits.targets.urls')),             # Targets
 )
+
+# Error overrides
+handler500 = 'crits.core.errors.custom_500'
+handler404 = 'crits.core.errors.custom_404'
+handler403 = 'crits.core.errors.custom_403'
+handler400 = 'crits.core.errors.custom_400'
 
 # Enable the API if configured
 if settings.ENABLE_API:

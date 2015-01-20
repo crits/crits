@@ -1,5 +1,16 @@
 /* expand/collapse */
 
+span.error_page {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    height: 200px;
+    margin: -250px 0 0 -250px;
+    text-align: center;
+    font-size: large;
+}
+
 #notifications {
     /* fixate the notifications div at the bottom right of the screen */
     position: fixed;

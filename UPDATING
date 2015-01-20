@@ -4,6 +4,15 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: wxs
+Date:   2015-01-17
+
+    Notifications had an incorrect index set on them, causing them not to
+    expire after 30 days. This can be fixed by executing the following command
+    from a mongo shell:
+
+    db.notifications.ensureIndex({"date": 1}, {expireAfterSeconds: 2592000, background: true})
+
+Author: wxs
 Date:   2014-12-30
 
     The WHOIS feature for Domain objects has been removed from core and put

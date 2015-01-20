@@ -1,17 +1,35 @@
+import json
+
 from django.contrib.auth.decorators import user_passes_test
-from crits.core.crits_mongoengine import json_handler
-from crits.core.user_tools import user_can_view_data
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from crits.core.handlers import generate_global_search, generate_dashboard
-from crits.core.views import dashboard
-from django.http import HttpResponse
-from crits.dashboards.dashboard import SavedSearch, Dashboard
-from crits.dashboards.handlers import toggleTableVisibility,get_saved_searches_list,get_dashboard, getHREFLink, get_obj_type_from_string, clear_dashboard, save_data, get_table_data, generate_search_for_saved_table, delete_table, getRecordsForDefaultDashboardTable
-from crits.dashboards.handlers import switch_existing_search_to_dashboard, add_existing_search_to_dashboard, renameDashboard,changeTheme, deleteDashboard,getDashboardsForUser,createNewDashboard, setDefaultDashboard, cloneDashboard, setPublic, updateChildren
-import json
-import re
-from django.core.urlresolvers import reverse
+
+from crits.core.user_tools import user_can_view_data
+from crits.core.handlers import generate_global_search
+from crits.dashboards.dashboard import Dashboard
+from crits.dashboards.handlers import (
+    toggleTableVisibility,
+    get_saved_searches_list,get_dashboard,
+    clear_dashboard,
+    save_data,
+    get_table_data,
+    generate_search_for_saved_table,
+    delete_table,
+    getRecordsForDefaultDashboardTable,
+    switch_existing_search_to_dashboard,
+    add_existing_search_to_dashboard,
+    renameDashboard,
+    changeTheme,
+    deleteDashboard,
+    getDashboardsForUser,
+    createNewDashboard,
+    setDefaultDashboard,
+    cloneDashboard,
+    setPublic,
+    updateChildren
+)
 
 @user_passes_test(user_can_view_data)
 def saved_searches_list(request):
@@ -52,9 +70,9 @@ def edit_save_search(request, id):
     args = generate_search_for_saved_table(user=request.user, id=id, request=request)
     if 'Result' in args and args['Result'] == "ERROR":
         return respondWithError(args['Message'], request=request)
-    
+
     args['dashboards'] = getDashboardsForUser(request.user)
-    
+
     return render("save_search.html", args, request)
 
 @user_passes_test(user_can_view_data)
@@ -67,7 +85,7 @@ def delete_save_search(request):
         return respondWithError("Saved search cannot be found."\
                                 " Please refresh and try again", True)
     response = delete_table(request.user.id, id)
-    
+
     return httpResponse(response)
 
 @user_passes_test(user_can_view_data)
@@ -175,9 +193,9 @@ def save_new_dashboard(request):
         if 'sortDirection' in table and 'sortField' in table:
             sortBy = {'field':table['sortField'],'direction':table['sortDirection']}
         response = save_data(userId, table['columns'], table['tableName'],
-                             tableId=table['id'], isDefaultOnDashboard=isDefault, 
+                             tableId=table['id'], isDefaultOnDashboard=isDefault,
                              sortBy=sortBy, dashboard=dashboard,
-                             clone=clone, row=table['row'], grid_col=table['col'], 
+                             clone=clone, row=table['row'], grid_col=table['col'],
                              sizex=table['sizex'], sizey=table['sizey'])
         if not response['success']:
             return httpResponse(response)
@@ -249,7 +267,7 @@ def set_dashboard_public(request):
     if type(response) == str:
         return respondWithError(response, True)
     return respondWithSuccess(successMsg)
-    
+
 def ignore_parent(request, id):
     """
     Ajax call to ignore that the parent of the dashboard has been changed.
@@ -273,9 +291,9 @@ def delete_dashboard(request):
     except Exception as e:
         print e
         return respondWithError("An error occured while deleting dashboard. Please try again later.", True)
-        
+
     return respondWithSuccess(response+" deleted successfully.")
-    
+
 def rename_dashboard(request):
     """
     Ajax call to rename the dashboard. Called from saved_searches_list.html
@@ -297,7 +315,6 @@ def change_theme(request):
     """
     theme = request.GET.get('newTheme', None)
     id = request.GET.get('id', None)
-    message = ""
     if not id or not theme:
         return respondWithError("An error occured while changing theme. Please try again later. ", True)
     response = changeTheme(id, theme)
@@ -339,8 +356,8 @@ def respondWithError(message, isAjax=False, request=None):
         return HttpResponse(json.dumps({'success': False, 'message': message}),
                                     mimetype="application/json")
     return render("error.html", {"error": message}, request)
-    
-def respondWithSuccess(message): 
+
+def respondWithSuccess(message):
     """
     ajax response with success message
     """
@@ -355,6 +372,6 @@ def render(html, args, request):
 
 def httpResponse(response):
     """
-    Returns response for ajax calls. 
+    Returns response for ajax calls.
     """
     return HttpResponse(json.dumps(response), mimetype="application/json")
