@@ -14,4 +14,19 @@ def custom_500(request):
     return render_to_response("500.html",
                               {"exception": exception,
                                "value": value},
-                                RequestContext(request))
+                              RequestContext(request))
+
+def custom_404(request):
+    return render_to_response("404.html",
+                              {},
+                              RequestContext(request))
+
+def custom_403(request):
+    return render_to_response("403.html",
+                              {},
+                              RequestContext(request))
+
+def custom_400(request):
+    return render_to_response("400.html",
+                              {},
+                              RequestContext(request))

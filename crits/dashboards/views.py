@@ -9,25 +9,27 @@ from django.template import RequestContext
 from crits.core.user_tools import user_can_view_data
 from crits.core.handlers import generate_global_search
 from crits.dashboards.dashboard import Dashboard
-from crits.dashboards.handlers import (toggleTableVisibility,
-                                       get_saved_searches_list,get_dashboard,
-                                       clear_dashboard,
-                                       save_data,
-                                       get_table_data,
-                                       generate_search_for_saved_table,
-                                       delete_table,
-                                       getRecordsForDefaultDashboardTable)
-from crits.dashboards.handlers import (switch_existing_search_to_dashboard,
-                                       add_existing_search_to_dashboard,
-                                       renameDashboard,
-                                       changeTheme,
-                                       deleteDashboard,
-                                       getDashboardsForUser,
-                                       createNewDashboard,
-                                       setDefaultDashboard,
-                                       cloneDashboard,
-                                       setPublic,
-                                       updateChildren)
+from crits.dashboards.handlers import (
+    toggleTableVisibility,
+    get_saved_searches_list,get_dashboard,
+    clear_dashboard,
+    save_data,
+    get_table_data,
+    generate_search_for_saved_table,
+    delete_table,
+    getRecordsForDefaultDashboardTable,
+    switch_existing_search_to_dashboard,
+    add_existing_search_to_dashboard,
+    renameDashboard,
+    changeTheme,
+    deleteDashboard,
+    getDashboardsForUser,
+    createNewDashboard,
+    setDefaultDashboard,
+    cloneDashboard,
+    setPublic,
+    updateChildren
+)
 
 @user_passes_test(user_can_view_data)
 def saved_searches_list(request):

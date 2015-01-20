@@ -31,6 +31,9 @@ urlpatterns = patterns('',
 
 # Error overrides
 handler500 = 'crits.core.errors.custom_500'
+handler404 = 'crits.core.errors.custom_404'
+handler403 = 'crits.core.errors.custom_403'
+handler400 = 'crits.core.errors.custom_400'
 
 # Enable the API if configured
 if settings.ENABLE_API:
