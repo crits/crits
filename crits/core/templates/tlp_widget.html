@@ -6,13 +6,13 @@
     <td class="key">TLP Sharing</td>
     <td>
         <select name="colorpicker">
-            <option value="white" {% if tlp == 'white' %} selected=selected {% endif %}>White</option>
+            <option value="#ffffff" {% if tlp == 'white' %} selected=selected {% endif %}>White</option>
             <optgroup label="----------"></optgroup>
-            <option value="green" {% if tlp == 'green' %} selected=selected {% endif %}>Green</option>
+            <option value="#00ff00" {% if tlp == 'green' %} selected=selected {% endif %}>Green</option>
             <optgroup label="----------"></optgroup>
-            <option value="yellow" {% if tlp == 'amber' %} selected=selected {% endif %}>Amber</option>
+            <option value="#ffcc22" {% if tlp == 'amber' %} selected=selected {% endif %}>Amber</option>
             <optgroup label="----------"></optgroup>
-            <option value="red" {% if tlp == 'red' %} selected=selected {% endif %}>Red</option>
+            <option value="#ff0000" {% if tlp == 'red' %} selected=selected {% endif %}>Red</option>
         </select>
     </td>
 </tr>

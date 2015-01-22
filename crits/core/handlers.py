@@ -4297,11 +4297,20 @@ def modify_tlp(itype, oid, tlp, analyst):
 
     obj = class_from_id(itype, oid)
     if not obj:
-        return
+        return {'success': False,
+                'message': "Cannot find object to set this TLP level for."}
 
+    tlp_dict = {'#ffffff': 'white',
+                '#00ff00': 'green',
+                '#ffcc22': 'amber',
+                '#ff0000': 'red'}
+
+    tlp = tlp_dict.get(tlp, None) or tlp
+    print obj.to_dict()
     obj.set_tlp(tlp)
 
     try:
+        print obj.to_dict()
         obj.save(username=analyst)
         if obj.tlp == tlp:
             return {'success': True}
