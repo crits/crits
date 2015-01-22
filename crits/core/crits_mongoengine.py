@@ -352,6 +352,16 @@ class CritsDocument(BaseDocument):
             audit_entry(self, username, "save")
         else:
             do_audit = True
+
+        # MongoEngine evidently tries to add partial functions as attributes:
+        # https://github.com/MongoEngine/mongoengine/blob/master/mongoengine/base/document.py#L967
+        # A bit of a hack but removing it manually until we can figure out why it is
+        # here and how to stop it from happening.
+        try:
+            self.unsupported_attrs.__delattr__('get_tlp_display')
+        except:
+            pass
+
         super(self.__class__, self).save(force_insert=force_insert,
                                          validate=validate,
                                          clean=clean,

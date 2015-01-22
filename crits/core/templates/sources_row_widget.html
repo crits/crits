@@ -9,6 +9,21 @@
     <div>
         <span class="heading">Reference:</span> <span data-field="reference"><a href="{% url 'crits.core.views.global_search_listing' %}?search_type=global&q=field%3Asource.instances.reference+full%3A{{ instance.reference|urlencode }}">{{instance.reference}}</a></span>
     </div>
+    <div>
+        <span class="heading">TLP:</span>
+            <span class="color" title="{{instance.tlp}}"
+                style="background-color:
+                {% if instance.tlp == "white" %}
+                    #ffffff
+                {% elif instance.tlp == "green" %}
+                    #00ff00
+                {% elif instance.tlp == "amber" %}
+                    #ffcc22
+                {% else %}
+                    #ff0000
+                {% endif %}; min-width: 15px; min-height: 15px;display: inline-block;"></span>
+            <span data-field="tlp" style="display:none;">{{instance.tlp}}</span>
+    </div>
     </td>
     <td style="border-right:none;">
     <div>

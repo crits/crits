@@ -454,7 +454,7 @@ def merge_source_lists(left, right):
     return left
 
 def source_add_update(obj_type, obj_id, action, source, method=None,
-                      reference=None, date=None, analyst=None):
+                      reference=None, tlp=None, date=None, analyst=None):
     """
     Add or update a source for a top-level object.
 
@@ -491,12 +491,14 @@ def source_add_update(obj_type, obj_id, action, source, method=None,
                         method=method,
                         reference=reference,
                         date=date,
+                        tlp=tlp,
                         analyst=analyst)
         else:
             obj.edit_source(source=source,
                             method=method,
                             reference=reference,
                             date=date,
+                            tlp=tlp,
                             analyst=analyst)
         obj.save(username=analyst)
         obj.reload()
@@ -4306,11 +4308,9 @@ def modify_tlp(itype, oid, tlp, analyst):
                 '#ff0000': 'red'}
 
     tlp = tlp_dict.get(tlp, None) or tlp
-    print obj.to_dict()
     obj.set_tlp(tlp)
 
     try:
-        print obj.to_dict()
         obj.save(username=analyst)
         if obj.tlp == tlp:
             return {'success': True}

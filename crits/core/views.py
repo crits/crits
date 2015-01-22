@@ -687,6 +687,7 @@ def add_update_source(request, method, obj_type, obj_id):
                                            data['name'],
                                            method=data['method'],
                                            reference=data['reference'],
+                                           tlp=data['tlp'],
                                            date=date,
                                            analyst=analyst)
                 if 'object' in result:
