@@ -489,6 +489,8 @@ def do_edit_config(name, analyst, post_data=None):
     service = CRITsService.objects(name=name, status__ne="unavailable").first()
     if not service:
         status['config_error'] = 'Service "%s" is unavailable. Please review error logs.' % name
+        status['form'] = ''
+        status['service'] = ''
         return status
 
     # Get the class that implements this service.
