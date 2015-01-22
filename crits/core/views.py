@@ -96,6 +96,7 @@ from crits.targets.forms import TargetInfoForm
 
 logger = logging.getLogger(__name__)
 
+
 @user_passes_test(user_can_view_data)
 def toggle_favorite(request):
     """

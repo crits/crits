@@ -7,6 +7,7 @@ from mongoengine import ObjectIdField, StringField, ListField, EmbeddedDocumentF
 from django.conf import settings
 from django.core.urlresolvers import reverse
 
+from crits.core.user import CRITsUser
 from crits.core.fields import CritsDateTimeField
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, CritsSourceDocument
@@ -195,7 +196,7 @@ def parse_comment(comment):
     # get users
     for i in re_user.finditer(comment):
         user = i.group(0).replace('@','').strip()
-        if len(user):
+        if len(user) and CRITsUser.objects(username=user).count() == 1:
             users.append(user)
     # dedupe
     users = list(set(users))
