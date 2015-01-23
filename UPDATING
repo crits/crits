@@ -15,13 +15,17 @@ Date:   2015-01-17
 Author: wxs
 Date:   2014-12-30
 
-    The WHOIS feature for Domain objects has been removed from core and put
-    into a service. If you do not have any WHOIS information for existing
-    domains in your database you can ignore this update. If you do have WHOIS
-    information a script has been provided which will run the WHOIS service
-    with default configuration against all domains which have WHOIS
-    information already. It is recommended that you use this script to create
-    service analysis results for these domains.
+    Domains got an overhaul to split the WHOIS feature out to a service. You
+    will need to migrate all your domains. This can be done with:
+
+    python manage.py upgrade -D
+
+    If you do not have any WHOIS information for existing domains in your
+    database you can ignore this update. If you do have WHOIS information a
+    script has been provided which will run the WHOIS service with default
+    configuration against all domains which have WHOIS information already. It
+    is recommended that you use this script to create service analysis results
+    for these domains.
 
     The WHOIS service supports three different query modes: live, pydat and
     domaintools. If you wish to use the domaintools or pydat modes you must
