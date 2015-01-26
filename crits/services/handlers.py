@@ -2,10 +2,11 @@ import ast
 import datetime
 import json
 import logging
+import copy
 
 from django.http import HttpResponse
 from multiprocessing import Process
-from threading import Thread
+from threading import Thread, local
 
 from mongoengine.base import ValidationError
 
@@ -173,9 +174,21 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
         result['html'] = "Service not supported for type '%s'" % crits_type
         return result
 
+    # When running in threaded mode, each thread needs to have its own copy of
+    # the object. If we do not do this then one thread may read() from the
+    # object (to get the binary) and then the second would would read() without
+    # knowing and get undefined behavior as the file pointer would be who knows
+    # where. By giving each thread a local copy they can operate independently.
+    #
+    # When not running in thread mode this has no effect except wasted memory.
+    local_obj = local()
+    local_obj.obj = copy.deepcopy(obj)
+
     # Give the service a chance to check for required fields.
     try:
-        service_class.valid_for(obj)
+        service_class.valid_for(local_obj.obj)
+        # Reset back to the start so the service gets the full file.
+        local_obj.obj.filedata.seek(0)
     except ServiceConfigError as e:
         result['html'] = str(e)
         return result
@@ -205,7 +218,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
         final_config = db_config
         final_config.update(form.cleaned_data)
 
-    logger.info("Running %s on %s, execute=%s" % (name, obj.id, execute))
+    logger.info("Running %s on %s, execute=%s" % (name, local_obj.obj.id, execute))
     service_instance = service_class(notify=update_analysis_results,
                                      complete=finish_task)
 
@@ -213,7 +226,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
     saved_config = dict(final_config)
     service_class.save_runtime_config(saved_config)
 
-    task = AnalysisTask(obj, service_instance, analyst)
+    task = AnalysisTask(local_obj.obj, service_instance, analyst)
     task.config = AnalysisConfig(**saved_config)
     task.start()
     add_task(task)
@@ -231,7 +244,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
             __service_process_pool__.apply_async(func=service_work_handler,
                                                  args=(service_instance, final_config,))
         else:
-            logger.warning("Could not run %s on %s, execute=%s, running in process mode" % (name, obj.id, execute))
+            logger.warning("Could not run %s on %s, execute=%s, running in process mode" % (name, local_obj.obj.id, execute))
             p = Process(target=service_instance.execute, args=(final_config,))
             p.start()
     elif execute == 'thread_pool':
@@ -239,7 +252,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
             __service_thread_pool__.apply_async(func=service_work_handler,
                                                 args=(service_instance, final_config,))
         else:
-            logger.warning("Could not run %s on %s, execute=%s, running in thread mode" % (name, obj.id, execute))
+            logger.warning("Could not run %s on %s, execute=%s, running in thread mode" % (name, local_obj.obj.id, execute))
             t = Thread(target=service_instance.execute, args=(final_config,))
             t.start()
     elif execute == 'local':
@@ -489,6 +502,8 @@ def do_edit_config(name, analyst, post_data=None):
     service = CRITsService.objects(name=name, status__ne="unavailable").first()
     if not service:
         status['config_error'] = 'Service "%s" is unavailable. Please review error logs.' % name
+        status['form'] = ''
+        status['service'] = ''
         return status
 
     # Get the class that implements this service.
