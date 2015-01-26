@@ -112,9 +112,6 @@ if TEST_RUN:
 # http://api.mongodb.org/python/current/api/pymongo/index.html
 MONGO_READ_PREFERENCE = ReadPreference.PRIMARY
 
-MONGO_WRITE_CONCERN = 1
-MONGO_WRITE_CONCERN_TIMEOUT = 30000
-
 # MongoDB default collections
 COL_ACTORS = "actors"                                     # main collection for actors
 COL_ACTOR_IDENTIFIERS = "actor_identifiers"               # main collection for actor identifiers

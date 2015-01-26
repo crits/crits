@@ -1113,12 +1113,7 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
                 sample.add_campaign(campaign_item)
 
         # save sample to get an id since the rest of the processing needs it
-        import datetime
-        write_concern = { 'w': settings.MONGO_WRITE_CONCERN,
-                          'wtimeout': settings.MONGO_WRITE_CONCERN_TIMEOUT }
-        print datetime.datetime.now()
-        sample.save(username=user, write_concern=write_concern)
-        print datetime.datetime.now()
+        sample.save(username=user)
         # reloading clears the _changed_fields of the sample object. this prevents
         # situations where we save again below and the shard key (md5) is
         # still marked as changed.
