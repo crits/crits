@@ -175,7 +175,7 @@ class ConfigServicesForm(forms.Form):
         label='Service Directories',
         help_text=('List of absolute directory paths.<br />'
                    '*Requires a web server restart.'),
-        required=True)
+        required=False)
     service_model = forms.ChoiceField(
         widget=forms.Select(),
         help_text=('Warning: Using process_pool may be memory intensive.<br />'
