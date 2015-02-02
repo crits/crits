@@ -1452,6 +1452,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             object_item.source = [create_embedded_source(source,
                                                          method=method,
                                                          reference=reference,
+                                                         needs_tlp=False,
                                                          analyst=analyst)]
             object_item.object_type = object_type
             object_item.value = value
@@ -1557,6 +1558,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 source = [create_embedded_source(new_source,
                                                  method=new_method,
                                                  reference=new_reference,
+                                                 needs_tlp=False,
                                                  analyst=analyst)]
                 self.obj[c].source = source
                 break
@@ -2481,7 +2483,8 @@ def json_handler(obj):
         return str(obj)
 
 def create_embedded_source(name, source_instance=None, date=None,
-                           reference=None, method=None, analyst=None):
+                           reference=None, method=None, tlp=None,
+                           needs_tlp=True, analyst=None):
     """
     Create an EmbeddedSource object. If source_instance is provided it will be
     used, otherwise date, reference, and method will be used.
@@ -2493,16 +2496,23 @@ def create_embedded_source(name, source_instance=None, date=None,
         :class:`crits.core.crits_mongoengine.EmbeddedSource.SourceInstance`
     :param date: The date for the source instance.
     :type date: datetime.datetime
-    :param reference: The reference for this source instance.
-    :type reference: str
     :param method: The method for this source instance.
     :type method: str
+    :param reference: The reference for this source instance.
+    :type reference: str
+    :param tlp: The TLP for this source instance.
+    :type tlp: str
+    :param needs_tlp: If this source needs a TLP (object sources don't yet).
+    :type needs_tlp: bool
     :param analyst: The user creating this embedded source.
     :type analyst: str
     :returns: None, :class:`crits.core.crits_mongoengine.EmbeddedSource`
     """
 
-    if isinstance(name, basestring):
+    if tlp not in ('white', 'green', 'amber', 'red', None):
+        return None
+
+    if isinstance(name, basestring) and tlp:
         s = EmbeddedSource()
         s.name = name
         if isinstance(source_instance, EmbeddedSource.SourceInstance):
@@ -2514,6 +2524,10 @@ def create_embedded_source(name, source_instance=None, date=None,
             i.date = date
             i.reference = reference
             i.method = method
+            if needs_tlp:
+                if not tlp:
+                    return None
+                i.tlp = tlp
             i.analyst = analyst
             s.instances = [i]
         return s

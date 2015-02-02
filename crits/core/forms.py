@@ -11,6 +11,7 @@ from crits.core.user_tools import get_user_organization
 from crits.config.config import CRITsConfig
 from crits import settings
 
+
 def add_bucketlist_to_form(input_form):
     """
     Add a bucket_list field to a form.
@@ -40,6 +41,38 @@ def add_ticket_to_form(input_form):
                             required=False,
                             label=form_consts.Common.TICKET,
                             help_text="Use comma separated values.")
+
+
+class SourceInForm(forms.Form):
+    """
+    Add source stuff to a form.
+    """
+
+    source_name = forms.ChoiceField(
+        widget=forms.Select(attrs={'class': 'no_clear'}),
+        label=form_consts.Indicator.SOURCE,
+        required=True)
+    source_method = forms.CharField(
+        widget=forms.TextInput,
+        label=form_consts.Indicator.SOURCE_METHOD,
+        required=False)
+    source_reference = forms.CharField(
+        widget=forms.TextInput(attrs={'size': '90'}),
+        label=form_consts.Indicator.SOURCE_REFERENCE,
+        required=False)
+    source_tlp = forms.ChoiceField(
+        widget=forms.Select,
+        label=form_consts.Common.SOURCE_TLP,
+        required=True)
+
+    def __init__(self, username, *args, **kwargs):
+        super(SourceInForm, self).__init__(*args, **kwargs)
+        self.fields['source_name'].choices = [
+            (c.name, c.name) for c in get_source_names(True, True, username)]
+        self.fields['source_name'].initial = get_user_organization(username)
+        self.fields['source_tlp'].choices = [
+            (t, t) for t in ('red', 'amber', 'green', 'white')]
+        self.fields['source_tlp'].initial = 'red'
 
 class AddRoleForm(forms.Form):
     """

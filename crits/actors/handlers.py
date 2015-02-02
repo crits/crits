@@ -288,8 +288,9 @@ def get_actor_by_name(allowed_sources, actor):
     return actor
 
 def add_new_actor(name, aliases=None, description=None, source=None,
-                  source_method=None, source_reference=None, campaign=None,
-                  confidence=None, analyst=None, bucket_list=None, ticket=None):
+                  source_method=None, source_reference=None, source_tlp=None,
+                  campaign=None, confidence=None, analyst=None,
+                  bucket_list=None, ticket=None):
     """
     Add an Actor to CRITs.
 
@@ -305,6 +306,8 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     :type source_method: str
     :param source_reference: A reference to this data.
     :type source_reference: str
+    :param source_tlp: The TLP for this Actor.
+    :type source_tlp: str
     :param campaign: A campaign to attribute to this actor.
     :type campaign: str
     :param confidence: Confidence level in the campaign attribution.
@@ -336,6 +339,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
+                                         tlp=source_tlp,
                                          analyst=analyst)]
 
     if isinstance(campaign, basestring):
@@ -469,7 +473,7 @@ def update_actor_tags(actor_id, tag_type, tags, username):
 
 def add_new_actor_identifier(identifier_type, identifier=None, source=None,
                              source_method=None, source_reference=None,
-                             analyst=None):
+                             source_tlp=None, analyst=None):
     """
     Add an Actor Identifier to CRITs.
 
@@ -483,6 +487,8 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
     :type source_method: str
     :param source_reference: A reference to this data.
     :type source_reference: str
+    :param source_tlp: The TLP for this identifier.
+    :type source_tlp: str
     :param analyst: The user adding this actor.
     :type analyst: str
     :returns: dict with keys:
@@ -508,6 +514,7 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
+                                         tlp=source_tlp,
                                          analyst=analyst)]
 
     if source:

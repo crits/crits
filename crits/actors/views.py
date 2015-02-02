@@ -112,9 +112,10 @@ def add_actor(request):
             name = cleaned_data['name']
             aliases = cleaned_data['aliases']
             description = cleaned_data['description']
-            source = cleaned_data['source']
+            source = cleaned_data['source_name']
             reference = cleaned_data['source_reference']
             method = cleaned_data['source_method']
+            tlp = cleaned_data['source_tlp']
             campaign = cleaned_data['campaign']
             confidence = cleaned_data['confidence']
             analyst = request.user.username
@@ -127,6 +128,7 @@ def add_actor(request):
                                    source=source,
                                    source_method=method,
                                    source_reference=reference,
+                                   source_tlp=tlp,
                                    campaign=campaign,
                                    confidence=confidence,
                                    analyst=analyst,
@@ -298,9 +300,10 @@ def add_identifier(request):
         if form.is_valid():
             identifier_type = request.POST.get('identifier_type', None)
             identifier = request.POST.get('identifier', None)
-            source = request.POST.get('source', None)
-            method = request.POST.get('method', None)
-            reference = request.POST.get('reference', None)
+            source = request.POST.get('source_name', None)
+            method = request.POST.get('source_method', None)
+            reference = request.POST.get('source_reference', None)
+            tlp = request.POST.get('source_tlp', None)
             if not identifier_type or not identifier:
                 return HttpResponse(json.dumps({'success': False,
                                                 'message': 'Need a name.'}),
@@ -310,6 +313,7 @@ def add_identifier(request):
                                               source,
                                               method,
                                               reference,
+                                              tlp,
                                               username)
             return HttpResponse(json.dumps(result),
                                 mimetype="application/json")

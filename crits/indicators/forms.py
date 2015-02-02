@@ -3,11 +3,12 @@ from django import forms
 from django.forms.widgets import RadioSelect
 
 from crits.campaigns.campaign import Campaign
-from crits.core import form_consts
-from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
+from crits.core.forms import (
+    add_bucketlist_to_form,
+    add_ticket_to_form,
+    SourceInForm)
 from crits.core.widgets import CalWidget, ExtendedChoiceField
-from crits.core.handlers import get_source_names, get_item_names, get_object_types
-from crits.core.user_tools import get_user_organization
+from crits.core.handlers import get_item_names, get_object_types
 from crits.indicators.indicator import IndicatorAction
 
 class IndicatorActionsForm(forms.Form):
@@ -85,7 +86,7 @@ class IndicatorActivityForm(forms.Form):
                                         'readonly': 'readonly',
                                         'id': 'id_activity_date'}))
 
-class UploadIndicatorCSVForm(forms.Form):
+class UploadIndicatorCSVForm(SourceInForm):
     """
     Django form for uploading Indicators via a CSV file.
     """
@@ -93,56 +94,26 @@ class UploadIndicatorCSVForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     filedata = forms.FileField()
-    source = forms.ChoiceField(
-        widget=forms.Select(attrs={'class': 'no_clear'}),
-        label=form_consts.Indicator.SOURCE,
-        required=True)
-    method = forms.CharField(
-        widget=forms.TextInput,
-        label=form_consts.Indicator.SOURCE_METHOD,
-        required=False)
-    reference = forms.CharField(
-        widget=forms.TextInput(attrs={'size': '90'}),
-        label=form_consts.Indicator.SOURCE_REFERENCE,
-        required=False)
 
     def __init__(self, username, *args, **kwargs):
-        super(UploadIndicatorCSVForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [
-            (c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(UploadIndicatorCSVForm, self).__init__(username, *args, **kwargs)
 
-class UploadIndicatorTextForm(forms.Form):
+class UploadIndicatorTextForm(SourceInForm):
     """
     Django form for uploading Indicators via a CSV blob.
     """
 
     error_css_class = 'error'
     required_css_class = 'required'
-    source = forms.ChoiceField(
-        widget=forms.Select(attrs={'class': 'no_clear'}),
-        label=form_consts.Indicator.SOURCE,
-        required=True)
-    method = forms.CharField(
-        widget=forms.TextInput,
-        label=form_consts.Indicator.SOURCE_METHOD,
-        required=False)
-    reference = forms.CharField(
-        widget=forms.TextInput(attrs={'size': '90'}),
-        label=form_consts.Indicator.SOURCE_REFERENCE,
-        required=False)
     data = forms.CharField(
         widget=forms.Textarea(attrs={'cols': '80', 'rows': '20'}),
         required=True)
     def __init__(self, username, *args, **kwargs):
-        super(UploadIndicatorTextForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [
-            (c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(UploadIndicatorTextForm, self).__init__(username, *args, **kwargs)
         dt = "Indicator, Type, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action\n"
         self.fields['data'].initial = dt
 
-class UploadIndicatorForm(forms.Form):
+class UploadIndicatorForm(SourceInForm):
     """
     Django form for uploading a single Indicator.
     """
@@ -157,24 +128,9 @@ class UploadIndicatorForm(forms.Form):
     impact = forms.ChoiceField(widget=forms.Select, required=True)
     campaign = forms.ChoiceField(widget=forms.Select, required=False)
     campaign_confidence = forms.ChoiceField(widget=forms.Select, required=False)
-    source = forms.ChoiceField(
-        widget=forms.Select(attrs={'class': 'no_clear'}),
-        label=form_consts.Indicator.SOURCE,
-        required=True)
-    method = forms.CharField(
-        widget=forms.TextInput,
-        label=form_consts.Indicator.SOURCE_METHOD,
-        required=False)
-    reference = forms.CharField(
-        widget=forms.TextInput(attrs={'size': '90'}),
-        label=form_consts.Indicator.SOURCE_REFERENCE,
-        required=False)
 
     def __init__(self, username, choices=None, *args, **kwargs):
-        super(UploadIndicatorForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [
-            (c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(UploadIndicatorForm, self).__init__(username, *args, **kwargs)
         if not choices:
             #only valid types for indicators are those which don't require file upload
             choices = [

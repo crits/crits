@@ -76,6 +76,9 @@
                         </td>
                     </tr>
                     {% include "actor_tags_widget.html" %}
+                    {% with tlp=actor.tlp %}
+                        {% include "tlp_widget.html" %}
+                    {% endwith %}
                     {% with sectors=actor.sectors %}
                         {% include "sector_widget.html" %}
                     {% endwith %}
