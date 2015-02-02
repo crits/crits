@@ -50,7 +50,7 @@ def list(request):
                               RequestContext(request))
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def analysis_result(request, analysis_id):
     """
     Get the TLO type and object_id and redirect to the details page for that
