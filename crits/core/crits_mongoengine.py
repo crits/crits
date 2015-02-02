@@ -5,6 +5,7 @@ import StringIO
 import csv
 
 from bson import json_util, ObjectId
+from collections import OrderedDict
 from dateutil.parser import parse
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -1185,7 +1186,36 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         if tlp not in ('white', 'green', 'amber', 'red'):
             tlp = 'red'
-        self.tlp = tlp
+        if tlp in self.get_acceptable_tlp_levels():
+            self.tlp = tlp
+
+    def get_acceptable_tlp_levels(self):
+        """
+        Based on what TLP levels sources have shared, limit the list of TLP
+        levels you can share this with accordingly.
+
+        :returns: list
+        """
+
+        d = {'white': ['white', 'green', 'amber', 'red'],
+             'green': ['green', 'amber', 'red'],
+             'amber': ['amber', 'red'],
+             'red': ['red']}
+
+        my_tlps = []
+        for s in self.source:
+            for i in s.instances:
+                my_tlps.append(i.tlp)
+        my_tlps = OrderedDict.fromkeys(my_tlps).keys()
+
+        if 'white' in my_tlps:
+            return d['white']
+        elif 'green' in my_tlps:
+            return d['green']
+        elif 'amber' in my_tlps:
+            return d['amber']
+        else:
+            return d['red']
 
     def add_campaign(self, campaign_item=None, update=True):
         """
