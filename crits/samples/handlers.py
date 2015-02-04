@@ -1142,6 +1142,9 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
                                   % (reverse('crits.samples.views.detail',
                                              args=[sample.md5.lower()]),
                                              sample.md5.lower()))
+            # Update Cache
+            if cached_results != None:
+                cached_results[sample.md5] = sample
     else:
         # Duplicate sample, but uploaded anyways
         if is_validate_only == False:
