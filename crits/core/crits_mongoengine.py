@@ -824,10 +824,11 @@ class CritsSourceDocument(BaseDocument):
         :type tlp: str
         """
 
+        sc = len(self.source)
         s = None
-        if tlp not in ('white', 'green', 'amber', 'red'):
-            tlp = 'red'
-        if source and analyst:
+        if source and analyst and tlp:
+            if tlp not in ('white', 'green', 'amber', 'red'):
+                tlp = 'red'
             if not date:
                 date = datetime.datetime.now()
             s = EmbeddedSource()
@@ -857,6 +858,8 @@ class CritsSourceDocument(BaseDocument):
                 self.source[match].instances.extend(source_item.instances)
             else: # else, add as new source
                 self.source.append(source_item)
+            if not sc:
+                self.tlp = source_item.instances[0].tlp
 
     def edit_source(self, source=None, date=None, method=None,
                     reference=None, analyst=None, tlp=None):

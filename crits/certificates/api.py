@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.certificates.certificate import Certificate
 from crits.certificates.handlers import handle_cert_file
@@ -63,6 +62,7 @@ class CertificateResource(CRITsAPIResource):
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', None)
         reference = bundle.data.get('reference', None)
+        tlp = bundle.data.get('tlp', None)
         description = bundle.data.get('reference', None)
         relationship = bundle.data.get('relationship', None)
         related_id = bundle.data.get('related_id', None)
@@ -81,6 +81,7 @@ class CertificateResource(CRITsAPIResource):
                                   related_type = related_type,
                                   method=method,
                                   reference=reference,
+                                  tlp=tlp,
                                   relationship=relationship,
                                   bucket_list=bucket_list,
                                   ticket=ticket)

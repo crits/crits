@@ -91,19 +91,21 @@ def upload_certificate(request):
             filedata = request.FILES['filedata']
             filename = filedata.name
             data = filedata.read() # XXX: Should be using chunks here.
-            source = form.cleaned_data.get('source')
+            source = form.cleaned_data.get('source_name')
             user = request.user.username
             description = form.cleaned_data.get('description', '')
             related = form.cleaned_data.get('related_id', '')
             related_type = form.cleaned_data.get('related_type', '')
             bucket_list = form.cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = form.cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
-            method = form.cleaned_data.get('method', '') or 'Upload'
-            reference = form.cleaned_data.get('reference', '')
+            method = form.cleaned_data.get('source_method', '') or 'Upload'
+            reference = form.cleaned_data.get('source_reference', '')
+            tlp = form.cleaned_data.get('source_tlp', None)
             status = handle_cert_file(filename, data, source, user, description,
                                       related_id=related, related_type=related_type,
                                       method=method, reference=reference,
-                                      bucket_list=bucket_list, ticket=ticket)
+                                      tlp=tlp, bucket_list=bucket_list,
+                                      ticket=ticket)
             if status['success']:
                 return render_to_response('file_upload_response.html',
                                           {'response': json.dumps({

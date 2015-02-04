@@ -206,7 +206,7 @@ def generate_cert_jtable(request, option):
 def handle_cert_file(filename, data, source_name, user=None,
                      description=None, related_id=None, related_md5=None,
                      related_type=None, method=None, reference=None,
-                     relationship=None, bucket_list=None, ticket=None):
+                     tlp=None, relationship=None, bucket_list=None, ticket=None):
     """
     Add a Certificate.
 
@@ -232,6 +232,8 @@ def handle_cert_file(filename, data, source_name, user=None,
     :type method: str
     :param reference: A reference to the source of this Certificate.
     :type reference: str
+    :param tlp: The TLP for this certificate.
+    :type tlp: str
     :param relationship: The relationship between the parent and the Certificate.
     :type relationship: str
     :param bucket_list: Bucket(s) to add to this Certificate
@@ -296,14 +298,17 @@ def handle_cert_file(filename, data, source_name, user=None,
         s = create_embedded_source(source_name,
                                    method=method,
                                    reference=reference,
+                                   tlp=tlp,
                                    analyst=user)
         cert.add_source(s)
     elif isinstance(source_name, EmbeddedSource):
-        cert.add_source(source_name, method=method, reference=reference)
+        cert.add_source(source_name, method=method, reference=reference,
+                        tlp=tlp)
     elif isinstance(source_name, list) and len(source_name) > 0:
         for s in source_name:
             if isinstance(s, EmbeddedSource):
-                cert.add_source(s, method=method, reference=reference)
+                cert.add_source(s, method=method, reference=reference,
+                                tlp=tlp)
 
     if bucket_list:
         cert.add_bucket_list(bucket_list, user)

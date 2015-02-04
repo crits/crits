@@ -54,6 +54,7 @@ class ActorResource(CRITsAPIResource):
         source = data.get('source', None)
         reference = data.get('reference', None)
         method = data.get('method', None)
+        tlp = data.get('tlp', None)
         campaign = data.get('campaign', None)
         confidence = data.get('confidence', None)
         bucket_list = data.get('bucket_list', None)
@@ -65,6 +66,7 @@ class ActorResource(CRITsAPIResource):
                                source=source,
                                source_method=method,
                                source_reference=reference,
+                               source_tlp=tlp,
                                campaign=campaign,
                                confidence=confidence,
                                analyst=analyst,
@@ -132,12 +134,14 @@ class ActorIdentifierResource(CRITsAPIResource):
         source = data.get('source', None)
         reference = data.get('reference', None)
         method = data.get('method', None)
+        tlp = data.get('tlp', None)
 
         result = add_new_actor_identifier(identifier_type,
                                           identifier,
                                           source=source,
                                           source_method=method,
                                           source_reference=reference,
+                                          source_tlp=tlp,
                                           analyst=analyst)
 
         content = {'return_code': 0,
