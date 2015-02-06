@@ -187,7 +187,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
     # Give the service a chance to check for required fields.
     try:
         service_class.valid_for(local_obj.obj)
-        if crits_type not in ('Domain','IP'):
+        if local_obj.obj.filedata not None:
             # Reset back to the start so the service gets the full file.
             local_obj.obj.filedata.seek(0)
     except ServiceConfigError as e:
