@@ -86,7 +86,7 @@ class Command(BaseCommand):
                   remote_addr=remote_addr, accept_language=accept_language,
                   totp_pass=totp_pass)
 
-        script = script_class(username=username)
+        script = script_class(user=u)
         script.run(arg_list)
 
 def try_login(username, password, user_agent, remote_addr, accept_language,
