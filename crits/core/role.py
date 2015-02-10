@@ -32,6 +32,9 @@ class EmbeddedSourceACL(EmbeddedDocument, CritsDocumentFormatter):
     name = StringField(required=True)
     read = BooleanField(default=False)
     write = BooleanField(default=False)
+    tlp_red = BooleanField(default=False)
+    tlp_amber = BooleanField(default=False)
+    tlp_green = BooleanField(default=False)
 
 class Role(CritsDocument, CritsSchemaDocument, Document):
     """
@@ -193,7 +196,8 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
         for s in sources:
             self.add_source(s.name)
 
-    def add_source(self, source, read=False, write=False):
+    def add_source(self, source, read=False, write=False,
+                   tlp_red=False, tlp_amber=False, tlp_green=False):
         """
         Add a source to this Role.
 
@@ -211,5 +215,8 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
             if src:
                 new_src = EmbeddedSourceACL(name=source,
                                             read=read,
-                                            write=write)
+                                            write=write,
+                                            tlp_red=tlp_red,
+                                            tlp_amber=tlp_amber,
+                                            tlp_green=tlp_green)
                 self.sources.append(new_src)

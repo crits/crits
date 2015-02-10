@@ -4036,7 +4036,10 @@ def add_role_source(rid, name, analyst):
 
     ed = {'name': name,
           'read': False,
-          'write': False}
+          'write': False,
+          'tlp_red': False,
+          'tlp_amber': False,
+          'tlp_green': False}
     d = {'push__sources': ed}
     Role.objects(id=rid, name__ne=settings.ADMIN_ROLE).update_one(**d)
 
