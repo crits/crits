@@ -204,7 +204,15 @@ def refresh_services(request, crits_type, identifier):
     # Verify user can see results.
     sources = user_sources(request.user.username)
     klass = class_from_type(crits_type)
-    obj = klass.objects(id=identifier,source__name__in=sources).first()
+    if not klass:
+        msg = 'Could not find object to refresh!'
+        response['success'] = False
+        response['html'] = msg
+        return HttpResponse(json.dumps(response), mimetype="application/json")
+    if hasattr(klass, 'source'):
+        obj = klass.objects(id=identifier,source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=identifier).first()
     if not obj:
         msg = 'Could not find object to refresh!'
         response['success'] = False

@@ -67,9 +67,9 @@ def get_aggregate_comments(atype, value, username, date=None):
     results = None
     if date:
         end_date = date+datetime.timedelta(days=1)
-        query = {'type': 'comment', 'date':{'$gte':date, '$lte':end_date}}
+        query = {'date':{'$gte':date, '$lte':end_date}}
     else:
-        query = {'type': 'comment'}
+        query = {}
     if atype == 'bytag':
         query['tags'] = value
     elif atype == 'byuser':
