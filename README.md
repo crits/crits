@@ -18,11 +18,12 @@ The following instructions assume you are running Ubuntu or RHEL6 64-bit with Py
 
 ## Installing Dependencies
 
-CRITs has a decent amount of dependencies due to the extensive amount of functionality provided throughout the system.
+CRITs has a decent amount of dependencies due to the extensive amount of functionality provided throughout the system. To install, run:
 
-### Acquire the CRITs dependencies from Github:
+```bash
 
-You can find a repository of the existing dependencies [here](https://github.com/crits/crits_dependencies). Read the README that comes with the dependencies for information on how to use the install script.
+    sh script/bootstrap
+```
 
 ### Adjust TCP Server Parameters:
 
