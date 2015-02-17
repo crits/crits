@@ -46,7 +46,8 @@ class ActorResource(CRITsAPIResource):
         :returns: HttpResponse object.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
+        user._setup()
         data = bundle.data
         name = data.get('name', None)
         aliases = data.get('aliases', '')
@@ -69,7 +70,7 @@ class ActorResource(CRITsAPIResource):
                                source_tlp=tlp,
                                campaign=campaign,
                                confidence=confidence,
-                               analyst=analyst,
+                               user=user,
                                bucket_list=bucket_list,
                                ticket=ticket)
 
@@ -127,7 +128,8 @@ class ActorIdentifierResource(CRITsAPIResource):
         :returns: HttpResponse object.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
+        user._setup()
         data = bundle.data
         identifier_type = data.get('identifier_type', None)
         identifier = data.get('identifier', None)
@@ -142,7 +144,7 @@ class ActorIdentifierResource(CRITsAPIResource):
                                           source_method=method,
                                           source_reference=reference,
                                           source_tlp=tlp,
-                                          analyst=analyst)
+                                          user=user)
 
         content = {'return_code': 0,
                    'type': 'ActorIdentifier',

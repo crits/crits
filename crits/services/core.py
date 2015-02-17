@@ -196,7 +196,7 @@ class AnalysisTask(object):
     STATUS_LIST = [STATUS_CREATED, STATUS_STARTED,
                    STATUS_ERROR, STATUS_COMPLETED]
 
-    def __init__(self, obj, service, analyst):
+    def __init__(self, obj, service, user):
         self.obj = obj
         # AnalysisTask.service should be an instance of a Service class.
         self.service = service
@@ -209,7 +209,7 @@ class AnalysisTask(object):
         self.start_date = None
         self.finish_date = None
         self.status = None
-        self.username = analyst
+        self.username = user.username
 
         self.log = []
         self.results = []
