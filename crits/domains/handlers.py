@@ -732,6 +732,7 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
     is_add_ip = False
 
     ip = rowData.get(form_consts.Domain.IP_ADDRESS, "")
+    ip_type = rowData.get(form_consts.Domain.IP_TYPE, "")
     created = rowData.get(form_consts.Domain.IP_DATE, "")
     #is_same_source = convert_string_to_bool(rowData.get(form_consts.Domain.SAME_SOURCE, "False"))
     is_same_source = False
@@ -755,6 +756,7 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
                 'domain_reference': domain_reference,
                 'add_ip': is_add_ip,
                 'ip': ip,
+                'ip_type': ip_type,
                 'created': created,
                 'same_source': is_same_source,
                 'ip_source': ip_source,
