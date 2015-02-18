@@ -39,7 +39,7 @@ if [ "$OS" == 'ubuntu' ]
 then
   echo "Installing dependencies with apt-get"
   apt-get update
-  apt-get install -y --fix-missing apache2 build-essential curl emacs git libapache2-mod-wsgi libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev m2crypto mongodb numactl p7zip-full python-dev python-lxml python-m2crypto python-matplotlib python-numpy python-pip python-pycurl python-pydot python-pyparsing python-setuptools python-yaml ssdeep upx zip
+  apt-get install -y --fix-missing apache2 build-essential curl git libapache2-mod-wsgi libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb numactl p7zip-full python-dev python-pip ssdeep upx zip
 
 # TODO: Need to test centos dependencies
 # elif [ "$OS" == 'centos' ] || [ "$OS" == 'redhat' ]
