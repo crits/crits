@@ -7,8 +7,6 @@
 # CRITs install.
 
 
-PYBIN=`which python`
-
 ARCH=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/')
 echo "Architecture: $ARCH"
 
@@ -58,20 +56,21 @@ then
 
 elif [ "$OS" == 'darwin' ]
 then
-  echo "OSX is not supported yet. See https://github.com/crits/crits/blob/master/documentation/crits_on_osx.txt for instructions."
-  # brew install ssdeep
+  echo "OSX support will be coming soon."
 else
   echo "Unknown distro!"
   echo -e "Detected: $OS $VER"
   exit
 fi
 
-echo "Installing MongoDB 2.6.4..."
-curl http://downloads.mongodb.org/linux/mongodb-linux-x86_64-2.6.4.tgz > mongodb-linux-x86_64-2.6.4.tgz
-tar -zxvf mongodb-linux-x86_64-2.6.4.tgz
-sudo cp ./mongodb-linux-x86_64-2.6.4/bin/* /usr/local/bin/
-rm  mongodb-linux-x86_64-2.6.4.tgz
-rm -r mongodb-linux-x86_64-2.6.4
+command -v mongo >/dev/null 2>&1 || {
+  echo "Installing MongoDB 2.6.4..."
+  curl http://downloads.mongodb.org/linux/mongodb-linux-x86_64-2.6.4.tgz > mongodb-linux-x86_64-2.6.4.tgz
+  tar -zxvf mongodb-linux-x86_64-2.6.4.tgz
+  sudo cp ./mongodb-linux-x86_64-2.6.4/bin/* /usr/local/bin/
+  rm  mongodb-linux-x86_64-2.6.4.tgz
+  rm -r mongodb-linux-x86_64-2.6.4
+}
 
 echo "Installing Python Dependencies"
 sudo pip install -r requirements.txt

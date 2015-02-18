@@ -1,6 +1,5 @@
 Django<1.7
 Pillow
-PyYAML
 amqp
 anyjson
 billiard
