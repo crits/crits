@@ -56,7 +56,11 @@ then
 
 elif [ "$OS" == 'darwin' ]
 then
-  echo "OSX support will be coming soon."
+  command -v brew >/dev/null 2>&1 || {
+    echo "Installation for OSX requires Homebrew. Please visit http://brew.sh/."
+    exit
+  }
+  brew install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl
 else
   echo "Unknown distro!"
   echo -e "Detected: $OS $VER"

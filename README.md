@@ -10,7 +10,7 @@ Visit our [website](https://crits.github.io) for more information, documentation
 
 # Installation
 
-CRITs is designed to work on a 64-bit architecture of Ubuntu or RHEL6 using Python 2.7. It is also possible to install CRITs on CentOS and OSX. There is more information in the 'documentation' folder if you would like to see how you can install CRITs on OSX. These instructions are mainly for developers as OSX is not a supported operating system.
+CRITs is designed to work on a 64-bit architecture of Ubuntu or RHEL6 using Python 2.7. Installation has beta support for OSX using Homebrew. It is also possible to install CRITs on CentOS.
 
 If you require the use of a 32-bit OS, you will need to download 32-bit versions of the pre-compiled dependencies.
 
