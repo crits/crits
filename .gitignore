@@ -12,8 +12,9 @@ logs/*.log*
 documentation/src/_build/
 extras/www/static/admin/
 
-# Ignore Apple
+# Ignore Apple and brew
 .DS_Store
+INSTALL_RECEIPT.json
 
 # Ignore aptitude cache
 .apt_cache
