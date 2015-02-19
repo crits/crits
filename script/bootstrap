@@ -41,7 +41,7 @@ if [ "$OS" == 'ubuntu' ]
 then
   echo "Installing dependencies with apt-get"
   sudo apt-get update
-  sudo apt-get install -y --fix-missing apache2 build-essential curl git libapache2-mod-wsgi libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+  sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
 
 # Redhat: Install as many dependencies as we can using yum.
 # TODO: Need to test centos dependencies
@@ -50,10 +50,7 @@ elif [ "$OS" == 'red hat' ]
 then
   echo "Installing Yum Packages"
   # Probably should run the Yum equivelent of apt-get update
-  sudo yum install httpd mod_wsgi mod_ssl make gcc gcc-c++ kernel-devel pcre pcre-devel curl libpcap-devel python-pycurl python-dateutil python-devel python-setuptools
-
-  echo "Automatically installing manual packages"
-  sudo yum install zip unzip gzip bzip2
+  sudo yum install make gcc gcc-c++ kernel-devel pcre pcre-devel curl libpcap-devel python-devel python-pip zip unzip gzip bzip2 swig
   sudo yum install p7zip-9.20.1-2
   sudo yum install unrar-4.2.3-1
   sudo yum install libyaml-0.1.4-1
@@ -66,7 +63,7 @@ then
     echo "Installation for OSX requires Homebrew. Please visit http://brew.sh/."
     exit
   }
-  brew install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl
+  brew install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl swig
 else
   echo "Unknown distro!"
   echo -e "Detected: $OS $VER"
