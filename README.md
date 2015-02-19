@@ -18,7 +18,14 @@ The following instructions assume you are running Ubuntu or RHEL6 64-bit with Py
 
 ## Quick install using bootstrap
 
-CRITs comes with a bootstrap script which will help you install all of the dependencies, configure CRITs, get MongoDB running, and use Django's runserver to quickly you up and running with CRITs:
+CRITs comes with a bootstrap script which will help you:
+
+* Install all of the dependencies.
+* Configure CRITs for database connectivity and your first admin user.
+* Get MongoDB running with default settings.
+* Use Django's runserver to quickly get you up and running with the CRITs interface.
+
+Just run the following:
 
 ```bash
 
