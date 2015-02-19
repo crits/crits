@@ -108,7 +108,7 @@ then
   while true; do
     read -p "Do you want to start 'mongod' now? [yn] " yn
     case $yn in
-        [Yy]* ) mkdir -p /data/db; mkdir -p /data/logs; sh contrib/mongo/mongod_start.sh; break;;
+        [Yy]* ) sudo mkdir -p /data/db; sudo mkdir -p /data/logs; sudo sh contrib/mongo/mongod_start.sh; break;;
         [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;
     esac
