@@ -27,3 +27,6 @@ INSTALL_RECEIPT.json
 
 # Ignore MongoDB download
 *mongodb-*
+
+# Ignore VirtualEnv
+venv/*
