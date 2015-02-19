@@ -14,11 +14,18 @@ CRITs is designed to work on a 64-bit architecture of Ubuntu or RHEL6 using Pyth
 
 If you require the use of a 32-bit OS, you will need to download 32-bit versions of the pre-compiled dependencies.
 
-The following instructions assume you are running Ubuntu or RHEL6 64-bit with Python 2.7. If you are on RHEL which does not come with Python 2.7, you will need to install it. If you do, ensure all python library dependencies are installed using Python 2.7. Also, make sure you install mod_wsgi against the Python 2.7 install. More information on this can be found in the Github wiki at https://github.com/crits/crits/wiki/Common-Questions.
+The following instructions assume you are running Ubuntu or RHEL6 64-bit with Python 2.7. If you are on RHEL which does not come with Python 2.7, you will need to install it. If you do, ensure all python library dependencies are installed using Python 2.7. Also, make sure you install mod_wsgi against the Python 2.7 install if you are looking to use Apache. More information on this can be found in the Github wiki at https://github.com/crits/crits/wiki/Common-Questions.
 
 ## Quick install using bootstrap
 
-CRITs comes with a bootstrap script which will help you install all of the dependencies, configure CRITs, get MongoDB running, and use Django's runserver to quickly you up and running with CRITs:
+CRITs comes with a bootstrap script which will help you:
+
+* Install all of the dependencies.
+* Configure CRITs for database connectivity and your first admin user.
+* Get MongoDB running with default settings.
+* Use Django's runserver to quickly get you up and running with the CRITs interface.
+
+Just run the following:
 
 ```bash
 
