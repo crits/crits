@@ -72,21 +72,21 @@
                                 <a href="{% url 'crits.campaigns.views.campaign_details' rel.name %}">{{ rel.name }}</a>
                             </td>
                         {% elif rel_type == 'Domain' %}
-                            <td>{{ rel.domain }}</td>
+                            <td><a href="{% url 'crits.domains.views.domain_detail' rel.domain %}">{{ rel.domain }}</a></td>
                         {% elif rel_type == 'Target' %}
                             <td>{{ rel.firstname }}</td>
                             <td>{{ rel.lastname }}</td>
-                            <td>{{ rel.email_address }}</td>
+                            <td><a href="{% url 'crits.targets.views.target_info' rel.email_address %}">{{ rel.email_address }}</a></td>
                             <td>{{ rel.email_count }}</td>
                         {% elif rel_type == 'Actor' %}
-                            <td>{{ rel.name }}</td>
+                            <td><a href="{% url 'crits.actors.views.actor_detail' rel.value %}">{{ rel.name}}</a></td>
                         {% elif rel_type == 'Event' %}
-                            <td>{{ rel.title }}</td>
+                            <td><a href="{% url 'crits.events.views.view_event' rel.value %}">{{ rel.title }}</a></td>
                             <td>{{ rel.event_type }}</td>
                             <td>{{ rel.description|truncatechars:100 }}</td>
                         {% elif rel_type == 'Indicator' %}
                             <td>
-                                {{ rel.ind_value }}
+                                <a href="{% url 'crits.indicators.views.indicator' rel.id %}">{{ rel.ind_value }}</a>
                                 {% if splunk_search_url %}
                                 <span style="float: right;">
                                     <a href="{{ splunk_search_url }}{{ rel.ind_value }}" target="_blank"><img src="/new_images/splunk.png" /></a>
@@ -95,7 +95,7 @@
                             </td>
                             <td><a href="{% url 'crits.indicators.views.indicators_listing' %}?type={{ rel.ind_type }}">{{ rel.ind_type }}</a></td>
                         {% elif rel_type == 'IP' %}
-                            <td>{{ rel.ip }}</td>
+                            <td><a href="{% url 'crits.ips.views.ip_detail' rel.ip %}">{{ rel.ip }}</a></td>
                         {% elif rel_type == 'Certificate' %}
                             <td><a href="{% url 'crits.certificates.views.certificate_details' rel.md5 %}">{{ rel.filename }}</a></td>
                             <td>{{ rel.filetype }}</td>
@@ -104,7 +104,7 @@
                             <td><a href="{% url 'crits.pcaps.views.pcap_details' rel.md5 %}">{{ rel.filename }}</a></td>
                             <td>{{ rel.description }}</td>
                         {% elif rel_type == 'RawData' %}
-                            <td>{{ rel.title }}</td>
+                            <td><a href="{% url 'crits.raw_data.views.raw_data_details' rel.value %}">{{ rel.title }}</a></td>
                             <td>{{ rel.data_type }}</td>
                             <td>{{ rel.tool.name }}</td>
                             <td>{{ rel.description|truncatechars:100 }}</td>
