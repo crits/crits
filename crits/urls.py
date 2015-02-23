@@ -41,6 +41,7 @@ if settings.ENABLE_API:
     from crits.actors.api import ActorResource, ActorIdentifierResource
     from crits.campaigns.api import CampaignResource
     from crits.certificates.api import CertificateResource
+    from crits.comments.api import CommentResource
     from crits.domains.api import DomainResource
     from crits.emails.api import EmailResource
     from crits.events.api import EventResource
@@ -61,6 +62,7 @@ if settings.ENABLE_API:
     v1_api.register(ActorIdentifierResource())
     v1_api.register(CampaignResource())
     v1_api.register(CertificateResource())
+    v1_api.register(CommentResource())
     v1_api.register(DomainResource())
     v1_api.register(EmailResource())
     v1_api.register(EventResource())
