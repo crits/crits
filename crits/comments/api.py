@@ -1,8 +1,5 @@
-from dateutil.parser import parse
-from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.comments.comment import Comment
 from crits.comments.handlers import comment_add
