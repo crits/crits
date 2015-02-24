@@ -1462,8 +1462,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                                                     "type": otypes[0],
                                                     "value": search_query}}}
     elif search_type == "byobject":
-        query = {'type': 'comment',
-                 'comment': search_query}
+        query = {'comment': search_query}
     elif search_type == "global":
         if type_ == "Sample":
             search_list.append(sample_queries["backdoor"])
@@ -1529,8 +1528,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                 ]
         elif type_ == "Comment":
             search_list = [
-                    {'comment': search_query,
-                     'type': 'comment'},
+                    {'comment': search_query},
                 ]
         elif type_ == "Campaign":
             search_list = [
