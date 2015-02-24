@@ -1636,7 +1636,7 @@ GET:
 
         /api/v1/indicators/
 
-        /api/v1/indicators/<object_id>/nm
+        /api/v1/indicators/<object_id>/
 
 POST:
 
