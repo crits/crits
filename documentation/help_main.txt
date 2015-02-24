@@ -1541,7 +1541,9 @@ POST:
 
 Unique POST Parameters:
 
-:comment: Description of the certificate.
+:comment: The comment you would like to add.
+:object_id: The ObjectId of the Indicator to add activity to.
+:object_type: The Object Type of this object.
 
 Domain API
 -------------------------------------------
@@ -1634,7 +1636,7 @@ GET:
 
         /api/v1/indicators/
 
-        /api/v1/indicators/<object_id>/
+        /api/v1/indicators/<object_id>/nm
 
 POST:
 
