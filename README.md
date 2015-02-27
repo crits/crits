@@ -29,7 +29,7 @@ Just run the following:
 
 ```bash
 
-    sh script/bootstrap
+    bash script/bootstrap
 ```
 
 ## Production CRITs install
