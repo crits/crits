@@ -33,8 +33,8 @@ else
   VER=$(uname -r)
 fi
 
-OS="$(tr "[:upper:]" "[:lower:]" <<< "$OS")"
-VER="$(tr "[:upper:]" "[:lower:]" <<< "$VER")"
+OS="$(echo "$OS" | tr "[:upper:]" "[:lower:]")"
+VER="$(echo "$VER" | tr "[:upper:]" "[:lower:]")"
 
 # Ubuntu: Install as many dependencies as we can using apt-get.
 if [ "$OS" == 'ubuntu' ]
