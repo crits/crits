@@ -37,16 +37,20 @@ OS="$(echo "$OS" | tr "[:upper:]" "[:lower:]")"
 VER="$(echo "$VER" | tr "[:upper:]" "[:lower:]")"
 
 # Ubuntu: Install as many dependencies as we can using apt-get.
-if [ "$OS" == 'ubuntu' ]
+if [ "$OS" = 'ubuntu' ]
 then
   echo "Installing dependencies with apt-get"
+  sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+  echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
+
   sudo apt-get update
-  sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+  sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+  sudo ldconfig
 
 # Redhat: Install as many dependencies as we can using yum.
 # TODO: Need to test centos dependencies
 # elif [ "$OS" == 'centos' ] || [ "$OS" == 'redhat' ]
-elif [ "$OS" == 'red hat' ]
+elif [ "$OS" = 'red hat' ]
 then
   echo "Installing Yum Packages"
   # Probably should run the Yum equivelent of apt-get update
@@ -57,7 +61,7 @@ then
   sudo yum install upx-3.07-1
 
 # OSX: Install as many dependencies as we can using Homebrew.
-elif [ "$OS" == 'darwin' ]
+elif [ "$OS" = 'darwin' ]
 then
   command -v brew >/dev/null 2>&1 || {
     echo "Installation for OSX requires Homebrew. Please visit http://brew.sh/."
@@ -67,7 +71,7 @@ then
   brew install https://raw.githubusercontent.com/destijl/homebrew-versions/master/swig304.rb
 else
   echo "Unknown distro!"
-  echo -e "Detected: $OS $VER"
+  echo "Detected: $OS $VER"
   exit
 fi
 
@@ -100,8 +104,8 @@ sed -i '' -e "s/.*SECRET_KEY.*/SECRET_KEY = \'"$SC"\'/" crits/config/database.py
 
 # If MongoDB isn't already running, ask to start it.
 # This can fail if MongoDB is running already but on a non-standard port.
-pgrep mongod &> /dev/null
-if [ $? == 1 ]
+pgrep mongod >/dev/null 2>&1
+if [ $? -ne 0 ]
 then
   while true; do
     read -p "Do you want to start 'mongod' now? [yn] " yn
@@ -116,26 +120,29 @@ fi
 echo "Creating default collections"
 python manage.py create_default_collections
 
-# Setup the first admin user.
-read -p "Username: " USERNAME
-read -p  "First name: " FIRSTNAME
-read -p "Last name: " LASTNAME
-read -p "Email address: " EMAIL
-read -p "Organization name: " ORG
-
-echo "Adding a default admin account"
-python manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
-echo "Make note of the above password so you can authenticate!"
-
-# Attempt to start the runserver.
-while true; do
-  read -p "Do you want to start 'runserver' now? [yn] " yn
-  case $yn in
-      [Yy]* ) break;;
-      [Nn]* ) exit;;
-      * ) echo "Please answer yes or no.";;
-  esac
-done
-
-echo "Attempting to start runserver on port 8080"
-python manage.py runserver 0.0.0.0:8080
+if [ $? -eq 0 ]
+then
+  # Setup the first admin user.
+  read -p "Username: " USERNAME
+  read -p  "First name: " FIRSTNAME
+  read -p "Last name: " LASTNAME
+  read -p "Email address: " EMAIL
+  read -p "Organization name: " ORG
+  
+  echo "Adding a default admin account"
+  python manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
+  echo "Make note of the above password so you can authenticate!"
+  
+  # Attempt to start the runserver.
+  while true; do
+    read -p "Do you want to start 'runserver' now? [yn] " yn
+    case $yn in
+        [Yy]* ) break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+  done
+  
+  echo "Attempting to start runserver on port 8080"
+  python manage.py runserver 0.0.0.0:8080
+fi
