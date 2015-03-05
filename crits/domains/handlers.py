@@ -372,7 +372,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                 # If we have an IP object, add an indicator for that.
                 if ip_result and ip_result['success']:
                     obj = ip_result['object']
-                    result = create_indicator_from_obj('Address - ipv4-addr',
+                    result = create_indicator_from_obj(ip_type,
                                                        'IP',
                                                        obj.id,
                                                        obj.ip,
