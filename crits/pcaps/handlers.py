@@ -349,6 +349,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
         'message':      'Uploaded pcap',
         'md5':          md5,
         'id':           str(pcap.id),
+        'object':       pcap
     }
 
     return status

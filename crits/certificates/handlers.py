@@ -338,7 +338,8 @@ def handle_cert_file(filename, data, source_name, user=None,
         'success':      True,
         'message':      'Uploaded certificate',
         'md5':          md5,
-        'id':           str(cert.id)
+        'id':           str(cert.id),
+        'object':       cert
     }
 
     return status
