@@ -313,8 +313,8 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
     return result, errors, retVal
 
 def ip_add_update(ip_address, ip_type, source=None, source_method=None,
-                  source_reference=None, campaign=None, confidence='low', analyst=None,
-                  is_add_indicator=False, indicator_reference=None,
+                  source_reference=None, campaign=None, confidence='low',
+                  analyst=None, is_add_indicator=False, indicator_reference=None,
                   bucket_list=None, ticket=None, is_validate_only=False, cache={}):
     """
     Add/update an IP address.
@@ -377,7 +377,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
             if ':' not in cidr_parts[0] and int(cidr_parts[1]) > 32:
                 raise ValidationError("")
             validate_ipv46_address(cidr_parts[0])
-        except (ValidationError, ValueError) as cidr_error:
+        except (ValidationError, ValueError):
             return {"success": False, "message": "Invalid CIDR address."}
     else:
         return {"success": False, "message": "Invalid IP type."}
