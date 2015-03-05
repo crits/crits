@@ -550,7 +550,7 @@ def upsert_domain(sdomain, domain, source, username=None, campaign=None,
     #if they don't exist, create them
     if not root_domain:
         root_domain = Domain()
-        root_domain.domain = sdomain
+        root_domain.domain = sdomain.strip()
         root_domain.source = []
         root_domain.record_type = 'A'
         is_root_domain_new = True
@@ -559,7 +559,7 @@ def upsert_domain(sdomain, domain, source, username=None, campaign=None,
             cached_results[sdomain] = root_domain
     if domain != sdomain and not fqdn_domain:
         fqdn_domain = Domain()
-        fqdn_domain.domain = domain
+        fqdn_domain.domain = domain.strip()
         fqdn_domain.source = []
         fqdn_domain.record_type = 'A'
         is_fqdn_domain_new = True

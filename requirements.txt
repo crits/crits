@@ -1,6 +1,5 @@
 Django<1.7
 Pillow
-PyYAML
 amqp
 anyjson
 billiard
@@ -11,12 +10,12 @@ defusedxml
 django-celery
 django-tastypie==0.11.0
 django-tastypie-mongoengine==0.4.5
-importlib
 kombu
 lxml
+m2crypto
 mongoengine==0.8.7
-ordereddict
 pydeep==0.2
+pydot
 pymongo==2.7.2
 pyparsing
 python-dateutil
@@ -24,7 +23,9 @@ python-ldap
 python-magic==0.4.6
 python-mimeparse
 pytz
+pyyaml
 requests
+setuptools
 simplejson
 six
 stix==1.1.1.0
