@@ -123,12 +123,13 @@ class STIXParser():
                     title = header.title
                 if hasattr(header, 'package_intents'):
                     event_type = str(header.package_intents[0])
-                description = header.description
-                if isinstance(description, StructuredText):
-                    try:
-                        description = description.to_dict()
-                    except:
-                        pass
+                if header.description:
+                    description = header.description
+                    if isinstance(description, StructuredText):
+                        try:
+                            description = description.to_dict()
+                        except:
+                            pass
             res = add_new_event(title,
                                 description,
                                 event_type,
@@ -226,20 +227,22 @@ class STIXParser():
                         ind_type = "%s - %s" % (obj.object_type, obj.name)
                     else:
                         ind_type = obj.object_type
-                    res = handle_indicator_ind(obj.value,
-                                               self.source,
-                                               None,
-                                               ind_type,
-                                               analyst,
-                                               add_domain=True,
-                                               add_relationship=True)
-                    if res['success']:
-                        self.imported.append((Indicator._meta['crits_type'],
-                                              res['object']))
-                    else:
-                        self.failed.append((res['message'],
-                                            type(item).__name__,
-                                            item.parent.id_)) # note for display in UI
+                    for value in obj.value:
+                        if value and ind_type:
+                            res = handle_indicator_ind(value.strip(),
+                                                    self.source,
+                                                    None,
+                                                    ind_type,
+                                                    analyst,
+                                                    add_domain=True,
+                                                    add_relationship=True)
+                            if res['success']:
+                                self.imported.append((Indicator._meta['crits_type'],
+                                                    res['object']))
+                            else:
+                                self.failed.append((res['message'],
+                                                    type(item).__name__,
+                                                    item.parent.id_)) # note for display in UI
                 except Exception, e: # probably caused by cybox object we don't handle
                     self.failed.append((e.message, type(item).__name__, item.parent.id_)) # note for display in UI
 
@@ -261,21 +264,27 @@ class STIXParser():
             try: # try to create CRITs object from observable
                 item = obs.object_.properties
                 if isinstance(item, Address):
+                    # This should be improved since some Address types are not
+                    # IP addresses.
                     imp_type = "IP"
-                    ip = str(item.address_value)
-                    iptype = "Address - %s" % item.category
-                    res = ip_add_update(ip,
-                                        iptype,
-                                        [self.source],
-                                        analyst=analyst,
-                                        is_add_indicator=True)
+                    for value in item.address_value.values():
+                        ip = str(value).strip()
+                        iptype = "Address - %s" % item.category
+                        res = ip_add_update(ip,
+                                            iptype,
+                                            [self.source],
+                                            analyst=analyst,
+                                            is_add_indicator=True)
+                        self.parse_res(imp_type, obs, res)
                 elif isinstance(item, DomainName):
                     imp_type = "Domain"
-                    (sdomain, domain) = get_domain(str(item.value))
-                    res = upsert_domain(sdomain,
-                                        domain,
-                                        [self.source],
-                                        username=analyst)
+                    for value in item.value.values():
+                        (sdomain, domain) = get_domain(str(value.strip()))
+                        res = upsert_domain(sdomain,
+                                            domain,
+                                            [self.source],
+                                            username=analyst)
+                        self.parse_res(imp_type, obs, res)
                 elif isinstance(item, Artifact):
                     # Not sure if this is right, and I believe these can be
                     # encoded in a couple different ways.
@@ -291,10 +300,11 @@ class STIXParser():
                                                description=description,
                                                title=title,
                                                data_type="Text",
-                                               tool_name="TAXII",
+                                               tool_name="STIX",
                                                tool_version=None,
                                                method=self.source_instance.method,
                                                reference=self.source_instance.reference)
+                    self.parse_res(imp_type, obs, res)
                 elif (isinstance(item, File) and
                       item.custom_properties and
                       item.custom_properties[0].name == "crits_type" and
@@ -311,6 +321,7 @@ class STIXParser():
                                            self.source,
                                            user=analyst,
                                            description=description)
+                    self.parse_res(imp_type, obs, res)
                 elif isinstance(item, File) and self.has_network_artifact(item):
                     imp_type = "PCAP"
                     description = str(item.description)
@@ -325,6 +336,7 @@ class STIXParser():
                                            self.source,
                                            user=analyst,
                                            description=description)
+                    self.parse_res(imp_type, obs, res)
                 elif isinstance(item, File):
                     imp_type = "Sample"
                     filename = str(item.file_name)
@@ -340,28 +352,32 @@ class STIXParser():
                                       user=analyst,
                                       md5_digest=md5,
                                       is_return_only_md5=False)
+                    self.parse_res(imp_type, obs, res)
                 elif isinstance(item, EmailMessage):
                     imp_type = "Email"
                     data = {}
                     data['source'] = self.source.name
                     data['source_method'] = self.source_instance.method
                     data['source_reference'] = self.source_instance.reference
-                    data['message_id'] = str(item.header.message_id)
-                    data['subject'] = str(item.header.subject)
-                    data['sender'] = str(item.header.sender)
-                    data['reply_to'] = str(item.header.reply_to)
-                    data['x_originating_ip'] = str(item.header.x_originating_ip)
-                    data['x_mailer'] = str(item.header.x_mailer)
-                    data['boundary'] = str(item.header.boundary)
                     data['raw_body'] = str(item.raw_body)
                     data['raw_header'] = str(item.raw_header)
                     data['helo'] = str(item.email_server)
-                    data['from_address'] = str(item.header.from_)
-                    data['date'] = item.header.date
-                    data['to'] = [str(r) for r in item.header.to.to_list()]
+                    if item.header:
+                        data['message_id'] = str(item.header.message_id)
+                        data['subject'] = str(item.header.subject)
+                        data['sender'] = str(item.header.sender)
+                        data['reply_to'] = str(item.header.reply_to)
+                        data['x_originating_ip'] = str(item.header.x_originating_ip)
+                        data['x_mailer'] = str(item.header.x_mailer)
+                        data['boundary'] = str(item.header.boundary)
+                        data['from_address'] = str(item.header.from_)
+                        data['date'] = item.header.date
+                        data['to'] = [str(r) for r in item.header.to.to_list()]
                     res = handle_email_fields(data,
-                                              analyst,
-                                              "TAXII")
+                                            analyst,
+                                            "STIX")
+                    # Should check for attachments and add them here.
+                    self.parse_res(imp_type, obs, res)
                 else: # try to parse all other possibilities as Indicator
                     imp_type = "Indicator"
                     obj = make_crits_object(item)
@@ -369,30 +385,38 @@ class STIXParser():
                         ind_type = "%s - %s" % (obj.object_type, obj.name)
                     else:
                         ind_type = obj.object_type
-                    res = handle_indicator_ind(obj.value,
-                                               self.source,
-                                               None,
-                                               ind_type,
-                                               analyst,
-                                               add_domain=True,
-                                               add_relationship=True)
-                if res['success']:
-                    self.imported.append((imp_type,
-                                          res['object'])) # use class to parse object
-                else:
-                    if 'reason' in res:
-                        msg = res['reason']
-                    elif 'message' in res:
-                        msg = res['message']
-                    else:
-                        msg = "Failed for unknown reason."
-                    self.failed.append((msg,
-                                        type(obs).__name__,
-                                        obs.id_)) # note for display in UI
+                    for value in obj.value:
+                        if value and ind_type:
+                            res = handle_indicator_ind(value.strip(),
+                                                    self.source,
+                                                    None,
+                                                    ind_type,
+                                                    analyst,
+                                                    add_domain=True,
+                                                    add_relationship=True)
+                            self.parse_res(imp_type, obs, res)
             except Exception, e: # probably caused by cybox object we don't handle
                 self.failed.append((e.message,
                                     type(item).__name__,
                                     item.parent.id_)) # note for display in UI
+
+    def parse_res(self, imp_type, obs, res):
+        s = res.get('success', None)
+        if s is None:
+            s = res.get('status', None)
+        if s:
+            self.imported.append((imp_type,
+                                    res['object'])) # use class to parse object
+        else:
+            if 'reason' in res:
+                msg = res['reason']
+            elif 'message' in res:
+                msg = res['message']
+            else:
+                msg = "Failed for unknown reason."
+            self.failed.append((msg,
+                                type(obs).__name__,
+                                obs.id_)) # note for display in UI
 
     def has_network_artifact(self, file_obj):
         """
