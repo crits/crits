@@ -781,6 +781,20 @@ class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
         method = StringField()
         reference = StringField()
 
+        def __eq__(self, other):
+            """
+            Two source instances are equal if their data attributes are equal
+            """
+
+            if isinstance(other, type(self)):
+                if (self.analyst == other.analyst and
+                    self.date == other.date and
+                    self.method == other.method and
+                    self.reference == other.reference):
+                    # all data attributes are equal, so sourceinstances are equal
+                    return True
+            return False
+
     instances = ListField(EmbeddedDocumentField(SourceInstance))
     name = StringField()
 
@@ -835,8 +849,14 @@ class CritsSourceDocument(BaseDocument):
                 if s.name == source_item.name: # find index of matching source
                     match = c
                     break
-            if match is not None: # if source exists, add instances to that source
-                self.source[match].instances.extend(source_item.instances)
+            if match is not None: # if source exists, add instances to it
+                # Don't add exact duplicates
+                for new_inst in source_item.instances:
+                    for exist_inst in self.source[match].instances:
+                        if new_inst == exist_inst:
+                            break
+                    else:
+                        self.source[match].instances.append(new_inst)
             else: # else, add as new source
                 self.source.append(source_item)
 
