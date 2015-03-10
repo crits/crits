@@ -257,6 +257,7 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
     campaign = data.get('campaign')
     confidence = data.get('confidence')
     source = data.get('source')
+    source_method = data.get('source_method')
     source_reference = data.get('source_reference')
     is_add_indicator = data.get('add_indicator')
     bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
@@ -265,6 +266,7 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
 
     retVal = ip_add_update(ip, ip_type,
             source=source,
+            source_method=source_method,
             source_reference=source_reference,
             campaign=campaign,
             confidence=confidence,
