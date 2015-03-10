@@ -265,9 +265,9 @@ def add_object(type_, oid, object_type, name, source, method,
                 reasons (by not querying mongo if we already have the
                 top level-object).
     :type obj: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-    :param is_validate_only: Only validate, do not add.
+    :param is_validate_only: Validate, but do not add to TLO.
     :type is_validate_only: bool
-    :param is_validate_locally: Only validate, do not add.
+    :param is_validate_locally: Validate, but do not add b/c there is no TLO.
     :type is_validate_locally: bool
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
@@ -287,41 +287,19 @@ def add_object(type_, oid, object_type, name, source, method,
     if obj == None:
         obj = class_from_id(type_, oid)
 
-    if not obj:
-        if is_validate_locally == True:
-            # TODO: Perform some form of validation
-            results['success'] = True
-            return results
-        else:
-            results['message'] = "Could not find item to add object to."
-            results['success'] = False
-            return results
+    from crits.indicators.handlers import validate_indicator_value
+    (value, error) = validate_indicator_value(value,
+                                              object_type + " - " + name)
+    if error:
+        return {"success": False, "message": error}
+    elif is_validate_locally: # no obj provided
+        results['success'] = True
+        return results
 
-    if name == "URL" and "://" not in value.split('.')[0]:
-        return {"success" : False, "message" : "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://)"}
-    elif object_type == "Address":
-        if "ipv4" in name:
-            try:
-                validate_ipv4_address(value)
-            except DjangoValidationError:
-                return {"success" : False, "message" : "Invalid IPv4 address. "}
-        elif "ipv6" in name:
-            try:
-                validate_ipv6_address(value)
-            except DjangoValidationError:
-                return {"success" : False, "message" : "Invalid IPv6 address. "}
-        elif "cidr" in name:
-            try:
-                if '/' not in value:
-                    raise ValidationError("")
-                cidr_parts = value.split('/')
-                if int(cidr_parts[1]) < 0 or int(cidr_parts[1]) > 128:
-                    raise ValidationError("")
-                if ':' not in cidr_parts[0] and int(cidr_parts[1]) > 32:
-                    raise ValidationError("")
-                validate_ipv46_address(cidr_parts[0])
-            except (ValidationError, ValueError) as cidr_error:
-                return {"success" : False, "message" : "Invalid CIDR address. "}
+    if not obj:
+        results['message'] = "TLO could not be found"
+        results['success'] = False
+        return results
 
     try:
         cur_len = len(obj.obj)

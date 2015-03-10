@@ -33,7 +33,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_admin, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.domains.handlers import get_domain
+from crits.domains.handlers import get_valid_root_domain
 from crits.emails import OleFileIO_PL
 from crits.emails.email import Email
 from crits.indicators.handlers import handle_indicator_ind
@@ -1547,7 +1547,7 @@ def parse_ole_file(file):
     all_received = headers.get_all('Received')
     crits_config = CRITsConfig.objects().first()
     if crits_config:
-        email_domain = get_domain(crits_config.crits_email.split('@')[-1])[0]
+        email_domain = get_valid_root_domain(crits_config.crits_email.split('@')[-1])[0]
     else:
         email_domain = ''
 

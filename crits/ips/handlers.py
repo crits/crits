@@ -7,6 +7,7 @@ from django.core.validators import validate_ipv46_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.utils.ipv6 import clean_ipv6_address
 
 from crits.core import form_consts
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
@@ -357,31 +358,9 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
     if not source:
         return {"success" : False, "message" : "Missing source information."}
 
-    if "Address - ipv4" in ip_type:
-        try:
-            validate_ipv4_address(ip_address)
-        except ValidationError:
-            return {"success": False, "message": "Invalid IPv4 address."}
-    elif "Address - ipv6" in ip_type:
-        try:
-            validate_ipv6_address(ip_address)
-        except ValidationError:
-            return {"success": False, "message": "Invalid IPv6 address."}
-    elif "cidr" in ip_type:
-        try:
-            if '/' not in ip_address:
-                raise ValidationError("Missing slash.")
-            cidr_parts = ip_address.split('/')
-            if int(cidr_parts[1]) < 0 or int(cidr_parts[1]) > 128:
-                raise ValidationError("Invalid mask.")
-            if ':' not in cidr_parts[0] and int(cidr_parts[1]) > 32:
-                raise ValidationError("Missing colon.")
-            validate_ipv46_address(cidr_parts[0])
-        except (ValidationError, ValueError) as cidr_error:
-            return {"success": False, "message": "Invalid CIDR address: %s" %
-                                                  cidr_error}
-    else:
-        return {"success": False, "message": "Invalid IP type."}
+    (ip_address, error) = validate_and_normalize_ip(ip_address, ip_type)
+    if error:
+        return {"success": False, "message": error}
 
     retVal = {}
     is_item_new = False
@@ -583,3 +562,63 @@ def process_bulk_add_ip(request, formdict):
     response = parse_bulk_upload(request, parse_row_to_bound_ip_form, add_new_ip_via_bulk, formdict, cache)
 
     return response
+
+def validate_and_normalize_ip(ip_address, ip_type):
+    """
+    Validate and normalize the given IP address
+
+    :param ip_address: the IP address to validate and normalize
+    :type ip_address: str
+    :param ip_type: the type of the IP address
+    :type ip_type: str
+    :returns: tuple: (Valid normalized IP, Error message)
+    """
+
+    cleaned = None
+    if "cidr" in ip_type:
+        try:
+            if '/' not in ip_address:
+                raise ValidationError("")
+            cidr_parts = ip_address.split('/')
+            if int(cidr_parts[1]) < 0 or int(cidr_parts[1]) > 128:
+                raise ValidationError("")
+            if ':' not in cidr_parts[0] and int(cidr_parts[1]) > 32:
+                raise ValidationError("")
+            ip_address = cidr_parts[0]
+        except (ValidationError, ValueError):
+            return ("", "Invalid CIDR address")
+
+    if "Address - ipv4" in ip_type or "cidr" in ip_type:
+        try:
+            validate_ipv4_address(ip_address)
+
+            # Remove leading zeros
+            cleaned = []
+            for octet in ip_address.split('.'):
+                cleaned.append(octet.lstrip('0') or '0')
+            cleaned = '.'.join(cleaned)
+        except ValidationError:
+            if "cidr" not in ip_type:
+                return ("", "Invalid IPv4 address")
+            else:
+                ip_type = "cidr_ipv6"
+
+    if "Address - ipv6" in ip_type or ip_type == "cidr_ipv6":
+        try:
+            validate_ipv6_address(ip_address)
+
+            # Replaces the longest continuous zero-sequence with "::" and
+            # removes leading zeroes and makes sure all hextets are lowercase.
+            cleaned = clean_ipv6_address(ip_address)
+        except ValidationError:
+            if "cidr" in ip_type:
+                return ("", "Invalid CIDR address")
+            else:
+                return ("", "Invalid IPv6 address")
+
+    if not cleaned:
+        return ("", "Invalid IP type.")
+    elif "cidr" in ip_type:
+        return (cleaned + '/' + cidr_parts[1], "")
+    else:
+        return (cleaned, "")

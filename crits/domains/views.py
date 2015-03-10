@@ -15,7 +15,7 @@ from crits.core.data_tools import json_handler
 from crits.core.handsontable_tools import form_to_dict
 from crits.core.user_tools import user_can_view_data
 from crits.domains.forms import TLDUpdateForm, AddDomainForm
-from crits.domains.handlers import get_domain, edit_domain_name
+from crits.domains.handlers import edit_domain_name
 from crits.domains.handlers import add_new_domain, get_domain_details
 from crits.domains.handlers import update_tlds, generate_domain_jtable
 from crits.domains.handlers import generate_domain_csv, process_bulk_add_domain
@@ -161,8 +161,7 @@ def edit_domain(request, domain):
     if request.method == "POST" and request.is_ajax():
         new_name = request.POST.get('value')
         analyst = request.user.username
-        if get_domain(new_name)[0] != 'no_tld_found_error':
-            edit_domain_name(domain, new_name, analyst)
+        if edit_domain_name(domain, new_name, analyst):
             return HttpResponse(new_name)
         else:
             return HttpResponse(domain)

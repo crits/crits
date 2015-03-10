@@ -26,14 +26,14 @@ from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
 from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.domains.domain import Domain
-from crits.domains.handlers import get_domain, upsert_domain
+from crits.domains.handlers import upsert_domain, get_valid_root_domain
 from crits.events.event import Event
 from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
 from crits.indicators.indicator import IndicatorAction
 from crits.indicators.indicator import Indicator
 from crits.indicators.indicator import EmbeddedConfidence, EmbeddedImpact
-from crits.ips.handlers import ip_add_update
+from crits.ips.handlers import ip_add_update, validate_and_normalize_ip
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.object_type import ObjectType
@@ -552,13 +552,14 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     :type cache: dict
     :returns: dict with keys:
               "success" (boolean),
-              "message" str) if failed,
+              "message" (str) if failed,
               "objectid" (str) if successful,
               "is_new_indicator" (boolean) if successful.
     """
 
-    if ind['type'] == "URI - URL" and "://" not in ind['value'].split('.')[0]:
-        return {"success": False, "message": "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://) "}
+    (ind['value'], error) = validate_indicator_value(ind['value'], ind['type'])
+    if error:
+        return {"success": False, "message": error}
 
     is_new_indicator = False
     dmain = None
@@ -640,21 +641,18 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         if ind_type in ("URI - Domain Name", "URI - URL"):
             if ind_type == "URI - URL":
                 domain_or_ip = urlparse.urlparse(ind_value).hostname
-            elif ind_type == "URI - Domain Name":
-                domain_or_ip = ind_value
-            (sdomain, fqdn) = get_domain(domain_or_ip)
-            if sdomain == "no_tld_found_error" and ind_type == "URI - URL":
                 try:
                     validate_ipv46_address(domain_or_ip)
                     url_contains_ip = True
                 except DjangoValidationError:
                     pass
+            else:
+                domain_or_ip = ind_value
             if not url_contains_ip:
                 success = None
                 if add_domain:
-                    success = upsert_domain(sdomain, fqdn, indicator.source,
-                                            '%s' % analyst, None,
-                                            bucket_list=bucket_list, cache=cache)
+                    success = upsert_domain(domain_or_ip, indicator.source, '%s' % analyst,
+                                            None, bucket_list=bucket_list, cache=cache)
                     if not success['success']:
                         return {'success': False, 'message': success['message']}
 
@@ -1203,3 +1201,61 @@ def create_indicator_from_obj(ind_type, obj_type, id_, value, analyst):
         return {'success': True, 'message': rels, 'value': id_}
     else:
         return {'success': False, 'message': result['message']}
+
+def validate_indicator_value(value, ind_type):
+    """
+    Check that a given value is valid for a particular Indicator type.
+
+    :param value: The value to be validated
+    :type value: str
+    :param ind_type: The indicator type to validate against
+    :type ind_type: str
+    :returns: tuple: (Valid value, Error message)
+    """
+
+    value = value.strip()
+    domain = ""
+
+    # URL
+    if ind_type == "URI - URL":
+        if "://" not in value.split('.')[0]:
+            return ("", "URI - URL must contain protocol "
+                        "prefix (e.g. http://, https://, ftp://) ")
+        domain_or_ip = urlparse.urlparse(value).hostname
+        try:
+            validate_ipv46_address(domain_or_ip)
+            return (value, "")
+        except DjangoValidationError:
+            domain = domain_or_ip
+
+    # Email address
+    if ind_type == "Address - e-mail":
+        if '@' not in value:
+            return ("", "Email address must contain an '@'")
+        domain_or_ip = value.split('@')[-1]
+        if domain_or_ip[0] == '[' and domain_or_ip[-1] == ']':
+            try:
+                validate_ipv46_address(domain_or_ip[1:-1])
+                return (value, "")
+            except DjangoValidationError:
+                return ("", "Email address does not contain a valid IP")
+        else:
+            domain = domain_or_ip
+
+    # IPs
+    if "Address - ipv" in ind_type or "cidr" in ind_type:
+        (ip_address, error) = validate_and_normalize_ip(value, ind_type)
+        if error:
+            return ("", error)
+        else:
+            return (ip_address, "")
+
+    # Domains
+    if ind_type == "URI - Domain Name" or domain:
+        (root, domain, error) = get_valid_root_domain(domain or value)
+        if error:
+            return ("", error)
+        else:
+            return (value, "")
+
+    return (value, "")
