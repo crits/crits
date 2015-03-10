@@ -278,10 +278,13 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
             is_validate_only=is_validate_only,
             cache=cache)
 
+    if not retVal['success']:
+        errors.append(retVal.get('message'))
+        retVal['message'] = ""
+
     # This block tries to add objects to the item
     if retVal['success'] == True or is_validate_only == True:
         result = True
-
         objectsData = rowData.get(form_consts.Common.OBJECTS_DATA)
 
         # add new objects if they exist
@@ -292,26 +295,28 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
                 new_ip = retVal.get('object')
 
                 if new_ip != None and is_validate_only == False:
-                    objectDict = object_array_to_dict(objectData, "IP", new_ip.id)
+                    objectDict = object_array_to_dict(objectData,
+                                                      "IP", new_ip.id)
                 else:
                     if new_ip != None:
                         if new_ip.id:
-                            objectDict = object_array_to_dict(objectData, "IP", new_ip.id)
+                            objectDict = object_array_to_dict(objectData,
+                                                              "IP", new_ip.id)
                         else:
-                            objectDict = object_array_to_dict(objectData, "IP", "")
+                            objectDict = object_array_to_dict(objectData,
+                                                              "IP", "")
                     else:
-                        objectDict = object_array_to_dict(objectData, "IP", "")
+                        objectDict = object_array_to_dict(objectData,
+                                                          "IP", "")
 
-                (object_result, object_errors, object_retVal) = validate_and_add_new_handler_object(
+                (obj_result,
+                 errors,
+                 obj_retVal) = validate_and_add_new_handler_object(
                         None, objectDict, request, errors, object_row_counter,
                         is_validate_only=is_validate_only, cache=cache)
 
-                if object_retVal.get('success') == False:
+                if not obj_result:
                     retVal['success'] = False
-                if object_retVal.get('message'):
-                    errors.append(object_retVal['message'])
-    else:
-        errors += "Failed to add IP: " + str(ip)
 
     return result, errors, retVal
 
