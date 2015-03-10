@@ -154,46 +154,48 @@ def upload_indicator(request):
                 request.POST,
                 request.FILES)
             if form.is_valid():
-                result = handle_indicator_csv(
-                    request.FILES['filedata'],
-                    request.POST['source'],
-                    request.POST['method'],
-                    request.POST['reference'],
-                    "file",
-                    username, add_domain=True)
+                result = handle_indicator_csv(request.FILES['filedata'],
+                                              request.POST['source'],
+                                              request.POST['method'],
+                                              request.POST['reference'],
+                                              "file",
+                                              username, add_domain=True)
                 if result['success']:
-                    message = {'message': ('<div>%s <a href="%s">Go to all indicators</a>'
-                                           '.</div>' % (result['message'],
-                                                        reverse('crits.indicators.views.indicators_listing')))}
+                    message = {'message': ('<div>%s <a href="%s">Go to all'
+                                           ' indicators</a></div>' %
+                                           (result['message'],
+                                            reverse('crits.indicators.views.indicators_listing')))}
                 else:
                     failed_msg = '<div>%s</div>' % result['message']
 
         if request.POST['svalue'] == "Upload Text":
             form = UploadIndicatorTextForm(username, request.POST)
             if form.is_valid():
-                result = handle_indicator_csv(
-                    request.POST['data'],
-                    request.POST['source'],
-                    request.POST['method'],
-                    request.POST['reference'],
-                    "ti",
-                    username,
-                    add_domain=True)
+                result = handle_indicator_csv(request.POST['data'],
+                                              request.POST['source'],
+                                              request.POST['method'],
+                                              request.POST['reference'],
+                                              "ti",
+                                              username,
+                                              add_domain=True)
                 if result['success']:
-                    message = {'message': ('<div>%s <a href="%s">Go to all indicators</a>'
-                                           '.</div>' % (result['message'],
-                                                        reverse('crits.indicators.views.indicators_listing')))}
+                    message = {'message': ('<div>%s <a href="%s">Go to all'
+                                           ' indicators</a></div>' %
+                                           (result['message'],
+                                            reverse('crits.indicators.views.indicators_listing')))}
                 else:
                     failed_msg = '<div>%s</div>' % result['message']
 
         if request.POST['svalue'] == "Upload Indicator":
-            all_ind_type_choices = [
-                (c[0], c[0], {'datatype': c[1].keys()[0], 'datatype_value': c[1].values()[0]})
-                for c in get_object_types(active=False, query={'datatype.file': {'$exists': 0}})]
-            form = UploadIndicatorForm(
-                username,
-                all_ind_type_choices,
-                request.POST)
+            all_ind_type_choices = [(c[0],
+                                     c[0],
+                                     {'datatype': c[1].keys()[0],
+                                      'datatype_value': c[1].values()[0]})
+                                    for c in get_object_types(active=False,
+                                                              query={'datatype.file': {'$exists': 0}})]
+            form = UploadIndicatorForm(username,
+                                       all_ind_type_choices,
+                                       request.POST)
             if form.is_valid():
                 result = handle_indicator_ind(
                     request.POST['value'],
@@ -210,18 +212,25 @@ def upload_indicator(request):
                     bucket_list=request.POST[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                     ticket=request.POST[form_consts.Common.TICKET_VARIABLE_NAME])
                 if result['success']:
-                    indicator_link = '<a href=\"%s\">Go to this indicator</a> or <a href="%s">all indicators</a>.</div>' % (reverse('crits.indicators.views.indicator', args=[result['objectid']]), reverse('crits.indicators.views.indicators_listing'))
+                    indicator_link = ((' - <a href=\"%s\">Go to this '
+                                       'indicator</a> or <a href="%s">all '
+                                       'indicators</a>.</div>') %
+                                      (reverse('crits.indicators.views.indicator',
+                                               args=[result['objectid']]),
+                                       reverse('crits.indicators.views.indicators_listing')))
 
                     if result.get('is_new_indicator', False) == False:
-                        message = {'message': ('<div>Warning: Updated indicator since indicator already exists! ' + indicator_link)}
+                        message = {'message': ('<div>Warning: Updated existing'
+                                               ' Indicator!' + indicator_link)}
                     else:
-                        message = {'message': ('<div>Indicator added successfully! ' + indicator_link)}
+                        message = {'message': ('<div>Indicator added '
+                                               'successfully!' + indicator_link)}
                 else:
-                    failed_msg = result['message']
+                    failed_msg = result['message'] + ' - '
 
         if result == None or not result['success']:
-            failed_msg += ('<a href="%s">Go to all indicators</a>'
-                           '.</div>' % reverse('crits.indicators.views.indicators_listing'))
+            failed_msg += ('<a href="%s"> Go to all indicators</a></div>'
+                           % reverse('crits.indicators.views.indicators_listing'))
             message = {'message': failed_msg, 'form': form.as_table()}
         elif result != None:
             message['success'] = result['success']
