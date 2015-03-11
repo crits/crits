@@ -351,10 +351,10 @@ def add_object(type_, oid, object_type, name, source, method,
                 campaign = obj.campaign if hasattr(obj, 'campaign') else None
                 ind_res = handle_indicator_ind(value,
                                                source,
-                                               reference,
                                                object_type,
                                                analyst,
                                                method,
+                                               reference,
                                                add_domain=True,
                                                campaign=campaign,
                                                cache=cache)
@@ -616,10 +616,10 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
         campaign = me.campaign if hasattr(me, 'campaign') else None
         create_indicator_result = handle_indicator_ind(value,
                                                        source_name,
-                                                       reference,
                                                        ind_type,
                                                        analyst,
                                                        method,
+                                                       reference,
                                                        add_domain=True,
                                                        campaign=campaign)
 

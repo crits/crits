@@ -25,7 +25,7 @@ from crits.indicators.handlers import activity_add, activity_update, activity_re
 from crits.indicators.handlers import ci_update, create_indicator_and_ip
 from crits.indicators.handlers import set_indicator_type, get_indicator_details
 from crits.indicators.handlers import generate_indicator_jtable, generate_indicator_csv
-from crits.indicators.handlers import create_indicator_from_obj
+from crits.indicators.handlers import create_indicator_from_tlo
 
 
 @user_passes_test(user_can_view_data)
@@ -198,10 +198,10 @@ def upload_indicator(request):
                 result = handle_indicator_ind(
                     request.POST['value'],
                     request.POST['source'],
-                    request.POST['reference'],
                     request.POST['indicator_type'],
                     username,
                     request.POST['method'],
+                    request.POST['reference'],
                     add_domain=True,
                     campaign=request.POST['campaign'],
                     campaign_confidence=request.POST['campaign_confidence'],
@@ -490,9 +490,9 @@ def indicator_and_ip(request):
     return HttpResponse(json.dumps(result), mimetype="application/json")
 
 @user_passes_test(user_can_view_data)
-def indicator_from_obj(request):
+def indicator_from_tlo(request):
     """
-    Create an Indicator from an Object. Should be an AJAX POST.
+    Create an Indicator from an Top-Level Object. Should be an AJAX POST.
 
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
@@ -501,18 +501,22 @@ def indicator_from_obj(request):
 
     if request.method == "POST" and request.is_ajax():
         ind_type = request.POST.get('ind_type', None)
-        obj_type = request.POST.get('obj_type', None)
-        id_ = request.POST.get('oid', None)
+        tlo_type = request.POST.get('obj_type', None)
+        tlo_id = request.POST.get('oid', None)
         value = request.POST.get('value', None)
-        if not ind_type or not obj_type or not id_ or not value:
+        source = request.POST.get('source', None)
+        if not ind_type or not tlo_type or not id_ or not value or not source:
             result = {'success': False,
-                      'message': "Need indicator type, object type, oid, and value."}
+                      'message': "Need indicator type, tlo type,"
+                                 "oid, value, and source."}
         else:
-            result = create_indicator_from_obj(ind_type,
-                                               obj_type,
-                                               id_,
-                                               value,
-                                               request.user.username)
+            result = create_indicator_from_tlo(tlo_type,
+                                               None,
+                                               request.user.username,
+                                               source,
+                                               tlo_id,
+                                               ind_type,
+                                               value)
             if result['success']:
                 relationship = {'type': ind_type,
                                 'value': result['value']}

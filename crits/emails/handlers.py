@@ -1273,7 +1273,6 @@ def create_indicator_from_header_field(email, header_field, ind_type,
 
     newindicator = handle_indicator_ind(value,
                                         email.source,
-                                        '',
                                         ind_type,
                                         analyst=analyst)
     if newindicator.get('objectid'):

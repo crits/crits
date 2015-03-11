@@ -66,19 +66,19 @@ class IndicatorResource(CRITsAPIResource):
         ticket = bundle.data.get('ticket', None)
 
         result =  handle_indicator_ind(value,
-                                        source,
-                                        reference,
-                                        ctype,
-                                        analyst,
-                                        method,
-                                        add_domain,
-                                        add_relationship,
-                                        campaign,
-                                        campaign_confidence,
-                                        confidence,
-                                        impact,
-                                        bucket_list,
-                                        ticket)
+                                       source,
+                                       ctype,
+                                       analyst,
+                                       method,
+                                       reference,
+                                       add_domain,
+                                       add_relationship,
+                                       campaign,
+                                       campaign_confidence,
+                                       confidence,
+                                       impact,
+                                       bucket_list,
+                                       ticket)
 
         content = {'return_code': 0,
                    'type': 'Indicator'}
