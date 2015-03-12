@@ -372,7 +372,8 @@ class STIXParser():
                         data['boundary'] = str(item.header.boundary)
                         data['from_address'] = str(item.header.from_)
                         data['date'] = item.header.date
-                        data['to'] = [str(r) for r in item.header.to.to_list()]
+                        if item.header.to:
+                            data['to'] = [str(r) for r in item.header.to.to_list()]
                     res = handle_email_fields(data,
                                             analyst,
                                             "STIX")
