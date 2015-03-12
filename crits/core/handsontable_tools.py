@@ -229,7 +229,9 @@ def parse_bulk_upload(request, parse_row_function, add_new_function, formdict, c
 
                 # Check to make sure there were no errors
                 for error in errors:
-                    message += error
+                    message += error + '; '
+                else:
+                    message = message[0:-2] # Remove '; ' from last
 
                 if errors:
                     # If there was an error then use a "col" value of -1, this is needed because

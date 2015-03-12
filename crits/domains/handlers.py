@@ -24,6 +24,7 @@ from crits.ips.ip import IP
 from crits.ips.handlers import validate_and_normalize_ip
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict, validate_and_add_new_handler_object
+from crits.relationships.handlers import forge_relationship
 from crits.services.handlers import run_triage, get_supported_services
 
 def get_valid_root_domain(domain):
@@ -277,10 +278,11 @@ def retrieve_domain(domain, cache):
     domain_obj = None
     cached_results = cache.get(form_consts.Domain.CACHED_RESULTS)
 
-    if cached_results != None:
+    if cached_results:
         domain_obj = cached_results.get(domain.lower())
-    else:
-        domain_obj = Domain.objects(domain_iexact=domain).first()
+
+    if not domain_obj:
+        domain_obj = Domain.objects(domain__iexact=domain).first()
 
     return domain_obj
 
@@ -299,44 +301,74 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
     :param is_validate_only: Only validate the data and return any errors.
     :type is_validate_only: boolean
     :param cache: Cached data, typically for performance enhancements
-                  during bulk uperations.
+                  during bulk operations.
     :type cache: dict
-    :returns: tuple
+    :returns: tuple (<result>, <errors>, <retVal>)
     """
 
-    username = request.user.username
     result = False
     retVal = {}
     domain = data['domain']
-    reference = data.get('domain_reference')
-    name = data.get('domain_source')
-    method = data.get('domain_method')
-    source = [create_embedded_source(name, reference=reference, method=method,
-                                     analyst=username)]
-    bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
-    ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+    add_ip = data.get('add_ip')
+    ip = data.get('ip')
+    ip_type = data.get('ip_type')
 
-    if data.get('campaign') and data.get('confidence'):
-        campaign = [EmbeddedCampaign(name=data.get('campaign'),
-                                     confidence=data.get('confidence'),
-                                     analyst=username)]
-    else:
-        campaign = []
+    if add_ip:
+        error = validate_and_normalize_ip(ip, ip_type)[1]
+        if error:
+             errors.append(error)
 
-    if is_validate_only == False:
+    if is_validate_only:
+        error = get_valid_root_domain(domain)[2]
+        if error:
+            errors.append(error)
+
+        # check for duplicate domains
+        fqdn_domain = retrieve_domain(domain, cache)
+
+        if fqdn_domain:
+            if isinstance(fqdn_domain, Domain):
+                resp_url = reverse('crits.domains.views.domain_detail', args=[domain])
+                message = ('Warning: Domain already exists: '
+                                     '<a href="%s">%s</a>' % (resp_url, domain))
+                retVal['message'] = message
+                retVal['status'] = form_consts.Status.DUPLICATE
+                retVal['warning'] = message
+        else:
+            result_cache = cache.get(form_consts.Domain.CACHED_RESULTS);
+            result_cache[domain.lower()] = True
+
+    elif not errors:
+        username = request.user.username
+        reference = data.get('domain_reference')
+        source_name = data.get('domain_source')
+        method = data.get('domain_method')
+        source = [create_embedded_source(source_name, reference=reference,
+                                         method=method, analyst=username)]
+        bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
+        ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+
+        if data.get('campaign') and data.get('confidence'):
+            campaign = [EmbeddedCampaign(name=data.get('campaign'),
+                                         confidence=data.get('confidence'),
+                                         analyst=username)]
+        else:
+            campaign = []
+
         retVal = upsert_domain(domain, source, username, campaign,
                                bucket_list=bucket_list, ticket=ticket, cache=cache)
-        ip_result = None
 
-        if retVal['success']:
+        if not retVal['success']:
+            errors.append(retVal.get('message'))
+            retVal['message'] = ""
+
+        else:
             new_domain = retVal['object']
-            add_ip = data.get('add_ip')
+            ip_result = {}
             if add_ip:
-                ip = data.get('ip')
-                ip_type = data.get('ip_type')
                 if data.get('same_source'):
-                    ip_source = data.get('domain_source')
-                    ip_method = data.get('domain_method')
+                    ip_source = source_name
+                    ip_method = method
                     ip_reference = reference
                 else:
                     ip_source = data.get('ip_source')
@@ -382,13 +414,14 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
             if data.get('add_indicators'):
                 from crits.indicators.handlers import create_indicator_from_tlo
                 # If we have an IP object, add an indicator for that.
-                if ip_result and ip_result['success']:
+                if ip_result.get('success'):
                     ip = ip_result['object']
                     result = create_indicator_from_tlo('IP',
                                                        ip,
                                                        username,
                                                        ip_source,
                                                        add_domain=False)
+                    ip_ind = result.get('indicator')
                     if not result['success']:
                         errors.append(result['message'])
 
@@ -396,33 +429,19 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                 result = create_indicator_from_tlo('Domain',
                                                    new_domain,
                                                    username,
-                                                   name,
+                                                   source_name,
                                                    add_domain=False)
 
                 if not result['success']:
                     errors.append(result['message'])
+                elif ip_result.get('success') and ip_ind:
+                    forge_relationship(left_class=result['indicator'],
+                                       right_class=ip_ind,
+                                       rel_type='Resolved_To',
+                                       analyst=username)
             result = True
 
-        elif 'message' in retVal: #database error? (!c_dom)
-            errors.append(retVal['message']) #u"Unknown error: unable to add domain")
-
-    elif is_validate_only == True:
-        domain = data['domain']
-        fqdn_domain = retrieve_domain(domain, cache);
-
-        if fqdn_domain:
-            if isinstance(fqdn_domain, Domain):
-                resp_url = reverse('crits.domains.views.domain_detail', args=[fqdn])
-                message = ('Warning: Domain already exists: '
-                                     '<a href="%s">%s</a>' % (resp_url, fqdn))
-                retVal['message'] = message;
-                retVal['status'] = form_consts.Status.DUPLICATE;
-                retVal['warning'] = message;
-        else:
-            result_cache = cache.get(form_consts.Domain.CACHED_RESULTS);
-            result_cache[domain.lower()] = True;
-
-    # This block tries to add objects to the item
+    # This block validates, and may also add, objects to the Domain
     if retVal.get('success') or is_validate_only == True:
         if rowData:
             objectsData = rowData.get(form_consts.Common.OBJECTS_DATA)
@@ -430,27 +449,32 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
             # add new objects if they exist
             if objectsData:
                 objectsData = json.loads(objectsData)
-                current_domain = retrieve_domain(fqdn, cache)
+                current_domain = retrieve_domain(domain, cache)
                 for object_row_counter, objectData in enumerate(objectsData, 1):
                     if current_domain != None:
                         # if the domain exists then try to add objects to it
                         if isinstance(current_domain, Domain) == True:
-                            objectDict = object_array_to_dict(objectData, "Domain", current_domain.id)
+                            objectDict = object_array_to_dict(objectData,
+                                                              "Domain",
+                                                              current_domain.id)
                         else:
-                            objectDict = object_array_to_dict(objectData, "Domain", "")
+                            objectDict = object_array_to_dict(objectData,
+                                                              "Domain",
+                                                              "")
                             current_domain = None;
                     else:
-                        objectDict = object_array_to_dict(objectData, "Domain", "")
+                        objectDict = object_array_to_dict(objectData,
+                                                          "Domain",
+                                                          "")
 
-                    (object_result, object_errors, object_retVal) = validate_and_add_new_handler_object(
-                            None, objectDict, request, errors, object_row_counter,
-                            is_validate_only=is_validate_only,
-                            cache=cache, obj=current_domain)
-
-                    if object_retVal.get('success') == False:
+                    (obj_result,
+                     errors,
+                     obj_retVal) = validate_and_add_new_handler_object(
+                        None, objectDict, request, errors, object_row_counter,
+                        is_validate_only=is_validate_only,
+                        cache=cache, obj=current_domain)
+                    if not obj_result:
                         retVal['success'] = False
-                    if object_retVal.get('message'):
-                        errors.append(object_retVal['message'])
 
     return result, errors, retVal
 
@@ -746,7 +770,7 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
     ip_source = rowData.get(form_consts.Domain.IP_SOURCE, "")
     ip_method = rowData.get(form_consts.Domain.IP_METHOD, "")
     ip_reference = rowData.get(form_consts.Domain.IP_REFERENCE, "")
-    is_add_indicator = convert_string_to_bool(rowData.get(form_consts.Domain.ADD_INDICATOR, "False"))
+    is_add_indicators = convert_string_to_bool(rowData.get(form_consts.Domain.ADD_INDICATORS, "False"))
 
     bucket_list = rowData.get(form_consts.Common.BUCKET_LIST, "")
     ticket = rowData.get(form_consts.Common.TICKET, "")
@@ -769,7 +793,7 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
                 'ip_source': ip_source,
                 'ip_method': ip_method,
                 'ip_reference': ip_reference,
-                'add_indicators': is_add_indicator,
+                'add_indicators': is_add_indicators,
                 'bucket_list': bucket_list,
                 'ticket': ticket}
 

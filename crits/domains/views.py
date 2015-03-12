@@ -122,21 +122,28 @@ def add_domain(request):
         retVal = {}
         errors = []
         if add_form.is_valid():
-            #form is valid, but we may still have post-validation errors
-            errors = add_form._errors.setdefault("domain", ErrorList())
+            errors = []
             data = add_form.cleaned_data
             (result, errors, retVal) = add_new_domain(data,
-                                              request,
-                                              errors)
-        if not result:
-            retVal['form'] = add_form.as_table()
+                                                      request,
+                                                      errors)
         if errors:
             if not 'message' in retVal:
                 retVal['message'] = ""
             elif not isinstance(retVal['message'], str):
                 retVal['message'] = str(retVal['message'])
             for e in errors:
+                if 'Domain' in e or 'TLD' in e:
+                    dom_form_error = add_form._errors.setdefault("domain",
+                                                                 ErrorList())
+                    dom_form_error.append('Invalid Domain')
+                elif 'IP' in e:
+                    ip_form_error = add_form._errors.setdefault("ip",
+                                                                ErrorList())
+                    ip_form_error.append('Invalid IP')
                 retVal['message'] += '<div>' + str(e) + '</div>'
+        if not result:
+            retVal['form'] = add_form.as_table()
         retVal['success'] = result
         return HttpResponse(json.dumps(retVal,
                                        default=json_handler),

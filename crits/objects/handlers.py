@@ -106,15 +106,20 @@ def validate_and_add_new_handler_object(data, rowData, request, errors, row_coun
     bound_form = parse_row_to_bound_object_form(request, rowData, cache)
 
     if bound_form.is_valid():
-        return add_new_handler_object(data, rowData, request, errors, obj=obj,
-                                      is_validate_only=is_validate_only,
-                                      is_sort_relationships=is_sort_relationships)
+        (result,
+         retVal) = add_new_handler_object(data, rowData, request, obj=obj,
+                                          is_validate_only=is_validate_only,
+                                          is_sort_relationships=is_sort_relationships)
+        if not result and 'message' in retVal:
+            errors.append("%s #%s - %s" % (form_consts.Common.OBJECTS_DATA,
+                                           str(row_counter),
+                                           retVal['message']))
     else:
         formdict = cache.get("object_formdict")
 
         if formdict == None:
             object_form = AddObjectForm(request.user, all_obj_type_choices)
-            formdict = form_to_dict(object_form, all_obj_type_choices)
+            formdict = form_to_dict(object_form)
             cache['object_formdict'] = formdict
 
         for name, errorMessages in bound_form.errors.items():
@@ -122,8 +127,10 @@ def validate_and_add_new_handler_object(data, rowData, request, errors, row_coun
             if entry == None:
                 continue
             for message in errorMessages:
-                errors.append("At " + form_consts.Common.OBJECTS_DATA + " #"
-                        + str(row_counter) + ": " + message + " ")
+                errors.append("%s #%s - %s - %s" % (form_consts.Common.OBJECTS_DATA,
+                                                    str(row_counter),
+                                                    name,
+                                                    message))
         result = False
 
     return result, errors, retVal
@@ -134,11 +141,17 @@ def add_new_handler_object_via_bulk(data, rowData, request, errors,
     Bulk add wrapper for the add_new_handler_object() function.
     """
 
-    return add_new_handler_object(data, rowData, request, errors,
-            is_validate_only=is_validate_only,
-            is_sort_relationships=True, cache=cache, obj=obj)
+    (result,
+     retVal) = add_new_handler_object(data, rowData, request,
+                                      is_validate_only=is_validate_only,
+                                      is_sort_relationships=True,
+                                      cache=cache, obj=obj)
+    if not result and 'message' in retVal:
+        errors.append(retVal['message'])
 
-def add_new_handler_object(data, rowData, request, errors, is_validate_only=False,
+    return result, errors, retVal
+
+def add_new_handler_object(data, rowData, request, is_validate_only=False,
                            is_sort_relationships=False, cache={}, obj=None):
     """
     Add an object to the database.
@@ -149,8 +162,6 @@ def add_new_handler_object(data, rowData, request, errors, is_validate_only=Fals
     :type rowData: dict
     :param request: The Django request.
     :type request: :class:`django.http.HttpRequest`
-    :param errors: List of existing errors to append to.
-    :type errors: list
     :param is_validate_only: Only validate.
     :type is_validate_only: bool
     :param cache: Cached data, typically for performance enhancements
@@ -161,7 +172,7 @@ def add_new_handler_object(data, rowData, request, errors, is_validate_only=Fals
                 reasons (by not querying mongo if we already have the
                 top level-object).
     :type obj: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-    :returns: tuple of (<result>, <errors>, <retVal>)
+    :returns: tuple (<result>, <retVal>)
     """
 
     result = False
@@ -212,9 +223,9 @@ def add_new_handler_object(data, rowData, request, errors, is_validate_only=Fals
             obj=obj, is_validate_only=is_validate_only, is_sort_relationships=is_sort_relationships,
             is_validate_locally=is_validate_locally, cache=cache)
 
-    if object_result['success'] == True:
+    if object_result['success']:
+        result = True
         if is_validate_only == False:
-            result = True
             if obj == None:
                 obj = class_from_id(otype, oid)
 
@@ -224,9 +235,9 @@ def add_new_handler_object(data, rowData, request, errors, is_validate_only=Fals
                 if object_result.get('relationships'):
                     retVal['secondary']['relationships'] = object_result.get('relationships')
     else:
-        errors += object_result['message']
+        retVal['message'] = object_result['message']
 
-    return result, errors, retVal
+    return result, retVal
 
 def add_object(type_, oid, object_type, name, source, method,
                reference, analyst, value=None, file_=None,
@@ -322,7 +333,8 @@ def add_object(type_, oid, object_type, name, source, method,
 
         new_len = len(obj.obj)
         if new_len > cur_len:
-            results['message'] = "Object added successfully!"
+            if not is_validate_only:
+                results['message'] = "Object added successfully!"
             results['success'] = True
             if file_:
                 # do we have a pcap?
