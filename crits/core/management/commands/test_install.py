@@ -40,14 +40,12 @@ class Command(BaseCommand):
                    'nids',
                    'pymongo',
                    'pefile',
-                   'pycurl',
                    'pydeep',
                    'pydot',
                    'pyparsing',
                    'requests',
                    'stix',
                    'yaml',
-                   'yara',
                    ]
 
         for i in imports:
@@ -68,7 +66,6 @@ class Command(BaseCommand):
         binaries = ['7za',
                     'mongod',
                     'mongos',
-                    'yara',
                     'unrar',
                     'upx']
 

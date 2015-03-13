@@ -110,6 +110,7 @@ class Domain():
     DOMAIN_REFERENCE = Common.SOURCE_REFERENCE
     ADD_IP_ADDRESS = "Add IP Address?"
     IP_ADDRESS = IP.IP_ADDRESS
+    IP_TYPE = IP.IP_TYPE
     IP_DATE = IP.IP_DATE
     SAME_SOURCE = "Use Domain Source"
     IP_SOURCE = IP.IP_SOURCE

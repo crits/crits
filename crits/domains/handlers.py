@@ -372,7 +372,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                 # If we have an IP object, add an indicator for that.
                 if ip_result and ip_result['success']:
                     obj = ip_result['object']
-                    result = create_indicator_from_obj('Address - ipv4-addr',
+                    result = create_indicator_from_obj(ip_type,
                                                        'IP',
                                                        obj.id,
                                                        obj.ip,
@@ -550,7 +550,7 @@ def upsert_domain(sdomain, domain, source, username=None, campaign=None,
     #if they don't exist, create them
     if not root_domain:
         root_domain = Domain()
-        root_domain.domain = sdomain
+        root_domain.domain = sdomain.strip()
         root_domain.source = []
         root_domain.record_type = 'A'
         is_root_domain_new = True
@@ -559,7 +559,7 @@ def upsert_domain(sdomain, domain, source, username=None, campaign=None,
             cached_results[sdomain] = root_domain
     if domain != sdomain and not fqdn_domain:
         fqdn_domain = Domain()
-        fqdn_domain.domain = domain
+        fqdn_domain.domain = domain.strip()
         fqdn_domain.source = []
         fqdn_domain.record_type = 'A'
         is_fqdn_domain_new = True
@@ -732,6 +732,7 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
     is_add_ip = False
 
     ip = rowData.get(form_consts.Domain.IP_ADDRESS, "")
+    ip_type = rowData.get(form_consts.Domain.IP_TYPE, "")
     created = rowData.get(form_consts.Domain.IP_DATE, "")
     #is_same_source = convert_string_to_bool(rowData.get(form_consts.Domain.SAME_SOURCE, "False"))
     is_same_source = False
@@ -755,6 +756,7 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
                 'domain_reference': domain_reference,
                 'add_ip': is_add_ip,
                 'ip': ip,
+                'ip_type': ip_type,
                 'created': created,
                 'same_source': is_same_source,
                 'ip_source': ip_source,
