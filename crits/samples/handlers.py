@@ -1026,13 +1026,13 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
     else:
         related_obj = None
 
-    if sha1_digest != None:
+    if sha1_digest != None and sha1_digest != ""::
         sha1_digest = sha1_digest.lower().strip()
         validate_sha1_result = validate_sha1_checksum(sha1_digest)
         retVal['message'] += validate_sha1_result.get('message')
         retVal['success'] = validate_sha1_result.get('success')
 
-    if sha256_digest != None:
+    if sha256_digest != None and sha256_digest != "":
         sha256_digest = sha256_digest.lower().strip()
         validate_sha256_result = validate_sha256_checksum(sha256_digest)
         retVal['message'] += validate_sha256_result.get('message')
