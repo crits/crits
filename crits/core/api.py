@@ -634,6 +634,57 @@ class CRITsAPIResource(MongoEngineResource):
         :returns: NotImplementedError if the resource doesn't override.
         """
 
+        import crits.actors.handlers as ah
+        import crits.campaigns.handlers as ch
+
+        actions = {
+            # Actor
+            'update_actor_tags': ah.update_actor_tags,
+            'attribute_actor_identifier': ah.attribute_actor_identifier,
+            'set_identifier_confidence': ah.set_identifier_confidence,
+            'remove_attribution': ah.remove_attribution,
+            'set_actor_name': ah.set_actor_name,
+            'set_actor_description': ah.set_actor_description,
+            'update_actor_aliases': ah.update_actor_aliases,
+            # Campaign
+            'add_campaign': ch.add_campaign,
+            'remove_campaign': ch.remove_campaign,
+            'add_ttp': ch.add_ttp,
+            'edit_ttp': ch.edit_ttp,
+            'remove_ttp': ch.remove_ttp,
+            'update_campaign_description': ch.update_campaign_description,
+            'modify_campaign_aliases': ch.modify_campaign_aliases,
+            'campaign_add': ch.campaign_add,
+            'campaign_edit': ch.campaign_edit,
+            'campaign_remove': ch.campaign_remove,
+        }
+
+        path = bundle.request.path[:-1].split('/')
+        type_ = path[-2][:-1].title()
+        if type_ == "Raw_data":
+            type_ = "RawData"
+        id_ = path[-1]
+
+        content = {'return_code': 0,
+                   'type': type_,
+                   'message': '',
+                   'id': id_}
+
+        action = bundle.data.get("action", None)
+        if action:
+            data = bundle.data
+            # Not sure if this needs to be done...
+            data['analyst'] = bundle.request.user.username
+            data['user'] = bundle.request.user.username
+            data['username'] = bundle.request.user.username
+            try:
+                results = actions[action](**data)
+                message = results.get('message', None)
+                content['message'] = message
+            except Exception, e:
+                print str(e)
+            print content
+
         raise NotImplementedError('You cannot currently update this object through the API.')
 
     def obj_delete_list(self, bundle, **kwargs):

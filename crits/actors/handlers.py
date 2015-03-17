@@ -669,7 +669,7 @@ def remove_attribution(id_, identifier=None, analyst=None):
     return {'success': True,
             'message': html}
 
-def set_actor_name(id_, name, analyst):
+def set_actor_name(id_, name, analyst, **kwargs):
     """
     Set an Actor name.
 
