@@ -246,14 +246,14 @@ def actor_tags_modify(request):
 
     if request.method == "POST" and request.is_ajax():
         tag_type = request.POST.get('tag_type', None)
-        actor_id = request.POST.get('oid', None)
+        id_ = request.POST.get('oid', None)
         tags = request.POST.get('tags', None)
-        username = request.user.username
+        user = request.user.username
         if not tag_type:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a tag type.'}),
                                 mimetype="application/json")
-        result = update_actor_tags(actor_id, tag_type, tags, username)
+        result = update_actor_tags(id_, tag_type, tags, user)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
     else:
@@ -339,7 +339,7 @@ def attribute_identifier(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        username = request.user.username
+        user = request.user.username
         id_ = request.POST.get('id', None)
         identifier_type = request.POST.get('identifier_type', None)
         identifier = request.POST.get('identifier', None)
@@ -352,7 +352,7 @@ def attribute_identifier(request):
                                             identifier_type,
                                             identifier,
                                             confidence,
-                                            username)
+                                            user)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
     else:
@@ -372,7 +372,7 @@ def edit_attributed_identifier(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        username = request.user.username
+        user = request.user.username
         id_ = request.POST.get('id', None)
         identifier = request.POST.get('identifier_id', None)
         confidence = request.POST.get('confidence', 'low')
@@ -383,7 +383,7 @@ def edit_attributed_identifier(request):
         result = set_identifier_confidence(id_,
                                            identifier,
                                            confidence,
-                                           username)
+                                           user)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
     else:
@@ -403,7 +403,7 @@ def remove_attributed_identifier(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        username = request.user.username
+        user = request.user.username
         id_ = request.POST.get('object_type', None)
         identifier = request.POST.get('key', None)
         if not identifier:
@@ -412,7 +412,7 @@ def remove_attributed_identifier(request):
                                 mimetype="application/json")
         result = remove_attribution(id_,
                                     identifier,
-                                    username)
+                                    user)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
     else:
@@ -434,7 +434,7 @@ def edit_actor_name(request, id_):
     """
 
     if request.method == "POST" and request.is_ajax():
-        username = request.user.username
+        user = request.user.username
         name = request.POST.get('name', None)
         if not name:
             return HttpResponse(json.dumps({'success': False,
@@ -442,7 +442,7 @@ def edit_actor_name(request, id_):
                                 mimetype="application/json")
         result = set_actor_name(id_,
                                 name,
-                                username)
+                                user)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
     else:
@@ -464,7 +464,7 @@ def edit_actor_description(request, id_):
     """
 
     if request.method == "POST" and request.is_ajax():
-        username = request.user.username
+        user = request.user.username
         description = request.POST.get('description', None)
         if not description:
             return HttpResponse(json.dumps({'success': False,
@@ -472,7 +472,7 @@ def edit_actor_description(request, id_):
                                 mimetype="application/json")
         result = set_actor_description(id_,
                                        description,
-                                       username)
+                                       user)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
     else:
@@ -494,9 +494,9 @@ def edit_actor_aliases(request):
 
     if request.method == "POST" and request.is_ajax():
         aliases = request.POST.get('aliases', None)
-        actor_id = request.POST.get('oid', None)
-        username = request.user.username
-        result = update_actor_aliases(actor_id, aliases, username)
+        id_ = request.POST.get('oid', None)
+        user = request.user.username
+        result = update_actor_aliases(id_, aliases, user)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
     else:

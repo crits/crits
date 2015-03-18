@@ -638,25 +638,27 @@ class CRITsAPIResource(MongoEngineResource):
         import crits.campaigns.handlers as ch
 
         actions = {
-            # Actor
-            'update_actor_tags': ah.update_actor_tags,
-            'attribute_actor_identifier': ah.attribute_actor_identifier,
-            'set_identifier_confidence': ah.set_identifier_confidence,
-            'remove_attribution': ah.remove_attribution,
-            'set_actor_name': ah.set_actor_name,
-            'set_actor_description': ah.set_actor_description,
-            'update_actor_aliases': ah.update_actor_aliases,
-            # Campaign
-            'add_campaign': ch.add_campaign,
-            'remove_campaign': ch.remove_campaign,
-            'add_ttp': ch.add_ttp,
-            'edit_ttp': ch.edit_ttp,
-            'remove_ttp': ch.remove_ttp,
-            'update_campaign_description': ch.update_campaign_description,
-            'modify_campaign_aliases': ch.modify_campaign_aliases,
-            'campaign_add': ch.campaign_add,
-            'campaign_edit': ch.campaign_edit,
-            'campaign_remove': ch.campaign_remove,
+            'Actor': {
+                'update_actor_tags': ah.update_actor_tags,
+                'attribute_actor_identifier': ah.attribute_actor_identifier,
+                'set_identifier_confidence': ah.set_identifier_confidence,
+                'remove_attribution': ah.remove_attribution,
+                'set_actor_name': ah.set_actor_name,
+                'set_actor_description': ah.set_actor_description,
+                'update_actor_aliases': ah.update_actor_aliases,
+            },
+            'Campaign': {
+                'add_campaign': ch.add_campaign,
+                'remove_campaign': ch.remove_campaign,
+                'add_ttp': ch.add_ttp,
+                'edit_ttp': ch.edit_ttp,
+                'remove_ttp': ch.remove_ttp,
+                'update_campaign_description': ch.update_campaign_description,
+                'modify_campaign_aliases': ch.modify_campaign_aliases,
+                'campaign_add': ch.campaign_add,
+                'campaign_edit': ch.campaign_edit,
+                'campaign_remove': ch.campaign_remove,
+            },
         }
 
         path = bundle.request.path[:-1].split('/')
@@ -670,22 +672,38 @@ class CRITsAPIResource(MongoEngineResource):
                    'message': '',
                    'id': id_}
 
+        # Make sure we have an appropriate action.
         action = bundle.data.get("action", None)
-        if action:
-            data = bundle.data
-            # Not sure if this needs to be done...
-            data['analyst'] = bundle.request.user.username
-            data['user'] = bundle.request.user.username
-            data['username'] = bundle.request.user.username
-            try:
-                results = actions[action](**data)
-                message = results.get('message', None)
-                content['message'] = message
-            except Exception, e:
-                print str(e)
-            print content
-
-        raise NotImplementedError('You cannot currently update this object through the API.')
+        atype = actions.get(type_, None)
+        if atype:
+            if atype.get(action, None):
+                data = bundle.data
+                # Requests don't need to have an id_ as we will derive it from
+                # the request URL. Override id_ if the request provided one.
+                data['id_'] = id_
+                # Override user (if provided) with the one who made the request.
+                data['user'] = bundle.request.user.username
+                try:
+                    results = actions[type_][action](**data)
+                    if not results.get('success', False):
+                        content['return_code'] = 1
+                        # TODO: Some messages contain HTML and other such content
+                        # that we shouldn't be returning here.
+                        message = results.get('message', None)
+                        content['message'] = message
+                    else:
+                        content['message'] = "success!"
+                except Exception, e:
+                    content['return_code'] = 1
+                    content['message'] = str(e)
+            else:
+                content['return_code'] = 1
+                content['message'] = "'%s' is not a valid action." % action
+            self.crits_response(content)
+        else:
+            raise NotImplementedError(
+                'You cannot currently update this object through the API.'
+            )
 
     def obj_delete_list(self, bundle, **kwargs):
         """
