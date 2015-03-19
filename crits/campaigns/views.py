@@ -75,8 +75,8 @@ def campaign_names(request, active_only=True):
 
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
-    :param option: Whether we return active campaigns only (default)
-    :type option: str
+    :param active_only: Whether we return active campaigns only (default)
+    :type active_only: str
     :returns: :class:`django.http.HttpResponse`
     """
 
