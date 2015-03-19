@@ -264,19 +264,20 @@ class STIXParser():
             try: # try to create CRITs object from observable
                 item = obs.object_.properties
                 if isinstance(item, Address):
-                    # This should be improved since some Address types are not
-                    # IP addresses.
-                    imp_type = "IP"
-                    for value in item.address_value.values():
-                        ip = str(value).strip()
-                        iptype = "Address - %s" % item.category
-                        res = ip_add_update(ip,
-                                            iptype,
-                                            [self.source],
-                                            analyst=analyst,
-                                            is_add_indicator=True)
-                        self.parse_res(imp_type, obs, res)
-                elif isinstance(item, DomainName):
+                    if item.category in ('cidr', 'ipv4-addr', 'ipv4-net',
+                                         'ipv4-netmask', 'ipv6-addr',
+                                         'ipv6-net', 'ipv6-netmask'):
+                        imp_type = "IP"
+                        for value in item.address_value.values():
+                            ip = str(value).strip()
+                            iptype = "Address - %s" % item.category
+                            res = ip_add_update(ip,
+                                                iptype,
+                                                [self.source],
+                                                analyst=analyst,
+                                                is_add_indicator=True)
+                            self.parse_res(imp_type, obs, res)
+                if isinstance(item, DomainName):
                     imp_type = "Domain"
                     for value in item.value.values():
                         (sdomain, domain) = get_domain(str(value.strip()))
@@ -382,20 +383,27 @@ class STIXParser():
                 else: # try to parse all other possibilities as Indicator
                     imp_type = "Indicator"
                     obj = make_crits_object(item)
-                    if obj.name and obj.name != obj.object_type:
-                        ind_type = "%s - %s" % (obj.object_type, obj.name)
+                    if (obj.object_type == 'Address' and
+                        obj.name in ('cidr', 'ipv4-addr', 'ipv4-net',
+                                     'ipv4-netmask', 'ipv6-addr',
+                                     'ipv6-net', 'ipv6-netmask')):
+                        # This was already caught above
+                        continue
                     else:
-                        ind_type = obj.object_type
-                    for value in obj.value:
-                        if value and ind_type:
-                            res = handle_indicator_ind(value.strip(),
-                                                    self.source,
-                                                    None,
-                                                    ind_type,
-                                                    analyst,
-                                                    add_domain=True,
-                                                    add_relationship=True)
-                            self.parse_res(imp_type, obs, res)
+                        if obj.name and obj.name != obj.object_type:
+                            ind_type = "%s - %s" % (obj.object_type, obj.name)
+                        else:
+                            ind_type = obj.object_type
+                        for value in obj.value:
+                            if value and ind_type:
+                                res = handle_indicator_ind(value.strip(),
+                                                        self.source,
+                                                        None,
+                                                        ind_type,
+                                                        analyst,
+                                                        add_domain=True,
+                                                        add_relationship=True)
+                                self.parse_res(imp_type, obs, res)
             except Exception, e: # probably caused by cybox object we don't handle
                 self.failed.append((e.message,
                                     type(item).__name__,
