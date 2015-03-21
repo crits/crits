@@ -907,6 +907,10 @@ class CRITsAuthBackend(object):
         :returns: :class:`crits.core.user.CRITsUser`, None
         """
 
+        # Need username and password for logins, checkem both
+        if not all([username, password]):
+            return None
+
         e = EmbeddedLoginAttempt()
         e.user_agent = user_agent
         e.remote_addr = remote_addr
