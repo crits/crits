@@ -2078,6 +2078,42 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 doc['url'] = reverse(url, args=(unicode(doc[urlfieldparam]),))
     return response
 
+def delete_id(username,obj,id):
+    """
+    Delete an object based on its ID.
+
+    Returns true if the obj was deleted and returns false with a message
+    if the deletion failed.
+
+    :param username: The username from the request (Required)
+    :type username: str
+    :param obj: MongoEngine collection object (Required)
+    :type obj: :class:`crits.core.crits_mongoengine.CritsDocument`
+    :param id: The ID of the object that will be deleted. (Required)
+    :type id: str
+    :returns: bool, str
+    """
+    # Only admins can delete
+    if not is_admin(username):
+        return (False, "Admin privileges required")
+
+    sources = user_sources(username)
+
+    # Finally, make sure there is a related document
+    doc = obj.objects(id=id,source__name__in=sources).first()
+    if not doc:
+        return (False, "ID not found")
+
+    if "delete_all_relationships" in dir(doc):
+        doc.delete_all_relationships()
+
+    # For samples/pcaps
+    if "filedata" in dir(doc):
+        doc.filedata.delete()
+
+    doc.delete(username=username)
+    return (True, "Success")
+
 def jtable_ajax_delete(obj,request):
     """
     Delete a document specified in the jTable POST.
@@ -2089,26 +2125,14 @@ def jtable_ajax_delete(obj,request):
     :returns: bool -- True if item was deleted
     """
 
-    # Only admins can delete
-    if not is_admin(request.user.username):
-        return False
     # Make sure we are supplied _id
     if not "id" in request.POST:
         return False
     docid = request.POST['id']
     if not docid:
         return False
-    # Finally, make sure there is a related document
-    doc = obj.objects(id=docid).first()
-    if not doc:
-        return False
-    if "delete_all_relationships" in dir(doc):
-        doc.delete_all_relationships()
-    # For samples/pcaps
-    if "filedata" in dir(doc):
-        doc.filedata.delete()
-    doc.delete(username=request.user.username)
-    return True
+    result, message = delete_id(request.user.username,obj,docid)
+    return result
 
 def build_jtable(jtopts, request):
     """

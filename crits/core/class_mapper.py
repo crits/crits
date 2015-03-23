@@ -298,3 +298,67 @@ def class_from_type(type_):
         return UserRole
     else:
         return None
+
+
+def class_from_path_name(path):
+    """
+    Return a class object based on the path name from the URL.
+
+    :param type_: The CRITs top-level object type.
+    :type type_: str
+    :param value: The value to search for.
+    :type value: str
+    :returns: class which inherits from
+              :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    """
+
+    # doing this to avoid circular imports
+    from crits.actors.actor import Actor
+    from crits.campaigns.campaign import Campaign
+    from crits.certificates.certificate import Certificate
+    from crits.comments.comment import Comment
+    from crits.domains.domain import Domain
+    from crits.emails.email import Email
+    from crits.events.event import Event
+    from crits.indicators.indicator import Indicator
+    from crits.ips.ip import IP
+    from crits.pcaps.pcap import PCAP
+    from crits.raw_data.raw_data import RawData
+    from crits.samples.sample import Sample
+    from crits.screenshots.screenshot import Screenshot
+    from crits.targets.target import Target
+
+    # Make sure value is a string...
+    value = str(path)
+
+    if path == 'ips':
+      return IP
+    elif path == 'domains':
+      return Domain
+    elif path == 'samples':
+      return Sample
+    elif path == 'campaigns':
+      return Campaign
+    elif path == 'pcaps':
+      return PCAP
+    elif path == 'emails':
+      return Email
+    elif path == 'comments':
+      return Comment
+    elif path == 'actors':
+      return Actor
+    elif path == 'certificates':
+      return Certificate
+    elif path == 'events':
+      return Event
+    elif path == 'raw_data':
+      return RawData
+    elif path == 'screenshots':
+      return Screenshot
+    elif path == 'targets':
+      return Target
+    elif path == 'indicators':
+      return Indicator
+    else:
+      return None
+
