@@ -7,9 +7,9 @@ from mongoengine.base import ValidationError
 from bson.objectid import ObjectId
 
 from crits.domains.domain import Domain
-from crits.domains.handlers import add_new_domain, add_whois
+from crits.domains.handlers import add_new_domain
 
-from crits.core.handlers import source_remove_all, delete_id
+from crits.core.handlers import source_remove_all
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 from crits.core.user_tools import is_admin, user_sources
@@ -65,6 +65,7 @@ class DomainResource(CRITsAPIResource):
         # Also add IP information
         add_ip = bundle.data.get('add_ip', None)
         ip = bundle.data.get('ip', None)
+        ip_type = bundle.data.get('ip_type', None)
         same_source = bundle.data.get('same_source', None)
         ip_source = bundle.data.get('ip_source', None)
         ip_method = bundle.data.get('ip_method', None)
@@ -86,6 +87,7 @@ class DomainResource(CRITsAPIResource):
                 'ip_reference': ip_reference,
                 'add_ip': add_ip,
                 'ip': ip,
+                'ip_type': ip_type,
                 'add_indicators': add_indicators,
                 'bucket_list': bucket_list,
                 'ticket': ticket}
@@ -125,44 +127,6 @@ class DomainResource(CRITsAPIResource):
 
         self.crits_response(content)
 
-
-    def delete_detail(self, request, **kwargs):
-        """
-        This will delete a specific domain ID record.
-
-        The domain ID must be part of the URL (/api/v1/domains/{id}/)
-
-        :param request: The incoming request.
-        :type request: :class:`django.http.HttpRequest`
-        :returns: HttpResponse.
-        """
-        content = {'return_code': 1,
-                   'type': 'Domain'}
-
-        analyst = request.user.username
-        if not is_admin(analyst):
-          content['message'] = 'You must be an admin to delete domains.'
-          self.crits_response(content)
-
-        path = request.path
-        parts = path.split("/")
-        id = parts[(len(parts) - 2)]
-
-        if not ObjectId.is_valid(id):
-          content['message'] = 'You must provide a valid domain ID.'
-          self.crits_response(content)
-
-        obj_type = Domain
-
-        result, message = delete_id(analyst,obj_type,id)
-        
-        if result: 
-          content['return_code'] = 0
-        else:
-          content['message'] = message
-
-        self.crits_response(content)
-   
 
     def patch_detail(self, request, **kwargs):
         """
@@ -244,61 +208,3 @@ class DomainResource(CRITsAPIResource):
 
         self.crits_response(content)
 
-
-
-class WhoIsResource(CRITsAPIResource):
-    """
-    Domain Whois API Resource Class.
-    """
-
-    class Meta:
-        object_class = Domain
-        allowed_methods = ('post',)
-        resource_name = "whois"
-        authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
-                                             CRITsSessionAuthentication())
-        authorization = authorization.Authorization()
-        serializer = CRITsSerializer()
-
-    def obj_create(self, bundle, **kwargs):
-        """
-        Handles adding WhoIs entries to domains through the API.
-
-        :param bundle: Bundle containing the information to create the Domain.
-        :type bundle: Tastypie Bundle object.
-        :returns: HttpResponse.
-        :raises BadRequest: If a domain name is not provided or creation fails.
-        """
-
-        analyst = bundle.request.user.username
-        domain = bundle.data.get('domain', None)
-        date = bundle.data.get('date', None)
-        whois = bundle.data.get('whois', None)
-
-        if not domain:
-            raise BadRequest('Need a Domain Name.')
-        if not date:
-            raise BadRequest('Need a date for this entry.')
-        if not whois:
-            raise BadRequest('Need whois data.')
-
-        try:
-            date = parse(date, fuzzy=True)
-        except Exception, e:
-            raise BadRequest('Cannot parse date: %s' % str(e))
-
-        result = add_whois(domain, whois, date, analyst, True)
-
-        content = {'return_code': 0,
-                   'type': 'Domain',
-                   'message': result.get('message', ''),
-                   'id': result.get('id', '')}
-        if result.get('id'):
-            url = reverse('api_dispatch_detail',
-                          kwargs={'resource_name': 'domains',
-                                  'api_name': 'v1',
-                                  'pk': result.get('id')})
-            content['url'] = url
-        if not result['success']:
-            content['return_code'] = 1
-        self.crits_response(content)

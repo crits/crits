@@ -7,7 +7,7 @@ from bson.objectid import ObjectId
 
 from crits.ips.ip import IP
 from crits.ips.handlers import ip_add_update
-from crits.core.handlers import source_remove_all, delete_id
+from crits.core.handlers import source_remove_all
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 from crits.core.user_tools import is_admin, user_sources
@@ -98,45 +98,6 @@ class IPResource(CRITsAPIResource):
             content['url'] = url
         if result['success']:
             content['return_code'] = 0
-        self.crits_response(content)
-
-
-    def delete_detail(self, request, **kwargs):
-        """
-        This will delete a specific IP record. 
-
-        The IP ID must be part of the URL (/api/v1/ips/{id}/)
-
-        :param request: The incoming request.
-        :type request: :class:`django.http.HttpRequest`
-        :returns: HttpResponse.
-        """
-        content = {'return_code': 1,
-                   'type': 'IP'}
-
-        analyst = request.user.username
-
-        if not is_admin(analyst):
-          content['message'] = 'You must be an admin to delete IPs.'
-          self.crits_response(content)
-
-        path = request.path
-        parts = path.split("/")
-        id = parts[(len(parts) - 2)]
-
-        if not ObjectId.is_valid(id):
-          content['message'] = 'You must provide a valid IP ID.'
-          self.crits_response(content)
-
-        obj_type = IP
-
-        result, message = delete_id(analyst,obj_type,id)
-
-        if result:
-          content['return_code'] = 0
-        else:
-          content['message'] = message
-
         self.crits_response(content)
 
 
