@@ -268,7 +268,7 @@ class STIXParser():
                                          'ipv4-netmask', 'ipv6-addr',
                                          'ipv6-net', 'ipv6-netmask'):
                         imp_type = "IP"
-                        for value in item.address_value.values():
+                        for value in item.address_value.values:
                             ip = str(value).strip()
                             iptype = "Address - %s" % item.category
                             res = ip_add_update(ip,
@@ -279,7 +279,7 @@ class STIXParser():
                             self.parse_res(imp_type, obs, res)
                 if isinstance(item, DomainName):
                     imp_type = "Domain"
-                    for value in item.value.values():
+                    for value in item.value.values:
                         (sdomain, domain) = get_domain(str(value.strip()))
                         res = upsert_domain(sdomain,
                                             domain,
@@ -372,7 +372,7 @@ class STIXParser():
                         data['x_mailer'] = str(item.header.x_mailer)
                         data['boundary'] = str(item.header.boundary)
                         data['from_address'] = str(item.header.from_)
-                        data['date'] = item.header.date
+                        data['date'] = item.header.date.value
                         if item.header.to:
                             data['to'] = [str(r) for r in item.header.to.to_list()]
                     res = handle_email_fields(data,
