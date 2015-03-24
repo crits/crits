@@ -12,11 +12,10 @@ from tastypie.authentication import SessionAuthentication, ApiKeyAuthentication
 from tastypie.utils.mime import build_content_type
 from tastypie_mongoengine.resources import MongoEngineResource
 
-from crits.core.class_mapper import class_from_path_name
 from crits.core.data_tools import format_file, create_zip
-from crits.core.handlers import download_object_handler, remove_quotes, generate_regex, delete_id
+from crits.core.handlers import download_object_handler, remove_quotes, generate_regex
 from crits.core.source_access import SourceAccess
-from crits.core.user_tools import user_sources, is_admin
+from crits.core.user_tools import user_sources
 
 
 # The following leverages code from the Tastypie library.
@@ -637,6 +636,7 @@ class CRITsAPIResource(MongoEngineResource):
 
         raise NotImplementedError('You cannot currently update this object through the API.')
 
+
     def obj_delete_list(self, bundle, **kwargs):
         """
         Delete list of objects in CRITs. Should be overridden by each
@@ -646,6 +646,7 @@ class CRITsAPIResource(MongoEngineResource):
         """
 
         raise NotImplementedError('You cannot currently delete objects through the API.')
+
 
     def obj_delete(self, bundle, **kwargs):
         """
@@ -660,46 +661,13 @@ class CRITsAPIResource(MongoEngineResource):
 
     def delete_detail(self, bundle, **kwargs):
         """
-        Delete a top-level object in CRITs. 
-        If special actions are needed for a TLO, it will be overriden in the objects API.
+        Delete an object in CRITs. Should be overridden by each
+        individual top-level resource.
 
-	The URL for the request should be /api/v1/{object}/{id}/
-
-        :returns: HttpResponse
+        :returns: NotImplementedError if the resource doesn't override.
         """
 
-        content = {'return_code': 1,
-                   'type': 'Core'}
-
-        analyst = bundle.user.username
-        if not is_admin(analyst):
-          content['message'] = 'You must be an admin to perform a delete.'
-          self.crits_response(content)
-
-        path = bundle.path
-        parts = path.split("/")
-        id = parts[(len(parts) - 2)]
-        path_type = parts[(len(parts) - 3)]
-
-        if not ObjectId.is_valid(id):
-          content['message'] = 'You must provide a valid CRITs ID.'
-          self.crits_response(content)
-
-        obj_type = class_from_path_name(path_type)
-        if obj_type == None:
-          content['message'] = 'The path contains an invalid type.'
-          self.crits_response(content)
-
-        content['type'] = obj_type._meta['crits_type']
-
-        result, message = delete_id(analyst,obj_type,id)
-
-        if result:
-          content['return_code'] = 0
-        else:
-          content['message'] = message
-
-        self.crits_response(content)
+        raise NotImplementedError('You cannot currently delete this object through the API.')
 
 
     def patch_detail(self, bundle, **kwargs):

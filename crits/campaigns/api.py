@@ -12,8 +12,6 @@ from crits.indicators.indicator import Indicator
 from crits.ips.ip import IP
 from crits.pcaps.pcap import PCAP
 from crits.samples.sample import Sample
-from crits.raw_data.raw_data import RawData
-from crits.actors.actor import Actor
 
 from crits.campaigns.handlers import add_campaign, campaign_remove, remove_campaign
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
@@ -76,12 +74,12 @@ class CampaignResource(CRITsAPIResource):
             content['message'] = 'Need a Campaign name.'
             self.crits_response(content)
 
-        result = add_campaign(name,
-                              description,
-                              aliases,
-                              analyst,
-                              bucket_list,
-                              ticket)
+        result =  add_campaign(name,
+                               description,
+                               aliases,
+                               analyst,
+                               bucket_list,
+                               ticket)
         if result.get('id'):
             url = reverse('api_dispatch_detail',
                           kwargs={'resource_name': 'campaigns',
@@ -186,7 +184,6 @@ class CampaignResource(CRITsAPIResource):
         """
         This will delete a specific campaign ID record.
         It will also delete all the campaign references in the TLOs.
-        This will override the delete_detail in the core API.
 
         The campaign ID must be part of the URL (/api/v1/campaigns/{id}/)
 
@@ -212,11 +209,10 @@ class CampaignResource(CRITsAPIResource):
 
         campaign = Campaign.objects(id=id).first()
         sources = user_sources(analyst)
- 
+
         # Remove associations
         formatted_query = {'campaign.name': campaign.name}
-        for obj_type in [Domain, PCAP, Indicator, Email, Sample, IP, Event, RawData, Actor]:
-           
+        for obj_type in [Sample, PCAP, Indicator, Email, Domain, IP, Event]:
           objects = obj_type.objects(source__name__in=sources, __raw__=formatted_query)
           for obj in objects:
             result = campaign_remove(obj._meta['crits_type'],obj.id,campaign.name,analyst)

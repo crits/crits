@@ -1,22 +1,5 @@
 from bson.objectid import ObjectId
 
-
-__obj_type_to_key_descriptor__ = {
-    'Actor': 'name',
-    'Campaign': 'name',
-    'Certificate': 'md5',
-    'Comment': 'object_id',
-    'Domain': 'domain',
-    'Email': 'id',
-    'Event': 'id',
-    'Indicator': 'id',
-    'IP': 'ip',
-    'PCAP': 'md5',
-    'RawData': 'title',
-    'Sample': 'md5',
-    'Target': 'email_address',
-}
-
 def class_from_id(type_, _id):
     """
     Return an instantiated class object.
@@ -122,9 +105,6 @@ def class_from_id(type_, _id):
         return UserRole.objects(id=_id).first()
     else:
         return None
-
-def key_descriptor_from_obj_type(obj_type):
-    return __obj_type_to_key_descriptor__.get(obj_type)
 
 def class_from_value(type_, value):
     """
@@ -298,67 +278,3 @@ def class_from_type(type_):
         return UserRole
     else:
         return None
-
-
-def class_from_path_name(path):
-    """
-    Return an class object based on the path name from the URL.
-
-    :param type_: The CRITs top-level object type.
-    :type type_: str
-    :param value: The value to search for.
-    :type value: str
-    :returns: class which inherits from
-              :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-    """
-
-    # doing this to avoid circular imports
-    from crits.actors.actor import Actor
-    from crits.campaigns.campaign import Campaign
-    from crits.certificates.certificate import Certificate
-    from crits.comments.comment import Comment
-    from crits.domains.domain import Domain
-    from crits.emails.email import Email
-    from crits.events.event import Event
-    from crits.indicators.indicator import Indicator
-    from crits.ips.ip import IP
-    from crits.pcaps.pcap import PCAP
-    from crits.raw_data.raw_data import RawData
-    from crits.samples.sample import Sample
-    from crits.screenshots.screenshot import Screenshot
-    from crits.targets.target import Target
-
-    # Make sure value is a string...
-    value = str(path)
-
-    if path == 'ips':
-      return IP
-    elif path == 'domains':
-      return Domain
-    elif path == 'samples':
-      return Sample
-    elif path == 'campaigns':
-      return Campaign
-    elif path == 'pcaps':
-      return PCAP
-    elif path == 'emails':
-      return Email
-    elif path == 'comments':
-      return Comment
-    elif path == 'actors':
-      return Actor
-    elif path == 'certificates':
-      return Certificate
-    elif path == 'events':
-      return Event
-    elif path == 'raw_data':
-      return RawData
-    elif path == 'screenshots':
-      return Screenshot
-    elif path == 'targets':
-      return Target
-    elif path == 'indicators':
-      return Indicator
-    else:
-      return None
-
