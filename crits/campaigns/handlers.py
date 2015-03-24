@@ -12,7 +12,7 @@ from crits.campaigns.forms import TTPForm
 from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.handlers import jtable_ajax_list, build_jtable
-from crits.core.handlers import csv_export
+from crits.core.handlers import csv_export, get_item_names
 from crits.core.mongo_tools import mongo_connector
 from crits.core.user_tools import user_sources, is_user_subscribed
 from crits.core.user_tools import is_user_favorite
@@ -30,6 +30,10 @@ from crits.targets.target import Target
 
 
 # Functions for top level Campaigns.
+def get_campaign_names_list(active):
+    listing = get_item_names(Campaign, bool(active))
+    return [c.name for c in listing]
+
 def get_campaign_details(campaign_name, analyst):
     """
     Generate the data to render the Campaign details template.

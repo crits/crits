@@ -657,6 +657,10 @@ def get_item_names(obj, active=None):
     :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
     """
 
+    # Don't use this to get sources.
+    if isinstance(obj, SourceAccess):
+        return []
+
     if active is None:
        c = obj.objects().order_by('+name')
     else:
