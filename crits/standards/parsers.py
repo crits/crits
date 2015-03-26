@@ -1,4 +1,4 @@
-import datetime, base64
+import datetime
 
 from StringIO import StringIO
 
@@ -290,33 +290,33 @@ class STIXParser():
                     # Not sure if this is right, and I believe these can be
                     # encoded in a couple different ways.
                     imp_type = "RawData"
-                    rawdata = base64.b64decode(item.data)
-                    description = str(item.description)
+                    rawdata = item.data.decode('utf-8')
+                    description = "None"
                     # TODO: find out proper ways to determine title, datatype,
                     #       tool_name, tool_version
                     title = "Artifact for Event: STIX Document %s" % self.package.id_
                     res = handle_raw_data_file(rawdata,
-                                               self.source.name,
-                                               user=analyst,
-                                               description=description,
-                                               title=title,
-                                               data_type="Text",
-                                               tool_name="STIX",
-                                               tool_version=None,
-                                               method=self.source_instance.method,
-                                               reference=self.source_instance.reference)
+                                            self.source.name,
+                                            user=analyst,
+                                            description=description,
+                                            title=title,
+                                            data_type="Text",
+                                            tool_name="STIX",
+                                            tool_version=None,
+                                            method=self.source_instance.method,
+                                            reference=self.source_instance.reference)
                     self.parse_res(imp_type, obs, res)
                 elif (isinstance(item, File) and
                       item.custom_properties and
                       item.custom_properties[0].name == "crits_type" and
                       item.custom_properties[0]._value == "Certificate"):
                     imp_type = "Certificate"
-                    description = str(item.description)
+                    description = "None"
                     filename = str(item.file_name)
                     data = None
                     for obj in item.parent.related_objects:
                         if isinstance(obj.properties, Artifact):
-                            data = base64.b64decode(obj.properties.data)
+                            data = obj.properties.data
                     res = handle_cert_file(filename,
                                            data,
                                            self.source,
@@ -325,13 +325,13 @@ class STIXParser():
                     self.parse_res(imp_type, obs, res)
                 elif isinstance(item, File) and self.has_network_artifact(item):
                     imp_type = "PCAP"
-                    description = str(item.description)
+                    description = "None"
                     filename = str(item.file_name)
                     data = None
                     for obj in item.parent.related_objects:
                         if (isinstance(obj.properties, Artifact) and
                             obj.properties.type_ == Artifact.TYPE_NETWORK):
-                            data = base64.b64decode(obj.properties.data)
+                            data = obj.properties.data
                     res = handle_pcap_file(filename,
                                            data,
                                            self.source,
@@ -346,7 +346,7 @@ class STIXParser():
                     for obj in item.parent.related_objects:
                         if (isinstance(obj.properties, Artifact) and
                             obj.properties.type_ == Artifact.TYPE_FILE):
-                            data = base64.b64decode(obj.properties.data)
+                            data = obj.properties.data
                     res = handle_file(filename,
                                       data,
                                       self.source,
