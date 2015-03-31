@@ -427,6 +427,7 @@ def handle_raw_data_file(data, source_name, user=None,
         'success':      True,
         'message':      'Uploaded raw_data',
         '_id':          raw_data.id,
+        'object':       raw_data
     }
 
     return status

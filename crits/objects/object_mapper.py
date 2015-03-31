@@ -66,6 +66,12 @@ class UnsupportedCRITsObjectTypeError(Exception):
     def __str__(self):
         return repr(self.message)
 
+def get_object_values(obj):
+    try:
+        return obj.values
+    except:
+        return [obj.value]
+
 def make_cybox_object(type_, name=None, value=None):
     """
     Converts type_, name, and value to a CybOX object instance.
@@ -322,20 +328,20 @@ def make_crits_object(cybox_obj):
     o.datatype = "string"
     if isinstance(cybox_obj, Account):
         o.object_type = "Account"
-        o.value = str(cybox_obj.description)
+        o.value = get_object_values(cybox_obj.description)
         return o
     elif isinstance(cybox_obj, Address):
         o.object_type = "Address"
         o.name = str(cybox_obj.category)
-        o.value = str(cybox_obj.address_value)
+        o.value = get_object_values(cybox_obj.address_value)
         return o
     elif isinstance(cybox_obj, API):
         o.object_type = "API"
-        o.value = str(cybox_obj.description)
+        o.value = get_object_values(cybox_obj.description)
         return o
     elif isinstance(cybox_obj, Artifact):
         o.object_type = "Artifact"
-        o.value = str(cybox_obj.data)
+        o.value = get_object_values(cybox_obj.data)
         if cybox_obj.type_ == Artifact.TYPE_GENERIC:
             o.name = "Data Region"
             return o
@@ -347,153 +353,152 @@ def make_crits_object(cybox_obj):
             return o
     elif isinstance(cybox_obj, Code):
         o.object_type = "Code"
-        o.value = str(cybox_obj.code_segment)
         o.name = str(cybox_obj.type)
+        o.value = get_object_values(cybox_obj.code_segment)
         return o
     elif isinstance(cybox_obj, Disk):
         o.object_type = "Disk"
         o.name = str(cybox_obj.type)
-        o.value = str(cybox_obj.disk_name)
+        o.value = get_object_values(cybox_obj.disk_name)
         return o
     elif isinstance(cybox_obj, DiskPartition):
         o.object_type = "Disk Partition"
         o.name = str(cybox_obj.type)
-        o.value = str(cybox_obj.device_name)
+        o.value = get_object_values(cybox_obj.device_name)
         return o
     elif isinstance(cybox_obj, DNSQuery):
         o.object_type = "DNS Query"
-        o.value = str(cybox_obj.question.qname.value)
+        o.value = get_object_values(cybox_obj.question.qname)
         return o
     elif isinstance(cybox_obj, DNSRecord):
         o.object_type = "DNS Record"
-        o.value = str(cybox_obj.description)
+        o.value = get_object_values(cybox_obj.description)
         return o
     elif isinstance(cybox_obj, DomainName):
-        o.object_type = "Domain Name"
-        o.value = str(cybox_obj.value)
+        o.object_type = "URI - Domain Name"
+        o.value = get_object_values(cybox_obj.value)
         return o
     elif isinstance(cybox_obj, EmailMessage):
         o.object_type = "Email Message"
-        o.value = str(cybox_obj.raw_body)
+        o.value = [cybox_obj.raw_body]
         return o
     elif isinstance(cybox_obj, GUIDialogbox):
         o.object_type = "GUI Dialogbox"
-        o.value = str(cybox_obj.box_text)
+        o.value = get_object_values(cybox_obj.box_text)
         return o
     elif isinstance(cybox_obj, GUIWindow):
         o.object_type = "GUI Window"
-        o.value = str(cybox_obj.window_display_name)
+        o.value = get_object_values(cybox_obj.window_display_name)
         return o
     elif isinstance(cybox_obj, Library):
         o.object_type = "Library"
         o.name = str(cybox_obj.type)
-        o.value = str(cybox_obj.name)
+        o.value = get_object_values(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, Memory):
         o.object_type = "Memory"
-        o.value = str(cybox_obj.memory_source)
+        o.value = get_object_values(cybox_obj.memory_source)
         return o
     elif isinstance(cybox_obj, Mutex):
         o.object_type = "Mutex"
-        o.value = str(cybox_obj.name)
+        o.value = get_object_values(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, NetworkConnection):
         o.object_type = "Network Connection"
-        o.value = str(cybox_obj.layer7_protocol)
+        o.value = get_object_values(cybox_obj.layer7_protocol)
         return o
     elif isinstance(cybox_obj, Pipe):
         o.object_type = "Pipe"
-        o.value = str(cybox_obj.name)
+        o.value = get_object_values(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, Port):
         o.object_type = "Port"
-        o.value = str(cybox_obj.port_value)
+        o.value = get_object_values(cybox_obj.port_value)
         return o
     elif isinstance(cybox_obj, Process):
         o.object_type = "Process"
-        o.value = str(cybox_obj.name)
+        o.value = get_object_values(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, String):
         o.object_type = "String"
-        o.value = str(cybox_obj.value)
+        o.value = get_object_values(cybox_obj.value)
         return o
     elif isinstance(cybox_obj, System):
         o.object_type = "System"
-        o.value = str(cybox_obj.hostname)
+        o.value = get_object_values(cybox_obj.hostname)
         return o
     elif isinstance(cybox_obj, URI):
-        o.object_type = "URI"
-        o.name = str(cybox_obj.type_)
-        o.value = str(cybox_obj.value)
+        o.object_type = "URI - URL"
+        o.name = cybox_obj.type_
+        o.value = get_object_values(cybox_obj.value)
         return o
     elif isinstance(cybox_obj, UserAccount):
         o.object_type = "User Account"
-        o.value = str(cybox_obj.username)
+        o.value = get_object_values(cybox_obj.username)
         return o
     elif isinstance(cybox_obj, Volume):
         o.object_type = "Volume"
-        o.value = str(cybox_obj.name)
+        o.value = get_object_values(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, WinDriver):
         o.object_type = "Win Driver"
-        o.value = str(cybox_obj.driver_name)
+        o.value = get_object_values(cybox_obj.driver_name)
         return o
     elif isinstance(cybox_obj, WinEventLog):
         o.object_type = "Win Event Log"
-        o.value = str(cybox_obj.log)
+        o.value = get_object_values(cybox_obj.log)
         return o
     elif isinstance(cybox_obj, WinEvent):
         o.object_type = "Win Event"
-        o.value = str(cybox_obj.name)
+        o.value = get_object_values(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, WinHandle):
         o.object_type = "Win Handle"
         o.name = str(cybox_obj.type_)
-        o.value = str(cybox_obj.object_address)
+        o.value = get_object_values(cybox_obj.object_address)
         return o
     elif isinstance(cybox_obj, WinKernelHook):
         o.object_type = "Win Kernel Hook"
-        o.value = str(cybox_obj.description)
+        o.value = get_object_values(cybox_obj.description)
         return o
     elif isinstance(cybox_obj, WinMailslot):
         o.object_type = "Win Mailslot"
-        o.value = str(cybox_obj.name)
+        o.value = get_object_values(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, WinNetworkShare):
         o.object_type = "Win Network Share"
-        o.value = str(cybox_obj.local_path)
+        o.value = get_object_values(cybox_obj.local_path)
         return o
     elif isinstance(cybox_obj, WinProcess):
         o.object_type = "Win Process"
-        o.value = str(cybox_obj.window_title)
+        o.value = get_object_values(cybox_obj.window_title)
         return o
     elif isinstance(cybox_obj, WinRegistryKey):
         o.object_type = "Win Registry Key"
-        o.value = str(cybox_obj.key)
+        o.value = get_object_values(cybox_obj.key)
         return o
     elif isinstance(cybox_obj, WinService):
         o.object_type = "Win Service"
-        o.value = str(cybox_obj.service_name)
+        o.value = get_object_values(cybox_obj.service_name)
         return o
     elif isinstance(cybox_obj, WinSystem):
         o.object_type = "Win System"
-        o.value = str(cybox_obj.product_name)
+        o.value = get_object_values(cybox_obj.product_name)
         return o
     elif isinstance(cybox_obj, WinTask):
         o.object_type = "Win Task"
-        o.value = str(cybox_obj.name)
+        o.value = get_object_values(cybox_obj.name)
         return o
     elif isinstance(cybox_obj, WinUser):
         o.object_type = "Win User Account"
-        o.value = str(cybox_obj.security_id)
+        o.value = get_object_values(cybox_obj.security_id)
         return o
     elif isinstance(cybox_obj, WinVolume):
         o.object_type = "Win Volume"
-        o.value = str(cybox_obj.drive_letter)
+        o.value = get_object_values(cybox_obj.drive_letter)
         return o
     elif isinstance(cybox_obj, X509Certificate):
         o.object_type = "X509 Certificate"
-        o.value = str(cybox_obj.raw_certificate)
+        o.value = get_object_values(cybox_obj.raw_certificate)
         return o
     raise UnsupportedCRITsObjectTypeError(cybox_obj)
-

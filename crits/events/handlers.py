@@ -1,7 +1,6 @@
 import json
 import uuid
 from HTMLParser import HTMLParser
-import urllib2
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -308,7 +307,8 @@ def add_new_event(title, description, event_type, source, method, reference,
                                           title))
         result = {'success': True,
                   'message': message,
-                  'id': str(event.id)}
+                  'id': str(event.id),
+                  'object': event}
     except ValidationError, e:
         result = {'success': False,
                   'message': e}
