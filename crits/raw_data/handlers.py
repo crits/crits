@@ -323,7 +323,7 @@ def handle_raw_data_file(data, source_name, user=None,
     :returns: dict with keys:
               'success' (boolean),
               'message' (str),
-              'md5' (str) if successful.
+              '_id' (str) if successful.
     """
 
     if not data or not title or not data_type:
@@ -419,6 +419,7 @@ def handle_raw_data_file(data, source_name, user=None,
         'success':      True,
         'message':      'Uploaded raw_data',
         '_id':          raw_data.id,
+        'object':       raw_data
     }
 
     return status
