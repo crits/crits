@@ -638,6 +638,11 @@ class CRITsAPIResource(MongoEngineResource):
         import crits.campaigns.handlers as ch
 
         actions = {
+            'Common': {
+                'campaign_add': ch.campaign_add,
+                'campaign_edit': ch.campaign_edit,
+                'campaign_remove': ch.campaign_remove,
+            },
             'Actor': {
                 'update_actor_tags': ah.update_actor_tags,
                 'attribute_actor_identifier': ah.attribute_actor_identifier,
@@ -655,9 +660,6 @@ class CRITsAPIResource(MongoEngineResource):
                 'remove_ttp': ch.remove_ttp,
                 'update_campaign_description': ch.update_campaign_description,
                 'modify_campaign_aliases': ch.modify_campaign_aliases,
-                'campaign_add': ch.campaign_add,
-                'campaign_edit': ch.campaign_edit,
-                'campaign_remove': ch.campaign_remove,
             },
         }
 
@@ -676,7 +678,10 @@ class CRITsAPIResource(MongoEngineResource):
         action = bundle.data.get("action", None)
         atype = actions.get(type_, None)
         if atype:
-            if atype.get(action, None):
+            action_type = atype.get(action, None)
+            if not action_type:
+                action_type = actions['Common'].get(action, None)
+            if action_type:
                 data = bundle.data
                 # Requests don't need to have an id_ as we will derive it from
                 # the request URL. Override id_ if the request provided one.
@@ -684,7 +689,7 @@ class CRITsAPIResource(MongoEngineResource):
                 # Override user (if provided) with the one who made the request.
                 data['user'] = bundle.request.user.username
                 try:
-                    results = actions[type_][action](**data)
+                    results = action_type(**data)
                     if not results.get('success', False):
                         content['return_code'] = 1
                         # TODO: Some messages contain HTML and other such content
