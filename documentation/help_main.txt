@@ -1213,6 +1213,7 @@ Currently the available resources are:
 
 - campaigns
 - certificates
+- comments
 - domains
 - emails
 - events
@@ -1532,6 +1533,19 @@ Unique POST Parameters:
 :related_md5: MD5 of the related top-level object if it has one.
 :related_type: The CRITs type of the related top-level object.
 :relationship: The type of relationship.
+
+Comment API
+-------------------------------------------
+
+POST:
+
+        /api/v1/comments/
+
+Unique POST Parameters:
+
+:comment: The Comment you would like to add.
+:object_id: The ObjectId of the item to add comment to.
+:object_type: The Object Type of this object.
 
 Domain API
 -------------------------------------------
