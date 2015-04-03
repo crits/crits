@@ -16,11 +16,12 @@
                     </td>
                 </tr>
             {% endfor %}
+    {% else %}
+        <tr>
+            <td colspan="2" style="text-align: center"><b>Nothing Imported</b></td>
+        </tr>
     {% endif %}
-{% if failed %}
-    {% if imported %}
-        <tr><td colspan="2">&nbsp;</td></tr>
-    {% endif %}
+    {% if failed %}
     <tr>
         <td colspan="2" style="text-align: center"><b>Failed</b></td>
     </tr>
@@ -35,6 +36,10 @@
                     </td>
                 </tr>
             {% endfor %}
-{% endif %}
+    {% else %}
+        <tr>
+            <td colspan="2" style="text-align: center"><b>Nothing Failed</b></td>
+        </tr>
+    {% endif %}
     </tbody>
 </table>

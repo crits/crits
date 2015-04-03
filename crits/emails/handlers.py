@@ -495,17 +495,20 @@ def handle_email_fields(data, analyst, method):
     except:
         pass
 
-    for x in ('cc', 'to'):
-        y = data.get(x, None)
-        if isinstance(y, basestring):
-            if len(y) > 0:
-                tmp_y = y.split(',')
-                y_final = [ty.strip() for ty in tmp_y]
-                data[x] = y_final
-            else:
+    try:
+        for x in ('cc', 'to'):
+            y = data.get(x, None)
+            if isinstance(y, basestring):
+                if len(y) > 0:
+                    tmp_y = y.split(',')
+                    y_final = [ty.strip() for ty in tmp_y]
+                    data[x] = y_final
+                else:
+                    data[x] = []
+            elif not y:
                 data[x] = []
-        elif not y:
-            data[x] = []
+    except:
+        pass
 
     new_email = Email()
     new_email.merge(data)

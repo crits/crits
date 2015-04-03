@@ -10,7 +10,7 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 from mongoengine.base import ValidationError
 
-from crits.core.crits_mongoengine import create_embedded_source, json_handler
+from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_admin, user_sources, is_user_favorite
@@ -323,7 +323,7 @@ def handle_raw_data_file(data, source_name, user=None,
     :returns: dict with keys:
               'success' (boolean),
               'message' (str),
-              'md5' (str) if successful.
+              '_id' (str) if successful.
     """
 
     if not data or not title or not data_type:
@@ -356,25 +356,16 @@ def handle_raw_data_file(data, source_name, user=None,
     # generate md5 and timestamp
     md5 = hashlib.md5(data).hexdigest()
     timestamp = datetime.datetime.now()
-
-    # create source
-    source = create_embedded_source(source_name,
-                                    date=timestamp,
-                                    reference=reference,
-                                    method=method,
-                                    analyst=user)
-
+    
     # generate raw_data
     is_rawdata_new = False
     raw_data = RawData.objects(md5=md5).first()
-    if raw_data:
-        raw_data.add_source(source)
-    else:
+    if not raw_data:
         raw_data = RawData()
         raw_data.created = timestamp
         raw_data.description = description
         raw_data.md5 = md5
-        raw_data.source = [source]
+        #raw_data.source = [source]
         raw_data.data = data
         raw_data.title = title
         raw_data.data_type = data_type
@@ -382,6 +373,23 @@ def handle_raw_data_file(data, source_name, user=None,
                           version=tool_version,
                           details=tool_details)
         is_rawdata_new = True
+    
+    # generate new source information and add to sample
+    if isinstance(source_name, basestring) and len(source_name) > 0:
+        source = create_embedded_source(source_name,
+                                   date=timestamp,
+                                   method=method,
+                                   reference=reference,
+                                   analyst=user)
+        # this will handle adding a new source, or an instance automatically
+        raw_data.add_source(source)
+    elif isinstance(source_name, EmbeddedSource):
+        raw_data.add_source(source_name, method=method, reference=reference)
+    elif isinstance(source_name, list) and len(source_name) > 0:
+        for s in source_name:
+            if isinstance(s, EmbeddedSource):
+                raw_data.add_source(s, method=method, reference=reference)
+    
     #XXX: need to validate this is a UUID
     if link_id:
         raw_data.link_id = link_id
@@ -419,6 +427,7 @@ def handle_raw_data_file(data, source_name, user=None,
         'success':      True,
         'message':      'Uploaded raw_data',
         '_id':          raw_data.id,
+        'object':       raw_data
     }
 
     return status

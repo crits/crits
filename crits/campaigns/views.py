@@ -18,6 +18,7 @@ from crits.campaigns.handlers import campaign_edit, campaign_remove
 from crits.campaigns.handlers import add_ttp, edit_ttp, remove_ttp
 from crits.campaigns.handlers import update_campaign_description, modify_campaign_aliases
 from crits.campaigns.handlers import generate_campaign_jtable, generate_campaign_csv
+from crits.campaigns.handlers import get_campaign_names_list
 from crits.core.user_tools import user_can_view_data
 from crits.stats.handlers import campaign_date_stats
 
@@ -50,6 +51,7 @@ def campaign_stats(request):
                                   {'campaign': campaign},
                                   RequestContext(request))
 
+
 @user_passes_test(user_can_view_data)
 def campaigns_listing(request, option=None):
     """
@@ -65,6 +67,21 @@ def campaigns_listing(request, option=None):
     if option == "csv":
         return generate_campaign_csv(request)
     return generate_campaign_jtable(request, option)
+
+@user_passes_test(user_can_view_data)
+def campaign_names(request, active_only=True):
+    """
+    Generate Campaign Listing.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param active_only: Whether we return active campaigns only (default)
+    :type active_only: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    campaign_list = get_campaign_names_list(active_only)
+    return HttpResponse(json.dumps(campaign_list), mimetype="application/json")
 
 @user_passes_test(user_can_view_data)
 def campaign_details(request, campaign_name):

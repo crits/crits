@@ -1,3 +1,5 @@
+import re
+
 from datetime import datetime
 from django.conf import settings
 from django import forms
@@ -7,10 +9,11 @@ from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.widgets import CalWidget
-from crits.core.handlers import get_source_names, get_item_names
+from crits.core.handlers import get_source_names, get_item_names, get_object_types
 from crits.core.user_tools import get_user_organization
 from crits.domains.domain import Domain
 
+ip_choices = [(c[0], c[0]) for c in get_object_types(active=False, query={'type':'Address', 'name':{'$in':['cidr', re.compile('^ipv')]}})]
 
 class TLDUpdateForm(forms.Form):
     """
@@ -47,6 +50,9 @@ class AddDomainForm(forms.Form):
     ip = forms.GenericIPAddressField(required=False,
                                      label=form_consts.Domain.IP_ADDRESS,
                                      widget=forms.TextInput(attrs={'class': 'togglewithip bulkrequired'}))
+    ip_type = forms.ChoiceField(required=False,
+                                label=form_consts.IP.IP_TYPE,
+                                widget=forms.Select(attrs={'class':'togglewithip bulkrequired bulknoinitial'}),)
     created = forms.DateTimeField(widget=CalWidget(format=settings.PY_DATETIME_FORMAT,
                                                    attrs={'class':'datetimeclass togglewithip bulkrequired',
                                                           'size':'25',
@@ -82,6 +88,9 @@ class AddDomainForm(forms.Form):
                                              ('medium', 'medium'),
                                              ('high', 'high')]
 
+        self.fields['ip_type'].choices = ip_choices
+        self.fields['ip_type'].initial = "Address - ipv4-addr"
+
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
@@ -92,6 +101,7 @@ class AddDomainForm(forms.Form):
         date = cleaned_data.get('created')
         same_source = cleaned_data.get('same_source')
         ip_source = cleaned_data.get('ip_source')
+        ip_type = cleaned_data.get('ip_type')
 
         campaign = cleaned_data.get('campaign')
 
@@ -106,6 +116,9 @@ class AddDomainForm(forms.Form):
             if not ip:
                 self._errors.setdefault('ip', ErrorList())
                 self._errors['ip'].append(u'This field is required.')
+            if not ip_type:
+                self._errors.setdefault('ip_type', ErrorList())
+                self._errors['ip_type'].append(u'This field is required.')
             if not date:
                 self._errors.setdefault('created', ErrorList())
                 self._errors['created'].append(u"This field is required.") #add error to created field

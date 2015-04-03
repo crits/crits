@@ -1178,7 +1178,9 @@ Follow these steps to change your password.
 API
 ===========================================
 
-CRITs comes with an authenticated API. The API leverages Tastypie. A lot of the
+CRITs comes with an authenticated API. It is disabled by default and
+must be enabled in the Control Panel. Once it is enabled you must restart
+the web server for the URLs to be exposed. The API leverages Tastypie. A lot of the
 features of Tastypie are overridden by CRITs code for our needs. More
 information on Tastypie can be found here:
 
@@ -1211,6 +1213,7 @@ Currently the available resources are:
 
 - campaigns
 - certificates
+- comments
 - domains
 - emails
 - events
@@ -1530,6 +1533,19 @@ Unique POST Parameters:
 :related_md5: MD5 of the related top-level object if it has one.
 :related_type: The CRITs type of the related top-level object.
 :relationship: The type of relationship.
+
+Comment API
+-------------------------------------------
+
+POST:
+
+        /api/v1/comments/
+
+Unique POST Parameters:
+
+:comment: The Comment you would like to add.
+:object_id: The ObjectId of the item to add comment to.
+:object_type: The Object Type of this object.
 
 Domain API
 -------------------------------------------

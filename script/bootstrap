@@ -1,0 +1,148 @@
+#!/bin/sh
+# (c) 2015, The MITRE Corporation. All rights reserved.
+# Source code distributed pursuant to license agreement.
+#
+# Usage: script/bootstrap
+# This script is designed to install all of the necessary dependencies for a
+# CRITs install, walk through some basic setup, and help you start a quick
+# instance of CRITs.
+
+
+# Make sure we are working with a 64-bit system.
+ARCH=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/')
+echo "Architecture: $ARCH"
+
+if [ $ARCH -ne '64' ]; then
+  echo "** Non 64-bit system detected **"
+  echo "These dependencies are for a 64-bit system."
+  echo "Exiting.."
+  exit
+fi
+
+# Determine the OS we are working with.
+# Using lsb-release because os-release not available on Ubuntu 10.04
+if [ -f /etc/lsb-release ]; then
+  . /etc/lsb-release
+  OS=$DISTRIB_ID
+  VER=$DISTRIB_RELEASE
+elif [ -f /etc/redhat-release ]; then
+  OS=$(cat /etc/redhat-release | sed 's/ Enterprise.*//')
+  VER=$(cat /etc/redhat-release | sed 's/.*release //;s/ .*$//')
+else
+  OS=$(uname -s)
+  VER=$(uname -r)
+fi
+
+OS="$(echo "$OS" | tr "[:upper:]" "[:lower:]")"
+VER="$(echo "$VER" | tr "[:upper:]" "[:lower:]")"
+
+# Ubuntu: Install as many dependencies as we can using apt-get.
+if [ "$OS" = 'ubuntu' ]
+then
+  echo "Installing dependencies with apt-get"
+  sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+  echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
+
+  sudo apt-get update
+  sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+  sudo ldconfig
+
+# Redhat: Install as many dependencies as we can using yum.
+# TODO: Need to test centos dependencies
+# elif [ "$OS" == 'centos' ] || [ "$OS" == 'redhat' ]
+elif [ "$OS" = 'red hat' ]
+then
+  echo "Installing Yum Packages"
+  # Probably should run the Yum equivelent of apt-get update
+  sudo yum install make gcc gcc-c++ kernel-devel pcre pcre-devel curl libpcap-devel python-devel python-pip zip unzip gzip bzip2 swig
+  sudo yum install p7zip-9.20.1-2
+  sudo yum install unrar-4.2.3-1
+  sudo yum install libyaml-0.1.4-1
+  sudo yum install upx-3.07-1
+
+# OSX: Install as many dependencies as we can using Homebrew.
+elif [ "$OS" = 'darwin' ]
+then
+  command -v brew >/dev/null 2>&1 || {
+    echo "Installation for OSX requires Homebrew. Please visit http://brew.sh/."
+    exit
+  }
+  brew install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl
+  brew install https://raw.githubusercontent.com/destijl/homebrew-versions/master/swig304.rb
+else
+  echo "Unknown distro!"
+  echo "Detected: $OS $VER"
+  exit
+fi
+
+# Determine if MongoDB is already installed.
+# NOTE: This does not do a version check, which we should probably do somehow.
+command -v mongo >/dev/null 2>&1 || {
+  echo "Installing MongoDB 2.6.4..."
+  curl http://downloads.mongodb.org/linux/mongodb-linux-x86_64-2.6.4.tgz > mongodb-linux-x86_64-2.6.4.tgz
+  tar -zxvf mongodb-linux-x86_64-2.6.4.tgz
+  sudo cp ./mongodb-linux-x86_64-2.6.4/bin/* /usr/local/bin/
+  rm  mongodb-linux-x86_64-2.6.4.tgz
+  rm -r mongodb-linux-x86_64-2.6.4
+}
+
+# Install the rest of our dependencies which are python libraries.
+echo "Installing Python Dependencies"
+sudo pip install -r requirements.txt
+
+echo "Dependency installations complete!"
+
+# Create log file and generate default database configuration.
+echo "Setting up crits.log file"
+touch logs/crits.log
+chmod 664 logs/crits.log
+
+echo "Creating default database configuration file"
+cp crits/config/database_example.py crits/config/database.py
+SC="$(python contrib/gen_secret_key.py)"
+sed -i '' -e "s/.*SECRET_KEY.*/SECRET_KEY = \'"$SC"\'/" crits/config/database.py
+
+# If MongoDB isn't already running, ask to start it.
+# This can fail if MongoDB is running already but on a non-standard port.
+pgrep mongod >/dev/null 2>&1
+if [ $? -ne 0 ]
+then
+  while true; do
+    read -p "Do you want to start 'mongod' now? [yn] " yn
+    case $yn in
+        [Yy]* ) sudo mkdir -p /data/db; sudo mkdir -p /data/logs; sudo sh contrib/mongo/mongod_start.sh; break;;
+        [Nn]* ) break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+  done
+fi
+
+echo "Creating default collections"
+python manage.py create_default_collections
+
+if [ $? -eq 0 ]
+then
+  # Setup the first admin user.
+  read -p "Username: " USERNAME
+  read -p  "First name: " FIRSTNAME
+  read -p "Last name: " LASTNAME
+  read -p "Email address: " EMAIL
+  read -p "Organization name: " ORG
+  
+  echo "Adding a default admin account"
+  python manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
+  echo "Make note of the above password so you can authenticate!"
+  
+  # Attempt to start the runserver.
+  while true; do
+    read -p "Do you want to start 'runserver' now? [yn] " yn
+    case $yn in
+        [Yy]* ) break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+  done
+  
+  echo "Attempting to start runserver on port 8080"
+  python manage.py runserver 0.0.0.0:8080
+fi

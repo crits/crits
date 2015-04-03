@@ -657,6 +657,10 @@ def get_item_names(obj, active=None):
     :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
     """
 
+    # Don't use this to get sources.
+    if isinstance(obj, SourceAccess):
+        return []
+
     if active is None:
        c = obj.objects().order_by('+name')
     else:
@@ -1453,8 +1457,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                                                     "type": otypes[0],
                                                     "value": search_query}}}
     elif search_type == "byobject":
-        query = {'type': 'comment',
-                 'comment': search_query}
+        query = {'comment': search_query}
     elif search_type == "global":
         if type_ == "Sample":
             search_list.append(sample_queries["backdoor"])
@@ -1520,8 +1523,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                 ]
         elif type_ == "Comment":
             search_list = [
-                    {'comment': search_query,
-                     'type': 'comment'},
+                    {'comment': search_query},
                 ]
         elif type_ == "Campaign":
             search_list = [
@@ -2046,7 +2048,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                             doc[key] = ",".join(value)
                     else:
                         doc[key] = ""
-                doc[key] = html_escape(doc[key])
+                if key != urlfieldparam:
+                    doc[key] = html_escape(doc[key])
             if col_obj._meta['crits_type'] == "Comment":
                 mapper = {
                     "Actor": 'crits.actors.views.actor_detail',
