@@ -1026,7 +1026,7 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
     else:
         related_obj = None
 
-    if sha1_digest != None and sha1_digest != ""::
+    if sha1_digest != None and sha1_digest != "":
         sha1_digest = sha1_digest.lower().strip()
         validate_sha1_result = validate_sha1_checksum(sha1_digest)
         retVal['message'] += validate_sha1_result.get('message')
