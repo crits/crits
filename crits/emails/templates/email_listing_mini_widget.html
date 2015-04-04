@@ -20,6 +20,7 @@
     {% endif %}
         <thead>
             <tr style="border-top: 0px;">
+                <th width="20px"><span class="ui-icon ui-icon-document" title="Details"></span></th>
                 <th width="120px">Relationship</th>
                 <th>From</th>
                 <th>Sender</th>
@@ -28,12 +29,13 @@
                 <th>Analyst</th>
                 <th>Date</th>
                 <th width="75px">Confidence</th>
-                <th width="50px"></th>
+                <th width="35px"></th>
             </tr>
         </thead>
         <tbody>
             {% for rel in rel_list %}
             <tr mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rConfidence="{{ rel.rel_confidence }}" rvalue  ="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}">
+                <td style="width: 16px; padding: 0px"><a href="{% url 'crits.core.views.details' rel_type rel.value %}" style="width: 16px; padding: 0px" class="ui-icon ui-icon-document" title="View Details"></a></td>
                 <td class="relationship_type_edit tooltip_edit" action="{% url 'crits.relationships.views.update_relationship_type' %}">{{ rel.relationship }}</td>
                 <td><a href="{% url 'crits.emails.views.emails_listing' %}?search_type=from&q={{rel.from}}&force_full=1">{{ rel.from }}</a>
                 {% if splunk_search_url %}
@@ -73,7 +75,7 @@
                 <td width="125px">{{rel.analyst}}</td>
                 <td width="125px">{{rel.relationship_date|date:"Y-m-d H:i:s"}}</td>
                 <td class='relationship_confidence_edit' action="{% url 'crits.relationships.views.update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
-                <td width="50px">
+                <td width="35px">
                     <div class="qtip-container ui-icon ui-icon-note" title="More Info..."></div>
                     <div class="qtip-body" mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}">
                         <b>Relationship Date:</b> <span class="relationship_date_edit tooltip_edit" action="{% url 'crits.relationships.views.update_relationship_date' %}">
@@ -96,16 +98,15 @@
                     	</div>
                     </div>      
                     <div>
-                        <a href="{% url 'crits.emails.views.email_detail' rel.value %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
-                                        </div>
-                                        {% if source_add %}
-                                                <div class="ui-icon ui-icon-trash dialogClick" dialog="confirm-breakup" mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}"></div>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </td>
-                    </tr>
+                    </div>
+                    {% if source_add %}
+                            <div class="ui-icon ui-icon-trash dialogClick" dialog="confirm-breakup" mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}"></div>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</td>
+</tr>
                     
