@@ -12,6 +12,5 @@ urlpatterns = patterns('crits.campaigns.views',
     (r'^remove/(?P<ctype>\w+)/(?P<objectid>\w+)/$', 'remove_campaign'),
     (r'^edit/(?P<ctype>\w+)/(?P<objectid>\w+)/$', 'edit_campaign'),
     (r'^ttp/(?P<cid>\w+)/$', 'campaign_ttp'),
-    (r'^set_description/(?P<name>.+?)/$', 'set_campaign_description'),
     (r'^aliases/$', 'campaign_aliases'),
 )

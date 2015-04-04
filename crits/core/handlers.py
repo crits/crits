@@ -57,6 +57,35 @@ from crits.core.totp import valid_totp
 
 logger = logging.getLogger(__name__)
 
+def description_update(type_, id_, description, analyst):
+    """
+    Change the description of a top-level object.
+
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
+    :param description: The description to use.
+    :type description: str
+    :param analyst: The user setting the description.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+    obj = class_from_id(type_, id_)
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser.HTMLParser()
+    description = h.unescape(description)
+    try:
+        obj.description = description
+        obj.save(username=analyst)
+        return {'success': True, 'message': "Description set."}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
 def get_favorites(analyst):
     """
     Get all favorites for a user.

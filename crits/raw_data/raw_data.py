@@ -106,7 +106,6 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
     }
 
     data_type = StringField()
-    description = StringField()
     data = StringField()
     highlights = ListField(EmbeddedDocumentField(EmbeddedHighlight))
     inlines = ListField(EmbeddedDocumentField(EmbeddedInline))

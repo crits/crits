@@ -50,6 +50,7 @@ from crits.core.handlers import details_from_id, status_update
 from crits.core.handlers import get_favorites, favorite_update
 from crits.core.handlers import generate_favorites_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
+from crits.core.handlers import description_update
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_role import UserRole
@@ -93,6 +94,31 @@ from crits.targets.forms import TargetInfoForm
 
 logger = logging.getLogger(__name__)
 
+
+@user_passes_test(user_can_view_data)
+def update_object_description(request):
+    """
+    Toggle favorite in a user profile.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        type_ = request.POST['type']
+        id_ = request.POST['id']
+        description = request.POST['description']
+        analyst = request.user.username
+        return HttpResponse(json.dumps(description_update(type_,
+                                                          id_,
+                                                          description,
+                                                          analyst)),
+                            mimetype="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def toggle_favorite(request):

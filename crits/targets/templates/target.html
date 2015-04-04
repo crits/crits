@@ -35,6 +35,11 @@
             </td>
         </tr>
         <tr>
+            {% with description=target_detail.description %}
+                {% include 'description_widget.html' %}
+            {% endwith %}
+        </tr>
+        <tr>
             <td class="key">Name</td>
             <td>
                 {{target_detail.firstname}} {{target_detail.lastname}}
