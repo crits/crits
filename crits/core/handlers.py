@@ -72,9 +72,18 @@ def description_update(type_, id_, description, analyst):
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    obj = class_from_id(type_, id_)
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(analyst)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
     if not obj:
         return {'success': False, 'message': 'Could not find object.'}
+
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
     h = HTMLParser.HTMLParser()
