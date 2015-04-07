@@ -376,6 +376,8 @@ class CritsDocument(BaseDocument):
             self.delete_all_relationships(username=username)
         if self._has_method("delete_all_comments"):
             self.delete_all_comments()
+        if self._has_method("delete_all_analysis_results"):
+            self.delete_all_analysis_results()
         if self._has_method("delete_all_objects"):
             self.delete_all_objects()
         if self._has_method("delete_all_favorites"):
@@ -1418,6 +1420,16 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 delete_object_file(value)
                 break
 
+    def delete_all_analysis_results(self):
+        """
+        Delete all analysis results for this top-level object.
+        """
+
+        from crits.services.analysis_result import AnalysisResult
+        results = AnalysisResult.objects(object_id=str(self.id))
+        for result in results:
+            result.delete()
+
     def delete_all_objects(self):
         """
         Delete all objects for this top-level object.
@@ -2250,7 +2262,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
             try:
                 return reverse(details_url, args=(unicode(self[details_url_key]),))
-            except Exception as e:
+            except Exception:
                 return None
         else:
             return None
