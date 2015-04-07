@@ -7,7 +7,7 @@ from django.template import RequestContext
 from mongoengine.base import ValidationError
 
 from crits.core import form_consts
-from crits.core.crits_mongoengine import json_handler
+from crits.core.crits_mongoengine import json_handler, EmbeddedCampaign
 from crits.core.handlers import jtable_ajax_list, build_jtable, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
@@ -69,6 +69,10 @@ def upsert_target(data, analyst):
         target.note = data['note']
     if 'title' in data:
         target.title = data['title']
+    if 'campaign' in data and 'camp_conf' in data:
+        target.add_campaign(EmbeddedCampaign(name=data['campaign'],
+                                             confidence=data['camp_conf'],
+                                             analyst=analyst))
     if 'bucket_list' in data:
         bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     if 'ticket' in data:
@@ -212,7 +216,7 @@ def get_target_details(email_address, analyst):
 
     return template, args
 
-def get_campaign_targets(campaign,user):
+def get_campaign_targets(campaign, user):
     """
     Get targets related to a specific campaign.
 
