@@ -229,6 +229,8 @@ def get_campaign_targets(campaign, user):
 
     # Searching for campaign targets
     sourcefilt = user_sources(user)
+
+    # Get addresses from the 'to' field of emails attributed to this campaign
     emails = Email.objects(source__name__in=sourcefilt,
                            campaign__name=campaign).only('to')
     addresses = {}
@@ -243,6 +245,12 @@ def get_campaign_targets(campaign, user):
                 addresses[target.email_address] = 1
             else:
                 addresses[to] = 1
+
+    # Get addresses of Targets attributed to this campaign
+    targets = Target.objects(campaign__name=campaign).only('email_address')
+    for target in targets:
+        addresses[target.email_address] = 1
+
     uniq_addrs = addresses.keys()
     return uniq_addrs
 
