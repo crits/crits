@@ -382,32 +382,4 @@ $(document).ready(function() {
             onblur: 'ignore',
     });
 
-    $('#edit_actor_description').editable(function(value, settings) {
-        var revert = this.revert;
-        return function(value, settings, elem) {
-            var data = {
-                description: value
-            };
-            $.ajax({
-                type: "POST",
-                async: false,
-                url: edit_actor_description,
-                data: data,
-                success: function(data) {
-                }
-            });
-            return value;
-        }(value, settings, this);
-        },
-        {
-            type: 'textarea',
-            height: "50px",
-            width: "400px",
-            tooltip: "",
-            cancel: "Cancel",
-            submit: "Ok",
-            onblur: 'ignore',
-    });
-
-
 }); //document.ready
