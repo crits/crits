@@ -13,7 +13,7 @@ django-tastypie-mongoengine==0.4.5
 kombu
 lxml
 m2crypto
-mongoengine==0.8.7
+--allow-external mongoengine mongoengine==0.8.7
 pydeep==0.2
 pydot
 pymongo==2.7.2

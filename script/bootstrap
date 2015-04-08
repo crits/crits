@@ -9,7 +9,7 @@
 
 
 # Make sure we are working with a 64-bit system.
-ARCH=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/')
+ARCH=$(uname -m | sed 's/x86_//;s/amd//;s/i[3-6]86/32/')
 echo "Architecture: $ARCH"
 
 if [ $ARCH -ne '64' ]; then
@@ -69,6 +69,10 @@ then
   }
   brew install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl
   brew install https://raw.githubusercontent.com/destijl/homebrew-versions/master/swig304.rb
+elif [ "$OS" = 'freebsd' ]
+then
+  echo "Installing ports"
+  sudo pkg install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl swig py27-m2crypto py27-pydeep py27-ldap2 py27-mongoengine
 else
   echo "Unknown distro!"
   echo "Detected: $OS $VER"
