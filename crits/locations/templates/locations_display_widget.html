@@ -1,3 +1,7 @@
+<script>
+    var edit_location = "{% url 'crits.locations.views.edit_location' relationship.type hit.id %}";
+</script>
+
 <div class="content_box">
     <h3 class="titleheader">
     <span>Locations</span>
@@ -31,3 +35,7 @@
         </table>
     </div>
 </div>
+
+{% block javascript_includes %}
+ <script type="text/javascript" src="{{ STATIC_URL }}js/locations.js"></script>
+{% endblock %}

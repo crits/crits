@@ -6,9 +6,29 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import user_passes_test
 
 from crits.locations.forms import AddLocationForm
-from crits.locations.handlers import location_add, location_remove
+from crits.locations.handlers import (
+    location_add,
+    location_remove,
+    get_location_names_list,
+    location_edit
+)
 from crits.core.user_tools import user_can_view_data
 
+
+@user_passes_test(user_can_view_data)
+def location_names(request, active_only=True):
+    """
+    Generate Location name list.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param active_only: Whether we return active locations only (default)
+    :type active_only: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    location_list = get_location_names_list(active_only)
+    return HttpResponse(json.dumps(location_list), mimetype="application/json")
 
 @user_passes_test(user_can_view_data)
 def add_location(request, type_, id_):
@@ -82,4 +102,36 @@ def remove_location(request, type_, id_):
     else:
         return render_to_response("error.html",
                                   {"error": 'Expected AJAX POST.'},
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def edit_location(request, type_, id_):
+    """
+    Edit a location. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST':
+        location_type = request.POST.get('location_type', None)
+        location_name = request.POST.get('location_name', None)
+        description = request.POST.get('description', None)
+        latitude = request.POST.get('latitude', None)
+        longitude = request.POST.get('longitude', None)
+        user = request.user.username
+        return HttpResponse(json.dumps(location_edit(type_,
+                                                     id_,
+                                                     location_name,
+                                                     location_type,
+                                                     user,
+                                                     description=description,
+                                                     latitude=latitude,
+                                                     longitude=longitude)),
+                            mimetype="application/json")
+    else:
+        error = "Expected POST"
+        return render_to_response("error.html",
+                                  {"error": error},
                                   RequestContext(request))

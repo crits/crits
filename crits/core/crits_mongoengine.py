@@ -1256,6 +1256,34 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         return {'success': False,
                 'message': 'Location is invalid'}
 
+    def edit_location(self, location_name=None, location_type=None,
+                      description=None, latitude=None, longitude=None):
+        """
+        Edit a location.
+
+        :param location_name: The location_name to edit.
+        :type location_name: str
+        :param location_type: The location_type to edit.
+        :type location_type: str
+        :param description: The new description.
+        :type description: str
+        :param latitude: The new latitude.
+        :type latitude: str
+        :param longitude: The new longitude.
+        :type longitude: str
+        """
+
+        for location in self.locations:
+            if (location.location == location_name and
+                location.location_type == location_type):
+                if description:
+                    location.description = description
+                if latitude:
+                    location.latitude = latitude
+                if longitude:
+                    location.longitude = longitude
+                break
+
     def remove_location(self, location_name=None, location_type=None):
         """
         Remove a location from this top-level object.

@@ -2,6 +2,13 @@ from mongoengine.base import ValidationError
 
 from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedLocation
+from crits.core.handlers import get_item_names
+
+from crits.locations.location import Location
+
+def get_location_names_list(active):
+    listing = get_item_names(Location, bool(active))
+    return [c.name for c in listing]
 
 def location_add(id_, type_, location_type, location_name, user,
                  description=None, latitude=None, longitude=None):
@@ -87,6 +94,45 @@ def location_remove(id_, type_, location_name, location_type, user):
         return {'success': False, 'message': 'Cannot find %s.' % type_}
 
     crits_object.remove_location(location_name, location_type)
+    try:
+        crits_object.save(username=user)
+        return {'success': True}
+    except ValidationError, e:
+        return {'success': False, 'message': "Invalid value: %s" % e}
+
+def location_edit(type_, id_, location_name, location_type, user,
+                  description=None, latitude=None, longitude=None):
+    """
+    Update a location.
+
+    :param type_: Type of TLO.
+    :type type_: str
+    :param id_: The ObjectId of the TLO.
+    :type id_: str
+    :param location_name: The name of the location to change.
+    :type location_name: str
+    :param location_type: The type of the location to change.
+    :type location_type: str
+    :param user: The user setting the new description.
+    :type user: str
+    :param description: The new description.
+    :type description: str
+    :param latitude: The new latitude.
+    :type latitude: str
+    :param longitude: The new longitude.
+    :type longitude: str
+    :returns: dict with key 'success' (boolean) and 'message' (str) if failed.
+    """
+
+    crits_object = class_from_id(type_, id_)
+    if not crits_object:
+        return {'success': False, 'message': 'Cannot find %s.' % type_}
+
+    crits_object.edit_location(location_name,
+                               location_type,
+                               description=description,
+                               latitude=latitude,
+                               longitude=longitude)
     try:
         crits_object.save(username=user)
         return {'success': True}

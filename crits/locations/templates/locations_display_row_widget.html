@@ -1,10 +1,16 @@
 {% load url from future %}
 <tr>
-    <td data-field="location_type">{{location.location_type}}</td>
-    <td data-field="location">{{location.location}}</td>
-    <td data-field="description">{{location.description}}</td>
-    <td data-field="latitude">{{location.latitude}}</td>
-    <td data-field="longitude">{{location.longitude}}</td>
+    <td id="location_type" data-field="location_type">{{location.location_type}}</td>
+    <td id="location" data-field="location">{{location.location}}</td>
+    <td data-field="description">
+        <span class="location_description edit_underline">{% if location.description %}{{location.description}}{% else %}None{% endif %}</span>
+    </td>
+    <td data-field="latitude">
+        <span class="location_latitude edit_underline">{% if location.latitude %}{{location.latitude}}{% else %}None{% endif %}</span>
+    </td>
+    <td data-field="longitude">
+        <span class="location_longitude edit_underline">{% if location.longitude %}{{location.longitude}}{% else %}None{% endif %}</span>
+    </td>
     <td data-field="analyst">{{location.analyst}}</td>
     <td data-field="date">{{location.date}}</td>
     {% with hit=obj|default:hit %}
