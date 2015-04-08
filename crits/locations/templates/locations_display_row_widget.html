@@ -1,0 +1,24 @@
+{% load url from future %}
+<tr>
+    <td data-field="location_type">{{location.location_type}}</td>
+    <td data-field="location">{{location.location}}</td>
+    <td data-field="description">{{location.description}}</td>
+    <td data-field="latitude">{{location.latitude}}</td>
+    <td data-field="longitude">{{location.longitude}}</td>
+    <td data-field="analyst">{{location.analyst}}</td>
+    <td data-field="date">{{location.date}}</td>
+    {% with hit=obj|default:hit %}
+    <td>
+        {% if admin %}
+        <a href="#"
+           title="Delete Location"
+           class="ui-icon ui-icon-close deleteClick"
+           type="location" value="{{location.location}}"
+           data-del-type="Location Association"
+           data-del-key="{{location.location}}"
+           action="{% url 'crits.locations.views.remove_location' relationship.type hit.id %}"
+           key="{{location.location}}|{{location.location_type}}"></a>
+        {% endif %}
+    </td>
+    {% endwith %}
+</tr>

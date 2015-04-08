@@ -135,6 +135,11 @@
         {% include 'campaigns_display_widget.html' %}
     {% endwith %}
     </div>
+    <div>
+    {% with hit=email col=COL_EMAIL %}
+        {% include 'locations_display_widget.html' %}
+    {% endwith %}
+    </div>
     <div id="relationships_div_container">
         {% include 'relationships_listing_widget.html' %}
     </div>

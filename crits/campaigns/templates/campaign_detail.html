@@ -98,6 +98,11 @@
       </div>
     </div>
     <div>
+        {% with hit=campaign_detail col=COL_CAMPAIGNS obj=campaign_detail %}
+            {% include "locations_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
       {% with obj=campaign_detail obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}

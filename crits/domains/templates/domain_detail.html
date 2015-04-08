@@ -85,11 +85,16 @@
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
     </div>
-
-    {% with hit=domain col=COL_DOMAINS %}
-        {% include "campaigns_display_widget.html" %}
-    {% endwith %}
-
+    <div>
+        {% with hit=domain col=COL_DOMAINS %}
+            {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=domain col=COL_DOMAINS %}
+            {% include "locations_display_widget.html" %}
+        {% endwith %}
+    </div>
     <div>
        {% include 'relationships_listing_widget.html' %}
     </div>
