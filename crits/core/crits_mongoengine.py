@@ -1165,6 +1165,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     bucket_list = ListField(StringField())
     campaign = ListField(EmbeddedDocumentField(EmbeddedCampaign))
     locations = ListField(EmbeddedDocumentField(EmbeddedLocation))
+    description = StringField()
     obj = ListField(EmbeddedDocumentField(EmbeddedObject), db_field="objects")
     relationships = ListField(EmbeddedDocumentField(EmbeddedRelationship))
     releasability = ListField(EmbeddedDocumentField(Releasability))

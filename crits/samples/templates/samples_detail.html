@@ -53,6 +53,11 @@
                 <td>{{ sample.id }}</td>
             </tr>
             <tr>
+                {% with description=sample.description %}
+                    {% include 'description_widget.html' %}
+                {% endwith %}
+            </tr>
+            <tr>
                 <td class="key">Filename</td>
                 <td>
                     <span class="edit_underline" id="sample_filename">{{ sample.filename }}</span>

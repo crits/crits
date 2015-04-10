@@ -695,32 +695,6 @@ def set_actor_name(id_, name, analyst):
     actor.save(username=analyst)
     return {'success': True}
 
-def set_actor_description(id_, description, analyst):
-    """
-    Set an Actor description.
-
-    :param id_: Actor ObjectId.
-    :type id_: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user updating the description.
-    :type analyst: str
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str),
-    """
-
-    sources = user_sources(analyst)
-    actor = Actor.objects(id=id_,
-                          source__name__in=sources).first()
-    if not actor:
-        return {'success': False,
-                'message': "Could not find actor"}
-
-    actor.description = description.strip()
-    actor.save(username=analyst)
-    return {'success': True}
-
 def update_actor_aliases(actor_id, aliases, analyst):
     """
     Update aliases for an Actor.

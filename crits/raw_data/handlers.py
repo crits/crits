@@ -432,28 +432,6 @@ def handle_raw_data_file(data, source_name, user=None,
 
     return status
 
-def update_raw_data_description(_id, description, analyst):
-    """
-    Update the RawData description.
-
-    :param _id: ObjectId of the RawData to update.
-    :type _id: str
-    :param description: The description to set.
-    :type description: str
-    :param analyst: The user updating the description.
-    :type analyst: str
-    :returns: None
-    :raises: ValidationError
-    """
-
-    raw_data = RawData.objects(id=_id).first()
-    raw_data.description = description
-    try:
-        raw_data.save(username=analyst)
-        return None
-    except ValidationError, e:
-        return e
-
 def update_raw_data_tool_details(_id, details, analyst):
     """
     Update the RawData tool details.

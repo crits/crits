@@ -188,7 +188,6 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
 
     name = StringField(required=True)
     aliases = ListField(StringField())
-    description = StringField()
     identifiers = ListField(EmbeddedDocumentField(EmbeddedActorIdentifier))
     intended_effects = ListField(StringField())
     motivations = ListField(StringField())

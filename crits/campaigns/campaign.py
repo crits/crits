@@ -29,7 +29,6 @@ class Campaign(CritsBaseAttributes, Document):
         "schema_doc": {
             'schema_version': 'Version of the Campaign schema doc',
             'active': 'Enabled in the UI (on/off)',
-            'description': 'Description of Campaign',
             'aliases': 'List [] of aliases this Campaign goes by',
             'domain_count': 'Domains tagged with Campaign. Added by MapReduce',
             'email_count': 'Emails tagged with Campaign. Added by MapReduce',
@@ -63,7 +62,6 @@ class Campaign(CritsBaseAttributes, Document):
 
     active = StringField(default="on")
     aliases = ListField(StringField(), default=[])
-    description = StringField()
     domain_count = IntField(default=0)
     email_count = IntField(default=0)
     event_count = IntField(default=0)

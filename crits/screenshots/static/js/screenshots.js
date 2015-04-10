@@ -172,6 +172,9 @@ $(document).ready(function() {
         });
     });
 
+    // Normally description editing is done in description_widget.html,
+    // but not for screenshots because descriptions of screenshots are
+    // only editable from the listing page.
     $(document).on('click', '.edit_ss_description', function(e) {
         e.preventDefault();
         $(this).editable(function(value, settings) {
@@ -179,7 +182,8 @@ $(document).ready(function() {
             return function(value, settings, elem) {
                 var data = {
                     description: value,
-                    oid: $(elem).attr('data-id')
+                    id: $(elem).attr('data-id'),
+                    type: "Screenshot"
                 };
                 $.ajax({
                     type: "POST",
