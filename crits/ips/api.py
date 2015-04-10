@@ -18,7 +18,7 @@ class IPResource(CRITsAPIResource):
 
     class Meta:
         object_class = IP
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'delete')
         resource_name = "ips"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

@@ -18,7 +18,7 @@ class PCAPResource(CRITsAPIResource):
 
     class Meta:
         object_class = PCAP
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'delete')
         resource_name = "pcaps"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

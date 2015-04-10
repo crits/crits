@@ -17,7 +17,7 @@ class DomainResource(CRITsAPIResource):
 
     class Meta:
         object_class = Domain
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'delete')
         resource_name = "domains"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

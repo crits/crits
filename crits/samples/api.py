@@ -18,7 +18,7 @@ class SampleResource(CRITsAPIResource):
 
     class Meta:
         object_class = Sample
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'delete')
         resource_name = "samples"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
