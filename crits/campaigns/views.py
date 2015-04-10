@@ -16,7 +16,7 @@ from crits.campaigns.handlers import campaign_add as campaign_addh
 from crits.campaigns.handlers import add_campaign as add_campaignh
 from crits.campaigns.handlers import campaign_edit, campaign_remove
 from crits.campaigns.handlers import add_ttp, edit_ttp, remove_ttp
-from crits.campaigns.handlers import update_campaign_description, modify_campaign_aliases
+from crits.campaigns.handlers import modify_campaign_aliases
 from crits.campaigns.handlers import generate_campaign_jtable, generate_campaign_csv
 from crits.campaigns.handlers import get_campaign_names_list
 from crits.core.user_tools import user_can_view_data
@@ -301,31 +301,6 @@ def campaign_ttp(request, cid):
     else:
         return render_to_response("error.html",
                                   {"error": 'Expected AJAX POST.'},
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def set_campaign_description(request, name):
-    """
-    Set a Campaign description. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param name: The name of the Campaign.
-    :type name: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        description = request.POST.get('description', None)
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_campaign_description(name,
-                                                                   description,
-                                                                   analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error": error},
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)

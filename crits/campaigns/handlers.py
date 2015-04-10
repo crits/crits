@@ -444,29 +444,6 @@ def remove_ttp(cid, ttp, analyst):
     else:
         return {'success': False, 'message': "Could not find Campaign"}
 
-def update_campaign_description(cid, description, analyst):
-    """
-    Update a Campaign description.
-
-    :param cid: ObjectId of the Campaign.
-    :type cid: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user setting the new description.
-    :type analyst: str
-    :returns: dict with key 'success' (boolean) and 'message' (str) if failed.
-    """
-
-    if not description:
-        return {'success': False, 'message': "No description to change"}
-    campaign = Campaign.objects(id=cid).first()
-    campaign.edit_description(description)
-    try:
-        campaign.save(username=analyst)
-        return {'success': True}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
-
 def modify_campaign_aliases(name, tags, analyst):
     """
     Modify the aliases for a Campaign.

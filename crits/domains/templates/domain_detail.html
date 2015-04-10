@@ -35,6 +35,11 @@
                 <td>{{domain.created}}</td>
             </tr>
             <tr>
+                {% with description=domain.description %}
+                    {% include 'description_widget.html' %}
+                {% endwith %}
+            </tr>
+            <tr>
                 <td class="key">DNSMon Enabled</td>
                 <td>{{domain.watchlistEnabled|default:"False"}}</td>
             </tr>
