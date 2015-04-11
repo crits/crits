@@ -1535,6 +1535,12 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                     {'description': search_query},
                     {'tags': search_query},
                 ]
+        elif type_ == "Target":
+            search_list = [
+                    {'email_address': search_query},
+                    {'firstname': search_query},
+                    {'lastname': search_query},
+                ]
         else:
             search_list = [{'name': search_query}]
         search_list.append({'source.instances.reference':search_query})
