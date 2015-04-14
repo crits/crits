@@ -93,10 +93,12 @@ def remove_location(request, type_, id_):
         data = request.POST
         location_name = data.get('key').split('|')[0]
         location_type = data.get('key').split('|')[1]
+        date = data.get('key').split('|')[2]
         result = location_remove(id_,
                                  type_,
                                  location_name=location_name,
                                  location_type=location_type,
+                                 date=date,
                                  user=request.user.username)
         return HttpResponse(json.dumps(result), mimetype="application/json")
     else:
@@ -117,6 +119,7 @@ def edit_location(request, type_, id_):
     if request.method == 'POST':
         location_type = request.POST.get('location_type', None)
         location_name = request.POST.get('location_name', None)
+        date = request.POST.get('date', None)
         description = request.POST.get('description', None)
         latitude = request.POST.get('latitude', None)
         longitude = request.POST.get('longitude', None)
@@ -125,6 +128,7 @@ def edit_location(request, type_, id_):
                                                      id_,
                                                      location_name,
                                                      location_type,
+                                                     date,
                                                      user,
                                                      description=description,
                                                      latitude=latitude,

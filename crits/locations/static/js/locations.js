@@ -13,9 +13,11 @@ $(document).ready(function() {
             return function(value, settings, elem) {
                 var ln = $(elem).parent().siblings('#location').text();
                 var lt = $(elem).parent().siblings('#location_type').text();
+                var ld = $(elem).parent().siblings('#location_date').text();
                 var data = {
                     location_name: ln,
                     location_type: lt,
+                    date: ld,
                     description: value
                 };
                 $.ajax({
@@ -42,9 +44,11 @@ $(document).ready(function() {
             return function(value, settings, elem) {
                 var ln = $(elem).parent().siblings('#location').text();
                 var lt = $(elem).parent().siblings('#location_type').text();
+                var ld = $(elem).parent().siblings('#location_date').text();
                 var data = {
                     location_name: ln,
                     location_type: lt,
+                    date: ld,
                     latitude: value
                 };
                 $.ajax({
@@ -71,9 +75,11 @@ $(document).ready(function() {
             return function(value, settings, elem) {
                 var ln = $(elem).parent().siblings('#location').text();
                 var lt = $(elem).parent().siblings('#location_type').text();
+                var ld = $(elem).parent().siblings('#location_date').text();
                 var data = {
                     location_name: ln,
                     location_type: lt,
+                    date: ld,
                     longitude: value
                 };
                 $.ajax({

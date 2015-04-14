@@ -12,7 +12,7 @@
         <span class="location_longitude edit_underline">{% if location.longitude %}{{location.longitude}}{% else %}None{% endif %}</span>
     </td>
     <td data-field="analyst">{{location.analyst}}</td>
-    <td data-field="date">{{location.date}}</td>
+    <td id="location_date" data-field="date">{{location.date}}</td>
     {% with hit=obj|default:hit %}
     <td>
         {% if admin %}
@@ -23,7 +23,7 @@
            data-del-type="Location Association"
            data-del-key="{{location.location}}"
            action="{% url 'crits.locations.views.remove_location' relationship.type hit.id %}"
-           key="{{location.location}}|{{location.location_type}}"></a>
+           key="{{location.location}}|{{location.location_type}}|{{location.date}}"></a>
         {% endif %}
     </td>
     {% endwith %}

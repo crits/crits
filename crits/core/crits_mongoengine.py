@@ -1247,7 +1247,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 location_item.location.strip() != ''):
                 for l, location in enumerate(self.locations):
                     if (location.location == location_item.location and
-                        location.location_type == location_item.location_type):
+                        location.location_type == location_item.location_type and
+                        location.date == location_item.date):
                         return {'success': False,
                                 'message': 'This location is already assigned.'}
                 else:
@@ -1257,7 +1258,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         return {'success': False,
                 'message': 'Location is invalid'}
 
-    def edit_location(self, location_name=None, location_type=None,
+    def edit_location(self, location_name=None, location_type=None, date=None,
                       description=None, latitude=None, longitude=None):
         """
         Edit a location.
@@ -1266,6 +1267,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type location_name: str
         :param location_type: The location_type to edit.
         :type location_type: str
+        :param date: The location date to edit.
+        :type date: str
         :param description: The new description.
         :type description: str
         :param latitude: The new latitude.
@@ -1274,9 +1277,12 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type longitude: str
         """
 
+        if isinstance(date, basestring):
+            date = parse(date, fuzzy=True)
         for location in self.locations:
             if (location.location == location_name and
-                location.location_type == location_type):
+                location.location_type == location_type and
+                location.date == date):
                 if description:
                     location.description = description
                 if latitude:
@@ -1285,7 +1291,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                     location.longitude = longitude
                 break
 
-    def remove_location(self, location_name=None, location_type=None):
+    def remove_location(self, location_name=None, location_type=None, date=None):
         """
         Remove a location from this top-level object.
 
@@ -1293,11 +1299,16 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type location_name: str
         :param location_type: The location type.
         :type location_type: str
+        :param date: The location date.
+        :type date: str
         """
 
+        if isinstance(date, basestring):
+            date = parse(date, fuzzy=True)
         for location in self.locations:
             if (location.location == location_name and
-                location.location_type == location_type):
+                location.location_type == location_type and
+                location.date == date):
                 self.locations.remove(location)
                 break
 

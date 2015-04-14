@@ -55,6 +55,7 @@ def location_add(id_, type_, location_type, location_name, user,
         longitude = longitude,
         analyst = user
     )
+    location.date = location.date.replace(microsecond=0)
     result = obj.add_location(location)
 
     if result['success']:
@@ -70,7 +71,7 @@ def location_add(id_, type_, location_type, location_name, user,
     return {'success': False,
             'message': result['message']}
 
-def location_remove(id_, type_, location_name, location_type, user):
+def location_remove(id_, type_, location_name, location_type, date, user):
     """
     Remove location attribution.
 
@@ -82,6 +83,8 @@ def location_remove(id_, type_, location_name, location_type, user):
     :type location_name: str
     :param location_type: The location type to remove.
     :type location_type: str
+    :param date: The location date to remove.
+    :type date: str
     :param user: The user removing this attribution.
     :type user: str
     :returns: dict with key 'success' (boolean) and 'message' (str) if failed.
@@ -93,14 +96,14 @@ def location_remove(id_, type_, location_name, location_type, user):
     if not crits_object:
         return {'success': False, 'message': 'Cannot find %s.' % type_}
 
-    crits_object.remove_location(location_name, location_type)
+    crits_object.remove_location(location_name, location_type, date)
     try:
         crits_object.save(username=user)
         return {'success': True}
     except ValidationError, e:
         return {'success': False, 'message': "Invalid value: %s" % e}
 
-def location_edit(type_, id_, location_name, location_type, user,
+def location_edit(type_, id_, location_name, location_type, date, user,
                   description=None, latitude=None, longitude=None):
     """
     Update a location.
@@ -113,6 +116,8 @@ def location_edit(type_, id_, location_name, location_type, user,
     :type location_name: str
     :param location_type: The type of the location to change.
     :type location_type: str
+    :param date: The location date to edit.
+    :type date: str
     :param user: The user setting the new description.
     :type user: str
     :param description: The new description.
@@ -130,6 +135,7 @@ def location_edit(type_, id_, location_name, location_type, user,
 
     crits_object.edit_location(location_name,
                                location_type,
+                               date,
                                description=description,
                                latitude=latitude,
                                longitude=longitude)
