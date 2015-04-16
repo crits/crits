@@ -39,6 +39,11 @@
         </td>
         </tr>
         <tr>
+            {% with description=indicator.description %}
+                {% include 'description_widget.html' %}
+            {% endwith %}
+        </tr>
+        <tr>
         <td class='key'>
             Type
             <span style="float: right;display: inline-block" id="indicator_type_error"></span>

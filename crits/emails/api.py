@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.emails.email import Email
 from crits.emails.handlers import handle_pasted_eml, handle_yaml, handle_eml
@@ -19,7 +18,7 @@ class EmailResource(CRITsAPIResource):
 
     class Meta:
         object_class = Email
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "emails"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

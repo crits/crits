@@ -1,6 +1,5 @@
 import json
 import uuid
-from HTMLParser import HTMLParser
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -332,35 +331,6 @@ def event_remove(_id, username):
         return {'success':True}
     else:
         return {'success':False,'message': 'Need to be admin'}
-
-def update_event_description(event_id, description, analyst):
-    """
-    Update event description.
-
-    :param event_id: The ObjectId of the Event to update.
-    :type event_id: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user updating this Event.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str)
-    """
-
-    if not description:
-        return {'success': False, 'message': "No description to change"}
-    event = Event.objects(id=event_id).first()
-    if not event:
-        return {'success': False, 'message': "No event found"}
-    # Have to unescape the submitted data. Use unescape() to escape
-    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser()
-    description = h.unescape(description)
-    event.description = description
-    try:
-        event.save(username=analyst)
-        return {'success': True}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
 
 def update_event_title(event_id, title, analyst):
     """

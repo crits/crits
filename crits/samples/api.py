@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.samples.sample import Sample
 from crits.samples.handlers import handle_uploaded_file
@@ -18,7 +17,7 @@ class SampleResource(CRITsAPIResource):
 
     class Meta:
         object_class = Sample
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "samples"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

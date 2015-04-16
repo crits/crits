@@ -53,6 +53,11 @@
                 {{ email.id }}
             </td>
         </tr>
+        <tr>
+            {% with description=email.description %}
+                {% include 'description_widget.html' %}
+            {% endwith %}
+        </tr>
 
         {% for email_field in email_fields %}
         <tr data-type='{{ email_field.field_type }}'>

@@ -635,13 +635,11 @@ class CRITsAPIResource(MongoEngineResource):
         """
 
         import crits.actors.handlers as ah
-        import crits.campaigns.handlers as ch
+        import crits.services.handlers as servh
 
         actions = {
             'Common': {
-                'campaign_add': ch.campaign_add,
-                'campaign_edit': ch.campaign_edit,
-                'campaign_remove': ch.campaign_remove,
+                'run_service': servh.run_service,
             },
             'Actor': {
                 'update_actor_tags': ah.update_actor_tags,
@@ -649,17 +647,7 @@ class CRITsAPIResource(MongoEngineResource):
                 'set_identifier_confidence': ah.set_identifier_confidence,
                 'remove_attribution': ah.remove_attribution,
                 'set_actor_name': ah.set_actor_name,
-                'set_actor_description': ah.set_actor_description,
                 'update_actor_aliases': ah.update_actor_aliases,
-            },
-            'Campaign': {
-                'add_campaign': ch.add_campaign,
-                'remove_campaign': ch.remove_campaign,
-                'add_ttp': ch.add_ttp,
-                'edit_ttp': ch.edit_ttp,
-                'remove_ttp': ch.remove_ttp,
-                'update_campaign_description': ch.update_campaign_description,
-                'modify_campaign_aliases': ch.modify_campaign_aliases,
             },
         }
 
@@ -686,6 +674,8 @@ class CRITsAPIResource(MongoEngineResource):
                 # Requests don't need to have an id_ as we will derive it from
                 # the request URL. Override id_ if the request provided one.
                 data['id_'] = id_
+                # Override type (if provided)
+                data['type_'] = type_
                 # Override user (if provided) with the one who made the request.
                 data['user'] = bundle.request.user.username
                 try:

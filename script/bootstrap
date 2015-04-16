@@ -144,5 +144,7 @@ then
   done
   
   echo "Attempting to start runserver on port 8080"
+  echo "If you exit bootstrap you can start runserver again using:"
+  echo "python manage.py runserver 0.0.0.0:8080"
   python manage.py runserver 0.0.0.0:8080
 fi

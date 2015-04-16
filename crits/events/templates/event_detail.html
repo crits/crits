@@ -4,7 +4,6 @@
 {% block title %} Event Detail {% endblock %}
 {% block content %}
 <script>
-    var update_event_description = "{% url 'crits.events.views.set_event_description' event.id %}";
     var update_event_title = "{% url 'crits.events.views.set_event_title' event.id %}";
     var update_event_type = "{% url 'crits.events.views.set_event_type' event.id %}";
     var get_event_types = "{% url 'crits.events.views.get_event_type_dropdown' %}";
@@ -60,10 +59,9 @@
                         <td>{{ event.created }}</td>
                     </tr>
                     <tr>
-                        <td class='key'>Description</td>
-                        <td class="longtext">
-                            <span class="edit_underline" id="event_description">{{ event.description }}</span><span id="event_description_error"></span>
-                        </td>
+                        {% with description=event.description %}
+                            {% include 'description_widget.html' %}
+                        {% endwith %}
                     </tr>
                     <tr>
                         <td class="key">Status

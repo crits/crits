@@ -313,29 +313,3 @@ def generate_screenshot_jtable(request, option):
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
-
-def edit_ss_description(oid, description, analyst):
-    """
-    Edit the description of a Screenshot.
-
-    :param oid: The ObjectId of the Screenshot.
-    :type oid: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user updating the Screenshot.
-    :type analyst: str
-    :returns: dict with key "success" (boolean)
-    """
-
-    result = {'success': False}
-
-    s = Screenshot.objects(id=oid).first()
-    if not s:
-        return result
-    s.description = description
-    try:
-        s.save(username=analyst)
-    except:
-        return result
-    result['success'] = True
-    return result
