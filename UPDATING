@@ -3,6 +3,20 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: frbapolkosnik
+Date:   2015-04-17
+
+    Bundled version of OleFileIO_PL has been removed and replaced with system-installed
+    olefile. In order to get it working one needs to install olefile module by either
+    building it and installing from source (https://pypi.python.org/pypi/olefile)
+    download the zip, unzip, cd to the extracted folder and run:
+
+        python setup build & sudo python setup.py install
+    
+    or through pip:
+
+        pip install olefile
+
 Author: wxs
 Date:   2015-01-17
 
