@@ -665,40 +665,35 @@ class CRITsAPIResource(MongoEngineResource):
         # Make sure we have an appropriate action.
         action = bundle.data.get("action", None)
         atype = actions.get(type_, None)
-        if atype:
-            action_type = atype.get(action, None)
-            if not action_type:
-                action_type = actions['Common'].get(action, None)
-            if action_type:
-                data = bundle.data
-                # Requests don't need to have an id_ as we will derive it from
-                # the request URL. Override id_ if the request provided one.
-                data['id_'] = id_
-                # Override type (if provided)
-                data['type_'] = type_
-                # Override user (if provided) with the one who made the request.
-                data['user'] = bundle.request.user.username
-                try:
-                    results = action_type(**data)
-                    if not results.get('success', False):
-                        content['return_code'] = 1
-                        # TODO: Some messages contain HTML and other such content
-                        # that we shouldn't be returning here.
-                        message = results.get('message', None)
-                        content['message'] = message
-                    else:
-                        content['message'] = "success!"
-                except Exception, e:
+        if not atype:
+            atype = actions.get('Common')
+        action_type = atype.get(action, None)
+        if action_type:
+            data = bundle.data
+            # Requests don't need to have an id_ as we will derive it from
+            # the request URL. Override id_ if the request provided one.
+            data['id_'] = id_
+            # Override type (if provided)
+            data['type_'] = type_
+            # Override user (if provided) with the one who made the request.
+            data['user'] = bundle.request.user.username
+            try:
+                results = action_type(**data)
+                if not results.get('success', False):
                     content['return_code'] = 1
-                    content['message'] = str(e)
-            else:
+                    # TODO: Some messages contain HTML and other such content
+                    # that we shouldn't be returning here.
+                    message = results.get('message', None)
+                    content['message'] = message
+                else:
+                    content['message'] = "success!"
+            except Exception, e:
                 content['return_code'] = 1
-                content['message'] = "'%s' is not a valid action." % action
-            self.crits_response(content)
+                content['message'] = str(e)
         else:
-            raise NotImplementedError(
-                'You cannot currently update this object through the API.'
-            )
+            content['return_code'] = 1
+            content['message'] = "'%s' is not a valid action." % action
+        self.crits_response(content)
 
     def obj_delete_list(self, bundle, **kwargs):
         """
