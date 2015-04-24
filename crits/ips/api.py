@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.ips.ip import IP
 from crits.ips.handlers import ip_add_update
@@ -18,7 +17,7 @@ class IPResource(CRITsAPIResource):
 
     class Meta:
         object_class = IP
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "ips"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

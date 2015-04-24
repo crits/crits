@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.events.event import Event, EventType
 from crits.events.handlers import add_new_event
@@ -18,7 +17,7 @@ class EventResource(CRITsAPIResource):
 
     class Meta:
         object_class = Event
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "events"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
