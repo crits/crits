@@ -6,6 +6,8 @@ from dateutil.parser import parse
 from django.http import HttpResponse
 from lxml.etree import tostring
 
+from django.core.urlresolvers import resolve, get_script_prefix
+
 from tastypie.exceptions import BadRequest, ImmediateHttpResponse
 from tastypie.serializers import Serializer
 from tastypie.authentication import SessionAuthentication, ApiKeyAuthentication
@@ -651,11 +653,16 @@ class CRITsAPIResource(MongoEngineResource):
             },
         }
 
-        path = bundle.request.path[:-1].split('/')
-        type_ = path[-2][:-1].title()
+        prefix = get_script_prefix()
+        uri = bundle.request.path
+        if prefix and uri.startswith(prefix):
+            uri = uri[len(prefix)-1:]
+        view, args, kwargs = resolve(uri)
+
+        type_ = kwargs['resource_name'].title()
         if type_ == "Raw_data":
             type_ = "RawData"
-        id_ = path[-1]
+        id_ = kwargs['pk']
 
         content = {'return_code': 0,
                    'type': type_,
