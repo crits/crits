@@ -23,7 +23,7 @@ from operator import itemgetter
 from crits.config.config import CRITsConfig
 from crits.core.audit import AuditLog
 from crits.core.bucket import Bucket
-from crits.core.class_mapper import class_from_id, class_from_type
+from crits.core.class_mapper import class_from_id, class_from_type, key_descriptor_from_obj_type
 from crits.core.crits_mongoengine import Releasability, json_handler
 from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.source_access import SourceAccess
@@ -33,7 +33,7 @@ from crits.core.sector import Sector, SectorObject
 from crits.core.user import CRITsUser, EmbeddedSubscriptions
 from crits.core.user import EmbeddedLoginAttempt
 from crits.core.user_tools import user_sources, is_admin
-from crits.core.user_tools import get_subscribed_users, save_user_secret
+from crits.core.user_tools import save_user_secret
 from crits.core.user_tools import get_user_email_notification
 
 from crits.actors.actor import Actor
@@ -43,8 +43,7 @@ from crits.comments.comment import Comment
 from crits.domains.domain import Domain
 from crits.events.event import Event
 from crits.ips.ip import IP
-from crits.notifications.notification import Notification
-from crits.notifications.handlers import get_user_notifications
+from crits.notifications.handlers import get_user_notifications, generate_audit_notification
 from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
 from crits.emails.email import Email
@@ -57,6 +56,44 @@ from crits.core.totp import valid_totp
 
 
 logger = logging.getLogger(__name__)
+
+def description_update(type_, id_, description, analyst):
+    """
+    Change the description of a top-level object.
+
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
+    :param description: The description to use.
+    :type description: str
+    :param analyst: The user setting the description.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(analyst)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser.HTMLParser()
+    description = h.unescape(description)
+    try:
+        obj.description = description
+        obj.save(username=analyst)
+        return {'success': True, 'message': "Description set."}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
 
 def get_favorites(analyst):
     """
@@ -657,6 +694,10 @@ def get_item_names(obj, active=None):
     :type active: boolean
     :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
     """
+
+    # Don't use this to get sources.
+    if isinstance(obj, SourceAccess):
+        return []
 
     if active is None:
        c = obj.objects().order_by('+name')
@@ -1454,8 +1495,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                                                     "type": otypes[0],
                                                     "value": search_query}}}
     elif search_type == "byobject":
-        query = {'type': 'comment',
-                 'comment': search_query}
+        query = {'comment': search_query}
     elif search_type == "global":
         if type_ == "Sample":
             search_list.append(sample_queries["backdoor"])
@@ -1521,8 +1561,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                 ]
         elif type_ == "Comment":
             search_list = [
-                    {'comment': search_query,
-                     'type': 'comment'},
+                    {'comment': search_query},
                 ]
         elif type_ == "Campaign":
             search_list = [
@@ -1534,6 +1573,12 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                     {'description': search_query},
                     {'tags': search_query},
                 ]
+        elif type_ == "Target":
+            search_list = [
+                    {'email_address': search_query},
+                    {'firstname': search_query},
+                    {'lastname': search_query},
+                ]
         else:
             search_list = [{'name': search_query}]
         search_list.append({'source.instances.reference':search_query})
@@ -1542,10 +1587,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         query = {'$or': search_list}
     else:
         if type_ == "Domain":
-            if search_type == "whois.data":
-                query = {'whois.text': search_query}
-            else:
-                query = {'domain': search_query}
+            query = {'domain': search_query}
         elif type_ == "Email":
             if search_type == "ip":
                 query = {'$or': [{'originating_ip': search_query},
@@ -2050,7 +2092,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                             doc[key] = ",".join(value)
                     else:
                         doc[key] = ""
-                doc[key] = html_escape(doc[key])
+                if key != urlfieldparam:
+                    doc[key] = html_escape(doc[key])
             if col_obj._meta['crits_type'] == "Comment":
                 mapper = {
                     "Actor": 'crits.actors.views.actor_detail',
@@ -2521,7 +2564,7 @@ def generate_dashboard(request):
     from crits.dashboards.handlers import get_dashboard
     args = get_dashboard(request.user)
     return render_to_response('dashboard.html', args, RequestContext(request))
-    
+
 def dns_timeline(query, analyst, sources):
     """
     Query for domains, format that data for timeline view, and return them.
@@ -2967,7 +3010,13 @@ def generate_user_preference(request,section=None,key=None,name=None):
     # Returned as an array to maintain the order
     # could also have a key/value and a ordered array
 
-    from crits.core.forms import PrefUIForm, NavMenuForm
+    from crits.core.forms import PrefUIForm, NavMenuForm, ToastNotificationConfigForm
+
+    toast_notifications_title = "Toast Notifications"
+
+    config = CRITsConfig.objects().first()
+    if not config.enable_toasts:
+        toast_notifications_title += " (currently globally disabled by an admin)"
 
     preferences = [
         {'section': 'notify',
@@ -2976,7 +3025,11 @@ def generate_user_preference(request,section=None,key=None,name=None):
          'enabled': get_user_email_notification(request.user.username),
          'name': 'Email Notifications'
          },
-
+        {'section': 'toast_notifications',
+         'title': toast_notifications_title,
+         'form': ToastNotificationConfigForm(request),
+         'formclass': ToastNotificationConfigForm,
+        },
         {'section': 'ui',
          'title': 'UI Settings',
          'form': PrefUIForm(request),
@@ -3507,7 +3560,6 @@ def details_from_id(type_, id_):
     else:
         return None
 
-
 def audit_entry(self, username, type_, new_doc=False):
     """
     Generate an audit entry.
@@ -3531,31 +3583,22 @@ def audit_entry(self, username, type_, new_doc=False):
     # don't audit audits
     if my_type in ("AuditLog", "Service"):
         return
-    changed = [f for f in self._get_changed_fields() if f not in ("modified",
+    changed_fields = [f.split('.')[0] for f in self._get_changed_fields() if f not in ("modified",
                                                                   "save",
                                                                   "delete")]
 
-    if new_doc and not changed:
+    # Remove any duplicate fields
+    changed_fields = list(set(changed_fields))
+
+    if new_doc and not changed_fields:
         what_changed = "new document"
     else:
-        what_changed = ', '.join(changed)
-    field_dict = {
-        'Actor': 'name',
-        'Campaign': 'name',
-        'Certificate': 'md5',
-        'Comment': 'object_id',
-        'Domain': 'domain',
-        'Email': 'id',
-        'Event': 'id',
-        'Indicator': 'id',
-        'IP': 'ip',
-        'PCAP': 'md5',
-        'RawData': 'title',
-        'Sample': 'md5',
-        'Target': 'email_address'
-    }
-    if my_type in field_dict:
-        value = getattr(self, field_dict[my_type], '')
+        what_changed = ', '.join(changed_fields)
+
+    key_descriptor = key_descriptor_from_obj_type(my_type)
+
+    if key_descriptor is not None:
+        value = getattr(self, key_descriptor, '')
     else:
         value = ""
 
@@ -3582,43 +3625,8 @@ def audit_entry(self, username, type_, new_doc=False):
         except ValidationError:
             pass
 
-    # Generate notification
-    if type_ == "save":
-        message = "%s updated the following attributes: %s" % (username,
-                                                               what_changed)
-    elif type_ == "delete":
-        message = "%s deleted the following %s: %s" % (username,
-                                                       my_type,
-                                                       self.id)
-
-    if my_type in field_dict:
-        n = Notification()
-        n.analyst = username
-        if my_type == 'Comment':
-            n.obj_id = self.obj_id
-            n.obj_type = self.obj_type
-            n.notification = "%s added a comment." % username
-        else:
-            n.notification = message
-            n.obj_id = self.id
-            n.obj_type = my_type
-        if hasattr(self, 'source'):
-            sources = [s.name for s in self.source]
-            n.users = get_subscribed_users(n.obj_type, n.obj_id, sources)
-        else:
-            n.users = []
-        if my_type == 'Comment':
-            for u in self.users:
-                if u not in n.users:
-                    n.users.append(u)
-        # don't notify the user creating this notification
-        n.users = [u for u in n.users if u != username]
-        if not len(n.users):
-            return
-        try:
-            n.save()
-        except ValidationError:
-            pass
+    # Generate audit notification
+    generate_audit_notification(username, type_, self, changed_fields, what_changed, new_doc)
 
 def ticket_add(type_, id_, ticket):
     """

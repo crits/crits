@@ -3,6 +3,66 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: frbapolkosnik
+Date:   2015-04-17
+
+    Bundled version of OleFileIO_PL has been removed and replaced with system-installed
+    olefile >= 0.40. In order to get it working one needs to install olefile module by either
+    building it and installing from source (https://pypi.python.org/pypi/olefile)
+    download the zip, unzip, cd to the extracted folder and run:
+
+        python setup build & sudo python setup.py install
+    
+    or through pip:
+
+        pip install olefile
+
+Author: wxs
+Date:   2015-01-17
+
+    Notifications had an incorrect index set on them, causing them not to
+    expire after 30 days. This can be fixed by executing the following command
+    from a mongo shell:
+
+    db.notifications.ensureIndex({"date": 1}, {expireAfterSeconds: 2592000, background: true})
+
+Author: wxs
+Date:   2014-12-30
+
+    Domains got an overhaul to split the WHOIS feature out to a service. You
+    will need to migrate all your domains. This can be done with:
+
+    python manage.py upgrade -D
+
+    If you do not have any WHOIS information for existing domains in your
+    database you can ignore this update. If you do have WHOIS information a
+    script has been provided which will run the WHOIS service with default
+    configuration against all domains which have WHOIS information already. It
+    is recommended that you use this script to create service analysis results
+    for these domains.
+
+    The WHOIS service supports three different query modes: live, pydat and
+    domaintools. If you wish to use the domaintools or pydat modes you must
+    configure the service first and then specify your runtime options to the
+    migrate script using the -c option.
+
+    If you only want to do live queries then run this:
+
+    python manage.py runscript whois_service migrate -- -v
+
+    If you want to do a pydat lookup then run this:
+
+    python manage.py runscript whois_service migrate -- -v -c "{'pydat_query': True}"
+
+    If you want to do a domaintools lookup then run this:
+
+    python manage.py runscript whois_service migrate -- -v -c "{'dt_query': True}"
+    The config options can be combined too. So all three modes would be:
+
+    "{'dt_query': True, 'pydat_query': True, 'live_query': True}"
+
+    Please use the -h argument to the script to get extra help.
+
 Author: dsnellgrove
 Date:   2014-10-30
 

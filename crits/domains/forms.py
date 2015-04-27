@@ -1,3 +1,5 @@
+import re
+
 from datetime import datetime
 from django.conf import settings
 from django import forms
@@ -7,87 +9,11 @@ from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.widgets import CalWidget
-from crits.core.handlers import get_source_names, get_item_names
+from crits.core.handlers import get_source_names, get_item_names, get_object_types
 from crits.core.user_tools import get_user_organization
 from crits.domains.domain import Domain
 
-class UpdateWhoisForm(forms.Form):
-    """
-    Django form for updating WhoIs information.
-    """
-
-    error_css_class = 'error'
-    required_css_class = 'required'
-    date = forms.ChoiceField(widget=forms.Select, required=False)
-    data = forms.CharField(required=True,
-                           widget=forms.Textarea(attrs={'cols':'100',
-                                                        'rows':'30'}))
-
-    def __init__(self, *args, **kwargs):
-        #populate date choices
-        self.domain = ""
-        allow_adding = True
-        if 'domain' in kwargs:
-            self.domain = kwargs['domain']
-            del kwargs['domain'] #keep the default __init__ from erroring out
-        if 'allow_adding' in kwargs:
-            allow_adding = kwargs['allow_adding']
-            del kwargs['allow_adding']
-        super(UpdateWhoisForm, self).__init__(*args, **kwargs)
-        if self.domain:
-            if allow_adding:
-                date_choices = [("","Add New")]
-            else:
-                date_choices = []
-            dmain = Domain.objects(domain=self.domain).first()
-            if dmain:
-                whois = dmain.whois
-                whois.sort(key=lambda w: w['date'], reverse=True)
-                for w in dmain.whois:
-                    date = datetime.strftime(w['date'],
-                                             settings.PY_DATETIME_FORMAT)
-                    date_choices.append((date,date))
-            self.fields['date'].choices = date_choices
-
-    def clean_date(self):
-        date = self.cleaned_data['date']
-        if date:
-            date_obj = datetime.strptime(self.cleaned_data['date'],
-                                         settings.PY_DATETIME_FORMAT)
-            domain = Domain.objects(domain=self.domain,
-                                    whois__date=date_obj).first()
-            if not domain:
-                raise forms.ValidationError(u'%s is not a valid date.' % date)
-
-class DiffWhoisForm(forms.Form):
-    """
-    Django form for diffing WhoIs information.
-    """
-
-    error_css_class = 'error'
-    required_css_class = 'required'
-    from_date = forms.ChoiceField(widget=forms.Select, required=True)
-    to_date = forms.ChoiceField(widget=forms.Select, required=True)
-
-    def __init__(self, *args, **kwargs):
-        #populate date choices
-        domain = ""
-        if 'domain' in kwargs:
-            domain = kwargs['domain']
-            del kwargs['domain'] #keep the default __init__ from erroring out
-        super(DiffWhoisForm, self).__init__(*args, **kwargs)
-        if domain:
-            date_choices = [("","Select Date To Compare")]
-            dmain = Domain.objects(domain=domain).first()
-            if dmain:
-                whois = dmain.whois
-                whois.sort(key=lambda w: w['date'], reverse=True)
-                for w in dmain.whois:
-                    date = datetime.strftime(w['date'],
-                                             settings.PY_DATETIME_FORMAT)
-                    date_choices.append((date,date))
-            self.fields['from_date'].choices = self.fields['to_date'].choices = date_choices
-
+ip_choices = [(c[0], c[0]) for c in get_object_types(active=False, query={'type':'Address', 'name':{'$in':['cidr', re.compile('^ipv')]}})]
 
 class TLDUpdateForm(forms.Form):
     """
@@ -124,6 +50,9 @@ class AddDomainForm(forms.Form):
     ip = forms.GenericIPAddressField(required=False,
                                      label=form_consts.Domain.IP_ADDRESS,
                                      widget=forms.TextInput(attrs={'class': 'togglewithip bulkrequired'}))
+    ip_type = forms.ChoiceField(required=False,
+                                label=form_consts.IP.IP_TYPE,
+                                widget=forms.Select(attrs={'class':'togglewithip bulkrequired bulknoinitial'}),)
     created = forms.DateTimeField(widget=CalWidget(format=settings.PY_DATETIME_FORMAT,
                                                    attrs={'class':'datetimeclass togglewithip bulkrequired',
                                                           'size':'25',
@@ -159,6 +88,9 @@ class AddDomainForm(forms.Form):
                                              ('medium', 'medium'),
                                              ('high', 'high')]
 
+        self.fields['ip_type'].choices = ip_choices
+        self.fields['ip_type'].initial = "Address - ipv4-addr"
+
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
@@ -169,6 +101,7 @@ class AddDomainForm(forms.Form):
         date = cleaned_data.get('created')
         same_source = cleaned_data.get('same_source')
         ip_source = cleaned_data.get('ip_source')
+        ip_type = cleaned_data.get('ip_type')
 
         campaign = cleaned_data.get('campaign')
 
@@ -183,6 +116,9 @@ class AddDomainForm(forms.Form):
             if not ip:
                 self._errors.setdefault('ip', ErrorList())
                 self._errors['ip'].append(u'This field is required.')
+            if not ip_type:
+                self._errors.setdefault('ip_type', ErrorList())
+                self._errors['ip_type'].append(u'This field is required.')
             if not date:
                 self._errors.setdefault('created', ErrorList())
                 self._errors['created'].append(u"This field is required.") #add error to created field

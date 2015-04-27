@@ -1178,7 +1178,9 @@ Follow these steps to change your password.
 API
 ===========================================
 
-CRITs comes with an authenticated API. The API leverages Tastypie. A lot of the
+CRITs comes with an authenticated API. It is disabled by default and
+must be enabled in the Control Panel. Once it is enabled you must restart
+the web server for the URLs to be exposed. The API leverages Tastypie. A lot of the
 features of Tastypie are overridden by CRITs code for our needs. More
 information on Tastypie can be found here:
 
@@ -1211,6 +1213,7 @@ Currently the available resources are:
 
 - campaigns
 - certificates
+- comments
 - domains
 - emails
 - events
@@ -1531,6 +1534,19 @@ Unique POST Parameters:
 :related_type: The CRITs type of the related top-level object.
 :relationship: The type of relationship.
 
+Comment API
+-------------------------------------------
+
+POST:
+
+        /api/v1/comments/
+
+Unique POST Parameters:
+
+:comment: The Comment you would like to add.
+:object_id: The ObjectId of the item to add comment to.
+:object_type: The Object Type of this object.
+
 Domain API
 -------------------------------------------
 
@@ -1550,6 +1566,7 @@ Unique POST Parameters:
 :add_ip: Tell the API that you are also adding an IP related to this domain.
 :domain: The domain name.
 :ip: The IP you want to relate to this domain.
+:ip_type: The type of the IP ('Address - ipv4-addr' is most common).
 :ip_source: The source of the IP.
 :ip_method: The method in which you acquired this IP from the source.
 :ip_reference: The reference about this IP source.
@@ -1816,6 +1833,7 @@ Unique POST Parameters:
 :tags: A comma-separated list of tags for the screenshot.
 :oid: The ObjectId of the top-level object the screenshot(s) is/are for.
 :otype: The type of the top-level object the screenshot(s) is/are for.
+:description: Description of the screenshot.
 
 Service API
 -------------------------------------------
@@ -1891,17 +1909,3 @@ Unique POST Parameters:
 :organization_id: The ID of the organization if they have one.
 :title: The job title of the Target.
 :note: Notes about the Target.
-
-
-WhoIs API
--------------------------------------------
-
-POST:
-
-        /api/v1/whois/
-
-Unique POST Parameters:
-
-:domain: The domain this WhoIs info is for.
-:date: The date for the WhoIs entry.
-:whois: The WhoIs entry.

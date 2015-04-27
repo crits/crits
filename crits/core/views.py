@@ -50,6 +50,7 @@ from crits.core.handlers import details_from_id, status_update
 from crits.core.handlers import get_favorites, favorite_update
 from crits.core.handlers import generate_favorites_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
+from crits.core.handlers import description_update
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_role import UserRole
@@ -92,6 +93,32 @@ from crits.standards.forms import UploadStandardsForm
 from crits.targets.forms import TargetInfoForm
 
 logger = logging.getLogger(__name__)
+
+
+@user_passes_test(user_can_view_data)
+def update_object_description(request):
+    """
+    Toggle favorite in a user profile.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        type_ = request.POST['type']
+        id_ = request.POST['id']
+        description = request.POST['description']
+        analyst = request.user.username
+        return HttpResponse(json.dumps(description_update(type_,
+                                                          id_,
+                                                          description,
+                                                          analyst)),
+                            mimetype="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def toggle_favorite(request):
@@ -982,6 +1009,9 @@ def base_context(request):
                            'company_name',
                            settings.COMPANY_NAME)
     crits_version = settings.CRITS_VERSION
+    enable_toasts = getattr(crits_config,
+                            'enable_toasts',
+                            settings.ENABLE_TOASTS)
     git_branch = getattr(crits_config,
                          'git_branch',
                          settings.GIT_BRANCH)
@@ -1010,6 +1040,7 @@ def base_context(request):
     base_context['instance_name'] = instance_name
     base_context['company_name'] = company_name
     base_context['crits_version'] = crits_version
+    base_context['enable_toasts'] = enable_toasts
     if git_repo_url:
         base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long+"'>"+git_branch+':'+git_hash+"</a>"
     else:
@@ -1166,6 +1197,11 @@ def base_context(request):
         nav_template = get_nav_template(request.user.prefs.nav)
         if nav_template != None:
             base_context['nav_template'] = nav_template
+
+        base_context['newer_notifications_location'] = request.user.prefs.toast_notifications.get('newer_notifications_location', 'top')
+        base_context['initial_notifications_display'] = request.user.prefs.toast_notifications.get('initial_notifications_display', 'show')
+        base_context['max_visible_notifications'] = request.user.prefs.toast_notifications.get('max_visible_notifications', 5)
+        base_context['notification_anchor_location'] = request.user.prefs.toast_notifications.get('notification_anchor_location', 'bottom_right')
 
         base_context['nav_config'] = {'text_color': request.user.prefs.nav.get('text_color'),
                                       'background_color': request.user.prefs.nav.get('background_color'),
@@ -1450,7 +1486,7 @@ def change_subscription(request, stype, oid):
         message = ""
         if is_user_subscribed(username, stype, oid):
             unsubscribe_user(username, stype, oid)
-            message = ("<span class=\"ui-icon ui-icon-check subscription_link"
+            message = ("<span class=\"ui-icon ui-icon-signal-diag subscription_link"
                        "_disable\" title=\"Subscribe\"></span>")
         else:
             subscribe_user(username, stype, oid)

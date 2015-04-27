@@ -16,8 +16,9 @@ from crits.campaigns.handlers import campaign_add as campaign_addh
 from crits.campaigns.handlers import add_campaign as add_campaignh
 from crits.campaigns.handlers import campaign_edit, campaign_remove
 from crits.campaigns.handlers import add_ttp, edit_ttp, remove_ttp
-from crits.campaigns.handlers import update_campaign_description, modify_campaign_aliases
+from crits.campaigns.handlers import modify_campaign_aliases
 from crits.campaigns.handlers import generate_campaign_jtable, generate_campaign_csv
+from crits.campaigns.handlers import get_campaign_names_list
 from crits.core.user_tools import user_can_view_data
 from crits.stats.handlers import campaign_date_stats
 
@@ -50,8 +51,9 @@ def campaign_stats(request):
                                   {'campaign': campaign},
                                   RequestContext(request))
 
+
 @user_passes_test(user_can_view_data)
-def campaigns_listing(request,option=None):
+def campaigns_listing(request, option=None):
     """
     Generate Campaign Listing template.
 
@@ -65,6 +67,21 @@ def campaigns_listing(request,option=None):
     if option == "csv":
         return generate_campaign_csv(request)
     return generate_campaign_jtable(request, option)
+
+@user_passes_test(user_can_view_data)
+def campaign_names(request, active_only=True):
+    """
+    Generate Campaign Listing.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param active_only: Whether we return active campaigns only (default)
+    :type active_only: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    campaign_list = get_campaign_names_list(active_only)
+    return HttpResponse(json.dumps(campaign_list), mimetype="application/json")
 
 @user_passes_test(user_can_view_data)
 def campaign_details(request, campaign_name):
@@ -113,13 +130,17 @@ def add_campaign(request):
                                    bucket_list=bucket_list,
                                    ticket=ticket)
             if result['success']:
-                message = {'message': '<div>Campaign <a href="%s">%s</a> added successfully!</div>' % (reverse('crits.campaigns.views.campaign_details', args=[campaign_name]), campaign_name), 'success': True}
+                message = {
+                    'message': '<div>Campaign <a href="%s">%s</a> added successfully!</div>' % (reverse('crits.campaigns.views.campaign_details', args=[campaign_name]), campaign_name),
+                    'success': True}
             else:
-                message = {'message': ['Campaign addition failed!']+result['message'], 'success': False}
+                message = {
+                    'message': ['Campaign addition failed!']+result['message'],
+                    'success': False}
             return HttpResponse(json.dumps(message), mimetype="application/json")
         else:
-            return HttpResponse(json.dumps({'form':campaign_form.as_table(), 'success': False, 'message':"Please correct form errors."}), mimetype="application/json")
-    return render_to_response("error.html", {"error" : 'Expected AJAX POST' }, RequestContext(request))
+            return HttpResponse(json.dumps({'form': campaign_form.as_table(), 'success': False, 'message': "Please correct form errors."}), mimetype="application/json")
+    return render_to_response("error.html", {"error": 'Expected AJAX POST'}, RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def campaign_add(request, ctype, objectid):
@@ -135,7 +156,7 @@ def campaign_add(request, ctype, objectid):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method=="POST" and request.is_ajax():
+    if request.method == "POST" and request.is_ajax():
         form = CampaignForm(request.POST)
         result = {}
         if form.is_valid():
@@ -179,7 +200,7 @@ def edit_campaign(request, ctype, objectid):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method=="POST" and request.is_ajax():
+    if request.method == "POST" and request.is_ajax():
         form = CampaignForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
@@ -206,12 +227,12 @@ def edit_campaign(request, ctype, objectid):
                 return HttpResponse(json.dumps(result),
                                     mimetype="application/json")
             else:
-                result.update({'form':form.as_table()})
+                result.update({'form': form.as_table()})
                 return HttpResponse(json.dumps(result),
                                     mimetype="application/json")
         else:
             return HttpResponse(json.dumps({'success': False,
-                                            'form':form.as_table()}),
+                                            'form': form.as_table()}),
                                 mimetype="application/json")
     else:
         return HttpResponse(json.dumps({'success': False}),
@@ -240,7 +261,7 @@ def remove_campaign(request, ctype, objectid):
         return HttpResponse(json.dumps(result), mimetype="application/json")
     else:
         return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
+                                  {"error": 'Expected AJAX POST.'},
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)
@@ -268,7 +289,7 @@ def campaign_ttp(request, cid):
             result = remove_ttp(cid, request.POST['ttp'],
                                 analyst)
         else:
-            result = { 'success': False, 'message': "Invalid action." }
+            result = {'success': False, 'message': "Invalid action."}
         if 'campaign' in result:
             campaign = result['campaign']
             html = render_to_string('campaign_ttps_data_widget.html',
@@ -279,32 +300,7 @@ def campaign_ttp(request, cid):
         return HttpResponse(json.dumps(result), mimetype="application/json")
     else:
         return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def set_campaign_description(request, name):
-    """
-    Set a Campaign description. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param name: The name of the Campaign.
-    :type name: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        description = request.POST.get('description', None)
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_campaign_description(name,
-                                                                   description,
-                                                                   analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
+                                  {"error": 'Expected AJAX POST.'},
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)
@@ -326,4 +322,4 @@ def campaign_aliases(request):
                             mimetype="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html", {"error" : error }, RequestContext(request))
+        return render_to_response("error.html", {"error": error}, RequestContext(request))

@@ -49,7 +49,11 @@ function add_screenshot_submit(e) {
     var elem = $(e.currentTarget);
     var dialog = elem.closest(".ui-dialog");
     var form = dialog.find("form");
-
+    var csrftoken = readCookie('csrftoken');
+    var input = $("<input>")
+               .attr("type", "hidden")
+               .attr("name", "csrfmiddlewaretoken").val(csrftoken);
+    form.append($(input));
     form.find("#id_oid").val(my_id);
     form.find("#id_otype").val(my_type);
     form.submit();
@@ -172,6 +176,9 @@ $(document).ready(function() {
         });
     });
 
+    // Normally description editing is done in description_widget.html,
+    // but not for screenshots because descriptions of screenshots are
+    // only editable from the listing page.
     $(document).on('click', '.edit_ss_description', function(e) {
         e.preventDefault();
         $(this).editable(function(value, settings) {
@@ -179,7 +186,8 @@ $(document).ready(function() {
             return function(value, settings, elem) {
                 var data = {
                     description: value,
-                    oid: $(elem).attr('data-id')
+                    id: $(elem).attr('data-id'),
+                    type: "Screenshot"
                 };
                 $.ajax({
                     type: "POST",

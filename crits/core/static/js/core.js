@@ -646,6 +646,19 @@ function initTabNav() {
     });
 }
 
+var csrftoken = readCookie('csrftoken');
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+$.ajaxSetup({
+    // Set request header for ajax POST
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
 
 $(document).ready(function() {
     var src_filter = '[name!="analyst"]';
@@ -1280,7 +1293,7 @@ $(document).ready(function() {
             url: get_search_help_url,
             success: function(data) {
                 if (data.template) {
-                    var rdiv = $("<div id='global_search_help' />");
+                    var rdiv = $("<div id='global_search_help' class='z-11' />");
                     $('body').append(rdiv);
                     $('#global_search_help')
                     .css('position', 'absolute')

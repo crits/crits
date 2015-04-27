@@ -9,5 +9,4 @@ urlpatterns = patterns('crits.domains.views',
     (r'^add/$', 'add_domain'),
     (r'^bulkadd/$', 'bulk_add_domain'),
     (r'^edit/(?P<domain>\S+)/$', 'edit_domain'),
-    (r'^update_whois/(?P<domain>\S+)/$', 'update_whois'),
 )

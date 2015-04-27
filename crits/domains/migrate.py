@@ -4,6 +4,20 @@ def migrate_domain(self):
     """
 
     migrate_1_to_2(self)
+    migrate_2_to_3(self)
+
+def migrate_2_to_3(self):
+    """
+    Migrate from schema 1 to 2.
+    """
+
+    if self.schema_version < 2:
+        migrate_1_to_2(self)
+
+    if self.schema_version == 2:
+        self.schema_version = 3
+        self.save()
+        self.reload()
 
 def migrate_1_to_2(self):
     """

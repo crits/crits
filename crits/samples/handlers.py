@@ -1127,7 +1127,10 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
         if related_obj and sample:
             if related_obj.id != sample.id: #don't form relationship to itself
                 if not relationship:
-                    relationship = "Related_To"
+                    if related_obj._meta['crits_type'] == 'Email':
+                        relationship = "Contained_Within"
+                    else:
+                        relationship = "Related_To"
                 sample.add_relationship(rel_item=related_obj,
                                         rel_type=relationship,
                                         analyst=user,
@@ -1142,6 +1145,9 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
                                   % (reverse('crits.samples.views.detail',
                                              args=[sample.md5.lower()]),
                                              sample.md5.lower()))
+            # Update Cache
+            if cached_results != None:
+                cached_results[sample.md5] = sample
     else:
         # Duplicate sample, but uploaded anyways
         if is_validate_only == False:
@@ -1227,6 +1233,8 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
     """
 
     samples = list()
+    if not source:
+        return [{'success': False, 'message': "Missing source information."}]
     if method:
         method = " - " + method
     if f:

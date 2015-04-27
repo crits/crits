@@ -268,6 +268,9 @@ def handle_pcap_file(filename, data, source_name, user=None,
         }
         return status
 
+    if not source_name:
+        return {"success" : False, "message" : "Missing source information."}
+
     related_obj = None
     if related_id or related_md5:
         if related_id:
@@ -346,30 +349,10 @@ def handle_pcap_file(filename, data, source_name, user=None,
         'message':      'Uploaded pcap',
         'md5':          md5,
         'id':           str(pcap.id),
+        'object':       pcap
     }
 
     return status
-
-def update_pcap_description(md5, description, analyst):
-    """
-    Update a PCAP description.
-
-    :param md5: The MD5 of the PCAP to update.
-    :type md5: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user updating the description.
-    :type analyst: str
-    :returns: None, ValidationError
-    """
-
-    pcap = PCAP.objects(md5=md5).first()
-    pcap.description = description
-    try:
-        pcap.save(username=analyst)
-        return None
-    except ValidationError, e:
-        return e
 
 def delete_pcap(pcap_md5, username=None):
     """
