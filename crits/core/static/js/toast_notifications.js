@@ -151,6 +151,23 @@ $.noty.themes.crits = {
     }
 };
 
+
+var csrftoken = readCookie('csrftoken');
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+$.ajaxSetup({
+    // Set request header for ajax POST
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+
+
 $(document).ready(function() {
     var notyIDToNotyDict = {};
     var isShowToastNotifications = true;
