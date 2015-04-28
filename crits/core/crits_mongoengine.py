@@ -783,6 +783,20 @@ class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
         method = StringField()
         reference = StringField()
 
+        def __eq__(self, other):
+            """
+            Two source instances are equal if their data attributes are equal
+            """
+
+            if isinstance(other, type(self)):
+                if (self.analyst == other.analyst and
+                    self.date == other.date and
+                    self.method == other.method and
+                    self.reference == other.reference):
+                    # all data attributes are equal, so sourceinstances are equal
+                    return True
+            return False
+
     instances = ListField(EmbeddedDocumentField(SourceInstance))
     name = StringField()
 
@@ -837,8 +851,14 @@ class CritsSourceDocument(BaseDocument):
                 if s.name == source_item.name: # find index of matching source
                     match = c
                     break
-            if match is not None: # if source exists, add instances to that source
-                self.source[match].instances.extend(source_item.instances)
+            if match is not None: # if source exists, add instances to it
+                # Don't add exact duplicates
+                for new_inst in source_item.instances:
+                    for exist_inst in self.source[match].instances:
+                        if new_inst == exist_inst:
+                            break
+                    else:
+                        self.source[match].instances.append(new_inst)
             else: # else, add as new source
                 self.source.append(source_item)
 
@@ -987,36 +1007,36 @@ class EmbeddedTickets(BaseDocument):
 
         return False;
 
-    def add_ticket(self, ticket, analyst, date=None):
+    def add_ticket(self, tickets, analyst=None, date=None):
         """
         Add a ticket to this top-level object.
 
-        :param ticket: The ticket to add.
-        :type ticket: str
+        :param tickets: The ticket(s) to add.
+        :type tickets: str, list, or
+                       :class:`crits.core.crits_mongoengine.EmbeddedTicket`
         :param analyst: The user adding this ticket.
         :type analyst: str
         :param date: The date for the ticket.
         :type date: datetime.datetime.
         """
 
-        if isinstance(ticket, list) and len(ticket) == 1 and ticket[0] == '':
-            parsed_tickets = []
-        elif isinstance(ticket, (str, unicode)):
-            parsed_tickets = ticket.split(',')
-        else:
-            parsed_tickets = ticket
+        if isinstance(tickets, basestring):
+            tickets = tickets.split(',')
+        elif not isinstance(tickets, list):
+            tickets = [tickets]
 
-        parsed_tickets = [ticket_number.strip() for ticket_number in parsed_tickets]
-
-        for ticket_number in parsed_tickets:
-            # prevent duplicates
-            if ticket_number and self.is_ticket_exist(ticket_number) == False:
-                et = EmbeddedTicket()
-                et.analyst = analyst
-                et.ticket_number = ticket_number
-                if date:
-                    et.date = date
-                self.tickets.append(et)
+        for ticket in tickets:
+            if isinstance(ticket, EmbeddedTicket):
+                if not self.is_ticket_exist(ticket.ticket_number): # stop dups
+                    self.tickets.append(ticket)
+            elif isinstance(ticket, basestring):
+                if ticket and not self.is_ticket_exist(ticket):  # stop dups
+                    et = EmbeddedTicket()
+                    et.analyst = analyst
+                    et.ticket_number = ticket
+                    if date:
+                        et.date = date
+                    self.tickets.append(et)
 
     def edit_ticket(self, analyst, ticket_number, date=None):
         """

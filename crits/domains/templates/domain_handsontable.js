@@ -2,13 +2,13 @@ function copyDomainSourcesToIP{{prefix}}(handsOnTableID, tableName) {
     var table = $('#' + handsOnTableID);
     colHeaderArray = table.handsontable('getColHeader');
 
-    domainSourceColIndex = getArrayIndexOfSubstring(colHeaderArray, "Domain Source")
-    domainMethodColIndex = getArrayIndexOfSubstring(colHeaderArray, "Domain Method")
-    domainReferenceColIndex = getArrayIndexOfSubstring(colHeaderArray, "Domain Reference")
+    domainSourceColIndex = getArrayIndexOfSubstring(colHeaderArray, "Source")
+    domainMethodColIndex = getArrayIndexOfSubstring(colHeaderArray, "Source Method")
+    domainReferenceColIndex = getArrayIndexOfSubstring(colHeaderArray, "Source Reference")
 
     ipSourceColIndex = getArrayIndexOfSubstring(colHeaderArray, "IP Source")
-    ipMethodColIndex = getArrayIndexOfSubstring(colHeaderArray, "IP Method")
-    ipReferenceColIndex = getArrayIndexOfSubstring(colHeaderArray, "IP Reference")
+    ipMethodColIndex = getArrayIndexOfSubstring(colHeaderArray, "IP Source Method")
+    ipReferenceColIndex = getArrayIndexOfSubstring(colHeaderArray, "IP Source Reference")
 
     if(domainSourceColIndex !== -1 && ipSourceColIndex !== -1) {
         copyHandsOnTableCol(table, domainSourceColIndex, ipSourceColIndex);
