@@ -57,7 +57,7 @@ elif 'test' in sys.argv:
     DEVEL_INSTANCE = True
     SERVICE_MODEL = 'thread'
     SESSION_COOKIE_SECURE = False
-    CSRV_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
     LOGIN_URL = "/login/"
 else:
     DEVEL_INSTANCE = False
