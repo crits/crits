@@ -338,31 +338,11 @@ def handle_cert_file(filename, data, source_name, user=None,
         'success':      True,
         'message':      'Uploaded certificate',
         'md5':          md5,
-        'id':           str(cert.id)
+        'id':           str(cert.id),
+        'object':       cert
     }
 
     return status
-
-def update_cert_description(md5, description, analyst):
-    """
-    Update a Certificate description.
-
-    :param md5: The MD5 of the Certificate to update.
-    :type md5: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user updating the description.
-    :type analyst: str
-    :returns: None, ValidationError
-    """
-
-    cert = Certificate.objects(md5=md5).first()
-    cert.description = description
-    try:
-        cert.save(username=analyst)
-        return None
-    except ValidationError, e:
-        return e
 
 def delete_cert(md5, username=None):
     """

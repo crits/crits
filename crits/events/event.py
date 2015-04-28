@@ -65,6 +65,7 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
 
     title = StringField(required=True)
     event_type = StringField(required=True)
+    # description also exists in CritsBaseAttributes, but this one is required.
     description = StringField(required=True)
     event_id = UUIDField(binary=True, required=True, default=uuid.uuid4)
 

@@ -7,9 +7,8 @@
 {% block content %}
 
 <script>
-    var update_campaign_description = "{% url 'crits.campaigns.views.set_campaign_description' campaign_detail.id %}";
     var update_campaign_aliases = "{% url 'crits.campaigns.views.campaign_aliases' %}";
-    var campaign_name = "{{ campaign_detail.name }}";
+    var campaign_name = "{{ campaign_detail.name|safe }}";
     var is_admin = "{{ admin }}";
 </script>
 
@@ -53,10 +52,9 @@
                 </td>
             </tr>
             <tr>
-                <td class="key">Description</td>
-                <td class="longtext">
-                    <span class="edit_underline" id="campaign_description">{{campaign_detail.description}}</span><span id="campaign_description_error"></span>
-                </td>
+            {% with description=campaign_detail.description %}
+                {% include 'description_widget.html' %}
+            {% endwith %}
             </tr>
             <tr id="ttps_container">
                 {% include 'campaign_ttps_list_widget.html' %}

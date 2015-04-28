@@ -1127,7 +1127,10 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         if related_obj and sample:
             if related_obj.id != sample.id: #don't form relationship to itself
                 if not relationship:
-                    relationship = "Related_To"
+                    if related_obj._meta['crits_type'] == 'Email':
+                        relationship = "Contained_Within"
+                    else:
+                        relationship = "Related_To"
                 sample.add_relationship(rel_item=related_obj,
                                         rel_type=relationship,
                                         analyst=user,

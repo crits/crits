@@ -11,6 +11,7 @@ import re
 import yaml
 import StringIO
 import sys
+import olefile
 
 from dateutil.parser import parse as date_parser
 from django.conf import settings
@@ -34,7 +35,6 @@ from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_admin, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.domains.handlers import get_valid_root_domain
-from crits.emails import OleFileIO_PL
 from crits.emails.email import Email
 from crits.indicators.handlers import handle_indicator_ind
 from crits.indicators.indicator import Indicator
@@ -495,17 +495,20 @@ def handle_email_fields(data, analyst, method):
     except:
         pass
 
-    for x in ('cc', 'to'):
-        y = data.get(x, None)
-        if isinstance(y, basestring):
-            if len(y) > 0:
-                tmp_y = y.split(',')
-                y_final = [ty.strip() for ty in tmp_y]
-                data[x] = y_final
-            else:
+    try:
+        for x in ('cc', 'to'):
+            y = data.get(x, None)
+            if isinstance(y, basestring):
+                if len(y) > 0:
+                    tmp_y = y.split(',')
+                    y_final = [ty.strip() for ty in tmp_y]
+                    data[x] = y_final
+                else:
+                    data[x] = []
+            elif not y:
                 data[x] = []
-        elif not y:
-            data[x] = []
+    except:
+        pass
 
     new_email = Email()
     new_email.merge(data)
@@ -1431,10 +1434,10 @@ def parse_ole_file(file):
     http://cpansearch.perl.org/src/MVZ/Email-Outlook-Message-0.912/lib/Email/Outlook/Message.pm
     """
 
-    header = file.read(len(OleFileIO_PL.MAGIC))
+    header = file.read(len(olefile.MAGIC))
 
     # Verify the file is in OLE2 format first
-    if header != OleFileIO_PL.MAGIC:
+    if header != olefile.MAGIC:
         return {'error': 'The upload file is not a valid Outlook file. It must be in OLE2 format (.msg)'}
 
     msg = {'subject': '_0037',
@@ -1450,7 +1453,7 @@ def parse_ole_file(file):
     file.seek(0)
     data = file.read()
     msg_file = StringIO.StringIO(data)
-    ole = OleFileIO_PL.OleFileIO(msg_file)
+    ole = olefile.OleFileIO(msg_file)
 
     # Helper function to grab data out of stream objects
     def get_stream_data(entry):

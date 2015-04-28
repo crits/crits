@@ -6,6 +6,9 @@ Filetype     {{ sample.filetype }}
 Mimetype     {{ sample.mimetype }}
 Size         {{ sample.size }}
 
+Description
+{{ sample.description }}
+
 Received From {% for stamp in sample.source %}
  * {{ stamp.instances.0.date }} ({{ stamp.name}}) {% endfor %}
 

@@ -119,6 +119,8 @@ function delete_object_click(e, item_type, del_label, data) {
     var fn = (function(e) {
         return function() {
         var form = "<form method='POST' action='" + action + "'>";
+        var csrftoken = readCookie('csrftoken');
+        form = form + "<input type='hidden' name='csrfmiddlewaretoken' value='" + csrftoken + "'>"
         $.each(data, function(k,v) { form = form + $("input").attr("type","hidden").attr("name",k).val(v).html(); } );
         form = form + "</form>";
         $(form).appendTo("body").submit();
@@ -443,7 +445,11 @@ function preference_toggle(e) {
 function defaultSubmit(e) {
     var dialog = $(e.currentTarget).closest(".ui-dialog").find(".ui-dialog-content");
     var form = dialog.find('form');
-
+    var csrftoken = readCookie('csrftoken');
+    var input = $("<input>")
+               .attr("type", "hidden")
+               .attr("name", "csrfmiddlewaretoken").val(csrftoken);
+    form.append($(input));
     form.submit();
 }
 
@@ -1019,6 +1025,18 @@ function new_sample_dialog() {
     }
 }
 
+function new_target_dialog() {
+    var element = document.getElementById('id_campaign');
+    var className = $(this).dialog("activatedBy")[0].className
+    if (className === "ui-icon ui-icon-plusthick add dialogClick") {
+        var campaign = this.baseURI.match(/\/campaigns\/details\/(.*)\//);
+        element.value = decodeURI(campaign[1]);
+    }
+    else {
+        element.value = '';
+    }
+}
+
 /// Standard Dialog setup below
 
 var stdDialogs = {
@@ -1041,7 +1059,7 @@ var stdDialogs = {
       "new-raw-data": {title: "Raw Data" },
       "raw_data_type_add": {title: "Raw Data Type"},
 
-      "new-target": {title: "Target"},
+      "new-target": {title: "Target", open: new_target_dialog },
 
       "backdoor_add": {title: "Backdoor"},
       "exploit_add": {title: "Exploit"},

@@ -57,6 +57,44 @@ from crits.core.totp import valid_totp
 
 logger = logging.getLogger(__name__)
 
+def description_update(type_, id_, description, analyst):
+    """
+    Change the description of a top-level object.
+
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
+    :param description: The description to use.
+    :type description: str
+    :param analyst: The user setting the description.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(analyst)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser.HTMLParser()
+    description = h.unescape(description)
+    try:
+        obj.description = description
+        obj.save(username=analyst)
+        return {'success': True, 'message': "Description set."}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
 def get_favorites(analyst):
     """
     Get all favorites for a user.
@@ -656,6 +694,10 @@ def get_item_names(obj, active=None):
     :type active: boolean
     :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
     """
+
+    # Don't use this to get sources.
+    if isinstance(obj, SourceAccess):
+        return []
 
     if active is None:
        c = obj.objects().order_by('+name')
@@ -1531,6 +1573,12 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                     {'description': search_query},
                     {'tags': search_query},
                 ]
+        elif type_ == "Target":
+            search_list = [
+                    {'email_address': search_query},
+                    {'firstname': search_query},
+                    {'lastname': search_query},
+                ]
         else:
             search_list = [{'name': search_query}]
         search_list.append({'source.instances.reference':search_query})
@@ -2044,7 +2092,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                             doc[key] = ",".join(value)
                     else:
                         doc[key] = ""
-                doc[key] = html_escape(doc[key])
+                if key != urlfieldparam:
+                    doc[key] = html_escape(doc[key])
             if col_obj._meta['crits_type'] == "Comment":
                 mapper = {
                     "Actor": 'crits.actors.views.actor_detail',

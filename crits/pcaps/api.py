@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.pcaps.pcap import PCAP
 from crits.pcaps.handlers import handle_pcap_file
@@ -18,7 +17,7 @@ class PCAPResource(CRITsAPIResource):
 
     class Meta:
         object_class = PCAP
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "pcaps"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
