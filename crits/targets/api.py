@@ -17,7 +17,7 @@ class TargetResource(CRITsAPIResource):
 
     class Meta:
         object_class = Target
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "targets"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

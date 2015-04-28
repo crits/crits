@@ -273,12 +273,14 @@ def target_user_stats():
     results = Email.objects(to__exists=True).map_reduce(m, r, 'inline')
     for result in results:
         try:
-            targ = Target.objects(email_address__iexact=result.key).first()
-            if not targ:
-                targ = Target()
-                targ.email_address = result.key
-            targ.email_count = result.value['count']
-            targ.save()
+            targs = Target.objects(email_address__iexact=result.key)
+            if not targs:
+                targs = [Target()]
+                targs[0].email_address = result.key.strip().lower()
+
+            for targ in targs:
+                targ.email_count = result.value['count']
+                targ.save()
         except:
             pass
     mapcode = """

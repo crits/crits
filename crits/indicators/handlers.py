@@ -16,6 +16,7 @@ from mongoengine.base import ValidationError
 
 from crits.campaigns.forms import CampaignForm
 from crits.campaigns.campaign import Campaign
+from crits.config.config import CRITsConfig
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
@@ -27,7 +28,6 @@ from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.domains.domain import Domain
 from crits.domains.handlers import get_domain, upsert_domain
-from crits.events.event import Event
 from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
 from crits.indicators.indicator import IndicatorAction
@@ -37,7 +37,6 @@ from crits.ips.handlers import ip_add_update
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.object_type import ObjectType
-from crits.raw_data.raw_data import RawData
 from crits.services.handlers import run_triage, get_supported_services
 
 logger = logging.getLogger(__name__)
@@ -104,6 +103,10 @@ def generate_indicator_jtable(request, option):
         'details_link': mapper['details_link'],
         'no_sort': mapper['no_sort']
     }
+    config = CRITsConfig.objects().first()
+    print config.splunk_search_url
+    if not config.splunk_search_url:
+        del jtopts['fields'][1]
     jtable = build_jtable(jtopts, request)
     jtable['toolbar'] = [
         {
@@ -142,6 +145,13 @@ def generate_indicator_jtable(request, option):
             'click': "function () {$('#new-indicator').click()}",
         },
     ]
+    if config.splunk_search_url:
+        for field in jtable['fields']:
+            if field['fieldname'].startswith("'splunk"):
+                field['display'] = """ function (data) {
+                return '<a href="%s' + data.record.value + '"><img src="/new_images/splunk.png" /></a>';
+                }
+                """ % config.splunk_search_url
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,

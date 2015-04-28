@@ -7,10 +7,11 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
+from crits.core.class_mapper import class_from_value
 from crits.core.user_tools import user_can_view_data, user_is_admin
 from crits.targets.forms import TargetInfoForm
 from crits.targets.handlers import upsert_target, get_target_details
-from crits.targets.handlers import remove_target, get_target
+from crits.targets.handlers import remove_target
 from crits.targets.handlers import generate_target_jtable, generate_target_csv
 from crits.targets.handlers import generate_division_jtable
 
@@ -89,7 +90,8 @@ def add_update_target(request):
     """
 
     if request.method == "POST":
-        email = request.POST['email_address'].strip()
+        email = request.POST['email_address']
+        new_email = email.strip().lower()
         form = TargetInfoForm(request.POST)
         analyst = request.user.username
         if form.is_valid():
@@ -98,8 +100,8 @@ def add_update_target(request):
             if results['success']:
                 message = '<div>Click here to view the new target: <a href='
                 message += '"%s">%s</a></div>' % (reverse('crits.targets.views.target_info',
-                                                        args=[email]),
-                                                  email)
+                                                          args=[new_email]),
+                                                  new_email)
                 result = {'message': message}
             else:
                 result = results
@@ -158,11 +160,11 @@ def target_details(request, email_address=None):
     if email_address is None:
         form = TargetInfoForm()
     else:
-        target = get_target(email_address)
+        target = class_from_value('Target', email_address)
         if not target:
             form = TargetInfoForm(initial={'email_address': email_address})
         else:
-            form = TargetInfoForm(initial=target)
+            form = TargetInfoForm(initial=target.to_dict())
     return render_to_response('target_form.html',
                               {'form': form},
                               RequestContext(request))

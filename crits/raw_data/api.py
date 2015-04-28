@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.raw_data.raw_data import RawData
 from crits.raw_data.handlers import handle_raw_data_file
@@ -18,7 +17,7 @@ class RawDataResource(CRITsAPIResource):
 
     class Meta:
         object_class = RawData
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "raw_data"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
