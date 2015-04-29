@@ -16,6 +16,7 @@ m2crypto
 --allow-external mongoengine mongoengine==0.8.7
 pydeep==0.2
 pydot
+mongoengine==0.8.7
 pymongo==2.7.2
 pyparsing
 python-dateutil
