@@ -97,14 +97,13 @@ def generate_indicator_jtable(request, option):
                                                               type_),
                              args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
-        'fields': mapper['jtopts_fields'],
+        'fields': list(mapper['jtopts_fields']),
         'hidden_fields': mapper['hidden_fields'],
         'linked_fields': mapper['linked_fields'],
         'details_link': mapper['details_link'],
         'no_sort': mapper['no_sort']
     }
     config = CRITsConfig.objects().first()
-    print config.splunk_search_url
     if not config.splunk_search_url:
         del jtopts['fields'][1]
     jtable = build_jtable(jtopts, request)
