@@ -1098,6 +1098,21 @@ class EmbeddedCampaign(EmbeddedDocument, CritsDocumentFormatter):
     description = StringField()
     name = StringField(required=True)
 
+
+class EmbeddedLocation(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Location object
+    """
+
+    location_type = StringField(required=True)
+    location = StringField(required=True)
+    description = StringField(required=False)
+    latitude = StringField(required=False)
+    longitude = StringField(required=False)
+    analyst = StringField(required=True)
+    date = DateTimeField(default=datetime.datetime.now)
+
+
 class Releasability(EmbeddedDocument, CritsDocumentFormatter):
     """
     Releasability Class.
@@ -1169,6 +1184,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     analyst = StringField()
     bucket_list = ListField(StringField())
     campaign = ListField(EmbeddedDocumentField(EmbeddedCampaign))
+    locations = ListField(EmbeddedDocumentField(EmbeddedLocation))
     description = StringField()
     obj = ListField(EmbeddedDocumentField(EmbeddedObject), db_field="objects")
     relationships = ListField(EmbeddedDocumentField(EmbeddedRelationship))
@@ -1236,6 +1252,85 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         if isinstance(campaign_item, EmbeddedCampaign):
             self.remove_campaign(campaign_name=campaign_item.name)
             self.add_campaign(campaign_item=campaign_item)
+
+    def add_location(self, location_item=None):
+        """
+        Add a location to this top-level object.
+
+        :param location_item: The location to add.
+        :type location_item: :class:`crits.core.crits_mongoengine.EmbeddedLocation`
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+
+        if isinstance(location_item, EmbeddedLocation):
+            if (location_item.location != None and
+                location_item.location.strip() != ''):
+                for l, location in enumerate(self.locations):
+                    if (location.location == location_item.location and
+                        location.location_type == location_item.location_type and
+                        location.date == location_item.date):
+                        return {'success': False,
+                                'message': 'This location is already assigned.'}
+                else:
+                    self.locations.append(location_item)
+                return {'success': True,
+                        'message': 'Location assigned successfully!'}
+        return {'success': False,
+                'message': 'Location is invalid'}
+
+    def edit_location(self, location_name=None, location_type=None, date=None,
+                      description=None, latitude=None, longitude=None):
+        """
+        Edit a location.
+
+        :param location_name: The location_name to edit.
+        :type location_name: str
+        :param location_type: The location_type to edit.
+        :type location_type: str
+        :param date: The location date to edit.
+        :type date: str
+        :param description: The new description.
+        :type description: str
+        :param latitude: The new latitude.
+        :type latitude: str
+        :param longitude: The new longitude.
+        :type longitude: str
+        """
+
+        if isinstance(date, basestring):
+            date = parse(date, fuzzy=True)
+        for location in self.locations:
+            if (location.location == location_name and
+                location.location_type == location_type and
+                location.date == date):
+                if description:
+                    location.description = description
+                if latitude:
+                    location.latitude = latitude
+                if longitude:
+                    location.longitude = longitude
+                break
+
+    def remove_location(self, location_name=None, location_type=None, date=None):
+        """
+        Remove a location from this top-level object.
+
+        :param location_name: The location to remove.
+        :type location_name: str
+        :param location_type: The location type.
+        :type location_type: str
+        :param date: The location date.
+        :type date: str
+        """
+
+        if isinstance(date, basestring):
+            date = parse(date, fuzzy=True)
+        for location in self.locations:
+            if (location.location == location_name and
+                location.location_type == location_type and
+                location.date == date):
+                self.locations.remove(location)
+                break
 
     def add_bucket_list(self, tags, analyst, append=True):
         """
@@ -1543,6 +1638,25 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         html = render_to_string('campaigns_display_row_widget.html',
                                 {'campaign': campaign,
+                                 'hit': self,
+                                 'obj': None,
+                                 'admin': is_admin(analyst),
+                                 'relationship': {'type': self._meta['crits_type']}})
+        return html
+
+    def format_location(self, location, analyst):
+        """
+        Render a location to HTML to prepare for inclusion in a template.
+
+        :param location: The location to templetize.
+        :type location: :class:`crits.core.crits_mongoengine.EmbeddedLocation`
+        :param analyst: The user requesting the Campaign.
+        :type analyst: str
+        :returns: str
+        """
+
+        html = render_to_string('locations_display_row_widget.html',
+                                {'location': location,
                                  'hit': self,
                                  'obj': None,
                                  'admin': is_admin(analyst),

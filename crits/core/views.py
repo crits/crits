@@ -75,6 +75,7 @@ from crits.indicators.forms import UploadIndicatorCSVForm, UploadIndicatorTextFo
 from crits.indicators.forms import UploadIndicatorForm, NewIndicatorActionForm
 from crits.indicators.indicator import IndicatorAction
 from crits.ips.forms import AddIPForm
+from crits.locations.forms import AddLocationForm
 from crits.notifications.handlers import get_user_notifications
 from crits.notifications.handlers import remove_user_from_notification
 from crits.notifications.handlers import remove_user_notifications
@@ -1063,6 +1064,7 @@ def base_context(request):
         base_context['comment_add'] = AddCommentForm()
         base_context['inline_comment_add'] = InlineCommentForm()
         base_context['campaign_form'] = CampaignForm()
+        base_context['location_add'] = AddLocationForm()
         base_context['add_raw_data_type'] = NewRawDataTypeForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
         base_context['source_access'] = SourceAccessForm()

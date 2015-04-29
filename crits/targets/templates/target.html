@@ -102,13 +102,16 @@
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
     </div>
-
     <div>
       {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
          {% include "campaigns_display_widget.html" %}
       {% endwith %}
     </div>
-
+    <div>
+      {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
+         {% include "locations_display_widget.html" %}
+      {% endwith %}
+    </div>
     <div>
         {% include 'relationships_listing_widget.html' %}
     </div>

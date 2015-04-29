@@ -3,6 +3,22 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: mgoffin
+Date:   2015-04-28
+
+    Locations has been added to CRITs. This is a new feature for each TLO.
+    Locations allows you to track where a TLO has been seen originating from as
+    well as destined to. Uniqueness of a location entry is based on a
+    combination of its type, location, and date of entry. This allows you to
+    have multiple instances of originating from the same place. Each location
+    comes with an optional description as well as optional lat/long.
+
+    In order for this to work you will need to populate your system with
+    locations to choose. Locations are based on country/territory. You can add
+    them by running the following:
+
+        python manage.py create_locations
+
 Author: frbapolkosnik
 Date:   2015-04-17
 
@@ -13,7 +29,7 @@ Date:   2015-04-17
     to the extracted folder and run:
 
         python setup build & sudo python setup.py install
-    
+
     or through pip:
 
         pip install olefile
