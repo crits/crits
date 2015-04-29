@@ -283,7 +283,7 @@ def generate_raw_data_jtable(request, option):
 def handle_raw_data_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
-                         link_id=None, method=None, reference=None,
+                         link_id=None, method='', reference='',
                          copy_rels=False, bucket_list=None, ticket=None):
     """
     Add RawData.
