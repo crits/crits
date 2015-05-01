@@ -1,7 +1,6 @@
 from django import forms
 from django.forms.util import ErrorList
 
-from crits.actors.actor import ActorThreatIdentifier
 from crits.campaigns.campaign import Campaign
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_item_names, get_source_names
