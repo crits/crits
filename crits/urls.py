@@ -40,6 +40,7 @@ handler400 = 'crits.core.errors.custom_400'
 if settings.ENABLE_API:
     from tastypie.api import Api
     from crits.actors.api import ActorResource, ActorIdentifierResource
+    from crits.backdoors.api import BackdoorResource
     from crits.campaigns.api import CampaignResource
     from crits.certificates.api import CertificateResource
     from crits.comments.api import CommentResource
@@ -61,6 +62,7 @@ if settings.ENABLE_API:
     v1_api = Api(api_name='v1')
     v1_api.register(ActorResource())
     v1_api.register(ActorIdentifierResource())
+    v1_api.register(BackdoorResource())
     v1_api.register(CampaignResource())
     v1_api.register(CertificateResource())
     v1_api.register(CommentResource())
