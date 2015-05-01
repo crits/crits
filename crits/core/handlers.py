@@ -114,6 +114,7 @@ def get_favorites(analyst):
 
     field_dict = {
         'Actor': 'name',
+        'Backdoor': 'name',
         'Campaign': 'name',
         'Certificate': 'filename',
         'Comment': 'object_id',
@@ -221,6 +222,7 @@ def get_data_for_item(item_type, item_id):
 
     type_to_fields = {
         'Actor': ['name', ],
+        'Backdoor': ['name', ],
         'Campaign': ['name', ],
         'Certificate': ['filename', ],
         'Domain': ['domain', ],
@@ -787,6 +789,7 @@ def alter_bucket_list(obj, buckets, val):
         if val == -1:
             Bucket.objects(name=name,
                            Actor=0,
+                           Backdoor=0,
                            Campaign=0,
                            Certificate=0,
                            Domain=0,
@@ -830,6 +833,7 @@ def generate_bucket_jtable(request, option):
                                     request,
                                     includes=['name',
                                               'Actor',
+                                              'Backdoor',
                                               'Campaign',
                                               'Certificate',
                                               'Domain',
@@ -844,9 +848,9 @@ def generate_bucket_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
-              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target',
-              'Promote']
+    fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
+              'Email', 'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample',
+              'Target', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
@@ -2110,9 +2114,6 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
                                     args=(doc['url_key'],))
-            elif col_obj._meta['crits_type'] == "Backdoor" and url:
-                doc['url'] = "{0}?q={1}&search_type=backdoor&force_full=1".format(
-                    reverse(url), doc['name'])
             elif col_obj._meta['crits_type'] == "AuditLog":
                 if doc.get('method', 'delete()') != 'delete()':
                     doc['url'] = details_from_id(doc['type'],
@@ -2403,9 +2404,6 @@ def generate_items_jtable(request, itype, option):
         fields = ['name', 'active', 'id']
     elif itype == 'ActorIntendedEffect':
         fields = ['name', 'active', 'id']
-    elif itype == 'Backdoor':
-        fields = ['name', 'sample_count', 'active', 'id']
-        click = "function () {window.parent.$('#backdoor_add').click();}"
     elif itype == 'Campaign':
         fields = ['name', 'description', 'active', 'id']
         click = "function () {window.parent.$('#new-campaign').click();}"

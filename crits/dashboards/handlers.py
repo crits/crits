@@ -12,7 +12,7 @@ from django.core.urlresolvers import reverse
 from crits.campaigns.campaign import Campaign
 from crits.indicators.indicator import Indicator
 from crits.emails.email import Email
-from crits.samples.sample import Sample, Backdoor
+from crits.samples.sample import Sample
 from django.http import HttpResponse
 import json
 from django.utils.html import escape as html_escape

@@ -16,7 +16,6 @@ from create_default_dashboard import create_dashboard
 from crits.core.user_role import UserRole
 from crits.domains.domain import TLD
 from crits.samples.exploit import Exploit
-from crits.samples.backdoor import Backdoor
 from crits.indicators.indicator import IndicatorAction
 from crits.raw_data.raw_data import RawDataType
 
@@ -47,7 +46,6 @@ class Command(BaseCommand):
             print "Drop protection enabled. Will not drop existing content!"
         populate_user_roles(drop)
         populate_exploits(drop)
-        populate_backdoors(drop)
         populate_indicator_actions(drop)
         populate_raw_data_types(drop)
         # The following will always occur with every run of this script:
@@ -114,27 +112,6 @@ def populate_exploits(drop):
         print "Exploits: added %s exploits!" % len(cves)
     else:
         print "Exploits: existing documents detected. skipping!"
-
-def populate_backdoors(drop):
-    """
-    Populate default set of backdoors into the system.
-
-    :param drop: Drop the existing collection before trying to populate.
-    :type: boolean
-    """
-
-    # define your backdoor names here
-    backdoors = ['PIVY']
-    if drop:
-        Backdoor.drop_collection()
-    if len(Backdoor.objects()) < 1:
-        for backdoor in backdoors:
-            bd = Backdoor()
-            bd.name = backdoor
-            bd.save()
-        print "Backdoors: added %s backdoors!" % len(backdoors)
-    else:
-        print "Backdoors: existing documents detected. skipping!"
 
 def populate_indicator_actions(drop):
     """

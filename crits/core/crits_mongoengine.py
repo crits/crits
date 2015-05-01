@@ -1979,6 +1979,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         rel_dict = dict((r.rel_type,[]) for r in self.relationships)
         query_dict = {
             'Actor': ('id', 'name', 'campaign'),
+            'Backdoor': ('id', 'name', 'aliases', 'campaign'),
             'Campaign': ('id', 'name'),
             'Certificate': ('id', 'md5', 'filename', 'description', 'campaign'),
             'Domain': ('id', 'domain'),
@@ -1994,7 +1995,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                        'filename',
                        'mimetype',
                        'size',
-                       'backdoor',
                        'exploit',
                        'campaign'),
             'Target': ('id', 'firstname', 'lastname', 'email_address', 'email_count'),
@@ -2011,8 +2011,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             for r in self.relationships:
                 rd = r.to_dict()
                 obj_class = class_from_type(rd['type'])
-                # TODO: these should be limited to the fields above, or at least exclude larger
-                # fields that we don't need.
+                # TODO: these should be limited to the fields above, or at
+                # least exclude larger fields that we don't need.
                 fields = query_dict.get(rd['type'])
                 if r.rel_type not in ["Campaign", "Target"]:
                     obj = obj_class.objects(id=rd['value'],

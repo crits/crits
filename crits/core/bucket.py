@@ -5,6 +5,7 @@ from mongoengine import StringField, IntField
 
 from django.conf import settings
 
+from crits.core.migrate import migrate_bucket
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 
 logger = logging.getLogger(__name__)
@@ -17,10 +18,11 @@ class Bucket(CritsDocument, CritsSchemaDocument, Document):
     meta = {
         "collection": settings.COL_BUCKET_LISTS,
         "crits_type": 'Bucketlist',
-        "latest_schema_version": 1,
+        "latest_schema_version": 2,
         "schema_doc": {
             'name': 'Bucketlist name',
             'Actor': 'Integer',
+            'Backdoor': 'Integer',
             'Campaign': 'Integer',
             'Certificate': 'Integer',
             'Domain': 'Integer',
@@ -37,6 +39,7 @@ class Bucket(CritsDocument, CritsSchemaDocument, Document):
 
     name = StringField(required=True)
     Actor = IntField(default=0)
+    Backdoor = IntField(default=0)
     Campaign = IntField(default=0)
     Certificate = IntField(default=0)
     Domain = IntField(default=0)
@@ -54,4 +57,4 @@ class Bucket(CritsDocument, CritsSchemaDocument, Document):
         Migrate to the latest schema version.
         """
 
-        pass
+        migrate_bucket(self)

@@ -35,9 +35,8 @@ from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
 from crits.objects.handlers import validate_and_add_new_handler_object
-from crits.samples.backdoor import Backdoor
 from crits.samples.exploit import Exploit
-from crits.samples.forms import BackdoorForm, ExploitForm, XORSearchForm
+from crits.samples.forms import ExploitForm, XORSearchForm
 from crits.samples.forms import UnrarSampleForm, UploadFileForm
 from crits.samples.sample import Sample
 from crits.samples.yarahit import YaraHit
@@ -113,7 +112,6 @@ def get_sample_details(sample_md5, analyst, format_=None):
         args = {'sample': sample}
     else:
         #create forms
-        backdoor_form = BackdoorForm()
         exploit_form = ExploitForm()
         xor_search_form = XORSearchForm()
         campaign_form = CampaignForm()
@@ -177,7 +175,6 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'relationship': relationship,
                 'subscription': subscription,
                 'sample': sample, 'sources': sources,
-                'backdoor_form': backdoor_form,
                 'exploit_form': exploit_form,
                 'campaign_form': campaign_form,
                 'download_form': download_form,
@@ -287,63 +284,6 @@ def generate_sample_jtable(request, option):
             'click': "function () {$('#new-sample').click()}",
         },
     ]
-    if option == "inline":
-        return render_to_response("jtable.html",
-                                  {'jtable': jtable,
-                                   'jtid': '%s_listing' % type_,
-                                   'button' : '%ss_tab' % type_},
-                                  RequestContext(request))
-    else:
-        return render_to_response("%s_listing.html" % type_,
-                                  {'jtable': jtable,
-                                   'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
-
-def generate_backdoor_jtable(request, option):
-    """
-    Generate the jtable data for rendering in the list template.
-
-    :param request: The request for this jtable.
-    :type request: :class:`django.http.HttpRequest`
-    :param option: Action to take.
-    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    obj_type = Backdoor
-    type_ = "backdoor"
-    if option == "jtlist":
-        # Sets display url
-        details_url = 'crits.samples.views.samples_listing'
-        details_url_key = "name"
-        response = jtable_ajax_list(obj_type,
-                                    details_url,
-                                    details_url_key,
-                                    request)
-        return HttpResponse(json.dumps(response,
-                                       default=json_handler),
-                            content_type="application/json")
-    if option == "jtdelete":
-        response = {"Result": "ERROR"}
-        if jtable_ajax_delete(obj_type,request):
-            response = {"Result": "OK"}
-        return HttpResponse(json.dumps(response,
-                                       default=json_handler),
-                            content_type="application/json")
-    jtopts = {
-        'title': "Backdoors",
-        'default_sort': "sample_count DESC",
-        'listurl': reverse('crits.samples.views.%ss_listing' % (type_,),
-                           args=('jtlist',)),
-        'deleteurl': reverse('crits.samples.views.%ss_listing' % (type_,),
-                             args=('jtdelete',)),
-        'searchurl': reverse('crits.samples.views.%ss_listing' % (type_,)),
-        'fields': ["name","sample_count","_id"],
-        'hidden_fields': [],
-        'linked_fields': []
-    }
-    jtable = build_jtable(jtopts,request)
-
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
@@ -568,59 +508,6 @@ def get_exploits():
 
     e = Exploit.objects()
     return e
-
-def add_new_backdoor(name, analyst):
-    """
-    Add a new backdoor to CRITs.
-
-    :param name: The name of the backdoor.
-    :type name: str
-    :param analyst: The user adding the new backdoor.
-    :type analyst: str
-    :returns: bool
-    """
-
-    try:
-        name = name.strip()
-        backdoor = Backdoor.objects(name=name).first()
-        if backdoor:
-            return False
-        backdoor = Backdoor()
-        backdoor.name = name
-        backdoor.save(username=analyst)
-        return True
-    except ValidationError:
-        return False
-
-def add_backdoor_to_sample(md5, name, version, analyst):
-    """
-    Add a backdoor to a sample.
-
-    :param md5: The MD5 of the sample to add this backdoor to.
-    :type md5: str
-    :param name: The backdoor to add.
-    :type name: str
-    :param version: The backdoor version.
-    :type version: str
-    :param analyst: The user adding this backdoor.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str)
-    """
-
-    sources = user_sources(analyst)
-    sample = Sample.objects(md5=md5,
-                            source__name__in=sources).first()
-    if not sample:
-        return {'success': False,
-                'message': "Could not find sample."}
-    try:
-        sample.set_backdoor(name, version, analyst)
-        sample.save(username=analyst)
-        return {'success': True,
-                'message': "Backdoor set successfully."}
-    except ValidationError, e:
-        return {'success': False,
-                'message': "Could not set backdoor: %s." % e}
 
 def get_yara_hits(version=None):
     """

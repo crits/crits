@@ -19,6 +19,7 @@ from crits.actors.actor import ActorSophistication, ActorThreatType
 from crits.actors.actor import ActorThreatIdentifier
 from crits.actors.forms import AddActorForm, AddActorIdentifierTypeForm
 from crits.actors.forms import AddActorIdentifierForm, AttributeIdentifierForm
+from crits.backdoors.forms import AddBackdoorForm
 from crits.campaigns.campaign import Campaign
 from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
@@ -85,9 +86,8 @@ from crits.raw_data.forms import UploadRawDataFileForm, UploadRawDataForm
 from crits.raw_data.forms import NewRawDataTypeForm
 from crits.raw_data.raw_data import RawDataType
 from crits.relationships.forms import ForgeRelationshipForm
-from crits.samples.backdoor import Backdoor
 from crits.samples.exploit import Exploit
-from crits.samples.forms import UploadFileForm, NewExploitForm, NewBackdoorForm
+from crits.samples.forms import UploadFileForm, NewExploitForm
 from crits.screenshots.forms import AddScreenshotForm
 from crits.standards.forms import UploadStandardsForm
 from crits.targets.forms import TargetInfoForm
@@ -1056,7 +1056,6 @@ def base_context(request):
         user = request.user.username
         # Forms that don't require a user
         base_context['add_exploit'] = NewExploitForm()
-        base_context['add_backdoor'] = NewBackdoorForm()
         base_context['add_indicator_action'] = NewIndicatorActionForm()
         base_context['add_target'] = TargetInfoForm()
         base_context['campaign_add'] = AddCampaignForm()
@@ -1081,6 +1080,10 @@ def base_context(request):
             base_context['add_actor_identifier'] = AddActorIdentifierForm(user)
         except Exception, e:
             logger.warning("Base Context AddActorIdentifierForm Error: %s" % e)
+        try:
+            base_context['backdoor_add'] = AddBackdoorForm(user)
+        except Exception, e:
+            logger.warning("Base Context AddBackdoorForm  Error: %s" % e)
         try:
             base_context['add_domain'] = AddDomainForm(user)
         except Exception, e:
@@ -1215,7 +1218,7 @@ def base_context(request):
             logger.warning("Base Context AddSourceForm Error: %s" % e)
         base_context['category_list'] = [
                                         {'collection': '', 'name': ''},
-                                        {'collection': settings.COL_BACKDOOR_DETAILS,
+                                        {'collection': settings.COL_BACKDOORS,
                                             'name': 'Backdoors'},
                                         {'collection': settings.COL_CAMPAIGNS,
                                             'name': 'Campaigns'},

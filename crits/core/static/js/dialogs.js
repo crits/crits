@@ -1048,6 +1048,7 @@ var stdDialogs = {
       "new-email-yaml": {title: "Email (YAML)", open: new_email_yaml_dialog},
 
       "new-campaign": {title: "Campaign"},
+      "new-backdoor": {title: "Backdoor"},
 
       "new-domain": {title: "Domain", open: new_domain_dialog},
       "new-indicator": {title: "Indicator", open: new_indicator_dialog},

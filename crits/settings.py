@@ -122,6 +122,7 @@ COL_ACTOR_SOPHISTICATIONS = "actor_sophistications"       # actor sophistication
 COL_ACTOR_INTENDED_EFFECTS = "actor_intended_effects"     # actor intended effects
 COL_ANALYSIS_RESULTS = "analysis_results"                 # analysis results
 COL_AUDIT_LOG = "audit_log"                               # audit log entries
+COL_BACKDOORS = "backdoors"                               # backdoors
 COL_BACKDOOR_DETAILS = "backdoor_details"                 # backdoor information
 COL_BUCKET_LISTS = "bucket_lists"                         # bucketlist information
 COL_CAMPAIGNS = "campaigns"                               # campaigns list
@@ -316,6 +317,7 @@ TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, '../documentation'),
     os.path.join(SITE_ROOT, 'core/templates'),
     os.path.join(SITE_ROOT, 'actors/templates'),
+    os.path.join(SITE_ROOT, 'backdoors/templates'),
     os.path.join(SITE_ROOT, 'core/dashboard/templates'),
     os.path.join(SITE_ROOT, 'campaigns/templates'),
     os.path.join(SITE_ROOT, 'certificates/templates'),
@@ -341,6 +343,7 @@ TEMPLATE_DIRS = (
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'core/static'),
     os.path.join(SITE_ROOT, 'actors/static'),
+    os.path.join(SITE_ROOT, 'backdoors/static'),
     os.path.join(SITE_ROOT, 'dashboards/static'),
     os.path.join(SITE_ROOT, 'campaigns/static'),
     os.path.join(SITE_ROOT, 'certificates/static'),
@@ -471,6 +474,7 @@ for handler in LOGGING['handlers'].values():
 CRITS_TYPES = {
     'Actor': COL_ACTORS,
     'AnalysisResult': COL_ANALYSIS_RESULTS,
+    'Backdoor': COL_BACKDOORS,
     'Campaign': COL_CAMPAIGNS,
     'Certificate': COL_CERTIFICATES,
     'Comment': COL_COMMENTS,

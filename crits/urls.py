@@ -9,6 +9,7 @@ urlpatterns = patterns('',
     (r'^', include('crits.core.urls')),                        # Core
     (r'^dashboards/', include('crits.dashboards.urls')),       # Dashboard
     (r'^actors/', include('crits.actors.urls')),               # Actors
+    (r'^backdoors/', include('crits.backdoors.urls')),         # Backdoors
     (r'^campaigns/', include('crits.campaigns.urls')),         # Campaigns
     (r'^certificates/', include('crits.certificates.urls')),   # Certificates
     (r'^comments/', include('crits.comments.urls')),           # Comments

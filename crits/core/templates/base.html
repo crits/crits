@@ -414,6 +414,10 @@
       </ul>
     </li>
     <li class='nav_objects mmenu_item'>
+      <a href="{% url 'crits.backdoors.views.backdoors_listing' %}">Backdoors</a>
+      <a href id="new-backdoor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-backdoor" persona="new" title="New Backdoor"></a>
+    </li>
+    <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.campaigns.views.campaigns_listing' %}">Campaigns</a>
       <a href id="new-campaign" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-campaign" persona="new" title="New Campaign"></a>
     </li>
@@ -498,9 +502,6 @@
         {% endif %}
         <li class='mmenu_item'>
           <a href="{% url 'crits.samples.views.sources' %}">Source Samples</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href="{% url 'crits.samples.views.backdoors_listing' %}">Backdoors</a>
         </li>
         <li class='mmenu_item'>
           <a href="{% url 'crits.samples.views.exploit' %}">Exploits</a>

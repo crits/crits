@@ -3,6 +3,7 @@ from bson.objectid import ObjectId
 
 __obj_type_to_key_descriptor__ = {
     'Actor': 'name',
+    'Backdoor': 'id',
     'Campaign': 'name',
     'Certificate': 'md5',
     'Comment': 'object_id',
@@ -33,6 +34,7 @@ def class_from_id(type_, _id):
     from crits.actors.actor import ActorThreatType, ActorMotivation
     from crits.actors.actor import ActorSophistication, ActorIntendedEffect
     from crits.actors.actor import ActorThreatIdentifier, Actor
+    from crits.backdoors.backdoor import Backdoor
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
@@ -47,7 +49,6 @@ def class_from_id(type_, _id):
     from crits.objects.object_type import ObjectType
     from crits.pcaps.pcap import PCAP
     from crits.raw_data.raw_data import RawData, RawDataType
-    from crits.samples.backdoor import Backdoor
     from crits.samples.exploit import Exploit
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot
@@ -66,6 +67,8 @@ def class_from_id(type_, _id):
 
     if type_ == 'Actor':
         return Actor.objects(id=_id).first()
+    elif type_ == 'Backdoor':
+        return Backdoor.objects(id=_id).first()
     elif type_ == 'ActorThreatIdentifier':
         return ActorThreatIdentifier.objects(id=_id).first()
     elif type_ == 'ActorThreatType':
@@ -76,8 +79,6 @@ def class_from_id(type_, _id):
         return ActorSophistication.objects(id=_id).first()
     elif type_ == 'ActorIntendedEffect':
         return ActorIntendedEffect.objects(id=_id).first()
-    elif type_ == 'Backdoor':
-        return Backdoor.objects(id=_id).first()
     elif type_ == 'Campaign':
         return Campaign.objects(id=_id).first()
     elif type_ == 'Certificate':
@@ -142,6 +143,7 @@ def class_from_value(type_, value):
     from crits.actors.actor import ActorThreatType, ActorMotivation
     from crits.actors.actor import ActorSophistication, ActorIntendedEffect
     from crits.actors.actor import ActorThreatIdentifier, Actor
+    from crits.backdoors.backdoor import Backdoor
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
@@ -161,12 +163,14 @@ def class_from_value(type_, value):
 
     # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
     # the queries below will raise a ValidationError exception.
-    if (type_ in ['Comment', 'Email', 'Event', 'Indicator', 'Screenshot'] and
+    if (type_ in ['Backdoor', 'Comment', 'Email', 'Event', 'Indicator', 'Screenshot'] and
        not ObjectId.is_valid(value.decode('utf8'))):
         return None
 
     if type_ == 'Actor':
         return Actor.objects(name=value).first()
+    if type_ == 'Backdoor':
+        return Backdoor.objects(id=value).first()
     elif type_ == 'ActorThreatIdentifier':
         return ActorThreatIdentifier.objects(name=value).first()
     elif type_ == 'ActorThreatType':
@@ -224,6 +228,7 @@ def class_from_type(type_):
     from crits.actors.actor import ActorThreatType, ActorMotivation
     from crits.actors.actor import ActorSophistication, ActorIntendedEffect
     from crits.actors.actor import ActorThreatIdentifier, Actor
+    from crits.backdoors.backdoor import Backdoor
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
@@ -238,7 +243,6 @@ def class_from_type(type_):
     from crits.objects.object_type import ObjectType
     from crits.pcaps.pcap import PCAP
     from crits.raw_data.raw_data import RawData, RawDataType
-    from crits.samples.backdoor import Backdoor
     from crits.samples.exploit import Exploit
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot

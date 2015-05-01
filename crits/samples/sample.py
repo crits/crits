@@ -9,7 +9,6 @@ from cybox.objects.artifact_object import Artifact, Base64Encoding, ZlibCompress
 from cybox.core import Observable
 from cybox.common import UnsignedLong, Hash
 
-from crits.samples.backdoor import Backdoor
 from crits.samples.migrate import migrate_sample
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsSourceDocument
@@ -19,14 +18,6 @@ class EmbeddedExploit(EmbeddedDocument, CritsDocumentFormatter):
     """Sample exploits object"""
 
     cve = StringField()
-
-class EmbeddedBackdoor(EmbeddedDocument, CritsDocumentFormatter):
-    """Sample backdoors object"""
-
-    name = StringField()
-    version = StringField()
-    analyst = StringField()
-    date = CritsDateTimeField(default=datetime.datetime.now)
 
 class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
     """Sample object"""
@@ -93,7 +84,6 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
                        },
     }
 
-    backdoor = EmbeddedDocumentField(EmbeddedBackdoor)
     exploit = ListField(EmbeddedDocumentField(EmbeddedExploit))
     filedata = getFileField(collection_name=settings.COL_SAMPLES)
     filename = StringField(required=True)
@@ -241,20 +231,6 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         if objectid:
             self.filedata.grid_id = objectid['_id']
             self.filedata._mark_as_changed()
-
-    def set_backdoor(self, name, version, analyst):
-        if self.backdoor:
-            bd = Backdoor.objects(name=self.backdoor.name).first()
-            bd.decrement_count()
-            bd.save(username=analyst)
-        eb = EmbeddedBackdoor()
-        eb.name = name
-        eb.version = version
-        eb.analyst = analyst
-        self.backdoor = eb
-        bd = Backdoor.objects(name=name).first()
-        bd.increment_count()
-        bd.save(username=analyst)
 
     def add_exploit(self, cve):
         found = False

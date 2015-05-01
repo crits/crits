@@ -89,6 +89,7 @@ class EmbeddedFavorites(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     Actor = ListField(StringField())
+    Backdoor = ListField(StringField())
     Campaign = ListField(StringField())
     Certificate = ListField(StringField())
     Domain = ListField(StringField())
@@ -197,7 +198,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             },
         ],
         "crits_type": 'User',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "schema_doc": {
             'username': 'The username of this analyst',
             'organization': 'The name of the organization this user is from',
@@ -267,6 +268,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                 ],
             },
             'favorites': {
+                'Actor': [],
+                'Backdoor': [],
                 'Campaign': [],
                 'Domain': [],
                 'Email': [],

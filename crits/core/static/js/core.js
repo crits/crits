@@ -513,6 +513,7 @@ function details_copy_id (crits_type) {
         createCookie('crits_rel_id',$(this).attr('id'),60);
         createCookie('crits_rel_type',crits_type,60);
         $('button#'+readCookie('crits_rel_id')).css('background-color', '#1AC932');
+        console.log(readCookie('crits_rel_type'));
         get_stored_item_data(get_item_data_url);
     });
 }
