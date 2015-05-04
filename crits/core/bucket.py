@@ -29,6 +29,7 @@ class Bucket(CritsDocument, CritsSchemaDocument, Document):
             'Email': 'Integer',
             'Target': 'Integer',
             'Event': 'Integer',
+            'Exploit': 'Integer',
             'IP': 'Integer',
             'Indicator': 'Integer',
             'PCAP': 'Integer',
@@ -45,6 +46,7 @@ class Bucket(CritsDocument, CritsSchemaDocument, Document):
     Domain = IntField(default=0)
     Email = IntField(default=0)
     Event = IntField(default=0)
+    Exploit = IntField(default=0)
     Indicator = IntField(default=0)
     IP = IntField(default=0)
     PCAP = IntField(default=0)

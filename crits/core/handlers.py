@@ -841,6 +841,7 @@ def generate_bucket_jtable(request, option):
                                               'Domain',
                                               'Email',
                                               'Event',
+                                              'Exploit',
                                               'Indicator',
                                               'IP',
                                               'PCAP',
@@ -851,8 +852,8 @@ def generate_bucket_jtable(request, option):
                             content_type='application/json')
 
     fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
-              'Email', 'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample',
-              'Target', 'Promote']
+              'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
+              'Sample', 'Target', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
