@@ -18,14 +18,11 @@ from crits.core.handsontable_tools import form_to_dict
 from crits.core.user_tools import user_can_view_data, user_is_admin
 from crits.core.user_tools import get_user_organization
 from crits.objects.forms import AddObjectForm
-from crits.samples.forms import UploadFileForm, NewExploitForm
-from crits.samples.forms import ExploitForm, XORSearchForm
+from crits.samples.forms import UploadFileForm, XORSearchForm
 from crits.samples.forms import UnrarSampleForm
-from crits.samples.handlers import handle_uploaded_file
-from crits.samples.handlers import add_new_exploit, mail_sample
+from crits.samples.handlers import handle_uploaded_file, mail_sample
 from crits.samples.handlers import handle_unrar_sample, generate_yarahit_jtable
 from crits.samples.handlers import delete_sample, handle_unzip_file
-from crits.samples.handlers import get_exploits, add_exploit_to_sample
 from crits.samples.handlers import get_source_counts
 from crits.samples.handlers import get_sample_details
 from crits.samples.handlers import generate_sample_jtable
@@ -33,7 +30,6 @@ from crits.samples.handlers import generate_sample_csv, process_bulk_add_md5_sam
 from crits.samples.handlers import update_sample_filename, modify_sample_filenames
 from crits.samples.sample import Sample
 from crits.stats.handlers import generate_sources
-from crits.stats.handlers import generate_exploits
 
 
 @user_passes_test(user_can_view_data)
@@ -297,37 +293,6 @@ def upload_file(request, related_md5=None):
         return HttpResponseRedirect(reverse('crits.samples.views.samples_listing'))
 
 @user_passes_test(user_can_view_data)
-def new_exploit(request):
-    """
-    Upload a new exploit. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST' and request.is_ajax():
-        form = NewExploitForm(request.POST)
-        analyst = request.user.username
-        if form.is_valid():
-            result = add_new_exploit(form.cleaned_data['name'],
-                                     analyst)
-            if result:
-                message = {'message': '<div>Exploit added successfully!</div>',
-                           'success':True}
-            else:
-                message = {'message': '<div>Exploit addition failed!</div>',
-                           'success': False}
-        else:
-            message = {'form':form.as_table(),
-                       'success': False}
-        return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
-    return render_to_response("error.html",
-                              {'error':'Expected AJAX POST'},
-                              RequestContext(request))
-
-@user_passes_test(user_can_view_data)
 def strings(request, sample_md5):
     """
     Generate strings for a sample. Should be an AJAX POST.
@@ -544,48 +509,6 @@ def sources(request):
     return render_to_response('samples_sources.html',
                               {'sources': sources_list},
                               RequestContext(request))
-
-#TODO: convert to jtable
-@user_passes_test(user_can_view_data)
-def exploit(request):
-    """
-    Get the exploits list for samples.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    refresh = request.GET.get("refresh", "no")
-    if refresh == "yes":
-        generate_exploits()
-    exploit_list = get_exploits()
-    return render_to_response('samples_exploit.html',
-                              {'exploits': exploit_list},
-                              RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def add_exploit(request, sample_md5):
-    """
-    Add an exploit to a sample.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param sample_md5: The MD5 of the sample to add to.
-    :type sample_md5: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST":
-        exploit_form = ExploitForm(request.POST)
-        if exploit_form.is_valid():
-            cve = exploit_form.cleaned_data['exploit']
-            analyst = request.user.username
-            add_exploit_to_sample(sample_md5,
-                                  cve.upper(),
-                                  analyst)
-    return HttpResponseRedirect(reverse('crits.samples.views.detail',
-                                        args=[sample_md5]))
 
 @user_passes_test(user_is_admin)
 def remove_sample(request, md5):

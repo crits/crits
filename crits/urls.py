@@ -16,6 +16,7 @@ urlpatterns = patterns('',
     (r'^domains/', include('crits.domains.urls')),             # Domains
     (r'^emails/', include('crits.emails.urls')),               # Emails
     (r'^events/', include('crits.events.urls')),               # Events
+    (r'^exploits/', include('crits.exploits.urls')),           # Exploits
     (r'^indicators/', include('crits.indicators.urls')),       # Indicators
     (r'^ips/', include('crits.ips.urls')),                     # IPs
     (r'^notifications/', include('crits.notifications.urls')), # Notifications

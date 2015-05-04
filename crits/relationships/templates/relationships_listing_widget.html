@@ -27,6 +27,11 @@
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
+                    {% if relationships.Backdoor %}
+                        {% with rel_list=relationships.Backdoor rel_type='Backdoor' %}
+                            {% include 'relationships_listing_row_widget.html' %}
+                        {% endwith %}
+                    {% endif %}
                     {% if relationships.Campaign %}
                         {% with rel_list=relationships.Campaign rel_type='Campaign' %}
                             {% include 'relationships_listing_row_widget.html' %}
@@ -54,6 +59,11 @@
                     {% endif %}
                     {% if relationships.Event %}
                         {% with rel_list=relationships.Event rel_type='Event' %}
+                            {% include 'relationships_listing_row_widget.html' %}
+                        {% endwith %}
+                    {% endif %}
+                    {% if relationships.Exploit %}
+                        {% with rel_list=relationships.Exploit rel_type='Exploit' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}

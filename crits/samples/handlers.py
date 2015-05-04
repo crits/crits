@@ -35,9 +35,7 @@ from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
 from crits.objects.handlers import validate_and_add_new_handler_object
-from crits.samples.exploit import Exploit
-from crits.samples.forms import ExploitForm, XORSearchForm
-from crits.samples.forms import UnrarSampleForm, UploadFileForm
+from crits.samples.forms import XORSearchForm, UnrarSampleForm, UploadFileForm
 from crits.samples.sample import Sample
 from crits.samples.yarahit import YaraHit
 from crits.services.analysis_result import AnalysisResult
@@ -112,13 +110,12 @@ def get_sample_details(sample_md5, analyst, format_=None):
         args = {'sample': sample}
     else:
         #create forms
-        exploit_form = ExploitForm()
         xor_search_form = XORSearchForm()
         campaign_form = CampaignForm()
         unrar_sample_form = UnrarSampleForm()
         download_form = DownloadFileForm(initial={"obj_type":'Sample',
-                                                    "obj_id":sample.id,
-                                                    "meta_format": "none"})
+                                                  "obj_id":sample.id,
+                                                  "meta_format": "none"})
 
         # do we have the binary?
         if isinstance(sample.filedata.grid_id, ObjectId):
@@ -175,7 +172,6 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'relationship': relationship,
                 'subscription': subscription,
                 'sample': sample, 'sources': sources,
-                'exploit_form': exploit_form,
                 'campaign_form': campaign_form,
                 'download_form': download_form,
                 'xor_search_form': xor_search_form,
@@ -447,67 +443,6 @@ def get_source_counts(analyst):
     allowed = user_sources(analyst)
     sources = SourceAccess.objects(name__in=allowed)
     return sources
-
-def add_new_exploit(name, analyst):
-    """
-    Add a new exploit to CRITs.
-
-    :param name: The name of the exploit.
-    :type name: str
-    :param analyst: The user adding the new exploit.
-    :type analyst: str
-    :returns: bool
-    """
-
-    try:
-        name = name.strip().upper()
-        exploit = Exploit.objects(name=name).first()
-        if exploit:
-            return False
-        exploit = Exploit()
-        exploit.name = name
-        exploit.save(username=analyst)
-        return True
-    except ValidationError:
-        return False
-
-def add_exploit_to_sample(md5, cve, analyst):
-    """
-    Add an exploit to a sample.
-
-    :param md5: The MD5 of the sample to add this exploit to.
-    :type md5: str
-    :param cve: The exploit to add.
-    :type cve: str
-    :param analyst: The user adding this exploit.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str)
-    """
-
-    sources = user_sources(analyst)
-    sample = Sample.objects(md5=md5,
-                            source__name__in=sources).first()
-    if not sample:
-        return {'success': False,
-                'message': "Could not find sample."}
-    try:
-        sample.add_exploit(cve)
-        sample.save(username=analyst)
-        return {'success': True,
-                'message': "Exploit added successfully."}
-    except ValidationError, e:
-        return {'success': False,
-                'message': "Could not add exploit: %s." % e}
-
-def get_exploits():
-    """
-    Get the available exploits in the database.
-
-    :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
-    """
-
-    e = Exploit.objects()
-    return e
 
 def get_yara_hits(version=None):
     """

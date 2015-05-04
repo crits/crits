@@ -95,6 +95,7 @@ class EmbeddedFavorites(EmbeddedDocument, CritsDocumentFormatter):
     Domain = ListField(StringField())
     Email = ListField(StringField())
     Event = ListField(StringField())
+    Exploit = ListField(StringField())
     IP = ListField(StringField())
     Indicator = ListField(StringField())
     PCAP = ListField(StringField())
@@ -275,6 +276,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                 'Email': [],
                 'Target': [],
                 'Event': [],
+                'Exploit': [],
                 'IP': [],
                 'Indicator': [],
                 'PCAP': [],

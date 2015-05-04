@@ -193,11 +193,6 @@
 
 <div style="display: none;">
 
-<div id="dialog-add-exploit" title="Add Exploit">
-    <form id="form-add-exploit" action='{% url "crits.samples.views.add_exploit" sample.md5 %}' method='POST'>
-    <table class='form'> {{ exploit_form.as_table }} </table>
-    </form>
-</div>
 <div id="dialog-download-sample" title="Download Sample">
     <form id="form-download-sample" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
     <table class="form">{{download_form.as_table}}</table>

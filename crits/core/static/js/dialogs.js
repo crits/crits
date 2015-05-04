@@ -1049,6 +1049,7 @@ var stdDialogs = {
 
       "new-campaign": {title: "Campaign"},
       "new-backdoor": {title: "Backdoor"},
+      "new-exploit": {title: "Exploit"},
 
       "new-domain": {title: "Domain", open: new_domain_dialog},
       "new-indicator": {title: "Indicator", open: new_indicator_dialog},

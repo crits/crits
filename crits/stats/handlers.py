@@ -76,42 +76,6 @@ def generate_filetypes():
     except:
         return
 
-def generate_backdoors():
-    """
-    Generate backdoors mapreduce.
-    """
-
-    samples = mongo_connector(settings.COL_SAMPLES)
-    m = Code('function() emit({name: this.backdoor.name} ,{count: 1});}) }', {})
-    r = Code('function(k,v) { var count = 0; v.forEach(function(v) { count += v["count"]; }); return {count: count}; }', {})
-    try:
-        backdoors = samples.inline_map_reduce(m,r,
-                                              query={"backdoor.name": {"$ne": "None"}})
-    except:
-        return
-    backdoor_details = mongo_connector(settings.COL_BACKDOOR_DETAILS)
-    for backdoor in backdoors:
-        backdoor_details.update({"name": backdoor["_id"]["name"]},
-                                {"$set": {"sample_count": backdoor["value"]["count"]}})
-
-def generate_exploits():
-    """
-    Generate exploits mapreduce.
-    """
-
-    samples = mongo_connector(settings.COL_SAMPLES)
-    m = Code('function() { this.exploit.forEach(function(z) {emit({cve: z.cve} ,{count: 1});}) }', {})
-    r = Code('function(k,v) { var count = 0; v.forEach(function(v) { count += v["count"]; }); return {count: count}; }', {})
-    try:
-        exploits = samples.inline_map_reduce(m,r,
-                                             query={"exploit.cve": {"$exists": 1}})
-    except:
-        return
-    exploit_details = mongo_connector(settings.COL_EXPLOIT_DETAILS)
-    for exploit in exploits:
-        exploit_details.update({"name": exploit["_id"]["cve"]},
-                               {"$set": {"sample_count": exploit["value"]["count"]}})
-
 def zero_campaign():
     """
     Zero out the campaign counts before recalculating.

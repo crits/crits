@@ -10,6 +10,7 @@ __obj_type_to_key_descriptor__ = {
     'Domain': 'domain',
     'Email': 'id',
     'Event': 'id',
+    'Exploit': 'id',
     'Indicator': 'id',
     'IP': 'ip',
     'PCAP': 'md5',
@@ -44,12 +45,12 @@ def class_from_id(type_, _id):
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event, EventType
+    from crits.exploits.exploit import Exploit
     from crits.indicators.indicator import Indicator, IndicatorAction
     from crits.ips.ip import IP
     from crits.objects.object_type import ObjectType
     from crits.pcaps.pcap import PCAP
     from crits.raw_data.raw_data import RawData, RawDataType
-    from crits.samples.exploit import Exploit
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot
     from crits.targets.target import Target
@@ -150,6 +151,7 @@ def class_from_value(type_, value):
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event
+    from crits.exploits.exploit import Exploit
     from crits.indicators.indicator import Indicator
     from crits.ips.ip import IP
     from crits.pcaps.pcap import PCAP
@@ -163,7 +165,8 @@ def class_from_value(type_, value):
 
     # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
     # the queries below will raise a ValidationError exception.
-    if (type_ in ['Backdoor', 'Comment', 'Email', 'Event', 'Indicator', 'Screenshot'] and
+    if (type_ in ['Backdoor', 'Comment', 'Email', 'Event', 'Exploit',
+                  'Indicator', 'Screenshot'] and
        not ObjectId.is_valid(value.decode('utf8'))):
         return None
 
@@ -193,6 +196,8 @@ def class_from_value(type_, value):
         return Email.objects(id=value).first()
     elif type_ == 'Event':
         return Event.objects(id=value).first()
+    elif type_ == 'Exploit':
+        return Exploit.objects(id=value).first()
     elif type_ == 'Indicator':
         return Indicator.objects(id=value).first()
     elif type_ == 'IP':
@@ -238,12 +243,12 @@ def class_from_type(type_):
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event, EventType
+    from crits.exploits.exploit import Exploit
     from crits.indicators.indicator import Indicator, IndicatorAction
     from crits.ips.ip import IP
     from crits.objects.object_type import ObjectType
     from crits.pcaps.pcap import PCAP
     from crits.raw_data.raw_data import RawData, RawDataType
-    from crits.samples.exploit import Exploit
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot
     from crits.targets.target import Target

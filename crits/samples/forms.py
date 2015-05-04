@@ -6,7 +6,6 @@ from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
-from crits.samples.exploit import Exploit
 
 class UnrarSampleForm(forms.Form):
     """
@@ -159,28 +158,3 @@ class UploadFileForm(forms.Form):
                 self._errors['related_md5'].append(u'Need a Related MD5 from which to inherit.')
 
         return cleaned_data
-
-class NewExploitForm(forms.Form):
-    """
-    Django form to handle uploading a new exploit.
-    """
-
-    error_css_class = 'error'
-    required_css_class = 'required'
-    name = forms.CharField(widget=forms.TextInput, required=True)
-
-class ExploitForm(forms.Form):
-    """
-    Django form to handle adding an exploit to a sample.
-    """
-
-    error_css_class = 'error'
-    required_css_class = 'required'
-    exploit = forms.ChoiceField(required=True, widget=forms.Select)
-
-    def __init__(self, *args, **kwargs):
-        super(ExploitForm, self).__init__(*args, **kwargs)
-        self.fields['exploit'].choices = [(c.name,
-                                           c.name
-                                           ) for c in get_item_names(Exploit,
-                                                                     True)]
