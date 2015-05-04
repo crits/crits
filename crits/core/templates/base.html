@@ -690,6 +690,10 @@
 </nav>
 <!-- end nav -->
 {% endif %}
+
+<span id="selectedNodeMenu" class="ui-icon ui-icon-plus">
+</span>
+
 <script type="text/javascript" src="{{ STATIC_URL }}js/core.js"></script>
 {% if enable_toasts == True %}
     {% if not request.user.prefs.toast_notifications or request.user.prefs.toast_notifications.enabled != False %}

@@ -660,7 +660,50 @@ $.ajaxSetup({
     }
 });
 
+var selected_text = null;
+
+function getSelected() {
+    if (window.getSelection) {
+        return window.getSelection();
+    } else if (document.getSelection) {
+        return document.getSelection();
+    } else {
+        var selection = document.selection && document.selection.createRange();
+        if (selection.text) {
+            return selection.text;
+        }
+        return false;
+    }
+    return false;
+}
+
 $(document).ready(function() {
+
+    $(document).mouseup(function(e) {
+        var selected = getSelected();
+        if (selected.toString().length > 0) {
+            selected_text = selected.toString()
+            var span = $('<span>')
+            .attr('id', 'tmpSelectedNode');
+            var range = selected.getRangeAt(0);
+            range.insertNode($(span).get(0));
+            var position = $('#tmpSelectedNode').position();
+            var fspan = $('#selectedNodeMenu')
+            .css('top', position.top)
+            .css('left', position.left)
+            .attr('data-selected', selected_text)
+            .show();
+            $('#tmpSelectedNode').remove();
+        } else {
+            $('#selectedNodeMenu').hide();
+        }
+    });
+
+    $(document).on('click', '#selectedNodeMenu', function(e) {
+        var selected = $(this).attr('data-selected');
+        $('#new-indicator').click();
+    });
+
     var src_filter = '[name!="analyst"]';
 
     // Enable Preference Toggle buttons
@@ -1408,4 +1451,5 @@ $(document).ready(function() {
             }
         });
     });
+
 }); //document.ready

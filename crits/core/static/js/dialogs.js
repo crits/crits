@@ -505,6 +505,11 @@ function update_dialog(e) {
     // pre-populate form
     inputs.each(function(index) {
         var input = $(this);
+        // If we have selected text, pre-populate
+        if ($input.attr('id') == 'id_value') {
+            input.val(selected_text);
+            selected_text = null;
+        }
     var field = input.attr('name');
     var value;
 
