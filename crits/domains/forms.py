@@ -47,11 +47,11 @@ class AddDomainForm(forms.Form):
     add_ip = forms.BooleanField(required=False,
                                 widget=forms.CheckboxInput(attrs={'class':'bulkskip'}),
                                 label=form_consts.Domain.ADD_IP_ADDRESS)
-    ip = forms.GenericIPAddressField(required=False,
-                                     label=form_consts.Domain.IP_ADDRESS,
-                                     widget=forms.TextInput(attrs={'class': 'togglewithip bulkrequired'}))
+    ip = forms.CharField(required=False,
+                         label=form_consts.Domain.IP_ADDRESS,
+                         widget=forms.TextInput(attrs={'class': 'togglewithip bulkrequired'}))
     ip_type = forms.ChoiceField(required=False,
-                                label=form_consts.IP.IP_TYPE,
+                                label=form_consts.Domain.IP_TYPE,
                                 widget=forms.Select(attrs={'class':'togglewithip bulkrequired bulknoinitial'}),)
     created = forms.DateTimeField(widget=CalWidget(format=settings.PY_DATETIME_FORMAT,
                                                    attrs={'class':'datetimeclass togglewithip bulkrequired',
@@ -75,7 +75,7 @@ class AddDomainForm(forms.Form):
                                    label=form_consts.Domain.IP_REFERENCE)
     add_indicators = forms.BooleanField(required=False,
                                         widget=forms.CheckboxInput(attrs={'class':'bulkskip'}),
-                                        label=form_consts.Domain.ADD_INDICATOR)
+                                        label=form_consts.Domain.ADD_INDICATORS)
 
     def __init__(self, username, *args, **kwargs):
         super(AddDomainForm, self).__init__(*args, **kwargs)

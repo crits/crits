@@ -6,6 +6,7 @@ from optparse import make_option
 
 from create_indexes import create_indexes
 from create_event_types import add_event_types
+from create_locations import add_location_objects
 from create_object_types import add_object_types
 from create_relationship_types import add_relationship_types
 from create_sectors import add_sector_objects
@@ -60,6 +61,7 @@ class Command(BaseCommand):
         add_relationship_types(drop)
         add_object_types(drop)
         add_event_types(drop)
+        add_location_objects(drop)
         add_sector_objects(drop)
         add_actor_content(drop)
         create_dashboard(drop)

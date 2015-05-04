@@ -7,6 +7,7 @@ from django.core.validators import validate_ipv46_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.utils.ipv6 import clean_ipv6_address
 
 from crits.core import form_consts
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
@@ -256,6 +257,7 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
     campaign = data.get('campaign')
     confidence = data.get('confidence')
     source = data.get('source')
+    source_method = data.get('source_method')
     source_reference = data.get('source_reference')
     is_add_indicator = data.get('add_indicator')
     bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
@@ -264,6 +266,7 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
 
     retVal = ip_add_update(ip, ip_type,
             source=source,
+            source_method=source_method,
             source_reference=source_reference,
             campaign=campaign,
             confidence=confidence,
@@ -275,10 +278,13 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
             is_validate_only=is_validate_only,
             cache=cache)
 
+    if not retVal['success']:
+        errors.append(retVal.get('message'))
+        retVal['message'] = ""
+
     # This block tries to add objects to the item
     if retVal['success'] == True or is_validate_only == True:
         result = True
-
         objectsData = rowData.get(form_consts.Common.OBJECTS_DATA)
 
         # add new objects if they exist
@@ -289,32 +295,34 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
                 new_ip = retVal.get('object')
 
                 if new_ip != None and is_validate_only == False:
-                    objectDict = object_array_to_dict(objectData, "IP", new_ip.id)
+                    objectDict = object_array_to_dict(objectData,
+                                                      "IP", new_ip.id)
                 else:
                     if new_ip != None:
                         if new_ip.id:
-                            objectDict = object_array_to_dict(objectData, "IP", new_ip.id)
+                            objectDict = object_array_to_dict(objectData,
+                                                              "IP", new_ip.id)
                         else:
-                            objectDict = object_array_to_dict(objectData, "IP", "")
+                            objectDict = object_array_to_dict(objectData,
+                                                              "IP", "")
                     else:
-                        objectDict = object_array_to_dict(objectData, "IP", "")
+                        objectDict = object_array_to_dict(objectData,
+                                                          "IP", "")
 
-                (object_result, object_errors, object_retVal) = validate_and_add_new_handler_object(
+                (obj_result,
+                 errors,
+                 obj_retVal) = validate_and_add_new_handler_object(
                         None, objectDict, request, errors, object_row_counter,
                         is_validate_only=is_validate_only, cache=cache)
 
-                if object_retVal.get('success') == False:
+                if not obj_result:
                     retVal['success'] = False
-                if object_retVal.get('message'):
-                    errors.append(object_retVal['message'])
-    else:
-        errors += "Failed to add IP: " + str(ip)
 
     return result, errors, retVal
 
-def ip_add_update(ip_address, ip_type, source=None, source_method=None,
-                  source_reference=None, campaign=None, confidence='low',
-                  analyst=None, is_add_indicator=False, indicator_reference=None,
+def ip_add_update(ip_address, ip_type, source=None, source_method='',
+                  source_reference='', campaign=None, confidence='low',
+                  analyst=None, is_add_indicator=False, indicator_reference='',
                   bucket_list=None, ticket=None, is_validate_only=False, cache={}):
     """
     Add/update an IP address.
@@ -357,31 +365,9 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
     if not source:
         return {"success" : False, "message" : "Missing source information."}
 
-    if "Address - ipv4" in ip_type:
-        try:
-            validate_ipv4_address(ip_address)
-        except ValidationError:
-            return {"success": False, "message": "Invalid IPv4 address."}
-    elif "Address - ipv6" in ip_type:
-        try:
-            validate_ipv6_address(ip_address)
-        except ValidationError:
-            return {"success": False, "message": "Invalid IPv6 address."}
-    elif "cidr" in ip_type:
-        try:
-            if '/' not in ip_address:
-                raise ValidationError("Missing slash.")
-            cidr_parts = ip_address.split('/')
-            if int(cidr_parts[1]) < 0 or int(cidr_parts[1]) > 128:
-                raise ValidationError("Invalid mask.")
-            if ':' not in cidr_parts[0] and int(cidr_parts[1]) > 32:
-                raise ValidationError("Missing colon.")
-            validate_ipv46_address(cidr_parts[0])
-        except (ValidationError, ValueError) as cidr_error:
-            return {"success": False, "message": "Invalid CIDR address: %s" %
-                                                  cidr_error}
-    else:
-        return {"success": False, "message": "Invalid IP type."}
+    (ip_address, error) = validate_and_normalize_ip(ip_address, ip_type)
+    if error:
+        return {"success": False, "message": error}
 
     retVal = {}
     is_item_new = False
@@ -456,10 +442,10 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
         from crits.indicators.handlers import handle_indicator_ind
         handle_indicator_ind(ip_address,
                              source,
-                             indicator_reference,
                              ip_type,
                              analyst,
                              source_method,
+                             indicator_reference,
                              add_domain=False,
                              add_relationship=True,
                              bucket_list=bucket_list,
@@ -583,3 +569,63 @@ def process_bulk_add_ip(request, formdict):
     response = parse_bulk_upload(request, parse_row_to_bound_ip_form, add_new_ip_via_bulk, formdict, cache)
 
     return response
+
+def validate_and_normalize_ip(ip_address, ip_type):
+    """
+    Validate and normalize the given IP address
+
+    :param ip_address: the IP address to validate and normalize
+    :type ip_address: str
+    :param ip_type: the type of the IP address
+    :type ip_type: str
+    :returns: tuple: (Valid normalized IP, Error message)
+    """
+
+    cleaned = None
+    if "cidr" in ip_type:
+        try:
+            if '/' not in ip_address:
+                raise ValidationError("")
+            cidr_parts = ip_address.split('/')
+            if int(cidr_parts[1]) < 0 or int(cidr_parts[1]) > 128:
+                raise ValidationError("")
+            if ':' not in cidr_parts[0] and int(cidr_parts[1]) > 32:
+                raise ValidationError("")
+            ip_address = cidr_parts[0]
+        except (ValidationError, ValueError):
+            return ("", "Invalid CIDR address")
+
+    if "Address - ipv4" in ip_type or "cidr" in ip_type:
+        try:
+            validate_ipv4_address(ip_address)
+
+            # Remove leading zeros
+            cleaned = []
+            for octet in ip_address.split('.'):
+                cleaned.append(octet.lstrip('0') or '0')
+            cleaned = '.'.join(cleaned)
+        except ValidationError:
+            if "cidr" not in ip_type:
+                return ("", "Invalid IPv4 address")
+            else:
+                ip_type = "cidr_ipv6"
+
+    if "Address - ipv6" in ip_type or ip_type == "cidr_ipv6":
+        try:
+            validate_ipv6_address(ip_address)
+
+            # Replaces the longest continuous zero-sequence with "::" and
+            # removes leading zeroes and makes sure all hextets are lowercase.
+            cleaned = clean_ipv6_address(ip_address)
+        except ValidationError:
+            if "cidr" in ip_type:
+                return ("", "Invalid CIDR address")
+            else:
+                return ("", "Invalid IPv6 address")
+
+    if not cleaned:
+        return ("", "Invalid IP type.")
+    elif "cidr" in ip_type:
+        return (cleaned + '/' + cidr_parts[1], "")
+    else:
+        return (cleaned, "")

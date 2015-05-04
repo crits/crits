@@ -5,7 +5,7 @@ from StringIO import StringIO
 from crits.actors.actor import Actor
 from crits.actors.handlers import add_new_actor, update_actor_tags
 from crits.certificates.handlers import handle_cert_file
-from crits.domains.handlers import upsert_domain, get_domain
+from crits.domains.handlers import upsert_domain
 from crits.emails.handlers import handle_email_fields
 from crits.events.handlers import add_new_event
 from crits.indicators.indicator import Indicator
@@ -69,7 +69,7 @@ class STIXParser():
         self.failed = [] # track STIX/CybOX items that failed import
         self.saved_artifacts = {}
 
-    def parse_stix(self, reference=None, make_event=False, source=''):
+    def parse_stix(self, reference='', make_event=False, source=''):
         """
         Parse the document.
 
@@ -280,9 +280,7 @@ class STIXParser():
                 if isinstance(item, DomainName):
                     imp_type = "Domain"
                     for value in item.value.values:
-                        (sdomain, domain) = get_domain(str(value.strip()))
-                        res = upsert_domain(sdomain,
-                                            domain,
+                        res = upsert_domain(str(value),
                                             [self.source],
                                             username=analyst)
                         self.parse_res(imp_type, obs, res)

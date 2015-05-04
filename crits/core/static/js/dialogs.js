@@ -1074,6 +1074,7 @@ var stdDialogs = {
                   addEditSubmit)
       }
       },
+      "location-add": {title: "Add Location"},
       "ticket": {title: "Ticket",
          update: { open: update_dialog} },
 

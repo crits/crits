@@ -19,6 +19,7 @@ urlpatterns = patterns('',
     (r'^exploits/', include('crits.exploits.urls')),           # Exploits
     (r'^indicators/', include('crits.indicators.urls')),       # Indicators
     (r'^ips/', include('crits.ips.urls')),                     # IPs
+    (r'^locations/', include('crits.locations.urls')),         # Locations
     (r'^notifications/', include('crits.notifications.urls')), # Notifications
     (r'^objects/', include('crits.objects.urls')),             # Objects
     (r'^pcaps/', include('crits.pcaps.urls')),                 # PCAPs

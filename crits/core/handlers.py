@@ -487,8 +487,8 @@ def merge_source_lists(left, right):
                 left.append(src)
     return left
 
-def source_add_update(obj_type, obj_id, action, source, method=None,
-                      reference=None, date=None, analyst=None):
+def source_add_update(obj_type, obj_id, action, source, method='',
+                      reference='', date=None, analyst=None):
     """
     Add or update a source for a top-level object.
 

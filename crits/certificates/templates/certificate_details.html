@@ -104,6 +104,11 @@
         {% endwith %}
     </div>
     <div>
+        {% with hit=cert col=COL_CERTIFICATES %}
+            {% include "locations_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
         {% include 'relationships_listing_widget.html' %}
     </div>
     <div>

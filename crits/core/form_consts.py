@@ -152,7 +152,7 @@ class Domain():
     IP_SOURCE = IP.IP_SOURCE
     IP_METHOD = IP.IP_METHOD
     IP_REFERENCE = IP.IP_REFERENCE
-    ADD_INDICATOR = Common.ADD_INDICATOR
+    ADD_INDICATORS = "Add Indicator(s)?"
 
     CACHED_RESULTS = "domain_cached_results"
 

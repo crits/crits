@@ -60,6 +60,8 @@ def add_event(request):
                                    bucket_list=data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                                    ticket=data[form_consts.Common.TICKET_VARIABLE_NAME],
                                    analyst=request.user.username)
+            if 'object' in result:
+                del result['object']
             return HttpResponse(json.dumps(result), mimetype="application/json")
         else:
             return HttpResponse(json.dumps({'form': event_form.as_table(),

@@ -57,7 +57,7 @@ elif 'test' in sys.argv:
     DEVEL_INSTANCE = True
     SERVICE_MODEL = 'thread'
     SESSION_COOKIE_SECURE = False
-    CSRV_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
     LOGIN_URL = "/login/"
 else:
     DEVEL_INSTANCE = False
@@ -144,6 +144,7 @@ COL_IDB_ACTIONS = "idb_actions"                           # list of available ac
 COL_INDICATORS = "indicators"                             # main indicators collection
 COL_INTERNAL_LOCATIONS = "internal_locations"             # site locations for company
 COL_IPS = "ips"                                           # IPs collection
+COL_LOCATIONS = "locations"                               # Locations collection
 COL_NOTIFICATIONS = "notifications"                       # notifications collection
 COL_OBJECTS = "objects"                                   # objects that are files that have been added
 COL_OBJECT_TYPES = "object_types"                         # types of objects that can be added
@@ -330,6 +331,7 @@ TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, 'exploits/templates'),
     os.path.join(SITE_ROOT, 'indicators/templates'),
     os.path.join(SITE_ROOT, 'ips/templates'),
+    os.path.join(SITE_ROOT, 'locations/templates'),
     os.path.join(SITE_ROOT, 'objects/templates'),
     os.path.join(SITE_ROOT, 'pcaps/templates'),
     os.path.join(SITE_ROOT, 'raw_data/templates'),
@@ -356,6 +358,7 @@ STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'exploits/static'),
     os.path.join(SITE_ROOT, 'indicators/static'),
     os.path.join(SITE_ROOT, 'ips/static'),
+    os.path.join(SITE_ROOT, 'locations/static'),
     os.path.join(SITE_ROOT, 'objects/static'),
     os.path.join(SITE_ROOT, 'pcaps/static'),
     os.path.join(SITE_ROOT, 'raw_data/static'),
@@ -385,6 +388,7 @@ INSTALLED_APPS = (
     'crits.events',
     'crits.indicators',
     'crits.ips',
+    'crits.locations',
     'crits.objects',
     'crits.pcaps',
     'crits.raw_data',

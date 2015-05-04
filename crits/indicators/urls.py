@@ -13,7 +13,7 @@ urlpatterns = patterns('crits.indicators.views',
     (r'^ci/update/(?P<indicator_id>\w+)/(?P<ci_type>\S+)/$', 'update_ci'),
     (r'^type/update/(?P<indicator_id>\w+)/$', 'update_indicator_type'),
     (r'^and_ip/$', 'indicator_and_ip'),
-    (r'^from_obj/$', 'indicator_from_obj'),
+    (r'^from_obj/$', 'indicator_from_tlo'),
     (r'^list/$', 'indicators_listing'),
     (r'^list/(?P<option>\S+)/$', 'indicators_listing'),
 )

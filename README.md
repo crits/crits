@@ -32,6 +32,13 @@ Just run the following:
     sh script/bootstrap
 ```
 
+Once you've run bootstrap once, do not use it again to get the runserver going, you'll be going through the install process again. Instead use the server script:
+
+```bash
+
+    sh script/server
+```
+
 ## Production CRITs install
 
 If you are looking for a more permanent and performant CRITs installation or just interested in tweaking things, read more about setting up CRITs for [production](https://github.com/crits/crits/wiki/Production-grade-CRITs-install).

@@ -1,0 +1,41 @@
+<script>
+    var edit_location = "{% url 'crits.locations.views.edit_location' relationship.type hit.id %}";
+</script>
+
+<div class="content_box">
+    <h3 class="titleheader">
+    <span>Locations</span>
+    <span class="add_button" data-intro="Add a location" data-position="right">
+      <a href="#" action="{% url 'crits.locations.views.add_location' relationship.type hit.id %}" class="ui-icon ui-icon-plusthick dialogClick" dialog="location-add" persona="new" title="Add Location"></a>
+    </span>
+    </h3>
+    <div class="content_body">
+        <table class='chart' id="location_listing">
+            <thead>
+                {% if not hit.locations %}
+                <tr style="display:none;">
+                {% else %}
+                <tr>
+                {% endif %}
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Analyst</th>
+                    <th>Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for location in hit.locations %}
+                {% include "locations_display_row_widget.html" %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% block javascript_includes %}
+ <script type="text/javascript" src="{{ STATIC_URL }}js/locations.js"></script>
+{% endblock %}

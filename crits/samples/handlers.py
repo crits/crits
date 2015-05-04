@@ -479,7 +479,7 @@ def handle_unrar_sample(md5, user=None, password=None):
     data = sample.filedata.read()
     source = sample.source[0].name
     campaign = sample.campaign
-    reference = None
+    reference = ''
     return unrar_file(md5, user, password, data, source, method="Unrar Existing Sample",
                       reference=reference, campaign=campaign, related_md5=md5)
 
@@ -503,12 +503,12 @@ def handle_unzip_file(md5, user=None, password=None):
     data = sample.filedata.read()
     source = sample.source[0].name
     campaign = sample.campaign
-    reference = None
+    reference = ''
     return unzip_file(md5, user, password, data, source, method="Unzip Existing Sample",
                       reference=reference, campaign=campaign, related_md5=md5, )
 
 def unzip_file(filename, user=None, password=None, data=None, source=None,
-               method='Zip', reference=None, campaign=None, confidence='low',
+               method='Zip', reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
                bucket_list=None, ticket=None, inherited_source=None):
     """
@@ -633,7 +633,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     return samples
 
 def unrar_file(filename, user=None, password=None, data=None, source=None,
-               method="Generic", reference=None, campaign=None, confidence='low',
+               method="Generic", reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
                bucket_list=None, ticket=None, inherited_source=None):
     """
@@ -750,7 +750,7 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
 
     return samples
 
-def handle_file(filename, data, source, method='Generic', reference=None, related_md5=None,
+def handle_file(filename, data, source, method='Generic', reference='', related_md5=None,
                 related_id=None, related_type='Sample', backdoor=None, user='',
                 campaign=None, confidence='low', md5_digest=None, bucket_list=None,
                 ticket=None, relationship=None, inherited_source=None, is_validate_only=False,
@@ -1001,7 +1001,7 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         retVal['object'] = sample
         return retVal
 
-def handle_uploaded_file(f, source, method="", reference=None, file_format=None,
+def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                          password=None, user=None, campaign=None, confidence='low',
                          related_md5=None, related_id=None, related_type='Sample',
                          filename=None, md5=None, bucket_list=None, ticket=None,

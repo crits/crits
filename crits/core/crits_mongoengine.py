@@ -783,6 +783,20 @@ class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
         method = StringField()
         reference = StringField()
 
+        def __eq__(self, other):
+            """
+            Two source instances are equal if their data attributes are equal
+            """
+
+            if isinstance(other, type(self)):
+                if (self.analyst == other.analyst and
+                    self.date == other.date and
+                    self.method == other.method and
+                    self.reference == other.reference):
+                    # all data attributes are equal, so sourceinstances are equal
+                    return True
+            return False
+
     instances = ListField(EmbeddedDocumentField(SourceInstance))
     name = StringField()
 
@@ -793,8 +807,8 @@ class CritsSourceDocument(BaseDocument):
 
     source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
 
-    def add_source(self, source_item=None, source=None, method=None,
-                   reference=None, date=None, analyst=None):
+    def add_source(self, source_item=None, source=None, method='',
+                   reference='', date=None, analyst=None):
         """
         Add a source instance to this top-level object.
 
@@ -837,13 +851,19 @@ class CritsSourceDocument(BaseDocument):
                 if s.name == source_item.name: # find index of matching source
                     match = c
                     break
-            if match is not None: # if source exists, add instances to that source
-                self.source[match].instances.extend(source_item.instances)
+            if match is not None: # if source exists, add instances to it
+                # Don't add exact duplicates
+                for new_inst in source_item.instances:
+                    for exist_inst in self.source[match].instances:
+                        if new_inst == exist_inst:
+                            break
+                    else:
+                        self.source[match].instances.append(new_inst)
             else: # else, add as new source
                 self.source.append(source_item)
 
-    def edit_source(self, source=None, date=None, method=None,
-                    reference=None, analyst=None):
+    def edit_source(self, source=None, date=None, method='',
+                    reference='', analyst=None):
         """
         Edit a source instance from this top-level object.
 
@@ -987,36 +1007,36 @@ class EmbeddedTickets(BaseDocument):
 
         return False;
 
-    def add_ticket(self, ticket, analyst, date=None):
+    def add_ticket(self, tickets, analyst=None, date=None):
         """
         Add a ticket to this top-level object.
 
-        :param ticket: The ticket to add.
-        :type ticket: str
+        :param tickets: The ticket(s) to add.
+        :type tickets: str, list, or
+                       :class:`crits.core.crits_mongoengine.EmbeddedTicket`
         :param analyst: The user adding this ticket.
         :type analyst: str
         :param date: The date for the ticket.
         :type date: datetime.datetime.
         """
 
-        if isinstance(ticket, list) and len(ticket) == 1 and ticket[0] == '':
-            parsed_tickets = []
-        elif isinstance(ticket, (str, unicode)):
-            parsed_tickets = ticket.split(',')
-        else:
-            parsed_tickets = ticket
+        if isinstance(tickets, basestring):
+            tickets = tickets.split(',')
+        elif not isinstance(tickets, list):
+            tickets = [tickets]
 
-        parsed_tickets = [ticket_number.strip() for ticket_number in parsed_tickets]
-
-        for ticket_number in parsed_tickets:
-            # prevent duplicates
-            if ticket_number and self.is_ticket_exist(ticket_number) == False:
-                et = EmbeddedTicket()
-                et.analyst = analyst
-                et.ticket_number = ticket_number
-                if date:
-                    et.date = date
-                self.tickets.append(et)
+        for ticket in tickets:
+            if isinstance(ticket, EmbeddedTicket):
+                if not self.is_ticket_exist(ticket.ticket_number): # stop dups
+                    self.tickets.append(ticket)
+            elif isinstance(ticket, basestring):
+                if ticket and not self.is_ticket_exist(ticket):  # stop dups
+                    et = EmbeddedTicket()
+                    et.analyst = analyst
+                    et.ticket_number = ticket
+                    if date:
+                        et.date = date
+                    self.tickets.append(et)
 
     def edit_ticket(self, analyst, ticket_number, date=None):
         """
@@ -1077,6 +1097,21 @@ class EmbeddedCampaign(EmbeddedDocument, CritsDocumentFormatter):
     date = CritsDateTimeField(default=datetime.datetime.now)
     description = StringField()
     name = StringField(required=True)
+
+
+class EmbeddedLocation(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Location object
+    """
+
+    location_type = StringField(required=True)
+    location = StringField(required=True)
+    description = StringField(required=False)
+    latitude = StringField(required=False)
+    longitude = StringField(required=False)
+    analyst = StringField(required=True)
+    date = DateTimeField(default=datetime.datetime.now)
+
 
 class Releasability(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -1149,6 +1184,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     analyst = StringField()
     bucket_list = ListField(StringField())
     campaign = ListField(EmbeddedDocumentField(EmbeddedCampaign))
+    locations = ListField(EmbeddedDocumentField(EmbeddedLocation))
     description = StringField()
     obj = ListField(EmbeddedDocumentField(EmbeddedObject), db_field="objects")
     relationships = ListField(EmbeddedDocumentField(EmbeddedRelationship))
@@ -1216,6 +1252,85 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         if isinstance(campaign_item, EmbeddedCampaign):
             self.remove_campaign(campaign_name=campaign_item.name)
             self.add_campaign(campaign_item=campaign_item)
+
+    def add_location(self, location_item=None):
+        """
+        Add a location to this top-level object.
+
+        :param location_item: The location to add.
+        :type location_item: :class:`crits.core.crits_mongoengine.EmbeddedLocation`
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+
+        if isinstance(location_item, EmbeddedLocation):
+            if (location_item.location != None and
+                location_item.location.strip() != ''):
+                for l, location in enumerate(self.locations):
+                    if (location.location == location_item.location and
+                        location.location_type == location_item.location_type and
+                        location.date == location_item.date):
+                        return {'success': False,
+                                'message': 'This location is already assigned.'}
+                else:
+                    self.locations.append(location_item)
+                return {'success': True,
+                        'message': 'Location assigned successfully!'}
+        return {'success': False,
+                'message': 'Location is invalid'}
+
+    def edit_location(self, location_name=None, location_type=None, date=None,
+                      description=None, latitude=None, longitude=None):
+        """
+        Edit a location.
+
+        :param location_name: The location_name to edit.
+        :type location_name: str
+        :param location_type: The location_type to edit.
+        :type location_type: str
+        :param date: The location date to edit.
+        :type date: str
+        :param description: The new description.
+        :type description: str
+        :param latitude: The new latitude.
+        :type latitude: str
+        :param longitude: The new longitude.
+        :type longitude: str
+        """
+
+        if isinstance(date, basestring):
+            date = parse(date, fuzzy=True)
+        for location in self.locations:
+            if (location.location == location_name and
+                location.location_type == location_type and
+                location.date == date):
+                if description:
+                    location.description = description
+                if latitude:
+                    location.latitude = latitude
+                if longitude:
+                    location.longitude = longitude
+                break
+
+    def remove_location(self, location_name=None, location_type=None, date=None):
+        """
+        Remove a location from this top-level object.
+
+        :param location_name: The location to remove.
+        :type location_name: str
+        :param location_type: The location type.
+        :type location_type: str
+        :param date: The location date.
+        :type date: str
+        """
+
+        if isinstance(date, basestring):
+            date = parse(date, fuzzy=True)
+        for location in self.locations:
+            if (location.location == location_name and
+                location.location_type == location_type and
+                location.date == date):
+                self.locations.remove(location)
+                break
 
     def add_bucket_list(self, tags, analyst, append=True):
         """
@@ -1476,8 +1591,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 break
 
     def update_object_source(self, object_type, name, value,
-                             new_source=None, new_method=None,
-                             new_reference=None, analyst=None):
+                             new_source=None, new_method='',
+                             new_reference='', analyst=None):
         """
         Update the source for an object on this top-level object.
 
@@ -1523,6 +1638,25 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         html = render_to_string('campaigns_display_row_widget.html',
                                 {'campaign': campaign,
+                                 'hit': self,
+                                 'obj': None,
+                                 'admin': is_admin(analyst),
+                                 'relationship': {'type': self._meta['crits_type']}})
+        return html
+
+    def format_location(self, location, analyst):
+        """
+        Render a location to HTML to prepare for inclusion in a template.
+
+        :param location: The location to templetize.
+        :type location: :class:`crits.core.crits_mongoengine.EmbeddedLocation`
+        :param analyst: The user requesting the Campaign.
+        :type analyst: str
+        :returns: str
+        """
+
+        html = render_to_string('locations_display_row_widget.html',
+                                {'location': location,
                                  'hit': self,
                                  'obj': None,
                                  'admin': is_admin(analyst),
@@ -2355,7 +2489,7 @@ def json_handler(obj):
         return str(obj)
 
 def create_embedded_source(name, source_instance=None, date=None,
-                           reference=None, method=None, analyst=None):
+                           reference='', method='', analyst=None):
     """
     Create an EmbeddedSource object. If source_instance is provided it will be
     used, otherwise date, reference, and method will be used.
