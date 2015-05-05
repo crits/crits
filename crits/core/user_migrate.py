@@ -36,6 +36,7 @@ def migrate_2_to_3(self):
         self.schema_version = 3
 
         self.favorites['Backdoor'] = []
+        self.favorites['Exploit'] = []
 
         self.save()
         self.reload()
