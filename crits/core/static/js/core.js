@@ -699,9 +699,15 @@ $(document).ready(function() {
         }
     });
 
-    $(document).on('click', '#selectedNodeMenu', function(e) {
-        var selected = $(this).attr('data-selected');
-        $('#new-indicator').click();
+    $(document).on('click', '.selected_text_button', function(e) {
+        var selected = $(this).parent().attr('data-selected');
+        if ($(this).attr('id') == 'selected_to_indicator') {
+            $('#new-indicator').click();
+        } else if ($(this).attr('id') == 'selected_to_domain') {
+            $('#new-domain').click();
+        } else if ($(this).attr('id') == 'selected_to_ip') {
+            $('#new-ip').click();
+        }
     });
 
     var src_filter = '[name!="analyst"]';

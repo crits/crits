@@ -691,7 +691,10 @@
 <!-- end nav -->
 {% endif %}
 
-<span id="selectedNodeMenu" class="ui-icon ui-icon-plus">
+<span id="selectedNodeMenu">
+    <button class="selected_text_button" id="selected_to_indicator" title="Add as Indicator">I</button>
+    <button class="selected_text_button" id="selected_to_domain" title="Add as Domain">D</button>
+    <button class="selected_text_button" id="selected_to_ip" title="Add as IP">IP</button>
 </span>
 
 <script type="text/javascript" src="{{ STATIC_URL }}js/core.js"></script>
