@@ -797,6 +797,7 @@ def alter_bucket_list(obj, buckets, val):
                            Domain=0,
                            Email=0,
                            Event=0,
+                           Exploit=0,
                            Indicator=0,
                            IP=0,
                            PCAP=0,
