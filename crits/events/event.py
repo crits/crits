@@ -90,6 +90,18 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
     def stix_title(self):
         return self.title
 
+    def to_stix_incident(self):
+        """
+        Creates a STIX Incident object from a CRITs Event.
+
+        Returns the STIX Incident and the original CRITs Event's
+        releasability list.
+        """
+        from stix.incident import Incident
+        inc = Incident(title=self.title, description=self.description)
+
+        return (inc, self.releasability)
+
     @classmethod
     def from_stix(cls, stix_package):
         """

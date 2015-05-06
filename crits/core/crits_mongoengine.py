@@ -698,6 +698,7 @@ class CritsDocument(BaseDocument):
 
         # Store message
         stix_msg = {
+                       'stix_incidents': [],
                        'stix_indicators': [],
                        'stix_observables': [],
                        'stix_actors': [],
@@ -710,31 +711,85 @@ class CritsDocument(BaseDocument):
 
         # add self to the list of items to STIXify
         if self not in items_to_convert:
-            items_to_convert.append(self);
+            items_to_convert.append(self)
 
+        # add any email attachments
+        attachments = []
+        for obj in items_to_convert:
+            if obj._meta['crits_type'] == 'Email':
+                for rel in obj.relationships:
+                    if rel.relationship == 'Contains':
+                        atch = class_from_id('Sample', rel.object_id)
+                        if atch not in items_to_convert:
+                            attachments.append(atch)
+        items_to_convert.extend(attachments)
+
+        # grab ObjectId of items
+        refObjs = {key.id: 0 for key in items_to_convert}
+
+        relationships = {}
+        stix = []
+        from stix.indicator import Indicator as S_Ind
         for obj in items_to_convert:
             obj_type = obj._meta['crits_type']
             if obj_type == class_from_type('Event')._meta['crits_type']:
-                # occurs if the 'parent' object is an Event. We don't need to convert
-                # but we do need to add to 'final_objects' for tracking purposes
-                stix_msg['final_objects'].append(self)
-
-            if obj_type in ind_list: # convert to STIX indicators
-                ind, releas = obj.to_stix_indicator()
-                stix_msg['stix_indicators'].append(ind)
-                stix_msg['final_objects'].append(obj)
+                stx, release = obj.to_stix_incident()
+                stix_msg['stix_incidents'].append(stx)
+            elif obj_type in ind_list: # convert to STIX indicators
+                stx, releas = obj.to_stix_indicator()
+                stix_msg['stix_indicators'].append(stx)
+                refObjs[obj.id] = S_Ind(idref=stx.id_)
             elif obj_type in obs_list: # convert to CybOX observable
                 if obj_type == class_from_type('Sample')._meta['crits_type']:
-                    ind, releas = obj.to_cybox_observable(bin_fmt=bin_fmt)
+                    stx, releas = obj.to_cybox_observable(bin_fmt=bin_fmt)
                 else:
-                    ind, releas = obj.to_cybox_observable()
-                stix_msg['stix_observables'].extend(ind)
-                stix_msg['final_objects'].append(obj)
-            elif obj_type in actor_list: # cover to STIX actor
-                act, releas = obj.to_stix_actor()
-                stix_msg['stix_actors'].append(act)
-                stix_msg['final_objects'].append(obj)
+                    stx, releas = obj.to_cybox_observable()
 
+                # wrap in stix Indicator
+                ind = S_Ind()
+                for ob in stx:
+                    ind.add_observable(ob)
+                ind.title = "CRITs %s Top-Level Object" % obj_type
+                ind.description = ("This is simply a CRITs %s top-level "
+                                   "object, not actually an Indicator. "
+                                   "The Observable is wrapped in an Indicator"
+                                   " to facilitate documentation of the "
+                                   "relationship." % obj_type)
+                ind.confidence = 'None'
+                stx = ind
+                stix_msg['stix_indicators'].append(stx)
+                refObjs[obj.id] = S_Ind(idref=stx.id_)
+            elif obj_type in actor_list: # convert to STIX actor
+                stx, releas = obj.to_stix_actor()
+                stix_msg['stix_actors'].append(stx)
+
+            # get relationships from CRITs objects
+            for rel in obj.relationships:
+                if rel.object_id in refObjs:
+                    relationships.setdefault(stx.id_, {})
+                    relationships[stx.id_][rel.object_id] = (rel.relationship,
+                                                             rel.rel_confidence.capitalize(),
+                                                             rel.rel_type)
+
+            stix_msg['final_objects'].append(obj)
+            stix.append(stx)
+
+        # set relationships on STIX objects
+        from cybox.objects.email_message_object import Attachments
+        for stix_obj in stix:
+            for rel in relationships.get(stix_obj.id_, {}):
+                if isinstance(refObjs.get(rel), S_Ind): # if is STIX Indicator
+                    stix_obj.related_indicators.append(refObjs[rel])
+                    rel_meta = relationships.get(stix_obj.id_)[rel]
+                    stix_obj.related_indicators[-1].relationship = rel_meta[0]
+                    stix_obj.related_indicators[-1].confidence = rel_meta[1]
+
+                    # Add any Email Attachments to CybOX EmailMessage Objects
+                    if isinstance(stix_obj, S_Ind):
+                        if 'EmailMessage' in stix_obj.observable.object_.id_:
+                            if rel_meta[0] == 'Contains' and rel_meta[2] == 'Sample':
+                                email = stix_obj.observable.object_.properties
+                                email.attachments.append(refObjs[rel].idref)
 
         tool_list = ToolInformationList()
         tool = ToolInformation("CRITs", "MITRE")
@@ -758,8 +813,8 @@ class CritsDocument(BaseDocument):
                             package_intents=[stix_int],
                             title=stix_title)
 
-        stix_msg['stix_obj'] = STIXPackage(indicators=stix_msg['stix_indicators'],
-                        observables=Observables(stix_msg['stix_observables']),
+        stix_msg['stix_obj'] = STIXPackage(incidents=stix_msg['stix_incidents'],
+                        indicators=stix_msg['stix_indicators'],
                         threat_actors=stix_msg['stix_actors'],
                         stix_header=header,
                         id_=uuid.uuid4())
