@@ -341,7 +341,7 @@ def make_crits_object(cybox_obj):
         return o
     elif isinstance(cybox_obj, Artifact):
         o.object_type = "Artifact"
-        o.value = get_object_values(cybox_obj.data)
+        o.value = [cybox_obj.data]
         if cybox_obj.type_ == Artifact.TYPE_GENERIC:
             o.name = "Data Region"
             return o
