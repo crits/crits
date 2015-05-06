@@ -17,6 +17,7 @@ from django.template import RequestContext
 from hashlib import md5
 from mongoengine.base import ValidationError
 
+from crits.backdoors.backdoor import Backdoor
 from crits.campaigns.forms import CampaignForm
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_value, class_from_id
@@ -510,7 +511,8 @@ def handle_unzip_file(md5, user=None, password=None):
 def unzip_file(filename, user=None, password=None, data=None, source=None,
                method='Zip', reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
-               bucket_list=None, ticket=None, inherited_source=None):
+               bucket_list=None, ticket=None, inherited_source=None,
+               backdoor_name=None, backdoor_version=None):
     """
     Unzip a file.
 
@@ -544,6 +546,10 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     :type ticket: str
     :param inherited_source: Source(s) to be inherited by the new Sample
     :type inherited_source: list, :class:`crits.core.crits_mongoengine.EmbeddedSource`
+    :param backdoor_name: Name of backdoor to relate this object to.
+    :type backdoor_name: str
+    :param backdoor_version: Version of backdoor to relate this object to.
+    :type backdoor_version: str
     :returns: list
     :raises: ZipFileError, Exception
     """
@@ -613,7 +619,9 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                                              bucket_list=bucket_list,
                                              ticket=ticket,
                                              inherited_source=inherited_source,
-                                             relationship=relationship)
+                                             relationship=relationship,
+                                             backdoor_name=backdoor_name,
+                                             backdoor_version=backdoor_version)
                     if new_sample:
                         samples.append(new_sample)
                     filehandle.close()
@@ -635,7 +643,8 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
 def unrar_file(filename, user=None, password=None, data=None, source=None,
                method="Generic", reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
-               bucket_list=None, ticket=None, inherited_source=None):
+               bucket_list=None, ticket=None, inherited_source=None,
+               backdoor_name=None, backdoor_version=None):
     """
     Unrar a file.
 
@@ -735,7 +744,9 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
                                                      bucket_list=bucket_list,
                                                      ticket=ticket,
                                                      inherited_source=inherited_source,
-                                                     relationship=relationship)
+                                                     relationship=relationship,
+                                                     backdoor_name=backdoor_name,
+                                                     backdoor_version=backdoor_version)
                             samples.append(new_sample)
     except ZipFileError:
         raise
@@ -754,7 +765,8 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
                 related_id=None, related_type='Sample', backdoor=None, user='',
                 campaign=None, confidence='low', md5_digest=None, bucket_list=None,
                 ticket=None, relationship=None, inherited_source=None, is_validate_only=False,
-                is_return_only_md5=True, cache={}):
+                is_return_only_md5=True, cache={}, backdoor_name=None,
+                backdoor_version=None):
     """
     Handle adding a file.
 
@@ -799,6 +811,10 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
     :type cache: dict
+    :param backdoor_name: Name of the backdoor to relate the file to.
+    :type backdoor_name: str
+    :param backdoor_version: Version of the backdoor to relate the file to.
+    :type backdoor_version: str
     :returns: str,
               dict with keys:
               "success" (boolean),
@@ -936,6 +952,30 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
 
         # save sample to get an id since the rest of the processing needs it
         sample.save(username=user)
+
+        sources = user_sources(user)
+        if backdoor_name:
+            # Relate this to the backdoor family if there is one.
+            backdoor = Backdoor.objects(name=backdoor_name,
+                                        source__name__in=sources).first()
+            if backdoor:
+                backdoor.add_relationship(rel_item=sample,
+                                          rel_type="Related_To",
+                                          analyst=user)
+                backdoor.save()
+            # Also relate to the specific instance backdoor.
+            if backdoor_version:
+                backdoor = Backdoor.objects(name=backdoor_name,
+                                            version=backdoor_version,
+                                            source__name__in=sources).first()
+                if backdoor:
+                    backdoor.add_relationship(rel_item=sample,
+                                              rel_type="Related_To",
+                                              analyst=user)
+                    backdoor.save()
+            # Save after adding backdoor relationships
+            sample.save()
+
         # reloading clears the _changed_fields of the sample object. this prevents
         # situations where we save again below and the shard key (md5) is
         # still marked as changed.
@@ -1006,7 +1046,8 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                          related_md5=None, related_id=None, related_type='Sample',
                          filename=None, md5=None, bucket_list=None, ticket=None,
                          inherited_source=None, is_validate_only=False,
-                         is_return_only_md5=True, cache={}):
+                         is_return_only_md5=True, cache={}, backdoor_name=None,
+                         backdoor_version=None):
     """
     Handle an uploaded file.
 
@@ -1051,6 +1092,10 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
     :type cache: dict
+    :param backdoor_name: Name of backdoor to relate this object to.
+    :type backdoor_name: str
+    :param backdoor_version: Version of backdoor to relate this object to.
+    :type backdoor_version: str
     :returns: list
     """
 
@@ -1092,7 +1137,9 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             related_type=related_type,
             bucket_list=bucket_list,
             ticket=ticket,
-            inherited_source=inherited_source)
+            inherited_source=inherited_source,
+            backdoor_name=backdoor_name,
+            backdoor_version=backdoor_version)
     elif file_format == "rar" and f:
         return unrar_file(
             filename,
@@ -1109,7 +1156,9 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             related_type=related_type,
             bucket_list=bucket_list,
             ticket=ticket,
-            inherited_source=inherited_source)
+            inherited_source=inherited_source,
+            backdoor_name=backdoor_name,
+            backdoor_version=backdoor_version)
     else:
         new_sample = handle_file(filename, data, source, method, reference,
                                  related_md5=related_md5, related_id=related_id,
@@ -1117,7 +1166,9 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                                  campaign=campaign, confidence=confidence, md5_digest=md5,
                                  bucket_list=bucket_list, ticket=ticket,
                                  inherited_source=inherited_source, is_validate_only=is_validate_only,
-                                 is_return_only_md5=is_return_only_md5, cache=cache)
+                                 is_return_only_md5=is_return_only_md5, cache=cache,
+                                 backdoor_name=backdoor_name,
+                                 backdoor_version=backdoor_version)
 
         if new_sample:
             samples.append(new_sample)

@@ -175,6 +175,7 @@ def upload_file(request, related_md5=None):
             response = {'success': False,
                         'message': 'Unknown error; unable to upload file.'}
             inherited_source = None
+            backdoor = form.cleaned_data['backdoor']
             campaign = form.cleaned_data['campaign']
             confidence = form.cleaned_data['confidence']
             source = form.cleaned_data['source']
@@ -204,6 +205,14 @@ def upload_file(request, related_md5=None):
                 if form.cleaned_data['inherit_sources']:
                     inherited_source = related_sample.source
 
+            if backdoor:
+                backdoor = backdoor.split('|||')
+                if len(backdoor) == 2:
+                    (backdoor_name, backdoor_version) = backdoor[0], backdoor[1]
+                else:
+                    backdoor_name = None
+                    backdoor_version = None
+
             try:
                 if request.FILES:
                     result = handle_uploaded_file(
@@ -219,7 +228,9 @@ def upload_file(request, related_md5=None):
                         related_md5,
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
-                        inherited_source=inherited_source)
+                        inherited_source=inherited_source,
+                        backdoor_name=backdoor_name,
+                        backdoor_version=backdoor_version)
                 else:
                     result = handle_uploaded_file(
                         None,
@@ -237,7 +248,9 @@ def upload_file(request, related_md5=None):
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
                         inherited_source=inherited_source,
-                        is_return_only_md5=False)
+                        is_return_only_md5=False,
+                        backdoor_name=backdoor_name,
+                        backdoor_version=backdoor_version)
 
             except ZipFileError, zfe:
                 return render_to_response('file_upload_response.html',

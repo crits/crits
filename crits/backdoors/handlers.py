@@ -402,3 +402,22 @@ def update_backdoor_aliases(id_, aliases, user, **kwargs):
         backdoor.update_aliases(aliases)
         backdoor.save(username=user)
         return {'success': True}
+
+def get_backdoor_names(user, **kwargs):
+    """
+    Get a list of unique backdoor names.
+
+    :param user: The user requesting the names.
+    :returns: list of tuples
+    """
+
+    sources = user_sources(user)
+    only = ('name', 'version')
+    bds = Backdoor.objects(source__name__in=sources).only(*only)
+
+    names = []
+    for b in bds:
+        if (b.name, b.version) not in names:
+            names.append((b.name, b.version))
+    return names
+

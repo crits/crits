@@ -5,6 +5,7 @@ from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_source_names, get_item_names
+from crits.backdoors.handlers import get_backdoor_names
 from crits.core.user_tools import get_user_organization
 
 class UnrarSampleForm(forms.Form):
@@ -81,6 +82,8 @@ class UploadFileForm(forms.Form):
                                  label=form_consts.Sample.RELATED_MD5)
     email = forms.BooleanField(required=False,
                                label=form_consts.Sample.EMAIL_RESULTS)
+    backdoor = forms.ChoiceField(widget=forms.Select, required=False,
+                                 label=form_consts.Backdoor.NAME)
 
     def __init__(self, username, *args, **kwargs):
         super(UploadFileForm, self).__init__(*args, **kwargs)
@@ -95,6 +98,13 @@ class UploadFileForm(forms.Form):
                                              ('low', 'low'),
                                              ('medium', 'medium'),
                                              ('high', 'high')]
+        self.fields['backdoor'].choices = [('', '')]
+        for (name, version) in get_backdoor_names(username):
+            display = name
+            value = name + '|||' + version
+            if version:
+                display += ' (Version: ' + version + ')'
+            self.fields['backdoor'].choices.append((value, display))
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

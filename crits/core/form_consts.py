@@ -65,7 +65,7 @@ class Backdoor():
     Constants for Backdoors.
     """
 
-    NAME = "Name"
+    NAME = "Backdoor name"
     ALIASES = "Aliases"
     DESCRIPTION = "Description"
     CAMPAIGN = Common.CAMPAIGN
