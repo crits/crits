@@ -618,7 +618,6 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                                              related_type=related_type, backdoor='',
                                              user=user, campaign=campaign,
                                              confidence=confidence,
-                                             filepath=filepath,
                                              bucket_list=bucket_list,
                                              ticket=ticket,
                                              inherited_source=inherited_source,
@@ -745,7 +744,6 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
                                                      campaign=campaign,
                                                      confidence=confidence,
                                                      bucket_list=bucket_list,
-                                                     filepath=filepath,
                                                      ticket=ticket,
                                                      inherited_source=inherited_source,
                                                      relationship=relationship,
@@ -877,13 +875,15 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
         is_sample_new = True
         sample = Sample()
         sample.filename = filename or md5_digest
-        sample.filepaths.append(filepath)
+        if len(filepath) >0:
+            sample.filepaths.append(filepath)
         sample.md5 = md5_digest
     else:
         if filename not in sample.filenames and filename != sample.filename:
             sample.filenames.append(filename)
-        if filepath not in sample.filepaths:
-            sample.filepaths.append(filepath)
+        if len(filepath) >0:
+            if filepath not in sample.filepaths:
+                sample.filepaths.append(filepath)
 
         if cached_results != None:
             cached_results[md5_digest] = sample

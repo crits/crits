@@ -119,6 +119,7 @@ def upload_attach(request, email_id):
                                              ticket,
                                              request.FILES.get('filedata',None),
                                              request.POST.get('filename', None),
+                                             request.POST.get('filepath', None),
                                              request.POST.get('md5', None),
                                              email_addr,
                                              cleaned_data['inherit_sources'])
