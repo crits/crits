@@ -2130,7 +2130,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                        'filename',
                        'mimetype',
                        'size',
-                       'exploit',
                        'campaign'),
             'Target': ('id', 'firstname', 'lastname', 'email_address', 'email_count'),
         }
