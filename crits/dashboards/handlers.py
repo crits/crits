@@ -1,6 +1,6 @@
 """
 This File will often refer to 'default dashboard tables.' They currently are:
-Counts, Top Backdoors, Top Campaigns, Recent Indicators, Recent Emails, and 
+Counts, Top Campaigns, Recent Indicators, Recent Emails, and
 Recent Samples in that order. The user has the ability to change they're 
 positioning, size, columns, and sort order but they are always there and their 
 names cannot be changed.
@@ -116,9 +116,6 @@ def getRecordsForDefaultDashboardTable(username, tableName):
     elif tableName == "Top_Campaigns" or tableName == "Top Campaigns":
         obj_type = "Campaign"
         response = data_query(Campaign, username, query={}, limit=5)
-    elif tableName == "Top_Backdoors" or tableName == "Top Backdoors":
-        obj_type = "Backdoor"
-        response = data_query(Backdoor, username, query={}, limit=5)
     elif tableName == "Counts":
         response = generate_counts_jtable(None, "jtlist")
         records = json.loads(response.content)["Records"]
@@ -206,11 +203,6 @@ def parseDocObjectsToStrings(records, obj_type):
                 "</a>"
             elif key == "password_reset":
                 doc['password_reset'] = None
-            elif key == "exploit":
-                exploits = []
-                for ex in value:
-                    exploits.append(ex['cve'])
-                doc[key] = "|||".join(exploits)
             elif key == "campaign":
                 camps = []
                 for campdict in value:
@@ -344,12 +336,6 @@ def clear_dashboard(dashId):
                             "sizey": 13,
                             "row": 1,
                             "col": 1
-                        },
-                        "Top Backdoors": {
-                            "sizex": 10,
-                            "sizey": 8,
-                            "row": 1,
-                            "col": 10
                         },
                         "Top Campaigns": {
                             "sizex": 25,
