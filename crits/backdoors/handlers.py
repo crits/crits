@@ -208,6 +208,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
+              "id" (str),
               "object" (if successful) :class:`crits.backdoors.backdoor.Backdoor`
     """
 
@@ -249,6 +250,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         family.save()
         # In case this is the only object we create, make sure to return it.
         retVal['object'] = family
+        retVal['id'] = str(family.id)
 
     # Now check if we have the specific instance for this name + version.
     if version:
@@ -312,6 +314,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         retVal['message'] = 'Success: <a href="%s">%s</a>' % (resp_url,
                                                               backdoor.name)
         retVal['object'] = backdoor
+        retVal['id'] = str(backdoor.id)
 
     # If we have a family and specific object, attempt to relate the two.
     if len(objs) == 2:
