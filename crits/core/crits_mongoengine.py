@@ -2113,7 +2113,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         rel_dict = dict((r.rel_type,[]) for r in self.relationships)
         query_dict = {
             'Actor': ('id', 'name', 'campaign'),
-            'Backdoor': ('id', 'name', 'aliases', 'campaign'),
+            'Backdoor': ('id', 'name', 'version', 'campaign'),
             'Campaign': ('id', 'name'),
             'Certificate': ('id', 'md5', 'filename', 'description', 'campaign'),
             'Domain': ('id', 'domain'),

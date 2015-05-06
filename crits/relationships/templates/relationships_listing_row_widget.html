@@ -28,7 +28,7 @@
                         <th>Campaign</th>
                     {% elif rel_type == 'Backdoor' %}
                         <th>Name</th>
-                        <th>Aliases</th>
+                        <th>Version</th>
                         <th>Campaign</th>
                     {% elif rel_type == 'Event' %}
                         <th>Title</th>
@@ -92,9 +92,7 @@
                             <td>{{ rel.name }}</td>
                         {% elif rel_type == 'Backdoor' %}
                             <td>{{ rel.name }}</td>
-                            <td>{% for alias in rel.aliases %}
-                                {{ alias }}
-                                {% endfor %}</td>
+                            <td>{{ rel.version }}</td>
                         {% elif rel_type == 'Event' %}
                             <td>{{ rel.title }}</td>
                             <td>{{ rel.event_type }}</td>
