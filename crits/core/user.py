@@ -1016,7 +1016,10 @@ someone may be attempting to access your account.
 Please contact a site administrator to resolve.
 
 """
-                user.email_user(subject, body)
+                try:
+                    user.email_user(subject, body)
+                except Exception, err:
+                    logger.warning("Error sending email: %s" % str(err))
             self.track_login_attempt(user, e)
             user.reload()
         return None
