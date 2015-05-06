@@ -1458,7 +1458,6 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
 
     sample_queries = {
         'size' : {'size': search_query},
-        'backdoor': {'backdoor.name': search_query},
         'md5hash': {'md5': search_query},
         'sha1hash': {'sha1': search_query},
         'ssdeephash': {'ssdeep': search_query},
@@ -1468,7 +1467,6 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             {'filename': search_query},
             {'filenames': search_query},
         ]},
-        'exploit': {'exploit.cve': search_query},
         'campaign': {'campaign.name': search_query},
         # slightly slow in larger collections
         'object_value': {'objects.value': search_query},
@@ -1506,7 +1504,6 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         query = {'comment': search_query}
     elif search_type == "global":
         if type_ == "Sample":
-            search_list.append(sample_queries["backdoor"])
             search_list.append(sample_queries["object_value"])
             search_list.append(sample_queries["filename"])
             if len(term) == 32:
@@ -2061,11 +2058,6 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                                                           "%Y-%m-%d %H:%M:%S")
                 if key == "password_reset":
                     doc['password_reset'] = None
-                if key == "exploit":
-                    exploits = []
-                    for ex in value:
-                        exploits.append(ex['cve'])
-                    doc[key] = "|||".join(exploits)
                 if key == "campaign":
                     camps = []
                     for campdict in value:
@@ -2770,7 +2762,7 @@ def generate_user_profile(username, request):
     for sample in sample_md5s:
         md5s.append(sample.value.split(" ")[0])
     filter_data = ('md5', 'source', 'filename', 'mimetype',
-                   'size', 'campaign', 'backdoor', 'exploit')
+                   'size', 'campaign')
     sample_list = (Sample.objects(md5__in=md5s)
                    .only(*filter_data)
                    .sanitize_sources(username))
