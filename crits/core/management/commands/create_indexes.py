@@ -184,8 +184,6 @@ def create_indexes():
     samples.ensure_index("objects.value", background=True)
     samples.ensure_index("relationships.value", background=True)
     samples.ensure_index("campaign.name", background=True)
-    samples.ensure_index("backdoor.name", background=True)
-    samples.ensure_index("exploit.cve", background=True)
     samples.ensure_index("analysis.results.result", background=True)
     samples.ensure_index("analysis.results.md5", background=True)
     samples.ensure_index("bucket_list", background=True)
