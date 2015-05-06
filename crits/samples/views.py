@@ -26,7 +26,7 @@ from crits.samples.handlers import get_source_counts
 from crits.samples.handlers import get_sample_details
 from crits.samples.handlers import generate_sample_jtable
 from crits.samples.handlers import generate_sample_csv, process_bulk_add_md5_sample
-from crits.samples.handlers import update_sample_filename, modify_sample_filenames
+from crits.samples.handlers import update_sample_filename, modify_sample_filenames, modify_sample_filepaths
 from crits.samples.sample import Sample
 from crits.stats.handlers import generate_sources
 
@@ -219,6 +219,7 @@ def upload_file(request, related_md5=None):
                         campaign,
                         confidence,
                         related_md5,
+                        filepath=request.POST['filepath'].strip(),
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
                         inherited_source=inherited_source,
@@ -237,6 +238,7 @@ def upload_file(request, related_md5=None):
                         confidence,
                         related_md5 = related_md5,
                         filename=request.POST['filename'].strip(),
+                        filepath=request.POST['filepath'].strip(),
                         md5=request.POST['md5'].strip().lower(),
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
@@ -576,6 +578,28 @@ def set_sample_filenames(request):
         tags = request.POST.get('tags', "").split(",")
         id_ = request.POST.get('id', None)
         return HttpResponse(json.dumps(modify_sample_filenames(id_,
+                                                               tags,
+                                                               request.user.username)),
+                            mimetype="application/json")
+    else:
+        error = "Expected POST"
+        return render_to_response("error.html", {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def set_sample_filepaths(request):
+    """
+    Set Sample filepaths. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        tags = request.POST.get('tags', "").split(",")
+        id_ = request.POST.get('id', None)
+        return HttpResponse(json.dumps(modify_sample_filepaths(id_,
                                                                tags,
                                                                request.user.username)),
                             mimetype="application/json")

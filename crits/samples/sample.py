@@ -15,12 +15,13 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_SAMPLES,
         "crits_type": 'Sample',
-        "latest_schema_version": 4,
+        "latest_schema_version": 5,
         "shard_key": ('md5',),
         "schema_doc": {
             'filename': 'The name of the last file that was uploaded with this'\
                 'MD5',
             'filenames': 'A list of filenames this binary has gone by.',
+            'filepaths': 'A list of filepaths this binary has been seen in.',
             'filetype': 'The filetype of the file',
             'mimetype': 'The mimetype of the file',
             'size': 'The size of the file',
@@ -63,7 +64,9 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
 
     filedata = getFileField(collection_name=settings.COL_SAMPLES)
     filename = StringField(required=True)
+    filepath = StringField()
     filenames = ListField(StringField())
+    filepaths = ListField(StringField())
     filetype = StringField()
     md5 = StringField(required=True)
     mimetype = StringField()
@@ -151,3 +154,15 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
 
         if isinstance(filenames, list):
             self.filenames = filenames
+
+    def set_filepaths(self, filepaths):
+        """
+        Set the Sample filepaths to a specified list.
+
+        :param filepaths: The filepaths to set.
+        :type filepaths: list
+
+        """
+
+        if isinstance(filepaths, list):
+            self.filepaths = filepaths

@@ -20,5 +20,7 @@ urlpatterns = patterns('crits.samples.views',
         (r'^yarahits/list/$', 'yarahits_listing'),
         (r'^yarahits/list/(?P<option>\S+)/$', 'yarahits_listing'),
         (r'^set_filename/$', 'set_sample_filename'),
+        (r'^set_filepath/$', 'set_sample_filepaths'),
         (r'^filenames/$', 'set_sample_filenames'),
+        (r'^filepaths/$', 'set_sample_filepaths'),
 )

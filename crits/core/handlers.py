@@ -1399,6 +1399,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             {'filename': search_query},
             {'filenames': search_query},
         ]},
+        'filepaths': {'filepaths': search_query},
         'campaign': {'campaign.name': search_query},
         # slightly slow in larger collections
         'object_value': {'objects.value': search_query},

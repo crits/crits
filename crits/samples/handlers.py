@@ -618,6 +618,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                                              related_type=related_type, backdoor='',
                                              user=user, campaign=campaign,
                                              confidence=confidence,
+                                             filepath=filepath,
                                              bucket_list=bucket_list,
                                              ticket=ticket,
                                              inherited_source=inherited_source,
@@ -646,7 +647,7 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
                method="Generic", reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
                bucket_list=None, ticket=None, inherited_source=None,
-               backdoor_name=None, backdoor_version=None):
+               backdoor_name=None, backdoor_version=None, filepath=None):
     """
     Unrar a file.
 
@@ -744,6 +745,7 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
                                                      campaign=campaign,
                                                      confidence=confidence,
                                                      bucket_list=bucket_list,
+                                                     filepath=filepath,
                                                      ticket=ticket,
                                                      inherited_source=inherited_source,
                                                      relationship=relationship,
@@ -767,7 +769,7 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
                 related_id=None, related_type='Sample', backdoor=None, user='',
                 campaign=None, confidence='low', md5_digest=None, bucket_list=None,
                 ticket=None, relationship=None, inherited_source=None, is_validate_only=False,
-                is_return_only_md5=True, cache={}, backdoor_name=None,
+                is_return_only_md5=True, cache={}, backdoor_name=None, filepath=None,
                 backdoor_version=None):
     """
     Handle adding a file.
@@ -817,6 +819,8 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
     :type backdoor_name: str
     :param backdoor_version: Version of the backdoor to relate the file to.
     :type backdoor_version: str
+    :param filepath: The filepath of the file.
+    :type filepath: str
     :returns: str,
               dict with keys:
               "success" (boolean),
@@ -873,10 +877,13 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
         is_sample_new = True
         sample = Sample()
         sample.filename = filename or md5_digest
+        sample.filepaths.append(filepath)
         sample.md5 = md5_digest
     else:
         if filename not in sample.filenames and filename != sample.filename:
             sample.filenames.append(filename)
+        if filepath not in sample.filepaths:
+            sample.filepaths.append(filepath)
 
         if cached_results != None:
             cached_results[md5_digest] = sample
@@ -1043,7 +1050,7 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
 def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                          password=None, user=None, campaign=None, confidence='low',
                          related_md5=None, related_id=None, related_type='Sample',
-                         filename=None, md5=None, bucket_list=None, ticket=None,
+                         filename=None, filepath=None, md5=None, bucket_list=None, ticket=None,
                          inherited_source=None, is_validate_only=False,
                          is_return_only_md5=True, cache={}, backdoor_name=None,
                          backdoor_version=None):
@@ -1076,6 +1083,8 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
     :type related_type: str
     :param filename: The filename of the sample.
     :type filename: str
+    :param filepath: The filepath of the sample.
+    :type filepath: str
     :param md5: The MD5 of the sample.
     :type md5: str
     :param bucket_list: The bucket(s) to assign to this data.
@@ -1136,6 +1145,7 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             related_type=related_type,
             bucket_list=bucket_list,
             ticket=ticket,
+            filepath=filepath,
             inherited_source=inherited_source,
             backdoor_name=backdoor_name,
             backdoor_version=backdoor_version)
@@ -1155,6 +1165,7 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             related_type=related_type,
             bucket_list=bucket_list,
             ticket=ticket,
+            filepath=filepath,
             inherited_source=inherited_source,
             backdoor_name=backdoor_name,
             backdoor_version=backdoor_version)
@@ -1163,7 +1174,7 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                                  related_md5=related_md5, related_id=related_id,
                                  related_type=related_type, backdoor='', user=user,
                                  campaign=campaign, confidence=confidence, md5_digest=md5,
-                                 bucket_list=bucket_list, ticket=ticket,
+                                 bucket_list=bucket_list, ticket=ticket, filepath=filepath,
                                  inherited_source=inherited_source, is_validate_only=is_validate_only,
                                  is_return_only_md5=is_return_only_md5, cache=cache,
                                  backdoor_name=backdoor_name,
@@ -1206,6 +1217,7 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     #upload_type = data.get('upload_type')
     #filedata = data.get('filedata')
     filename = data.get('filename')
+    filepath = data.get('filepath')
     campaign = data.get('campaign')
     confidence = data.get('confidence')
     md5 = data.get('md5')
@@ -1230,6 +1242,7 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
                                   md5=md5,
                                   bucket_list=bucket_list,
                                   ticket=ticket,
+                                  filepath=filepath,
                                   is_validate_only=is_validate_only,
                                   is_return_only_md5=False,
                                   cache=cache)
@@ -1318,6 +1331,7 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
     fileformat = None
     password = None
     filename = None
+    filepath = None
     md5 = None
 
     if not upload_type:
@@ -1331,6 +1345,7 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         filename = rowData.get(form_consts.Sample.FILE_NAME, "")
         md5 = rowData.get(form_consts.Sample.MD5, "")
 
+    filepath = rowData.get(form_consts.Sample.FILE_PATH, "")
     campaign = rowData.get(form_consts.Sample.CAMPAIGN, "")
     confidence = rowData.get(form_consts.Sample.CAMPAIGN_CONFIDENCE, "")
     is_email_results = convert_string_to_bool(rowData.get(form_consts.Sample.EMAIL_RESULTS, ""))
@@ -1345,6 +1360,7 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         'upload_type': upload_type,
         'filedata': filedata,
         'filename': filename,
+        'filepath': filepath,
         'md5': md5,
         'file_format': fileformat,
         'campaign': campaign,
@@ -1443,6 +1459,31 @@ def update_sample_filename(id_, filename, analyst):
     except ValidationError, e:
         return {'success': False, 'message': e}
 
+def update_sample_filepaths(id_, filename, analyst):
+    """
+    Update a Sample filename.
+
+    :param id_: ObjectId of the Sample.
+    :type id_: str
+    :param filename: The new filename.
+    :type filename: str
+    :param analyst: The user setting the new filename.
+    :type analyst: str
+    :returns: dict with key 'success' (boolean) and 'message' (str) if failed.
+    """
+
+    if not filepath:
+        return {'success': False, 'message': "No filename to change"}
+    sample = Sample.objects(id=id_).first()
+    if not sample:
+        return {'success': False, 'message': "No sample to change"}
+    sample.filepath = filepath.strip()
+    try:
+        sample.save(username=analyst)
+        return {'success': True}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
 def modify_sample_filenames(id_, tags, analyst):
     """
     Modify the filenames for a Sample.
@@ -1459,6 +1500,30 @@ def modify_sample_filenames(id_, tags, analyst):
     sample = Sample.objects(id=id_).first()
     if sample:
         sample.set_filenames(tags)
+        try:
+            sample.save(username=analyst)
+            return {'success': True}
+        except ValidationError, e:
+            return {'success': False, 'message': "Invalid value: %s" % e}
+    else:
+        return {'success': False}
+
+def modify_sample_filepaths(id_, tags, analyst):
+    """
+    Modify the filepaths for a Sample.
+
+    :param id_: ObjectId of the Sample.
+    :type id_: str
+    :param tags: The new filepaths.
+    :type tags: list
+    :param analyst: The user setting the new filepaths.
+    :type analyst: str
+    :returns: dict with key 'success' (boolean) and 'message' (str) if failed.
+    """
+
+    sample = Sample.objects(id=id_).first()
+    if sample:
+        sample.set_filepaths(tags)
         try:
             sample.save(username=analyst)
             return {'success': True}

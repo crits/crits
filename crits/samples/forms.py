@@ -84,6 +84,7 @@ class UploadFileForm(forms.Form):
                                label=form_consts.Sample.EMAIL_RESULTS)
     backdoor = forms.ChoiceField(widget=forms.Select, required=False,
                                  label=form_consts.Backdoor.NAME)
+    filepath = forms.CharField(widget=forms.TextInput, required=False, label='filepath') #form_consts.Sample.FILE_PATH)
 
     def __init__(self, username, *args, **kwargs):
         super(UploadFileForm, self).__init__(*args, **kwargs)
@@ -118,6 +119,7 @@ class UploadFileForm(forms.Form):
         else:
             filedata = False
         filename = cleaned_data.get('filename')
+        filepath = cleaned_data.get('filepath')
         file_format = cleaned_data.get('file_format')
 
         if upload_type == "File Upload":

@@ -252,6 +252,7 @@ class Sample():
     FILE_DATA = "File Data"
     FILE_FORMAT = "File Format"
     FILE_NAME = "File Name"
+    FILE_PATH = "File Path"
     INHERIT_CAMPAIGNS = "Inherit Campaigns?"
     INHERIT_SOURCES = "Inherit Sources?"
     MD5 = "MD5"

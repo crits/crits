@@ -183,6 +183,24 @@ $(document).ready(function(){
         },
     });
 
+    $("#sample_filepaths").tagit({
+        allowSpaces: true,
+        removeConfirmation: false,
+        afterTagAdded: function(event, ui) {
+            var my_tags = $("#sample_filepaths").tagit("assignedTags");
+            update_filepaths(my_tags);
+        },
+        beforeTagRemoved: function(event, ui) {
+            if (is_admin != "True") {
+                return false;
+            }
+        },
+        afterTagRemoved: function(event, ui) {
+            var my_tags = $("#sample_filepaths").tagit("assignedTags");
+            update_filepaths(my_tags);
+        },
+    });
+
     function update_filenames(my_tags) {
         if (window.add_filenames) {
             var data = {
@@ -203,7 +221,28 @@ $(document).ready(function(){
         }
     }
 
+    function update_filepaths(my_tags) {
+        if (window.add_filepaths) {
+            var data = {
+                        'id': sample_id_escaped,
+                        'tags': my_tags.toString(),
+            };
+            $.ajax({
+                type: "POST",
+                url: update_sample_filepaths,
+                data: data,
+                datatype: 'json',
+                success: function(data) {
+                    if (!data.success) {
+                        alert("Failed to update filepaths!");
+                    }
+                }
+            });
+        }
+    }
+
     $(document).trigger('enable_filenames');
+    $(document).trigger('enable_filepaths');
 
     details_copy_id('Sample');
     toggle_favorite('Sample');
