@@ -74,17 +74,6 @@
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
     </div>
-    {% if samples %}
-    <div class="content_box">
-    <div class="content_body">
-        <h3 class="titleheader">Matching Samples</h3>
-         {% with sample_list=samples %}
-           {% include 'samples_malware_mini_widget.html' %}
-         {% endwith %}
-    </div><!-- samples content_body -->
-    </div><!-- samples content_box -->
-    {% endif %}
-
     <div>
       {% with obj=domain obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
