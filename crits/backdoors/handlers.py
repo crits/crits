@@ -41,7 +41,7 @@ def generate_backdoor_jtable(request, option):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    obj_type = Backdoor 
+    obj_type = Backdoor
     type_ = "backdoor"
     mapper = obj_type._meta['jtable_opts']
     if option == "jtlist":
@@ -174,15 +174,18 @@ def get_backdoor_details(id_, analyst):
                 'comments': comments}
     return template, args
 
-def add_new_backdoor(name, aliases=None, description=None, source=None,
-                     source_method=None, source_reference=None, campaign=None,
-                     confidence=None, analyst=None, bucket_list=None,
-                     ticket=None):
+# XXX: Relate the family to the more specific one too.
+def add_new_backdoor(name, version=None, aliases=None, description=None,
+                     source=None, source_method=None, source_reference=None,
+                     campaign=None, confidence=None, analyst=None,
+                     bucket_list=None, ticket=None):
     """
     Add an Backdoor to CRITs.
 
     :param name: The name of the backdoor.
     :type name: str
+    :param version: Version of the backdoor.
+    :type version: str
     :param aliases: Aliases for the backdoor.
     :type aliases: list or str
     :param description: Description of the backdoor.
@@ -209,66 +212,109 @@ def add_new_backdoor(name, aliases=None, description=None, source=None,
               "object" (if successful) :class:`crits.backdoors.backdoor.Backdoor`
     """
 
-    is_item_new = False
-    retVal = {}
-    backdoor = Backdoor.objects(name=name).first()
-
-    if not backdoor:
-        backdoor = Backdoor()
-        backdoor.name = name
-        if description:
-            backdoor.description = description.strip()
-        is_item_new = True
+    retVal = {'success': False, 'message': ''}
 
     if isinstance(source, basestring):
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
                                          analyst=analyst)]
+    if not source:
+        retVal['message'] = "Missing source information."
+        return retval
 
-    if isinstance(campaign, basestring):
-        c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst)
-        campaign = [c]
+    # When creating a backdoor object we can potentially create multiple
+    # objects. If we are given a name but no version we will create an object
+    # with just the name (called the "family backdoor"). If given a name and a
+    # version we will create the family backdoor and the specific backdoor for
+    # that given version.
 
-    if campaign:
-        for camp in campaign:
-            backdoor.add_campaign(camp)
+    # In case we create more than one backdoor object, store the created ones
+    # in this list. The list is walked later on and attributes applied to each
+    # object.
+    objs = []
 
-    if source:
+    # First check if we have the family (name and no version).
+    family = Backdoor.objects(name=name, version='').first()
+
+    if not family:
+        family = Backdoor()
+        family.name = name
+        family.version = ''
+        # Family does not exist, new object. Details are handled later.
+        objs.append(family)
+    else:
+        # Family exists, old object. Add a new source only.
+        for s in source:
+            family.add_source(s)
+        family.save()
+        # In case this is the only object we create, make sure to return it.
+        retVal['object'] = family
+
+    # Now check if we have the specific instance for this name + version.
+    if version:
+        backdoor = Backdoor.objects(name=name, version=version).first()
+        if not backdoor:
+            backdoor = Backdoor()
+            backdoor.name = name
+            backdoor.version = version
+            # Backdoor does not exist, new object. Details are handled later.
+            objs.append(backdoor)
+        else:
+            # Backdoor exists, old object. Add a new source only.
+            for s in source:
+                backdoor.add_source(s)
+            backdoor.save()
+
+    # At this point we have a family object and potentially a specific object.
+    # Add the common parameters to all objects in the list and save them.
+    for backdoor in objs:
         for s in source:
             backdoor.add_source(s)
-    else:
-        return {"success" : False, "message" : "Missing source information."}
 
-    if not isinstance(aliases, list):
-        aliases = aliases.split(',')
-        for alias in aliases:
-            alias = alias.strip()
-            if alias not in backdoor.aliases:
-                backdoor.aliases.append(alias)
+        if description:
+            backdoor.description = description.strip()
 
-    if bucket_list:
-        backdoor.add_bucket_list(bucket_list, analyst)
+        if isinstance(campaign, basestring):
+            c = EmbeddedCampaign(name=campaign,
+                                 confidence=confidence,
+                                 analyst=analyst)
+            campaign = [c]
 
-    if ticket:
-        backdoor.add_ticket(ticket, analyst)
+        if campaign:
+            for camp in campaign:
+                backdoor.add_campaign(camp)
 
-    backdoor.save(username=analyst)
+        if aliases:
+            if not isinstance(aliases, list):
+                aliases = aliases.split(',')
+                for alias in aliases:
+                    alias = alias.strip()
+                    if alias not in backdoor.aliases:
+                        backdoor.aliases.append(alias)
 
-    # run backdoor triage
-    if is_item_new:
+        if bucket_list:
+            backdoor.add_bucket_list(bucket_list, analyst)
+
+        if ticket:
+            backdoor.add_ticket(ticket, analyst)
+
+        backdoor.save(username=analyst)
+
+        # run backdoor triage
         backdoor.reload()
         run_triage(backdoor, analyst)
 
-    resp_url = reverse('crits.backdoors.views.backdoor_detail', args=[backdoor.id])
-
-    retVal['message'] = ('Success! Click here to view the new Backdoor: '
-                         '<a href="%s">%s</a>' % (resp_url, backdoor.name))
+        # Because family objects are put in the list first we will always
+        # return a link to the most specific object created. If there is only
+        # one item in the list it will be the family object.
+        resp_url = reverse('crits.backdoors.views.backdoor_detail',
+                           args=[backdoor.id])
+        retVal['message'] = 'Success: <a href="%s">%s</a>' % (resp_url,
+                                                              backdoor.name)
+        retVal['object'] = backdoor
 
     retVal['success'] = True
-    retVal['object'] = backdoor 
-    retVal['id'] = str(backdoor.id)
-
     return retVal
 
 def backdoor_remove(id_, username):

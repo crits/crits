@@ -84,6 +84,7 @@ def add_backdoor(request):
             ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
 
             result = add_new_backdoor(name,
+                                      version=version,
                                       aliases=aliases,
                                       description=description,
                                       source=source,
@@ -94,8 +95,7 @@ def add_backdoor(request):
                                       analyst=analyst,
                                       bucket_list=bucket_list,
                                       ticket=ticket)
-            return HttpResponse(json.dumps(result,
-                                           default=json_handler),
+            return HttpResponse(json.dumps(result, default=json_handler),
                                 mimetype='application/json')
         return HttpResponse(json.dumps({'success': False,
                                         'form':form.as_table()}),

@@ -49,6 +49,7 @@ class BackdoorResource(CRITsAPIResource):
         analyst = bundle.request.user.username
         data = bundle.data
         name = data.get('name', None)
+        version = data.get('aliases', '')
         aliases = data.get('aliases', '')
         description = data.get('description', None)
         source = data.get('source', None)
@@ -60,6 +61,7 @@ class BackdoorResource(CRITsAPIResource):
         ticket = data.get('ticket', None)
 
         result = add_new_backdoor(name,
+                                  version,
                                   aliases,
                                   description=description,
                                   source=source,
