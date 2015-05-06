@@ -174,7 +174,6 @@ def get_backdoor_details(id_, analyst):
                 'comments': comments}
     return template, args
 
-# XXX: Relate the family to the more specific one too.
 def add_new_backdoor(name, version=None, aliases=None, description=None,
                      source=None, source_method=None, source_reference=None,
                      campaign=None, confidence=None, analyst=None,
@@ -313,6 +312,12 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         retVal['message'] = 'Success: <a href="%s">%s</a>' % (resp_url,
                                                               backdoor.name)
         retVal['object'] = backdoor
+
+    # If we have a family and specific object, attempt to relate the two.
+    if len(objs) == 2:
+        objs[0].add_relationship(rel_item=objs[1], rel_type='Related_To')
+        objs[0].save()
+        objs[1].save()
 
     retVal['success'] = True
     return retVal
