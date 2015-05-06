@@ -37,29 +37,25 @@ def create_dashboard(drop=False):
         defaultDashboard.name = "Default"
         defaultDashboard.isPublic = True
         defaultDashboard.save()
-        for title in ["Counts","Top Backdoors", "Top Campaigns","Recent Indicators",
+        for title in ["Counts", "Top Campaigns","Recent Indicators",
                   "Recent Emails", "Recent Samples"]:
             savedSearch = SavedSearch()
             savedSearch.name = title
             savedSearch.dashboard = defaultDashboard.id
             savedSearch.isDefaultOnDashboard = True
             savedSearch.tableColumns = getColumnsForTable(title)
-            if title == "Counts" or title == "Top Backdoors":
+            if title == "Counts":
                 savedSearch.sizex = 10
             elif title == "Top Campaigns":
                 savedSearch.sizex = 25
-            if title == "Counts":
+            elif title == "Counts":
                 savedSearch.sizey = 13
-            if title == "Recent Indicators":
+            elif title == "Recent Indicators":
                 savedSearch.row = 15
             elif title == "Recent Emails":
                 savedSearch.row = 23
             elif title == "Recent Samples":
                 savedSearch.row = 31
-            if title == "Top Backdoors":
-                savedSearch.col = 10
-            elif title == "Top Campaigns":
-                savedSearch.col = 20
                 
             savedSearch.save()
         print "Default Dashboard Created."
@@ -70,9 +66,6 @@ def getColumnsForTable(title):
         if title == "Counts":
             colFields = ["type", "count"]
             colNames = ["Type", "Count"]
-        elif  title == "Top Backdoors":
-            colFields = ["name", "sample_count"]
-            colNames = ["Name", "Sample Count"]
         elif  title == "Top Campaigns":
             colFields = ["name", "email_count", "indicator_count", "sample_count", 
                          "domain_count", "ip_count", "event_count", "pcap_count"]
@@ -86,9 +79,9 @@ def getColumnsForTable(title):
             colNames = ["Details","From", "Recip", "Subject", "Date", "Source", "Campaign"]
         elif  title == "Recent Samples":
             colFields = ["details","filename", "size", "filetype", "created",
-                          "modified","exploit","source", "campaign"]
+                          "modified", "source", "campaign"]
             colNames = ["Details","Filename", "Size", "Filetype", "Added",
-                        "Modified", "Exploit","Source", "Campaign"]
+                        "Modified", "Source", "Campaign"]
         columns = []
         for field, name in zip(colFields, colNames):
             if field == "details":
