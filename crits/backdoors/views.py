@@ -37,7 +37,7 @@ def backdoors_listing(request,option=None):
 @user_passes_test(user_can_view_data)
 def backdoor_detail(request, id_):
     """
-    Generate the BAckdoor details page.
+    Generate the Backdoor details page.
 
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
