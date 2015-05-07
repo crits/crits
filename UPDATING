@@ -3,6 +3,17 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: brlogan
+Date: 2015-05-07
+
+    Added support for sharing String Indicators via STIX. Because there is no
+    generic String type in CybOX, the CybOX Custom object must be used. This
+    requries updating python-stix and python-cybox.
+    
+    Updated versions are:
+        cybox-2.1.0.11
+        stix-1.1.1.5
+
 Author: mgoffin
 Date:   2015-04-28
 
