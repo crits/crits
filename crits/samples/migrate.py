@@ -102,8 +102,6 @@ def migrate_2_to_3(self):
         from crits.core.core_migrate import migrate_analysis_results
         migrate_analysis_results(self)
         self.schema_version = 3
-        self.save()
-        self.reload()
 
 def migrate_1_to_2(self):
     """
