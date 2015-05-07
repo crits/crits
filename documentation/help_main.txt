@@ -1211,12 +1211,16 @@ are using.
 The <resource> is the content you wish to utilize within CRITs.
 Currently the available resources are:
 
+- actors
+- actoridentifiers
+- backdoors
 - campaigns
 - certificates
 - comments
 - domains
 - emails
 - events
+- exploits 
 - indicators
 - ips
 - pcaps
@@ -1493,6 +1497,26 @@ Unique POST Parameters:
 :identifier_type: Type of the Actor Identifier.
 :identifier: Value of the Actor Identifier.
 
+Backdoor API
+-------------------------------------------
+
+GET:
+
+        /api/v1/backdoors/
+
+        /api/v1/backdoors/<object_id>/
+
+POST:
+
+        /api/v1/backdoors/
+
+Unique POST Parameters:
+
+:name: Name of the Backdoor.
+:version: Version of the Backdoor
+:aliases: Comma-separated list of backdoor aliases.
+:description: Description of the Backdoor.
+
 Campaign API
 -------------------------------------------
 
@@ -1630,6 +1654,25 @@ Unique POST Parameters:
 :event_type: Type of Event.
 :date: Date of the event.
 :title: Title of the event.
+
+Exploit API
+-------------------------------------------
+
+GET:
+
+        /api/v1/exploits/
+
+        /api/v1/exploits/<object_id>/
+
+POST:
+
+        /api/v1/exploits/
+
+Unique POST Parameters:
+
+:name: Name of the Exploit.
+:cve: CVE identifier of the Exploit.
+:description: Description of the Exploit.
 
 Indicator API
 -------------------------------------------
