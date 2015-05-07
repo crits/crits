@@ -205,13 +205,12 @@ def upload_file(request, related_md5=None):
                 if form.cleaned_data['inherit_sources']:
                     inherited_source = related_sample.source
 
+            backdoor_name = None
+            backdoor_version = None
             if backdoor:
                 backdoor = backdoor.split('|||')
                 if len(backdoor) == 2:
                     (backdoor_name, backdoor_version) = backdoor[0], backdoor[1]
-                else:
-                    backdoor_name = None
-                    backdoor_version = None
 
             try:
                 if request.FILES:
