@@ -110,11 +110,13 @@ class EmbeddedSubscriptions(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     Actor = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Backdoor = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Campaign = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Certificate = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Domain = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Email = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Event = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Exploit = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     IP = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Indicator = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     PCAP = ListField(EmbeddedDocumentField(EmbeddedSubscription))
