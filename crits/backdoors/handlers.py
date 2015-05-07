@@ -242,43 +242,23 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
     family = Backdoor.objects(name=name, version='').first()
 
     if not family:
+        # Family does not exist, new object. Details are handled later.
         family = Backdoor()
         family.name = name
         family.version = ''
-        # Family does not exist, new object. Details are handled later.
-        objs.append(family)
-    else:
-        # Family exists, old object. Add a new source only.
-        for s in source:
-            family.add_source(s)
-        family.save(username=user)
-        # In case this is the only object we create, make sure to return it.
-        retVal['object'] = family
-        retVal['id'] = str(family.id)
-        resp_url = reverse('crits.backdoors.views.backdoor_detail',
-                           args=[family.id])
-        retVal['message'] = 'Success: <a href="%s">%s</a>' % (resp_url,
-                                                              family.name)
+
+    objs.append(family)
+
     # Now check if we have the specific instance for this name + version.
+    backdoor = None
     if version:
         backdoor = Backdoor.objects(name=name, version=version).first()
         if not backdoor:
+            # Backdoor does not exist, new object. Details are handled later.
             backdoor = Backdoor()
             backdoor.name = name
             backdoor.version = version
-            # Backdoor does not exist, new object. Details are handled later.
-            objs.append(backdoor)
-        else:
-            # Backdoor exists, old object. Add a new source only.
-            for s in source:
-                backdoor.add_source(s)
-            backdoor.save(username=user)
-            resp_url = reverse('crits.backdoors.views.backdoor_detail',
-                               args=[backdoor.id])
-            retVal['message'] = 'Success: <a href="%s">%s</a>' % (resp_url,
-                                                                  backdoor.name)
-            retVal['object'] = family
-            retVal['id'] = str(family.id)
+        objs.append(backdoor)
 
     # At this point we have a family object and potentially a specific object.
     # Add the common parameters to all objects in the list and save them.
@@ -286,7 +266,8 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         for s in source:
             backdoor.add_source(s)
 
-        if description:
+        # Don't overwrite existing description.
+        if description and backdoor.description == '':
             backdoor.description = description.strip()
 
         if isinstance(campaign, basestring):
