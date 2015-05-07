@@ -123,7 +123,6 @@ COL_ACTOR_INTENDED_EFFECTS = "actor_intended_effects"     # actor intended effec
 COL_ANALYSIS_RESULTS = "analysis_results"                 # analysis results
 COL_AUDIT_LOG = "audit_log"                               # audit log entries
 COL_BACKDOORS = "backdoors"                               # backdoors
-COL_BACKDOOR_DETAILS = "backdoor_details"                 # backdoor information
 COL_BUCKET_LISTS = "bucket_lists"                         # bucketlist information
 COL_CAMPAIGNS = "campaigns"                               # campaigns list
 COL_CERTIFICATES = "certificates"                         # certificates list
