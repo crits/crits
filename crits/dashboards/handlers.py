@@ -122,6 +122,13 @@ def getRecordsForDefaultDashboardTable(username, tableName):
         for record in records:
             record["recid"] = record.pop("id")
         return records
+    else:
+        # This only happens if we have a dashboard which is no longer valid.
+        # For example, after Backdoor and Exploit were added the "Top_Backdoors"
+        # dashboard is no longer valid. Produce an "empty" response.
+        response = {'data': []}
+        obj_type = None
+
     return parseDocumentsForW2ui(response, obj_type)
 
 def constructSavedTable(table, records):
