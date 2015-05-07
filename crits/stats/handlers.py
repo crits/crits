@@ -82,11 +82,14 @@ def zero_campaign():
     """
 
     return {
+        'actor_count': 0,
+        'backdoor_count': 0,
         'indicator_count': 0,
         'sample_count': 0,
         'email_count': 0,
         'domain_count': 0,
         'event_count': 0,
+        'exploit_count': 0,
         'ip_count': 0,
         'pcap_count': 0,
     }
@@ -132,10 +135,13 @@ def generate_campaign_stats(source_name=None):
     stat_query["campaign.name"] = {"$exists": "true"}
     if source_name:
         stat_query["source.name"] = source_name
+    actors = mongo_connector(settings.COL_ACTORS)
+    backdoors = mongo_connector(settings.COL_BACKDOORS)
     campaigns = mongo_connector(settings.COL_CAMPAIGNS)
     domains = mongo_connector(settings.COL_DOMAINS)
     emails = mongo_connector(settings.COL_EMAIL)
     events = mongo_connector(settings.COL_EVENTS)
+    exploits = mongo_connector(settings.COL_EXPLOITS)
     indicators = mongo_connector(settings.COL_INDICATORS)
     ips = mongo_connector(settings.COL_IPS)
     pcaps = mongo_connector(settings.COL_PCAPS)
@@ -157,12 +163,18 @@ def generate_campaign_stats(source_name=None):
     """
     m = Code(mapcode, {})
     r = Code('function(k,v) { var count = 0; v.forEach(function(v) { count += v["count"]; }); return {count: count}; }', {})
+    campaign_stats = update_results(actors, m, r, stat_query,
+                                    "actor_count", campaign_stats)
+    campaign_stats = update_results(backdoors, m, r, stat_query,
+                                    "backdoor_count", campaign_stats)
     campaign_stats = update_results(domains, m, r, stat_query,
                                     "domain_count", campaign_stats)
     campaign_stats = update_results(emails, m, r, stat_query,
                                     "email_count", campaign_stats)
     campaign_stats = update_results(events, m, r, stat_query,
                                     "event_count", campaign_stats)
+    campaign_stats = update_results(exploits, m, r, stat_query,
+                                    "exploit_count", campaign_stats)
     campaign_stats = update_results(indicators, m, r, stat_query,
                                     "indicator_count", campaign_stats)
     campaign_stats = update_results(ips, m, r, stat_query,
