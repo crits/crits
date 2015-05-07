@@ -12,17 +12,14 @@ Date:   2015-05-06
 
     db.exploits.drop()
 
-    Now you can create the indexes for the new collections:
-
-    python manage.py create_indexes
-
     If you have existing samples with backdoor or exploit information you can
     migrate these to new objects in the new collections using:
 
-    python manage.py upgrade -s -S
+    python manage.py upgrade -S
 
     The above will create new objects in the collections for each exploit and
-    backdoor attribute of a Sample, and relate the Sample to them.
+    backdoor attribute of a Sample, and relate the Sample to them. It will also
+    create indexes for the new "backdoors" and "exploits" collection.
 
 Author: mgoffin
 Date:   2015-04-28
