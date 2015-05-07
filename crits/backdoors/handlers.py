@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 from crits.backdoors.backdoor import Backdoor
 from crits.core.class_mapper import class_from_type
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
+from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.crits_mongoengine import create_embedded_source
 from crits.core.handlers import build_jtable, jtable_ajax_list
 from crits.core.handlers import jtable_ajax_delete
@@ -219,6 +220,9 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
                                          reference=source_reference,
                                          method=source_method,
                                          analyst=user)]
+    elif isinstance(source, EmbeddedSource):
+        source = [source]
+
     if not source:
         retVal['message'] = "Missing source information."
         return retval
