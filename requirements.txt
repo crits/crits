@@ -5,7 +5,7 @@ anyjson
 billiard
 biplist
 celery
-cybox==2.1.0.5
+cybox==2.1.0.11
 defusedxml
 django-celery
 django-tastypie==0.11.0
@@ -29,7 +29,7 @@ requests
 setuptools
 simplejson
 six
-stix==1.1.1.0
+stix==1.1.1.5
 ushlex
 wsgiref
 olefile
