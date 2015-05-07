@@ -98,18 +98,18 @@ def generate_backdoor_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
 
-def get_backdoor_details(id_, analyst):
+def get_backdoor_details(id_, user):
     """
     Generate the data to render the Backdoor details template.
 
     :param id_: The Backdoor ObjectId to get details for.
     :type id_: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: str
     :returns: template (str), arguments (dict)
     """
 
-    allowed_sources = user_sources(analyst)
+    allowed_sources = user_sources(user)
     backdoor = Backdoor.objects(id=id_, source__name__in=allowed_sources).first()
     template = None
     args = {}
@@ -119,16 +119,16 @@ def get_backdoor_details(id_, analyst):
                  ' permission to view it.')
         args = {'error': error}
     else:
-        backdoor.sanitize("%s" % analyst)
+        backdoor.sanitize("%s" % user)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, backdoor.id, 'Backdoor')
+        remove_user_from_notification("%s" % user, backdoor.id, 'Backdoor')
 
         # subscription
         subscription = {
             'type': 'Backdoor',
             'id': backdoor.id,
-            'subscribed': is_user_subscribed("%s" % analyst,
+            'subscribed': is_user_subscribed("%s" % user,
                                              'Backdoor',
                                              backdoor.id),
         }
@@ -137,7 +137,7 @@ def get_backdoor_details(id_, analyst):
         objects = backdoor.sort_objects()
 
         #relationships
-        relationships = backdoor.sort_relationships("%s" % analyst, meta=True)
+        relationships = backdoor.sort_relationships("%s" % user, meta=True)
 
         # relationship
         relationship = {
@@ -150,10 +150,10 @@ def get_backdoor_details(id_, analyst):
                     'url_key': backdoor.id}
 
         #screenshots
-        screenshots = backdoor.get_screenshots(analyst)
+        screenshots = backdoor.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'Backdoor', backdoor.id)
+        favorite = is_user_favorite("%s" % user, 'Backdoor', backdoor.id)
 
         # services
         service_list = get_supported_services('Backdoor')
@@ -176,7 +176,7 @@ def get_backdoor_details(id_, analyst):
 
 def add_new_backdoor(name, version=None, aliases=None, description=None,
                      source=None, source_method=None, source_reference=None,
-                     campaign=None, confidence=None, analyst=None,
+                     campaign=None, confidence=None, user=None,
                      bucket_list=None, ticket=None):
     """
     Add an Backdoor to CRITs.
@@ -199,8 +199,8 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
     :type campaign: str
     :param confidence: Confidence level in the campaign attribution.
     :type confidence: str ("low", "medium", "high")
-    :param analyst: The user adding this backdoor.
-    :type analyst: str
+    :param user: The user adding this backdoor.
+    :type user: str
     :param bucket_list: Buckets to assign to this backdoor.
     :type bucket_list: str
     :param ticket: Ticket to assign to this backdoor.
@@ -218,7 +218,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
-                                         analyst=analyst)]
+                                         analyst=user)]
     if not source:
         retVal['message'] = "Missing source information."
         return retval
@@ -247,7 +247,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         # Family exists, old object. Add a new source only.
         for s in source:
             family.add_source(s)
-        family.save()
+        family.save(username=user)
         # In case this is the only object we create, make sure to return it.
         retVal['object'] = family
         retVal['id'] = str(family.id)
@@ -268,7 +268,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
             # Backdoor exists, old object. Add a new source only.
             for s in source:
                 backdoor.add_source(s)
-            backdoor.save()
+            backdoor.save(username=user)
             resp_url = reverse('crits.backdoors.views.backdoor_detail',
                                args=[backdoor.id])
             retVal['message'] = 'Success: <a href="%s">%s</a>' % (resp_url,
@@ -288,7 +288,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         if isinstance(campaign, basestring):
             c = EmbeddedCampaign(name=campaign,
                                  confidence=confidence,
-                                 analyst=analyst)
+                                 analyst=user)
             campaign = [c]
 
         if campaign:
@@ -304,16 +304,16 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
                         backdoor.aliases.append(alias)
 
         if bucket_list:
-            backdoor.add_bucket_list(bucket_list, analyst)
+            backdoor.add_bucket_list(bucket_list, user)
 
         if ticket:
-            backdoor.add_ticket(ticket, analyst)
+            backdoor.add_ticket(ticket, user)
 
-        backdoor.save(username=analyst)
+        backdoor.save(username=user)
 
         # run backdoor triage
         backdoor.reload()
-        run_triage(backdoor, analyst)
+        run_triage(backdoor, user)
 
         # Because family objects are put in the list first we will always
         # return a link to the most specific object created. If there is only

@@ -46,7 +46,7 @@ class BackdoorResource(CRITsAPIResource):
         :returns: HttpResponse object.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user.username
         data = bundle.data
         name = data.get('name', None)
         version = data.get('version', '')
@@ -69,7 +69,7 @@ class BackdoorResource(CRITsAPIResource):
                                   source_reference=reference,
                                   campaign=campaign,
                                   confidence=confidence,
-                                  analyst=analyst,
+                                  user=user,
                                   bucket_list=bucket_list,
                                   ticket=ticket)
 

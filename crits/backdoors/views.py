@@ -47,8 +47,8 @@ def backdoor_detail(request, id_):
     """
 
     template = "backdoor_detail.html"
-    analyst = request.user.username
-    (new_template, args) = get_backdoor_details(id_, analyst)
+    user = request.user.username
+    (new_template, args) = get_backdoor_details(id_, user)
     if new_template:
         template = new_template
     return render_to_response(template,
@@ -79,7 +79,7 @@ def add_backdoor(request):
             method = cleaned_data['source_method']
             campaign = cleaned_data['campaign']
             confidence = cleaned_data['confidence']
-            analyst = request.user.username
+            user = request.user.username
             bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
 
@@ -92,7 +92,7 @@ def add_backdoor(request):
                                       source_reference=reference,
                                       campaign=campaign,
                                       confidence=confidence,
-                                      analyst=analyst,
+                                      user=user,
                                       bucket_list=bucket_list,
                                       ticket=ticket)
             return HttpResponse(json.dumps(result, default=json_handler),
