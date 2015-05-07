@@ -258,7 +258,8 @@ def generate_campaign_jtable(request, option):
 
     ]
     # Make count fields clickable to search those listings
-    for ctype in ["indicator", "email", "domain", "sample", "event", "ip", "pcap"]:
+    for ctype in ["actor", "backdoor", "exploit", "indicator", "email",
+                  "domain", "sample", "event", "ip", "pcap"]:
         url = reverse('crits.%ss.views.%ss_listing' % (ctype, ctype))
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
