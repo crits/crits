@@ -1229,8 +1229,6 @@ def base_context(request):
                                             'name': 'Campaigns'},
                                         {'collection': settings.COL_EVENT_TYPES,
                                             'name': 'Event Types'},
-                                        {'collection': settings.COL_EXPLOIT_DETAILS,
-                                            'name': 'Exploits'},
                                         {'collection': settings.COL_IDB_ACTIONS,
                                             'name': 'Indicator Actions'},
                                         {'collection': settings.COL_INTERNAL_LOCATIONS,
