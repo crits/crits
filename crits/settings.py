@@ -393,6 +393,7 @@ INSTALLED_APPS = (
     'crits.samples',
     'crits.screenshots',
     'crits.services',
+    'crits.sources',
     'crits.stats',
     'crits.targets',
     'tastypie',

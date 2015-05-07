@@ -59,6 +59,7 @@ if settings.ENABLE_API:
     from crits.samples.api import SampleResource
     from crits.screenshots.api import ScreenshotResource
     from crits.services.api import ServiceResource
+    from crits.sources.api import SourceResource
     from crits.targets.api import TargetResource
     from crits.standards.api import StandardsResource
 
@@ -83,6 +84,7 @@ if settings.ENABLE_API:
     v1_api.register(SampleResource())
     v1_api.register(ScreenshotResource())
     v1_api.register(ServiceResource())
+    v1_api.register(SourceResource())
     v1_api.register(TargetResource())
     v1_api.register(StandardsResource())
 
