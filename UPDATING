@@ -19,7 +19,7 @@ Date:   2015-05-06
     If you have existing samples with backdoor or exploit information you can
     migrate these to new objects in the new collections using:
 
-    python manage.py upgrade -S
+    python manage.py upgrade -s -S
 
     The above will create new objects in the collections for each exploit and
     backdoor attribute of a Sample, and relate the Sample to them.
