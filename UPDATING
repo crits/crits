@@ -7,8 +7,12 @@ Author: wxs
 Date:   2015-05-06
 
     Backdoor and Exploit TLOs have been added to CRITs. This provides for
-    better tracking of TTPs over time. You need to create indexes for these
-    new collections. This is done by running:
+    better tracking of TTPs over time. The old "exploits" collection will need
+    to be removed first by running the following from a mongo shell:
+
+    db.exploits.drop()
+
+    Now you can create the indexes for the new collections:
 
     python manage.py create_indexes
 

@@ -44,7 +44,7 @@ def remove_indexes():
                  settings.COL_DOMAINS,
                  settings.COL_EMAIL,
                  settings.COL_EVENTS,
-                 settings.COL_EXPLOIT,
+                 settings.COL_EXPLOITS,
                  settings.COL_INDICATORS,
                  settings.COL_IPS,
                  settings.COL_NOTIFICATIONS,
@@ -114,7 +114,7 @@ def create_indexes():
     events.ensure_index("campaign.name", background=True)
     events.ensure_index("bucket_list", background=True)
 
-    exploits = mongo_connector(settings.COL_EXPLOIT)
+    exploits = mongo_connector(settings.COL_EXPLOITS)
     exploits.ensure_index("name", background=True)
 
     indicators = mongo_connector(settings.COL_INDICATORS)
