@@ -358,10 +358,51 @@ def set_backdoor_name(id_, name, user, **kwargs):
     sources = user_sources(user)
     backdoor = Backdoor.objects(id=id_, source__name__in=sources).first()
     if not backdoor:
-        return {'success': False,
-                'message': "Could not find backdoor"}
+        return {'success': False, 'message': "Could not find backdoor"}
+
+    # Make sure we don't have a backdoor with that name and new version yet.
+    existing_backdoor = Backdoor.objects(name=name,
+                                         version=backdoor.version,
+                                         source__name__in=sources).first()
+    if existing_backdoor:
+        # Be sure to return the same error message so backdoors can not be
+        # enumerated via this method.
+        return {'success': False, 'message': "Could not find backdoor"}
 
     backdoor.name = name.strip()
+    backdoor.save(username=user)
+    return {'success': True}
+
+def set_backdoor_version(id_, version, user, **kwargs):
+    """
+    Set a Backdoor name.
+
+    :param id_: Backdoor ObjectId.
+    :type id_: str
+    :param version: The new version.
+    :type version: str
+    :param user: The user updating the version.
+    :type user: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str),
+    """
+
+    sources = user_sources(user)
+    backdoor = Backdoor.objects(id=id_, source__name__in=sources).first()
+    if not backdoor:
+        return {'success': False, 'message': "Could not find backdoor"}
+
+    # Make sure we don't have a backdoor with that name and new version yet.
+    existing_backdoor = Backdoor.objects(name=backdoor.name,
+                                         version=version,
+                                         source__name__in=sources).first()
+    if existing_backdoor:
+        # Be sure to return the same error message so backdoors can not be
+        # enumerated via this method.
+        return {'success': False, 'message': "Could not find backdoor"}
+
+    backdoor.version = version.strip()
     backdoor.save(username=user)
     return {'success': True}
 

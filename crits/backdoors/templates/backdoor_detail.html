@@ -6,6 +6,7 @@
 
 <script>
    var edit_backdoor_name = "{% url 'crits.backdoors.views.edit_backdoor_name' backdoor.id|urlencode %}";
+   var edit_backdoor_version = "{% url 'crits.backdoors.views.edit_backdoor_version' backdoor.id|urlencode %}";
    var update_backdoor_aliases = "{% url 'crits.backdoors.views.edit_backdoor_aliases' %}";
 </script>
 
@@ -46,7 +47,9 @@
                     </tr>
                     <tr>
                         <td class="key">Version</td>
-                        <td>{{backdoor.version}}</td>
+                        <td>
+                            <span class="edit_underline" id="edit_backdoor_version">{{backdoor.version}}</span>
+                        </td>
                     </tr>
                     <tr>
                         <td class="key">Aliases</td>

@@ -11,6 +11,7 @@ from crits.backdoors.forms import AddBackdoorForm
 from crits.backdoors.handlers import add_new_backdoor, get_backdoor_details
 from crits.backdoors.handlers import backdoor_remove, set_backdoor_name
 from crits.backdoors.handlers import update_backdoor_aliases
+from crits.backdoors.handlers import set_backdoor_version
 from crits.backdoors.handlers import generate_backdoor_csv
 from crits.backdoors.handlers import generate_backdoor_jtable
 from crits.core import form_consts
@@ -175,6 +176,33 @@ def edit_backdoor_aliases(request):
         result = update_backdoor_aliases(id_, aliases, user)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def edit_backdoor_version(request, id_):
+    """
+    Set backdoor version. Should be an AJAX POST.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :param id_: The ObjectId of the Backdoor.
+    :type id_: str
+    :returns: :class:`django.http.HttpResponseRedirect`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        user = request.user.username
+        version = request.POST.get('version', None)
+        if version == None:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': 'Not all info provided.'}),
+                                mimetype="application/json")
+        result = set_backdoor_version(id_, version, user)
+        return HttpResponse(json.dumps(result), mimetype="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",

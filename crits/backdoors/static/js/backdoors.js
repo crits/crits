@@ -68,4 +68,30 @@ $(document).ready(function() {
             onblur: 'ignore',
     });
 
+    $('#edit_backdoor_version').editable(function(value, settings) {
+        var revert = this.revert;
+        return function(value, settings, elem) {
+            var data = {
+                version: value
+            };
+            $.ajax({
+                type: "POST",
+                async: false,
+                url: edit_backdoor_version,
+                data: data,
+                success: function(data) {
+                }
+            });
+            return value;
+        }(value, settings, this);
+        },
+        {
+            type: 'textarea',
+            width: "400px",
+            tooltip: "",
+            cancel: "Cancel",
+            submit: "Ok",
+            onblur: 'ignore',
+    });
+
 }); //document.ready
