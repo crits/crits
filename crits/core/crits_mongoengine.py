@@ -1718,19 +1718,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 return {'success': False,
                         'message': 'Could not find object'}
         if rel_item and rel_type:
-            # If relating anything to a backdoor, check if we are relating to a
-            # versioned backdoor. If we are, also relate to the family.
-            rel_items = [rel_item]
-            if rel_item._meta['crits_type'] == class_from_type('Backdoor')._meta['crits_type']:
-                if rel_item.version != '':
-                    # No need to do source access checks here. You can relate
-                    # to a family even if you can't see the family.
-                    klass = class_from_type('Backdoor')
-                    family = klass.objects(name=rel_item.name,
-                                           version='').first()
-                    if family:
-                        rel_items.append(family)
-
             # get reverse relationship
             r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
             if len(r) == 0:
@@ -1741,72 +1728,71 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             rev_type = r.reverse if rel_type == r.forward else r.forward
             date = datetime.datetime.now()
 
-            for rel_obj in rel_items:
-                # setup the relationship for me
-                my_rel = EmbeddedRelationship()
-                my_rel.relationship = rel_type
-                my_rel.rel_type = rel_obj._meta['crits_type']
-                my_rel.analyst = analyst
-                my_rel.date = date
-                my_rel.relationship_date = rel_date
-                my_rel.object_id = rel_obj.id
-                my_rel.rel_confidence = rel_confidence
-                my_rel.rel_reason = rel_reason
+            # setup the relationship for me
+            my_rel = EmbeddedRelationship()
+            my_rel.relationship = rel_type
+            my_rel.rel_type = rel_item._meta['crits_type']
+            my_rel.analyst = analyst
+            my_rel.date = date
+            my_rel.relationship_date = rel_date
+            my_rel.object_id = rel_item.id
+            my_rel.rel_confidence = rel_confidence
+            my_rel.rel_reason = rel_reason
 
-                # setup the relationship for them
-                their_rel = EmbeddedRelationship()
-                their_rel.relationship = rev_type
-                their_rel.rel_type = self._meta['crits_type']
-                their_rel.analyst = analyst
-                their_rel.date = date
-                their_rel.relationship_date = rel_date
-                their_rel.object_id = self.id
-                their_rel.rel_confidence = rel_confidence
-                their_rel.rel_reason = rel_reason
+            # setup the relationship for them
+            their_rel = EmbeddedRelationship()
+            their_rel.relationship = rev_type
+            their_rel.rel_type = self._meta['crits_type']
+            their_rel.analyst = analyst
+            their_rel.date = date
+            their_rel.relationship_date = rel_date
+            their_rel.object_id = self.id
+            their_rel.rel_confidence = rel_confidence
+            their_rel.rel_reason = rel_reason
 
-                # check for existing relationship before
-                # blindly adding them
-                for r in self.relationships:
-                    if rel_date:
-                        if (r.object_id == my_rel.object_id
-                            and r.relationship == my_rel.relationship
-                            and r.relationship_date == my_rel.relationship_date
-                            and r.rel_type == my_rel.rel_type):
-                            return {'success': False,
-                                    'message': 'Left relationship already exists'}
-                    else:
-                        if (r.object_id == my_rel.object_id
-                            and r.relationship == my_rel.relationship
-                            and r.rel_type == my_rel.rel_type):
-                            return {'success': False,
-                                    'message': 'Left relationship already exists'}
-                self.relationships.append(my_rel)
-                for r in rel_obj.relationships:
-                    if rel_date:
-                        if (r.object_id == their_rel.object_id
-                            and r.relationship == their_rel.relationship
-                            and r.relationship_date == their_rel.relationship_date
-                            and r.rel_type == their_rel.rel_type):
-                            return {'success': False,
-                                    'message': 'Right relationship already exists'}
-                    else:
-                        if (r.object_id == their_rel.object_id
-                            and r.relationship == their_rel.relationship
-                            and r.rel_type == their_rel.rel_type):
-                            return {'success': False,
-                                    'message': 'Right relationship already exists'}
-                rel_obj.relationships.append(their_rel)
-                if not got_rel:
-                    rel_obj.save(username=analyst)
+            # check for existing relationship before
+            # blindly adding them
+            for r in self.relationships:
+                if rel_date:
+                    if (r.object_id == my_rel.object_id
+                        and r.relationship == my_rel.relationship
+                        and r.relationship_date == my_rel.relationship_date
+                        and r.rel_type == my_rel.rel_type):
+                        return {'success': False,
+                                'message': 'Left relationship already exists'}
+                else:
+                    if (r.object_id == my_rel.object_id
+                        and r.relationship == my_rel.relationship
+                        and r.rel_type == my_rel.rel_type):
+                        return {'success': False,
+                                'message': 'Left relationship already exists'}
+            self.relationships.append(my_rel)
+            for r in rel_item.relationships:
+                if rel_date:
+                    if (r.object_id == their_rel.object_id
+                        and r.relationship == their_rel.relationship
+                        and r.relationship_date == their_rel.relationship_date
+                        and r.rel_type == their_rel.rel_type):
+                        return {'success': False,
+                                'message': 'Right relationship already exists'}
+                else:
+                    if (r.object_id == their_rel.object_id
+                        and r.relationship == their_rel.relationship
+                        and r.rel_type == their_rel.rel_type):
+                        return {'success': False,
+                                'message': 'Right relationship already exists'}
+            rel_item.relationships.append(their_rel)
+            if not got_rel:
+                rel_item.save(username=analyst)
+            if get_rels:
+                return {'success': True,
+                        'message': self.sort_relationships(analyst, meta=True)}
+            else:
+                return {'success': True,
+                        'message': 'Relationship forged'}
         else:
             return {'success': False,
                     'message': 'Need valid object and relationship type'}
-        if get_rels:
-            return {'success': True,
-                    'message': self.sort_relationships(analyst, meta=True)}
-        else:
-            return {'success': True,
-                    'message': 'Relationship forged'}
 
     def _modify_relationship(self, rel_item=None, rel_id=None, type_=None,
                              rel_type=None, rel_date=None, new_type=None,
