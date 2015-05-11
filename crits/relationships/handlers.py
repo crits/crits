@@ -109,22 +109,22 @@ def forge_relationship(left_class=None, right_class=None,
     try:
         # forge relationship
         if right_class:
-            results = left_class.add_relationship(rel_item=right_class,
-                                        rel_type=rel_type,
+            results = left_class.add_relationship(right_class,
+                                        rel_type,
                                         rel_date=rel_date,
                                         analyst=analyst,
                                         rel_confidence=rel_confidence,
                                         rel_reason=rel_reason)
-            right_class.save(username=analyst)
         else:
             if right_type and right_id:
-                results = left_class.add_relationship(type_=right_type,
-                                            rel_id=right_id,
-                                            rel_type=rel_type,
-                                            rel_date=rel_date,
-                                            analyst=analyst,
-                                            rel_confidence=rel_confidence,
-                                            rel_reason=rel_reason)
+                rel_item = class_from_id(right_type, right_id)
+                if rel_item:
+                    results = left_class.add_relationship(rel_item,
+                                                rel_type,
+                                                rel_date=rel_date,
+                                                analyst=analyst,
+                                                rel_confidence=rel_confidence,
+                                                rel_reason=rel_reason)
             else:
                 return {'success': False,
                         'message': "Need a valid right type and id"}

@@ -12,6 +12,7 @@ from mongoengine.base import ValidationError
 
 from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
+from crits.core.class_mapper import class_from_id
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
@@ -400,11 +401,13 @@ def handle_raw_data_file(data, source_name, user=None,
                     raw_data.save(username=user)
                     raw_data.reload()
                     for rel in rd2.relationships:
-                        raw_data.add_relationship(rel_id=rel.object_id,
-                                                  type_=rel.rel_type,
-                                                  rel_type=rel.relationship,
-                                                  rel_date=rel.relationship_date,
-                                                  analyst=user)
+                        # Get object to relate to.
+                        rel_item = class_from_id(rel.rel_type, rel.rel_object_id)
+                        if rel_item:
+                            raw_data.add_relationship(rel_item,
+                                                      rel.relationship,
+                                                      rel_date=rel.relationship_date,
+                                                      analyst=user)
 
 
     raw_data.version = len(RawData.objects(link_id=link_id)) + 1

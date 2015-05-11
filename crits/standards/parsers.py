@@ -454,11 +454,9 @@ class STIXParser():
 
             for right in finished_objects:
                 obj[1].add_relationship(right,
-                                     rel_type="Related_To",
-                                     analyst=self.source_instance.analyst)
+                                        "Related_To",
+                                        analyst=self.source_instance.analyst)
             finished_objects.append(obj[1])
 
         for f in finished_objects:
             f.save(username=self.source_instance.analyst)
-
-

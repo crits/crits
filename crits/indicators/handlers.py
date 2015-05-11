@@ -28,6 +28,7 @@ from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.domains.domain import Domain
 from crits.domains.handlers import upsert_domain, get_valid_root_domain
+from crits.events.event import Event
 from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
 from crits.indicators.indicator import IndicatorAction
@@ -699,19 +700,17 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     indicator.save(username=analyst)
 
     if dmain:
-        dmain.add_relationship(rel_item=indicator,
-                               rel_type='Related_To',
+        dmain.add_relationship(indicator,
+                               'Related_To',
                                analyst="%s" % analyst,
                                get_rels=False)
         dmain.save(username=analyst)
     if ip:
-        ip.add_relationship(rel_item=indicator,
-                            rel_type='Related_To',
+        ip.add_relationship(indicator,
+                            'Related_To',
                             analyst="%s" % analyst,
                             get_rels=False)
         ip.save(username=analyst)
-
-    indicator.save(username=analyst)
 
     # run indicator triage
     if is_new_indicator:
@@ -1103,26 +1102,26 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
 
         # setup IP
         if ip_class:
-            ip_class.add_relationship(rel_item=obj_class,
-                                      rel_type="Related_To",
+            ip_class.add_relationship(obj_class,
+                                      "Related_To",
                                       analyst=analyst)
         else:
             ip_class = IP()
             ip_class.ip = ip
             ip_class.source = obj_class.source
             ip_class.save(username=analyst)
-            ip_class.add_relationship(rel_item=obj_class,
-                                      rel_type="Related_To",
+            ip_class.add_relationship(obj_class,
+                                      "Related_To",
                                       analyst=analyst)
 
         # setup Indicator
         message = ""
         if ind_class:
-            message = ind_class.add_relationship(rel_item=obj_class,
-                                                 rel_type="Related_To",
+            message = ind_class.add_relationship(obj_class,
+                                                 "Related_To",
                                                  analyst=analyst)
-            ind_class.add_relationship(rel_item=ip_class,
-                                       rel_type="Related_To",
+            ind_class.add_relationship(ip_class,
+                                       "Related_To",
                                        analyst=analyst)
         else:
             ind_class = Indicator()
@@ -1130,11 +1129,11 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
             ind_class.ind_type = ind_type
             ind_class.value = ip
             ind_class.save(username=analyst)
-            message = ind_class.add_relationship(rel_item=obj_class,
-                                                 rel_type="Related_To",
+            message = ind_class.add_relationship(obj_class,
+                                                 "Related_To",
                                                  analyst=analyst)
-            ind_class.add_relationship(rel_item=ip_class,
-                                       rel_type="Related_To",
+            ind_class.add_relationship(ip_class,
+                                       "Related_To",
                                        analyst=analyst)
 
         # save
@@ -1239,16 +1238,18 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
                                date=datetime.datetime.now(),
                                analyst = analyst)
 
-            tlo.add_relationship(rel_item=ind,
-                                 rel_type="Related_To",
+            tlo.add_relationship(ind,
+                                 "Related_To",
                                  analyst=analyst)
             tlo.save(username=analyst)
             for rel in tlo.relationships:
                 if rel.rel_type == "Event":
-                    ind.add_relationship(rel_id=rel.object_id,
-                                         type_=rel.rel_type,
-                                         rel_type="Related_To",
-                                         analyst=analyst)
+                    # Get event object to pass in.
+                    rel_item = Event.objects(id=rel.object_id).first()
+                    if rel_item:
+                        ind.add_relationship(rel_item,
+                                             "Related_To",
+                                             analyst=analyst)
             ind.save(username=analyst)
             tlo.reload()
             rels = tlo.sort_relationships("%s" % analyst, meta=True)

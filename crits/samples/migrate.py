@@ -26,11 +26,11 @@ def migrate_backdoors(self):
                               source=self.source,
                               campaign=self.campaign)
     if result['success']:
-        self.add_relationship(rel_item=result['object'],
-                              rel_type="Related_To",
+        self.add_relationship(result['object'],
+                              "Related_To",
                               rel_reason="Migrated")
-        # Save the backdoor after relationship was created.
-        result['object'].save()
+        # Save the object after relationship was created.
+        self.save()
     else:
         print "Error migrating %s: %s" % (self.id, result['message'])
 
@@ -58,11 +58,11 @@ def migrate_exploits(self):
                                  source=self.source,
                                  campaign=self.campaign)
         if result['success']:
-            self.add_relationship(rel_item=result['object'],
-                                  rel_type="Related_To",
+            self.add_relationship(result['object'],
+                                  "Related_To",
                                   rel_reason="Migrated")
-            # Save the exploit after relationship was created.
-            result['object'].save()
+            # Save the object after relationship was created.
+            self.save()
         else:
             print "Error migrating %s: %s" % (self.id, result['message'])
 

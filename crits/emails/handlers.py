@@ -1060,11 +1060,13 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
     # Relate the email back to the pcap, if it came from PCAP.
     if parent_id and parent_type:
-        ret = result['object'].add_relationship(rel_id=parent_id,
-                                                type_=parent_type,
-                                                rel_type='Extracted_From',
-                                                analyst=analyst,
-                                                get_rels=False)
+        rel_item = class_from_id(parent_type, parent_id)
+        if rel_item:
+            rel_type = 'Extracted_From'
+            ret = result['object'].add_relationship(rel_item,
+                                                    rel_type,
+                                                    analyst=analyst,
+                                                    get_rels=False)
         if not ret['success']:
             result['reason'] = "Failed to create relationship.\n<br /><pre>"
             + result['message'] + "</pre>"
@@ -1280,13 +1282,12 @@ def create_indicator_from_header_field(email, header_field, ind_type,
                                         analyst=analyst)
     if newindicator.get('objectid'):
         indicator = Indicator.objects(id=newindicator['objectid']).first()
-        results = email.add_relationship(rel_item=indicator,
-                                          rel_type="Related_To",
-                                          analyst=analyst,
-                                          get_rels=True)
+        results = email.add_relationship(indicator,
+                                         "Related_To",
+                                         analyst=analyst,
+                                         get_rels=True)
         if results['success']:
             email.save(username=analyst)
-            indicator.save(username=analyst)
             relationship = {'type': 'Email', 'value': email.id}
             message = render_to_string('relationships_listing_widget.html',
                                         {'relationship': relationship,

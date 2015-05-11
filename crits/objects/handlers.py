@@ -645,13 +645,12 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
             result = {'success': False,
                       'message': "Could not create indicator"}
         else:
-            results = me.add_relationship(rel_item=indicator,
-                                          rel_type="Related_To",
+            results = me.add_relationship(indicator,
+                                          "Related_To",
                                           analyst=analyst,
                                           get_rels=True)
             if results['success']:
                 me.save(username=analyst)
-                indicator.save(username=analyst)
                 relationship= {'type': rel_type, 'value': rel_id}
                 message = render_to_string('relationships_listing_widget.html',
                                             {'relationship': relationship,

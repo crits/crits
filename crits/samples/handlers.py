@@ -959,8 +959,8 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
             backdoor = Backdoor.objects(name=backdoor_name,
                                         source__name__in=sources).first()
             if backdoor:
-                backdoor.add_relationship(rel_item=sample,
-                                          rel_type="Related_To",
+                backdoor.add_relationship(sample,
+                                          "Related_To",
                                           analyst=user)
                 backdoor.save()
             # Also relate to the specific instance backdoor.
@@ -969,12 +969,10 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
                                             version=backdoor_version,
                                             source__name__in=sources).first()
                 if backdoor:
-                    backdoor.add_relationship(rel_item=sample,
-                                              rel_type="Related_To",
+                    backdoor.add_relationship(sample,
+                                              "Related_To",
                                               analyst=user)
                     backdoor.save()
-            # Save after adding backdoor relationships
-            sample.save()
 
         # reloading clears the _changed_fields of the sample object. this prevents
         # situations where we save again below and the shard key (md5) is
@@ -993,11 +991,10 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
                         relationship = "Contained_Within"
                     else:
                         relationship = "Related_To"
-                sample.add_relationship(rel_item=related_obj,
-                                        rel_type=relationship,
+                sample.add_relationship(related_obj,
+                                        relationship,
                                         analyst=user,
                                         get_rels=False)
-                related_obj.save(username=user)
                 sample.save(username=user)
 
     if is_sample_new == True:

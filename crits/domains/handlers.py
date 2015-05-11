@@ -391,12 +391,11 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     #add a relationship with the new IP address
                     new_ip = ip_result['object']
                     if new_domain and new_ip:
-                        new_domain.add_relationship(rel_item=new_ip,
-                                                    rel_type='Resolved_To',
+                        new_domain.add_relationship(new_ip,
+                                                    'Resolved_To',
                                                     analyst=username,
                                                     get_rels=False)
                         new_domain.save(username=username)
-                        new_ip.save(username=username)
 
             #set the URL for viewing the new data
             resp_url = reverse('crits.domains.views.domain_detail', args=[domain])
@@ -641,10 +640,10 @@ def upsert_domain(domain, source, username=None, campaign=None,
 
     #Add relationships between fqdn, root
     if fqdn_domain and root_domain:
-        root_domain.add_relationship(rel_item=fqdn_domain,
-                                        rel_type="Supra-domain_Of",
-                                        analyst=username,
-                                        get_rels=False)
+        root_domain.add_relationship(fqdn_domain,
+                                     "Supra-domain_Of",
+                                     analyst=username,
+                                     get_rels=False)
         root_domain.save(username=username)
         fqdn_domain.save(username=username)
 
