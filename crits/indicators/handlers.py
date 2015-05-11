@@ -1153,7 +1153,7 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
         return {'success': False,
                 'message': "Could not find %s to add relationships" % type_}
 
-def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name,
+def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
                               tlo_id=None, ind_type=None, value=None,
                               update_existing=True, add_domain=True):
     """
@@ -1231,12 +1231,13 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name,
         ind = Indicator.objects(id=result['objectid']).first()
 
         if ind:
-            # add source to show when indicator was created/updated
-            ind.add_source(source=source_name,
-                           method= 'Indicator created/updated ' \
-                                   'from %s with ID %s' % (tlo_type, tlo.id),
-                           date=datetime.datetime.now(),
-                           analyst = analyst)
+            if source_name:
+                # add source to show when indicator was created/updated
+                ind.add_source(source=source_name,
+                               method= 'Indicator created/updated ' \
+                                       'from %s with ID %s' % (tlo_type, tlo.id),
+                               date=datetime.datetime.now(),
+                               analyst = analyst)
 
             tlo.add_relationship(rel_item=ind,
                                  rel_type="Related_To",
