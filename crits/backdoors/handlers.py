@@ -279,12 +279,12 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
                 backdoor.add_campaign(camp)
 
         if aliases:
-            if not isinstance(aliases, list):
+            if isinstance(aliases, basestring):
                 aliases = aliases.split(',')
-                for alias in aliases:
-                    alias = alias.strip()
-                    if alias not in backdoor.aliases:
-                        backdoor.aliases.append(alias)
+            for alias in aliases:
+                alias = alias.strip()
+                if alias not in backdoor.aliases:
+                    backdoor.aliases.append(alias)
 
         if bucket_list:
             backdoor.add_bucket_list(bucket_list, user)
