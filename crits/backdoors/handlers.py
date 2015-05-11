@@ -225,7 +225,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
 
     if not source:
         retVal['message'] = "Missing source information."
-        return retval
+        return retVal
 
     # When creating a backdoor object we can potentially create multiple
     # objects. If we are given a name but no version we will create an object
