@@ -1,13 +1,7 @@
-import datetime
-
-from mongoengine import Document, EmbeddedDocument, StringField, ListField
-from mongoengine import EmbeddedDocumentField
+from mongoengine import Document, StringField, ListField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
-from crits.core.crits_mongoengine import CritsSchemaDocument, CritsDocument
-from crits.core.fields import CritsDateTimeField
-from crits.core.user_tools import user_sources
 
 class Backdoor(CritsBaseAttributes, CritsSourceDocument, Document):
     """
