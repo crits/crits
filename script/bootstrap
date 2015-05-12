@@ -69,6 +69,10 @@ then
   }
   brew install mongodb ssdeep upx p7zip libmagic libyaml pcre libxml2 openssl
   brew install https://raw.githubusercontent.com/destijl/homebrew-versions/master/swig304.rb
+  command -v pip >/dev/null 2>&1 || {
+    echo "Installation for OSX requires pip. We will try to install pip now."
+    sudo easy_install pip
+  }  
 elif [ "$OS" = 'freebsd' ]
 then
   echo "Installing ports"
