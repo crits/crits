@@ -67,7 +67,7 @@ then
     echo "Installation for OSX requires Homebrew. Please visit http://brew.sh/."
     exit
   }
-  brew install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl
+  brew install mongodb ssdeep upx p7zip libmagic libyaml pcre libxml2 openssl
   brew install https://raw.githubusercontent.com/destijl/homebrew-versions/master/swig304.rb
 elif [ "$OS" = 'freebsd' ]
 then
