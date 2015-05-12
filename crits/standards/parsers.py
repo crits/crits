@@ -258,12 +258,11 @@ class STIXParser():
                     for value in obj.value:
                         if value and ind_type:
                             res = handle_indicator_ind(value.strip(),
-                                                    self.source,
-                                                    None,
-                                                    ind_type,
-                                                    analyst,
-                                                    add_domain=True,
-                                                    add_relationship=True)
+                                                       self.source,
+                                                       ind_type,
+                                                       analyst,
+                                                       add_domain=True,
+                                                       add_relationship=True)
                             if res['success']:
                                 self.imported[indicator.id_] = (Indicator._meta['crits_type'],
                                                                 res['object'])
@@ -430,7 +429,6 @@ class STIXParser():
                             if value and ind_type:
                                 res = handle_indicator_ind(value.strip(),
                                                         self.source,
-                                                        None,
                                                         ind_type,
                                                         analyst,
                                                         add_domain=True,
