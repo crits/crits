@@ -19,9 +19,12 @@ from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.stats.handlers import generate_campaign_stats
 
+from crits.actors.actor import Actor
+from crits.backdoors.backdoor import Backdoor
 from crits.domains.domain import Domain
 from crits.emails.email import Email
 from crits.events.event import Event
+from crits.exploits.exploit import Exploit
 from crits.indicators.indicator import Indicator
 from crits.ips.ip import IP
 from crits.pcaps.pcap import PCAP
@@ -88,7 +91,7 @@ def get_campaign_details(campaign_name, analyst):
     # Get item counts
     formatted_query = {'campaign.name': campaign_name}
     counts = {}
-    for col_obj in [Sample, PCAP, Indicator, Email, Domain, IP, Event]:
+    for col_obj in [Actor, Backdoor, Exploit, Sample, PCAP, Indicator, Email, Domain, IP, Event]:
         counts[col_obj._meta['crits_type']] = col_obj.objects(source__name__in=sources,
                                                               __raw__=formatted_query).count()
 
@@ -258,7 +261,8 @@ def generate_campaign_jtable(request, option):
 
     ]
     # Make count fields clickable to search those listings
-    for ctype in ["indicator", "email", "domain", "sample", "event", "ip", "pcap"]:
+    for ctype in ["actor", "backdoor", "exploit", "indicator", "email",
+                  "domain", "sample", "event", "ip", "pcap"]:
         url = reverse('crits.%ss.views.%ss_listing' % (ctype, ctype))
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):

@@ -16,11 +16,13 @@ class Common():
 
     # class names
     Actor = "Actor"
+    Backdoor = "Backdoor"
     Campaign = "Campaign"
     Certificate = "Certificate"
     Domain = "Domain"
     Email = "Email"
     Event = "Event"
+    Exploit = "Exploit"
     Indicator = "Indicator"
     IP = "IP"
     Object = "Object"
@@ -45,7 +47,7 @@ class Status():
 
 class Actor():
     """
-    Constants for Campaigns.
+    Constants for Actors.
     """
 
     NAME = "Name"
@@ -53,6 +55,38 @@ class Actor():
     DESCRIPTION = "Description"
     CAMPAIGN = Common.CAMPAIGN
     CAMPAIGN_CONFIDENCE = Common.CAMPAIGN_CONFIDENCE
+    SOURCE = Common.SOURCE
+    SOURCE_METHOD = "Source Method"
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+
+
+class Backdoor():
+    """
+    Constants for Backdoors.
+    """
+
+    NAME = "Backdoor name"
+    ALIASES = "Aliases"
+    DESCRIPTION = "Description"
+    CAMPAIGN = Common.CAMPAIGN
+    CAMPAIGN_CONFIDENCE = Common.CAMPAIGN_CONFIDENCE
+    VERSION = "Version"
+    SOURCE = Common.SOURCE
+    SOURCE_METHOD = "Source Method"
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+
+
+class Exploit():
+    """
+    Constants for Exploits.
+    """
+
+    NAME = "Name"
+    DESCRIPTION = "Description"
+    CVE = "CVE"
+    CAMPAIGN = Common.CAMPAIGN
+    CAMPAIGN_CONFIDENCE = Common.CAMPAIGN_CONFIDENCE
+    VERSION = "Version"
     SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE

@@ -114,12 +114,14 @@ def get_favorites(analyst):
 
     field_dict = {
         'Actor': 'name',
+        'Backdoor': 'name',
         'Campaign': 'name',
         'Certificate': 'filename',
         'Comment': 'object_id',
         'Domain': 'domain',
         'Email': 'id',
         'Event': 'title',
+        'Exploit': 'name',
         'Indicator': 'id',
         'IP': 'ip',
         'PCAP': 'filename',
@@ -221,11 +223,13 @@ def get_data_for_item(item_type, item_id):
 
     type_to_fields = {
         'Actor': ['name', ],
+        'Backdoor': ['name', ],
         'Campaign': ['name', ],
         'Certificate': ['filename', ],
         'Domain': ['domain', ],
         'Email': ['from_address', 'date', ],
         'Event': ['title', 'event_type', ],
+        'Exploit': ['name', 'cve', ],
         'Indicator': ['value', 'ind_type', ],
         'IP': ['ip', 'type', ],
         'PCAP': ['filename', ],
@@ -787,11 +791,13 @@ def alter_bucket_list(obj, buckets, val):
         if val == -1:
             Bucket.objects(name=name,
                            Actor=0,
+                           Backdoor=0,
                            Campaign=0,
                            Certificate=0,
                            Domain=0,
                            Email=0,
                            Event=0,
+                           Exploit=0,
                            Indicator=0,
                            IP=0,
                            PCAP=0,
@@ -830,11 +836,13 @@ def generate_bucket_jtable(request, option):
                                     request,
                                     includes=['name',
                                               'Actor',
+                                              'Backdoor',
                                               'Campaign',
                                               'Certificate',
                                               'Domain',
                                               'Email',
                                               'Event',
+                                              'Exploit',
                                               'Indicator',
                                               'IP',
                                               'PCAP',
@@ -844,9 +852,9 @@ def generate_bucket_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
-              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target',
-              'Promote']
+    fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
+              'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
+              'Sample', 'Target', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
@@ -1450,7 +1458,6 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
 
     sample_queries = {
         'size' : {'size': search_query},
-        'backdoor': {'backdoor.name': search_query},
         'md5hash': {'md5': search_query},
         'sha1hash': {'sha1': search_query},
         'ssdeephash': {'ssdeep': search_query},
@@ -1460,7 +1467,6 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             {'filename': search_query},
             {'filenames': search_query},
         ]},
-        'exploit': {'exploit.cve': search_query},
         'campaign': {'campaign.name': search_query},
         # slightly slow in larger collections
         'object_value': {'objects.value': search_query},
@@ -1498,7 +1504,6 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         query = {'comment': search_query}
     elif search_type == "global":
         if type_ == "Sample":
-            search_list.append(sample_queries["backdoor"])
             search_list.append(sample_queries["object_value"])
             search_list.append(sample_queries["filename"])
             if len(term) == 32:
@@ -2053,11 +2058,6 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                                                           "%Y-%m-%d %H:%M:%S")
                 if key == "password_reset":
                     doc['password_reset'] = None
-                if key == "exploit":
-                    exploits = []
-                    for ex in value:
-                        exploits.append(ex['cve'])
-                    doc[key] = "|||".join(exploits)
                 if key == "campaign":
                     camps = []
                     for campdict in value:
@@ -2110,9 +2110,6 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
                                     args=(doc['url_key'],))
-            elif col_obj._meta['crits_type'] == "Backdoor" and url:
-                doc['url'] = "{0}?q={1}&search_type=backdoor&force_full=1".format(
-                    reverse(url), doc['name'])
             elif col_obj._meta['crits_type'] == "AuditLog":
                 if doc.get('method', 'delete()') != 'delete()':
                     doc['url'] = details_from_id(doc['type'],
@@ -2403,17 +2400,11 @@ def generate_items_jtable(request, itype, option):
         fields = ['name', 'active', 'id']
     elif itype == 'ActorIntendedEffect':
         fields = ['name', 'active', 'id']
-    elif itype == 'Backdoor':
-        fields = ['name', 'sample_count', 'active', 'id']
-        click = "function () {window.parent.$('#backdoor_add').click();}"
     elif itype == 'Campaign':
         fields = ['name', 'description', 'active', 'id']
         click = "function () {window.parent.$('#new-campaign').click();}"
     elif itype == 'EventType':
         fields = ['name', 'active', 'id']
-    elif itype == 'Exploit':
-        fields = ['name', 'active', 'id']
-        click = "function () {window.parent.$('#exploit_add').click();}"
     elif itype == 'IndicatorAction':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#indicator_action_add').click();}"
@@ -2771,7 +2762,7 @@ def generate_user_profile(username, request):
     for sample in sample_md5s:
         md5s.append(sample.value.split(" ")[0])
     filter_data = ('md5', 'source', 'filename', 'mimetype',
-                   'size', 'campaign', 'backdoor', 'exploit')
+                   'size', 'campaign')
     sample_list = (Sample.objects(md5__in=md5s)
                    .only(*filter_data)
                    .sanitize_sources(username))
@@ -3508,11 +3499,13 @@ def details_from_id(type_, id_):
     """
 
     type_map = {'Actor': 'crits.actors.views.actor_detail',
+                'Backdoor': 'crits.backdoors.views.backdoor_detail',
                 'Campaign': 'crits.campaigns.views.campaign_details',
                 'Certificate': 'crits.certificates.views.certificate_details',
                 'Domain': 'crits.domains.views.domain_detail',
                 'Email': 'crits.emails.views.email_detail',
                 'Event': 'crits.events.views.view_event',
+                'Exploit': 'crits.exploits.views.exploit_detail',
                 'Indicator': 'crits.indicators.views.indicator',
                 'IP': 'crits.ips.views.ip_detail',
                 'PCAP': 'crits.pcaps.views.pcap_details',
