@@ -10,7 +10,7 @@ from crits.indicators.indicator import Indicator
 from crits.ips.ip import IP
 from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
-from crits.samples.sample import Sample, Backdoor
+from crits.samples.sample import Sample
 from crits.screenshots.screenshot import Screenshot
 from crits.targets.target import Target
 

@@ -327,11 +327,10 @@ def handle_cert_file(filename, data, source_name, user=None,
     if related_obj and cert:
         if not relationship:
             relationship = "Related_To"
-        cert.add_relationship(rel_item=related_obj,
-                              rel_type=relationship,
+        cert.add_relationship(related_obj,
+                              relationship,
                               analyst=user,
                               get_rels=False)
-        related_obj.save(username=user)
         cert.save(username=user)
 
     status = {

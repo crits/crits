@@ -1,6 +1,6 @@
 """
 This File will often refer to 'default dashboard tables.' They currently are:
-Counts, Top Backdoors, Top Campaigns, Recent Indicators, Recent Emails, and 
+Counts, Top Campaigns, Recent Indicators, Recent Emails, and
 Recent Samples in that order. The user has the ability to change they're 
 positioning, size, columns, and sort order but they are always there and their 
 names cannot be changed.
@@ -12,7 +12,7 @@ from django.core.urlresolvers import reverse
 from crits.campaigns.campaign import Campaign
 from crits.indicators.indicator import Indicator
 from crits.emails.email import Email
-from crits.samples.sample import Sample, Backdoor
+from crits.samples.sample import Sample
 from django.http import HttpResponse
 import json
 from django.utils.html import escape as html_escape
@@ -116,15 +116,19 @@ def getRecordsForDefaultDashboardTable(username, tableName):
     elif tableName == "Top_Campaigns" or tableName == "Top Campaigns":
         obj_type = "Campaign"
         response = data_query(Campaign, username, query={}, limit=5)
-    elif tableName == "Top_Backdoors" or tableName == "Top Backdoors":
-        obj_type = "Backdoor"
-        response = data_query(Backdoor, username, query={}, limit=5)
     elif tableName == "Counts":
         response = generate_counts_jtable(None, "jtlist")
         records = json.loads(response.content)["Records"]
         for record in records:
             record["recid"] = record.pop("id")
         return records
+    else:
+        # This only happens if we have a dashboard which is no longer valid.
+        # For example, after Backdoor and Exploit were added the "Top_Backdoors"
+        # dashboard is no longer valid. Produce an "empty" response.
+        response = {'data': []}
+        obj_type = None
+
     return parseDocumentsForW2ui(response, obj_type)
 
 def constructSavedTable(table, records):
@@ -206,11 +210,6 @@ def parseDocObjectsToStrings(records, obj_type):
                 "</a>"
             elif key == "password_reset":
                 doc['password_reset'] = None
-            elif key == "exploit":
-                exploits = []
-                for ex in value:
-                    exploits.append(ex['cve'])
-                doc[key] = "|||".join(exploits)
             elif key == "campaign":
                 camps = []
                 for campdict in value:
@@ -344,12 +343,6 @@ def clear_dashboard(dashId):
                             "sizey": 13,
                             "row": 1,
                             "col": 1
-                        },
-                        "Top Backdoors": {
-                            "sizex": 10,
-                            "sizey": 8,
-                            "row": 1,
-                            "col": 10
                         },
                         "Top Campaigns": {
                             "sizex": 25,

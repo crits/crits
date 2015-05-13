@@ -332,11 +332,10 @@ def handle_pcap_file(filename, data, source_name, user=None,
     if related_obj and pcap:
         if not relationship:
             relationship = "Related_To"
-        pcap.add_relationship(rel_item=related_obj,
-                              rel_type=relationship,
+        pcap.add_relationship(related_obj,
+                              relationship,
                               analyst=user,
                               get_rels=False)
-        related_obj.save(username=user)
         pcap.save(username=user)
 
     # run pcap triage

@@ -1732,20 +1732,16 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             o_dict[o.object_type].append(o.to_dict())
         return o_dict
 
-    def add_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                         rel_date=None, analyst=None, rel_confidence='unknown',
+    def add_relationship(self, rel_item, rel_type, rel_date=None,
+                         analyst=None, rel_confidence='unknown',
                          rel_reason='N/A', get_rels=False):
         """
-        Add a relationship to this top-level object. If rel_item is provided it
-        will be used, otherwise rel_id and type_ must be provided.
+        Add a relationship to this top-level object. The rel_item will be
+        saved. It is up to the caller to save "self".
 
         :param rel_item: The top-level object to relate to.
         :type rel_item: class which inherits from
                         :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-        :param rel_id: The ObjectId of the top-level object to relate to.
-        :type rel_id: str
-        :param type_: The type of top-level object to relate to.
-        :type type_: str
         :param rel_type: The type of relationship.
         :type rel_type: str
         :param rel_date: The date this relationship applies.
@@ -1762,92 +1758,125 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                   failed, dict if successful)
         """
 
-        got_rel = True
-        if not rel_item:
-            got_rel = False
-            if isinstance(rel_id, basestring) and isinstance(type_, basestring):
-                rel_item = class_from_id(type_, rel_id)
-            elif isinstance(rel_id, ObjectId) and isinstance(type_, basestring):
-                rel_item = class_from_id(type_, str(rel_id))
-            else:
-                return {'success': False,
-                        'message': 'Could not find object'}
-        if rel_item and rel_type:
-            # get reverse relationship
-            r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
-            if len(r) == 0:
-                return {'success': False,
-                        'message': 'Could not find relationship type'}
-            else:
-                r = r.first()
-            rev_type = r.reverse if rel_type == r.forward else r.forward
-            date = datetime.datetime.now()
-
-            # setup the relationship for me
-            my_rel = EmbeddedRelationship()
-            my_rel.relationship = rel_type
-            my_rel.rel_type = rel_item._meta['crits_type']
-            my_rel.analyst = analyst
-            my_rel.date = date
-            my_rel.relationship_date = rel_date
-            my_rel.object_id = rel_item.id
-            my_rel.rel_confidence = rel_confidence
-            my_rel.rel_reason = rel_reason
-
-            # setup the relationship for them
-            their_rel = EmbeddedRelationship()
-            their_rel.relationship = rev_type
-            their_rel.rel_type = self._meta['crits_type']
-            their_rel.analyst = analyst
-            their_rel.date = date
-            their_rel.relationship_date = rel_date
-            their_rel.object_id = self.id
-            their_rel.rel_confidence = rel_confidence
-            their_rel.rel_reason = rel_reason
-
-            # check for existing relationship before
-            # blindly adding them
-            for r in self.relationships:
-                if rel_date:
-                    if (r.object_id == my_rel.object_id
-                        and r.relationship == my_rel.relationship
-                        and r.relationship_date == my_rel.relationship_date
-                        and r.rel_type == my_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Left relationship already exists'}
-                else:
-                    if (r.object_id == my_rel.object_id
-                        and r.relationship == my_rel.relationship
-                        and r.rel_type == my_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Left relationship already exists'}
-            self.relationships.append(my_rel)
-            for r in rel_item.relationships:
-                if rel_date:
-                    if (r.object_id == their_rel.object_id
-                        and r.relationship == their_rel.relationship
-                        and r.relationship_date == their_rel.relationship_date
-                        and r.rel_type == their_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Right relationship already exists'}
-                else:
-                    if (r.object_id == their_rel.object_id
-                        and r.relationship == their_rel.relationship
-                        and r.rel_type == their_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Right relationship already exists'}
-            rel_item.relationships.append(their_rel)
-            if not got_rel:
-                rel_item.save(username=analyst)
-            if get_rels:
-                return {'success': True,
-                        'message': self.sort_relationships(analyst, meta=True)}
-            else:
-                return {'success': True,
-                        'message': 'Relationship forged'}
-        else:
+        # get reverse relationship
+        r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
+        if len(r) == 0:
             return {'success': False,
-                    'message': 'Need valid object and relationship type'}
+                    'message': 'Could not find relationship type'}
+        else:
+            r = r.first()
+        rev_type = r.reverse if rel_type == r.forward else r.forward
+        date = datetime.datetime.now()
+
+        # setup the relationship for me
+        my_rel = EmbeddedRelationship()
+        my_rel.relationship = rel_type
+        my_rel.rel_type = rel_item._meta['crits_type']
+        my_rel.analyst = analyst
+        my_rel.date = date
+        my_rel.relationship_date = rel_date
+        my_rel.object_id = rel_item.id
+        my_rel.rel_confidence = rel_confidence
+        my_rel.rel_reason = rel_reason
+
+        # setup the relationship for them
+        their_rel = EmbeddedRelationship()
+        their_rel.relationship = rev_type
+        their_rel.rel_type = self._meta['crits_type']
+        their_rel.analyst = analyst
+        their_rel.date = date
+        their_rel.relationship_date = rel_date
+        their_rel.object_id = self.id
+        their_rel.rel_confidence = rel_confidence
+        their_rel.rel_reason = rel_reason
+
+        # check for existing relationship before
+        # blindly adding them
+        for r in self.relationships:
+            if rel_date:
+                if (r.object_id == my_rel.object_id
+                    and r.relationship == my_rel.relationship
+                    and r.relationship_date == my_rel.relationship_date
+                    and r.rel_type == my_rel.rel_type):
+                    return {'success': False,
+                            'message': 'Left relationship already exists'}
+            else:
+                if (r.object_id == my_rel.object_id
+                    and r.relationship == my_rel.relationship
+                    and r.rel_type == my_rel.rel_type):
+                    return {'success': False,
+                            'message': 'Left relationship already exists'}
+        self.relationships.append(my_rel)
+
+        for r in rel_item.relationships:
+            if rel_date:
+                if (r.object_id == their_rel.object_id
+                    and r.relationship == their_rel.relationship
+                    and r.relationship_date == their_rel.relationship_date
+                    and r.rel_type == their_rel.rel_type):
+                    return {'success': False,
+                            'message': 'Right relationship already exists'}
+            else:
+                if (r.object_id == their_rel.object_id
+                    and r.relationship == their_rel.relationship
+                    and r.rel_type == their_rel.rel_type):
+                    return {'success': False,
+                            'message': 'Right relationship already exists'}
+
+        rel_item.relationships.append(their_rel)
+        rel_item.save(username=analyst)
+
+        if get_rels:
+            results = {'success': True,
+                       'message': self.sort_relationships(analyst, meta=True)}
+        else:
+            results = {'success': True,
+                       'message': 'Relationship forged'}
+
+        # In case of relating to a versioned backdoor we also want to relate to
+        # the family backdoor.
+        self_type = self._meta['crits_type']
+        rel_item_type = rel_item._meta['crits_type']
+
+        # If both are not backdoors, just return
+        if self_type != 'Backdoor' and rel_item_type != 'Backdoor':
+            return results
+
+        # If either object is a family backdoor, don't go further.
+        if ((self_type == 'Backdoor' and self.version == '') or
+            (rel_item_type == 'Backdoor' and rel_item.version == '')):
+            return results
+
+        # If one is a versioned backdoor and the other is a family backdoor,
+        # don't go further.
+        if ((self_type == 'Backdoor' and self.version != '' and
+             rel_item_type == 'Backdoor' and rel_item.version == '') or
+            (rel_item_type == 'Backdoor' and rel_item.version != '' and
+             self_type == 'Backdoor' and self.version == '')):
+           return results
+
+        # Figure out which is the backdoor object.
+        if self_type == 'Backdoor':
+            bd = self
+            other = rel_item
+        else:
+            bd = rel_item
+            other = self
+
+        # Find corresponding family backdoor object.
+        klass = class_from_type('Backdoor')
+        family = klass.objects(name=bd.name, version='').first()
+        if family:
+            other.add_relationship(family,
+                                   rel_type,
+                                   rel_date=rel_date,
+                                   analyst=analyst,
+                                   rel_confidence=rel_confidence,
+                                   rel_reason=rel_reason,
+                                   get_rels=get_rels)
+            other.save(user=analyst)
+
+        return results
 
     def _modify_relationship(self, rel_item=None, rel_id=None, type_=None,
                              rel_type=None, rel_date=None, new_type=None,
@@ -2168,11 +2197,13 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         rel_dict = dict((r.rel_type,[]) for r in self.relationships)
         query_dict = {
             'Actor': ('id', 'name', 'campaign'),
+            'Backdoor': ('id', 'name', 'version', 'campaign'),
             'Campaign': ('id', 'name'),
             'Certificate': ('id', 'md5', 'filename', 'description', 'campaign'),
             'Domain': ('id', 'domain'),
             'Email': ('id', 'from_address', 'sender', 'subject', 'campaign'),
             'Event': ('id', 'title', 'event_type', 'description', 'campaign'),
+            'Exploit': ('id', 'name', 'cve', 'campaign'),
             'Indicator': ('id', 'ind_type', 'value', 'campaign'),
             'IP': ('id', 'ip', 'campaign'),
             'PCAP': ('id', 'md5', 'filename', 'description', 'campaign'),
@@ -2183,8 +2214,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                        'filename',
                        'mimetype',
                        'size',
-                       'backdoor',
-                       'exploit',
                        'campaign'),
             'Target': ('id', 'firstname', 'lastname', 'email_address', 'email_count'),
         }
@@ -2200,8 +2229,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             for r in self.relationships:
                 rd = r.to_dict()
                 obj_class = class_from_type(rd['type'])
-                # TODO: these should be limited to the fields above, or at least exclude larger
-                # fields that we don't need.
+                # TODO: these should be limited to the fields above, or at
+                # least exclude larger fields that we don't need.
                 fields = query_dict.get(rd['type'])
                 if r.rel_type not in ["Campaign", "Target"]:
                     obj = obj_class.objects(id=rd['value'],

@@ -89,11 +89,13 @@ class EmbeddedFavorites(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     Actor = ListField(StringField())
+    Backdoor = ListField(StringField())
     Campaign = ListField(StringField())
     Certificate = ListField(StringField())
     Domain = ListField(StringField())
     Email = ListField(StringField())
     Event = ListField(StringField())
+    Exploit = ListField(StringField())
     IP = ListField(StringField())
     Indicator = ListField(StringField())
     PCAP = ListField(StringField())
@@ -108,11 +110,13 @@ class EmbeddedSubscriptions(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     Actor = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Backdoor = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Campaign = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Certificate = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Domain = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Email = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Event = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Exploit = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     IP = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Indicator = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     PCAP = ListField(EmbeddedDocumentField(EmbeddedSubscription))
@@ -197,7 +201,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             },
         ],
         "crits_type": 'User',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "schema_doc": {
             'username': 'The username of this analyst',
             'organization': 'The name of the organization this user is from',
@@ -267,11 +271,14 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                 ],
             },
             'favorites': {
+                'Actor': [],
+                'Backdoor': [],
                 'Campaign': [],
                 'Domain': [],
                 'Email': [],
                 'Target': [],
                 'Event': [],
+                'Exploit': [],
                 'IP': [],
                 'Indicator': [],
                 'PCAP': [],

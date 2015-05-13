@@ -514,7 +514,7 @@ def indicator_from_tlo(request):
         tlo_id = request.POST.get('oid', None)
         value = request.POST.get('value', None)
         source = request.POST.get('source', None)
-        if not ind_type or not tlo_type or not id_ or not value or not source:
+        if not ind_type or not tlo_type or not tlo_id or not value:
             result = {'success': False,
                       'message': "Need indicator type, tlo type,"
                                  "oid, value, and source."}

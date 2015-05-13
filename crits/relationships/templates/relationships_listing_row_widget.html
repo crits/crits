@@ -26,10 +26,18 @@
                     {% elif rel_type == 'Actor' %}
                         <th>Name</th>
                         <th>Campaign</th>
+                    {% elif rel_type == 'Backdoor' %}
+                        <th>Name</th>
+                        <th>Version</th>
+                        <th>Campaign</th>
                     {% elif rel_type == 'Event' %}
                         <th>Title</th>
                         <th>Type</th>
                         <th>Description</th>
+                    {% elif rel_type == 'Exploit' %}
+                        <th>Name</th>
+                        <th>CVE</th>
+                        <th>Campaign</th>
                     {% elif rel_type == 'Indicator' %}
                         <th>Value</th>
                         <th>Type</th>
@@ -82,10 +90,16 @@
                             <td>{{ rel.email_count }}</td>
                         {% elif rel_type == 'Actor' %}
                             <td>{{ rel.name }}</td>
+                        {% elif rel_type == 'Backdoor' %}
+                            <td>{{ rel.name }}</td>
+                            <td>{{ rel.version }}</td>
                         {% elif rel_type == 'Event' %}
                             <td>{{ rel.title }}</td>
                             <td>{{ rel.event_type }}</td>
                             <td>{{ rel.description|truncatechars:100 }}</td>
+                        {% elif rel_type == 'Exploit' %}
+                            <td>{{ rel.name }}</td>
+                            <td>{{ rel.cve }}</td>
                         {% elif rel_type == 'Indicator' %}
                             <td>
                                 {{ rel.ind_value }}
@@ -112,7 +126,7 @@
                             <td>{{ rel.description|truncatechars:100 }}</td>
                             <td>{{ rel.version }}</td>
                         {% endif %}
-                        {% if rel_type in "RawDataPCAPCertificateIndicatorEventActor" %}
+                        {% if rel_type in "RawDataPCAPCertificateIndicatorEventActorExploitBackdoor" %}
                             <td class='campaignWidth'>
                                 {% for campaign in rel.campaign %}
                                     <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">

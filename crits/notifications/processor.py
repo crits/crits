@@ -389,22 +389,6 @@ class ChangeParser():
         return message
 
     @staticmethod
-    def backdoor_change_handler(old_value, new_value, changed_field):
-
-        fields = ['name', 'version']
-
-        if old_value is not None:
-            old_description = "%s %s" % (changed_field, old_value.name)
-            message = ChangeParser.generic_child_fields_change_handler(
-                    old_value, new_value, fields, old_description)
-        else:
-            old_description = "%s" % (changed_field)
-            message = ChangeParser.generic_child_fields_change_handler(
-                    old_value, new_value, fields, old_description)
-
-        return message
-
-    @staticmethod
     def bucket_list_change_handler(old_value, new_value, changed_field):
         return ChangeParser.generic_list_change_handler(old_value, new_value, changed_field)
 
@@ -422,13 +406,6 @@ class ChangeParser():
 
         fields = ['name', 'confidence', 'description']
         message = ChangeParser.generic_child_fields_change_handler(old_value, new_value, fields, base_fqn)
-
-        return message
-
-    @staticmethod
-    def exploit_change_handler(old_value, new_value, changed_field):
-        changed_data = ChangeParser.get_changed_object_list(old_value, new_value, 'cve')
-        message = ChangeParser.parse_generic_change_object_list(changed_data, changed_field, 'cve')
 
         return message
 
@@ -634,6 +611,10 @@ class NotificationHeaderManager():
         return "Event: %s" % (obj.title)
 
     @staticmethod
+    def generate_exploit_header(obj):
+        return "Exploit: %s" % (obj.name)
+
+    @staticmethod
     def generate_indicator_header(obj):
         return "Indicator: %s - %s" % (obj.ind_type, obj.value)
 
@@ -670,10 +651,8 @@ class NotificationHeaderManager():
 __general_field_to_change_handler__ = {
     "actions": ChangeParser.actions_change_handler,
     "analysis": ChangeParser.skip_change_handler,
-    "backdoor": ChangeParser.backdoor_change_handler,
     "bucket_list": ChangeParser.bucket_list_change_handler,
     "campaign": ChangeParser.campaign_change_handler,
-    "exploit": ChangeParser.exploit_change_handler,
     "obj": ChangeParser.objects_change_handler,
     "relationships": ChangeParser.relationships_change_handler,
     "screenshots": ChangeParser.screenshots_change_handler,
@@ -696,11 +675,13 @@ __specific_field_to_change_handler__ = {
 
 __notification_header_handler__ = {
     "Actor": NotificationHeaderManager.generate_actor_header,
+    "Backdoor": NotificationHeaderManager.generate_backdoor_header,
     "Campaign": NotificationHeaderManager.generate_campaign_header,
     "Certificate": NotificationHeaderManager.generate_certificate_header,
     "Domain": NotificationHeaderManager.generate_domain_header,
     "Email": NotificationHeaderManager.generate_email_header,
     "Event": NotificationHeaderManager.generate_event_header,
+    "Exploit": NotificationHeaderManager.generate_exploit_header,
     "Indicator": NotificationHeaderManager.generate_indicator_header,
     "IP": NotificationHeaderManager.generate_ip_header,
     "PCAP": NotificationHeaderManager.generate_pcap_header,

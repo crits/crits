@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.12: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.11: http://docutils.sourceforge.net/" />
 <title>CRITs User Manual</title>
 <style type="text/css">
 
@@ -466,24 +466,26 @@ phrase.</p>
 <li><a class="reference internal" href="#common-post-parameters" id="id80">17.6&nbsp;&nbsp;&nbsp;Common POST Parameters</a></li>
 <li><a class="reference internal" href="#actor-api" id="id81">17.7&nbsp;&nbsp;&nbsp;Actor API</a></li>
 <li><a class="reference internal" href="#actor-identifier-api" id="id82">17.8&nbsp;&nbsp;&nbsp;Actor Identifier API</a></li>
-<li><a class="reference internal" href="#campaign-api" id="id83">17.9&nbsp;&nbsp;&nbsp;Campaign API</a></li>
-<li><a class="reference internal" href="#certificate-api" id="id84">17.10&nbsp;&nbsp;&nbsp;Certificate API</a></li>
-<li><a class="reference internal" href="#comment-api" id="id85">17.11&nbsp;&nbsp;&nbsp;Comment API</a></li>
-<li><a class="reference internal" href="#domain-api" id="id86">17.12&nbsp;&nbsp;&nbsp;Domain API</a></li>
-<li><a class="reference internal" href="#email-api" id="id87">17.13&nbsp;&nbsp;&nbsp;Email API</a></li>
-<li><a class="reference internal" href="#event-api" id="id88">17.14&nbsp;&nbsp;&nbsp;Event API</a></li>
-<li><a class="reference internal" href="#indicator-api" id="id89">17.15&nbsp;&nbsp;&nbsp;Indicator API</a></li>
-<li><a class="reference internal" href="#indicator-activity-api" id="id90">17.16&nbsp;&nbsp;&nbsp;Indicator Activity API</a></li>
-<li><a class="reference internal" href="#ip-api" id="id91">17.17&nbsp;&nbsp;&nbsp;IP API</a></li>
-<li><a class="reference internal" href="#object-api" id="id92">17.18&nbsp;&nbsp;&nbsp;Object API</a></li>
-<li><a class="reference internal" href="#pcap-api" id="id93">17.19&nbsp;&nbsp;&nbsp;PCAP API</a></li>
-<li><a class="reference internal" href="#raw-data-api" id="id94">17.20&nbsp;&nbsp;&nbsp;Raw Data API</a></li>
-<li><a class="reference internal" href="#relationship-api" id="id95">17.21&nbsp;&nbsp;&nbsp;Relationship API</a></li>
-<li><a class="reference internal" href="#sample-api" id="id96">17.22&nbsp;&nbsp;&nbsp;Sample API</a></li>
-<li><a class="reference internal" href="#screenshot-api" id="id97">17.23&nbsp;&nbsp;&nbsp;Screenshot API</a></li>
-<li><a class="reference internal" href="#service-api" id="id98">17.24&nbsp;&nbsp;&nbsp;Service API</a></li>
-<li><a class="reference internal" href="#standards-api" id="id99">17.25&nbsp;&nbsp;&nbsp;Standards API</a></li>
-<li><a class="reference internal" href="#target-api" id="id100">17.26&nbsp;&nbsp;&nbsp;Target API</a></li>
+<li><a class="reference internal" href="#backdoor-api" id="id83">17.9&nbsp;&nbsp;&nbsp;Backdoor API</a></li>
+<li><a class="reference internal" href="#campaign-api" id="id84">17.10&nbsp;&nbsp;&nbsp;Campaign API</a></li>
+<li><a class="reference internal" href="#certificate-api" id="id85">17.11&nbsp;&nbsp;&nbsp;Certificate API</a></li>
+<li><a class="reference internal" href="#comment-api" id="id86">17.12&nbsp;&nbsp;&nbsp;Comment API</a></li>
+<li><a class="reference internal" href="#domain-api" id="id87">17.13&nbsp;&nbsp;&nbsp;Domain API</a></li>
+<li><a class="reference internal" href="#email-api" id="id88">17.14&nbsp;&nbsp;&nbsp;Email API</a></li>
+<li><a class="reference internal" href="#event-api" id="id89">17.15&nbsp;&nbsp;&nbsp;Event API</a></li>
+<li><a class="reference internal" href="#exploit-api" id="id90">17.16&nbsp;&nbsp;&nbsp;Exploit API</a></li>
+<li><a class="reference internal" href="#indicator-api" id="id91">17.17&nbsp;&nbsp;&nbsp;Indicator API</a></li>
+<li><a class="reference internal" href="#indicator-activity-api" id="id92">17.18&nbsp;&nbsp;&nbsp;Indicator Activity API</a></li>
+<li><a class="reference internal" href="#ip-api" id="id93">17.19&nbsp;&nbsp;&nbsp;IP API</a></li>
+<li><a class="reference internal" href="#object-api" id="id94">17.20&nbsp;&nbsp;&nbsp;Object API</a></li>
+<li><a class="reference internal" href="#pcap-api" id="id95">17.21&nbsp;&nbsp;&nbsp;PCAP API</a></li>
+<li><a class="reference internal" href="#raw-data-api" id="id96">17.22&nbsp;&nbsp;&nbsp;Raw Data API</a></li>
+<li><a class="reference internal" href="#relationship-api" id="id97">17.23&nbsp;&nbsp;&nbsp;Relationship API</a></li>
+<li><a class="reference internal" href="#sample-api" id="id98">17.24&nbsp;&nbsp;&nbsp;Sample API</a></li>
+<li><a class="reference internal" href="#screenshot-api" id="id99">17.25&nbsp;&nbsp;&nbsp;Screenshot API</a></li>
+<li><a class="reference internal" href="#service-api" id="id100">17.26&nbsp;&nbsp;&nbsp;Service API</a></li>
+<li><a class="reference internal" href="#standards-api" id="id101">17.27&nbsp;&nbsp;&nbsp;Standards API</a></li>
+<li><a class="reference internal" href="#target-api" id="id102">17.28&nbsp;&nbsp;&nbsp;Target API</a></li>
 </ul>
 </li>
 </ul>
@@ -1804,12 +1806,16 @@ are using.</p>
 <p>The &lt;resource&gt; is the content you wish to utilize within CRITs.
 Currently the available resources are:</p>
 <ul class="simple">
+<li>actors</li>
+<li>actoridentifiers</li>
+<li>backdoors</li>
 <li>campaigns</li>
 <li>certificates</li>
 <li>comments</li>
 <li>domains</li>
 <li>emails</li>
 <li>events</li>
+<li>exploits</li>
 <li>indicators</li>
 <li>ips</li>
 <li>pcaps</li>
@@ -2155,8 +2161,34 @@ sections below for any special conditions you may need to look out for.</p>
 </tbody>
 </table>
 </div>
+<div class="section" id="backdoor-api">
+<h2><a class="toc-backref" href="#id83">17.9&nbsp;&nbsp;&nbsp;Backdoor API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/backdoors/</p>
+<p>/api/v1/backdoors/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/backdoors/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">name:</th><td class="field-body">Name of the Backdoor.</td>
+</tr>
+<tr class="field"><th class="field-name">version:</th><td class="field-body">Version of the Backdoor</td>
+</tr>
+<tr class="field"><th class="field-name">aliases:</th><td class="field-body">Comma-separated list of backdoor aliases.</td>
+</tr>
+<tr class="field"><th class="field-name">description:</th><td class="field-body">Description of the Backdoor.</td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section" id="campaign-api">
-<h2><a class="toc-backref" href="#id83">17.9&nbsp;&nbsp;&nbsp;Campaign API</a></h2>
+<h2><a class="toc-backref" href="#id84">17.10&nbsp;&nbsp;&nbsp;Campaign API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/campaigns/</p>
@@ -2180,7 +2212,7 @@ sections below for any special conditions you may need to look out for.</p>
 </table>
 </div>
 <div class="section" id="certificate-api">
-<h2><a class="toc-backref" href="#id84">17.10&nbsp;&nbsp;&nbsp;Certificate API</a></h2>
+<h2><a class="toc-backref" href="#id85">17.11&nbsp;&nbsp;&nbsp;Certificate API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/certificates/</p>
@@ -2210,7 +2242,7 @@ sections below for any special conditions you may need to look out for.</p>
 </table>
 </div>
 <div class="section" id="comment-api">
-<h2><a class="toc-backref" href="#id85">17.11&nbsp;&nbsp;&nbsp;Comment API</a></h2>
+<h2><a class="toc-backref" href="#id86">17.12&nbsp;&nbsp;&nbsp;Comment API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/comments/</blockquote>
@@ -2229,7 +2261,7 @@ sections below for any special conditions you may need to look out for.</p>
 </table>
 </div>
 <div class="section" id="domain-api">
-<h2><a class="toc-backref" href="#id86">17.12&nbsp;&nbsp;&nbsp;Domain API</a></h2>
+<h2><a class="toc-backref" href="#id87">17.13&nbsp;&nbsp;&nbsp;Domain API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/domains/</p>
@@ -2265,7 +2297,7 @@ sections below for any special conditions you may need to look out for.</p>
 </table>
 </div>
 <div class="section" id="email-api">
-<h2><a class="toc-backref" href="#id87">17.13&nbsp;&nbsp;&nbsp;Email API</a></h2>
+<h2><a class="toc-backref" href="#id88">17.14&nbsp;&nbsp;&nbsp;Email API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/emails/</p>
@@ -2330,7 +2362,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="event-api">
-<h2><a class="toc-backref" href="#id88">17.14&nbsp;&nbsp;&nbsp;Event API</a></h2>
+<h2><a class="toc-backref" href="#id89">17.15&nbsp;&nbsp;&nbsp;Event API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/events/</p>
@@ -2355,8 +2387,32 @@ only &quot;date&quot; is required:</p>
 </tbody>
 </table>
 </div>
+<div class="section" id="exploit-api">
+<h2><a class="toc-backref" href="#id90">17.16&nbsp;&nbsp;&nbsp;Exploit API</a></h2>
+<p>GET:</p>
+<blockquote>
+<p>/api/v1/exploits/</p>
+<p>/api/v1/exploits/&lt;object_id&gt;/</p>
+</blockquote>
+<p>POST:</p>
+<blockquote>
+/api/v1/exploits/</blockquote>
+<p>Unique POST Parameters:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">name:</th><td class="field-body">Name of the Exploit.</td>
+</tr>
+<tr class="field"><th class="field-name">cve:</th><td class="field-body">CVE identifier of the Exploit.</td>
+</tr>
+<tr class="field"><th class="field-name">description:</th><td class="field-body">Description of the Exploit.</td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section" id="indicator-api">
-<h2><a class="toc-backref" href="#id89">17.15&nbsp;&nbsp;&nbsp;Indicator API</a></h2>
+<h2><a class="toc-backref" href="#id91">17.17&nbsp;&nbsp;&nbsp;Indicator API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/indicators/</p>
@@ -2407,7 +2463,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="indicator-activity-api">
-<h2><a class="toc-backref" href="#id90">17.16&nbsp;&nbsp;&nbsp;Indicator Activity API</a></h2>
+<h2><a class="toc-backref" href="#id92">17.18&nbsp;&nbsp;&nbsp;Indicator Activity API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/indicator_activity/</blockquote>
@@ -2428,7 +2484,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="ip-api">
-<h2><a class="toc-backref" href="#id91">17.17&nbsp;&nbsp;&nbsp;IP API</a></h2>
+<h2><a class="toc-backref" href="#id93">17.19&nbsp;&nbsp;&nbsp;IP API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/ips/</p>
@@ -2455,7 +2511,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="object-api">
-<h2><a class="toc-backref" href="#id92">17.18&nbsp;&nbsp;&nbsp;Object API</a></h2>
+<h2><a class="toc-backref" href="#id94">17.20&nbsp;&nbsp;&nbsp;Object API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/objects/</blockquote>
@@ -2486,7 +2542,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="pcap-api">
-<h2><a class="toc-backref" href="#id93">17.19&nbsp;&nbsp;&nbsp;PCAP API</a></h2>
+<h2><a class="toc-backref" href="#id95">17.21&nbsp;&nbsp;&nbsp;PCAP API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/pcaps/</p>
@@ -2514,7 +2570,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="raw-data-api">
-<h2><a class="toc-backref" href="#id94">17.20&nbsp;&nbsp;&nbsp;Raw Data API</a></h2>
+<h2><a class="toc-backref" href="#id96">17.22&nbsp;&nbsp;&nbsp;Raw Data API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/raw_data/</p>
@@ -2564,7 +2620,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="relationship-api">
-<h2><a class="toc-backref" href="#id95">17.21&nbsp;&nbsp;&nbsp;Relationship API</a></h2>
+<h2><a class="toc-backref" href="#id97">17.23&nbsp;&nbsp;&nbsp;Relationship API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/relationships/</blockquote>
@@ -2602,7 +2658,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="sample-api">
-<h2><a class="toc-backref" href="#id96">17.22&nbsp;&nbsp;&nbsp;Sample API</a></h2>
+<h2><a class="toc-backref" href="#id98">17.24&nbsp;&nbsp;&nbsp;Sample API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/samples/</p>
@@ -2647,7 +2703,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="screenshot-api">
-<h2><a class="toc-backref" href="#id97">17.23&nbsp;&nbsp;&nbsp;Screenshot API</a></h2>
+<h2><a class="toc-backref" href="#id99">17.25&nbsp;&nbsp;&nbsp;Screenshot API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/screenshots/</p>
@@ -2679,7 +2735,7 @@ only &quot;date&quot; is required:</p>
 </table>
 </div>
 <div class="section" id="service-api">
-<h2><a class="toc-backref" href="#id98">17.24&nbsp;&nbsp;&nbsp;Service API</a></h2>
+<h2><a class="toc-backref" href="#id100">17.26&nbsp;&nbsp;&nbsp;Service API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/services/</blockquote>
@@ -2724,7 +2780,7 @@ only &quot;date&quot; is required:</p>
 field, &quot;log_level&quot; will be set to &quot;info&quot; if it is not provided.</p>
 </div>
 <div class="section" id="standards-api">
-<h2><a class="toc-backref" href="#id99">17.25&nbsp;&nbsp;&nbsp;Standards API</a></h2>
+<h2><a class="toc-backref" href="#id101">17.27&nbsp;&nbsp;&nbsp;Standards API</a></h2>
 <p>POST:</p>
 <blockquote>
 /api/v1/standards/</blockquote>
@@ -2752,7 +2808,7 @@ The failed field is a list of dictionaries containing the TLO type (type) CRITs
 tried to create and a message (message) detailing what went wrong.</p>
 </div>
 <div class="section" id="target-api">
-<h2><a class="toc-backref" href="#id100">17.26&nbsp;&nbsp;&nbsp;Target API</a></h2>
+<h2><a class="toc-backref" href="#id102">17.28&nbsp;&nbsp;&nbsp;Target API</a></h2>
 <p>GET:</p>
 <blockquote>
 <p>/api/v1/targets/</p>

@@ -9,24 +9,10 @@ from cybox.objects.artifact_object import Artifact, Base64Encoding, ZlibCompress
 from cybox.core import Observable
 from cybox.common import UnsignedLong, Hash
 
-from crits.samples.backdoor import Backdoor
 from crits.samples.migrate import migrate_sample
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.fields import CritsDateTimeField, getFileField
-
-class EmbeddedExploit(EmbeddedDocument, CritsDocumentFormatter):
-    """Sample exploits object"""
-
-    cve = StringField()
-
-class EmbeddedBackdoor(EmbeddedDocument, CritsDocumentFormatter):
-    """Sample backdoors object"""
-
-    name = StringField()
-    version = StringField()
-    analyst = StringField()
-    date = CritsDateTimeField(default=datetime.datetime.now)
 
 class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
     """Sample object"""
@@ -34,7 +20,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_SAMPLES,
         "crits_type": 'Sample',
-        "latest_schema_version": 3,
+        "latest_schema_version": 4,
         "shard_key": ('md5',),
         "schema_doc": {
             'filename': 'The name of the last file that was uploaded with this'\
@@ -47,17 +33,6 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
             'sha1': 'The SHA1 of the file',
             'sha256': 'The SHA256 of the file',
             'ssdeep': 'The ssdeep of the file',
-            'exploit': [
-                {
-                    'cve': 'The CVE of the exploit used by this file'
-                }
-            ],
-            'backdoor': {
-                'name': 'The name of the backdoor used by this file',
-                'version': 'The version of the backdoor used by this file',
-                'analyst': 'The analyst who added this backdoor',
-                'date': 'The date this backdoor was added'
-            },
             'campaign': 'List [] of campaigns using this file',
             'source': 'List [] of sources that provided this file',
             'created': 'ISODate of when this file was uploaded',
@@ -70,15 +45,13 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
                          'default_sort': "created DESC",
                          'searchurl': 'crits.samples.views.samples_listing',
                          'fields': [ "filename", "size", "filetype",
-                                     "created", "modified", "exploit",
-                                     "campaign", "source", "md5", "id",
-                                     "status"],
+                                     "created", "modified", "campaign",
+                                     "source", "md5", "id", "status"],
                          'jtopts_fields': [ "details",
                                             "filename",
                                             "size",
                                             "filetype",
                                             "created",
-                                            "exploit",
                                             "campaign",
                                             "source",
                                             "md5",
@@ -87,14 +60,12 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
                                             "id"],
                          'hidden_fields': ["md5"],
                          'linked_fields': ["filename", "source", "campaign",
-                                           "filetype","exploit"],
+                                           "filetype"],
                          'details_link': 'details',
                          'no_sort': ['details', 'id']
                        },
     }
 
-    backdoor = EmbeddedDocumentField(EmbeddedBackdoor)
-    exploit = ListField(EmbeddedDocumentField(EmbeddedExploit))
     filedata = getFileField(collection_name=settings.COL_SAMPLES)
     filename = StringField(required=True)
     filenames = ListField(StringField())
@@ -241,37 +212,6 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         if objectid:
             self.filedata.grid_id = objectid['_id']
             self.filedata._mark_as_changed()
-
-    def set_backdoor(self, name, version, analyst):
-        if self.backdoor:
-            bd = Backdoor.objects(name=self.backdoor.name).first()
-            bd.decrement_count()
-            bd.save(username=analyst)
-        eb = EmbeddedBackdoor()
-        eb.name = name
-        eb.version = version
-        eb.analyst = analyst
-        self.backdoor = eb
-        bd = Backdoor.objects(name=name).first()
-        bd.increment_count()
-        bd.save(username=analyst)
-
-    def add_exploit(self, cve):
-        found = False
-        for e in self.exploit:
-            if e.cve == cve:
-                found = True
-        if not found:
-            ee = EmbeddedExploit()
-            ee.cve = cve
-            self.exploit.append(ee)
-
-    def delete_exploit(self, cve):
-        c = 0
-        for e in self.exploit:
-            if e.cve == cve:
-                del self.exploit[c]
-            c += 0
 
     def set_filenames(self, filenames):
         """
