@@ -505,8 +505,8 @@ function update_dialog(e) {
     // pre-populate form
     inputs.each(function(index) {
         var input = $(this);
-    var field = input.attr('name');
-    var value;
+        var field = input.attr('name');
+        var value;
 
         // map input to table cell with "data-field" (changed from class) matching input name
         // first look at the top level
@@ -897,6 +897,22 @@ function releasability_add_submit(e) {
         });
 }
 
+function check_selected(type, dialog) {
+    if (selected_text) {
+        var obj = null;
+        if (type == 'ip') {
+            obj = '#id_ip';
+        } else if (type == 'domain') {
+            obj = '#id_domain';
+        } else if (type == 'indicator') {
+            obj = '#id_value';
+        }
+        if (obj) {
+            dialog.find(obj).val(selected_text);
+            selected_text = null;
+        }
+    }
+}
 
 function new_ip_dialog(e) {
     var dialog = $(this).find("form");
@@ -910,6 +926,9 @@ function new_ip_dialog(e) {
             ref.hide();
         }
         }).trigger('change');
+
+    // If there is selected text, default the value in the form
+    check_selected('ip', dialog);
 }
 
 function new_domain_dialog(e) {
@@ -954,6 +973,10 @@ function new_domain_dialog(e) {
 
     //reinitialize ip date field (since this function can be called after page load)
     createPickers();
+
+    // If there is selected text, default the value in the form
+    check_selected('domain', dialog);
+
 }
 
 function new_event_dialog() {
@@ -995,6 +1018,9 @@ function new_indicator_dialog(e) {
     var form = dialog.find("form");
 
     add_more_object_types_button(form, 'no_file');
+
+    // If there is selected text, default the value in the form
+    check_selected('indicator', dialog);
 }
 
 // We may want to do something like this generally, but for now just doing it for single text entry form
