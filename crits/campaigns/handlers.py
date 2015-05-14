@@ -267,7 +267,7 @@ def generate_campaign_jtable(request, option):
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
                 field['display'] = """ function (data) {
-                return '<a href="%s?campaign='+data.record.name+'">'+data.record.%s_count+'</a>';
+                return '<a href="%s?campaign='+encodeURIComponent(data.record.name)+'">'+data.record.%s_count+'</a>';
             }
             """ % (url, ctype)
     if option == "inline":
