@@ -37,11 +37,13 @@ from crits.core.user_tools import save_user_secret
 from crits.core.user_tools import get_user_email_notification
 
 from crits.actors.actor import Actor
+from crits.backdoors.backdoor import Backdoor
 from crits.campaigns.campaign import Campaign
 from crits.certificates.certificate import Certificate
 from crits.comments.comment import Comment
 from crits.domains.domain import Domain
 from crits.events.event import Event
+from crits.exploits.exploit import Exploit
 from crits.ips.ip import IP
 from crits.notifications.handlers import get_user_notifications, generate_audit_notification
 from crits.pcaps.pcap import PCAP
@@ -3283,11 +3285,13 @@ def generate_global_search(request):
     if ObjectId.is_valid(searchtext):
         for obj_type, url, key in [
                 ['Actor', 'crits.actors.views.actor_detail', 'id'],
+                ['Backdoor', 'crits.backdoors.views.backdoor_detail', 'id'],
                 ['Campaign', 'crits.campaigns.views.campaign_details', 'name'],
                 ['Certificate', 'crits.certificates.views.certificate_details', 'md5'],
                 ['Domain', 'crits.domains.views.domain_detail', 'domain'],
                 ['Email', 'crits.emails.views.email_detail', 'id'],
                 ['Event', 'crits.events.views.view_event', 'id'],
+                ['Exploit', 'crits.exploits.views.exploit_detail', 'id'],
                 ['Indicator', 'crits.indicators.views.indicator', 'id'],
                 ['IP', 'crits.ips.views.ip_detail', 'ip'],
                 ['PCAP', 'crits.pcaps.views.pcap_details', 'md5'],
@@ -3305,12 +3309,14 @@ def generate_global_search(request):
     for col_obj,url in [
                     [Actor, "crits.actors.views.actors_listing"],
                     [AnalysisResult, "crits.services.views.analysis_results_listing"],
+                    [Backdoor, "crits.backdoors.views.backdoors_listing"],
                     [Campaign, "crits.campaigns.views.campaigns_listing"],
                     [Certificate, "crits.certificates.views.certificates_listing"],
                     [Comment, "crits.comments.views.comments_listing"],
                     [Domain, "crits.domains.views.domains_listing"],
                     [Email, "crits.emails.views.emails_listing"],
                     [Event, "crits.events.views.events_listing"],
+                    [Exploit, "crits.exploits.views.exploits_listing"],
                     [Indicator,"crits.indicators.views.indicators_listing"],
                     [IP, "crits.ips.views.ips_listing"],
                     [PCAP, "crits.pcaps.views.pcaps_listing"],
