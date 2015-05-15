@@ -643,7 +643,7 @@ class CRITsAPIResource(MongoEngineResource):
             'Common': {
                 'run_service': servh.run_service,
             },
-            'Actor': {
+            'Actors': {
                 'update_actor_tags': ah.update_actor_tags,
                 'attribute_actor_identifier': ah.attribute_actor_identifier,
                 'set_identifier_confidence': ah.set_identifier_confidence,
