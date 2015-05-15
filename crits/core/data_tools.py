@@ -234,7 +234,7 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
     :param obj_id: The ObjectId to search for.
     :type obj_id: str
     :param data_format: The format of the returned data.
-    :type data_format: str of "yaml", "json", or "cybox".
+    :type data_format: str of "yaml" or "json"
     :param cleanse: Remove "to", "actions", "releasability", and "bucket_list"
                     if this is an Email or Indicator.
     :type cleanse: boolean
@@ -323,9 +323,6 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
         data = yaml.dump(yaml.load(data), default_flow_style=False)
     elif data_format == "json":
         data = json.dumps(json.loads(data))
-    elif data_format == "cybox":
-        if hasattr(obj_class, "to_cybox_observable"):
-            data = obj_class.to_cybox_observable()[0][0].to_xml()
 
     return data
 

@@ -174,8 +174,8 @@ in the system.
    relationship between each of these objects that would otherwise
    be independent. Relationships can be either horizontal (as in the
    above example) or vertical (as in hierarchical). CRITs supports
-   relationships as defined in the CybOX specification. Each object
-   has a \"child\" object in which related objects are declared.
+   relationships. Each object has a \"child\" object in which related
+   objects are declared.
 
 **Sample**
   Samples are binaries which you want to perform some level of analysis on due
@@ -194,8 +194,6 @@ in the system.
    universal \"right way\" to define them. Having a solid
    understanding of how your organization defines sources will ensure
    that your own efforts will be compliant.
-
-.. _CybOX Objects: http://cybox.mitre.org/about/faqs.html#B2
 
 Keyboard Shortcuts
 -------------------------------------------
@@ -1241,10 +1239,6 @@ following formats:
 - json
 - yaml
 - xml
-- stix
-
-If you choose the stix format, you will get a single stix document from the API
-which contains all of the objects returned from that API call.
 
 If you wish to get information about a single document, you would use:
 
@@ -1904,30 +1898,6 @@ Unique POST Parameters:
 If you include the "result" field, you will be required to also provide the
 "result_type" and "result_subtype". Also, if you include the "log_message"
 field, "log_level" will be set to "info" if it is not provided.
-
-Standards API
--------------------------------------------
-
-POST:
-
-        /api/v1/standards/
-
-Unique POST Parameters:
-
-:upload_type: must be 'file' or 'xml' (lower case)
-:filedata: The STIX document if uploading as a file using the 'file' upload_type.
-:xml: The STIX document if uploading as 'xml' using the 'xml' upload_type.
-:make_event: Wether to create an event within CRITS.  False if not present.  Set to True
-
-POST Response:
-
-Since it is possible to import multiple TLOs within a single standards document
-the format of the response is different from most others. You will find two fields
-called "imported" and "failed". The imported field is a list of dictionaries. Each
-dictionary contains the TLO type (type), ObjectId (id), and API details URL (url).
-The failed field is a list of dictionaries containing the TLO type (type) CRITs
-tried to create and a message (message) detailing what went wrong.
-
 
 Target API
 -------------------------------------------

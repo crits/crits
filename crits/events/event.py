@@ -1,4 +1,3 @@
-import datetime
 import uuid
 
 from mongoengine import Document, StringField, UUIDField
@@ -80,73 +79,6 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
         e = EventType.objects(name=event_type).first()
         if e:
             self.event_type = event_type
-
-    def stix_description(self):
-        return self.description
-
-    def stix_intent(self):
-        return self.event_type
-
-    def stix_title(self):
-        return self.title
-
-    def to_stix_incident(self):
-        """
-        Creates a STIX Incident object from a CRITs Event.
-
-        Returns the STIX Incident and the original CRITs Event's
-        releasability list.
-        """
-        from stix.incident import Incident
-        inc = Incident(title=self.title, description=self.description)
-
-        return (inc, self.releasability)
-
-    @classmethod
-    def from_stix(cls, stix_package):
-        """
-        Converts a stix_package to a CRITs Event.
-
-        :param stix_package: A stix package.
-        :type stix_package: :class:`stix.core.STIXPackage`
-        :returns: None, :class:`crits.events.event.Event'
-        """
-
-        from stix.common import StructuredText
-        from stix.core import STIXPackage, STIXHeader
-
-        if isinstance(stix_package, STIXPackage):
-            stix_header = stix_package.stix_header
-            stix_id = stix_package.id_
-            event = cls()
-            event.title = "STIX Document %s" % stix_id
-            event.event_type = "Collective Threat Intelligence"
-            event.description = str(datetime.datetime.now())
-            eid = stix_package.id_
-            try:
-                uuid.UUID(eid)
-            except ValueError:
-                # The STIX package ID attribute is not a valid UUID
-                # so make one up.
-                eid = uuid.uuid4() # XXX: Log this somewhere?
-            event.event_id = eid
-            if isinstance(stix_header, STIXHeader):
-                if stix_header.title:
-                    event.title = stix_header.title
-                #if stix_header.package_intents:
-                # package_intents are optional in the STIX Spec.. So we check for the attribute being present
-                # rather than the original check which causes an exception
-                if hasattr(stix_header,'package_intents'):
-                    event.event_type = str(stix_header.package_intents[0])
-                description = stix_header.description
-                if isinstance(description, StructuredText):
-                    try:
-                        event.description = description.to_dict()
-                    except:
-                        pass
-            return event
-        else:
-            return None
 
     def migrate(self):
         """

@@ -90,7 +90,6 @@ from crits.raw_data.raw_data import RawDataType
 from crits.relationships.forms import ForgeRelationshipForm
 from crits.samples.forms import UploadFileForm
 from crits.screenshots.forms import AddScreenshotForm
-from crits.standards.forms import UploadStandardsForm
 from crits.targets.forms import TargetInfoForm
 
 logger = logging.getLogger(__name__)
@@ -189,7 +188,7 @@ def get_dialog(request):
 
     dialog = request.GET.get('dialog', '')
     # Regex in urls.py doesn't seem to be working, should sanity check dialog
-    return render_to_response("dialogs/" + dialog + ".html",
+    return render_to_response(dialog + ".html",
                               {"error" : 'Dialog not found'},
                               RequestContext(request))
 
@@ -849,15 +848,6 @@ def download_object(request):
                                   {"error" : "Expecting POST."},
                                   RequestContext(request))
 
-    # if the STIX format is chosen, force binary to be base64
-    # we force this in the UI as well, but because we disable the select box it
-    # winds up not including it in the POST data. we get a two-fer here by
-    # making the form valid again and also ensuring people can't submit bad
-    # requests and forcing a format they shouldn't be.
-    request.POST = request.POST.copy()
-    if request.POST['rst_fmt'] == 'stix':
-        request.POST['bin_fmt'] = 'base64'
-
     form = DownloadFileForm(request.POST)
     if form.is_valid():
         total_limit = form.cleaned_data['total_limit']
@@ -1150,10 +1140,6 @@ def base_context(request):
             base_context['upload_sample'] = UploadFileForm(user)
         except Exception, e:
             logger.warning("Base Context UploadFileForm Error: %s" % e)
-        try:
-            base_context['upload_standards'] = UploadStandardsForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadStandardsForm Error: %s" % e)
         try:
             base_context['object_form'] = AddObjectForm(user, None)
         except Exception, e:

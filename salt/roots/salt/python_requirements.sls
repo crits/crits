@@ -7,12 +7,6 @@ anyjson:
     - requires:
       - cmd: python-pip
 
-cybox:
-  pip.installed:
-    - name: cybox==2.1.0.5
-    - requires:
-      - cmd: python-pip
-
 python-dateutil:
   pip.installed:
     - name: python-dateutil==2.2
@@ -82,12 +76,6 @@ python-magic:
 simplejson:
   pip.installed:
     - name: simplejson==3.5.2
-    - requires:
-        - cmd: python-pip
-
-stix:
-  pip.installed:
-    - name: stix==1.1.1.0
     - requires:
         - cmd: python-pip
 

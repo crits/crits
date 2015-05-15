@@ -23,7 +23,6 @@ Subpackages
     crits.relationships
     crits.samples
     crits.services
-    crits.standards
     crits.stats
     crits.targets
 

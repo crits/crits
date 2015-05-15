@@ -1164,20 +1164,6 @@ def dict_to_email(d, save_unsupported=True):
     crits_email.merge(d)
     return crits_email
 
-def generate_email_cybox(email_id):
-    """
-    Generate Cybox for a given email.
-
-    :param email_id: The ObjectId of the email.
-    :returns: str
-    """
-
-    email = Email.objects(id=email_id).first()
-    if email:
-        return email.to_cybox_observable()[0][0]
-    else:
-        return None
-
 def update_email_header_value(email_id, type_, value, analyst):
     """
     Update a header value for an email.

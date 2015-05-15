@@ -1074,6 +1074,8 @@ var stdDialogs = {
       "new-email-yaml": {title: "Email (YAML)", open: new_email_yaml_dialog},
 
       "new-campaign": {title: "Campaign"},
+      "new-backdoor": {title: "Backdoor"},
+      "new-exploit": {title: "Exploit"},
 
       "new-domain": {title: "Domain", open: new_domain_dialog},
       "new-indicator": {title: "Indicator", open: new_indicator_dialog},
@@ -1087,8 +1089,6 @@ var stdDialogs = {
 
       "new-target": {title: "Target", open: new_target_dialog },
 
-      "backdoor_add": {title: "Backdoor"},
-      "exploit_add": {title: "Exploit"},
       "source_create": {title: "Source"},
       "user_role": {title: "User Role"},
 
@@ -1120,7 +1120,6 @@ var stdDialogs = {
 
   var fileDialogs = {
       // File Upload Dialogs
-      "new-standards": {title: "STIX Document"},
       "new-email-outlook": {title: "Upload Outlook Email" },
       "new-email-eml": {title: "Email" },
       "new-pcap": {title: "PCAP", personas: {related: newPersona("Upload Related PCAP",
@@ -1143,8 +1142,8 @@ var stdDialogs = {
   $.each(fileDialogs, function(id,opt) {
       stdDialog(id, opt, {
           new: { open: file_upload_dialog, submit: defaultSubmit }}
-          )
-          });
+      )
+  });
 
   // New Sample dialog has some additional setup, so add that as an event callback
   $("#dialog-new-sample").on("dialogopen", new_sample_dialog);
@@ -1156,7 +1155,7 @@ var stdDialogs = {
   // action to the form's submit action by default, but I don't want
   // to make that sort of global change before 3.0.
   var singleInputDialogs = "#dialog-actor-identifier-type,#dialog-ticket,"+
-      "#dialog-backdoor_add,#dialog-source_create,#dialog-user_role,#dialog-exploit_add," +
+      "#dialog-source_create,#dialog-user_role," +
       "#dialog-indicator_action_add,#dialog-raw_data_type_add";
   $(singleInputDialogs).on("dialogopen", fix_form_submit(addEditSubmit));
 
@@ -1186,16 +1185,6 @@ var stdDialogs = {
 
 
   $("#dialog-new-indicator").on("dialogcreate", new_indicator_dialog);
-
-  $(document).on('change', "#id_rst_fmt", function(e) {
-      if (this.value == 'stix') {
-          console.log("disable");
-          $("#id_bin_fmt").val("base64").prop("disabled", true);
-      } else {
-          console.log("enable");
-          $("#id_bin_fmt").prop("disabled", false);
-      }
-  });
 
   // Releasability has plus instance and delete buttons that use same callback
   $(document).on('click', '.add_releasability_instance_button',
