@@ -81,6 +81,9 @@
                             <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{backdoor.status}}</span>
                         </td>
                     </tr>
+                    {% with sectors=backdoor.sectors %}
+                        {% include "sector_widget.html" %}
+                    {% endwith %}
                     <tr>
                         {% with sources=backdoor.source obj_id=backdoor.id obj_type=subscription.type %}
                             {% include "sources_listing_widget.html" %}

@@ -3811,11 +3811,13 @@ def generate_sector_jtable(request, option):
                                     request,
                                     includes=['name',
                                               'Actor',
+                                              'Backdoor',
                                               'Campaign',
                                               'Certificate',
                                               'Domain',
                                               'Email',
                                               'Event',
+                                              'Exploit',
                                               'Indicator',
                                               'IP',
                                               'PCAP',
@@ -3825,8 +3827,9 @@ def generate_sector_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
-              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target']
+    fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
+              'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
+              'Sample', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',
