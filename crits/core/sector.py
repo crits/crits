@@ -29,7 +29,6 @@ class Sector(CritsDocument, CritsSchemaDocument, Document):
             'Event': 'Integer',
             'Exploit': 'Integer',
             'Target': 'Integer',
-            'Event': 'Integer',
             'IP': 'Integer',
             'Indicator': 'Integer',
             'PCAP': 'Integer',
