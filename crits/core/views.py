@@ -496,26 +496,26 @@ def source_releasability(request):
 
     if request.method == 'POST' and request.is_ajax():
         type_ = request.POST.get('type', None)
-        _id = request.POST.get('id', None)
+        id_ = request.POST.get('id', None)
         name = request.POST.get('name', None)
         action = request.POST.get('action', None)
         date = request.POST.get('date', datetime.datetime.now())
         if not isinstance(date, datetime.datetime):
             date = parse(date, fuzzy=True)
-        analyst = str(request.user.username)
-        if not type_ or not _id or not name or not action:
+        user = str(request.user.username)
+        if not type_ or not id_ or not name or not action:
             error = "Modifying releasability requires a type, id, source, and action"
             return render_to_response("error.html",
                                       {"error" : error },
                                       RequestContext(request))
         if action  == "add":
-            result = add_releasability(type_, _id, name, analyst)
+            result = add_releasability(type_, id_, name, user)
         elif action  == "add_instance":
-            result = add_releasability_instance(type_, _id, name, analyst)
+            result = add_releasability_instance(type_, id_, name, user)
         elif action == "remove":
-            result = remove_releasability(type_, _id, name, analyst)
+            result = remove_releasability(type_, id_, name, user)
         elif action == "remove_instance":
-            result = remove_releasability_instance(type_, _id, name, date, analyst)
+            result = remove_releasability_instance(type_, id_, name, date, user)
         else:
             error = "Unknown releasability action: %s" % action
             return render_to_response("error.html",
@@ -524,7 +524,7 @@ def source_releasability(request):
         if result['success']:
             subscription = {
                 'type': type_,
-                'id': _id
+                'id': id_
             }
 
             html = render_to_string('releasability_header_widget.html',

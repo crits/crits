@@ -637,11 +637,13 @@ class CRITsAPIResource(MongoEngineResource):
         """
 
         import crits.actors.handlers as ah
+        import crits.core.handlers as coreh
         import crits.services.handlers as servh
 
         actions = {
             'Common': {
                 'run_service': servh.run_service,
+                'add_releasability': coreh.add_releasability,
             },
             'Actor': {
                 'update_actor_tags': ah.update_actor_tags,
@@ -694,7 +696,7 @@ class CRITsAPIResource(MongoEngineResource):
             content['message'] = "'%s' is not a valid resource." % type_
             self.crits_response(content)
         action_type = atype.get(action, None)
-        if not action_type:
+        if action_type is None:
             atype = actions.get('Common')
             action_type = atype.get(action, None)
         if action_type:
