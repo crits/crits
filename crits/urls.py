@@ -4,20 +4,22 @@ import os
 from django.conf import settings
 from django.conf.urls import include, patterns
 
-
 urlpatterns = patterns('',
 
     (r'^', include('crits.core.urls')),                        # Core
     (r'^dashboards/', include('crits.dashboards.urls')),       # Dashboard
     (r'^actors/', include('crits.actors.urls')),               # Actors
+    (r'^backdoors/', include('crits.backdoors.urls')),         # Backdoors
     (r'^campaigns/', include('crits.campaigns.urls')),         # Campaigns
     (r'^certificates/', include('crits.certificates.urls')),   # Certificates
     (r'^comments/', include('crits.comments.urls')),           # Comments
     (r'^domains/', include('crits.domains.urls')),             # Domains
     (r'^emails/', include('crits.emails.urls')),               # Emails
     (r'^events/', include('crits.events.urls')),               # Events
+    (r'^exploits/', include('crits.exploits.urls')),           # Exploits
     (r'^indicators/', include('crits.indicators.urls')),       # Indicators
     (r'^ips/', include('crits.ips.urls')),                     # IPs
+    (r'^locations/', include('crits.locations.urls')),         # Locations
     (r'^notifications/', include('crits.notifications.urls')), # Notifications
     (r'^objects/', include('crits.objects.urls')),             # Objects
     (r'^pcaps/', include('crits.pcaps.urls')),                 # PCAPs
@@ -30,15 +32,24 @@ urlpatterns = patterns('',
     (r'^targets/', include('crits.targets.urls')),             # Targets
 )
 
+# Error overrides
+handler500 = 'crits.core.errors.custom_500'
+handler404 = 'crits.core.errors.custom_404'
+handler403 = 'crits.core.errors.custom_403'
+handler400 = 'crits.core.errors.custom_400'
+
 # Enable the API if configured
 if settings.ENABLE_API:
     from tastypie.api import Api
     from crits.actors.api import ActorResource, ActorIdentifierResource
+    from crits.backdoors.api import BackdoorResource
     from crits.campaigns.api import CampaignResource
     from crits.certificates.api import CertificateResource
+    from crits.comments.api import CommentResource
     from crits.domains.api import DomainResource
     from crits.emails.api import EmailResource
     from crits.events.api import EventResource
+    from crits.exploits.api import ExploitResource
     from crits.indicators.api import IndicatorResource, IndicatorActivityResource
     from crits.ips.api import IPResource
     from crits.objects.api import ObjectResource
@@ -54,11 +65,14 @@ if settings.ENABLE_API:
     v1_api = Api(api_name='v1')
     v1_api.register(ActorResource())
     v1_api.register(ActorIdentifierResource())
+    v1_api.register(BackdoorResource())
     v1_api.register(CampaignResource())
     v1_api.register(CertificateResource())
+    v1_api.register(CommentResource())
     v1_api.register(DomainResource())
     v1_api.register(EmailResource())
     v1_api.register(EventResource())
+    v1_api.register(ExploitResource())
     v1_api.register(IndicatorResource())
     v1_api.register(IndicatorActivityResource())
     v1_api.register(IPResource())

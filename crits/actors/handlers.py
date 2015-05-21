@@ -288,7 +288,7 @@ def get_actor_by_name(allowed_sources, actor):
     return actor
 
 def add_new_actor(name, aliases=None, description=None, source=None,
-                  source_method=None, source_reference=None, campaign=None,
+                  source_method='', source_reference='', campaign=None,
                   confidence=None, analyst=None, bucket_list=None, ticket=None):
     """
     Add an Actor to CRITs.
@@ -448,12 +448,12 @@ def get_actor_tags_by_type(tag_type):
         tags = [t.name for t in results]
     return tags
 
-def update_actor_tags(actor_id, tag_type, tags, username):
+def update_actor_tags(id_, tag_type, tags, user, **kwargs):
     """
     Update a subset of tags for an Actor.
 
-    :param actor_id: The ObjectId of the Actor to update.
-    :type actor_id: str
+    :param id_: The ObjectId of the Actor to update.
+    :type id_: str
     :param tag_type: The type of tag we are updating.
     :type tag_type: str
     :param tags: The tags we are setting.
@@ -461,17 +461,17 @@ def update_actor_tags(actor_id, tag_type, tags, username):
     :returns: dict
     """
 
-    actor = Actor.objects(id=actor_id).first()
+    actor = Actor.objects(id=id_).first()
     if not actor:
         return {'success': False,
                 'message': 'No actor could be found.'}
     else:
         actor.update_tags(tag_type, tags)
-        actor.save(username=username)
+        actor.save(username=user)
         return {'success': True}
 
 def add_new_actor_identifier(identifier_type, identifier=None, source=None,
-                             source_method=None, source_reference=None,
+                             source_method='', source_reference='',
                              analyst=None):
     """
     Add an Actor Identifier to CRITs.
@@ -564,23 +564,25 @@ def actor_identifier_type_values(type_=None, username=None):
     return result
 
 def attribute_actor_identifier(id_, identifier_type, identifier=None,
-                               confidence="low", analyst=None):
+                               confidence="low", user=None, **kwargs):
     """
     Attribute an Actor Identifier to an Actor in CRITs.
 
+    :param id_: The Actor ObjectId.
+    :type id_: str
     :param identifier_type: The Actor Identifier Type.
     :type identifier_type: str
     :param identifier: The Actor Identifier.
     :type identifier: str
-    :param analyst: The user attributing this identifier.
-    :type analyst: str
+    :param user: The user attributing this identifier.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
     """
 
-    sources = user_sources(analyst)
-    admin = is_admin(analyst)
+    sources = user_sources(user)
+    admin = is_admin(user)
     actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
@@ -588,10 +590,10 @@ def attribute_actor_identifier(id_, identifier_type, identifier=None,
                 'message': "Could not find actor"}
 
     c = len(actor.identifiers)
-    actor.attribute_identifier(identifier_type, identifier, confidence, analyst)
-    actor.save(username=analyst)
+    actor.attribute_identifier(identifier_type, identifier, confidence, user)
+    actor.save(username=user)
     actor.reload()
-    actor_identifiers = actor.generate_identifiers_list(analyst)
+    actor_identifiers = actor.generate_identifiers_list(user)
 
     if len(actor.identifiers) <= c:
         return {'success': False,
@@ -606,7 +608,7 @@ def attribute_actor_identifier(id_, identifier_type, identifier=None,
             'message': html}
 
 def set_identifier_confidence(id_, identifier=None, confidence="low",
-                              analyst=None):
+                              user=None, **kwargs):
     """
     Set the Identifier attribution confidence.
 
@@ -615,14 +617,14 @@ def set_identifier_confidence(id_, identifier=None, confidence="low",
     :type identifier: str
     :param confidence: The confidence level.
     :type confidence: str
-    :param analyst: The user editing this identifier.
-    :type analyst: str
+    :param user: The user editing this identifier.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
     """
 
-    sources = user_sources(analyst)
+    sources = user_sources(user)
     actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
@@ -630,26 +632,26 @@ def set_identifier_confidence(id_, identifier=None, confidence="low",
                 'message': "Could not find actor"}
 
     actor.set_identifier_confidence(identifier, confidence)
-    actor.save(username=analyst)
+    actor.save(username=user)
 
     return {'success': True}
 
-def remove_attribution(id_, identifier=None, analyst=None):
+def remove_attribution(id_, identifier=None, user=None, **kwargs):
     """
     Remove an attributed identifier.
 
     :param id_: The ObjectId of the Actor.
     :param identifier: The Actor Identifier ObjectId.
     :type identifier: str
-    :param analyst: The user removing this attribution.
-    :type analyst: str
+    :param user: The user removing this attribution.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
     """
 
-    sources = user_sources(analyst)
-    admin = is_admin(analyst)
+    sources = user_sources(user)
+    admin = is_admin(user)
     actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
@@ -657,9 +659,9 @@ def remove_attribution(id_, identifier=None, analyst=None):
                 'message': "Could not find actor"}
 
     actor.remove_attribution(identifier)
-    actor.save(username=analyst)
+    actor.save(username=user)
     actor.reload()
-    actor_identifiers = actor.generate_identifiers_list(analyst)
+    actor_identifiers = actor.generate_identifiers_list(user)
 
     html = render_to_string('actor_identifiers_widget.html',
                             {'actor_identifiers': actor_identifiers,
@@ -669,7 +671,7 @@ def remove_attribution(id_, identifier=None, analyst=None):
     return {'success': True,
             'message': html}
 
-def set_actor_name(id_, name, analyst):
+def set_actor_name(id_, name, user, **kwargs):
     """
     Set an Actor name.
 
@@ -677,14 +679,14 @@ def set_actor_name(id_, name, analyst):
     :type id_: str
     :param name: The new name.
     :type name: str
-    :param analyst: The user updating the name.
-    :type analyst: str
+    :param user: The user updating the name.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
     """
 
-    sources = user_sources(analyst)
+    sources = user_sources(user)
     actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
@@ -692,55 +694,29 @@ def set_actor_name(id_, name, analyst):
                 'message': "Could not find actor"}
 
     actor.name = name.strip()
-    actor.save(username=analyst)
+    actor.save(username=user)
     return {'success': True}
 
-def set_actor_description(id_, description, analyst):
-    """
-    Set an Actor description.
-
-    :param id_: Actor ObjectId.
-    :type id_: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user updating the description.
-    :type analyst: str
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str),
-    """
-
-    sources = user_sources(analyst)
-    actor = Actor.objects(id=id_,
-                          source__name__in=sources).first()
-    if not actor:
-        return {'success': False,
-                'message': "Could not find actor"}
-
-    actor.description = description.strip()
-    actor.save(username=analyst)
-    return {'success': True}
-
-def update_actor_aliases(actor_id, aliases, analyst):
+def update_actor_aliases(id_, aliases, user, **kwargs):
     """
     Update aliases for an Actor.
 
-    :param actor_id: The ObjectId of the Actor to update.
-    :type actor_id: str
+    :param id_: The ObjectId of the Actor to update.
+    :type id_: str
     :param aliases: The aliases we are setting.
     :type aliases: list
-    :param analyst: The user updating the aliases.
-    :type analyst: str
+    :param user: The user updating the aliases.
+    :type user: str
     :returns: dict
     """
 
-    sources = user_sources(analyst)
-    actor = Actor.objects(id=actor_id,
+    sources = user_sources(user)
+    actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
         return {'success': False,
                 'message': 'No actor could be found.'}
     else:
         actor.update_aliases(aliases)
-        actor.save(username=analyst)
+        actor.save(username=user)
         return {'success': True}

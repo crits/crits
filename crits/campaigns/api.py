@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.campaigns.campaign import Campaign
 from crits.campaigns.handlers import add_campaign
@@ -18,7 +17,7 @@ class CampaignResource(CRITsAPIResource):
 
     class Meta:
         object_class = Campaign
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "campaigns"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

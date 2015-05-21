@@ -160,31 +160,9 @@ def prep_indexes():
     Update indexing.
     """
 
-    notifications = mongo_connector(settings.COL_NOTIFICATIONS)
-    # auto-expire notifications after 30 days
-    notifications.ensure_index("obj_id", background=True,
-                               expireAfterSeconds=2592000)
-    notifications.ensure_index("users", background=True)
-    print "Notification indexes created."
-    screenshots = mongo_connector(settings.COL_SCREENSHOTS)
-    screenshots.ensure_index("tags", background=True)
-    print "Screenshot indexes created."
-
-    # check for old invalid chunk indexes and fix
-    for col in ("%s.chunks" % settings.COL_OBJECTS,
-                "%s.chunks" % settings.COL_PCAPS,
-                "%s.chunks" % settings.COL_SAMPLES):
-        c = mongo_connector(col)
-        d = c.index_information()
-        if d.get('files_id_1_n_1', False):
-            b = d['files_id_1_n_1'].get('background', None)
-            # background could be set to False or True in the DB
-            if b is not None:
-                c.drop_index("files_id_1_n_1")
-                c.ensure_index([("files_id", pymongo.ASCENDING),
-                                ("n", pymongo.ASCENDING)],
-                               unique=True)
-                print "Found bad index for %s. Fixed it." % col
+    # Create default indexes.
+    from create_indexes import create_indexes
+    create_indexes()
 
 def update_database_version():
 

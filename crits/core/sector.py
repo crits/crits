@@ -21,12 +21,14 @@ class Sector(CritsDocument, CritsSchemaDocument, Document):
         "schema_doc": {
             'name': 'Sectorlist name',
             'Actor': 'Integer',
+            'Backdoor': 'Integer',
             'Campaign': 'Integer',
             'Certificate': 'Integer',
             'Domain': 'Integer',
             'Email': 'Integer',
-            'Target': 'Integer',
             'Event': 'Integer',
+            'Exploit': 'Integer',
+            'Target': 'Integer',
             'IP': 'Integer',
             'Indicator': 'Integer',
             'PCAP': 'Integer',
@@ -37,11 +39,13 @@ class Sector(CritsDocument, CritsSchemaDocument, Document):
 
     name = StringField(required=True)
     Actor = IntField(default=0)
+    Backdoor = IntField(default=0)
     Campaign = IntField(default=0)
     Certificate = IntField(default=0)
     Domain = IntField(default=0)
     Email = IntField(default=0)
     Event = IntField(default=0)
+    Exploit = IntField(default=0)
     Indicator = IntField(default=0)
     IP = IntField(default=0)
     PCAP = IntField(default=0)

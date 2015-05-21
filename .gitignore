@@ -1,12 +1,20 @@
+# Common ignores
 *.pyc
 *.swp
 *.swo
+
+# Ignore custom config files and logs
 crits/config/database.py
 crits/config/overrides.py
 logs/*.log*
-.DS_Store
+
+# Ignore build files
 documentation/src/_build/
 extras/www/static/admin/
+
+# Ignore Apple and brew
+.DS_Store
+INSTALL_RECEIPT.json
 
 # Ignore aptitude cache
 .apt_cache
@@ -16,3 +24,9 @@ extras/www/static/admin/
 
 # Ignore vagrant dir
 .vagrant
+
+# Ignore MongoDB download
+*mongodb-*
+
+# Ignore VirtualEnv
+venv/*

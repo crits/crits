@@ -37,12 +37,14 @@ def remove_indexes():
     Removes all indexes from all collections.
     """
 
-    coll_list = [settings.COL_BUCKET_LISTS,
+    coll_list = [settings.COL_BACKDOORS,
+                 settings.COL_BUCKET_LISTS,
                  settings.COL_CAMPAIGNS,
                  settings.COL_COMMENTS,
                  settings.COL_DOMAINS,
                  settings.COL_EMAIL,
                  settings.COL_EVENTS,
+                 settings.COL_EXPLOITS,
                  settings.COL_INDICATORS,
                  settings.COL_IPS,
                  settings.COL_NOTIFICATIONS,
@@ -79,6 +81,9 @@ def create_indexes():
     bucket_lists = mongo_connector(settings.COL_BUCKET_LISTS)
     bucket_lists.ensure_index("name", background=True)
 
+    backdoors = mongo_connector(settings.COL_BACKDOORS)
+    backdoors.ensure_index("name", background=True)
+
     campaigns = mongo_connector(settings.COL_CAMPAIGNS)
     campaigns.ensure_index("objects.value", background=True)
     campaigns.ensure_index("relationships.value", background=True)
@@ -109,6 +114,9 @@ def create_indexes():
     events.ensure_index("campaign.name", background=True)
     events.ensure_index("bucket_list", background=True)
 
+    exploits = mongo_connector(settings.COL_EXPLOITS)
+    exploits.ensure_index("name", background=True)
+
     indicators = mongo_connector(settings.COL_INDICATORS)
     indicators.ensure_index("value", background=True)
     indicators.ensure_index("objects.value", background=True)
@@ -133,8 +141,9 @@ def create_indexes():
                                unique=True)
 
     notifications = mongo_connector(settings.COL_NOTIFICATIONS)
+    notifications.ensure_index("obj_id", background=True)
     # auto-expire notifications after 30 days
-    notifications.ensure_index("obj_id", background=True,
+    notifications.ensure_index("date", background=True,
                                expireAfterSeconds=2592000)
     notifications.ensure_index("users", background=True)
 
@@ -175,8 +184,6 @@ def create_indexes():
     samples.ensure_index("objects.value", background=True)
     samples.ensure_index("relationships.value", background=True)
     samples.ensure_index("campaign.name", background=True)
-    samples.ensure_index("backdoor.name", background=True)
-    samples.ensure_index("exploit.cve", background=True)
     samples.ensure_index("analysis.results.result", background=True)
     samples.ensure_index("analysis.results.md5", background=True)
     samples.ensure_index("bucket_list", background=True)

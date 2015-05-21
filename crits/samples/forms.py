@@ -5,9 +5,8 @@ from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_source_names, get_item_names
+from crits.backdoors.handlers import get_backdoor_names
 from crits.core.user_tools import get_user_organization
-from crits.samples.backdoor import Backdoor
-from crits.samples.exploit import Exploit
 
 class UnrarSampleForm(forms.Form):
     """
@@ -83,6 +82,8 @@ class UploadFileForm(forms.Form):
                                  label=form_consts.Sample.RELATED_MD5)
     email = forms.BooleanField(required=False,
                                label=form_consts.Sample.EMAIL_RESULTS)
+    backdoor = forms.ChoiceField(widget=forms.Select, required=False,
+                                 label=form_consts.Backdoor.NAME)
 
     def __init__(self, username, *args, **kwargs):
         super(UploadFileForm, self).__init__(*args, **kwargs)
@@ -97,6 +98,13 @@ class UploadFileForm(forms.Form):
                                              ('low', 'low'),
                                              ('medium', 'medium'),
                                              ('high', 'high')]
+        self.fields['backdoor'].choices = [('', '')]
+        for (name, version) in get_backdoor_names(username):
+            display = name
+            value = name + '|||' + version
+            if version:
+                display += ' (Version: ' + version + ')'
+            self.fields['backdoor'].choices.append((value, display))
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
@@ -160,55 +168,3 @@ class UploadFileForm(forms.Form):
                 self._errors['related_md5'].append(u'Need a Related MD5 from which to inherit.')
 
         return cleaned_data
-
-class BackdoorForm(forms.Form):
-    """
-    Django form to handle adding a backdoor to a sample.
-    """
-
-    error_css_class = 'error'
-    required_css_class = 'required'
-    backdoor_types = forms.ChoiceField(required=True,
-                                       widget=forms.Select)
-    backdoor_version = forms.CharField(widget=forms.TextInput,
-                                       required=False)
-    def __init__(self, *args, **kwargs):
-        super(BackdoorForm, self).__init__(*args, **kwargs)
-        self.fields['backdoor_types'].choices = [(c.name,
-                                                  c.name
-                                                  ) for c in get_item_names(Backdoor,
-                                                                            True)]
-
-class NewBackdoorForm(forms.Form):
-    """
-    Django form to handle uploading a new backdoor.
-    """
-
-    error_css_class = 'error'
-    required_css_class = 'required'
-    name = forms.CharField(widget=forms.TextInput, required=True)
-
-class NewExploitForm(forms.Form):
-    """
-    Django form to handle uploading a new exploit.
-    """
-
-    error_css_class = 'error'
-    required_css_class = 'required'
-    name = forms.CharField(widget=forms.TextInput, required=True)
-
-class ExploitForm(forms.Form):
-    """
-    Django form to handle adding an exploit to a sample.
-    """
-
-    error_css_class = 'error'
-    required_css_class = 'required'
-    exploit = forms.ChoiceField(required=True, widget=forms.Select)
-
-    def __init__(self, *args, **kwargs):
-        super(ExploitForm, self).__init__(*args, **kwargs)
-        self.fields['exploit'].choices = [(c.name,
-                                           c.name
-                                           ) for c in get_item_names(Exploit,
-                                                                     True)]

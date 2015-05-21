@@ -6,7 +6,6 @@
 
 <script>
     var edit_actor_name = "{% url 'crits.actors.views.edit_actor_name' actor.id|urlencode %}";
-    var edit_actor_description = "{% url 'crits.actors.views.edit_actor_description' actor.id %}";
     var update_actor_aliases = "{% url 'crits.actors.views.edit_actor_aliases' %}";
 </script>
 
@@ -56,10 +55,9 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="key">Description</td>
-                        <td class="longtext">
-                            <span class="edit_underline" id="edit_actor_description">{{actor.description}}</span>
-                        </td>
+                        {% with description=actor.description %}
+                            {% include 'description_widget.html' %}
+                        {% endwith %}
                     </tr>
                     <tr>
                         <td class="key">Created</td>
@@ -112,6 +110,11 @@
     <div>
         {% with hit=actor col=COL_ACTORS %}
             {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=actor col=COL_ACTORS %}
+            {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
     <div>

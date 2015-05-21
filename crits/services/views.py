@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
@@ -50,7 +50,7 @@ def list(request):
                               RequestContext(request))
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def analysis_result(request, analysis_id):
     """
     Get the TLO type and object_id and redirect to the details page for that
@@ -137,16 +137,16 @@ def edit_config(request, name):
     """
 
     analyst = request.user.username
-    if request.method == "POST":
+    if request.method == "POST" and request.is_ajax():
         results = do_edit_config(name, analyst, post_data=request.POST)
-        if results['success'] == True:
-            return redirect(reverse('crits.services.views.detail', args=[name]))
-        else:
-            return render_to_response('services_edit_config.html',
-                                      {'form': results['form'],
-                                       'service': results['service'],
-                                       'config_error': results['config_error']},
-                                      RequestContext(request))
+        if 'service' in results:
+            del results['service']
+        return HttpResponse(json.dumps(results), mimetype="application/json")
+    elif request.method == "POST" and not request.is_ajax():
+        error = results['config_error']
+        return render_to_response('error.html',
+                                  {'error': "Expected AJAX POST."},
+                                  RequestContext(request))
     else:
         results = do_edit_config(name, analyst)
         if results['success'] == True:
@@ -204,7 +204,15 @@ def refresh_services(request, crits_type, identifier):
     # Verify user can see results.
     sources = user_sources(request.user.username)
     klass = class_from_type(crits_type)
-    obj = klass.objects(id=identifier,source__name__in=sources).first()
+    if not klass:
+        msg = 'Could not find object to refresh!'
+        response['success'] = False
+        response['html'] = msg
+        return HttpResponse(json.dumps(response), mimetype="application/json")
+    if hasattr(klass, 'source'):
+        obj = klass.objects(id=identifier,source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=identifier).first()
     if not obj:
         msg = 'Could not find object to refresh!'
         response['success'] = False

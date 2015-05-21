@@ -1,0 +1,8 @@
+{% load url from future %}
+<div id="dialog-location-add" title="Add Location" style="display:none">
+    <form id="form-location-add" 
+	  method="POST" enctype="multipart/form-data" item-type="location">
+    <table class="form">{{location_add.as_table}}</table>
+    <div id="form-location-add-results" class="form_results"></div>
+    </form>
+</div>

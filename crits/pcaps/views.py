@@ -10,7 +10,7 @@ from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
 from crits.core.user_tools import user_is_admin
 from crits.pcaps.forms import UploadPcapForm
-from crits.pcaps.handlers import update_pcap_description, handle_pcap_file
+from crits.pcaps.handlers import handle_pcap_file
 from crits.pcaps.handlers import delete_pcap, get_pcap_details
 from crits.pcaps.handlers import generate_pcap_jtable, generate_pcap_csv
 
@@ -29,31 +29,6 @@ def pcaps_listing(request,option=None):
     if option == "csv":
         return generate_pcap_csv(request)
     return generate_pcap_jtable(request, option)
-
-@user_passes_test(user_can_view_data)
-def set_pcap_description(request, md5):
-    """
-    Set the PCAP description. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param md5: The MD5 of the PCAP.
-    :type md5: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        description = request.POST['description']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_pcap_description(md5,
-                                                               description,
-                                                               analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def pcap_details(request, md5):

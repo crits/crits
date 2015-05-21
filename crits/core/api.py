@@ -6,6 +6,8 @@ from dateutil.parser import parse
 from django.http import HttpResponse
 from lxml.etree import tostring
 
+from django.core.urlresolvers import resolve, get_script_prefix
+
 from tastypie.exceptions import BadRequest, ImmediateHttpResponse
 from tastypie.serializers import Serializer
 from tastypie.authentication import SessionAuthentication, ApiKeyAuthentication
@@ -582,7 +584,7 @@ class CRITsAPIResource(MongoEngineResource):
         if no_sources and sources:
             querydict['source.name'] = {'$in': source_list}
         if only or exclude:
-            required = [k for k,v in klass._fields.iteritems() if v.required]
+            required = [k for k,f in klass._fields.iteritems() if f.required]
         if only:
             fields = only.split(',')
             if exclude:
@@ -634,7 +636,95 @@ class CRITsAPIResource(MongoEngineResource):
         :returns: NotImplementedError if the resource doesn't override.
         """
 
-        raise NotImplementedError('You cannot currently update this object through the API.')
+        import crits.actors.handlers as ah
+        import crits.core.handlers as coreh
+        import crits.services.handlers as servh
+
+        actions = {
+            'Common': {
+                'run_service': servh.run_service,
+                'add_releasability': coreh.add_releasability,
+            },
+            'Actor': {
+                'update_actor_tags': ah.update_actor_tags,
+                'attribute_actor_identifier': ah.attribute_actor_identifier,
+                'set_identifier_confidence': ah.set_identifier_confidence,
+                'remove_attribution': ah.remove_attribution,
+                'set_actor_name': ah.set_actor_name,
+                'update_actor_aliases': ah.update_actor_aliases,
+            },
+            'Backdoor': {},
+            'Campaign': {},
+            'Certificate': {},
+            'Domain': {},
+            'Email': {},
+            'Event': {},
+            'Exploit': {},
+            'Indicator': {},
+            'IP': {},
+            'PCAP': {},
+            'RawData': {},
+            'Sample': {},
+            'Target': {},
+        }
+
+        prefix = get_script_prefix()
+        uri = bundle.request.path
+        if prefix and uri.startswith(prefix):
+            uri = uri[len(prefix)-1:]
+        view, args, kwargs = resolve(uri)
+
+        type_ = kwargs['resource_name'].title()
+        if type_ == "Raw_data":
+            type_ = "RawData"
+        if type_[-1] == 's':
+            type_ = type_[:-1]
+        if type_ in ("Pcap", "Ip"):
+            type_ = type_.upper()
+        id_ = kwargs['pk']
+
+        content = {'return_code': 0,
+                   'type': type_,
+                   'message': '',
+                   'id': id_}
+
+        # Make sure we have an appropriate action.
+        action = bundle.data.get("action", None)
+        atype = actions.get(type_, None)
+        if atype is None:
+            content['return_code'] = 1
+            content['message'] = "'%s' is not a valid resource." % type_
+            self.crits_response(content)
+        action_type = atype.get(action, None)
+        if action_type is None:
+            atype = actions.get('Common')
+            action_type = atype.get(action, None)
+        if action_type:
+            data = bundle.data
+            # Requests don't need to have an id_ as we will derive it from
+            # the request URL. Override id_ if the request provided one.
+            data['id_'] = id_
+            # Override type (if provided)
+            data['type_'] = type_
+            # Override user (if provided) with the one who made the request.
+            data['user'] = bundle.request.user.username
+            try:
+                results = action_type(**data)
+                if not results.get('success', False):
+                    content['return_code'] = 1
+                    # TODO: Some messages contain HTML and other such content
+                    # that we shouldn't be returning here.
+                    message = results.get('message', None)
+                    content['message'] = message
+                else:
+                    content['message'] = "success!"
+            except Exception, e:
+                content['return_code'] = 1
+                content['message'] = str(e)
+        else:
+            content['return_code'] = 1
+            content['message'] = "'%s' is not a valid action." % action
+        self.crits_response(content)
 
     def obj_delete_list(self, bundle, **kwargs):
         """

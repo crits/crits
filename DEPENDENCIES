@@ -6,18 +6,30 @@ for these services may cause CRITs to break!
 ========================
 Required System Programs
 ========================
-* mongodb 2.6.4
-* python 2.7.x
-* unrar
-* zip
-* 7zip
+python 2.7.x
+Provides: The language CRITs is written in. 2.7.x is a minimum requirement!
+
+mongodb 2.6.4
+Provides: MongoDB which is the backend database CRITs uses.
+
+unrar
+Provides: unrar
+
+zip
+Provides: zip
+
+7zip
+Provides: 7z
 
 
 ========================
 Optional System Programs
 ========================
-* Apache
-* mod-wsgi
+Apache
+Provides: The web server used to run CRITs if you are not using Django runserver.
+
+mod-wsgi
+Provides: The module for Apache necessary for running CRITs.
 
 
 =========================

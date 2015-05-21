@@ -76,53 +76,20 @@ def generate_filetypes():
     except:
         return
 
-def generate_backdoors():
-    """
-    Generate backdoors mapreduce.
-    """
-
-    samples = mongo_connector(settings.COL_SAMPLES)
-    m = Code('function() emit({name: this.backdoor.name} ,{count: 1});}) }', {})
-    r = Code('function(k,v) { var count = 0; v.forEach(function(v) { count += v["count"]; }); return {count: count}; }', {})
-    try:
-        backdoors = samples.inline_map_reduce(m,r,
-                                              query={"backdoor.name": {"$ne": "None"}})
-    except:
-        return
-    backdoor_details = mongo_connector(settings.COL_BACKDOOR_DETAILS)
-    for backdoor in backdoors:
-        backdoor_details.update({"name": backdoor["_id"]["name"]},
-                                {"$set": {"sample_count": backdoor["value"]["count"]}})
-
-def generate_exploits():
-    """
-    Generate exploits mapreduce.
-    """
-
-    samples = mongo_connector(settings.COL_SAMPLES)
-    m = Code('function() { this.exploit.forEach(function(z) {emit({cve: z.cve} ,{count: 1});}) }', {})
-    r = Code('function(k,v) { var count = 0; v.forEach(function(v) { count += v["count"]; }); return {count: count}; }', {})
-    try:
-        exploits = samples.inline_map_reduce(m,r,
-                                             query={"exploit.cve": {"$exists": 1}})
-    except:
-        return
-    exploit_details = mongo_connector(settings.COL_EXPLOIT_DETAILS)
-    for exploit in exploits:
-        exploit_details.update({"name": exploit["_id"]["cve"]},
-                               {"$set": {"sample_count": exploit["value"]["count"]}})
-
 def zero_campaign():
     """
     Zero out the campaign counts before recalculating.
     """
 
     return {
+        'actor_count': 0,
+        'backdoor_count': 0,
         'indicator_count': 0,
         'sample_count': 0,
         'email_count': 0,
         'domain_count': 0,
         'event_count': 0,
+        'exploit_count': 0,
         'ip_count': 0,
         'pcap_count': 0,
     }
@@ -168,10 +135,13 @@ def generate_campaign_stats(source_name=None):
     stat_query["campaign.name"] = {"$exists": "true"}
     if source_name:
         stat_query["source.name"] = source_name
+    actors = mongo_connector(settings.COL_ACTORS)
+    backdoors = mongo_connector(settings.COL_BACKDOORS)
     campaigns = mongo_connector(settings.COL_CAMPAIGNS)
     domains = mongo_connector(settings.COL_DOMAINS)
     emails = mongo_connector(settings.COL_EMAIL)
     events = mongo_connector(settings.COL_EVENTS)
+    exploits = mongo_connector(settings.COL_EXPLOITS)
     indicators = mongo_connector(settings.COL_INDICATORS)
     ips = mongo_connector(settings.COL_IPS)
     pcaps = mongo_connector(settings.COL_PCAPS)
@@ -193,12 +163,18 @@ def generate_campaign_stats(source_name=None):
     """
     m = Code(mapcode, {})
     r = Code('function(k,v) { var count = 0; v.forEach(function(v) { count += v["count"]; }); return {count: count}; }', {})
+    campaign_stats = update_results(actors, m, r, stat_query,
+                                    "actor_count", campaign_stats)
+    campaign_stats = update_results(backdoors, m, r, stat_query,
+                                    "backdoor_count", campaign_stats)
     campaign_stats = update_results(domains, m, r, stat_query,
                                     "domain_count", campaign_stats)
     campaign_stats = update_results(emails, m, r, stat_query,
                                     "email_count", campaign_stats)
     campaign_stats = update_results(events, m, r, stat_query,
                                     "event_count", campaign_stats)
+    campaign_stats = update_results(exploits, m, r, stat_query,
+                                    "exploit_count", campaign_stats)
     campaign_stats = update_results(indicators, m, r, stat_query,
                                     "indicator_count", campaign_stats)
     campaign_stats = update_results(ips, m, r, stat_query,
@@ -273,12 +249,14 @@ def target_user_stats():
     results = Email.objects(to__exists=True).map_reduce(m, r, 'inline')
     for result in results:
         try:
-            targ = Target.objects(email_address__iexact=result.key).first()
-            if not targ:
-                targ = Target()
-                targ.email_address = result.key
-            targ.email_count = result.value['count']
-            targ.save()
+            targs = Target.objects(email_address__iexact=result.key)
+            if not targs:
+                targs = [Target()]
+                targs[0].email_address = result.key.strip().lower()
+
+            for targ in targs:
+                targ.email_count = result.value['count']
+                targ.save()
         except:
             pass
     mapcode = """

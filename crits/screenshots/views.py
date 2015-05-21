@@ -9,7 +9,6 @@ from crits.core.user_tools import user_can_view_data
 from crits.screenshots.handlers import get_screenshots_for_id, get_screenshot
 from crits.screenshots.handlers import add_screenshot, generate_screenshot_jtable
 from crits.screenshots.handlers import delete_screenshot_from_object
-from crits.screenshots.handlers import edit_ss_description
 
 @user_passes_test(user_can_view_data)
 def screenshots_listing(request,option=None):
@@ -136,23 +135,5 @@ def remove_screenshot_from_object(request):
     sid = request.POST.get('sid', None)
 
     result = delete_screenshot_from_object(obj, oid, sid, analyst)
-    return HttpResponse(json.dumps(result),
-                        mimetype="application/json")
-
-@user_passes_test(user_can_view_data)
-def update_ss_description(request):
-    """
-    Edit the description of a screenshot.
-
-    :param request: The Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    analyst = request.user.username
-    oid = request.POST.get('oid', None)
-    description = request.POST.get('description', None)
-
-    result = edit_ss_description(oid, description, analyst)
     return HttpResponse(json.dumps(result),
                         mimetype="application/json")

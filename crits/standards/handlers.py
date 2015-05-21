@@ -1,4 +1,9 @@
+import logging
+
 from crits.standards.parsers import STIXParser, STIXParserException
+
+logger = logging.getLogger(__name__)
+
 
 def import_standards_doc(data, analyst, method, ref=None, make_event=False,
                          source=None):
@@ -37,9 +42,11 @@ def import_standards_doc(data, analyst, method, ref=None, make_event=False,
         parser.parse_stix(reference=ref, make_event=make_event, source=source)
         parser.relate_objects()
     except STIXParserException, e:
+        logger.exception(e)
         ret['reason'] = str(e.message)
         return ret
     except Exception, e:
+        logger.exception(e)
         ret['reason'] = str(e)
         return ret
 

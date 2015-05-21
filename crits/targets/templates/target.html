@@ -35,6 +35,11 @@
             </td>
         </tr>
         <tr>
+            {% with description=target_detail.description %}
+                {% include 'description_widget.html' %}
+            {% endwith %}
+        </tr>
+        <tr>
             <td class="key">Name</td>
             <td>
                 {{target_detail.firstname}} {{target_detail.lastname}}
@@ -97,13 +102,16 @@
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
     </div>
-
     <div>
       {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
          {% include "campaigns_display_widget.html" %}
       {% endwith %}
     </div>
-
+    <div>
+      {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
+         {% include "locations_display_widget.html" %}
+      {% endwith %}
+    </div>
     <div>
         {% include 'relationships_listing_widget.html' %}
     </div>
@@ -136,7 +144,7 @@
 
 <div style="display: none;">
     <div id="edit-details-form" title="Edit Details" style="display: table;">
-        <form id="form-edit-details" action='{% url 'crits.targets.views.add_update_target' %}' method='POST' style="display: inline;">
+        <form id="form-edit-details" action='{% url 'crits.targets.views.add_update_target' %}' method='POST' style="display: inline;">{% csrf_token %}
         <table class='form'> {{ form.as_table }}</table>
         </form>
     </div>

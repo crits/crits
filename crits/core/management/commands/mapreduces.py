@@ -16,8 +16,6 @@ class Command(BaseCommand):
         stats.generate_yara_hits()
         stats.generate_sources()
         stats.generate_filetypes()
-        stats.generate_backdoors()
-        stats.generate_exploits()
         stats.generate_filetypes()
         stats.generate_campaign_stats()
         stats.generate_counts()

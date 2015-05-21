@@ -16,28 +16,28 @@ from mongoengine.base import ValidationError
 
 from crits.campaigns.forms import CampaignForm
 from crits.campaigns.campaign import Campaign
+from crits.config.config import CRITsConfig
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
-from crits.core.crits_mongoengine import json_handler
+from crits.core.crits_mongoengine import EmbeddedTicket, json_handler
 from crits.core.forms import SourceForm, DownloadFileForm
 from crits.core.handlers import build_jtable, csv_export
 from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
 from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.domains.domain import Domain
-from crits.domains.handlers import get_domain, upsert_domain
+from crits.domains.handlers import upsert_domain, get_valid_root_domain
 from crits.events.event import Event
 from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
 from crits.indicators.indicator import IndicatorAction
 from crits.indicators.indicator import Indicator
 from crits.indicators.indicator import EmbeddedConfidence, EmbeddedImpact
-from crits.ips.handlers import ip_add_update
+from crits.ips.handlers import ip_add_update, validate_and_normalize_ip
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.object_type import ObjectType
-from crits.raw_data.raw_data import RawData
 from crits.services.handlers import run_triage, get_supported_services
 
 logger = logging.getLogger(__name__)
@@ -98,12 +98,15 @@ def generate_indicator_jtable(request, option):
                                                               type_),
                              args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
-        'fields': mapper['jtopts_fields'],
+        'fields': list(mapper['jtopts_fields']),
         'hidden_fields': mapper['hidden_fields'],
         'linked_fields': mapper['linked_fields'],
         'details_link': mapper['details_link'],
         'no_sort': mapper['no_sort']
     }
+    config = CRITsConfig.objects().first()
+    if not config.splunk_search_url:
+        del jtopts['fields'][1]
     jtable = build_jtable(jtopts, request)
     jtable['toolbar'] = [
         {
@@ -142,6 +145,13 @@ def generate_indicator_jtable(request, option):
             'click': "function () {$('#new-indicator').click()}",
         },
     ]
+    if config.splunk_search_url:
+        for field in jtable['fields']:
+            if field['fieldname'].startswith("'splunk"):
+                field['display'] = """ function (data) {
+                return '<a href="%s' + data.record.value + '"><img src="/new_images/splunk.png" /></a>';
+                }
+                """ % config.splunk_search_url
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
@@ -439,11 +449,10 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     result['message'] = "Successfully added %s Indicator(s).<br />%s" % (added, result_message)
     return result
 
-def handle_indicator_ind(value, source, reference, ctype, analyst,
-                         method='', add_domain=False, add_relationship=False,
-                         campaign=None, campaign_confidence=None,
-                         confidence=None, impact=None, bucket_list=None,
-                         ticket=None, cache={}):
+def handle_indicator_ind(value, source, ctype, analyst, method='', reference='',
+                         add_domain=False, add_relationship=False, campaign=None,
+                         campaign_confidence=None, confidence=None, impact=None,
+                         bucket_list=None, ticket=None, cache={}):
     """
     Handle adding an individual indicator.
 
@@ -451,14 +460,14 @@ def handle_indicator_ind(value, source, reference, ctype, analyst,
     :type value: str
     :param source: The name of the source for this indicator.
     :type source: str
-    :param reference: The reference to this data.
-    :type reference: str
     :param ctype: The indicator type.
     :type ctype: str
     :param analyst: The user adding this indicator.
     :type analyst: str
     :param method: The method of acquisition of this indicator.
     :type method: str
+    :param reference: The reference to this data.
+    :type reference: str
     :param add_domain: If the indicators being added are also other top-level
                        objects, add those too.
     :type add_domain: boolean
@@ -552,13 +561,14 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     :type cache: dict
     :returns: dict with keys:
               "success" (boolean),
-              "message" str) if failed,
+              "message" (str) if failed,
               "objectid" (str) if successful,
               "is_new_indicator" (boolean) if successful.
     """
 
-    if ind['type'] == "URI - URL" and "://" not in ind['value'].split('.')[0]:
-        return {"success": False, "message": "URI - URL must contain protocol prefix (e.g. http://, https://, ftp://) "}
+    (ind['value'], error) = validate_indicator_value(ind['value'], ind['type'])
+    if error:
+        return {"success": False, "message": error}
 
     is_new_indicator = False
     dmain = None
@@ -640,21 +650,18 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         if ind_type in ("URI - Domain Name", "URI - URL"):
             if ind_type == "URI - URL":
                 domain_or_ip = urlparse.urlparse(ind_value).hostname
-            elif ind_type == "URI - Domain Name":
-                domain_or_ip = ind_value
-            (sdomain, fqdn) = get_domain(domain_or_ip)
-            if sdomain == "no_tld_found_error" and ind_type == "URI - URL":
                 try:
                     validate_ipv46_address(domain_or_ip)
                     url_contains_ip = True
                 except DjangoValidationError:
                     pass
+            else:
+                domain_or_ip = ind_value
             if not url_contains_ip:
                 success = None
                 if add_domain:
-                    success = upsert_domain(sdomain, fqdn, indicator.source,
-                                            '%s' % analyst, None,
-                                            bucket_list=bucket_list, cache=cache)
+                    success = upsert_domain(domain_or_ip, indicator.source, '%s' % analyst,
+                                            None, bucket_list=bucket_list, cache=cache)
                     if not success['success']:
                         return {'success': False, 'message': success['message']}
 
@@ -693,19 +700,17 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     indicator.save(username=analyst)
 
     if dmain:
-        dmain.add_relationship(rel_item=indicator,
-                               rel_type='Related_To',
+        dmain.add_relationship(indicator,
+                               'Related_To',
                                analyst="%s" % analyst,
                                get_rels=False)
         dmain.save(username=analyst)
     if ip:
-        ip.add_relationship(rel_item=indicator,
-                            rel_type='Related_To',
+        ip.add_relationship(indicator,
+                            'Related_To',
                             analyst="%s" % analyst,
                             get_rels=False)
         ip.save(username=analyst)
-
-    indicator.save(username=analyst)
 
     # run indicator triage
     if is_new_indicator:
@@ -1097,26 +1102,26 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
 
         # setup IP
         if ip_class:
-            ip_class.add_relationship(rel_item=obj_class,
-                                      rel_type="Related_To",
+            ip_class.add_relationship(obj_class,
+                                      "Related_To",
                                       analyst=analyst)
         else:
             ip_class = IP()
             ip_class.ip = ip
             ip_class.source = obj_class.source
             ip_class.save(username=analyst)
-            ip_class.add_relationship(rel_item=obj_class,
-                                      rel_type="Related_To",
+            ip_class.add_relationship(obj_class,
+                                      "Related_To",
                                       analyst=analyst)
 
         # setup Indicator
         message = ""
         if ind_class:
-            message = ind_class.add_relationship(rel_item=obj_class,
-                                                 rel_type="Related_To",
+            message = ind_class.add_relationship(obj_class,
+                                                 "Related_To",
                                                  analyst=analyst)
-            ind_class.add_relationship(rel_item=ip_class,
-                                       rel_type="Related_To",
+            ind_class.add_relationship(ip_class,
+                                       "Related_To",
                                        analyst=analyst)
         else:
             ind_class = Indicator()
@@ -1124,11 +1129,11 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
             ind_class.ind_type = ind_type
             ind_class.value = ip
             ind_class.save(username=analyst)
-            message = ind_class.add_relationship(rel_item=obj_class,
-                                                 rel_type="Related_To",
+            message = ind_class.add_relationship(obj_class,
+                                                 "Related_To",
                                                  analyst=analyst)
-            ind_class.add_relationship(rel_item=ip_class,
-                                       rel_type="Related_To",
+            ind_class.add_relationship(ip_class,
+                                       "Related_To",
                                        analyst=analyst)
 
         # save
@@ -1147,59 +1152,168 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
         return {'success': False,
                 'message': "Could not find %s to add relationships" % type_}
 
-def create_indicator_from_obj(ind_type, obj_type, id_, value, analyst):
+def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
+                              tlo_id=None, ind_type=None, value=None,
+                              update_existing=True, add_domain=True):
     """
-    Add indicators from CRITs object.
+    Create an indicator from a Top-Level Object (TLO).
 
-    :param ind_type: The indicator type to add.
-    :type ind_type: str
-    :param obj_type: The CRITs type of the parent object.
-    :type obj_type: str
-    :param id_: The ObjectId of the parent object.
-    :type id_: str
-    :param value: The value of the indicator to add.
-    :type value: str
-    :param analyst: The user adding this indicator.
+    :param tlo_type: The CRITs type of the parent TLO.
+    :type tlo_type: str
+    :param tlo: A CRITs parent TLO class object
+    :type tlo: class - some CRITs TLO
+    :param analyst: The user creating this indicator.
     :type analyst: str
+    :param source_name: The source name for the new source instance that
+    records this indicator being added.
+    :type source_name: str
+    :param tlo_id: The ObjectId of the parent TLO.
+    :type tlo_id: str
+    :param ind_type: The indicator type, if TLO is not Domain or IP.
+    :type ind_type: str
+    :param value: The value of the indicator, if TLO is not Domain or IP.
+    :type value: str
+    :param update_existing: If Indicator already exists, update it
+    :type update_existing: boolean
+    :param add_domain: If new indicator contains a domain/ip, add a
+                       matching Domain or IP TLO
+    :type add_domain: boolean
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
-              "value" (str)
+              "value" (str),
+              "indicator" :class:`crits.indicators.indicator.Indicator`
     """
 
-    obj = class_from_id(obj_type, id_)
-    if not obj:
-        return {'success': False, 'message': 'Could not find object.'}
-    source = obj.source
-    bucket_list = obj.bucket_list
-    campaign = None
-    campaign_confidence = None
-    if len(obj.campaign) > 0:
-        campaign = obj.campaign[0].name
-        campaign_confidence = obj.campaign[0].confidence
-    result = handle_indicator_ind(value, source, reference=None, ctype=ind_type,
+    if not tlo:
+        tlo = class_from_id(tlo_type, tlo_id)
+    if not tlo:
+        return {'success': False,
+                'message': "Could not find source %s" % obj_type}
+
+    source = tlo.source
+    campaign = tlo.campaign
+    bucket_list = tlo.bucket_list
+    tickets = tlo.tickets
+
+    # If value and ind_type provided, use them instead of defaults
+    if tlo_type == "Domain":
+        value = value or tlo.domain
+        ind_type = ind_type or "URI - Domain Name"
+    elif tlo_type == "IP":
+        value = value or tlo.ip
+        ind_type = ind_type or tlo.ip_type
+    elif tlo_type == "Indicator":
+        value = value or tlo.value
+        ind_type = ind_type or tlo.ind_type
+
+    if not value or not ind_type: # if not provided & no default
+        return {'success': False,
+                'message': "Indicator value & type must be provided"
+                           "for TLO of type %s" % obj_type}
+
+    #check if indicator already exists
+    if Indicator.objects(ind_type=ind_type,
+                         value=value).first() and not update_existing:
+        return {'success': False, 'message': "Indicator already exists"}
+
+    result = handle_indicator_ind(value, source,
+                                  ctype=ind_type,
                                   analyst=analyst,
-                                  add_domain=True,
+                                  add_domain=add_domain,
                                   add_relationship=True,
                                   campaign=campaign,
-                                  campaign_confidence=campaign_confidence,
-                                  bucket_list=bucket_list)
+                                  bucket_list=bucket_list,
+                                  ticket=tickets)
+
     if result['success']:
         ind = Indicator.objects(id=result['objectid']).first()
+
         if ind:
-            obj.add_relationship(rel_item=ind,
-                                 rel_type="Related_To",
+            if source_name:
+                # add source to show when indicator was created/updated
+                ind.add_source(source=source_name,
+                               method= 'Indicator created/updated ' \
+                                       'from %s with ID %s' % (tlo_type, tlo.id),
+                               date=datetime.datetime.now(),
+                               analyst = analyst)
+
+            tlo.add_relationship(ind,
+                                 "Related_To",
                                  analyst=analyst)
-            obj.save(username=analyst)
-            for rel in obj.relationships:
+            tlo.save(username=analyst)
+            for rel in tlo.relationships:
                 if rel.rel_type == "Event":
-                    ind.add_relationship(rel_id=rel.object_id,
-                                         type_=rel.rel_type,
-                                         rel_type="Related_To",
-                                         analyst=analyst)
+                    # Get event object to pass in.
+                    rel_item = Event.objects(id=rel.object_id).first()
+                    if rel_item:
+                        ind.add_relationship(rel_item,
+                                             "Related_To",
+                                             analyst=analyst)
             ind.save(username=analyst)
-        obj.reload()
-        rels = obj.sort_relationships("%s" % analyst, meta=True)
-        return {'success': True, 'message': rels, 'value': id_}
+            tlo.reload()
+            rels = tlo.sort_relationships("%s" % analyst, meta=True)
+            return {'success': True, 'message': rels,
+                    'value': tlo.id, 'indicator': ind}
+        else:
+            return {'success': False, 'message': "Failed to create Indicator"}
     else:
-        return {'success': False, 'message': result['message']}
+        return result
+
+def validate_indicator_value(value, ind_type):
+    """
+    Check that a given value is valid for a particular Indicator type.
+
+    :param value: The value to be validated
+    :type value: str
+    :param ind_type: The indicator type to validate against
+    :type ind_type: str
+    :returns: tuple: (Valid value, Error message)
+    """
+
+    value = value.strip()
+    domain = ""
+
+    # URL
+    if ind_type == "URI - URL":
+        if "://" not in value.split('.')[0]:
+            return ("", "URI - URL must contain protocol "
+                        "prefix (e.g. http://, https://, ftp://) ")
+        domain_or_ip = urlparse.urlparse(value).hostname
+        try:
+            validate_ipv46_address(domain_or_ip)
+            return (value, "")
+        except DjangoValidationError:
+            domain = domain_or_ip
+
+    # Email address
+    if ind_type == "Address - e-mail":
+        if '@' not in value:
+            return ("", "Email address must contain an '@'")
+        domain_or_ip = value.split('@')[-1]
+        if domain_or_ip[0] == '[' and domain_or_ip[-1] == ']':
+            try:
+                validate_ipv46_address(domain_or_ip[1:-1])
+                return (value, "")
+            except DjangoValidationError:
+                return ("", "Email address does not contain a valid IP")
+        else:
+            domain = domain_or_ip
+
+    # IPs
+    if "Address - ipv" in ind_type or "cidr" in ind_type:
+        (ip_address, error) = validate_and_normalize_ip(value, ind_type)
+        if error:
+            return ("", error)
+        else:
+            return (ip_address, "")
+
+    # Domains
+    if ind_type == "URI - Domain Name" or domain:
+        (root, domain, error) = get_valid_root_domain(domain or value)
+        if error:
+            return ("", error)
+        else:
+            return (value, "")
+
+    return (value, "")

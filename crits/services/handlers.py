@@ -2,10 +2,11 @@ import ast
 import datetime
 import json
 import logging
+import copy
 
 from django.http import HttpResponse
 from multiprocessing import Process
-from threading import Thread
+from threading import Thread, local
 
 from mongoengine.base import ValidationError
 
@@ -122,17 +123,19 @@ def service_work_handler(service_instance, final_config):
     service_instance.execute(final_config)
 
 
-def run_service(name, crits_type, identifier, analyst, obj=None,
-                execute='local', custom_config={}):
+def run_service(name, type_, id_, user, obj=None,
+                execute='local', custom_config={}, **kwargs):
     """
     Run a service.
 
     :param name: The name of the service to run.
     :type name: str
-    :param crits_type: The type of the object.
-    :type name: str
-    :param identifier: The identifier of the object.
-    :type name: str
+    :param type_: The type of the object.
+    :type type_: str
+    :param id_: The identifier of the object.
+    :type id_: str
+    :param user: The user running the service.
+    :type user: str
     :param obj: The CRITs object, if given this overrides crits_type and identifier.
     :type obj: CRITs object.
     :param analyst: The user updating the results.
@@ -144,7 +147,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
     """
 
     result = {'success': False}
-    if crits_type not in settings.CRITS_TYPES:
+    if type_ not in settings.CRITS_TYPES:
         result['html'] = "Unknown CRITs type."
         return result
 
@@ -158,7 +161,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
         return result
 
     if not obj:
-        obj = class_from_id(crits_type, identifier)
+        obj = class_from_id(type_, id_)
         if not obj:
             result['html'] = 'Could not find object.'
             return result
@@ -169,13 +172,26 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
         return result
 
     # See if the object is a supported type for the service.
-    if not service_class.supported_for_type(crits_type):
-        result['html'] = "Service not supported for type '%s'" % crits_type
+    if not service_class.supported_for_type(type_):
+        result['html'] = "Service not supported for type '%s'" % type_
         return result
+
+    # When running in threaded mode, each thread needs to have its own copy of
+    # the object. If we do not do this then one thread may read() from the
+    # object (to get the binary) and then the second would would read() without
+    # knowing and get undefined behavior as the file pointer would be who knows
+    # where. By giving each thread a local copy they can operate independently.
+    #
+    # When not running in thread mode this has no effect except wasted memory.
+    local_obj = local()
+    local_obj.obj = copy.deepcopy(obj)
 
     # Give the service a chance to check for required fields.
     try:
-        service_class.valid_for(obj)
+        service_class.valid_for(local_obj.obj)
+        if hasattr(local_obj.obj, 'filedata') and local_obj.obj.filedata:
+            # Reset back to the start so the service gets the full file.
+            local_obj.obj.filedata.seek(0)
     except ServiceConfigError as e:
         result['html'] = str(e)
         return result
@@ -194,7 +210,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
     # This is because not all config options may be submitted.
     final_config.update(custom_config)
 
-    form = service_class.bind_runtime_form(analyst, final_config)
+    form = service_class.bind_runtime_form(user, final_config)
     if form:
         if not form.is_valid():
             # TODO: return corrected form via AJAX
@@ -205,7 +221,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
         final_config = db_config
         final_config.update(form.cleaned_data)
 
-    logger.info("Running %s on %s, execute=%s" % (name, obj.id, execute))
+    logger.info("Running %s on %s, execute=%s" % (name, local_obj.obj.id, execute))
     service_instance = service_class(notify=update_analysis_results,
                                      complete=finish_task)
 
@@ -213,7 +229,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
     saved_config = dict(final_config)
     service_class.save_runtime_config(saved_config)
 
-    task = AnalysisTask(obj, service_instance, analyst)
+    task = AnalysisTask(local_obj.obj, service_instance, user)
     task.config = AnalysisConfig(**saved_config)
     task.start()
     add_task(task)
@@ -231,7 +247,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
             __service_process_pool__.apply_async(func=service_work_handler,
                                                  args=(service_instance, final_config,))
         else:
-            logger.warning("Could not run %s on %s, execute=%s, running in process mode" % (name, obj.id, execute))
+            logger.warning("Could not run %s on %s, execute=%s, running in process mode" % (name, local_obj.obj.id, execute))
             p = Process(target=service_instance.execute, args=(final_config,))
             p.start()
     elif execute == 'thread_pool':
@@ -239,7 +255,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
             __service_thread_pool__.apply_async(func=service_work_handler,
                                                 args=(service_instance, final_config,))
         else:
-            logger.warning("Could not run %s on %s, execute=%s, running in thread mode" % (name, obj.id, execute))
+            logger.warning("Could not run %s on %s, execute=%s, running in thread mode" % (name, local_obj.obj.id, execute))
             t = Thread(target=service_instance.execute, args=(final_config,))
             t.start()
     elif execute == 'local':
@@ -489,6 +505,8 @@ def do_edit_config(name, analyst, post_data=None):
     service = CRITsService.objects(name=name, status__ne="unavailable").first()
     if not service:
         status['config_error'] = 'Service "%s" is unavailable. Please review error logs.' % name
+        status['form'] = ''
+        status['service'] = ''
         return status
 
     # Get the class that implements this service.

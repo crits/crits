@@ -116,30 +116,6 @@ function upload_new_version_dialog_submit(e) {
 }
 
 $(document).ready(function() {
-    $('#raw_data_description').editable(function(value, settings) {
-        return function(value, settings, elem) {
-            var data = {
-                description: value,
-            };
-            $.ajax({
-                type: "POST",
-                async: false,
-                url: update_raw_data_description,
-                data: data,
-            });
-            return value;
-        }(value, settings, this);
-        },
-        {
-            type: 'textarea',
-            height: "50px",
-            width: "400px",
-            tooltip: "",
-            cancel: "Cancel",
-            submit: "Ok",
-            onblur: 'ignore',
-    });
-
     $('#raw_data_tool_details').editable(function(value, settings) {
         return function(value, settings, elem) {
             var data = {
