@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.samples.sample import Sample
 from crits.samples.handlers import handle_uploaded_file
@@ -18,7 +17,7 @@ class SampleResource(CRITsAPIResource):
 
     class Meta:
         object_class = Sample
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "samples"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
@@ -82,6 +81,8 @@ class SampleResource(CRITsAPIResource):
         related_md5 = bundle.data.get('related_md5', None)
         related_id = bundle.data.get('related_id', None)
         related_type = bundle.data.get('related_type', None)
+        backdoor_name = bundle.data.get('backdoor_name', None)
+        backdoor_version = bundle.data.get('backdoor_version', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
@@ -106,7 +107,9 @@ class SampleResource(CRITsAPIResource):
                                           md5=md5,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
-                                          is_return_only_md5=False)
+                                          is_return_only_md5=False,
+                                          backdoor_name=backdoor_name,
+                                          backdoor_version=backdoor_version)
 
         result = {'success': False}
 

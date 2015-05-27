@@ -209,7 +209,7 @@ def generate_pcap_jtable(request, option):
 
 def handle_pcap_file(filename, data, source_name, user=None,
                      description=None, related_id=None, related_md5=None,
-                     related_type=None, method=None, reference=None,
+                     related_type=None, method='', reference='',
                      relationship=None, bucket_list=None, ticket=None):
     """
     Add a PCAP.
@@ -332,11 +332,10 @@ def handle_pcap_file(filename, data, source_name, user=None,
     if related_obj and pcap:
         if not relationship:
             relationship = "Related_To"
-        pcap.add_relationship(rel_item=related_obj,
-                              rel_type=relationship,
+        pcap.add_relationship(related_obj,
+                              relationship,
                               analyst=user,
                               get_rels=False)
-        related_obj.save(username=user)
         pcap.save(username=user)
 
     # run pcap triage
@@ -353,27 +352,6 @@ def handle_pcap_file(filename, data, source_name, user=None,
     }
 
     return status
-
-def update_pcap_description(md5, description, analyst):
-    """
-    Update a PCAP description.
-
-    :param md5: The MD5 of the PCAP to update.
-    :type md5: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user updating the description.
-    :type analyst: str
-    :returns: None, ValidationError
-    """
-
-    pcap = PCAP.objects(md5=md5).first()
-    pcap.description = description
-    try:
-        pcap.save(username=analyst)
-        return None
-    except ValidationError, e:
-        return e
 
 def delete_pcap(pcap_md5, username=None):
     """

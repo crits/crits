@@ -5,7 +5,7 @@ anyjson
 billiard
 biplist
 celery
-cybox==2.1.0.5
+cybox==2.1.0.11
 defusedxml
 django-celery
 django-tastypie==0.11.0
@@ -13,9 +13,9 @@ django-tastypie-mongoengine==0.4.5
 kombu
 lxml
 m2crypto
+--allow-external mongoengine
 mongoengine==0.8.7
 pydeep==0.2
-pydot
 pymongo==2.7.2
 pyparsing
 python-dateutil
@@ -28,6 +28,7 @@ requests
 setuptools
 simplejson
 six
-stix==1.1.1.0
+stix==1.1.1.5
 ushlex
 wsgiref
+olefile

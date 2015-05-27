@@ -414,6 +414,10 @@
       </ul>
     </li>
     <li class='nav_objects mmenu_item'>
+      <a href="{% url 'crits.backdoors.views.backdoors_listing' %}">Backdoors</a>
+      <a href id="new-backdoor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-backdoor" persona="new" title="New Backdoor"></a>
+    </li>
+    <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.campaigns.views.campaigns_listing' %}">Campaigns</a>
       <a href id="new-campaign" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-campaign" persona="new" title="New Campaign"></a>
     </li>
@@ -451,6 +455,10 @@
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.events.views.events_listing' %}">Events</a>
       <a href id="new-event" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-event" persona="new" title="New Event"></a>
+    </li>
+    <li class='nav_objects mmenu_item'>
+      <a href="{% url 'crits.exploits.views.exploits_listing' %}">Exploits</a>
+      <a href id="new-exploit" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-exploit" persona="new" title="New Exploit"></a>
     </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.indicators.views.indicators_listing' %}">Indicators</a>
@@ -498,12 +506,6 @@
         {% endif %}
         <li class='mmenu_item'>
           <a href="{% url 'crits.samples.views.sources' %}">Source Samples</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href="{% url 'crits.samples.views.backdoors_listing' %}">Backdoors</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href="{% url 'crits.samples.views.exploit' %}">Exploits</a>
         </li>
         <li class='mmenu_item'>
           <a href="{% url 'crits.samples.views.bulk_add_md5_sample' %}" id="bulk_upload_md5_sample">Bulk Upload MD5 Samples</a>
@@ -555,12 +557,6 @@
       <ul class='sub-mmenu'>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="actor_identifier_type_add" id="actor_identifier_type_add">Actor Identifier Type</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="backdoor_add" id="backdoor_add">Backdoor</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="exploit_add" id="exploit_add">Exploit</a>
         </li>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="indicator_action_add" id="indicator_action_add">Indicator Action</a>
@@ -630,17 +626,11 @@
                        <li class='mmenu_item'>
                            <a class='controlPanelNav' sub_node='actor_intended_effects_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_intended_effects_button">Actor Intended Effects</a>
                        </li>
-                       <li class='mmenu_item'>
-                            <a class='controlPanelNav' sub_node='backdoor_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#backdoor_button">Backdoors</a>
-                        </li>
                         <li class='mmenu_item'>
                             <a class='controlPanelNav' sub_node='campaign_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#campaign_button">Campaigns</a>
                         </li>
                         <li class='mmenu_item'>
                             <a class='controlPanelNav' sub_node='eventtype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#eventtype_button">Event Types</a>
-                        </li>
-                        <li class='mmenu_item'>
-                            <a class='controlPanelNav' sub_node='exploit_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#exploit_button">Exploits</a>
                         </li>
                         <li class='mmenu_item'>
                             <a class='controlPanelNav' sub_node='indicatoraction_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#indicatoraction_button">Indicator Actions</a>
@@ -690,6 +680,13 @@
 </nav>
 <!-- end nav -->
 {% endif %}
+
+<span id="selectedNodeMenu">
+    <button class="selected_text_button" id="selected_to_indicator" title="Add as Indicator">I</button>
+    <button class="selected_text_button" id="selected_to_domain" title="Add as Domain">D</button>
+    <button class="selected_text_button" id="selected_to_ip" title="Add as IP">IP</button>
+</span>
+
 <script type="text/javascript" src="{{ STATIC_URL }}js/core.js"></script>
 {% if enable_toasts == True %}
     {% if not request.user.prefs.toast_notifications or request.user.prefs.toast_notifications.enabled != False %}

@@ -17,7 +17,7 @@ class ActorResource(CRITsAPIResource):
 
     class Meta:
         object_class = Actor
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "actors"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

@@ -1,0 +1,10 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Add New Backdoor">
+    <form id="form-{{ request.GET.dialog }}"
+	  action='{% url "crits.backdoors.views.add_backdoor" %}'
+	  method='POST' enctype="multipart/form-data"
+      item-type="backdoor">
+    <table class="form">{{ backdoor_add.as_table }}</table>
+    </form>
+</div>

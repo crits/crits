@@ -11,6 +11,7 @@ import re
 import yaml
 import StringIO
 import sys
+import olefile
 
 from dateutil.parser import parse as date_parser
 from django.conf import settings
@@ -33,8 +34,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_admin, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.domains.handlers import get_domain
-from crits.emails import OleFileIO_PL
+from crits.domains.handlers import get_valid_root_domain
 from crits.emails.email import Email
 from crits.indicators.handlers import handle_indicator_ind
 from crits.indicators.indicator import Indicator
@@ -1060,11 +1060,13 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
     # Relate the email back to the pcap, if it came from PCAP.
     if parent_id and parent_type:
-        ret = result['object'].add_relationship(rel_id=parent_id,
-                                                type_=parent_type,
-                                                rel_type='Extracted_From',
-                                                analyst=analyst,
-                                                get_rels=False)
+        rel_item = class_from_id(parent_type, parent_id)
+        if rel_item:
+            rel_type = 'Extracted_From'
+            ret = result['object'].add_relationship(rel_item,
+                                                    rel_type,
+                                                    analyst=analyst,
+                                                    get_rels=False)
         if not ret['success']:
             result['reason'] = "Failed to create relationship.\n<br /><pre>"
             + result['message'] + "</pre>"
@@ -1276,18 +1278,16 @@ def create_indicator_from_header_field(email, header_field, ind_type,
 
     newindicator = handle_indicator_ind(value,
                                         email.source,
-                                        '',
                                         ind_type,
                                         analyst=analyst)
     if newindicator.get('objectid'):
         indicator = Indicator.objects(id=newindicator['objectid']).first()
-        results = email.add_relationship(rel_item=indicator,
-                                          rel_type="Related_To",
-                                          analyst=analyst,
-                                          get_rels=True)
+        results = email.add_relationship(indicator,
+                                         "Related_To",
+                                         analyst=analyst,
+                                         get_rels=True)
         if results['success']:
             email.save(username=analyst)
-            indicator.save(username=analyst)
             relationship = {'type': 'Email', 'value': email.id}
             message = render_to_string('relationships_listing_widget.html',
                                         {'relationship': relationship,
@@ -1435,10 +1435,10 @@ def parse_ole_file(file):
     http://cpansearch.perl.org/src/MVZ/Email-Outlook-Message-0.912/lib/Email/Outlook/Message.pm
     """
 
-    header = file.read(len(OleFileIO_PL.MAGIC))
+    header = file.read(len(olefile.MAGIC))
 
     # Verify the file is in OLE2 format first
-    if header != OleFileIO_PL.MAGIC:
+    if header != olefile.MAGIC:
         return {'error': 'The upload file is not a valid Outlook file. It must be in OLE2 format (.msg)'}
 
     msg = {'subject': '_0037',
@@ -1454,7 +1454,7 @@ def parse_ole_file(file):
     file.seek(0)
     data = file.read()
     msg_file = StringIO.StringIO(data)
-    ole = OleFileIO_PL.OleFileIO(msg_file)
+    ole = olefile.OleFileIO(msg_file)
 
     # Helper function to grab data out of stream objects
     def get_stream_data(entry):
@@ -1550,7 +1550,7 @@ def parse_ole_file(file):
     all_received = headers.get_all('Received')
     crits_config = CRITsConfig.objects().first()
     if crits_config:
-        email_domain = get_domain(crits_config.crits_email.split('@')[-1])[0]
+        email_domain = get_valid_root_domain(crits_config.crits_email.split('@')[-1])[0]
     else:
         email_domain = ''
 

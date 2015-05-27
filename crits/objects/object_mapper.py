@@ -1,12 +1,14 @@
 from crits.core.crits_mongoengine import EmbeddedObject
 
 from cybox.common import String, PositiveInteger, StructuredText
+from cybox.common.object_properties import CustomProperties, Property
 
 from cybox.objects.account_object import Account
 from cybox.objects.address_object import Address
 from cybox.objects.api_object import API
 from cybox.objects.artifact_object import Artifact
 from cybox.objects.code_object import Code
+from cybox.objects.custom_object import Custom
 from cybox.objects.disk_object import Disk
 from cybox.objects.disk_partition_object import DiskPartition
 from cybox.objects.domain_name_object import DomainName
@@ -190,7 +192,18 @@ def make_cybox_object(type_, name=None, value=None):
         p.name = String(value)
         return p
     elif type_ == "String":
-        return String(value)
+        c = Custom()
+        c.custom_name = "crits:String"
+        c.description = ("This is a generic string used as the value of an "
+                         "Indicator or Object within CRITs.")
+        c.custom_properties = CustomProperties()
+
+        p1 = Property()
+        p1.name = "value"
+        p1.description = "Generic String"
+        p1.value = value
+        c.custom_properties.append(p1)
+        return c
     elif type_ == "System":
         s = System()
         s.hostname = String(value)
@@ -341,7 +354,7 @@ def make_crits_object(cybox_obj):
         return o
     elif isinstance(cybox_obj, Artifact):
         o.object_type = "Artifact"
-        o.value = get_object_values(cybox_obj.data)
+        o.value = [cybox_obj.data]
         if cybox_obj.type_ == Artifact.TYPE_GENERIC:
             o.name = "Data Region"
             return o
@@ -356,6 +369,12 @@ def make_crits_object(cybox_obj):
         o.name = str(cybox_obj.type)
         o.value = get_object_values(cybox_obj.code_segment)
         return o
+    elif isinstance(cybox_obj, Custom):
+        if cybox_obj.custom_name == "crits:String":
+            if cybox_obj.custom_properties[0].name == "value":
+                o.object_type = "String"
+                o.value = [cybox_obj.custom_properties[0].value]
+                return o
     elif isinstance(cybox_obj, Disk):
         o.object_type = "Disk"
         o.name = str(cybox_obj.type)
@@ -418,10 +437,6 @@ def make_crits_object(cybox_obj):
     elif isinstance(cybox_obj, Process):
         o.object_type = "Process"
         o.value = get_object_values(cybox_obj.name)
-        return o
-    elif isinstance(cybox_obj, String):
-        o.object_type = "String"
-        o.value = get_object_values(cybox_obj.value)
         return o
     elif isinstance(cybox_obj, System):
         o.object_type = "System"

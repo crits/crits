@@ -29,7 +29,6 @@ class Campaign(CritsBaseAttributes, Document):
         "schema_doc": {
             'schema_version': 'Version of the Campaign schema doc',
             'active': 'Enabled in the UI (on/off)',
-            'description': 'Description of Campaign',
             'aliases': 'List [] of aliases this Campaign goes by',
             'domain_count': 'Domains tagged with Campaign. Added by MapReduce',
             'email_count': 'Emails tagged with Campaign. Added by MapReduce',
@@ -47,13 +46,14 @@ class Campaign(CritsBaseAttributes, Document):
             'details_url_key': 'name',
             'default_sort': "name ASC",
             'searchurl': 'crits.campaigns.views.campaigns_listing',
-            'fields': ["name", "aliases", "indicator_count", "email_count",
+            'fields': ["name", "aliases", "actor_count", "backdoor_count",
+                       "exploit_count", "indicator_count", "email_count",
                        "domain_count", "sample_count", "event_count",
                        "ip_count", "pcap_count", "modified", "id", "status"],
             'jtopts_fields': ["details", "name", "aliases", "status",
-                              "indicator_count", "email_count", "domain_count",
-                              "sample_count", "event_count", "ip_count",
-                              "pcap_count", "modified", "favorite", "id"],
+                              "actors", "backdoors", "exploits", "indicators",
+                              "emails", "domains", "samples", "events", "ips",
+                              "pcaps", "modified", "favorite", "id"],
             'hidden_fields': [],
             'linked_fields': [],
             'details_link': 'details',
@@ -63,10 +63,12 @@ class Campaign(CritsBaseAttributes, Document):
 
     active = StringField(default="on")
     aliases = ListField(StringField(), default=[])
-    description = StringField()
+    actor_count = IntField(default=0)
+    backdoor_count = IntField(default=0)
     domain_count = IntField(default=0)
     email_count = IntField(default=0)
     event_count = IntField(default=0)
+    exploit_count = IntField(default=0)
     indicator_count = IntField(default=0)
     ip_count = IntField(default=0)
     name = StringField(default=0)

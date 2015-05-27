@@ -5,7 +5,7 @@ from StringIO import StringIO
 from crits.actors.actor import Actor
 from crits.actors.handlers import add_new_actor, update_actor_tags
 from crits.certificates.handlers import handle_cert_file
-from crits.domains.handlers import upsert_domain, get_domain
+from crits.domains.handlers import upsert_domain
 from crits.emails.handlers import handle_email_fields
 from crits.events.handlers import add_new_event
 from crits.indicators.indicator import Indicator
@@ -65,11 +65,14 @@ class STIXParser():
         self.source_instance.method = method
         self.information_source = None
 
-        self.imported = [] # track items that are imported
+        self.event = None # the Event TLO
+        self.event_rels = {} # track relationships to the event
+        self.relationships = [] # track other relationships that need forming
+        self.imported = {} # track items that are imported
         self.failed = [] # track STIX/CybOX items that failed import
         self.saved_artifacts = {}
 
-    def parse_stix(self, reference=None, make_event=False, source=''):
+    def parse_stix(self, reference='', make_event=False, source=''):
         """
         Parse the document.
 
@@ -139,8 +142,15 @@ class STIXParser():
                                 date,
                                 self.source_instance.analyst)
             if res['success']:
-                self.imported.append(('Event',
-                                      res['object']))
+                self.event = res['object']
+                self.imported[self.package.id_] = ('Event', res['object'])
+
+                # Get relationships to the Event
+                if self.package.incidents:
+                    incdnts = self.package.incidents
+                    for rel in getattr(incdnts[0], 'related_indicators', ()):
+                        self.event_rels[rel.item.idref] = (rel.relationship.value,
+                                                           rel.confidence.value.value)
             else:
                 self.failed.append((res['message'],
                                     "STIX Event",
@@ -200,7 +210,8 @@ class STIXParser():
                                             il,
                                             analyst)
                         obj = Actor.objects(id=res['id']).first()
-                        self.imported.append((Actor._meta['crits_type'], obj))
+                        self.imported[threat_actor.id_] = (Actor._meta['crits_type'],
+                                                           obj)
                     else:
                         self.failed.append((res['message'],
                                             type(threat_actor).__name__,
@@ -219,6 +230,23 @@ class STIXParser():
 
         analyst = self.source_instance.analyst
         for indicator in indicators: # for each STIX indicator
+
+            # store relationships
+            for rel in getattr(indicator, 'related_indicators', ()):
+                self.relationships.append((indicator.id_,
+                                           rel.relationship.value,
+                                           rel.item.idref,
+                                           rel.confidence.value.value))
+
+            # handled indicator-wrapped observable
+            if getattr(indicator, 'title', ""):
+                if "Top-Level Object" in indicator.title:
+                    self.parse_observables(indicator.observables)
+                    result = self.imported.pop(indicator.observables[0].id_, None)
+                    if result:
+                        self.imported[indicator.id_] = result
+                    continue
+
             for observable in indicator.observables: # get each observable from indicator (expecting only 1)
                 try: # create CRITs Indicator from observable
                     item = observable.object_.properties
@@ -230,15 +258,14 @@ class STIXParser():
                     for value in obj.value:
                         if value and ind_type:
                             res = handle_indicator_ind(value.strip(),
-                                                    self.source,
-                                                    None,
-                                                    ind_type,
-                                                    analyst,
-                                                    add_domain=True,
-                                                    add_relationship=True)
+                                                       self.source,
+                                                       ind_type,
+                                                       analyst,
+                                                       add_domain=True,
+                                                       add_relationship=True)
                             if res['success']:
-                                self.imported.append((Indicator._meta['crits_type'],
-                                                    res['object']))
+                                self.imported[indicator.id_] = (Indicator._meta['crits_type'],
+                                                                res['object'])
                             else:
                                 self.failed.append((res['message'],
                                                     type(item).__name__,
@@ -280,9 +307,7 @@ class STIXParser():
                 if isinstance(item, DomainName):
                     imp_type = "Domain"
                     for value in item.value.values:
-                        (sdomain, domain) = get_domain(str(value.strip()))
-                        res = upsert_domain(sdomain,
-                                            domain,
+                        res = upsert_domain(str(value),
                                             [self.source],
                                             username=analyst)
                         self.parse_res(imp_type, obs, res)
@@ -380,6 +405,12 @@ class STIXParser():
                                             "STIX")
                     # Should check for attachments and add them here.
                     self.parse_res(imp_type, obs, res)
+                    if res.get('status') and item.attachments:
+                        for attach in item.attachments:
+                            rel_id = attach.to_dict()['object_reference']
+                            self.relationships.append((obs.id_,
+                                                       "Contains",
+                                                       rel_id, "High"))
                 else: # try to parse all other possibilities as Indicator
                     imp_type = "Indicator"
                     obj = make_crits_object(item)
@@ -398,7 +429,6 @@ class STIXParser():
                             if value and ind_type:
                                 res = handle_indicator_ind(value.strip(),
                                                         self.source,
-                                                        None,
                                                         ind_type,
                                                         analyst,
                                                         add_domain=True,
@@ -414,8 +444,8 @@ class STIXParser():
         if s is None:
             s = res.get('status', None)
         if s:
-            self.imported.append((imp_type,
-                                    res['object'])) # use class to parse object
+            self.imported[obs.id_] = (imp_type,
+                                      res['object']) # use class to parse object
         else:
             if 'reason' in res:
                 msg = res['reason']
@@ -444,23 +474,42 @@ class STIXParser():
 
     def relate_objects(self):
         """
-        for now we are relating all objects to each other with a common
-        relationship type that is most likely inaccurate. Need to get actual
-        relationship out of the cybox document once we are storing it there.
+        If an Incident was included in the STIX package, its
+        related_indicators attribute is used to relate objects to the event.
+        Any objects without an explicit relationship to the event are
+        related using type "Related_To".
+
+        Objects are related to each other using the relationships listed in
+        their related_indicators attribute.
         """
-        finished_objects = []
-        for obj in self.imported:
-            if not finished_objects: # Prime the list...
-                finished_objects.append(obj[1])
-                continue
+        analyst = self.source_instance.analyst
 
-            for right in finished_objects:
-                obj[1].add_relationship(right,
-                                     rel_type="Related_To",
-                                     analyst=self.source_instance.analyst)
-            finished_objects.append(obj[1])
+        # relate objects to Event
+        if self.event:
+            evt = self.event
+            for id_ in self.imported:
+                if id_ in self.event_rels:
+                    evt.add_relationship(self.imported[id_][1],
+                                         rel_type=self.event_rels[id_][0],
+                                         rel_confidence=self.event_rels[id_][1],
+                                         analyst=analyst)
+                elif self.imported[id_][0] != 'Event':
+                    evt.add_relationship(self.imported[id_][1],
+                                         rel_type='Related_To',
+                                         rel_confidence='Unknown',
+                                         analyst=analyst)
+            evt.save(username=analyst)
 
-        for f in finished_objects:
-            f.save(username=self.source_instance.analyst)
+        # relate objects to each other
+        for rel in self.relationships:
+            if rel[0] in self.imported and rel[2] in self.imported:
+                left = self.imported[rel[0]][1]
+                right = self.imported[rel[2]][1]
+                left.add_relationship(right,
+                                      rel_type=rel[1],
+                                      rel_confidence=rel[3],
+                                      analyst=analyst)
 
-
+        # save objects
+        for id_ in self.imported:
+            self.imported[id_][1].save(username=analyst)

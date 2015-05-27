@@ -18,22 +18,18 @@ from crits.core.handsontable_tools import form_to_dict
 from crits.core.user_tools import user_can_view_data, user_is_admin
 from crits.core.user_tools import get_user_organization
 from crits.objects.forms import AddObjectForm
-from crits.samples.forms import UploadFileForm, NewExploitForm, NewBackdoorForm
-from crits.samples.forms import BackdoorForm, ExploitForm, XORSearchForm
+from crits.samples.forms import UploadFileForm, XORSearchForm
 from crits.samples.forms import UnrarSampleForm
-from crits.samples.handlers import handle_uploaded_file, add_new_backdoor
-from crits.samples.handlers import add_new_exploit, mail_sample
+from crits.samples.handlers import handle_uploaded_file, mail_sample
 from crits.samples.handlers import handle_unrar_sample, generate_yarahit_jtable
 from crits.samples.handlers import delete_sample, handle_unzip_file
-from crits.samples.handlers import get_exploits, add_exploit_to_sample
-from crits.samples.handlers import add_backdoor_to_sample, get_source_counts
-from crits.samples.handlers import get_sample_details, generate_backdoor_jtable
+from crits.samples.handlers import get_source_counts
+from crits.samples.handlers import get_sample_details
 from crits.samples.handlers import generate_sample_jtable
 from crits.samples.handlers import generate_sample_csv, process_bulk_add_md5_sample
 from crits.samples.handlers import update_sample_filename, modify_sample_filenames
 from crits.samples.sample import Sample
 from crits.stats.handlers import generate_sources
-from crits.stats.handlers import generate_exploits
 
 
 @user_passes_test(user_can_view_data)
@@ -78,20 +74,6 @@ def samples_listing(request,option=None):
     if option == "csv":
         return generate_sample_csv(request)
     return generate_sample_jtable(request, option)
-
-@user_passes_test(user_can_view_data)
-def backdoors_listing(request,option=None):
-    """
-    Generate Backdoor Listing template.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param option: Whether or not we should generate a CSV (yes if option is "csv")
-    :type option: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    return generate_backdoor_jtable(request, option)
 
 @user_passes_test(user_can_view_data)
 def yarahits_listing(request,option=None):
@@ -193,6 +175,7 @@ def upload_file(request, related_md5=None):
             response = {'success': False,
                         'message': 'Unknown error; unable to upload file.'}
             inherited_source = None
+            backdoor = form.cleaned_data['backdoor']
             campaign = form.cleaned_data['campaign']
             confidence = form.cleaned_data['confidence']
             source = form.cleaned_data['source']
@@ -222,6 +205,13 @@ def upload_file(request, related_md5=None):
                 if form.cleaned_data['inherit_sources']:
                     inherited_source = related_sample.source
 
+            backdoor_name = None
+            backdoor_version = None
+            if backdoor:
+                backdoor = backdoor.split('|||')
+                if len(backdoor) == 2:
+                    (backdoor_name, backdoor_version) = backdoor[0], backdoor[1]
+
             try:
                 if request.FILES:
                     result = handle_uploaded_file(
@@ -237,7 +227,9 @@ def upload_file(request, related_md5=None):
                         related_md5,
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
-                        inherited_source=inherited_source)
+                        inherited_source=inherited_source,
+                        backdoor_name=backdoor_name,
+                        backdoor_version=backdoor_version)
                 else:
                     result = handle_uploaded_file(
                         None,
@@ -255,7 +247,9 @@ def upload_file(request, related_md5=None):
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
                         inherited_source=inherited_source,
-                        is_return_only_md5=False)
+                        is_return_only_md5=False,
+                        backdoor_name=backdoor_name,
+                        backdoor_version=backdoor_version)
 
             except ZipFileError, zfe:
                 return render_to_response('file_upload_response.html',
@@ -309,69 +303,6 @@ def upload_file(request, related_md5=None):
                                       RequestContext(request))
     else:
         return HttpResponseRedirect(reverse('crits.samples.views.samples_listing'))
-
-@user_passes_test(user_can_view_data)
-def new_exploit(request):
-    """
-    Upload a new exploit. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST' and request.is_ajax():
-        form = NewExploitForm(request.POST)
-        analyst = request.user.username
-        if form.is_valid():
-            result = add_new_exploit(form.cleaned_data['name'],
-                                     analyst)
-            if result:
-                message = {'message': '<div>Exploit added successfully!</div>',
-                           'success':True}
-            else:
-                message = {'message': '<div>Exploit addition failed!</div>',
-                           'success': False}
-        else:
-            message = {'form':form.as_table(),
-                       'success': False}
-        return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
-    return render_to_response("error.html",
-                              {'error':'Expected AJAX POST'},
-                              RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def new_backdoor(request):
-    """
-    Upload a new backdoor. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST' and request.is_ajax():
-        form = NewBackdoorForm(request.POST)
-        analyst = request.user.username
-        if form.is_valid():
-            success = add_new_backdoor(form.cleaned_data['name'],
-                                       analyst)
-            if success:
-                message = {'message': '<div>Backdoor added successfully!</div>',
-                           'success':True}
-            else:
-                message = {'message': '<div>Backdoor addition failed!</div>',
-                           'success': False,
-                           'form':form.as_table()}
-        else:
-            message = {'form': form.as_table(),
-                       'success': False}
-        return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
-    return render_to_response("error.html",
-                              {'error':'Expected AJAX POST'},
-                              RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def strings(request, sample_md5):
@@ -590,73 +521,6 @@ def sources(request):
     return render_to_response('samples_sources.html',
                               {'sources': sources_list},
                               RequestContext(request))
-
-#TODO: convert to jtable
-@user_passes_test(user_can_view_data)
-def exploit(request):
-    """
-    Get the exploits list for samples.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    refresh = request.GET.get("refresh", "no")
-    if refresh == "yes":
-        generate_exploits()
-    exploit_list = get_exploits()
-    return render_to_response('samples_exploit.html',
-                              {'exploits': exploit_list},
-                              RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def add_exploit(request, sample_md5):
-    """
-    Add an exploit to a sample.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param sample_md5: The MD5 of the sample to add to.
-    :type sample_md5: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST":
-        exploit_form = ExploitForm(request.POST)
-        if exploit_form.is_valid():
-            cve = exploit_form.cleaned_data['exploit']
-            analyst = request.user.username
-            add_exploit_to_sample(sample_md5,
-                                  cve.upper(),
-                                  analyst)
-    return HttpResponseRedirect(reverse('crits.samples.views.detail',
-                                        args=[sample_md5]))
-
-@user_passes_test(user_can_view_data)
-def add_backdoor(request, sample_md5):
-    """
-    Add a backdoor to a sample.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param sample_md5: The MD5 of the sample to add to.
-    :type sample_md5: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST":
-        backdoor_form = BackdoorForm(request.POST)
-        if backdoor_form.is_valid():
-            name = backdoor_form.cleaned_data['backdoor_types']
-            version = backdoor_form.cleaned_data['backdoor_version']
-            analyst = request.user.username
-            add_backdoor_to_sample(sample_md5,
-                                   name,
-                                   version,
-                                   analyst)
-    return HttpResponseRedirect(reverse('crits.samples.views.detail',
-                                        args=[sample_md5]))
 
 @user_passes_test(user_is_admin)
 def remove_sample(request, md5):

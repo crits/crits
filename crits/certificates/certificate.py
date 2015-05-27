@@ -26,7 +26,6 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
             'filetype': 'The filetype of the certificate',
             'md5': 'The MD5 of the certificate file',
             'size': 'The filesize of the certificate',
-            'description': 'Description of what the certificate contains',
             'source': 'List [] of source information about who provided the certificate'
         },
         "jtable_opts": {
@@ -56,7 +55,6 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
                        },
     }
 
-    description = StringField()
     filedata = getFileField(collection_name=settings.COL_CERTIFICATES)
     filename = StringField(required=True)
     filetype = StringField(required=True)

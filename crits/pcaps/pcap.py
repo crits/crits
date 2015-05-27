@@ -24,7 +24,6 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
             'md5': 'The MD5 of the PCAP file',
             'length': 'The filesize of the PCAP',
             'uploadDate': 'The ISODate when the PCAP was uploaded',
-            'description': 'Description of what the PCAP contains',
             'contentType': 'The filetype of the PCAP',
             'source': 'List [] of source information about who provided the PCAP'
         },
@@ -55,7 +54,6 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
     }
 
     contentType = StringField()
-    description = StringField()
     filedata = getFileField(collection_name=settings.COL_PCAPS)
     filename = StringField(required=True)
     length = IntField(default=0)

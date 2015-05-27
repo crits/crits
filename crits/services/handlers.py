@@ -123,17 +123,19 @@ def service_work_handler(service_instance, final_config):
     service_instance.execute(final_config)
 
 
-def run_service(name, crits_type, identifier, analyst, obj=None,
-                execute='local', custom_config={}):
+def run_service(name, type_, id_, user, obj=None,
+                execute='local', custom_config={}, **kwargs):
     """
     Run a service.
 
     :param name: The name of the service to run.
     :type name: str
-    :param crits_type: The type of the object.
-    :type name: str
-    :param identifier: The identifier of the object.
-    :type name: str
+    :param type_: The type of the object.
+    :type type_: str
+    :param id_: The identifier of the object.
+    :type id_: str
+    :param user: The user running the service.
+    :type user: str
     :param obj: The CRITs object, if given this overrides crits_type and identifier.
     :type obj: CRITs object.
     :param analyst: The user updating the results.
@@ -145,7 +147,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
     """
 
     result = {'success': False}
-    if crits_type not in settings.CRITS_TYPES:
+    if type_ not in settings.CRITS_TYPES:
         result['html'] = "Unknown CRITs type."
         return result
 
@@ -159,7 +161,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
         return result
 
     if not obj:
-        obj = class_from_id(crits_type, identifier)
+        obj = class_from_id(type_, id_)
         if not obj:
             result['html'] = 'Could not find object.'
             return result
@@ -170,8 +172,8 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
         return result
 
     # See if the object is a supported type for the service.
-    if not service_class.supported_for_type(crits_type):
-        result['html'] = "Service not supported for type '%s'" % crits_type
+    if not service_class.supported_for_type(type_):
+        result['html'] = "Service not supported for type '%s'" % type_
         return result
 
     # When running in threaded mode, each thread needs to have its own copy of
@@ -208,7 +210,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
     # This is because not all config options may be submitted.
     final_config.update(custom_config)
 
-    form = service_class.bind_runtime_form(analyst, final_config)
+    form = service_class.bind_runtime_form(user, final_config)
     if form:
         if not form.is_valid():
             # TODO: return corrected form via AJAX
@@ -227,7 +229,7 @@ def run_service(name, crits_type, identifier, analyst, obj=None,
     saved_config = dict(final_config)
     service_class.save_runtime_config(saved_config)
 
-    task = AnalysisTask(local_obj.obj, service_instance, analyst)
+    task = AnalysisTask(local_obj.obj, service_instance, user)
     task.config = AnalysisConfig(**saved_config)
     task.start()
     add_task(task)

@@ -646,8 +646,70 @@ function initTabNav() {
     });
 }
 
+var csrftoken = readCookie('csrftoken');
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+$.ajaxSetup({
+    // Set request header for ajax POST
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+var selected_text = null;
+
+function getSelected() {
+    if (window.getSelection) {
+        return window.getSelection();
+    } else if (document.getSelection) {
+        return document.getSelection();
+    } else {
+        var selection = document.selection && document.selection.createRange();
+        if (selection.text) {
+            return selection.text;
+        }
+        return false;
+    }
+    return false;
+}
 
 $(document).ready(function() {
+
+    $(document).mouseup(function(e) {
+        var selected = getSelected();
+        if (selected.toString().length > 0) {
+            selected_text = selected.toString()
+            var span = $('<span>')
+            .attr('id', 'tmpSelectedNode');
+            var range = selected.getRangeAt(0);
+            range.insertNode($(span).get(0));
+            var position = $('#tmpSelectedNode').position();
+            var fspan = $('#selectedNodeMenu')
+            .css('top', position.top)
+            .css('left', position.left)
+            .attr('data-selected', selected_text)
+            .show();
+            $('#tmpSelectedNode').remove();
+        } else {
+            $('#selectedNodeMenu').hide();
+        }
+    });
+
+    $(document).on('click', '.selected_text_button', function(e) {
+        var selected = $(this).parent().attr('data-selected');
+        if ($(this).attr('id') == 'selected_to_indicator') {
+            $('#new-indicator').click();
+        } else if ($(this).attr('id') == 'selected_to_domain') {
+            $('#new-domain').click();
+        } else if ($(this).attr('id') == 'selected_to_ip') {
+            $('#new-ip').click();
+        }
+    });
+
     var src_filter = '[name!="analyst"]';
 
     // Enable Preference Toggle buttons
@@ -1395,4 +1457,5 @@ $(document).ready(function() {
             }
         });
     });
+
 }); //document.ready

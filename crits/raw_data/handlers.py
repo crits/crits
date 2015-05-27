@@ -12,6 +12,7 @@ from mongoengine.base import ValidationError
 
 from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
+from crits.core.class_mapper import class_from_id
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
@@ -283,7 +284,7 @@ def generate_raw_data_jtable(request, option):
 def handle_raw_data_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
-                         link_id=None, method=None, reference=None,
+                         link_id=None, method='', reference='',
                          copy_rels=False, bucket_list=None, ticket=None):
     """
     Add RawData.
@@ -400,11 +401,13 @@ def handle_raw_data_file(data, source_name, user=None,
                     raw_data.save(username=user)
                     raw_data.reload()
                     for rel in rd2.relationships:
-                        raw_data.add_relationship(rel_id=rel.object_id,
-                                                  type_=rel.rel_type,
-                                                  rel_type=rel.relationship,
-                                                  rel_date=rel.relationship_date,
-                                                  analyst=user)
+                        # Get object to relate to.
+                        rel_item = class_from_id(rel.rel_type, rel.rel_object_id)
+                        if rel_item:
+                            raw_data.add_relationship(rel_item,
+                                                      rel.relationship,
+                                                      rel_date=rel.relationship_date,
+                                                      analyst=user)
 
 
     raw_data.version = len(RawData.objects(link_id=link_id)) + 1
@@ -431,28 +434,6 @@ def handle_raw_data_file(data, source_name, user=None,
     }
 
     return status
-
-def update_raw_data_description(_id, description, analyst):
-    """
-    Update the RawData description.
-
-    :param _id: ObjectId of the RawData to update.
-    :type _id: str
-    :param description: The description to set.
-    :type description: str
-    :param analyst: The user updating the description.
-    :type analyst: str
-    :returns: None
-    :raises: ValidationError
-    """
-
-    raw_data = RawData.objects(id=_id).first()
-    raw_data.description = description
-    try:
-        raw_data.save(username=analyst)
-        return None
-    except ValidationError, e:
-        return e
 
 def update_raw_data_tool_details(_id, details, analyst):
     """

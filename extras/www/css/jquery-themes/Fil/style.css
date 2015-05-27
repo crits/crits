@@ -1586,3 +1586,22 @@ a#reply_inline_comment {
     border-radius: 50%;
     border: 1px solid #FA8258;
 }
+
+#selectedNodeMenu {
+    z-index: 10;
+    display: none;
+    padding: 5px;
+    background-color: #eeeeee;
+    border: 1px solid #666666;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    color: #222222;
+}
+
+.selected_text_button {
+    min-width: 20px;
+    min-height: 20px;
+    display: inline-block;
+    border-radius: 0px;
+}

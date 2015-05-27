@@ -6,7 +6,7 @@
     <tr>
         <td colspan="2" style="text-align: center"><b>Imported</b></td>
     </tr>
-            {% for item in imported %}
+            {% for key, item in imported.items %}
                 <tr>
                     <td class="key">
                         {{item.0}}

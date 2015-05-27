@@ -11,7 +11,6 @@
     var add_highlight = "{% url 'crits.raw_data.views.add_highlight' raw_data.id %}";
     var remove_highlight = "{% url 'crits.raw_data.views.remove_highlight' raw_data.id %}";
     var details_by_link = "{% url 'crits.raw_data.views.details_by_link' raw_data.link_id|stringformat:"s" %}"
-    var update_raw_data_description = "{% url 'crits.raw_data.views.set_raw_data_description' raw_data.id %}";
     var update_raw_data_tool_details = "{% url 'crits.raw_data.views.set_raw_data_tool_details' raw_data.id %}";
     var update_raw_data_tool_name = "{% url 'crits.raw_data.views.set_raw_data_tool_name' raw_data.id %}";
     var update_raw_data_type = "{% url 'crits.raw_data.views.set_raw_data_type' raw_data.id %}";
@@ -95,7 +94,6 @@
                 </td>
             </tr>
             <tr>
-            <tr>
             <td class='key'>Version</td>
             <td>
                 <select id="jump_versions" data-link="{{ raw_data.link_id }}"
@@ -104,17 +102,9 @@
             </td>
             </tr>
             <tr>
-            <tr>
-            <td class='key'>Description</td>
-            {% if raw_data.description %}
-                <td>
-                    <span class="edit_underline" id="raw_data_description">{{raw_data.description}}</span>
-                </td>
-            {% else %}
-                <td>
-                    <span class="edit_underline" id="raw_data_description">None</span>
-                </td>
-            {% endif %}
+                {% with description=raw_data.description %}
+                    {% include 'description_widget.html' %}
+                {% endwith %}
             </tr>
             <tr>
                 <td class="key">Status
@@ -157,6 +147,11 @@
     <div>
         {% with hit=raw_data col=COL_RAW_DATA %}
             {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=raw_data col=COL_RAW_DATA %}
+            {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
     <div>

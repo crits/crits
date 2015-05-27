@@ -9,7 +9,7 @@
 
 
 # Make sure we are working with a 64-bit system.
-ARCH=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/')
+ARCH=$(uname -m | sed 's/x86_//;s/amd//;s/i[3-6]86/32/')
 echo "Architecture: $ARCH"
 
 if [ $ARCH -ne '64' ]; then
@@ -42,9 +42,9 @@ then
   echo "Installing dependencies with apt-get"
   sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
   echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
-
+  sudo apt-add-repository universe
   sudo apt-get update
-  sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+  sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep unrar-free upx zip swig libssl-dev
   sudo ldconfig
 
 # Redhat: Install as many dependencies as we can using yum.
@@ -67,8 +67,16 @@ then
     echo "Installation for OSX requires Homebrew. Please visit http://brew.sh/."
     exit
   }
-  brew install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl
+  brew install mongodb ssdeep upx p7zip libmagic libyaml pcre libxml2 openssl
   brew install https://raw.githubusercontent.com/destijl/homebrew-versions/master/swig304.rb
+  command -v pip >/dev/null 2>&1 || {
+    echo "Installation for OSX requires pip. We will try to install pip now."
+    sudo easy_install pip
+  }  
+elif [ "$OS" = 'freebsd' ]
+then
+  echo "Installing ports"
+  sudo pkg install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl swig py27-m2crypto py27-pydeep py27-ldap2 py27-mongoengine
 else
   echo "Unknown distro!"
   echo "Detected: $OS $VER"
@@ -97,11 +105,16 @@ echo "Setting up crits.log file"
 touch logs/crits.log
 chmod 664 logs/crits.log
 
-echo "Creating default database configuration file"
-cp crits/config/database_example.py crits/config/database.py
-SC="$(python contrib/gen_secret_key.py)"
-sed -i '' -e "s/.*SECRET_KEY.*/SECRET_KEY = \'"$SC"\'/" crits/config/database.py
-
+if [ ! -f crits/config/database.py ]; then
+  echo "Creating default database configuration file"
+  cp crits/config/database_example.py crits/config/database.py
+  SC=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(-_=+)' | fold -w 50 | head -n 1)
+  # This is going to escape the '&' character that is a special character in sed 
+  SE=$(echo ${SC} | sed -e 's/&/\\\&/g')
+  sed -i -e "s/^\(SECRET_KEY = \).*$/\1\'${SE}\'/1" crits/config/database.py
+else
+  echo "Database configuration file exists, skip secret_key generation!"
+fi
 # If MongoDB isn't already running, ask to start it.
 # This can fail if MongoDB is running already but on a non-standard port.
 pgrep mongod >/dev/null 2>&1
@@ -124,7 +137,7 @@ if [ $? -eq 0 ]
 then
   # Setup the first admin user.
   read -p "Username: " USERNAME
-  read -p  "First name: " FIRSTNAME
+  read -p "First name: " FIRSTNAME
   read -p "Last name: " LASTNAME
   read -p "Email address: " EMAIL
   read -p "Organization name: " ORG
@@ -144,5 +157,7 @@ then
   done
   
   echo "Attempting to start runserver on port 8080"
+  echo "If you exit bootstrap you can start runserver again using:"
+  echo "python manage.py runserver 0.0.0.0:8080"
   python manage.py runserver 0.0.0.0:8080
 fi

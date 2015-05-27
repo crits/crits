@@ -39,6 +39,11 @@
         </td>
         </tr>
         <tr>
+            {% with description=indicator.description %}
+                {% include 'description_widget.html' %}
+            {% endwith %}
+        </tr>
+        <tr>
         <td class='key'>
             Type
             <span style="float: right;display: inline-block" id="indicator_type_error"></span>
@@ -194,6 +199,11 @@ class="ui-icon ui-icon-plusthick dialogClick" dialog="add-action" persona="new" 
 <div>
     {% with hit=indicator col=COL_INDICATORS obj=indicator %}
         {% include "campaigns_display_widget.html" %}
+    {% endwith %}
+</div>
+<div>
+    {% with hit=indicator col=COL_INDICATORS obj=indicator %}
+        {% include "locations_display_widget.html" %}
     {% endwith %}
 </div>
 <div class="content_box">

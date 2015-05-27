@@ -16,6 +16,7 @@
         {% endif %}
             <thead>
                 <tr style="border-top: 0px;">
+                    <th width="20px"><span class="ui-icon ui-icon-document" title="Details"></span></th>
                     <th width="120px">Relationship</th>
                     {% if rel_type == 'Target' %}
                         <th>First Name</th>
@@ -25,10 +26,18 @@
                     {% elif rel_type == 'Actor' %}
                         <th>Name</th>
                         <th>Campaign</th>
+                    {% elif rel_type == 'Backdoor' %}
+                        <th>Name</th>
+                        <th>Version</th>
+                        <th>Campaign</th>
                     {% elif rel_type == 'Event' %}
                         <th>Title</th>
-                        <th>Event Type</th>
+                        <th>Type</th>
                         <th>Description</th>
+                    {% elif rel_type == 'Exploit' %}
+                        <th>Name</th>
+                        <th>CVE</th>
+                        <th>Campaign</th>
                     {% elif rel_type == 'Indicator' %}
                         <th>Value</th>
                         <th>Type</th>
@@ -60,12 +69,13 @@
                     <th>Analyst</th>
                     <th>Date</th>
                     <th width="75px">Confidence</th>
-                    <th width="50px"></th>
+                    <th width="35px"></th>
                 </tr>
             </thead>
             <tbody>
                 {% for rel in rel_list %}
                     <tr mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}" rConfidence="{{ rel.rel_confidence }}" {% if rel_type == 'Indicator' %} data-value="{{rel.ind_value}}" data-type="{{rel.ind_type}}"{% endif %}>
+                        <td style="width: 16px; padding: 0px"><a href="{% url 'crits.core.views.details' rel_type rel.value %}" style="width: 16px; padding: 0px" class="ui-icon ui-icon-document" title="View Details"></a></td>
                         <td class="relationship_type_edit tooltip_edit" action="{% url 'crits.relationships.views.update_relationship_type' %}">{{ rel.relationship }}</td>
                         {% if rel_type == 'Campaign' %}
                             <td>
@@ -80,10 +90,16 @@
                             <td>{{ rel.email_count }}</td>
                         {% elif rel_type == 'Actor' %}
                             <td>{{ rel.name }}</td>
+                        {% elif rel_type == 'Backdoor' %}
+                            <td>{{ rel.name }}</td>
+                            <td>{{ rel.version }}</td>
                         {% elif rel_type == 'Event' %}
                             <td>{{ rel.title }}</td>
                             <td>{{ rel.event_type }}</td>
                             <td>{{ rel.description|truncatechars:100 }}</td>
+                        {% elif rel_type == 'Exploit' %}
+                            <td>{{ rel.name }}</td>
+                            <td>{{ rel.cve }}</td>
                         {% elif rel_type == 'Indicator' %}
                             <td>
                                 {{ rel.ind_value }}
@@ -110,7 +126,7 @@
                             <td>{{ rel.description|truncatechars:100 }}</td>
                             <td>{{ rel.version }}</td>
                         {% endif %}
-                        {% if rel_type in "RawDataPCAPCertificateIndicatorEventActor" %}
+                        {% if rel_type in "RawDataPCAPCertificateIndicatorEventActorExploitBackdoor" %}
                             <td class='campaignWidth'>
                                 {% for campaign in rel.campaign %}
                                     <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
@@ -130,7 +146,7 @@
                         <td width="125px">{{rel.analyst}}</td>
                         <td width="125px">{{rel.relationship_date|date:"Y-m-d H:i:s"}}</td>
                         <td class='relationship_confidence_edit' action="{% url 'crits.relationships.views.update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
-                        <td width="50px">
+                        <td width="35px">
                             <div class="qtip-container ui-icon ui-icon-note" title="More Info..."></div>
                             <div class="qtip-body" mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}">
                                 <b>Relationship Date:</b> <span class="relationship_date_edit tooltip_edit" action="{% url 'crits.relationships.views.update_relationship_date' %}">
@@ -151,29 +167,6 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                            </div>
-                            <div>
-                            {% if rel_type == 'Actor' %}
-                                <a href="{% url 'crits.actors.views.actor_detail' rel.value %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
-                            {% elif rel_type == 'Campaign' %}
-                                <a href="{% url 'crits.campaigns.views.campaign_details' rel.name %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
-                            {% elif rel_type == 'Domain' %}
-                                <a href="{% url 'crits.domains.views.domain_detail' rel.domain %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
-                            {% elif rel_type == 'Target' %}
-                                <a href="{% url 'crits.targets.views.target_info' rel.email_address %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
-                            {% elif rel_type == 'Event' %}
-                                <a href="{% url 'crits.events.views.view_event' rel.value %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
-                            {% elif rel_type == 'Indicator' %}
-                                <a href="{% url 'crits.indicators.views.indicator' rel.id %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
-                            {% elif rel_type == 'IP' %}
-                                <a href="{% url 'crits.ips.views.ip_detail' rel.ip %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
-                            {% elif rel_type == 'Certificate' %}
-                                <a href="{% url 'crits.certificates.views.certificate_details' rel.md5 %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
-                            {% elif rel_type == 'PCAP' %}
-                                <a href="{% url 'crits.pcaps.views.pcap_details' rel.md5 %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
-                            {% elif rel_type == 'RawData' %}
-                                <a href="{% url 'crits.raw_data.views.raw_data_details' rel.value %}" class="ui-icon ui-icon-arrowthick-1-e"></a>
-                            {% endif %}
                             </div>
                             <div class="ui-icon ui-icon-trash dialogClick" dialog="confirm-breakup"></div>
                         </td>

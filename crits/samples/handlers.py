@@ -17,6 +17,7 @@ from django.template import RequestContext
 from hashlib import md5
 from mongoengine.base import ValidationError
 
+from crits.backdoors.backdoor import Backdoor
 from crits.campaigns.forms import CampaignForm
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_value, class_from_id
@@ -35,10 +36,7 @@ from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
 from crits.objects.handlers import validate_and_add_new_handler_object
-from crits.samples.backdoor import Backdoor
-from crits.samples.exploit import Exploit
-from crits.samples.forms import BackdoorForm, ExploitForm, XORSearchForm
-from crits.samples.forms import UnrarSampleForm, UploadFileForm
+from crits.samples.forms import XORSearchForm, UnrarSampleForm, UploadFileForm
 from crits.samples.sample import Sample
 from crits.samples.yarahit import YaraHit
 from crits.services.analysis_result import AnalysisResult
@@ -113,14 +111,12 @@ def get_sample_details(sample_md5, analyst, format_=None):
         args = {'sample': sample}
     else:
         #create forms
-        backdoor_form = BackdoorForm()
-        exploit_form = ExploitForm()
         xor_search_form = XORSearchForm()
         campaign_form = CampaignForm()
         unrar_sample_form = UnrarSampleForm()
         download_form = DownloadFileForm(initial={"obj_type":'Sample',
-                                                    "obj_id":sample.id,
-                                                    "meta_format": "none"})
+                                                  "obj_id":sample.id,
+                                                  "meta_format": "none"})
 
         # do we have the binary?
         if isinstance(sample.filedata.grid_id, ObjectId):
@@ -177,8 +173,6 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'relationship': relationship,
                 'subscription': subscription,
                 'sample': sample, 'sources': sources,
-                'backdoor_form': backdoor_form,
-                'exploit_form': exploit_form,
                 'campaign_form': campaign_form,
                 'download_form': download_form,
                 'xor_search_form': xor_search_form,
@@ -287,63 +281,6 @@ def generate_sample_jtable(request, option):
             'click': "function () {$('#new-sample').click()}",
         },
     ]
-    if option == "inline":
-        return render_to_response("jtable.html",
-                                  {'jtable': jtable,
-                                   'jtid': '%s_listing' % type_,
-                                   'button' : '%ss_tab' % type_},
-                                  RequestContext(request))
-    else:
-        return render_to_response("%s_listing.html" % type_,
-                                  {'jtable': jtable,
-                                   'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
-
-def generate_backdoor_jtable(request, option):
-    """
-    Generate the jtable data for rendering in the list template.
-
-    :param request: The request for this jtable.
-    :type request: :class:`django.http.HttpRequest`
-    :param option: Action to take.
-    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    obj_type = Backdoor
-    type_ = "backdoor"
-    if option == "jtlist":
-        # Sets display url
-        details_url = 'crits.samples.views.samples_listing'
-        details_url_key = "name"
-        response = jtable_ajax_list(obj_type,
-                                    details_url,
-                                    details_url_key,
-                                    request)
-        return HttpResponse(json.dumps(response,
-                                       default=json_handler),
-                            content_type="application/json")
-    if option == "jtdelete":
-        response = {"Result": "ERROR"}
-        if jtable_ajax_delete(obj_type,request):
-            response = {"Result": "OK"}
-        return HttpResponse(json.dumps(response,
-                                       default=json_handler),
-                            content_type="application/json")
-    jtopts = {
-        'title': "Backdoors",
-        'default_sort': "sample_count DESC",
-        'listurl': reverse('crits.samples.views.%ss_listing' % (type_,),
-                           args=('jtlist',)),
-        'deleteurl': reverse('crits.samples.views.%ss_listing' % (type_,),
-                             args=('jtdelete',)),
-        'searchurl': reverse('crits.samples.views.%ss_listing' % (type_,)),
-        'fields': ["name","sample_count","_id"],
-        'hidden_fields': [],
-        'linked_fields': []
-    }
-    jtable = build_jtable(jtopts,request)
-
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
@@ -508,120 +445,6 @@ def get_source_counts(analyst):
     sources = SourceAccess.objects(name__in=allowed)
     return sources
 
-def add_new_exploit(name, analyst):
-    """
-    Add a new exploit to CRITs.
-
-    :param name: The name of the exploit.
-    :type name: str
-    :param analyst: The user adding the new exploit.
-    :type analyst: str
-    :returns: bool
-    """
-
-    try:
-        name = name.strip().upper()
-        exploit = Exploit.objects(name=name).first()
-        if exploit:
-            return False
-        exploit = Exploit()
-        exploit.name = name
-        exploit.save(username=analyst)
-        return True
-    except ValidationError:
-        return False
-
-def add_exploit_to_sample(md5, cve, analyst):
-    """
-    Add an exploit to a sample.
-
-    :param md5: The MD5 of the sample to add this exploit to.
-    :type md5: str
-    :param cve: The exploit to add.
-    :type cve: str
-    :param analyst: The user adding this exploit.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str)
-    """
-
-    sources = user_sources(analyst)
-    sample = Sample.objects(md5=md5,
-                            source__name__in=sources).first()
-    if not sample:
-        return {'success': False,
-                'message': "Could not find sample."}
-    try:
-        sample.add_exploit(cve)
-        sample.save(username=analyst)
-        return {'success': True,
-                'message': "Exploit added successfully."}
-    except ValidationError, e:
-        return {'success': False,
-                'message': "Could not add exploit: %s." % e}
-
-def get_exploits():
-    """
-    Get the available exploits in the database.
-
-    :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
-    """
-
-    e = Exploit.objects()
-    return e
-
-def add_new_backdoor(name, analyst):
-    """
-    Add a new backdoor to CRITs.
-
-    :param name: The name of the backdoor.
-    :type name: str
-    :param analyst: The user adding the new backdoor.
-    :type analyst: str
-    :returns: bool
-    """
-
-    try:
-        name = name.strip()
-        backdoor = Backdoor.objects(name=name).first()
-        if backdoor:
-            return False
-        backdoor = Backdoor()
-        backdoor.name = name
-        backdoor.save(username=analyst)
-        return True
-    except ValidationError:
-        return False
-
-def add_backdoor_to_sample(md5, name, version, analyst):
-    """
-    Add a backdoor to a sample.
-
-    :param md5: The MD5 of the sample to add this backdoor to.
-    :type md5: str
-    :param name: The backdoor to add.
-    :type name: str
-    :param version: The backdoor version.
-    :type version: str
-    :param analyst: The user adding this backdoor.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str)
-    """
-
-    sources = user_sources(analyst)
-    sample = Sample.objects(md5=md5,
-                            source__name__in=sources).first()
-    if not sample:
-        return {'success': False,
-                'message': "Could not find sample."}
-    try:
-        sample.set_backdoor(name, version, analyst)
-        sample.save(username=analyst)
-        return {'success': True,
-                'message': "Backdoor set successfully."}
-    except ValidationError, e:
-        return {'success': False,
-                'message': "Could not set backdoor: %s." % e}
-
 def get_yara_hits(version=None):
     """
     Get the yara hits in the database.
@@ -657,7 +480,7 @@ def handle_unrar_sample(md5, user=None, password=None):
     data = sample.filedata.read()
     source = sample.source[0].name
     campaign = sample.campaign
-    reference = None
+    reference = ''
     return unrar_file(md5, user, password, data, source, method="Unrar Existing Sample",
                       reference=reference, campaign=campaign, related_md5=md5)
 
@@ -681,14 +504,15 @@ def handle_unzip_file(md5, user=None, password=None):
     data = sample.filedata.read()
     source = sample.source[0].name
     campaign = sample.campaign
-    reference = None
+    reference = ''
     return unzip_file(md5, user, password, data, source, method="Unzip Existing Sample",
                       reference=reference, campaign=campaign, related_md5=md5, )
 
 def unzip_file(filename, user=None, password=None, data=None, source=None,
-               method='Zip', reference=None, campaign=None, confidence='low',
+               method='Zip', reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
-               bucket_list=None, ticket=None, inherited_source=None):
+               bucket_list=None, ticket=None, inherited_source=None,
+               backdoor_name=None, backdoor_version=None):
     """
     Unzip a file.
 
@@ -722,6 +546,10 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     :type ticket: str
     :param inherited_source: Source(s) to be inherited by the new Sample
     :type inherited_source: list, :class:`crits.core.crits_mongoengine.EmbeddedSource`
+    :param backdoor_name: Name of backdoor to relate this object to.
+    :type backdoor_name: str
+    :param backdoor_version: Version of backdoor to relate this object to.
+    :type backdoor_version: str
     :returns: list
     :raises: ZipFileError, Exception
     """
@@ -791,7 +619,9 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                                              bucket_list=bucket_list,
                                              ticket=ticket,
                                              inherited_source=inherited_source,
-                                             relationship=relationship)
+                                             relationship=relationship,
+                                             backdoor_name=backdoor_name,
+                                             backdoor_version=backdoor_version)
                     if new_sample:
                         samples.append(new_sample)
                     filehandle.close()
@@ -811,9 +641,10 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     return samples
 
 def unrar_file(filename, user=None, password=None, data=None, source=None,
-               method="Generic", reference=None, campaign=None, confidence='low',
+               method="Generic", reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
-               bucket_list=None, ticket=None, inherited_source=None):
+               bucket_list=None, ticket=None, inherited_source=None,
+               backdoor_name=None, backdoor_version=None):
     """
     Unrar a file.
 
@@ -913,7 +744,9 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
                                                      bucket_list=bucket_list,
                                                      ticket=ticket,
                                                      inherited_source=inherited_source,
-                                                     relationship=relationship)
+                                                     relationship=relationship,
+                                                     backdoor_name=backdoor_name,
+                                                     backdoor_version=backdoor_version)
                             samples.append(new_sample)
     except ZipFileError:
         raise
@@ -928,11 +761,12 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
 
     return samples
 
-def handle_file(filename, data, source, method='Generic', reference=None, related_md5=None,
+def handle_file(filename, data, source, method='Generic', reference='', related_md5=None,
                 related_id=None, related_type='Sample', backdoor=None, user='',
                 campaign=None, confidence='low', md5_digest=None, bucket_list=None,
                 ticket=None, relationship=None, inherited_source=None, is_validate_only=False,
-                is_return_only_md5=True, cache={}):
+                is_return_only_md5=True, cache={}, backdoor_name=None,
+                backdoor_version=None):
     """
     Handle adding a file.
 
@@ -977,6 +811,10 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
     :type cache: dict
+    :param backdoor_name: Name of the backdoor to relate the file to.
+    :type backdoor_name: str
+    :param backdoor_version: Version of the backdoor to relate the file to.
+    :type backdoor_version: str
     :returns: str,
               dict with keys:
               "success" (boolean),
@@ -1114,6 +952,28 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
 
         # save sample to get an id since the rest of the processing needs it
         sample.save(username=user)
+
+        sources = user_sources(user)
+        if backdoor_name:
+            # Relate this to the backdoor family if there is one.
+            backdoor = Backdoor.objects(name=backdoor_name,
+                                        source__name__in=sources).first()
+            if backdoor:
+                backdoor.add_relationship(sample,
+                                          "Related_To",
+                                          analyst=user)
+                backdoor.save()
+            # Also relate to the specific instance backdoor.
+            if backdoor_version:
+                backdoor = Backdoor.objects(name=backdoor_name,
+                                            version=backdoor_version,
+                                            source__name__in=sources).first()
+                if backdoor:
+                    backdoor.add_relationship(sample,
+                                              "Related_To",
+                                              analyst=user)
+                    backdoor.save()
+
         # reloading clears the _changed_fields of the sample object. this prevents
         # situations where we save again below and the shard key (md5) is
         # still marked as changed.
@@ -1131,11 +991,10 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
                         relationship = "Contained_Within"
                     else:
                         relationship = "Related_To"
-                sample.add_relationship(rel_item=related_obj,
-                                        rel_type=relationship,
+                sample.add_relationship(related_obj,
+                                        relationship,
                                         analyst=user,
                                         get_rels=False)
-                related_obj.save(username=user)
                 sample.save(username=user)
 
     if is_sample_new == True:
@@ -1179,12 +1038,13 @@ def handle_file(filename, data, source, method='Generic', reference=None, relate
         retVal['object'] = sample
         return retVal
 
-def handle_uploaded_file(f, source, method="", reference=None, file_format=None,
+def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                          password=None, user=None, campaign=None, confidence='low',
                          related_md5=None, related_id=None, related_type='Sample',
                          filename=None, md5=None, bucket_list=None, ticket=None,
                          inherited_source=None, is_validate_only=False,
-                         is_return_only_md5=True, cache={}):
+                         is_return_only_md5=True, cache={}, backdoor_name=None,
+                         backdoor_version=None):
     """
     Handle an uploaded file.
 
@@ -1229,6 +1089,10 @@ def handle_uploaded_file(f, source, method="", reference=None, file_format=None,
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
     :type cache: dict
+    :param backdoor_name: Name of backdoor to relate this object to.
+    :type backdoor_name: str
+    :param backdoor_version: Version of backdoor to relate this object to.
+    :type backdoor_version: str
     :returns: list
     """
 
@@ -1270,7 +1134,9 @@ def handle_uploaded_file(f, source, method="", reference=None, file_format=None,
             related_type=related_type,
             bucket_list=bucket_list,
             ticket=ticket,
-            inherited_source=inherited_source)
+            inherited_source=inherited_source,
+            backdoor_name=backdoor_name,
+            backdoor_version=backdoor_version)
     elif file_format == "rar" and f:
         return unrar_file(
             filename,
@@ -1287,7 +1153,9 @@ def handle_uploaded_file(f, source, method="", reference=None, file_format=None,
             related_type=related_type,
             bucket_list=bucket_list,
             ticket=ticket,
-            inherited_source=inherited_source)
+            inherited_source=inherited_source,
+            backdoor_name=backdoor_name,
+            backdoor_version=backdoor_version)
     else:
         new_sample = handle_file(filename, data, source, method, reference,
                                  related_md5=related_md5, related_id=related_id,
@@ -1295,7 +1163,9 @@ def handle_uploaded_file(f, source, method="", reference=None, file_format=None,
                                  campaign=campaign, confidence=confidence, md5_digest=md5,
                                  bucket_list=bucket_list, ticket=ticket,
                                  inherited_source=inherited_source, is_validate_only=is_validate_only,
-                                 is_return_only_md5=is_return_only_md5, cache=cache)
+                                 is_return_only_md5=is_return_only_md5, cache=cache,
+                                 backdoor_name=backdoor_name,
+                                 backdoor_version=backdoor_version)
 
         if new_sample:
             samples.append(new_sample)

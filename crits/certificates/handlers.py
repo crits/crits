@@ -205,7 +205,7 @@ def generate_cert_jtable(request, option):
 
 def handle_cert_file(filename, data, source_name, user=None,
                      description=None, related_id=None, related_md5=None,
-                     related_type=None, method=None, reference=None,
+                     related_type=None, method='', reference='',
                      relationship=None, bucket_list=None, ticket=None):
     """
     Add a Certificate.
@@ -327,11 +327,10 @@ def handle_cert_file(filename, data, source_name, user=None,
     if related_obj and cert:
         if not relationship:
             relationship = "Related_To"
-        cert.add_relationship(rel_item=related_obj,
-                              rel_type=relationship,
+        cert.add_relationship(related_obj,
+                              relationship,
                               analyst=user,
                               get_rels=False)
-        related_obj.save(username=user)
         cert.save(username=user)
 
     status = {
@@ -343,27 +342,6 @@ def handle_cert_file(filename, data, source_name, user=None,
     }
 
     return status
-
-def update_cert_description(md5, description, analyst):
-    """
-    Update a Certificate description.
-
-    :param md5: The MD5 of the Certificate to update.
-    :type md5: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user updating the description.
-    :type analyst: str
-    :returns: None, ValidationError
-    """
-
-    cert = Certificate.objects(md5=md5).first()
-    cert.description = description
-    try:
-        cert.save(username=analyst)
-        return None
-    except ValidationError, e:
-        return e
 
 def delete_cert(md5, username=None):
     """

@@ -53,6 +53,11 @@
                 {{ email.id }}
             </td>
         </tr>
+        <tr>
+            {% with description=email.description %}
+                {% include 'description_widget.html' %}
+            {% endwith %}
+        </tr>
 
         {% for email_field in email_fields %}
         <tr data-type='{{ email_field.field_type }}'>
@@ -133,6 +138,11 @@
     <div>
     {% with hit=email col=COL_EMAIL %}
         {% include 'campaigns_display_widget.html' %}
+    {% endwith %}
+    </div>
+    <div>
+    {% with hit=email col=COL_EMAIL %}
+        {% include 'locations_display_widget.html' %}
     {% endwith %}
     </div>
     <div id="relationships_div_container">

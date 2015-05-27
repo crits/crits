@@ -376,6 +376,8 @@ class CritsDocument(BaseDocument):
             self.delete_all_relationships(username=username)
         if self._has_method("delete_all_comments"):
             self.delete_all_comments()
+        if self._has_method("delete_all_analysis_results"):
+            self.delete_all_analysis_results()
         if self._has_method("delete_all_objects"):
             self.delete_all_objects()
         if self._has_method("delete_all_favorites"):
@@ -696,6 +698,7 @@ class CritsDocument(BaseDocument):
 
         # Store message
         stix_msg = {
+                       'stix_incidents': [],
                        'stix_indicators': [],
                        'stix_observables': [],
                        'stix_actors': [],
@@ -708,31 +711,85 @@ class CritsDocument(BaseDocument):
 
         # add self to the list of items to STIXify
         if self not in items_to_convert:
-            items_to_convert.append(self);
+            items_to_convert.append(self)
 
+        # add any email attachments
+        attachments = []
+        for obj in items_to_convert:
+            if obj._meta['crits_type'] == 'Email':
+                for rel in obj.relationships:
+                    if rel.relationship == 'Contains':
+                        atch = class_from_id('Sample', rel.object_id)
+                        if atch not in items_to_convert:
+                            attachments.append(atch)
+        items_to_convert.extend(attachments)
+
+        # grab ObjectId of items
+        refObjs = {key.id: 0 for key in items_to_convert}
+
+        relationships = {}
+        stix = []
+        from stix.indicator import Indicator as S_Ind
         for obj in items_to_convert:
             obj_type = obj._meta['crits_type']
             if obj_type == class_from_type('Event')._meta['crits_type']:
-                # occurs if the 'parent' object is an Event. We don't need to convert
-                # but we do need to add to 'final_objects' for tracking purposes
-                stix_msg['final_objects'].append(self)
-
-            if obj_type in ind_list: # convert to STIX indicators
-                ind, releas = obj.to_stix_indicator()
-                stix_msg['stix_indicators'].append(ind)
-                stix_msg['final_objects'].append(obj)
+                stx, release = obj.to_stix_incident()
+                stix_msg['stix_incidents'].append(stx)
+            elif obj_type in ind_list: # convert to STIX indicators
+                stx, releas = obj.to_stix_indicator()
+                stix_msg['stix_indicators'].append(stx)
+                refObjs[obj.id] = S_Ind(idref=stx.id_)
             elif obj_type in obs_list: # convert to CybOX observable
                 if obj_type == class_from_type('Sample')._meta['crits_type']:
-                    ind, releas = obj.to_cybox_observable(bin_fmt=bin_fmt)
+                    stx, releas = obj.to_cybox_observable(bin_fmt=bin_fmt)
                 else:
-                    ind, releas = obj.to_cybox_observable()
-                stix_msg['stix_observables'].extend(ind)
-                stix_msg['final_objects'].append(obj)
-            elif obj_type in actor_list: # cover to STIX actor
-                act, releas = obj.to_stix_actor()
-                stix_msg['stix_actors'].append(act)
-                stix_msg['final_objects'].append(obj)
+                    stx, releas = obj.to_cybox_observable()
 
+                # wrap in stix Indicator
+                ind = S_Ind()
+                for ob in stx:
+                    ind.add_observable(ob)
+                ind.title = "CRITs %s Top-Level Object" % obj_type
+                ind.description = ("This is simply a CRITs %s top-level "
+                                   "object, not actually an Indicator. "
+                                   "The Observable is wrapped in an Indicator"
+                                   " to facilitate documentation of the "
+                                   "relationship." % obj_type)
+                ind.confidence = 'None'
+                stx = ind
+                stix_msg['stix_indicators'].append(stx)
+                refObjs[obj.id] = S_Ind(idref=stx.id_)
+            elif obj_type in actor_list: # convert to STIX actor
+                stx, releas = obj.to_stix_actor()
+                stix_msg['stix_actors'].append(stx)
+
+            # get relationships from CRITs objects
+            for rel in obj.relationships:
+                if rel.object_id in refObjs:
+                    relationships.setdefault(stx.id_, {})
+                    relationships[stx.id_][rel.object_id] = (rel.relationship,
+                                                             rel.rel_confidence.capitalize(),
+                                                             rel.rel_type)
+
+            stix_msg['final_objects'].append(obj)
+            stix.append(stx)
+
+        # set relationships on STIX objects
+        from cybox.objects.email_message_object import Attachments
+        for stix_obj in stix:
+            for rel in relationships.get(stix_obj.id_, {}):
+                if isinstance(refObjs.get(rel), S_Ind): # if is STIX Indicator
+                    stix_obj.related_indicators.append(refObjs[rel])
+                    rel_meta = relationships.get(stix_obj.id_)[rel]
+                    stix_obj.related_indicators[-1].relationship = rel_meta[0]
+                    stix_obj.related_indicators[-1].confidence = rel_meta[1]
+
+                    # Add any Email Attachments to CybOX EmailMessage Objects
+                    if isinstance(stix_obj, S_Ind):
+                        if 'EmailMessage' in stix_obj.observable.object_.id_:
+                            if rel_meta[0] == 'Contains' and rel_meta[2] == 'Sample':
+                                email = stix_obj.observable.object_.properties
+                                email.attachments.append(refObjs[rel].idref)
 
         tool_list = ToolInformationList()
         tool = ToolInformation("CRITs", "MITRE")
@@ -756,8 +813,8 @@ class CritsDocument(BaseDocument):
                             package_intents=[stix_int],
                             title=stix_title)
 
-        stix_msg['stix_obj'] = STIXPackage(indicators=stix_msg['stix_indicators'],
-                        observables=Observables(stix_msg['stix_observables']),
+        stix_msg['stix_obj'] = STIXPackage(incidents=stix_msg['stix_incidents'],
+                        indicators=stix_msg['stix_indicators'],
                         threat_actors=stix_msg['stix_actors'],
                         stix_header=header,
                         id_=uuid.uuid4())
@@ -781,6 +838,20 @@ class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
         method = StringField()
         reference = StringField()
 
+        def __eq__(self, other):
+            """
+            Two source instances are equal if their data attributes are equal
+            """
+
+            if isinstance(other, type(self)):
+                if (self.analyst == other.analyst and
+                    self.date == other.date and
+                    self.method == other.method and
+                    self.reference == other.reference):
+                    # all data attributes are equal, so sourceinstances are equal
+                    return True
+            return False
+
     instances = ListField(EmbeddedDocumentField(SourceInstance))
     name = StringField()
 
@@ -791,8 +862,8 @@ class CritsSourceDocument(BaseDocument):
 
     source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
 
-    def add_source(self, source_item=None, source=None, method=None,
-                   reference=None, date=None, analyst=None):
+    def add_source(self, source_item=None, source=None, method='',
+                   reference='', date=None, analyst=None):
         """
         Add a source instance to this top-level object.
 
@@ -835,13 +906,19 @@ class CritsSourceDocument(BaseDocument):
                 if s.name == source_item.name: # find index of matching source
                     match = c
                     break
-            if match is not None: # if source exists, add instances to that source
-                self.source[match].instances.extend(source_item.instances)
+            if match is not None: # if source exists, add instances to it
+                # Don't add exact duplicates
+                for new_inst in source_item.instances:
+                    for exist_inst in self.source[match].instances:
+                        if new_inst == exist_inst:
+                            break
+                    else:
+                        self.source[match].instances.append(new_inst)
             else: # else, add as new source
                 self.source.append(source_item)
 
-    def edit_source(self, source=None, date=None, method=None,
-                    reference=None, analyst=None):
+    def edit_source(self, source=None, date=None, method='',
+                    reference='', analyst=None):
         """
         Edit a source instance from this top-level object.
 
@@ -985,36 +1062,36 @@ class EmbeddedTickets(BaseDocument):
 
         return False;
 
-    def add_ticket(self, ticket, analyst, date=None):
+    def add_ticket(self, tickets, analyst=None, date=None):
         """
         Add a ticket to this top-level object.
 
-        :param ticket: The ticket to add.
-        :type ticket: str
+        :param tickets: The ticket(s) to add.
+        :type tickets: str, list, or
+                       :class:`crits.core.crits_mongoengine.EmbeddedTicket`
         :param analyst: The user adding this ticket.
         :type analyst: str
         :param date: The date for the ticket.
         :type date: datetime.datetime.
         """
 
-        if isinstance(ticket, list) and len(ticket) == 1 and ticket[0] == '':
-            parsed_tickets = []
-        elif isinstance(ticket, (str, unicode)):
-            parsed_tickets = ticket.split(',')
-        else:
-            parsed_tickets = ticket
+        if isinstance(tickets, basestring):
+            tickets = tickets.split(',')
+        elif not isinstance(tickets, list):
+            tickets = [tickets]
 
-        parsed_tickets = [ticket_number.strip() for ticket_number in parsed_tickets]
-
-        for ticket_number in parsed_tickets:
-            # prevent duplicates
-            if ticket_number and self.is_ticket_exist(ticket_number) == False:
-                et = EmbeddedTicket()
-                et.analyst = analyst
-                et.ticket_number = ticket_number
-                if date:
-                    et.date = date
-                self.tickets.append(et)
+        for ticket in tickets:
+            if isinstance(ticket, EmbeddedTicket):
+                if not self.is_ticket_exist(ticket.ticket_number): # stop dups
+                    self.tickets.append(ticket)
+            elif isinstance(ticket, basestring):
+                if ticket and not self.is_ticket_exist(ticket):  # stop dups
+                    et = EmbeddedTicket()
+                    et.analyst = analyst
+                    et.ticket_number = ticket
+                    if date:
+                        et.date = date
+                    self.tickets.append(et)
 
     def edit_ticket(self, analyst, ticket_number, date=None):
         """
@@ -1075,6 +1152,21 @@ class EmbeddedCampaign(EmbeddedDocument, CritsDocumentFormatter):
     date = CritsDateTimeField(default=datetime.datetime.now)
     description = StringField()
     name = StringField(required=True)
+
+
+class EmbeddedLocation(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Location object
+    """
+
+    location_type = StringField(required=True)
+    location = StringField(required=True)
+    description = StringField(required=False)
+    latitude = StringField(required=False)
+    longitude = StringField(required=False)
+    analyst = StringField(required=True)
+    date = DateTimeField(default=datetime.datetime.now)
+
 
 class Releasability(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -1147,6 +1239,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     analyst = StringField()
     bucket_list = ListField(StringField())
     campaign = ListField(EmbeddedDocumentField(EmbeddedCampaign))
+    locations = ListField(EmbeddedDocumentField(EmbeddedLocation))
+    description = StringField()
     obj = ListField(EmbeddedDocumentField(EmbeddedObject), db_field="objects")
     relationships = ListField(EmbeddedDocumentField(EmbeddedRelationship))
     releasability = ListField(EmbeddedDocumentField(Releasability))
@@ -1213,6 +1307,85 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         if isinstance(campaign_item, EmbeddedCampaign):
             self.remove_campaign(campaign_name=campaign_item.name)
             self.add_campaign(campaign_item=campaign_item)
+
+    def add_location(self, location_item=None):
+        """
+        Add a location to this top-level object.
+
+        :param location_item: The location to add.
+        :type location_item: :class:`crits.core.crits_mongoengine.EmbeddedLocation`
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+
+        if isinstance(location_item, EmbeddedLocation):
+            if (location_item.location != None and
+                location_item.location.strip() != ''):
+                for l, location in enumerate(self.locations):
+                    if (location.location == location_item.location and
+                        location.location_type == location_item.location_type and
+                        location.date == location_item.date):
+                        return {'success': False,
+                                'message': 'This location is already assigned.'}
+                else:
+                    self.locations.append(location_item)
+                return {'success': True,
+                        'message': 'Location assigned successfully!'}
+        return {'success': False,
+                'message': 'Location is invalid'}
+
+    def edit_location(self, location_name=None, location_type=None, date=None,
+                      description=None, latitude=None, longitude=None):
+        """
+        Edit a location.
+
+        :param location_name: The location_name to edit.
+        :type location_name: str
+        :param location_type: The location_type to edit.
+        :type location_type: str
+        :param date: The location date to edit.
+        :type date: str
+        :param description: The new description.
+        :type description: str
+        :param latitude: The new latitude.
+        :type latitude: str
+        :param longitude: The new longitude.
+        :type longitude: str
+        """
+
+        if isinstance(date, basestring):
+            date = parse(date, fuzzy=True)
+        for location in self.locations:
+            if (location.location == location_name and
+                location.location_type == location_type and
+                location.date == date):
+                if description:
+                    location.description = description
+                if latitude:
+                    location.latitude = latitude
+                if longitude:
+                    location.longitude = longitude
+                break
+
+    def remove_location(self, location_name=None, location_type=None, date=None):
+        """
+        Remove a location from this top-level object.
+
+        :param location_name: The location to remove.
+        :type location_name: str
+        :param location_type: The location type.
+        :type location_type: str
+        :param date: The location date.
+        :type date: str
+        """
+
+        if isinstance(date, basestring):
+            date = parse(date, fuzzy=True)
+        for location in self.locations:
+            if (location.location == location_name and
+                location.location_type == location_type and
+                location.date == date):
+                self.locations.remove(location)
+                break
 
     def add_bucket_list(self, tags, analyst, append=True):
         """
@@ -1418,6 +1591,16 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 delete_object_file(value)
                 break
 
+    def delete_all_analysis_results(self):
+        """
+        Delete all analysis results for this top-level object.
+        """
+
+        from crits.services.analysis_result import AnalysisResult
+        results = AnalysisResult.objects(object_id=str(self.id))
+        for result in results:
+            result.delete()
+
     def delete_all_objects(self):
         """
         Delete all objects for this top-level object.
@@ -1463,8 +1646,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 break
 
     def update_object_source(self, object_type, name, value,
-                             new_source=None, new_method=None,
-                             new_reference=None, analyst=None):
+                             new_source=None, new_method='',
+                             new_reference='', analyst=None):
         """
         Update the source for an object on this top-level object.
 
@@ -1516,6 +1699,25 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                                  'relationship': {'type': self._meta['crits_type']}})
         return html
 
+    def format_location(self, location, analyst):
+        """
+        Render a location to HTML to prepare for inclusion in a template.
+
+        :param location: The location to templetize.
+        :type location: :class:`crits.core.crits_mongoengine.EmbeddedLocation`
+        :param analyst: The user requesting the Campaign.
+        :type analyst: str
+        :returns: str
+        """
+
+        html = render_to_string('locations_display_row_widget.html',
+                                {'location': location,
+                                 'hit': self,
+                                 'obj': None,
+                                 'admin': is_admin(analyst),
+                                 'relationship': {'type': self._meta['crits_type']}})
+        return html
+
     def sort_objects(self):
         """
         Sort the objects for this top-level object.
@@ -1530,20 +1732,16 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             o_dict[o.object_type].append(o.to_dict())
         return o_dict
 
-    def add_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                         rel_date=None, analyst=None, rel_confidence='unknown',
+    def add_relationship(self, rel_item, rel_type, rel_date=None,
+                         analyst=None, rel_confidence='unknown',
                          rel_reason='N/A', get_rels=False):
         """
-        Add a relationship to this top-level object. If rel_item is provided it
-        will be used, otherwise rel_id and type_ must be provided.
+        Add a relationship to this top-level object. The rel_item will be
+        saved. It is up to the caller to save "self".
 
         :param rel_item: The top-level object to relate to.
         :type rel_item: class which inherits from
                         :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-        :param rel_id: The ObjectId of the top-level object to relate to.
-        :type rel_id: str
-        :param type_: The type of top-level object to relate to.
-        :type type_: str
         :param rel_type: The type of relationship.
         :type rel_type: str
         :param rel_date: The date this relationship applies.
@@ -1560,92 +1758,125 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                   failed, dict if successful)
         """
 
-        got_rel = True
-        if not rel_item:
-            got_rel = False
-            if isinstance(rel_id, basestring) and isinstance(type_, basestring):
-                rel_item = class_from_id(type_, rel_id)
-            elif isinstance(rel_id, ObjectId) and isinstance(type_, basestring):
-                rel_item = class_from_id(type_, str(rel_id))
-            else:
-                return {'success': False,
-                        'message': 'Could not find object'}
-        if rel_item and rel_type:
-            # get reverse relationship
-            r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
-            if len(r) == 0:
-                return {'success': False,
-                        'message': 'Could not find relationship type'}
-            else:
-                r = r.first()
-            rev_type = r.reverse if rel_type == r.forward else r.forward
-            date = datetime.datetime.now()
-
-            # setup the relationship for me
-            my_rel = EmbeddedRelationship()
-            my_rel.relationship = rel_type
-            my_rel.rel_type = rel_item._meta['crits_type']
-            my_rel.analyst = analyst
-            my_rel.date = date
-            my_rel.relationship_date = rel_date
-            my_rel.object_id = rel_item.id
-            my_rel.rel_confidence = rel_confidence
-            my_rel.rel_reason = rel_reason
-
-            # setup the relationship for them
-            their_rel = EmbeddedRelationship()
-            their_rel.relationship = rev_type
-            their_rel.rel_type = self._meta['crits_type']
-            their_rel.analyst = analyst
-            their_rel.date = date
-            their_rel.relationship_date = rel_date
-            their_rel.object_id = self.id
-            their_rel.rel_confidence = rel_confidence
-            their_rel.rel_reason = rel_reason
-
-            # check for existing relationship before
-            # blindly adding them
-            for r in self.relationships:
-                if rel_date:
-                    if (r.object_id == my_rel.object_id
-                        and r.relationship == my_rel.relationship
-                        and r.relationship_date == my_rel.relationship_date
-                        and r.rel_type == my_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Left relationship already exists'}
-                else:
-                    if (r.object_id == my_rel.object_id
-                        and r.relationship == my_rel.relationship
-                        and r.rel_type == my_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Left relationship already exists'}
-            self.relationships.append(my_rel)
-            for r in rel_item.relationships:
-                if rel_date:
-                    if (r.object_id == their_rel.object_id
-                        and r.relationship == their_rel.relationship
-                        and r.relationship_date == their_rel.relationship_date
-                        and r.rel_type == their_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Right relationship already exists'}
-                else:
-                    if (r.object_id == their_rel.object_id
-                        and r.relationship == their_rel.relationship
-                        and r.rel_type == their_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Right relationship already exists'}
-            rel_item.relationships.append(their_rel)
-            if not got_rel:
-                rel_item.save(username=analyst)
-            if get_rels:
-                return {'success': True,
-                        'message': self.sort_relationships(analyst, meta=True)}
-            else:
-                return {'success': True,
-                        'message': 'Relationship forged'}
-        else:
+        # get reverse relationship
+        r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
+        if len(r) == 0:
             return {'success': False,
-                    'message': 'Need valid object and relationship type'}
+                    'message': 'Could not find relationship type'}
+        else:
+            r = r.first()
+        rev_type = r.reverse if rel_type == r.forward else r.forward
+        date = datetime.datetime.now()
+
+        # setup the relationship for me
+        my_rel = EmbeddedRelationship()
+        my_rel.relationship = rel_type
+        my_rel.rel_type = rel_item._meta['crits_type']
+        my_rel.analyst = analyst
+        my_rel.date = date
+        my_rel.relationship_date = rel_date
+        my_rel.object_id = rel_item.id
+        my_rel.rel_confidence = rel_confidence
+        my_rel.rel_reason = rel_reason
+
+        # setup the relationship for them
+        their_rel = EmbeddedRelationship()
+        their_rel.relationship = rev_type
+        their_rel.rel_type = self._meta['crits_type']
+        their_rel.analyst = analyst
+        their_rel.date = date
+        their_rel.relationship_date = rel_date
+        their_rel.object_id = self.id
+        their_rel.rel_confidence = rel_confidence
+        their_rel.rel_reason = rel_reason
+
+        # check for existing relationship before
+        # blindly adding them
+        for r in self.relationships:
+            if rel_date:
+                if (r.object_id == my_rel.object_id
+                    and r.relationship == my_rel.relationship
+                    and r.relationship_date == my_rel.relationship_date
+                    and r.rel_type == my_rel.rel_type):
+                    return {'success': False,
+                            'message': 'Left relationship already exists'}
+            else:
+                if (r.object_id == my_rel.object_id
+                    and r.relationship == my_rel.relationship
+                    and r.rel_type == my_rel.rel_type):
+                    return {'success': False,
+                            'message': 'Left relationship already exists'}
+        self.relationships.append(my_rel)
+
+        for r in rel_item.relationships:
+            if rel_date:
+                if (r.object_id == their_rel.object_id
+                    and r.relationship == their_rel.relationship
+                    and r.relationship_date == their_rel.relationship_date
+                    and r.rel_type == their_rel.rel_type):
+                    return {'success': False,
+                            'message': 'Right relationship already exists'}
+            else:
+                if (r.object_id == their_rel.object_id
+                    and r.relationship == their_rel.relationship
+                    and r.rel_type == their_rel.rel_type):
+                    return {'success': False,
+                            'message': 'Right relationship already exists'}
+
+        rel_item.relationships.append(their_rel)
+        rel_item.save(username=analyst)
+
+        if get_rels:
+            results = {'success': True,
+                       'message': self.sort_relationships(analyst, meta=True)}
+        else:
+            results = {'success': True,
+                       'message': 'Relationship forged'}
+
+        # In case of relating to a versioned backdoor we also want to relate to
+        # the family backdoor.
+        self_type = self._meta['crits_type']
+        rel_item_type = rel_item._meta['crits_type']
+
+        # If both are not backdoors, just return
+        if self_type != 'Backdoor' and rel_item_type != 'Backdoor':
+            return results
+
+        # If either object is a family backdoor, don't go further.
+        if ((self_type == 'Backdoor' and self.version == '') or
+            (rel_item_type == 'Backdoor' and rel_item.version == '')):
+            return results
+
+        # If one is a versioned backdoor and the other is a family backdoor,
+        # don't go further.
+        if ((self_type == 'Backdoor' and self.version != '' and
+             rel_item_type == 'Backdoor' and rel_item.version == '') or
+            (rel_item_type == 'Backdoor' and rel_item.version != '' and
+             self_type == 'Backdoor' and self.version == '')):
+           return results
+
+        # Figure out which is the backdoor object.
+        if self_type == 'Backdoor':
+            bd = self
+            other = rel_item
+        else:
+            bd = rel_item
+            other = self
+
+        # Find corresponding family backdoor object.
+        klass = class_from_type('Backdoor')
+        family = klass.objects(name=bd.name, version='').first()
+        if family:
+            other.add_relationship(family,
+                                   rel_type,
+                                   rel_date=rel_date,
+                                   analyst=analyst,
+                                   rel_confidence=rel_confidence,
+                                   rel_reason=rel_reason,
+                                   get_rels=get_rels)
+            other.save(user=analyst)
+
+        return results
 
     def _modify_relationship(self, rel_item=None, rel_id=None, type_=None,
                              rel_type=None, rel_date=None, new_type=None,
@@ -1966,11 +2197,13 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         rel_dict = dict((r.rel_type,[]) for r in self.relationships)
         query_dict = {
             'Actor': ('id', 'name', 'campaign'),
+            'Backdoor': ('id', 'name', 'version', 'campaign'),
             'Campaign': ('id', 'name'),
             'Certificate': ('id', 'md5', 'filename', 'description', 'campaign'),
             'Domain': ('id', 'domain'),
             'Email': ('id', 'from_address', 'sender', 'subject', 'campaign'),
             'Event': ('id', 'title', 'event_type', 'description', 'campaign'),
+            'Exploit': ('id', 'name', 'cve', 'campaign'),
             'Indicator': ('id', 'ind_type', 'value', 'campaign'),
             'IP': ('id', 'ip', 'campaign'),
             'PCAP': ('id', 'md5', 'filename', 'description', 'campaign'),
@@ -1981,8 +2214,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                        'filename',
                        'mimetype',
                        'size',
-                       'backdoor',
-                       'exploit',
                        'campaign'),
             'Target': ('id', 'firstname', 'lastname', 'email_address', 'email_count'),
         }
@@ -1998,8 +2229,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             for r in self.relationships:
                 rd = r.to_dict()
                 obj_class = class_from_type(rd['type'])
-                # TODO: these should be limited to the fields above, or at least exclude larger
-                # fields that we don't need.
+                # TODO: these should be limited to the fields above, or at
+                # least exclude larger fields that we don't need.
                 fields = query_dict.get(rd['type'])
                 if r.rel_type not in ["Campaign", "Target"]:
                     obj = obj_class.objects(id=rd['value'],
@@ -2250,7 +2481,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
             try:
                 return reverse(details_url, args=(unicode(self[details_url_key]),))
-            except Exception as e:
+            except Exception:
                 return None
         else:
             return None
@@ -2341,7 +2572,7 @@ def json_handler(obj):
         return str(obj)
 
 def create_embedded_source(name, source_instance=None, date=None,
-                           reference=None, method=None, analyst=None):
+                           reference='', method='', analyst=None):
     """
     Create an EmbeddedSource object. If source_instance is provided it will be
     used, otherwise date, reference, and method will be used.

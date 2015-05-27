@@ -6,7 +6,7 @@ from django.conf import settings
 from cybox.common import String, DateTime
 from cybox.core import Observable
 from cybox.objects.address_object import Address, EmailAddress
-from cybox.objects.email_message_object import EmailHeader, EmailMessage
+from cybox.objects.email_message_object import EmailHeader, EmailMessage, Attachments
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.fields import CritsDateTimeField
@@ -211,6 +211,8 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
             obj.header.from_ = EmailAddress(self.from_address)
         if 'date' not in exclude and 'isodate' not in exclude:
             obj.header.date = DateTime(self.isodate)
+
+	obj.attachments = Attachments()
 
         observables.append(Observable(obj))
         return (observables, self.releasability)

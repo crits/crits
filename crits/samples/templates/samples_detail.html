@@ -53,6 +53,11 @@
                 <td>{{ sample.id }}</td>
             </tr>
             <tr>
+                {% with description=sample.description %}
+                    {% include 'description_widget.html' %}
+                {% endwith %}
+            </tr>
+            <tr>
                 <td class="key">Filename</td>
                 <td>
                     <span class="edit_underline" id="sample_filename">{{ sample.filename }}</span>
@@ -145,41 +150,15 @@
         {% endwith %}
     </div>
     <div>
+        {% with hit=sample col=COL_SAMPLES %}
+            {% include 'locations_display_widget.html' %}
+        {% endwith %}
+    </div>
+    <div>
         {% include 'relationships_listing_widget.html' %}
     </div>
     <div>
         {% include 'objects_listing_widget.html' %}
-    </div>
-    <div class='content_box'>
-        <h3 class='titleheader'>
-            <span>Quick Summary</span>
-        </h3>
-        <table class="vertical" width="100%">
-            <thead>
-            </thead>
-            <tbody>
-            <tr>
-                <td class="key">Backdoor
-                    <span class="ui-icon ui-icon-pencil add_backdoor dialogClick" dialog="add-backdoor" persona="update" title="Edit Backdoor" style="float: right;"></span>
-                </td>
-                <td>
-                    {% if sample.backdoor %}
-                    <a href="{% url 'crits.samples.views.samples_listing' %}?search_type=backdoor&q={{ sample.backdoor.name }}&force_full=1"><span data-field="backdoor_types">{{ sample.backdoor.name }}</span> (<span data-field="backdoor_version">{{ sample.backdoor.version }}</span>)</a>
-                    {% endif %}
-                </td>
-            </tr>
-            <tr>
-                <td class="key">Exploit
-                    <span class="ui-icon ui-icon-plusthick add_exploit dialogClick" dialog="add-exploit" persona="new" title="Add Exploit" style="float: right;"></span>
-                </td>
-                <td>
-                    {% for exploit in sample.exploit %}
-                        <a href="{% url 'crits.samples.views.samples_listing'%}?search_type=exploit&q={{exploit.cve}}&force_full=1">{{ exploit.cve}}</a>,&nbsp;
-                    {% endfor %}
-                </td>
-            </tr>
-            </tbody>
-        </table>
     </div>
     <div>
     {% include 'screenshot_widget.html' %}
@@ -198,17 +177,6 @@
 
 <div style="display: none;">
 
-<div id="dialog-add-backdoor" title="Edit Backdoor">
-    <form id="form-add-backdoor" action='{% url "crits.samples.views.add_backdoor" sample.md5 %}' method='POST' item-type="backdoor">
-    <table class='form'> {{ backdoor_form.as_table }} </table>
-    </form>
-</div>
-
-<div id="dialog-add-exploit" title="Add Exploit">
-    <form id="form-add-exploit" action='{% url "crits.samples.views.add_exploit" sample.md5 %}' method='POST'>
-    <table class='form'> {{ exploit_form.as_table }} </table>
-    </form>
-</div>
 <div id="dialog-download-sample" title="Download Sample">
     <form id="form-download-sample" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
     <table class="form">{{download_form.as_table}}</table>
