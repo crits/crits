@@ -102,7 +102,7 @@ def forge_relationship(left_class=None, right_class=None,
             left_class = class_from_id(left_type, left_id)
             if not left_class:
                 return {'success': False,
-                        'message': "Unable to get object."}
+                        'message': "Unable to get left object."}
         else:
             return {'success': False,
                     'message': "Need a valid left type and id"}
@@ -125,6 +125,9 @@ def forge_relationship(left_class=None, right_class=None,
                                                 analyst=analyst,
                                                 rel_confidence=rel_confidence,
                                                 rel_reason=rel_reason)
+                else:
+                    return {'success': False,
+                            'message': "Failed to get right object"}
             else:
                 return {'success': False,
                         'message': "Need a valid right type and id"}
