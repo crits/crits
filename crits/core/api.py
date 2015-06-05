@@ -511,7 +511,7 @@ class CRITsAPIResource(MongoEngineResource):
         if no_sources and sources:
             querydict['source.name'] = {'$in': source_list}
         if only or exclude:
-            required = [k for k,v in klass._fields.iteritems() if v.required]
+            required = [k for k,f in klass._fields.iteritems() if f.required]
         if only:
             fields = only.split(',')
             if exclude:
@@ -564,11 +564,13 @@ class CRITsAPIResource(MongoEngineResource):
         """
 
         import crits.actors.handlers as ah
+        import crits.core.handlers as coreh
         import crits.services.handlers as servh
 
         actions = {
             'Common': {
                 'run_service': servh.run_service,
+                'add_releasability': coreh.add_releasability,
             },
             'Actor': {
                 'update_actor_tags': ah.update_actor_tags,
@@ -578,6 +580,19 @@ class CRITsAPIResource(MongoEngineResource):
                 'set_actor_name': ah.set_actor_name,
                 'update_actor_aliases': ah.update_actor_aliases,
             },
+            'Backdoor': {},
+            'Campaign': {},
+            'Certificate': {},
+            'Domain': {},
+            'Email': {},
+            'Event': {},
+            'Exploit': {},
+            'Indicator': {},
+            'IP': {},
+            'PCAP': {},
+            'RawData': {},
+            'Sample': {},
+            'Target': {},
         }
 
         prefix = get_script_prefix()
@@ -589,6 +604,10 @@ class CRITsAPIResource(MongoEngineResource):
         type_ = kwargs['resource_name'].title()
         if type_ == "Raw_data":
             type_ = "RawData"
+        if type_[-1] == 's':
+            type_ = type_[:-1]
+        if type_ in ("Pcap", "Ip"):
+            type_ = type_.upper()
         id_ = kwargs['pk']
 
         content = {'return_code': 0,
@@ -599,9 +618,14 @@ class CRITsAPIResource(MongoEngineResource):
         # Make sure we have an appropriate action.
         action = bundle.data.get("action", None)
         atype = actions.get(type_, None)
-        if not atype:
-            atype = actions.get('Common')
+        if atype is None:
+            content['return_code'] = 1
+            content['message'] = "'%s' is not a valid resource." % type_
+            self.crits_response(content)
         action_type = atype.get(action, None)
+        if action_type is None:
+            atype = actions.get('Common')
+            action_type = atype.get(action, None)
         if action_type:
             data = bundle.data
             # Requests don't need to have an id_ as we will derive it from

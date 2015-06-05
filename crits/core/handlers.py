@@ -264,7 +264,7 @@ def get_data_for_item(item_type, item_id):
             response['data'][field.title()] = value
     return response
 
-def add_releasability(type_, _id, name, analyst):
+def add_releasability(type_, id_, name, user, **kwargs):
     """
     Add releasability to a top-level object.
 
@@ -274,18 +274,18 @@ def add_releasability(type_, _id, name, analyst):
     :type id_: str
     :param name: The source to add releasability for.
     :type name: str
-    :param analyst: The user adding the releasability.
-    :type analyst: str
+    :param user: The user adding the releasability.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    obj = class_from_id(type_, _id)
+    obj = class_from_id(type_, id_)
     if not obj:
         return {'success': False,
                 'message': "Could not find object."}
     try:
-        obj.add_releasability(name=name, analyst=analyst, instances=[])
-        obj.save(username=analyst)
+        obj.add_releasability(name=name, analyst=user, instances=[])
+        obj.save(username=user)
         obj.reload()
         return {'success': True,
                 'obj': obj.to_dict()['releasability']}
@@ -3770,11 +3770,13 @@ def generate_sector_jtable(request, option):
                                     request,
                                     includes=['name',
                                               'Actor',
+                                              'Backdoor',
                                               'Campaign',
                                               'Certificate',
                                               'Domain',
                                               'Email',
                                               'Event',
+                                              'Exploit',
                                               'Indicator',
                                               'IP',
                                               'PCAP',
@@ -3784,8 +3786,9 @@ def generate_sector_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
-              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target']
+    fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
+              'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
+              'Sample', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',
