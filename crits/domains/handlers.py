@@ -43,10 +43,14 @@ def get_valid_root_domain(domain):
     if any(c in black_list for c in domain):
         error = 'Domain cannot contain space or characters %s' % (black_list)
     else:
+        global tld_parser
         root = tld_parser.parse(domain)
         if root == "no_tld_found_error":
-            error = 'No valid TLD found'
-            root = ""
+            tld_parser = etld()
+            root = tld_parser.parse(domain)
+            if root == "no_tld_found_error":
+                error = 'No valid TLD found'
+                root = ""
         else:
             fqdn = domain.lower()
 
