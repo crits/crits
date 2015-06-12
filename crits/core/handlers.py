@@ -29,7 +29,7 @@ from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.source_access import SourceAccess
 from crits.core.data_tools import create_zip, format_file
 from crits.core.mongo_tools import mongo_connector, get_file
-from crits.core.sector import Sector, SectorObject
+from crits.core.sector import Sector
 from crits.core.user import CRITsUser, EmbeddedSubscriptions
 from crits.core.user import EmbeddedLoginAttempt
 from crits.core.user_tools import user_sources, is_admin
@@ -3850,18 +3850,6 @@ def modify_sector_list(itype, oid, sectors, analyst):
         obj.save(username=analyst)
     except ValidationError:
         pass
-
-def get_sector_options():
-    """
-    Get available sector options.
-
-    :returns: list
-    """
-
-    sectors = SectorObject.objects()
-    sector_list = [s.name for s in sectors]
-    return HttpResponse(json.dumps(sector_list, default=json_handler),
-                        content_type='application/json')
 
 def get_bucket_autocomplete(term):
     """
