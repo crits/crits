@@ -1,20 +1,21 @@
 from crits.vocabulary.vocab import vocab
 
-class Sectors(vocab):
+class EventTypes(vocab):
 
-    CHEMICAL = "Chemical",
-    COMMERCIAL_FACILITIES = "Commercial Facilities",
-    COMMUNICATIONS = "Communications",
-    CRITICAL_MANUFACTURING = "Critical Manufacturing",
-    DAMS = "Dams",
-    DEFENSE_INDUSTRIAL_BASE = "Defense Industrial Base",
-    EMERGENCY_SERVICES = "Emergency Services",
-    ENERGY = "Energy",
-    FINANCIAL_SERVICES = "Financial Services",
-    FOOD_AND_AGRICULTURE = "Food and Agriculture",
-    GOVERNMENT_FACILITIES = "Government Facilities",
-    HEALTHCARE_AND_PUBLIC_HEALTH = "Healthcare and Public Health",
-    INFORMATION_TECHNOLOGY = "Information Technology",
-    NUCLEAR_REACTORS_MATERIALS_AND_WASTE = "Nuclear Reactors Materials and Waste",
-    TRANSPORTATION_SYSTEMS = "Transportation Systems",
-    WATER_AND_WASTEWATER_SYSTEMS = "Water and Wastewater Systems"
+    APPLICATION_COMPROMISE = "Application Compromise"
+    DENIAL_OF_SERVICE = "Denial of Service"
+    DISTRIBUTED_DENIAL_OF_SERVICE = "Distributed Denial of Service"
+    EXPLOITATION = "Exploitation"
+    INTEL_SHARING = "Intel Sharing"
+    MALICIOUS_CODE = "Malicious Code"
+    PHISHING = "Phishing"
+    PRIVILEGED_ACCOUNT_COMPROMISE = "Privileged Account Compromise"
+    SCANNING = "Scanning"
+    SENSOR_ALERT = "Sensor Alert"
+    SOCIAL_ENGINEERING = "Social Engineering"
+    SNIFFING = "Sniffing"
+    SPAM = "Spam"
+    STRATEGIC_WEB_COMPROMISE = "Strategic Web Compromise"
+    UNAUTHORIZED_INFORMATION_ACCESS = "Unauthorized Information Access"
+    UNKNOWN = "Unknown"
+    WEBSITE_DEFACEMENT = "Website Defacement"

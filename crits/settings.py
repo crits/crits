@@ -315,6 +315,7 @@ ROOT_URLCONF = 'crits.urls'
 TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, '../documentation'),
     os.path.join(SITE_ROOT, 'core/templates'),
+    os.path.join(SITE_ROOT, 'core/templates/dialogs'),
     os.path.join(SITE_ROOT, 'actors/templates'),
     os.path.join(SITE_ROOT, 'backdoors/templates'),
     os.path.join(SITE_ROOT, 'core/dashboard/templates'),

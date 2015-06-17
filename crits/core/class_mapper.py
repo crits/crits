@@ -42,7 +42,7 @@ def class_from_id(type_, _id):
     from crits.core.user_role import UserRole
     from crits.domains.domain import Domain
     from crits.emails.email import Email
-    from crits.events.event import Event, EventType
+    from crits.events.event import Event
     from crits.exploits.exploit import Exploit
     from crits.indicators.indicator import Indicator, IndicatorAction
     from crits.ips.ip import IP
@@ -82,8 +82,6 @@ def class_from_id(type_, _id):
         return Email.objects(id=_id).first()
     elif type_ == 'Event':
         return Event.objects(id=_id).first()
-    elif type_ == 'EventType':
-        return EventType.objects(id=_id).first()
     elif type_ == 'Exploit':
         return Exploit.objects(id=_id).first()
     elif type_ == 'Indicator':
@@ -220,7 +218,7 @@ def class_from_type(type_):
     from crits.core.user_role import UserRole
     from crits.domains.domain import Domain
     from crits.emails.email import Email
-    from crits.events.event import Event, EventType
+    from crits.events.event import Event
     from crits.exploits.exploit import Exploit
     from crits.indicators.indicator import Indicator, IndicatorAction
     from crits.ips.ip import IP
@@ -249,8 +247,6 @@ def class_from_type(type_):
         return Email
     elif type_ == 'Event':
         return Event
-    elif type_ == 'EventType':
-        return EventType
     elif type_ == 'Exploit':
         return Exploit
     elif type_ == 'Indicator':

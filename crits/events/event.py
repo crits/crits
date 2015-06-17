@@ -3,9 +3,10 @@ import uuid
 from mongoengine import Document, StringField, UUIDField
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsSchemaDocument, CritsBaseAttributes
-from crits.core.crits_mongoengine import CritsDocument, CritsSourceDocument
+from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.events.migrate import migrate_event
+
+from crits.vocabulary.event_types import EventTypes
 
 class UnreleasableEventError(Exception):
     """
@@ -76,8 +77,7 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
         :type event_type: str
         """
 
-        e = EventType.objects(name=event_type).first()
-        if e:
+        if event_type in EventTypes.values():
             self.event_type = event_type
 
     def migrate(self):
@@ -86,22 +86,3 @@ class Event(CritsBaseAttributes, CritsSourceDocument, Document):
         """
 
         migrate_event(self)
-
-
-class EventType(CritsDocument, CritsSchemaDocument, Document):
-    """
-    Event Type class.
-    """
-
-    meta = {
-        "collection": settings.COL_EVENT_TYPES,
-        "crits_type": 'EventType',
-        "latest_schema_version": 1,
-        "schema_doc": {
-            'name': 'The name of this Type',
-            'active': 'Enabled in the UI (on/off)'
-        },
-    }
-
-    name = StringField()
-    active = StringField()

@@ -2,10 +2,12 @@ from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 
-from crits.events.event import Event, EventType
+from crits.events.event import Event
 from crits.events.handlers import add_new_event
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
+
+from crits.vocabulary.event_types import EventTypes
 
 
 class EventResource(CRITsAPIResource):
@@ -61,8 +63,7 @@ class EventResource(CRITsAPIResource):
         if not title or not event_type or not source or not description:
             content['message'] = 'Must provide a title, event_type, source, and description.'
             self.crits_response(content)
-        et = EventType.objects(name=event_type).first()
-        if not et:
+        if event_type not in EventTypes.values():
             content['message'] = 'Not a valid Event Type.'
             self.crits_response(content)
 

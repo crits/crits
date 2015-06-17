@@ -2364,8 +2364,6 @@ def generate_items_jtable(request, itype, option):
     elif itype == 'Campaign':
         fields = ['name', 'description', 'active', 'id']
         click = "function () {window.parent.$('#new-campaign').click();}"
-    elif itype == 'EventType':
-        fields = ['name', 'active', 'id']
     elif itype == 'IndicatorAction':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#indicator_action_add').click();}"
@@ -2411,7 +2409,7 @@ def generate_items_jtable(request, itype, option):
     jtable = build_jtable(jtopts, request)
     if itype not in ('ActorThreatType', 'ActorMotivation',
                      'ActorSophistication', 'ActorIntendedEffect',
-                     'EventType', 'ObjectType', 'RelationshipType'):
+                     'ObjectType', 'RelationshipType'):
         jtable['toolbar'] = [
             {
                 'tooltip': "'Add %s'" % itype,

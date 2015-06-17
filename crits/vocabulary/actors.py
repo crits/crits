@@ -34,7 +34,7 @@ class Motivations(vocab):
     MILITARY = "Military"
     OPPORTUNISTIC = "Opportunistic"
     POLITICAL = "Political"
-    RELIGIOUS = "RELIGIOUS"
+    RELIGIOUS = "Religious"
     SECURITY_AWARENESS = "Security Awareness"
 
 
