@@ -149,21 +149,43 @@ class STIXParser():
                 if self.package.incidents:
                     incdnts = self.package.incidents
                     for rel in getattr(incdnts[0], 'related_indicators', ()):
-                        self.event_rels[rel.item.idref] = (rel.relationship.value,
-                                                           rel.confidence.value.value)
+                        if rel.confidence:
+                            conf_val = rel.confidence.value.value
+                        else:
+                            conf_val = "None"
+                        if rel.item.idref:
+                            ind_id=rel.item.idref
+                        else:
+                            ind_id=rel.item.id_
+                        self.event_rels[ind_id] = (rel.relationship.value,
+                                                  conf_val)
             else:
                 self.failed.append((res['message'],
                                     "STIX Event",
                                     ""))
 
-        if self.package.indicators:
-            self.parse_indicators(self.package.indicators)
+        packages = []
+        packages.append(self.package)
+        if self.package.related_packages:
+            for related_package in self.package.related_packages:
+                    packages.append(related_package.item)
 
-        if self.package.observables and self.package.observables.observables:
-            self.parse_observables(self.package.observables.observables)
+        for package in packages:
+            if package.indicators:
+                self.parse_indicators(package.indicators)
 
-        if self.package.threat_actors:
-            self.parse_threat_actors(self.package.threat_actors)
+            if package.incidents:
+                relindicators = []
+                for inc in package.incidents:
+                    for rel in getattr(inc, 'related_indicators', ()):
+                        relindicators.append(rel.item)
+                self.parse_indicators(relindicators)
+
+            if package.observables and package.observables.observables:
+                self.parse_observables(package.observables.observables)
+
+            if package.threat_actors:
+                self.parse_threat_actors(package.threat_actors)
 
     def parse_threat_actors(self, threat_actors):
         """
@@ -233,10 +255,18 @@ class STIXParser():
 
             # store relationships
             for rel in getattr(indicator, 'related_indicators', ()):
+                if rel.confidence:
+                    conf_val = rel.confidence.value.value
+                else:
+                    conf_val = "None"
+                if rel.item.idref:
+                    ind_id = rel.item.idref
+                else:
+                    ind_id = rel.item.id_
                 self.relationships.append((indicator.id_,
                                            rel.relationship.value,
-                                           rel.item.idref,
-                                           rel.confidence.value.value))
+                                           ind_id,
+                                           conf_val))
 
             # handled indicator-wrapped observable
             if getattr(indicator, 'title', ""):
@@ -246,6 +276,8 @@ class STIXParser():
                     if result:
                         self.imported[indicator.id_] = result
                     continue
+
+            self.parse_observables(indicator.observables)
 
             for observable in indicator.observables: # get each observable from indicator (expecting only 1)
                 try: # create CRITs Indicator from observable
@@ -397,7 +429,8 @@ class STIXParser():
                         data['x_mailer'] = str(item.header.x_mailer)
                         data['boundary'] = str(item.header.boundary)
                         data['from_address'] = str(item.header.from_)
-                        data['date'] = item.header.date.value
+                        if item.header.date:
+                            data['date'] = item.header.date.value
                         if item.header.to:
                             data['to'] = [str(r) for r in item.header.to.to_list()]
                     res = handle_email_fields(data,
