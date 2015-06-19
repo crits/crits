@@ -2,6 +2,10 @@ from crits.vocabulary.vocab import vocab
 
 
 class ThreatTypes(vocab):
+    """
+    Vocabulary for Actor Threat Types.
+    """
+
 
     CYBER_ESPIONAGE_OPERATIONS = "Cyber Espionage Operations"
     HACKER_WHITE_HAT = "Hacker - White Hat"
@@ -22,6 +26,10 @@ class ThreatTypes(vocab):
 
 
 class Motivations(vocab):
+    """
+    Vocabulary for Actor Motivations.
+    """
+
 
     ANTI_CORRUPTION = "Anti-Corruption"
     ANTI_ESTABLISHMENT = "Anti-Establishment"
@@ -39,6 +47,10 @@ class Motivations(vocab):
 
 
 class Sophistications(vocab):
+    """
+    Vocabulary for Actor Sophistications.
+    """
+
 
     ASPIRANT = "Aspirant"
     EXPERT = "Expert"
@@ -48,6 +60,10 @@ class Sophistications(vocab):
 
 
 class IntendedEffects(vocab):
+    """
+    Vocabulary for Actor Intended Effects.
+    """
+
 
     ACCOUNT_TAKEOVER = "Account Takeover"
     BRAND_DAMAGE = "Brand Damage"

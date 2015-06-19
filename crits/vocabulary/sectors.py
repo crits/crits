@@ -1,6 +1,10 @@
 from crits.vocabulary.vocab import vocab
 
 class Sectors(vocab):
+    """
+    Vocabulary for Sectors.
+    """
+
 
     CHEMICAL = "Chemical"
     COMMERCIAL_FACILITIES = "Commercial Facilities"

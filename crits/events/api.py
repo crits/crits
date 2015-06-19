@@ -7,7 +7,7 @@ from crits.events.handlers import add_new_event
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
-from crits.vocabulary.event_types import EventTypes
+from crits.vocabulary.events import EventTypes
 
 
 class EventResource(CRITsAPIResource):

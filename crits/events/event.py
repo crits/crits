@@ -6,7 +6,7 @@ from django.conf import settings
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.events.migrate import migrate_event
 
-from crits.vocabulary.event_types import EventTypes
+from crits.vocabulary.events import EventTypes
 
 class UnreleasableEventError(Exception):
     """

@@ -1,6 +1,10 @@
 from crits.vocabulary.vocab import vocab
 
 class EventTypes(vocab):
+    """
+    Vocabulary for Event Types.
+    """
+
 
     APPLICATION_COMPROMISE = "Application Compromise"
     DENIAL_OF_SERVICE = "Denial of Service"

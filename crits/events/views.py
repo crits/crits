@@ -18,7 +18,7 @@ from crits.events.handlers import generate_event_jtable, add_sample_for_event
 from crits.events.handlers import generate_event_csv, add_new_event
 from crits.samples.forms import UploadFileForm
 
-from crits.vocabulary.event_types import EventTypes
+from crits.vocabulary.events import EventTypes
 
 
 @user_passes_test(user_can_view_data)

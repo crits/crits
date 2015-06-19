@@ -7,7 +7,7 @@ from crits.core.widgets import CalWidget
 from crits.core.handlers import get_source_names
 from crits.core.user_tools import get_user_organization
 
-from crits.vocabulary.event_types import EventTypes
+from crits.vocabulary.events import EventTypes
 
 class EventForm(forms.Form):
     """
