@@ -315,7 +315,6 @@ ROOT_URLCONF = 'crits.urls'
 TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, '../documentation'),
     os.path.join(SITE_ROOT, 'core/templates'),
-    os.path.join(SITE_ROOT, 'core/templates/dialogs'),
     os.path.join(SITE_ROOT, 'actors/templates'),
     os.path.join(SITE_ROOT, 'backdoors/templates'),
     os.path.join(SITE_ROOT, 'core/dashboard/templates'),
@@ -339,6 +338,14 @@ TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, 'services/templates'),
     os.path.join(SITE_ROOT, 'stats/templates'),
     os.path.join(SITE_ROOT, 'targets/templates'),
+    os.path.join(SITE_ROOT, 'core/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'campaigns/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'comments/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'locations/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'objects/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'raw_data/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'relationships/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'screenshots/templates/dialogs'),
 )
 
 STATICFILES_DIRS = (
