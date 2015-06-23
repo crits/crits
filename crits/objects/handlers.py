@@ -1,9 +1,6 @@
 from hashlib import md5
 
 from django.conf import settings
-from django.core.exceptions import ValidationError as DjangoValidationError
-from django.core.validators import validate_ipv4_address, validate_ipv6_address
-from django.core.validators import validate_ipv46_address
 from django.template.loader import render_to_string
 from django.template import RequestContext
 from mongoengine.base import ValidationError
@@ -373,10 +370,10 @@ def add_object(type_, oid, object_type, name, source, method,
 
                 if ind_res['success']:
                     ind = ind_res['object']
-                    forge_relationship(left_class=obj,
+                    forge_relationship(class_=obj,
                                        right_class=ind,
                                        rel_type="Related_To",
-                                       analyst=analyst,
+                                       user=analyst,
                                        get_rels=is_sort_relationships)
                 else:
                     results['message'] = "Object was added, but failed to add Indicator." \

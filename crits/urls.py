@@ -54,7 +54,6 @@ if settings.ENABLE_API:
     from crits.objects.api import ObjectResource
     from crits.pcaps.api import PCAPResource
     from crits.raw_data.api import RawDataResource
-    from crits.relationships.api import RelationshipResource
     from crits.samples.api import SampleResource
     from crits.screenshots.api import ScreenshotResource
     from crits.services.api import ServiceResource
@@ -77,7 +76,6 @@ if settings.ENABLE_API:
     v1_api.register(ObjectResource())
     v1_api.register(PCAPResource())
     v1_api.register(RawDataResource())
-    v1_api.register(RelationshipResource())
     v1_api.register(SampleResource())
     v1_api.register(ScreenshotResource())
     v1_api.register(ServiceResource())

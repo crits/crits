@@ -15,8 +15,7 @@ from tastypie.utils.mime import build_content_type
 from tastypie_mongoengine.resources import MongoEngineResource
 
 from crits.core.data_tools import format_file, create_zip
-from crits.core.handlers import download_object_handler, remove_quotes, generate_regex
-from crits.core.source_access import SourceAccess
+from crits.core.handlers import remove_quotes, generate_regex
 from crits.core.user_tools import user_sources
 
 
@@ -565,12 +564,14 @@ class CRITsAPIResource(MongoEngineResource):
 
         import crits.actors.handlers as ah
         import crits.core.handlers as coreh
+        import crits.relationships.handlers as relh
         import crits.services.handlers as servh
 
         actions = {
             'Common': {
-                'run_service': servh.run_service,
                 'add_releasability': coreh.add_releasability,
+                'forge_relationship': relh.forge_relationship,
+                'run_service': servh.run_service,
             },
             'Actor': {
                 'update_actor_tags': ah.update_actor_tags,

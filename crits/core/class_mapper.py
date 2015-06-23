@@ -37,7 +37,6 @@ def class_from_id(type_, _id):
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
-    from crits.core.crits_mongoengine import RelationshipType
     from crits.core.source_access import SourceAccess
     from crits.core.user_role import UserRole
     from crits.domains.domain import Domain
@@ -98,8 +97,6 @@ def class_from_id(type_, _id):
         return RawData.objects(id=_id).first()
     elif type_ == 'RawDataType':
         return RawDataType.objects(id=_id).first()
-    elif type_ == 'RelationshipType':
-        return RelationshipType.objects(id=_id).first()
     elif type_ == 'Sample':
         return Sample.objects(id=_id).first()
     elif type_ == 'SourceAccess':
@@ -213,7 +210,6 @@ def class_from_type(type_):
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
-    from crits.core.crits_mongoengine import RelationshipType
     from crits.core.source_access import SourceAccess
     from crits.core.user_role import UserRole
     from crits.domains.domain import Domain
@@ -263,8 +259,6 @@ def class_from_type(type_):
         return RawData
     elif type_ == 'RawDataType':
         return RawDataType
-    elif type_ == 'RelationshipType':
-        return RelationshipType
     elif type_ == 'Sample':
         return Sample
     elif type_ == 'SourceAccess':

@@ -2,7 +2,6 @@ import json
 import re
 import datetime
 
-from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -434,10 +433,10 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                 if not result['success']:
                     errors.append(result['message'])
                 elif ip_result.get('success') and ip_ind:
-                    forge_relationship(left_class=result['indicator'],
+                    forge_relationship(class_=result['indicator'],
                                        right_class=ip_ind,
                                        rel_type='Resolved_To',
-                                       analyst=username)
+                                       user=username)
             result = True
 
     # This block validates, and may also add, objects to the Domain

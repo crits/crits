@@ -29,36 +29,12 @@ def get_relationships(obj=None, type_=None, id_=None, analyst=None):
     else:
         return {}
 
-def get_relationship_types(active=True):
-    """
-    Get relationship types available in the database.
-
-    :param active: Only get active relationship types.
-    :type active: bool
-    :returns: list
-    """
-
-    from crits.core.crits_mongoengine import RelationshipType
-    if active:
-        result = RelationshipType.objects(active="on")
-    else:
-        result = RelationshipType.objects()
-    relationship_types = []
-    for r in result:
-        if r.forward != r.reverse:
-            relationship_types.append(r.forward)
-            relationship_types.append(r.reverse)
-        else:
-            relationship_types.append(r.forward)
-    relationship_types.sort()
-    return relationship_types
-
 def forge_relationship(left_class=None, right_class=None,
                        left_type=None, left_id=None,
                        right_type=None, right_id=None,
                        rel_type=None, rel_date=None,
-                       analyst=None, rel_reason="N/A",
-                       rel_confidence='unknown', get_rels=False):
+                       user=None, rel_reason="N/A",
+                       rel_confidence='unknown', get_rels=False, **kwargs):
     """
     Forge a relationship between two top-level objects.
 
@@ -78,8 +54,8 @@ def forge_relationship(left_class=None, right_class=None,
     :type rel_type: str
     :param rel_date: The date this relationship applies.
     :type rel_date: datetime.datetime
-    :param analyst: The user forging this relationship.
-    :type analyst: str
+    :param user: The user forging this relationship.
+    :type user: str
     :param rel_reason: The reason for the relationship.
     :type rel_reason: str
     :param rel_confidence: The confidence of the relationship.
@@ -112,7 +88,7 @@ def forge_relationship(left_class=None, right_class=None,
             results = left_class.add_relationship(right_class,
                                         rel_type,
                                         rel_date=rel_date,
-                                        analyst=analyst,
+                                        analyst=user,
                                         rel_confidence=rel_confidence,
                                         rel_reason=rel_reason)
         else:
@@ -122,7 +98,7 @@ def forge_relationship(left_class=None, right_class=None,
                     results = left_class.add_relationship(rel_item,
                                                 rel_type,
                                                 rel_date=rel_date,
-                                                analyst=analyst,
+                                                analyst=user,
                                                 rel_confidence=rel_confidence,
                                                 rel_reason=rel_reason)
                 else:
@@ -135,10 +111,10 @@ def forge_relationship(left_class=None, right_class=None,
         return {'success': False, 'message': e}
 
     if results['success']:
-        left_class.save(username=analyst)
+        left_class.save(username=user)
         left_class.reload()
         if get_rels:
-            results['relationships'] = left_class.sort_relationships("%s" % analyst, meta=True)
+            results['relationships'] = left_class.sort_relationships("%s" % user, meta=True)
     return results
 
 def delete_all_relationships(left_class=None, left_type=None,

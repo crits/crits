@@ -1268,9 +1268,7 @@ def get_item_state(type_, name):
     :returns: True if active, False if inactive.
     """
 
-    if type_ == 'RelationshipType':
-        query = {'forward': name}
-    elif type_ == 'ObjectType':
+    if type_ == 'ObjectType':
         a = name.split(" - ")
         if len(a) == 1:
             query = {'name': name}
@@ -2353,28 +2351,15 @@ def generate_items_jtable(request, itype, option):
     if itype == 'ActorThreatIdentifier':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#actor_identifier_type_add').click();}"
-    elif itype == 'ActorThreatType':
-        fields = ['name', 'active', 'id']
-    elif itype == 'ActorMotivation':
-        fields = ['name', 'active', 'id']
-    elif itype == 'ActorSophistication':
-        fields = ['name', 'active', 'id']
-    elif itype == 'ActorIntendedEffect':
-        fields = ['name', 'active', 'id']
     elif itype == 'Campaign':
         fields = ['name', 'description', 'active', 'id']
         click = "function () {window.parent.$('#new-campaign').click();}"
     elif itype == 'IndicatorAction':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#indicator_action_add').click();}"
-    elif itype == 'ObjectType':
-        fields = ['name', 'name_type', 'object_type', 'datatype', 'description',
-                  'active', 'id']
     elif itype == 'RawDataType':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#raw_data_type_add').click();}"
-    elif itype == 'RelationshipType':
-        fields = ['forward', 'reverse', 'description', 'active', 'id']
     elif itype == 'SourceAccess':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#source_create').click();}"
@@ -2390,10 +2375,6 @@ def generate_items_jtable(request, itype, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type="application/json")
 
-    if itype == "ObjectType":
-        fields = ['name', 'name_type', 'type', 'datatype', 'description',
-                  'active', 'id']
-
     jtopts = {
         'title': "%ss" % itype,
         'default_sort': 'name ASC',
@@ -2407,16 +2388,13 @@ def generate_items_jtable(request, itype, option):
         'details_link': '',
     }
     jtable = build_jtable(jtopts, request)
-    if itype not in ('ActorThreatType', 'ActorMotivation',
-                     'ActorSophistication', 'ActorIntendedEffect',
-                     'ObjectType', 'RelationshipType'):
-        jtable['toolbar'] = [
-            {
-                'tooltip': "'Add %s'" % itype,
-                'text': "'Add %s'" % itype,
-                'click': click,
-            },
-        ]
+    jtable['toolbar'] = [
+        {
+            'tooltip': "'Add %s'" % itype,
+            'text': "'Add %s'" % itype,
+            'click': click,
+        },
+    ]
 
     for field in jtable['fields']:
         if field['fieldname'].startswith("'active"):

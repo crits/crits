@@ -9,11 +9,10 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
-from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
+from mongoengine import EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
 from mongoengine import IntField, DateTimeField, ObjectIdField
 from mongoengine.base import BaseDocument, ValidationError
-from mongoengine.queryset import Q
 
 # Determine if we should be caching queries or not.
 if settings.QUERY_CACHING:
@@ -26,6 +25,7 @@ from pprint import pformat
 from crits.core.user_tools import user_sources, is_admin
 from crits.core.fields import CritsDateTimeField
 from crits.core.class_mapper import class_from_id, class_from_type
+from crits.vocabulary.relationships import RelationshipTypes
 
 # Hack to fix an issue with non-cached querysets and django-tastypie-mongoengine
 # The issue is in django-tastypie-mongoengine in resources.py from what I can
@@ -1586,13 +1586,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         # get reverse relationship
-        r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
-        if len(r) == 0:
+        rev_type = RelationshipTypes.inverse(rel_type)
+        if rev_type is None:
             return {'success': False,
                     'message': 'Could not find relationship type'}
-        else:
-            r = r.first()
-        rev_type = r.reverse if rel_type == r.forward else r.forward
         date = datetime.datetime.now()
 
         # setup the relationship for me
@@ -1751,22 +1748,16 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             new_date = parse(new_date, fuzzy=True)
         if rel_item and rel_type and modification:
             # get reverse relationship
-            r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
-            if len(r) == 0:
+            rev_type = RelationshipTypes.inverse(rel_type)
+            if rev_type is None:
                 return {'success': False,
                         'message': 'Could not find relationship type'}
-            else:
-                r = r.first()
-            rev_type = r.reverse if rel_type == r.forward else r.forward
             if modification == "type":
                 # get new reverse relationship
-                r = RelationshipType.objects(Q(forward=new_type) | Q(reverse=new_type))
-                if len(r) == 0:
+                new_rev_type = RelationshipTypes.inverse(new_type)
+                if new_rev_type is None:
                     return {'success': False,
                             'message': 'Could not find reverse relationship type'}
-                else:
-                    r = r.first()
-                new_rev_type = r.reverse if new_type == r.forward else r.forward
             for c, r in enumerate(self.relationships):
                 if rel_date:
                     if (r.object_id == rel_item.id
@@ -2313,38 +2304,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         else:
             return None
 
-
-# Needs to be here to prevent circular imports with CritsBaseAttributes
-class RelationshipType(CritsDocument, CritsSchemaDocument, Document):
-    """
-    Relationship Type Class.
-    """
-
-    meta = {
-        "collection": settings.COL_RELATIONSHIP_TYPES,
-        "crits_type": 'RelationshipType',
-        "latest_schema_version": 1,
-        "minify_defaults": [
-            'forward',
-            'reverse',
-            'active',
-            'description',
-        ],
-        "schema_doc": {
-            'forward': 'The forward (left) side of the relationship pair',
-            'reverse': 'The reverse (right) side of the relationship pair',
-            'description': 'The description of the relationship pair',
-            'active': 'Enabled in the UI (on/off)'
-        },
-    }
-
-    forward = StringField(required=True)
-    reverse = StringField(required=True)
-    active = StringField(required=True)
-    description = StringField()
-
-    def migrate(self):
-        pass
 
 def merge(self, arg_dict=None, overwrite=False, **kwargs):
     """

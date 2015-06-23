@@ -6,8 +6,6 @@ from optparse import make_option
 
 from create_indexes import create_indexes
 from create_locations import add_location_objects
-from create_object_types import add_object_types
-from create_relationship_types import add_relationship_types
 from setconfig import create_config_if_not_exist
 from create_default_dashboard import create_dashboard
 
@@ -47,16 +45,7 @@ class Command(BaseCommand):
         # The following will always occur with every run of this script:
         #   - tlds are based off of a Mozilla TLD list so it should never
         #     contain  entries outside of the ones provided.
-        #   - object types are based off of the CybOX standard (with very few
-        #   exceptions) so we will always repopulate with the list above.
-        #   - relationship types are based off of the CybOX standard so we will
-        #   always populate with the list above.
-        # If you wish to add your own custom relationship types or object types
-        # (not recommended), then be sure to add them above so they will be
-        # added back if this script were to be used again.
         populate_tlds(drop)
-        add_relationship_types(drop)
-        add_object_types(drop)
         add_location_objects(drop)
         create_dashboard(drop)
         create_config_if_not_exist()
