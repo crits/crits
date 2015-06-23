@@ -2,12 +2,8 @@
     <ul style="font-size: 125%;">
         <li><a href="{% url 'crits.core.views.items_listing' 'ActorThreatIdentifier' 'inline' %}"
             id="actor_threat_identifiers_button"><span>Actor Threat Identifiers ({{ counts.ActorThreatIdentifier }})</span></a></li>
-	    <li><a href="{% url 'crits.core.views.items_listing' 'Backdoor' 'inline' %}"
-	        id="backdoor_button"><span>Backdoors ({{ counts.Backdoor }})</span></a></li>
 	    <li><a href="{% url 'crits.core.views.items_listing' 'Campaign' 'inline' %}"
 	        id="campaign_button"><span>Campaigns ({{ counts.Campaign }})</span></a></li>
-	    <li><a href="{% url 'crits.core.views.items_listing' 'Exploit' 'inline' %}"
-	        id="exploit_button"><span>Exploits ({{ counts.Exploit }})</span></a></li>
 	    <li><a href="{% url 'crits.core.views.items_listing' 'IndicatorAction' 'inline' %}"
 	        id="indicatoraction_button"><span>Indicator Actions ({{ counts.IndicatorAction }})</span></a></li>
 	    <li><a href="{% url 'crits.core.views.items_listing' 'RawDataType' 'inline' %}"
