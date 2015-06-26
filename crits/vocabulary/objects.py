@@ -1,4 +1,6 @@
-class ObjectTypes(object):
+from crits.vocabulary.vocab import vocab
+
+class ObjectTypes(vocab):
     """
     Vocabulary for Object Types.
     """
@@ -40,6 +42,7 @@ class ObjectTypes(object):
     FILE_OPENED = "File Opened"
     FILE_READ = "File Read"
     FILE_WRITTEN = "File Written"
+    FILE_UPLOAD = "File Upload" # Used to upload a file to CRITs!
     GET_PARAM = "GET Parameter"
     IMPHASH = "IMPHASH"
     MD5 = "MD5"

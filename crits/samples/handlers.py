@@ -43,6 +43,8 @@ from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import run_triage, get_supported_services
 from crits.stats.handlers import generate_yara_hits
 
+from crits.vocabulary.relationships import RelationshipTypes
+
 logger = logging.getLogger(__name__)
 
 
@@ -604,7 +606,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
             if related_md5 and related_md5 == zip_md5:
                 relationship = "Compressed_Into"
             else:
-                relationship = "Related_To"
+                relationship = RelationshipTypes.RELATED_TO
             for root, dirs, files in os.walk(extractdir):
                 for filename in files:
                     filepath = extractdir + "/" + filename
@@ -726,7 +728,7 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
             if related_md5 and related_md5 == rar_md5:
                 relationship = "Compressed_Into"
             else:
-                relationship = "Related_To"
+                relationship = RelationshipTypes.RELATED_TO
             for root, dirs, files in os.walk(rardir):
                 for filename in files:
                     filepath = os.path.join(rardir, filename)
@@ -960,7 +962,7 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
                                         source__name__in=sources).first()
             if backdoor:
                 backdoor.add_relationship(sample,
-                                          "Related_To",
+                                          RelationshipTypes.RELATED_TO,
                                           analyst=user)
                 backdoor.save()
             # Also relate to the specific instance backdoor.
@@ -970,7 +972,7 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
                                             source__name__in=sources).first()
                 if backdoor:
                     backdoor.add_relationship(sample,
-                                              "Related_To",
+                                              RelationshipTypes.RELATED_TO,
                                               analyst=user)
                     backdoor.save()
 
@@ -990,7 +992,7 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
                     if related_obj._meta['crits_type'] == 'Email':
                         relationship = "Contained_Within"
                     else:
-                        relationship = "Related_To"
+                        relationship = RelationshipTypes.RELATED_TO
                 sample.add_relationship(related_obj,
                                         relationship,
                                         analyst=user,

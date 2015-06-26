@@ -104,6 +104,7 @@ class IndicatorTypes(vocab):
     WHOIS_NAME = "WHOIS Name"
     WHOIS_ADDR1 = "WHOIS Address 1"
     WHOIS_ADDR2 = "WHOIS Address 2"
+    WHOIS_TELEPHONE = "WHOIS Telephone"
     XPI = "XPI"
 
 

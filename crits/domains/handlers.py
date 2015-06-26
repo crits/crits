@@ -26,6 +26,8 @@ from crits.objects.handlers import object_array_to_dict, validate_and_add_new_ha
 from crits.relationships.handlers import forge_relationship
 from crits.services.handlers import run_triage, get_supported_services
 
+from crits.vocabulary.relationships import RelationshipTypes
+
 def get_valid_root_domain(domain):
     """
     Validate the given domain and TLD, and if valid, parse out the root domain
@@ -391,7 +393,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     new_ip = ip_result['object']
                     if new_domain and new_ip:
                         new_domain.add_relationship(new_ip,
-                                                    'Resolved_To',
+                                                    RelationshipTypes.RESOLVED_TO,
                                                     analyst=username,
                                                     get_rels=False)
                         new_domain.save(username=username)
@@ -435,7 +437,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                 elif ip_result.get('success') and ip_ind:
                     forge_relationship(class_=result['indicator'],
                                        right_class=ip_ind,
-                                       rel_type='Resolved_To',
+                                       rel_type=RelationshipTypes.RESOLVED_TO,
                                        user=username)
             result = True
 
@@ -640,7 +642,7 @@ def upsert_domain(domain, source, username=None, campaign=None,
     #Add relationships between fqdn, root
     if fqdn_domain and root_domain:
         root_domain.add_relationship(fqdn_domain,
-                                     "Supra-domain_Of",
+                                     RelationshipTypes.SUPRA_DOMAIN_OF,
                                      analyst=username,
                                      get_rels=False)
         root_domain.save(username=username)

@@ -20,7 +20,7 @@ from crits.config.config import CRITsConfig
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
-from crits.core.crits_mongoengine import EmbeddedTicket, json_handler
+from crits.core.crits_mongoengine import json_handler
 from crits.core.forms import SourceForm, DownloadFileForm
 from crits.core.handlers import build_jtable, csv_export
 from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
@@ -37,8 +37,11 @@ from crits.indicators.indicator import EmbeddedConfidence, EmbeddedImpact
 from crits.ips.handlers import ip_add_update, validate_and_normalize_ip
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
-from crits.objects.object_type import ObjectType
 from crits.services.handlers import run_triage, get_supported_services
+
+from crits.vocabulary.indicators import IndicatorTypes
+from crits.vocabulary.ips import IPTypes
+from crits.vocabulary.relationships import RelationshipTypes
 
 logger = logging.getLogger(__name__)
 
@@ -377,12 +380,8 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     for a in IndicatorAction.objects(active='on'):
         valid_actions[a['name'].lower().replace(' - ', '-')] = a['name']
     valid_ind_types = {}
-    for obj in ObjectType.objects(datatype__enum__exists=False, datatype__file__exists=False):
-        if obj['object_type'] == obj['name']:
-            name = obj['object_type']
-        else:
-            name = "%s - %s" % (obj['object_type'], obj['name'])
-        valid_ind_types[name.lower().replace(' - ', '-')] = name
+    for obj in IndicatorTypes.values(sort=True):
+        valid_ind_types[obj.lower().replace(' - ', '-')] = obj
 
     # Start line-by-line import
     added = 0
@@ -647,8 +646,9 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         ind_type = indicator.ind_type
         ind_value = indicator.value
         url_contains_ip = False
-        if ind_type in ("URI - Domain Name", "URI - URL"):
-            if ind_type == "URI - URL":
+        if ind_type in (IndicatorTypes.DOMAIN,
+                        IndicatorTypes.URI):
+            if ind_type == IndicatorTypes.URI:
                 domain_or_ip = urlparse.urlparse(ind_value).hostname
                 try:
                     validate_ipv46_address(domain_or_ip)
@@ -670,14 +670,14 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                 else:
                     dmain = success['object']
 
-        if ind_type.startswith("Address - ip") or ind_type == "Address - cidr" or url_contains_ip:
+        if ind_type in IPTypes.values() or url_contains_ip:
             if url_contains_ip:
                 ind_value = domain_or_ip
                 try:
                     validate_ipv4_address(domain_or_ip)
-                    ind_type = 'Address - ipv4-addr'
+                    ind_type = IndicatorTypes.IPV4_ADDRESS
                 except DjangoValidationError:
-                    ind_type = 'Address - ipv6-addr'
+                    ind_type = IndicatorTypes.IPV6_ADDRESS
             success = None
             if add_domain:
                 success = ip_add_update(ind_value,
@@ -701,13 +701,13 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
 
     if dmain:
         dmain.add_relationship(indicator,
-                               'Related_To',
+                               RelationshipTypes.RELATED_TO,
                                analyst="%s" % analyst,
                                get_rels=False)
         dmain.save(username=analyst)
     if ip:
         ip.add_relationship(indicator,
-                            'Related_To',
+                            RelationshipTypes.RELATED_TO,
                             analyst="%s" % analyst,
                             get_rels=False)
         ip.save(username=analyst)
@@ -1097,13 +1097,13 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
     obj_class = class_from_id(type_, id_)
     if obj_class:
         ip_class = IP.objects(ip=ip).first()
-        ind_type = "Address - ipv4-addr"
+        ind_type = IPTypes.IPV4_ADDRESS
         ind_class = Indicator.objects(ind_type=ind_type, value=ip).first()
 
         # setup IP
         if ip_class:
             ip_class.add_relationship(obj_class,
-                                      "Related_To",
+                                      RelationshipTypes.RELATED_TO,
                                       analyst=analyst)
         else:
             ip_class = IP()
@@ -1111,17 +1111,17 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
             ip_class.source = obj_class.source
             ip_class.save(username=analyst)
             ip_class.add_relationship(obj_class,
-                                      "Related_To",
+                                      RelationshipTypes.RELATED_TO,
                                       analyst=analyst)
 
         # setup Indicator
         message = ""
         if ind_class:
             message = ind_class.add_relationship(obj_class,
-                                                 "Related_To",
+                                                 RelationshipTypes.RELATED_TO,
                                                  analyst=analyst)
             ind_class.add_relationship(ip_class,
-                                       "Related_To",
+                                       RelationshipTypes.RELATED_TO,
                                        analyst=analyst)
         else:
             ind_class = Indicator()
@@ -1130,10 +1130,10 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
             ind_class.value = ip
             ind_class.save(username=analyst)
             message = ind_class.add_relationship(obj_class,
-                                                 "Related_To",
+                                                 RelationshipTypes.RELATED_TO,
                                                  analyst=analyst)
             ind_class.add_relationship(ip_class,
-                                       "Related_To",
+                                       RelationshipTypes.RELATED_TO,
                                        analyst=analyst)
 
         # save
@@ -1189,7 +1189,7 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
         tlo = class_from_id(tlo_type, tlo_id)
     if not tlo:
         return {'success': False,
-                'message': "Could not find source %s" % obj_type}
+                'message': "Could not find %s" % tlo_type}
 
     source = tlo.source
     campaign = tlo.campaign
@@ -1199,7 +1199,7 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
     # If value and ind_type provided, use them instead of defaults
     if tlo_type == "Domain":
         value = value or tlo.domain
-        ind_type = ind_type or "URI - Domain Name"
+        ind_type = ind_type or IndicatorTypes.DOMAIN
     elif tlo_type == "IP":
         value = value or tlo.ip
         ind_type = ind_type or tlo.ip_type
@@ -1210,7 +1210,7 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
     if not value or not ind_type: # if not provided & no default
         return {'success': False,
                 'message': "Indicator value & type must be provided"
-                           "for TLO of type %s" % obj_type}
+                           "for TLO of type %s" % tlo_type}
 
     #check if indicator already exists
     if Indicator.objects(ind_type=ind_type,
@@ -1239,7 +1239,7 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
                                analyst = analyst)
 
             tlo.add_relationship(ind,
-                                 "Related_To",
+                                 RelationshipTypes.RELATED_TO,
                                  analyst=analyst)
             tlo.save(username=analyst)
             for rel in tlo.relationships:
@@ -1248,7 +1248,7 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
                     rel_item = Event.objects(id=rel.object_id).first()
                     if rel_item:
                         ind.add_relationship(rel_item,
-                                             "Related_To",
+                                             RelationshipTypes.RELATED_TO,
                                              analyst=analyst)
             ind.save(username=analyst)
             tlo.reload()
@@ -1275,9 +1275,9 @@ def validate_indicator_value(value, ind_type):
     domain = ""
 
     # URL
-    if ind_type == "URI - URL":
+    if ind_type == IndicatorTypes.URI:
         if "://" not in value.split('.')[0]:
-            return ("", "URI - URL must contain protocol "
+            return ("", "URI must contain protocol "
                         "prefix (e.g. http://, https://, ftp://) ")
         domain_or_ip = urlparse.urlparse(value).hostname
         try:
@@ -1287,7 +1287,10 @@ def validate_indicator_value(value, ind_type):
             domain = domain_or_ip
 
     # Email address
-    if ind_type == "Address - e-mail":
+    if ind_type in (IndicatorTypes.EMAIL_ADDRESS,
+                    IndicatorTypes.EMAIL_FROM,
+                    IndicatorTypes.EMAIL_REPLY_TO,
+                    IndicatorTypes.EMAIL_SENDER):
         if '@' not in value:
             return ("", "Email address must contain an '@'")
         domain_or_ip = value.split('@')[-1]
@@ -1301,7 +1304,7 @@ def validate_indicator_value(value, ind_type):
             domain = domain_or_ip
 
     # IPs
-    if "Address - ipv" in ind_type or "cidr" in ind_type:
+    if ind_type in IPTypes.values():
         (ip_address, error) = validate_and_normalize_ip(value, ind_type)
         if error:
             return ("", error)
@@ -1309,7 +1312,8 @@ def validate_indicator_value(value, ind_type):
             return (ip_address, "")
 
     # Domains
-    if ind_type == "URI - Domain Name" or domain:
+    if ind_type in (IndicatorTypes.DOMAIN,
+                    IndicatorTypes.URI) or domain:
         (root, domain, error) = get_valid_root_domain(domain or value)
         if error:
             return ("", error)

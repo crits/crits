@@ -11,7 +11,6 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 
 from crits.core.crits_mongoengine import json_handler
-from crits.core.handlers import get_object_types
 from crits.core.user_tools import user_can_view_data, is_admin
 from crits.core import form_consts
 from crits.indicators.forms import NewIndicatorActionForm, UploadIndicatorCSVForm
@@ -187,14 +186,7 @@ def upload_indicator(request):
                     failed_msg = '<div>%s</div>' % result['message']
 
         if request.POST['svalue'] == "Upload Indicator":
-            all_ind_type_choices = [(c[0],
-                                     c[0],
-                                     {'datatype': c[1].keys()[0],
-                                      'datatype_value': c[1].values()[0]})
-                                    for c in get_object_types(active=False,
-                                                              query={'datatype.file': {'$exists': 0}})]
             form = UploadIndicatorForm(username,
-                                       all_ind_type_choices,
                                        request.POST)
             if form.is_valid():
                 result = handle_indicator_ind(

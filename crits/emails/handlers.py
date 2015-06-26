@@ -42,6 +42,8 @@ from crits.notifications.handlers import remove_user_from_notification
 from crits.samples.handlers import handle_file, handle_uploaded_file, mail_sample
 from crits.services.handlers import run_triage
 
+from crits.vocabulary.relationships import RelationshipTypes
+
 def create_email_field_dict(field_name,
                             field_type,
                             field_value,
@@ -1062,7 +1064,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
     if parent_id and parent_type:
         rel_item = class_from_id(parent_type, parent_id)
         if rel_item:
-            rel_type = 'Extracted_From'
+            rel_type = RelationshipTypes.CONTAINED_WITHIN
             ret = result['object'].add_relationship(rel_item,
                                                     rel_type,
                                                     analyst=analyst,
@@ -1092,7 +1094,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
                        related_type='Email',
                        campaign=campaign,
                        confidence=confidence,
-                       relationship='Extracted_From') == None:
+                       relationship=RelationshipTypes.CONTAINED_WITHIN) == None:
             result['reason'] = "Failed to save attachment.\n<br /><pre>"
             + md5_ + "</pre>"
             return result
@@ -1269,7 +1271,7 @@ def create_indicator_from_header_field(email, header_field, ind_type,
     if newindicator.get('objectid'):
         indicator = Indicator.objects(id=newindicator['objectid']).first()
         results = email.add_relationship(indicator,
-                                         "Related_To",
+                                         RelationshipTypes.RELATED_TO,
                                          analyst=analyst,
                                          get_rels=True)
         if results['success']:

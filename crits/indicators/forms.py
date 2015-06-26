@@ -5,10 +5,11 @@ from django.forms.widgets import RadioSelect
 from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
-from crits.core.widgets import CalWidget, ExtendedChoiceField
-from crits.core.handlers import get_source_names, get_item_names, get_object_types
+from crits.core.widgets import CalWidget
+from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
 from crits.indicators.indicator import IndicatorAction
+from crits.vocabulary.indicators import IndicatorTypes
 
 class IndicatorActionsForm(forms.Form):
     """
@@ -149,9 +150,9 @@ class UploadIndicatorForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    indicator_type = ExtendedChoiceField(required=True)
+    indicator_type = forms.ChoiceField(widget=forms.Select, required=True)
     value = forms.CharField(
-        widget=forms.TextInput(attrs={'size': '100'}),
+        widget=forms.Textarea(attrs={'rows': '5', 'cols': '28'}),
         required=True)
     confidence = forms.ChoiceField(widget=forms.Select, required=True)
     impact = forms.ChoiceField(widget=forms.Select, required=True)
@@ -170,20 +171,14 @@ class UploadIndicatorForm(forms.Form):
         label=form_consts.Indicator.SOURCE_REFERENCE,
         required=False)
 
-    def __init__(self, username, choices=None, *args, **kwargs):
+    def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorForm, self).__init__(*args, **kwargs)
         self.fields['source'].choices = [
             (c.name, c.name) for c in get_source_names(True, True, username)]
         self.fields['source'].initial = get_user_organization(username)
-        if not choices:
-            #only valid types for indicators are those which don't require file upload
-            choices = [
-                (c[0], c[0], {'datatype': c[1].keys()[0],
-                              'datatype_value': c[1].values()[0]})
-                for c in get_object_types(active=True, query={'datatype.file': {'$exists': 0},
-                                                              'datatype.enum': {'$exists': 0}})]
-
-        self.fields['indicator_type'].choices = choices
+        self.fields['indicator_type'].choices = [
+            (c,c) for c in IndicatorTypes.values(sort=True)
+        ]
         self.fields['indicator_type'].widget.attrs = {'class': 'object-types'}
         self.fields['campaign'].choices = [("", "")]
         self.fields['campaign'].choices += [

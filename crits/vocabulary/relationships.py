@@ -42,6 +42,9 @@ class RelationshipTypes(vocab):
     RECEIVED_FROM = "Received From"
     SENT_TO = "Sent To"
 
+    REGISTERED = "Registered"
+    REGISTERED_TO = "Registered To"
+
     RELATED_TO = "Related To"
 
     RESOLVED_TO = "Resolved To"
@@ -113,6 +116,10 @@ class RelationshipTypes(vocab):
             return cls.SENT_TO
         elif relationship == cls.SENT_TO:
             return cls.RECEIVED_FROM
+        elif relationship == cls.REGISTERED:
+            return cls.REGISTERED_TO
+        elif relationship == cls.REGISTERED_TO:
+            return cls.REGISTERED
         elif relationship == cls.RELATED_TO:
             return cls.RELATED_TO
         elif relationship == cls.RESOLVED_TO:

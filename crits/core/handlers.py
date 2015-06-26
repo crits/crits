@@ -616,33 +616,6 @@ def source_remove_all(obj_type, obj_id, name, analyst=None):
     except ValidationError, e:
         return {'success':False, 'message': e}
 
-def get_object_types(active=True, query=None):
-    """
-    Get a list of available ObjectTypes in CRITs sorted alphabetically.
-
-    :param active: Whether or not the ObjectTypes returned should be active.
-    :type active: boolean
-    :param query: Custom query to use by default.
-    :type query: dict
-    :returns: list
-    """
-
-    from crits.objects.object_type import ObjectType
-    if query is None:
-        query = {}
-    if active:
-        query['active'] = "on"
-    result = ObjectType.objects(__raw__=query)
-    object_types = []
-    for r in result:
-        if r.name == r.object_type:
-            object_types.append((r.name, r.datatype))
-        else:
-            object_types.append(("%s - %s" % (r.object_type, r.name),
-                                 r.datatype))
-    object_types.sort()
-    return object_types
-
 def get_sources(obj_type, obj_id, analyst):
     """
     Get a list of sources for a top-level object.

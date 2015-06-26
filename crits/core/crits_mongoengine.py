@@ -1033,9 +1033,7 @@ class EmbeddedObject(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     analyst = StringField()
-    datatype = StringField(required=True)
     date = CritsDateTimeField(default=datetime.datetime.now)
-    name = StringField(required=True)
     source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
     object_type = StringField(required=True, db_field="type")
     value = StringField(required=True)
@@ -1355,15 +1353,13 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         else:
             return []
 
-    def add_object(self, object_type, name, value, source, method, reference,
+    def add_object(self, object_type, value, source, method, reference,
                    analyst, object_item=None):
         """
         Add an object to this top-level object.
 
         :param object_type: The Object Type being added.
         :type object_type: str
-        :param name: The name of the object being added.
-        :type name: str
         :param value: The value of the object being added.
         :type value: str
         :param source: The name of the source adding this object.
@@ -1379,12 +1375,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         if not isinstance(object_item, EmbeddedObject):
-            from crits.objects.handlers import get_objects_datatype
             object_item = EmbeddedObject()
             object_item.analyst = analyst
-            object_item.datatype = get_objects_datatype(name,
-                                                        object_type)
-            object_item.name = name
             object_item.source = [create_embedded_source(source,
                                                          method=method,
                                                          reference=reference,
@@ -1392,27 +1384,24 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             object_item.object_type = object_type
             object_item.value = value
         for o in self.obj:
-            if o.name == name and o.value == value:
+            if o.object_type == object_type and o.value == value:
                 break
         else:
             self.obj.append(object_item)
 
-    def remove_object(self, object_type, name, value):
+    def remove_object(self, object_type, value):
         """
         Remove an object from this top-level object.
 
         :param object_type: The type of the object being removed.
         :type object_type: str
-        :param name: The name of the object being removed.
-        :type name: str
         :param value: The value of the object being removed.
         :type value: str
         """
 
         for o in self.obj:
-            if (o.name == name and
-                    o.object_type == object_type and
-                    o.value == value):
+            if (o.object_type == object_type and
+                o.value == value):
                 from crits.objects.handlers import delete_object_file
                 self.obj.remove(o)
                 delete_object_file(value)
@@ -1451,14 +1440,12 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 user.favorites[type_].remove(str(self.id))
                 user.save()
 
-    def update_object_value(self, object_type, name, value, new_value):
+    def update_object_value(self, object_type, value, new_value):
         """
         Update the value for an object on this top-level object.
 
         :param object_type: The type of the object being updated.
         :type object_type: str
-        :param name: The name of the object being updated.
-        :type name: str
         :param value: The value of the object being updated.
         :type value: str
         :param new_value: The new value of the object being updated.
@@ -1466,13 +1453,12 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         for c, o in enumerate(self.obj):
-            if (o.name == name and
-                o.object_type == object_type and
+            if (o.object_type == object_type and
                 o.value == value):
                 self.obj[c].value = new_value
                 break
 
-    def update_object_source(self, object_type, name, value,
+    def update_object_source(self, object_type, value,
                              new_source=None, new_method='',
                              new_reference='', analyst=None):
         """
@@ -1480,8 +1466,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         :param object_type: The type of the object being updated.
         :type object_type: str
-        :param name: The name of the object being updated.
-        :type name: str
         :param value: The value of the object being updated.
         :type value: str
         :param new_source: The name of the new source.
@@ -1495,8 +1479,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         for c, o in enumerate(self.obj):
-            if (o.name == name and
-                o.object_type == object_type and
+            if (o.object_type == object_type and
                 o.value == value):
                 if not analyst:
                     analyst = self.obj[c].source[0].intances[0].analyst
