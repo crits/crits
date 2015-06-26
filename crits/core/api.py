@@ -564,11 +564,13 @@ class CRITsAPIResource(MongoEngineResource):
 
         import crits.actors.handlers as ah
         import crits.core.handlers as coreh
+        import crits.objects.handlers as objh
         import crits.relationships.handlers as relh
         import crits.services.handlers as servh
 
         actions = {
             'Common': {
+                'add_object': objh.add_object,
                 'add_releasability': coreh.add_releasability,
                 'forge_relationship': relh.forge_relationship,
                 'run_service': servh.run_service,
