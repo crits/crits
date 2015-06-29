@@ -28,7 +28,7 @@ function updateObjectSource(value, settings, elem, update) {
         return value;
 }
 
-function getAllObjectTypes(sel, filter) {
+function getAllObjectTypes(sel) {
     if (typeof(obj_types_url) != "undefined") {
         var return_data = {};
         $.ajax({

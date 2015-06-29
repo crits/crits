@@ -17,15 +17,33 @@ from crits.indicators.forms import NewIndicatorActionForm, UploadIndicatorCSVFor
 from crits.indicators.forms import UploadIndicatorForm, UploadIndicatorTextForm
 from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
-from crits.indicators.handlers import add_new_indicator_action, indicator_remove
-from crits.indicators.handlers import handle_indicator_csv, handle_indicator_ind
-from crits.indicators.handlers import action_add, action_update, action_remove
-from crits.indicators.handlers import activity_add, activity_update, activity_remove
-from crits.indicators.handlers import ci_update, create_indicator_and_ip
-from crits.indicators.handlers import set_indicator_type, get_indicator_details
-from crits.indicators.handlers import generate_indicator_jtable, generate_indicator_csv
-from crits.indicators.handlers import create_indicator_from_tlo
+from crits.indicators.handlers import (
+    add_new_indicator_action,
+    indicator_remove,
+    handle_indicator_csv,
+    handle_indicator_ind,
+    action_add,
+    action_update,
+    action_remove,
+    activity_add,
+    activity_update,
+    activity_remove,
+    ci_update,
+    create_indicator_and_ip,
+    set_indicator_type,
+    set_indicator_threat_type,
+    set_indicator_attack_type,
+    get_indicator_details,
+    generate_indicator_jtable,
+    generate_indicator_csv,
+    create_indicator_from_tlo
+)
 
+from crits.vocabulary.indicators import (
+    IndicatorTypes,
+    IndicatorAttackTypes,
+    IndicatorThreatTypes
+)
 
 @user_passes_test(user_can_view_data)
 def indicator(request, indicator_id):
@@ -234,37 +252,6 @@ def upload_indicator(request):
             return render_to_response('file_upload_response.html',
                                       {'response': json.dumps(message)},
                                       RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def update_indicator_type(request, indicator_id):
-    """
-    Update an indicator's type. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        if 'type' in request.POST and len(request.POST['type']) > 0:
-            result = set_indicator_type(indicator_id,
-                                        request.POST['type'],
-                                        '%s' % request.user.username)
-            if result['success']:
-                message = {'success': True}
-            else:
-                message = {'success': False}
-        else:
-            message = {'success': False}
-        return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
-    else:
-        error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error": error},
-                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def add_update_action(request, method, indicator_id):
@@ -537,3 +524,133 @@ def indicator_from_tlo(request):
             'message':  "Expected AJAX POST"
         }
     return HttpResponse(json.dumps(result), mimetype="application/json")
+
+@user_passes_test(user_can_view_data)
+def get_indicator_type_dropdown(request):
+    """
+    Get Indicator type dropdown data. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST':
+        if request.is_ajax():
+            dd_final = {}
+            list_type = request.POST.get('type', None)
+            if list_type == 'indicator_type':
+                type_list = IndicatorTypes.values(sort=True)
+            elif list_type == 'threat_type':
+                type_list = IndicatorThreatTypes.values(sort=True)
+            elif list_type == 'attack_type':
+                type_list = IndicatorAttackTypes.values(sort=True)
+            else:
+                type_list = []
+            for type_ in type_list:
+                dd_final[type_] = type_
+            result = {'types': dd_final}
+            return HttpResponse(json.dumps(result), mimetype="application/json")
+        else:
+            error = "Expected AJAX"
+            return render_to_response("error.html",
+                                      {"error" : error },
+                                      RequestContext(request))
+    else:
+        error = "Expected POST"
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def update_indicator_type(request, indicator_id):
+    """
+    Update an indicator's type. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param indicator_id: The ObjectId of the indicator to update.
+    :type indicator_id: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        if 'type' in request.POST and len(request.POST['type']) > 0:
+            result = set_indicator_type(indicator_id,
+                                        request.POST['type'],
+                                        '%s' % request.user.username)
+            if result['success']:
+                message = {'success': True}
+            else:
+                message = {'success': False}
+        else:
+            message = {'success': False}
+        return HttpResponse(json.dumps(message),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error": error},
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def update_indicator_threat_type(request, indicator_id):
+    """
+    Update an indicator's threat type. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param indicator_id: The ObjectId of the indicator to update.
+    :type indicator_id: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        if 'type' in request.POST and len(request.POST['type']) > 0:
+            result = set_indicator_threat_type(indicator_id,
+                                        request.POST['type'],
+                                        '%s' % request.user.username)
+            if result['success']:
+                message = {'success': True}
+            else:
+                message = {'success': False}
+        else:
+            message = {'success': False}
+        return HttpResponse(json.dumps(message),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error": error},
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def update_indicator_attack_type(request, indicator_id):
+    """
+    Update an indicator's attack type. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param indicator_id: The ObjectId of the indicator to update.
+    :type indicator_id: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        if 'type' in request.POST and len(request.POST['type']) > 0:
+            result = set_indicator_attack_type(indicator_id,
+                                        request.POST['type'],
+                                        '%s' % request.user.username)
+            if result['success']:
+                message = {'success': True}
+            else:
+                message = {'success': False}
+        else:
+            message = {'success': False}
+        return HttpResponse(json.dumps(message),
+                            mimetype="application/json")
+    else:
+        error = "Expected AJAX POST"
+        return render_to_response("error.html",
+                                  {"error": error},
+                                  RequestContext(request))

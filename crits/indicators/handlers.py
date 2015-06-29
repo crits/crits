@@ -820,6 +820,62 @@ def set_indicator_type(indicator_id, itype, username):
         except ValidationError:
             return {'success': False}
 
+def set_indicator_threat_type(id_, threat_type, user):
+    """
+    Set the Indicator threat type.
+
+    :param indicator_id: The ObjectId of the indicator to update.
+    :type indicator_id: str
+    :param threat_type: The new indicator threat type.
+    :type threat_type: str
+    :param user: The user updating the indicator.
+    :type user: str
+    :returns: dict with key "success" (boolean)
+    """
+
+    # check to ensure we're not duping an existing indicator
+    indicator = Indicator.objects(id=id_).first()
+    value = indicator.value
+    ind_check = Indicator.objects(threat_type=threat_type, value=value).first()
+    if ind_check:
+        # we found a dupe
+        return {'success': False}
+    else:
+        try:
+            indicator.threat_type = threat_type
+            indicator.save(username=user)
+            return {'success': True}
+        except ValidationError:
+            return {'success': False}
+
+def set_indicator_attack_type(id_, attack_type, user):
+    """
+    Set the Indicator attack type.
+
+    :param indicator_id: The ObjectId of the indicator to update.
+    :type indicator_id: str
+    :param attack_type: The new indicator attack type.
+    :type attack_type: str
+    :param user: The user updating the indicator.
+    :type user: str
+    :returns: dict with key "success" (boolean)
+    """
+
+    # check to ensure we're not duping an existing indicator
+    indicator = Indicator.objects(id=id_).first()
+    value = indicator.value
+    ind_check = Indicator.objects(attack_type=attack_type, value=value).first()
+    if ind_check:
+        # we found a dupe
+        return {'success': False}
+    else:
+        try:
+            indicator.attack_type = attack_type
+            indicator.save(username=user)
+            return {'success': True}
+        except ValidationError:
+            return {'success': False}
+
 def add_new_indicator_action(action, analyst):
     """
     Add a new indicator action to CRITs.

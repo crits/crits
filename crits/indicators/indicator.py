@@ -12,6 +12,11 @@ from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.fields import CritsDateTimeField
 from crits.indicators.migrate import migrate_indicator
 
+from crits.vocabulary.indicators import (
+    IndicatorAttackTypes,
+    IndicatorThreatTypes
+)
+
 
 class IndicatorAction(CritsDocument, CritsSchemaDocument, Document):
     """
@@ -83,8 +88,10 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         "crits_type": 'Indicator',
         "latest_schema_version": 3,
         "schema_doc": {
+            'type': 'The type of this indicator.',
+            'threat_type': 'The threat type of this indicator.',
+            'attack_type': 'The attack type of this indicator.',
             'value': 'The value of this indicator',
-            'type': 'The type of this indicator based on CybOX Object Types',
             'created': 'The ISODate when this indicator was entered',
             'modified': 'The ISODate when this indicator was last modified',
             'actions': 'List [] of actions taken for this indicator',
@@ -125,6 +132,8 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
     impact = EmbeddedDocumentField(EmbeddedImpact,
                                    default=EmbeddedImpact())
     ind_type = StringField(db_field="type")
+    threat_type = StringField(default=IndicatorThreatTypes.UNKNOWN)
+    attack_type = StringField(default=IndicatorAttackTypes.UNKNOWN)
     value = StringField()
 
     def migrate(self):
