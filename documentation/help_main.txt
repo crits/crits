@@ -1881,3 +1881,49 @@ Unique POST Parameters:
 :organization_id: The ID of the organization if they have one.
 :title: The job title of the Target.
 :note: Notes about the Target.
+
+
+Updating TLOs through the API using PATCH
+-----------------------------------------
+
+Over time we are beginning to expose handler functions to the API allowing you
+to make modifications to TLOs using them. This requires a PATCH request. We will
+not document the specific parameters to include as they will change along with
+the handler they map to. For information on what parameters to include, look at
+the handlers and provide the appropriate arguments. A couple notes, however:
+
+:`id_`: Anywhere you notice an `id_` argument to a handler, we provide it for you.
+:`type_`: Anywhere you notice a `type_` argument to a handler, we provide it for you.
+:user: Anywhere you notice a "user" argument to a handler, we provide it for you.
+
+Attempts at providing those values yourself will be dropped and replaced by the
+values we provide. For example, if you wanted to add releasability to a Sample,
+you don't need to provide a 'Sample' type nor the ObjectId of the sample since
+we can determine that from your PATCH request. PATCH requests are submitted to
+the details URL for a TLO like so:
+
+    /api/v1/samples/<object_id>/?action=add_releasability
+
+You would then look at what the "add_releasability" handler requires for
+arguments, and provide them in your request.
+
+Here is a list of currently exposed handlers:
+
+
+Common PATCH actions for all TLOs
+---------------------------------
+
+:add_object:
+:add_releasability:
+:forge_relationship:
+:run_service:
+
+Actor PATCH actions
+-------------------
+
+:update_actor_tags:
+:attribute_actor_identifier:
+:set_identifier_confidence:
+:remove_attribution:
+:set_actor_name:
+:update_actor_aliases:

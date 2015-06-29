@@ -483,6 +483,9 @@ phrase.</p>
 <li><a class="reference internal" href="#screenshot-api" id="id97">17.23&nbsp;&nbsp;&nbsp;Screenshot API</a></li>
 <li><a class="reference internal" href="#service-api" id="id98">17.24&nbsp;&nbsp;&nbsp;Service API</a></li>
 <li><a class="reference internal" href="#target-api" id="id99">17.25&nbsp;&nbsp;&nbsp;Target API</a></li>
+<li><a class="reference internal" href="#updating-tlos-through-the-api-using-patch" id="id100">17.26&nbsp;&nbsp;&nbsp;Updating TLOs through the API using PATCH</a></li>
+<li><a class="reference internal" href="#common-patch-actions-for-all-tlos" id="id101">17.27&nbsp;&nbsp;&nbsp;Common PATCH actions for all TLOs</a></li>
+<li><a class="reference internal" href="#actor-patch-actions" id="id102">17.28&nbsp;&nbsp;&nbsp;Actor PATCH actions</a></li>
 </ul>
 </li>
 </ul>
@@ -2736,6 +2739,81 @@ field, &quot;log_level&quot; will be set to &quot;info&quot; if it is not provid
 <tr class="field"><th class="field-name">title:</th><td class="field-body">The job title of the Target.</td>
 </tr>
 <tr class="field"><th class="field-name">note:</th><td class="field-body">Notes about the Target.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="updating-tlos-through-the-api-using-patch">
+<h2><a class="toc-backref" href="#id100">17.26&nbsp;&nbsp;&nbsp;Updating TLOs through the API using PATCH</a></h2>
+<p>Over time we are beginning to expose handler functions to the API allowing you
+to make modifications to TLOs using them. This requires a PATCH request. We will
+not document the specific parameters to include as they will change along with
+the handler they map to. For information on what parameters to include, look at
+the handlers and provide the appropriate arguments. A couple notes, however:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name"><cite>id_</cite>:</th><td class="field-body">Anywhere you notice an <cite>id_</cite> argument to a handler, we provide it for you.</td>
+</tr>
+<tr class="field"><th class="field-name"><cite>type_</cite>:</th><td class="field-body">Anywhere you notice a <cite>type_</cite> argument to a handler, we provide it for you.</td>
+</tr>
+<tr class="field"><th class="field-name">user:</th><td class="field-body">Anywhere you notice a &quot;user&quot; argument to a handler, we provide it for you.</td>
+</tr>
+</tbody>
+</table>
+<p>Attempts at providing those values yourself will be dropped and replaced by the
+values we provide. For example, if you wanted to add releasability to a Sample,
+you don't need to provide a 'Sample' type nor the ObjectId of the sample since
+we can determine that from your PATCH request. PATCH requests are submitted to
+the details URL for a TLO like so:</p>
+<blockquote>
+/api/v1/samples/&lt;object_id&gt;/?action=add_releasability</blockquote>
+<p>You would then look at what the &quot;add_releasability&quot; handler requires for
+arguments, and provide them in your request.</p>
+<p>Here is a list of currently exposed handlers:</p>
+</div>
+<div class="section" id="common-patch-actions-for-all-tlos">
+<h2><a class="toc-backref" href="#id101">17.27&nbsp;&nbsp;&nbsp;Common PATCH actions for all TLOs</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">add_object:</th><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">add_releasability:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">forge_relationship:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name">run_service:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="actor-patch-actions">
+<h2><a class="toc-backref" href="#id102">17.28&nbsp;&nbsp;&nbsp;Actor PATCH actions</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name" colspan="2">update_actor_tags:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">attribute_actor_identifier:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">set_identifier_confidence:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">remove_attribution:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name">set_actor_name:</th><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">update_actor_aliases:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
