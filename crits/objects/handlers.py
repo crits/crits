@@ -17,6 +17,10 @@ from crits.pcaps.handlers import handle_pcap_file
 from crits.relationships.handlers import forge_relationship
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.indicators import (
+    IndicatorAttackTypes,
+    IndicatorThreatTypes
+)
 
 
 def validate_and_add_new_handler_object(data, rowData, request, errors,
@@ -302,6 +306,8 @@ def add_object(type_, id_, object_type, source, method,
                 ind_res = handle_indicator_ind(value,
                                                source,
                                                object_type,
+                                               IndicatorThreatTypes.UNKNOWN,
+                                               IndicatorAttackTypes.UNKNOWN,
                                                user,
                                                method,
                                                reference,

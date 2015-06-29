@@ -1691,6 +1691,8 @@ Unique POST Parameters:
 - Must be one of "unknown", "benign", "low", "medium", "high".
 
 :type: The type of the Indicator.
+:threat_type: The threat type of the Indicator.
+:attack_type: The attack type of the Indicator.
 :value: Indicator value.
 
 Indicator Activity API

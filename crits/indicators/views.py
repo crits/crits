@@ -211,6 +211,8 @@ def upload_indicator(request):
                     request.POST['value'],
                     request.POST['source'],
                     request.POST['indicator_type'],
+                    request.POST['threat_type'],
+                    request.POST['attack_type'],
                     username,
                     request.POST['method'],
                     request.POST['reference'],

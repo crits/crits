@@ -9,7 +9,11 @@ from crits.core.widgets import CalWidget
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
 from crits.indicators.indicator import IndicatorAction
-from crits.vocabulary.indicators import IndicatorTypes
+from crits.vocabulary.indicators import (
+    IndicatorTypes,
+    IndicatorThreatTypes,
+    IndicatorAttackTypes
+)
 
 class IndicatorActionsForm(forms.Form):
     """
@@ -151,6 +155,8 @@ class UploadIndicatorForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     indicator_type = forms.ChoiceField(widget=forms.Select, required=True)
+    threat_type = forms.ChoiceField(widget=forms.Select, required=True)
+    attack_type = forms.ChoiceField(widget=forms.Select, required=True)
     value = forms.CharField(
         widget=forms.Textarea(attrs={'rows': '5', 'cols': '28'}),
         required=True)
@@ -179,6 +185,14 @@ class UploadIndicatorForm(forms.Form):
         self.fields['indicator_type'].choices = [
             (c,c) for c in IndicatorTypes.values(sort=True)
         ]
+        self.fields['threat_type'].choices = [
+            (c,c) for c in IndicatorThreatTypes.values(sort=True)
+        ]
+        self.fields['threat_type'].initial = IndicatorThreatTypes.UNKNOWN
+        self.fields['attack_type'].choices = [
+            (c,c) for c in IndicatorAttackTypes.values(sort=True)
+        ]
+        self.fields['attack_type'].initial = IndicatorAttackTypes.UNKNOWN
         self.fields['indicator_type'].widget.attrs = {'class': 'object-types'}
         self.fields['campaign'].choices = [("", "")]
         self.fields['campaign'].choices += [

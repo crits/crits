@@ -52,6 +52,8 @@ class IndicatorResource(CRITsAPIResource):
         analyst = bundle.request.user.username
         value = bundle.data.get('value', None)
         ctype = bundle.data.get('type', None)
+        threat_type = bundle.data.get('threat_type', None)
+        attack_type = bundle.data.get('attack_type', None)
         source = bundle.data.get('source', None)
         reference = bundle.data.get('reference', None)
         method = bundle.data.get('method', None)
@@ -67,6 +69,8 @@ class IndicatorResource(CRITsAPIResource):
         result =  handle_indicator_ind(value,
                                        source,
                                        ctype,
+                                       threat_type,
+                                       attack_type,
                                        analyst,
                                        method,
                                        reference,

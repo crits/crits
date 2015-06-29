@@ -43,6 +43,10 @@ from crits.samples.handlers import handle_file, handle_uploaded_file, mail_sampl
 from crits.services.handlers import run_triage
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.indicators import (
+    IndicatorAttackTypes,
+    IndicatorThreatTypes
+)
 
 def create_email_field_dict(field_name,
                             field_type,
@@ -1267,6 +1271,8 @@ def create_indicator_from_header_field(email, header_field, ind_type,
     newindicator = handle_indicator_ind(value,
                                         email.source,
                                         ind_type,
+                                        threat_type=IndicatorThreatTypes.UNKNOWN,
+                                        attack_type=IndicatorAttackTypes.UNKNOWN,
                                         analyst=analyst)
     if newindicator.get('objectid'):
         indicator = Indicator.objects(id=newindicator['objectid']).first()

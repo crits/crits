@@ -3,7 +3,6 @@ import json
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.core.validators import validate_ipv4_address, validate_ipv6_address
-from django.core.validators import validate_ipv46_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -23,6 +22,11 @@ from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict, validate_and_add_new_handler_object
 from crits.services.handlers import run_triage, get_supported_services
+
+from crits.vocabulary.indicators import (
+    IndicatorAttackTypes,
+    IndicatorThreatTypes
+)
 
 def generate_ip_csv(request):
     """
@@ -443,6 +447,8 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
         handle_indicator_ind(ip_address,
                              source,
                              ip_type,
+                             IndicatorThreatTypes.UNKNOWN,
+                             IndicatorAttackTypes.UNKNOWN,
                              analyst,
                              source_method,
                              indicator_reference,
