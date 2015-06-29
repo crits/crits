@@ -16,7 +16,7 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
         "latest_schema_version": 3,
         "schema_doc": {
             'ip': 'The IP address',
-            'type': ('The type of IP address based on a subset of CybOX Address'
+            'type': ('The type of IP address.'
                     ' Object Types'),
         },
         "jtable_opts": {

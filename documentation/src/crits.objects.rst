@@ -20,21 +20,6 @@ crits.objects.handlers module
     :undoc-members:
     :show-inheritance:
 
-crits.objects.object_mapper module
-----------------------------------
-
-.. automodule:: crits.objects.object_mapper
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-crits.objects.object_type module
---------------------------------
-
-.. automodule:: crits.objects.object_type
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 crits.objects.views module
 --------------------------

@@ -45,7 +45,6 @@ def class_from_id(type_, _id):
     from crits.exploits.exploit import Exploit
     from crits.indicators.indicator import Indicator, IndicatorAction
     from crits.ips.ip import IP
-    from crits.objects.object_type import ObjectType
     from crits.pcaps.pcap import PCAP
     from crits.raw_data.raw_data import RawData, RawDataType
     from crits.samples.sample import Sample
@@ -89,8 +88,6 @@ def class_from_id(type_, _id):
         return IndicatorAction.objects(id=_id).first()
     elif type_ == 'IP':
         return IP.objects(id=_id).first()
-    elif type_ == 'ObjectType':
-        return ObjectType.objects(id=_id).first()
     elif type_ == 'PCAP':
         return PCAP.objects(id=_id).first()
     elif type_ == 'RawData':
@@ -218,7 +215,6 @@ def class_from_type(type_):
     from crits.exploits.exploit import Exploit
     from crits.indicators.indicator import Indicator, IndicatorAction
     from crits.ips.ip import IP
-    from crits.objects.object_type import ObjectType
     from crits.pcaps.pcap import PCAP
     from crits.raw_data.raw_data import RawData, RawDataType
     from crits.samples.sample import Sample
@@ -251,8 +247,6 @@ def class_from_type(type_):
         return IndicatorAction
     elif type_ == 'IP':
         return IP
-    elif type_ == 'ObjectType':
-        return ObjectType
     elif type_ == 'PCAP':
         return PCAP
     elif type_ == 'RawData':

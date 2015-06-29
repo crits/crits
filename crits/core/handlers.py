@@ -1241,14 +1241,7 @@ def get_item_state(type_, name):
     :returns: True if active, False if inactive.
     """
 
-    if type_ == 'ObjectType':
-        a = name.split(" - ")
-        if len(a) == 1:
-            query = {'name': name}
-        else:
-            query = {'type': a[0], 'name': a[1]}
-    else:
-        query = {'name': name}
+    query = {'name': name}
     obj = class_from_type(type_).objects(__raw__=query).first()
     if not obj:
         return False
