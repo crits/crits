@@ -3,6 +3,63 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: mgoffin
+Date: 2015-06-30
+
+    CybOX and STIX have been completely removed from core. There was too much
+    arguing and back-and-forth between the pro-standards and anti-standards
+    community members for it to stay as it is. Half of the people didn't want to
+    be forced to use them at all while the other half was not satisfied at the
+    level of feature parity and compatibility CRITs had with the standards.
+
+    The compromise that we came up with is to move any and all features that
+    involved CybOX/STIX over to the TAXII Service. That way if you use core you
+    are not required to interact or use the standards, but if you do want them
+    you can leverage the import/export capabilities via an optional service.
+
+    The following changes have taken place:
+
+        - CRITs has its own set of vocabularies for things like Event Type,
+          Relationships, Objects, Indicators, Actors, etc. Some of the values
+          might be the same, similar, or different than what was there before
+          depending on if those values made sense.
+            - We are not migrating old values and leaving the mapping of old
+              values to new ones up to organizations to handle. Due to the
+              confusion of what some of the old CybOX/STIX values meant, some
+              people used them in different ways and we didn't want to make
+              assumptions.
+        - STIX Import is gone and now a part of the TAXII Service. If you use
+          the TAXII service it can be found in the Nav Menu under "Services".
+        - Exporting a TLO in STIX format requires the TAXII Service's "Preview"
+          feature.
+        - The "Standards" API is gone but will work again if you include the
+          TAXII Service which extends the API.
+        - The TAXII Service has a new set of mappings to go from
+          CRITs->Standards->CRITs for the new vocabularies. It is less robust
+          than before but we are leaving it this way so people can submit PRs
+          for expanded support.
+        - Downloading a TLO no longer provides a STIX option. It is now
+          JSON-based.
+        - If you wish to upload a file as an Object, use the "File Upload"
+          Object Type.
+        - Indicators now have a "Threat Type" and "Attack Type" to provide more
+          context into what the Indicator means.
+        - The UI will now prevent you from trying to create an Indicator out of
+          an existing Object if there is no matching Indicator Type.
+        - If you had custom vocabulary additions before, we no longer use the
+          database to query for vocabulary values. They are now located in the
+          "vocabulary" directory of the project. You can add your vocabulary
+          items there as necessary and handle merge conflicts if needed.
+
+    This separation should put CRITs in the right position. We want to keep
+    CRITs as a collaborative analyst environment, not a sharing platform. If you
+    want to share by extending it with services that's excellent! CybOX and STIX
+    support can be expanded upon and rev'd more frequently in the TAXII Service
+    so people don't have to wait for new CRITs releases to get access to newer
+    versions of the standards. The core developers don't use the standards so
+    they are looking to the community to contribute enhancements to CybOX/STIX
+    support in the TAXII Service if it is something they need/want.
+
 Author: brlogan
 Date: 2015-05-07
 
