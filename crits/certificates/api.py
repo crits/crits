@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.certificates.certificate import Certificate
 from crits.certificates.handlers import handle_cert_file
@@ -18,7 +17,7 @@ class CertificateResource(CRITsAPIResource):
 
     class Meta:
         object_class = Certificate
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "certificates"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

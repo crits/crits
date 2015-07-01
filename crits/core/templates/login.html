@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% csrf_token %}
 
 <script>
     var reset_password = "{% url 'crits.core.views.reset_password' %}";
 </script>
 
-  {% if reset %}
+    {% if reset %}
     <div class="reset_password">
         Fill out the form below to reset your password.
         <table class="vertical">
@@ -58,28 +59,27 @@
         <button class="form_submit_button" id="reset_password" data-state="email">Send Email</button>
         <span id="ajax_response"></span>
     </div>
-  {% endif %}
-  <div class="login_box" style="text-align:center;margin-top:210px">
-    <p>
-      <font size="3">
-        {{ message|safe}}
-      </font>
-    </p>
-  </div>
+    {% endif %}
+    <div class="login_box" style="text-align:center;margin-top:210px">
+        <p>
+            <font size="3">
+                {{ message|safe}}
+            </font>
+        </p>
+    </div>
 
-  {% if login %}
+    {% if login %}
     <div id="login_form" class="login_box">
         <form id="login_form_container" method="POST" action="javascript:processLogin();">
-        <table class="vertical">
-            <thead>
-            </thead>
+        <table class="vertical" width="100%">
+            <thead></thead>
             <tbody>
                 {% if show_auth %}
                 <tr id="login_uname">
                     <td class="key">
                         Username
                     </td>
-                    <td>
+                    <td style="width: 76%">
                         <input id="l_username" type="textbox" size="40" name="username" class="textbox" autofocus>
                     </td>
                 </tr>
@@ -92,6 +92,7 @@
                     </td>
                 </tr>
                 {% endif %}
+                {% if not crits_config.totp_web == "Disabled" %}
                 <tr id="login_tkn">
                     <td class="key">
                         Token
@@ -105,6 +106,7 @@
                         </p>
                     </td>
                 </tr>
+                {% endif %}
             </tbody>
         </table>
         <br />
@@ -113,7 +115,7 @@
         </form>
         <span id="ajax_response"></span>
     </div>
-  {% endif %}
+    {% endif %}
 
     <img src="/new_images/crits_logo.png" class="login_logo"></img>
 

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Internal Server Error{% endblock %}
+{% block content %}
+
+<span class="error_page">
+    Error: 500 (Internal Server Error)
+    <br />
+    <br />
+    <table>
+        <tr>
+            <td style="text-align: left;"><b>Exception:</b></td><td>{{exception}}</td>
+        </tr>
+        <tr>
+            <td style="text-align: left;"><b>Value:</b></td><td>{{value}}</td>
+        </tr>
+    </table>
+    <br />
+    You have encountered a bug! Please report the circumstances to the application administrator.
+</span>
+
+{% endblock %}

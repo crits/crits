@@ -3,7 +3,6 @@ import datetime
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.indicators.indicator import Indicator
 from crits.indicators.handlers import handle_indicator_ind, activity_add
@@ -20,7 +19,7 @@ class IndicatorResource(CRITsAPIResource):
 
     class Meta:
         object_class = Indicator
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "indicators"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
@@ -66,19 +65,19 @@ class IndicatorResource(CRITsAPIResource):
         ticket = bundle.data.get('ticket', None)
 
         result =  handle_indicator_ind(value,
-                                        source,
-                                        reference,
-                                        ctype,
-                                        analyst,
-                                        method,
-                                        add_domain,
-                                        add_relationship,
-                                        campaign,
-                                        campaign_confidence,
-                                        confidence,
-                                        impact,
-                                        bucket_list,
-                                        ticket)
+                                       source,
+                                       ctype,
+                                       analyst,
+                                       method,
+                                       reference,
+                                       add_domain,
+                                       add_relationship,
+                                       campaign,
+                                       campaign_confidence,
+                                       confidence,
+                                       impact,
+                                       bucket_list,
+                                       ticket)
 
         content = {'return_code': 0,
                    'type': 'Indicator'}

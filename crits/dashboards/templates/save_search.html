@@ -11,6 +11,7 @@
 {% endcomment %}
 {% block javascript_includes %}
     <script>
+        var $gridster;
         //tabs to be shown
         {%if not isDefaultOnDashboard%}
             var tabs = [{% for result in results %}
@@ -314,13 +315,8 @@
         var lastSort = null;
         //used for pagination
         var currentPage = 1;
-        //used for pinning and removing tables
-        {% if maxRows %}
-            var maxRows = parseInt("{{maxRows}}");
-        {% else %}
-            var maxRows = 5;
-        {% endif %}
         var gridWidth = $('#grid').width();
+        var isGridsterInitalized = false;
         function create_pivot_links(data) {
             var campBase = "/campaigns/details/__CAMPAIGN__/";
             var items = data.split('|||');
@@ -374,7 +370,8 @@
                                 var record = records[i];
                                 for(k in record)
                                     if(k.indexOf('count') >= 0 || k == "to" || k == "length" ||
-                                    		k == "size" || (k == "version" && object.type != "AnalysisResult")) 
+                                            k == "size" || k == 'results' ||
+                                            (k == "version" && object.type != "AnalysisResult")) 
                                         record[k] = parseInt(record[k]);
                                     else if(k == 'campaign')
                                     	record[k] = create_pivot_links(record[k]);
@@ -456,8 +453,10 @@
         //if all the images have been loaded, refresh the grid
         function refreshGridIfLastImage(img) {
             imgCount--;
-            if (imgCount == 0)
+            if (imgCount == 0) {
                 refreshGrid();
+                correctGridsterSizeY();
+            }
         }
         //show the data passed into it on the grid
         function showData(data) {
@@ -475,6 +474,9 @@
                 });
                 refreshForImages = false;
             }
+            if (!isGridsterInitalized)
+                setUpGridster();
+            correctGridsterSizeY();
         }
         //refreshes the grid and then readds the droppable event
         function refreshGrid() {
@@ -546,7 +548,6 @@
 	        {% endif %}
             if(error)
             	return false;
-            var tempMaxRows = $('#maxRows').val();
             //set up the data to be sent via ajax
             var data = {
             		newDashName: newDashName,
@@ -554,12 +555,12 @@
                     userId: "{{ user.id }}",
                     tableName:tableName,
                     query: '{{ term }}',
-                    tableWidth: gridWidth/$('#container').width()*100,
+                    sizex: $('#gridster-li').attr('data-sizex'),
                     object_type: currentlyShownObject.type,
                     columns: JSON.stringify(w2ui['grid'].columns),
                     sortBy: JSON.stringify(currentlyShownObject.sortBy),
                     isDefaultOnDashboard: '{{isDefaultOnDashboard}}',
-                    maxRows: tempMaxRows,
+                    maxRows: $('#maxRows').val(),
                     {% if tableId %}
                             tableId: '{{tableId}}'
                     {% endif %}
@@ -586,7 +587,6 @@
                     {%if not tableId%}
                        $("#pinSearchForm")[0].reset();
                     {%endif %}
-                 maxRows = tempMaxRows;
                 },
                 error: function(data) {
                     showResultsDiv("An unexpected error occurred while saving table. Please refresh and try again.", true);
@@ -776,6 +776,7 @@
                 onClick: function (event) {
                 	w2ui['grid'].sortData = [];
                     changeGrid(getGridObjectFromTab(event.object));
+                    showResultsDiv("");
                 },
                 onClose: function(event) {
                     var target = event.target;
@@ -845,15 +846,18 @@
                         }
                     };
                 },
+                onRefresh: function() {
+                    if (w2ui['grid']) {
+                        var cols = w2ui['grid'].columns;
+                        for(var i in cols) {
+                            var value = true;
+                            if (i == cols.length-1)
+                                value = false;
+                            cols[i].resizable = value;
+                        }
+                    }
+                }
             });
-            $('#innerWrapper').resizable({
-                handles: 'e, w',
-                 start: function() {
-                 },
-                 stop: function(e) {
-                     gridWidth = $('#grid').width();
-                 }
-             });
             //load the initial data in the grid
             loadData(currentlyShownObject);
             //on add Tab change. append new tab
@@ -883,6 +887,28 @@
                 w2ui['grid'].sort("{{sortBy.field}}", "{{sortBy.direction}}");
             {% endif %}
         });         //document.ready
+        $(window).load(function() {
+            window.setTimeout(function() {
+                refreshGrid();
+            }, 2000);
+        });
+        function correctGridsterSizeY() {
+            var baseY = $gridster.options.widget_base_dimensions[1];
+            var margY = $gridster.options.widget_margins[1];
+            var $this = $('#gridster-li');
+            var maxNeededHeight = $('#tab-content').height();
+            var currentSizeY = $this.attr('data-sizey');
+            for (var i = 1; i < 100; i++) {
+                if (gridster_getTestHeight(i) > maxNeededHeight) {
+                    if (i != currentSizeY)
+                        $gridster.resize_widget($this, null, i);
+                    break;
+                }
+            }
+            function gridster_getTestHeight(x) {
+                return (x*baseY) + ((x-1) * margY)*2;
+            }
+        }
         $("#pinToDashboard").click(function(e) {
             e.preventDefault();
             $("#pinToDashboardDialog").dialog("open");
@@ -974,6 +1000,26 @@
 	    	else
 	    		$('#newDashWrapper').hide();
 	    });
+        function setUpGridster() {
+            var dashWidth = $('#container').width()*.99;
+            var dashHeight = $('#container').height();
+            $gridster = $('#innerWrapper ul').gridster({
+                widget_margins: [3, 3],
+                widget_base_dimensions: [(dashWidth-294)/50, (dashHeight-294)/50],
+                min_cols: 50,
+                min_rows: 50,
+                resize: {
+                    enabled: true,
+                    axes: ['x'],
+                    stop: function(e, ui, $widget) {
+                        w2ui['grid'].refresh();
+                        gridWidth = $('#grid').width();
+                    }
+                }
+            }).data('gridster');
+            $gridster.disable();
+            isGridsterInitalized = true;
+        }
     </script>
 {% endblock %}
 {% block content %}
@@ -995,25 +1041,29 @@
 	        <div id='garbageContent'></div>
 	    </div>
 	    <div class='clear'></div>
-	    <div id='wrapper' class='{{dashtheme}}-theme draggable' style='width:{% if tableWidth %}{{tableWidth}}{% else %}100{% endif %}%;'>
+	    <div id='wrapper' class='{{dashtheme}}-theme draggable' style='width:100%;'>
 		    <div id='innerWrapper'>
 			    <div id="tabs"></div>
 			    <div id="contentWrapper">
-			        <div id="tab-content"  >
-			            <div id="grid"></div>
-			            <div id='pagination-wrapper' {%if isDefaultOnDashboard %}style='display:none'{% endif %}>
-			                <div>
-			                    <span class='ui-icon-seek-first ui-icon'></span>
-			                    <span class='ui-icon-seek-prev ui-icon'></span>
-			                </div>
-			                <div id='pagination'></div>
-			                <div>
-			                    <span class='ui-icon-seek-next ui-icon'></span>
-			                    <span class='ui-icon-seek-end ui-icon'></span>
-			                </div>
-			            </div>
-			        </div>
-			    </div>
+			        <ul class='gridster'>
+                        <li id='gridster-li' data-sizex='{% if sizex %}{{sizex}}{% else %}50{% endif %}' data-sizey='40' data-col='1' data-row='1'>
+					        <div id="tab-content"  >
+					            <div id="grid"></div>
+					            <div id='pagination-wrapper' {%if isDefaultOnDashboard %}style='display:none'{% endif %}>
+					                <div>
+					                    <span class='ui-icon-seek-first ui-icon'></span>
+					                    <span class='ui-icon-seek-prev ui-icon'></span>
+					                </div>
+					                <div id='pagination'></div>
+					                <div>
+					                    <span class='ui-icon-seek-next ui-icon'></span>
+					                    <span class='ui-icon-seek-end ui-icon'></span>
+					                </div>
+					            </div>
+					        </div>
+					    </li>
+                    </ul>
+              </div>
 		    </div>
 		</div>
 	    <div class='clear'></div>
@@ -1051,9 +1101,6 @@
 	                        <option {%ifequal maxRows 3%}selected{%endifequal%}>3</option>
 	                        <option {%if not maxRows or maxRows == 5 %}selected{%endif%}>5</option>
 	                        <option {%ifequal maxRows 10%}selected{%endifequal%}>10</option>
-	                        <option {%ifequal maxRows 15%}selected{%endifequal%}>15</option>
-	                        <option {%ifequal maxRows 20%}selected{%endifequal%}>20</option>
-	                        <option {%ifequal maxRows 25%}selected{%endifequal%}>25</option>
 	                    </select>
 	                {%endif%}
 	            </div>

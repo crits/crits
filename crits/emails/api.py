@@ -1,7 +1,6 @@
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.emails.email import Email
 from crits.emails.handlers import handle_pasted_eml, handle_yaml, handle_eml
@@ -19,7 +18,7 @@ class EmailResource(CRITsAPIResource):
 
     class Meta:
         object_class = Email
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "emails"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
@@ -51,7 +50,8 @@ class EmailResource(CRITsAPIResource):
         type_ = bundle.data.get('upload_type', None)
 
         content = {'return_code': 1,
-                   'type': 'Email'}
+                   'type': 'Email',
+                   'message': ''}
 
         if not type_:
             content['message'] = 'You must specify the upload type.'
@@ -127,6 +127,8 @@ class EmailResource(CRITsAPIResource):
 
         if result.get('message'):
             content['message'] = result.get('message')
+        if result.get('reason'):
+            content['message'] += result.get('reason')
         if result.get('obj_id'):
             content['id'] = result.get('obj_id', '')
         elif result.get('object'):

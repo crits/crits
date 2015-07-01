@@ -11,7 +11,6 @@ from crits.core.user_tools import user_can_view_data
 from crits.core.user_tools import user_is_admin
 from crits.raw_data.forms import UploadRawDataFileForm, UploadRawDataForm
 from crits.raw_data.forms import NewRawDataTypeForm
-from crits.raw_data.handlers import update_raw_data_description
 from crits.raw_data.handlers import update_raw_data_tool_details
 from crits.raw_data.handlers import update_raw_data_tool_name
 from crits.raw_data.handlers import update_raw_data_type
@@ -43,31 +42,6 @@ def raw_data_listing(request,option=None):
     if option == "csv":
         return generate_raw_data_csv(request)
     return generate_raw_data_jtable(request, option)
-
-@user_passes_test(user_can_view_data)
-def set_raw_data_description(request, _id):
-    """
-    Set the RawData description. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param _id: The ObjectId of the RawData.
-    :type _id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        description = request.POST['description']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_raw_data_description(_id,
-                                                               description,
-                                                               analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def set_raw_data_tool_details(request, _id):

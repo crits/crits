@@ -6,8 +6,7 @@
             <th>Size</th>
             <th>Filetype</th>
             <th>Receive</th>
-            <th>Backdoor(v)[C]</th>
-            <th>CVE</th>
+            <th>Campaign</th>
             <th>ID</th>
         </tr>
     </thead>
@@ -21,28 +20,14 @@
         <td>{{ hit.mimetype }}</td>
         <td>{{ hit.source.0.instances.0.date|date:"m/d/Y" }}</td>
         <td>
-        {% if hit.backdoor.name %}
-            <a href="{% url 'crits.samples.views.samples_listing' %}?search_type=backdoor&q={{ hit.backdoor.name }}&force_full=1">{{ hit.backdoor.name }} ({{ hit.backdoor.version }})</a>
-        {% endif %}
-        {% if hit.campaign %}[
-        {% for campaign in  hit.campaign %}
+        {% if hit.campaign %}
+        {% for campaign in hit.campaign %}
             {% if campaign.name %}
             <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">{{campaign.name}}</a>
             {% endif %}
         {% endfor %}
-        ]{%endif %}
+        {%endif %}
 
-        </td>
-        <td>
-          <ul style="list-style: none;">
-          {% for exploit in hit.exploit %}
-            {% if exploit.cve %}
-                <li style="list-style: none;">
-                <a href="{% url 'crits.samples.views.samples_listing'%}?search_type=exploit&q={{exploit.cve}}&force_full=1">{{ exploit.cve}}</a>
-                </li>
-            {% endif %}
-          {% endfor %}
-          </ul>
         </td>
         <td>
             {{ hit.id }}

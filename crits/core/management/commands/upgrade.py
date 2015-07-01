@@ -5,12 +5,14 @@ from django.conf import settings
 from optparse import make_option
 
 from crits.actors.actor import Actor
+from crits.backdoors.backdoor import Backdoor
 from crits.campaigns.campaign import Campaign
 from crits.certificates.certificate import Certificate
 from crits.config.config import CRITsConfig
 from crits.domains.domain import Domain
 from crits.emails.email import Email
 from crits.events.event import Event
+from crits.exploits.exploit import Exploit
 from crits.indicators.indicator import Indicator
 from crits.ips.ip import IP
 from crits.pcaps.pcap import PCAP
@@ -33,6 +35,10 @@ class Command(BaseCommand):
                     dest="actors",
                     default=False,
                     help="Migrate actors."),
+        make_option("-b", "--migrate_backdoors", action="store_true",
+                    dest="backdoors",
+                    default=False,
+                    help="Migrate backdoors."),
         make_option("-c", "--migrate_campaigns", action="store_true",
                     dest="campaigns",
                     default=False,
@@ -83,6 +89,10 @@ class Command(BaseCommand):
                     dest="targets",
                     default=False,
                     help="Migrate targets."),
+        make_option("-x", "--migrate_exploits", action="store_true",
+                    dest="exploits",
+                    default=False,
+                    help="Migrate exploits."),
     )
     help = 'Upgrades MongoDB to latest version using mass-migration.'
 
@@ -99,6 +109,7 @@ class Command(BaseCommand):
         domains = options.get('domains')
         emails = options.get('emails')
         events = options.get('events')
+        exploits = options.get('exploits')
         indicators = options.get('indicators')
         ips = options.get('ips')
         pcaps = options.get('pcaps')
@@ -113,6 +124,7 @@ class Command(BaseCommand):
             not domains and
             not emails and
             not events and
+            not exploits and
             not indicators and
             not ips and
             not pcaps and
@@ -183,11 +195,13 @@ def upgrade(lv, options):
     # to work properly.
     mall = options.get('mall')
     actors = options.get('actors')
+    backdoors = options.get('backdoors')
     campaigns = options.get('campaigns')
     certificates = options.get('certificates')
     domains = options.get('domains')
     emails = options.get('emails')
     events = options.get('events')
+    exploits = options.get('exploits')
     indicators = options.get('indicators')
     ips = options.get('ips')
     pcaps = options.get('pcaps')
@@ -204,6 +218,8 @@ def upgrade(lv, options):
     # run full migrations
     if mall or actors:
         migrate_collection(Actor, sort_ids)
+    if mall or backdoors:
+        migrate_collection(Backdoor, sort_ids)
     if mall or campaigns:
         migrate_collection(Campaign, sort_ids)
     if mall or certificates:
@@ -226,6 +242,8 @@ def upgrade(lv, options):
         migrate_collection(Sample, sort_ids)
     if mall or targets:
         migrate_collection(Target, sort_ids)
+    if mall or exploits:
+        migrate_collection(Exploit, sort_ids)
 
     # Always bump the version to the latest in settings.py
     config = CRITsConfig.objects()

@@ -7,9 +7,15 @@
 #wrapper {
 	margin: 0 auto;
 }
+#container {
+	height:100%;
+}
 #innerWrapper {
-	overflow-x:hidden;
-	overflow-y:auto;  
+	//overflow-x:hidden;
+	//overflow-y:auto;  
+}
+#contentWrapper {
+	margin-top:-13px;
 }
 #tab-content {
   float:left;
@@ -84,10 +90,16 @@
 #garbageHeader {
     float:left;
     line-height: 58px;
-  width:160px;
-  border:1px solid black;
-  height:58px;
-  display:inline-block;
+    width:160px;
+    border:1px solid black;
+    height:58px;
+    display:inline-block;
+    cursor: pointer;
+}
+#garbageHeader:active {
+	-webkit-box-shadow:    1px 1px 10px 1px #000;
+    -moz-box-shadow: 1px 1px 10px 1px #000;
+    box-shadow:    1px 1px 10px 1px #000;
 }
 .submit {
     width:180px;

@@ -6,6 +6,7 @@ from optparse import make_option
 
 from create_indexes import create_indexes
 from create_event_types import add_event_types
+from create_locations import add_location_objects
 from create_object_types import add_object_types
 from create_relationship_types import add_relationship_types
 from create_sectors import add_sector_objects
@@ -15,8 +16,6 @@ from create_default_dashboard import create_dashboard
 
 from crits.core.user_role import UserRole
 from crits.domains.domain import TLD
-from crits.samples.exploit import Exploit
-from crits.samples.backdoor import Backdoor
 from crits.indicators.indicator import IndicatorAction
 from crits.raw_data.raw_data import RawDataType
 
@@ -46,8 +45,6 @@ class Command(BaseCommand):
         else:
             print "Drop protection enabled. Will not drop existing content!"
         populate_user_roles(drop)
-        populate_exploits(drop)
-        populate_backdoors(drop)
         populate_indicator_actions(drop)
         populate_raw_data_types(drop)
         # The following will always occur with every run of this script:
@@ -64,6 +61,7 @@ class Command(BaseCommand):
         add_relationship_types(drop)
         add_object_types(drop)
         add_event_types(drop)
+        add_location_objects(drop)
         add_sector_objects(drop)
         add_actor_content(drop)
         create_dashboard(drop)
@@ -93,48 +91,6 @@ def populate_user_roles(drop):
         print "User Roles: added %s roles!" % len(user_roles)
     else:
         print "User Roles: existing documents detected. skipping!"
-
-def populate_exploits(drop):
-    """
-    Populate default set of exploits into the system.
-
-    :param drop: Drop the existing collection before trying to populate.
-    :type: boolean
-    """
-
-    # define your CVE's here
-    cves = ['CVE-2009-4329']
-    if drop:
-        Exploit.drop_collection()
-    if len(Exploit.objects()) < 1:
-        for cve in cves:
-            ex = Exploit()
-            ex.name = cve
-            ex.save()
-        print "Exploits: added %s exploits!" % len(cves)
-    else:
-        print "Exploits: existing documents detected. skipping!"
-
-def populate_backdoors(drop):
-    """
-    Populate default set of backdoors into the system.
-
-    :param drop: Drop the existing collection before trying to populate.
-    :type: boolean
-    """
-
-    # define your backdoor names here
-    backdoors = ['PIVY']
-    if drop:
-        Backdoor.drop_collection()
-    if len(Backdoor.objects()) < 1:
-        for backdoor in backdoors:
-            bd = Backdoor()
-            bd.name = backdoor
-            bd.save()
-        print "Backdoors: added %s backdoors!" % len(backdoors)
-    else:
-        print "Backdoors: existing documents detected. skipping!"
 
 def populate_indicator_actions(drop):
     """

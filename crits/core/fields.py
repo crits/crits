@@ -4,6 +4,7 @@ from dateutil.parser import parse
 from mongoengine import DateTimeField, FileField
 from mongoengine.connection import DEFAULT_CONNECTION_NAME
 from mongoengine.python_support import str_types
+import StringIO
 
 from django.conf import settings
 if settings.FILE_DB == settings.S3:
@@ -77,7 +78,7 @@ class S3Proxy(object):
 
         try:
             if self.gridout is None:
-                self.gridout = S3.get_file_s3(self.grid_id, self.collection_name)
+                self.gridout = StringIO.StringIO(S3.get_file_s3(self.grid_id, self.collection_name))
             return self.gridout
         except:
             return None

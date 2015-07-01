@@ -19,23 +19,38 @@ from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.domains.domain import Domain, TLD
-from crits.domains.forms import AddDomainForm, UpdateWhoisForm, DiffWhoisForm
+from crits.domains.forms import AddDomainForm
 from crits.ips.ip import IP
+from crits.ips.handlers import validate_and_normalize_ip
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict, validate_and_add_new_handler_object
+from crits.relationships.handlers import forge_relationship
 from crits.services.handlers import run_triage, get_supported_services
 
-def get_domain(domain):
+def get_valid_root_domain(domain):
     """
-    Parse the provided domain to validate the TLD, and get the root domain if
-    possible.
+    Validate the given domain and TLD, and if valid, parse out the root domain
 
-    :param domain: The domain to parse.
+    :param domain: the domain to validate and parse
     :type domain: str
-    :returns: tuple
+    :returns: tuple: (Valid root domain, Valid FQDN, Error message)
     """
 
-    return (tld_parser.parse(domain), domain.lower())
+    root = fqdn = error = ""
+    black_list = "/:@\ "
+    domain = domain.strip()
+
+    if any(c in black_list for c in domain):
+        error = 'Domain cannot contain space or characters %s' % (black_list)
+    else:
+        root = tld_parser.parse(domain)
+        if root == "no_tld_found_error":
+            error = 'No valid TLD found'
+            root = ""
+        else:
+            fqdn = domain.lower()
+
+    return (root, fqdn, error)
 
 def get_domain_details(domain, analyst):
     """
@@ -59,41 +74,8 @@ def get_domain_details(domain, analyst):
         args = {'error': error}
         return template, args
 
-    forms = {}
-    #populate whois data into whois form
-    # and create data object (keyed on date) for updating form on date select
-    whois_data = {'':''} #blank info for "Add New" option
-    initial_data = {'data':' '}
-    raw_data = {}
-    whois = getattr(dmain, 'whois', None)
-    if whois:
-        for w in whois:
-            #build data as a display-friendly string
-            w.date = datetime.datetime.strftime(w.date,
-                                                settings.PY_DATETIME_FORMAT)
-            from whois_parser import WhoisEntry
-            #prettify the whois data
-            w.data = unicode(WhoisEntry.from_dict(w.data))
-            if 'text' not in w: #whois data was added with old data format
-                w.text = w.data
-            #also save our text blob for easy viewing of the original data
-            whois_data[w.date] = (w.data, w.text)
-        #show most recent entry first
-        initial_data = {'data':whois[-1].data, 'date': whois[-1].date}
-        raw_data = {'data':whois[-1].text, 'date': whois[-1].date}
-
-    whois_len = len(whois_data)-1 #subtract one to account for blank "Add New" entry
-    whois_data = json.dumps(whois_data)
-
     dmain.sanitize_sources(username="%s" % analyst,
                            sources=allowed_sources)
-
-    forms['whois'] = UpdateWhoisForm(initial_data,
-                                     domain=domain)
-    forms['raw_whois'] = UpdateWhoisForm(raw_data,
-                                         domain=domain,
-                                         allow_adding=False)
-    forms['diff_whois'] = DiffWhoisForm(domain=domain)
 
     # remove pending notifications for user
     remove_user_from_notification("%s" % analyst, dmain.id, 'Domain')
@@ -143,11 +125,8 @@ def get_domain_details(domain, analyst):
             'subscription': subscription,
             'screenshots': screenshots,
             'domain': dmain,
-            'forms': forms,
-            'whois_data': whois_data,
             'service_list': service_list,
-            'service_results': service_results,
-            'whois_len': whois_len}
+            'service_results': service_results}
 
     return template, args
 
@@ -299,10 +278,11 @@ def retrieve_domain(domain, cache):
     domain_obj = None
     cached_results = cache.get(form_consts.Domain.CACHED_RESULTS)
 
-    if cached_results != None:
+    if cached_results:
         domain_obj = cached_results.get(domain.lower())
-    else:
-        domain_obj = Domain.objects(domain_iexact=domain).first()
+
+    if not domain_obj:
+        domain_obj = Domain.objects(domain__iexact=domain).first()
 
     return domain_obj
 
@@ -321,44 +301,74 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
     :param is_validate_only: Only validate the data and return any errors.
     :type is_validate_only: boolean
     :param cache: Cached data, typically for performance enhancements
-                  during bulk uperations.
+                  during bulk operations.
     :type cache: dict
-    :returns: tuple
+    :returns: tuple (<result>, <errors>, <retVal>)
     """
 
-    username = request.user.username
     result = False
     retVal = {}
-    reference = data.get('domain_reference')
-    name = data.get('domain_source')
-    method = data.get('domain_method')
-    source = [create_embedded_source(name, reference=reference, method=method,
-                                     analyst=username)]
-    bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
-    ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+    domain = data['domain']
+    add_ip = data.get('add_ip')
+    ip = data.get('ip')
+    ip_type = data.get('ip_type')
 
-    if data.get('campaign') and data.get('confidence'):
-        campaign = [EmbeddedCampaign(name=data.get('campaign'),
-                                     confidence=data.get('confidence'),
-                                     analyst=username)]
-    else:
-        campaign = []
+    if add_ip:
+        error = validate_and_normalize_ip(ip, ip_type)[1]
+        if error:
+             errors.append(error)
 
-    (sdomain, fqdn) = get_domain(data['domain'])
-    if sdomain == "no_tld_found_error":
-        errors.append(u"Error: Invalid domain: " + data['domain'])
-    elif is_validate_only == False:
-        retVal = upsert_domain(sdomain, fqdn, source, username, campaign,
+    if is_validate_only:
+        error = get_valid_root_domain(domain)[2]
+        if error:
+            errors.append(error)
+
+        # check for duplicate domains
+        fqdn_domain = retrieve_domain(domain, cache)
+
+        if fqdn_domain:
+            if isinstance(fqdn_domain, Domain):
+                resp_url = reverse('crits.domains.views.domain_detail', args=[domain])
+                message = ('Warning: Domain already exists: '
+                                     '<a href="%s">%s</a>' % (resp_url, domain))
+                retVal['message'] = message
+                retVal['status'] = form_consts.Status.DUPLICATE
+                retVal['warning'] = message
+        else:
+            result_cache = cache.get(form_consts.Domain.CACHED_RESULTS);
+            result_cache[domain.lower()] = True
+
+    elif not errors:
+        username = request.user.username
+        reference = data.get('domain_reference')
+        source_name = data.get('domain_source')
+        method = data.get('domain_method')
+        source = [create_embedded_source(source_name, reference=reference,
+                                         method=method, analyst=username)]
+        bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
+        ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+
+        if data.get('campaign') and data.get('confidence'):
+            campaign = [EmbeddedCampaign(name=data.get('campaign'),
+                                         confidence=data.get('confidence'),
+                                         analyst=username)]
+        else:
+            campaign = []
+
+        retVal = upsert_domain(domain, source, username, campaign,
                                bucket_list=bucket_list, ticket=ticket, cache=cache)
-        ip_result = None
 
-        if retVal['success']:
-            add_ip = data.get('add_ip')
+        if not retVal['success']:
+            errors.append(retVal.get('message'))
+            retVal['message'] = ""
+
+        else:
+            new_domain = retVal['object']
+            ip_result = {}
             if add_ip:
-                ip = data.get('ip')
                 if data.get('same_source'):
-                    ip_source = data.get('domain_source')
-                    ip_method = data.get('domain_method')
+                    ip_source = source_name
+                    ip_method = method
                     ip_reference = reference
                 else:
                     ip_source = data.get('ip_source')
@@ -366,7 +376,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     ip_reference = data.get('ip_reference')
                 from crits.ips.handlers import ip_add_update
                 ip_result = ip_add_update(ip,
-                                          None,
+                                          ip_type,
                                           ip_source,
                                           ip_method,
                                           ip_reference,
@@ -379,73 +389,58 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     errors.append(ip_result['message'])
                 else:
                     #add a relationship with the new IP address
-                    new_domain = retVal['object']
                     new_ip = ip_result['object']
                     if new_domain and new_ip:
-                        new_domain.add_relationship(rel_item=new_ip,
-                                                    rel_type='Resolved_To',
+                        new_domain.add_relationship(new_ip,
+                                                    'Resolved_To',
                                                     analyst=username,
                                                     get_rels=False)
                         new_domain.save(username=username)
-                        new_ip.save(username=username)
 
             #set the URL for viewing the new data
-            resp_url = reverse('crits.domains.views.domain_detail', args=[fqdn])
+            resp_url = reverse('crits.domains.views.domain_detail', args=[domain])
 
             if retVal['is_domain_new'] == True:
                 retVal['message'] = ('Success! Click here to view the new domain: '
-                                     '<a href="%s">%s</a>' % (resp_url, fqdn))
+                                     '<a href="%s">%s</a>' % (resp_url, domain))
             else:
-                message = ('Updated existing domain: <a href="%s">%s</a>' % (resp_url, fqdn))
+                message = ('Updated existing domain: <a href="%s">%s</a>' % (resp_url, domain))
                 retVal['message'] = message
                 retVal[form_consts.Status.STATUS_FIELD] = form_consts.Status.DUPLICATE
                 retVal['warning'] = message
 
             #add indicators
-            # add_indicators_for_domain handles adding relationships as well
             if data.get('add_indicators'):
-                analyst = username
-                from crits.indicators.handlers import add_indicators_for_domain
-                if ip_result and ip_result['success']:
-                    obj = ip_result['object']
-                    errors += add_indicators_for_domain(sdomain,
-                                                        fqdn,
-                                                        source,
-                                                        analyst,
-                                                        reference,
-                                                        obj,
-                                                        bucket_list=bucket_list,
-                                                        ticket=ticket)['errors']
-                else:
-                    errors += add_indicators_for_domain(sdomain,
-                                                        fqdn,
-                                                        source,
-                                                        analyst,
-                                                        reference,
-                                                        bucket_list=bucket_list,
-                                                        ticket=ticket)['errors']
+                from crits.indicators.handlers import create_indicator_from_tlo
+                # If we have an IP object, add an indicator for that.
+                if ip_result.get('success'):
+                    ip = ip_result['object']
+                    result = create_indicator_from_tlo('IP',
+                                                       ip,
+                                                       username,
+                                                       ip_source,
+                                                       add_domain=False)
+                    ip_ind = result.get('indicator')
+                    if not result['success']:
+                        errors.append(result['message'])
+
+                # Add an indicator for the domain.
+                result = create_indicator_from_tlo('Domain',
+                                                   new_domain,
+                                                   username,
+                                                   source_name,
+                                                   add_domain=False)
+
+                if not result['success']:
+                    errors.append(result['message'])
+                elif ip_result.get('success') and ip_ind:
+                    forge_relationship(left_class=result['indicator'],
+                                       right_class=ip_ind,
+                                       rel_type='Resolved_To',
+                                       analyst=username)
             result = True
 
-        elif 'message' in retVal: #database error? (!c_dom)
-            errors.append(retVal['message']) #u"Unknown error: unable to add domain")
-
-    elif is_validate_only == True:
-        domain = data['domain']
-        fqdn_domain = retrieve_domain(domain, cache);
-
-        if fqdn_domain:
-            if isinstance(fqdn_domain, Domain):
-                resp_url = reverse('crits.domains.views.domain_detail', args=[fqdn])
-                message = ('Warning: Domain already exists: '
-                                     '<a href="%s">%s</a>' % (resp_url, fqdn))
-                retVal['message'] = message;
-                retVal['status'] = form_consts.Status.DUPLICATE;
-                retVal['warning'] = message;
-        else:
-            result_cache = cache.get(form_consts.Domain.CACHED_RESULTS);
-            result_cache[domain.lower()] = True;
-
-    # This block tries to add objects to the item
+    # This block validates, and may also add, objects to the Domain
     if retVal.get('success') or is_validate_only == True:
         if rowData:
             objectsData = rowData.get(form_consts.Common.OBJECTS_DATA)
@@ -453,27 +448,32 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
             # add new objects if they exist
             if objectsData:
                 objectsData = json.loads(objectsData)
-                current_domain = retrieve_domain(fqdn, cache)
+                current_domain = retrieve_domain(domain, cache)
                 for object_row_counter, objectData in enumerate(objectsData, 1):
                     if current_domain != None:
                         # if the domain exists then try to add objects to it
                         if isinstance(current_domain, Domain) == True:
-                            objectDict = object_array_to_dict(objectData, "Domain", current_domain.id)
+                            objectDict = object_array_to_dict(objectData,
+                                                              "Domain",
+                                                              current_domain.id)
                         else:
-                            objectDict = object_array_to_dict(objectData, "Domain", "")
+                            objectDict = object_array_to_dict(objectData,
+                                                              "Domain",
+                                                              "")
                             current_domain = None;
                     else:
-                        objectDict = object_array_to_dict(objectData, "Domain", "")
+                        objectDict = object_array_to_dict(objectData,
+                                                          "Domain",
+                                                          "")
 
-                    (object_result, object_errors, object_retVal) = validate_and_add_new_handler_object(
-                            None, objectDict, request, errors, object_row_counter,
-                            is_validate_only=is_validate_only,
-                            cache=cache, obj=current_domain)
-
-                    if object_retVal.get('success') == False:
+                    (obj_result,
+                     errors,
+                     obj_retVal) = validate_and_add_new_handler_object(
+                        None, objectDict, request, errors, object_row_counter,
+                        is_validate_only=is_validate_only,
+                        cache=cache, obj=current_domain)
+                    if not obj_result:
                         retVal['success'] = False
-                    if object_retVal.get('message'):
-                        errors.append(object_retVal['message'])
 
     return result, errors, retVal
 
@@ -490,129 +490,27 @@ def edit_domain_name(domain, new_domain, analyst):
     :returns: boolean
     """
 
+    # validate new domain
+    (root, validated_domain, error) = get_valid_root_domain(new_domain)
+    if error:
+        return False
+
     domain = Domain.objects(domain=domain).first()
     if not domain:
         return False
     try:
-        domain.domain = new_domain
+        domain.domain = validated_domain
         domain.save(username=analyst)
         return True
     except ValidationError:
         return False
 
-def add_whois(domain, data, date, analyst, editable):
-    """
-    Add whois information to a domain.
-
-    :param domain: The domain for the whois entry.
-    :type domain: str
-    :param data: The whois data.
-    :type data: str
-    :param date: The date for the whois data.
-    :type date: datetime.datetime
-    :param analyst: The user editing the domain name.
-    :type analyst: str
-    :param editable: If this entry can be modified.
-    :type editable: boolean
-    :returns: dict with keys:
-              "success" (boolean),
-              "whois" (str) if successful,
-              "message" (str) if failed.
-    """
-
-    domain = Domain.objects(domain=domain).first()
-    if not domain:
-        return {'success': False,
-                'message': "No matching domain found."}
-    try:
-        whois_entry = domain.add_whois(data, analyst, date, editable)
-        domain.save(username=analyst)
-        return {"success": True, 'whois': whois_entry, 'id': str(domain.id)}
-    except ValidationError, e:
-        return {"success": False, "message": e, 'id': str(domain.id)}
-
-def edit_whois(domain, data, date, analyst):
-    """
-    Edit whois information for a domain.
-
-    :param domain: The domain for the whois entry.
-    :type domain: str
-    :param data: The whois data.
-    :type data: str
-    :param date: The date for the whois data.
-    :type date: datetime.datetime
-    :param analyst: The user editing the domain name.
-    :type analyst: str
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str) if failed.
-    """
-
-    domain = Domain.objects(domain=domain).first()
-    if not domain:
-        return {'success': False,
-                'message': "No matching domain found."}
-    try:
-        domain.edit_whois(data, date)
-        domain.save(username=analyst)
-        return {'success': True}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
-
-def delete_whois(domain, date, analyst):
-    """
-    Remove whois information for a domain.
-
-    :param domain: The domain for the whois entry.
-    :type domain: str
-    :param date: The date for the whois data.
-    :type date: datetime.datetime
-    :param analyst: The user editing the domain name.
-    :type analyst: str
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str) if failed.
-    """
-
-    domain = Domain.objects(domain=domain).first()
-    if not domain:
-        return {'success': False,
-                'message': "No matching domain found."}
-    try:
-        domain.delete_whois(date)
-        domain.save(username=analyst)
-        return {'success': True}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
-
-def whois_diff(domain, from_date, to_date):
-    """
-    Diff whois entries.
-
-    :param domain: The domain to get whois information for.
-    :type domain: str
-    :param from_date: The date for the first whois entry.
-    :type from_date: datetime.datetime
-    :param to_date: The date for the second whois entry.
-    :type to_date: datetime.datetime
-    :returns: dict if failed, str on success.
-    """
-
-    domain = Domain.objects(domain=domain).first()
-    if not domain:
-        return {'success': False,
-                'message': "No matching domain found."}
-    return domain.whois_diff(from_date, to_date)
-
-def upsert_domain(sdomain, domain, source, username=None, campaign=None,
+def upsert_domain(domain, source, username=None, campaign=None,
                   confidence=None, bucket_list=None, ticket=None, cache={}):
     """
     Add or update a domain/FQDN. Campaign is assumed to be a list of campaign
     dictionary objects.
 
-    :param sdomain: Response from parsing the domain for a root domain. Will
-                    either be an error message or the root domain itself.
-    :type sdomain: str
     :param domain: The domain to add/update.
     :type domain: str
     :param source: The name of the source.
@@ -636,8 +534,10 @@ def upsert_domain(sdomain, domain, source, username=None, campaign=None,
               "is_domain_new" (boolean)
     """
 
-    if sdomain == "no_tld_found_error": #oops...
-        return {'success':False, 'message':"Invalid domain: %s "%sdomain}
+    # validate domain and grab root domain
+    (root, domain, error) = get_valid_root_domain(domain)
+    if error:
+        return {'success': False, 'message': error}
 
     is_fqdn_domain_new = False
     is_root_domain_new = False
@@ -666,28 +566,28 @@ def upsert_domain(sdomain, domain, source, username=None, campaign=None,
     cached_results = cache.get(form_consts.Domain.CACHED_RESULTS)
 
     if cached_results != None:
-        if domain != sdomain:
+        if domain != root:
             fqdn_domain = cached_results.get(domain)
-            root_domain = cached_results.get(sdomain)
+            root_domain = cached_results.get(root)
         else:
-            root_domain = cached_results.get(sdomain)
+            root_domain = cached_results.get(root)
     else:
         #first find the domain(s) if it/they already exist
-        root_domain = Domain.objects(domain=sdomain).first()
-        if domain != sdomain:
+        root_domain = Domain.objects(domain=root).first()
+        if domain != root:
             fqdn_domain = Domain.objects(domain=domain).first()
 
     #if they don't exist, create them
     if not root_domain:
         root_domain = Domain()
-        root_domain.domain = sdomain
+        root_domain.domain = root
         root_domain.source = []
         root_domain.record_type = 'A'
         is_root_domain_new = True
 
         if cached_results != None:
-            cached_results[sdomain] = root_domain
-    if domain != sdomain and not fqdn_domain:
+            cached_results[root] = root_domain
+    if domain != root and not fqdn_domain:
         fqdn_domain = Domain()
         fqdn_domain.domain = domain
         fqdn_domain.source = []
@@ -740,10 +640,10 @@ def upsert_domain(sdomain, domain, source, username=None, campaign=None,
 
     #Add relationships between fqdn, root
     if fqdn_domain and root_domain:
-        root_domain.add_relationship(rel_item=fqdn_domain,
-                                        rel_type="Supra-domain_Of",
-                                        analyst=username,
-                                        get_rels=False)
+        root_domain.add_relationship(fqdn_domain,
+                                     "Supra-domain_Of",
+                                     analyst=username,
+                                     get_rels=False)
         root_domain.save(username=username)
         fqdn_domain.save(username=username)
 
@@ -862,13 +762,14 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
     is_add_ip = False
 
     ip = rowData.get(form_consts.Domain.IP_ADDRESS, "")
+    ip_type = rowData.get(form_consts.Domain.IP_TYPE, "")
     created = rowData.get(form_consts.Domain.IP_DATE, "")
     #is_same_source = convert_string_to_bool(rowData.get(form_consts.Domain.SAME_SOURCE, "False"))
     is_same_source = False
     ip_source = rowData.get(form_consts.Domain.IP_SOURCE, "")
     ip_method = rowData.get(form_consts.Domain.IP_METHOD, "")
     ip_reference = rowData.get(form_consts.Domain.IP_REFERENCE, "")
-    is_add_indicator = convert_string_to_bool(rowData.get(form_consts.Domain.ADD_INDICATOR, "False"))
+    is_add_indicators = convert_string_to_bool(rowData.get(form_consts.Domain.ADD_INDICATORS, "False"))
 
     bucket_list = rowData.get(form_consts.Common.BUCKET_LIST, "")
     ticket = rowData.get(form_consts.Common.TICKET, "")
@@ -885,12 +786,13 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
                 'domain_reference': domain_reference,
                 'add_ip': is_add_ip,
                 'ip': ip,
+                'ip_type': ip_type,
                 'created': created,
                 'same_source': is_same_source,
                 'ip_source': ip_source,
                 'ip_method': ip_method,
                 'ip_reference': ip_reference,
-                'add_indicators': is_add_indicator,
+                'add_indicators': is_add_indicators,
                 'bucket_list': bucket_list,
                 'ticket': ticket}
 
@@ -948,17 +850,22 @@ def process_bulk_add_domain(request, formdict):
         if rowData != None:
             if rowData.get(form_consts.Domain.DOMAIN_NAME) != None:
                 domain = rowData.get(form_consts.Domain.DOMAIN_NAME).strip().lower()
-                (root_domain, full_domain) = get_domain(domain)
-                domain_names.append(full_domain);
+                (root_domain, full_domain, error) = get_valid_root_domain(domain)
+                domain_names.append(full_domain)
 
                 if domain != root_domain:
-                    domain_names.append(root_domain);
+                    domain_names.append(root_domain)
 
             if rowData.get(form_consts.Domain.IP_ADDRESS) != None:
-                ip_addresses.append(rowData.get(form_consts.Domain.IP_ADDRESS))
+                ip_addr = rowData.get(form_consts.Domain.IP_ADDRESS)
+                ip_type = rowData.get(form_consts.Domain.IP_TYPE)
+                (ip_addr, error) = validate_and_normalize_ip(ip_addr, ip_type)
+                ip_addresses.append(ip_addr)
 
     domain_results = Domain.objects(domain__in=domain_names)
+
     ip_results = IP.objects(ip__in=ip_addresses)
+
 
     for domain_result in domain_results:
         cached_domain_results[domain_result.domain] = domain_result

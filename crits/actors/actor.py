@@ -132,21 +132,17 @@ class ActorIdentifier(CritsDocument, CritsSchemaDocument, CritsSourceDocument,
             'active': 'Enabled in the UI (on/off)'
         },
         "jtable_opts": {
-                         'details_url': '',
-                         'details_url_key': '',
-                         'default_sort': "created DESC",
-                         'searchurl': 'crits.actors.views.actor_identifiers_listing',
-                         'fields': [ "name", "created", "source",
-                                    "identifier_type", "id"],
-                         'jtopts_fields': [ "name",
-                                            "identifier_type",
-                                            "created",
-                                            "source"],
-                         'hidden_fields': [],
-                         'linked_fields': ["name", "source"],
-                         'details_link': '',
-                         'no_sort': ['']
-                       }
+            'details_url': '',
+            'details_url_key': '',
+            'default_sort': "created DESC",
+            'searchurl': 'crits.actors.views.actor_identifiers_listing',
+            'fields': ["name", "created", "source", "identifier_type", "id"],
+            'jtopts_fields': ["name", "identifier_type", "created", "source"],
+            'hidden_fields': [],
+            'linked_fields': ["name", "source"],
+            'details_link': '',
+            'no_sort': [''],
+        }
     }
 
     active = StringField(default="on")
@@ -175,32 +171,23 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
         "schema_doc": {
         },
         "jtable_opts": {
-                         'details_url': 'crits.actors.views.actor_detail',
-                         'details_url_key': 'id',
-                         'default_sort': "modified DESC",
-                         'searchurl': 'crits.actors.views.actors_listing',
-                         'fields': [ "name", "description", "modified",
-                                     "source", "campaign", "status", "id"],
-                         'jtopts_fields': [ "details",
-                                            "name",
-                                            "description",
-                                            "modified",
-                                            "source",
-                                            "campaign",
-                                            "status",
-                                            "favorite",
-                                            "id"],
-                         'hidden_fields': [],
-                         'linked_fields': ["source", "campaign"],
-                         'details_link': 'details',
-                         'no_sort': ['details']
-                       }
-
+            'details_url': 'crits.actors.views.actor_detail',
+            'details_url_key': 'id',
+            'default_sort': "modified DESC",
+            'searchurl': 'crits.actors.views.actors_listing',
+            'fields': ["name", "description", "modified", "source", "campaign",
+                       "status", "id"],
+            'jtopts_fields': ["details", "name", "description", "modified",
+                              "source", "campaign", "status", "favorite", "id"],
+            'hidden_fields': [],
+            'linked_fields': ["source", "campaign"],
+            'details_link': 'details',
+            'no_sort': ['details'],
+        }
     }
 
     name = StringField(required=True)
     aliases = ListField(StringField())
-    description = StringField()
     identifiers = ListField(EmbeddedDocumentField(EmbeddedActorIdentifier))
     intended_effects = ListField(StringField())
     motivations = ListField(StringField())

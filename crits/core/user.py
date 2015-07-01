@@ -89,11 +89,13 @@ class EmbeddedFavorites(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     Actor = ListField(StringField())
+    Backdoor = ListField(StringField())
     Campaign = ListField(StringField())
     Certificate = ListField(StringField())
     Domain = ListField(StringField())
     Email = ListField(StringField())
     Event = ListField(StringField())
+    Exploit = ListField(StringField())
     IP = ListField(StringField())
     Indicator = ListField(StringField())
     PCAP = ListField(StringField())
@@ -108,11 +110,13 @@ class EmbeddedSubscriptions(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     Actor = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Backdoor = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Campaign = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Certificate = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Domain = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Email = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Event = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Exploit = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     IP = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Indicator = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     PCAP = ListField(EmbeddedDocumentField(EmbeddedSubscription))
@@ -145,6 +149,10 @@ class PreferencesField(DynamicEmbeddedDocument):
                                             "hover_text_color": "#39F",
                                             "hover_background_color": "#6F6F6F"})
 
+    toast_notifications = DictField(required=True, default={"enabled": True,
+                                                            "acknowledgement_type": "sticky",
+                                                            "initial_notifications_display": "show",
+                                                            "newer_notifications_location": "top"})
 
 class EmbeddedPasswordReset(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -193,7 +201,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             },
         ],
         "crits_type": 'User',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "schema_doc": {
             'username': 'The username of this analyst',
             'organization': 'The name of the organization this user is from',
@@ -263,11 +271,14 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                 ],
             },
             'favorites': {
+                'Actor': [],
+                'Backdoor': [],
                 'Campaign': [],
                 'Domain': [],
                 'Email': [],
                 'Target': [],
                 'Event': [],
+                'Exploit': [],
                 'IP': [],
                 'Indicator': [],
                 'PCAP': [],
@@ -320,8 +331,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     REQUIRED_FIELDS = ['email']
 
     defaultDashboard = ObjectIdField(required=False, default=None)
-    
-    
+
+
     def migrate(self):
         """
         Migrate to latest schema version.
@@ -903,6 +914,10 @@ class CRITsAuthBackend(object):
         :returns: :class:`crits.core.user.CRITsUser`, None
         """
 
+        # Need username and password for logins, checkem both
+        if not all([username, password]):
+            return None
+
         e = EmbeddedLoginAttempt()
         e.user_agent = user_agent
         e.remote_addr = remote_addr
@@ -1003,7 +1018,10 @@ someone may be attempting to access your account.
 Please contact a site administrator to resolve.
 
 """
-                user.email_user(subject, body)
+                try:
+                    user.email_user(subject, body)
+                except Exception, err:
+                    logger.warning("Error sending email: %s" % str(err))
             self.track_login_attempt(user, e)
             user.reload()
         return None
@@ -1069,7 +1087,7 @@ Please contact a site administrator to resolve.
         backend = auth.get_backends()[0]
         user.backend = "%s.%s" % (backend.__module__, backend.__class__.__name__)
         return user
-    
+
 
 class CRITsRemoteUserBackend(CRITsAuthBackend):
     """

@@ -272,10 +272,14 @@ def add_new_event(title, description, event_type, source, method, reference,
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
+    if not source:
+        return {'success': False, 'message': "Missing source information."}
+
     event = Event()
     event.title = title
     event.description = description
     event.set_event_type(event_type)
+
     s = create_embedded_source(name=source,
                                reference=reference,
                                method=method,
@@ -302,7 +306,8 @@ def add_new_event(title, description, event_type, source, method, reference,
                                           title))
         result = {'success': True,
                   'message': message,
-                  'id': str(event.id)}
+                  'id': str(event.id),
+                  'object': event}
     except ValidationError, e:
         result = {'success': False,
                   'message': e}
@@ -326,29 +331,6 @@ def event_remove(_id, username):
         return {'success':True}
     else:
         return {'success':False,'message': 'Need to be admin'}
-
-def update_event_description(event_id, description, analyst):
-    """
-    Update event description.
-
-    :param event_id: The ObjectId of the Event to update.
-    :type event_id: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user updating this Event.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str)
-    """
-
-    if not description:
-        return {'success': False, 'message': "No description to change"}
-    event = Event.objects(id=event_id).first()
-    event.description = description
-    try:
-        event.save(username=analyst)
-        return {'success': True}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
 
 def update_event_title(event_id, title, analyst):
     """

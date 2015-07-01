@@ -67,6 +67,6 @@ class Target(CritsBaseAttributes, Document):
 
     def find_emails(self, username):
         sources = user_sources(username)
-        emails = Email.objects(to=self.email_address,
+        emails = Email.objects(to__iexact=self.email_address,
                                source__name__in=sources)
         return emails

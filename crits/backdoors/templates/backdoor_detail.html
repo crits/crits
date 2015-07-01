@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %} Backdoor Detail {% endblock %}
+
+{% block content %}
+
+<script>
+   var edit_backdoor_name = "{% url 'crits.backdoors.views.edit_backdoor_name' backdoor.id|urlencode %}";
+   var edit_backdoor_version = "{% url 'crits.backdoors.views.edit_backdoor_version' backdoor.id|urlencode %}";
+   var update_backdoor_aliases = "{% url 'crits.backdoors.views.edit_backdoor_aliases' %}";
+</script>
+
+<div id="tabnav" class="tabnav" style="font-size:90%">
+    <ul style="font-size: 125%">
+    <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+    {% include 'services_tab_list_widget.html' %}
+    </ul>
+
+<div id="details_section">
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        {% if admin %}
+        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="backdoor" action='{% url "crits.backdoors.views.remove_backdoor" backdoor.id %}'>Delete Backdoor</a></li>
+        {% endif %}
+    </ul>
+    </span>
+
+    <div class="content_box content_details">
+        <h3 class="titleheader">
+            <span>Details for {{backdoor.name}}</span>
+        </h3>
+        <div class="content_body">
+            <table class="vertical" width="100%">
+                <thead>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="key">ID</td>
+                        <td>{{backdoor.id}}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Name</td>
+                        <td>
+                            <span class="edit_underline" id="edit_backdoor_name">{{backdoor.name}}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key">Version</td>
+                        <td>
+                            <span class="edit_underline" id="edit_backdoor_version">{{backdoor.version}}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key">Aliases</td>
+                        <td>
+                            <ul id="backdoor_aliases">
+                                {% for alias in backdoor.aliases %}
+                                    <li>{{ alias }}</li>
+                                {% endfor %}
+                        </td>
+                    </tr>
+                    <tr>
+                        {% with description=backdoor.description %}
+                            {% include 'description_widget.html' %}
+                        {% endwith %}
+                    </tr>
+                    <tr>
+                        <td class="key">Created</td>
+                        <td>{{backdoor.created}}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Modified</td>
+                        <td>{{backdoor.modified}}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Status
+                            <span style="float: right;" class="object_status_response"></span>
+                        </td>
+                        <td>
+                            <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{backdoor.status}}</span>
+                        </td>
+                    </tr>
+                    {% with sectors=backdoor.sectors %}
+                        {% include "sector_widget.html" %}
+                    {% endwith %}
+                    <tr>
+                        {% with sources=backdoor.source obj_id=backdoor.id obj_type=subscription.type %}
+                            {% include "sources_listing_widget.html" %}
+                        {% endwith %}
+                    </tr>
+                    <tr>
+                        {% with releasability=backdoor.releasability %}
+                            {% include "releasability_list_widget.html" %}
+                        {% endwith %}
+                    </tr>
+                </tbody>
+            </table>
+        </div> <!-- content_body -->
+     </div> <!-- content_box -->
+     <div id="detail_floaters">
+         {% include 'details_options_widget.html' %}
+         {% with bucket_list=backdoor.bucket_list %}
+             {% include 'bucket_list_widget.html' %}
+         {% endwith %}
+     </div>
+     <div>
+	    {% with obj=backdoor obj_type=subscription.type %}
+                {% include 'tickets_listing_widget.html' %}
+	    {% endwith %}
+    </div>
+    <div>
+        {% with hit=backdoor col=COL_BACKDOORS %}
+            {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% include 'relationships_listing_widget.html' %}
+    </div>
+    <div>
+        {% include 'objects_listing_widget.html' %}
+    </div>
+    <div>
+    {% include 'screenshot_widget.html' %}
+    </div>
+    <div>
+        {% include "comments_listing_widget.html" %}
+    </div>
+</div> <!-- details_section -->
+
+{% with item=backdoor %}
+    {% include "services_analysis_section.html" with crits_type="Backdoor" identifier=backdoor.id %}
+{% endwith %}
+
+{% include 'services_tab_tabs_widget.html' %}
+</div>
+
+<script type="text/javascript">
+    $(document).bind('enable_backdoor_aliases', function(){
+        window.add_backdoor_aliases = true;
+    });
+</script>
+
+{% endblock %}
+
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/backdoors.js"></script>
+{% endblock %}
+

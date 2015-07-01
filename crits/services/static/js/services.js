@@ -139,25 +139,43 @@ $(document).ready(function() {
             }
         });
     });
-});
-
-$(document).on("click", "span.enabled", function(e) {
-	 var me = $(this);
-     var url = me.attr('data-url');
-     $.ajax({
-         type: 'POST',
-         url: url,
-         data: {},
-         datatype: 'json',
-         success: function(data) {
-             if (data.success) {
-                 if (me.text() == "Yes") {
-                     me.text("No");
-                 } else {
-                     me.text("Yes")
+    $(document).on("click", "span.enabled", function(e) {
+         var me = $(this);
+         var url = me.attr('data-url');
+         $.ajax({
+             type: 'POST',
+             url: url,
+             data: {},
+             datatype: 'json',
+             success: function(data) {
+                 if (data.success) {
+                     if (me.text() == "Yes") {
+                         me.text("No");
+                     } else {
+                         me.text("Yes")
+                     }
+                     me.attr('data-url', data.url);
                  }
-                 me.attr('data-url', data.url);
              }
-         }
-     });
+         });
+    });
+    $(document).on('submit', '#form-config-service', function(e) {
+        e.preventDefault();
+        var data = $(this).serialize();
+        var url = $(this).attr('action')
+        $.ajax({
+            async: false,
+            type: "POST",
+            url: url,
+            data: data,
+            datatype: 'json',
+            success: function(data) {
+                if (data.success) {
+                    $('#service_edit_results').text("Success!");
+                } else {
+                    $('#service_edit_results').text(data.config_error);
+                }
+            }
+        });
+    });
 });

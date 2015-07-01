@@ -7,7 +7,6 @@
 
 <script>
     var pcap_md5 = "{{ pcap.md5 }}";
-    var update_pcap_description = "{% url 'crits.pcaps.views.set_pcap_description' pcap.md5 %}";
 </script>
 
 {% if pcap %}
@@ -56,16 +55,9 @@
             <td>{{ pcap.md5 }}</td>
             </tr>
             <tr>
-            <td class='key'>Description</td>
-            {% if pcap.description %}
-                <td>
-                    <span class="edit_underline" id="pcap_description">{{pcap.description}}</span>
-                </td>
-            {% else %}
-                <td>
-                    <span class="edit_underline" id="pcap_description">None</span>
-                </td>
-            {% endif %}
+                {% with description=pcap.description %}
+                    {% include 'description_widget.html' %}
+                {% endwith %}
             <tr>
                 <td class="key">Status
                     <span style="float: right;" class="object_status_response"></span>
@@ -104,6 +96,11 @@
     <div>
         {% with hit=pcap col=COL_PCAPS %}
             {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=pcap col=COL_PCAPS %}
+            {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
     <div>

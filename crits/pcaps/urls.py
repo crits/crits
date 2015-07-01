@@ -2,7 +2,6 @@ from django.conf.urls import patterns
 
 urlpatterns = patterns('crits.pcaps.views',
     (r'^details/(?P<md5>\w+)/$', 'pcap_details'),
-    (r'^set_description/(?P<md5>\w+)/$', 'set_pcap_description'),
     (r'^upload/$', 'upload_pcap'),
     (r'^remove/(?P<md5>[\S ]+)$', 'remove_pcap'),
     (r'^list/$', 'pcaps_listing'),

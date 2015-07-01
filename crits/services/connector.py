@@ -1,6 +1,3 @@
-# (c) 2014, The MITRE Corporation.  All rights reserved.
-# Source code distributed pursuant to license agreement.
-
 class UnknownConnector(Exception):
     """
     Exception for dealing with an unknown connector type.

@@ -1,5 +1,49 @@
 /* expand/collapse */
 
+span.error_page {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    height: 200px;
+    margin: -250px 0 0 -250px;
+    text-align: center;
+    font-size: large;
+}
+
+#notifications {
+    /* fixate the notifications div at the bottom right of the screen */
+    position: fixed;
+    bottom: 30px;
+    right: 20px;
+    padding-bottom: 10px;
+    padding-right: 10px;
+    text-align: center;
+    width: 350px;
+}
+
+#close_notifications, #notifications_count {
+    background-color: white;
+    border-style: solid;
+    border-width: thin;
+    padding-right: 40px;
+    padding-left: 40px;
+}
+
+span.noty_modified {
+    font-style: italic;
+}
+
+.noty_message {
+    font-size: 12px !important;
+}
+
+li.sf-firstrow a.sf-level0 {
+    border-width: 0;
+    background-color:inherit;
+    height: 10px;
+}
+
 table .collapsible {
     padding: 0 0 3px 0;
 }
@@ -341,7 +385,7 @@ span.right.link a:link{
 	padding:5px;
     width:30px;
     height:30px;
-    border: 3px solid; 
+    border: 3px solid;
 }
 .theme-picker-default {
 	background-image: linear-gradient(#f9f9f9,#e4e4e4);
@@ -372,11 +416,87 @@ span.right.link a:link{
 	font-size: 20px;
 	font-weight: 700;
 }
-
 .ui-tabs .ui-tabs-nav li.ui-tabs-active {
-    margin-bottom:-2px !important;
+	margin-bottom:-2px !important;
 }
 .divider {
-	border-left:1px solid #d3d3d3;
+	border-left:1px solid #ababab;
 	display: inline-block;
+}
+.gridster>* {
+	margin:0 !important;
+}
+.gridster li {
+	list-style-type: none;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+ul.gridster {
+    padding-left: 0px !important;
+}
+.top.responsive, .z-11 {
+	z-index:11;
+}
+.edit-button {
+    margin:5px;
+}
+.shadowed {
+    -webkit-box-shadow: 2px 3px 5px 1px #adadad;
+    -moz-box-shadow: 2px 3px 5px 1px #adadad;
+    box-shadow: 2px 3px 5px 1px #adadad;
+    z-index:12;
+}
+#buttonBar i, #buttonBar button{
+    cursor:pointer;
+}
+#buttonBar button {
+    min-width:20px;
+    -webkit-border-radius: 0px !important;
+}
+#other-searches-dropdown {
+	max-height:400px;
+	overflow-y:auto;
+	right:10px;
+	top:48px;
+	width:250px;
+	z-index:11;
+}
+#other-searches-dropdown .other-search {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.dropdown-gray {
+	border:1px solid #adadad;
+    border-top:none;
+    display:none;
+    position:absolute;
+    border-radius:0 0 5px 5px;
+    background-color: #EEE;
+}
+.dropdown-gray-option {
+	cursor:pointer;
+	padding:5px;
+}
+.dropdown-gray-option:hover {
+	border-radius:5px;
+    background: -webkit-linear-gradient(#ddd, #dedede, #ddd); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#ddd, #dedede, #ddd); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#ddd, #dedede, #ddd); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#ddd, #dedede, #ddd); /* Standard syntax (must be last) */
+    -webkit-box-shadow:    1px 1px 1px 1px #adadad;
+    -moz-box-shadow: 1px 1px 1px 1px #adadad;
+    box-shadow:    1px 1px 1px 1px #adadad;
+}
+.edit-button {
+	margin:5px;
+}
+.shadowed {
+    -webkit-box-shadow: 2px 3px 5px 1px #adadad;;
+    -moz-box-shadow: 2px 3px 5px 1px #adadad;;
+    box-shadow: 2px 3px 5px 1px #adadad;
+    z-index:12;
+}
+#buttonBar i, #buttonBar button{
+	cursor:pointer;
 }

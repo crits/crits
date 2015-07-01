@@ -53,6 +53,9 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
     }
 
     analyst = StringField()
+    # Description is used here instead of inheriting from CritsBaseAttributes
+    # because screenshots don't need the rest of the attributes that come with
+    # inheriting.
     description = StringField()
     filename = StringField()
     height = IntField()
@@ -105,6 +108,7 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
         :type tags: str, list
         """
 
+        tag_list = []
         if isinstance(tags, basestring):
             tag_list = [t.strip() for t in tags.split(',') if len(t.strip())]
         if isinstance(tags, list):

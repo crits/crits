@@ -106,7 +106,6 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
     }
 
     data_type = StringField()
-    description = StringField()
     data = StringField()
     highlights = ListField(EmbeddedDocumentField(EmbeddedHighlight))
     inlines = ListField(EmbeddedDocumentField(EmbeddedInline))
@@ -248,7 +247,7 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
             To get the cybox object as xml or json, call to_xml() or
             to_json(), respectively, on the resulting CybOX object.
         """
-        obj = Artifact(self.data, Artifact.TYPE_FILE)
+        obj = Artifact(self.data.encode('utf-8'), Artifact.TYPE_FILE)
         obj.packaging.append(Base64Encoding())
         obs = Observable(obj)
         obs.description = self.description
