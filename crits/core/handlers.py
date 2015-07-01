@@ -39,11 +39,13 @@ from crits.core.user_tools import save_user_secret
 from crits.core.user_tools import get_user_email_notification
 
 from crits.actors.actor import Actor
+from crits.backdoors.backdoor import Backdoor
 from crits.campaigns.campaign import Campaign
 from crits.certificates.certificate import Certificate
 from crits.comments.comment import Comment
 from crits.domains.domain import Domain
 from crits.events.event import Event
+from crits.exploits.exploit import Exploit
 from crits.ips.ip import IP
 from crits.notifications.handlers import get_user_notifications, generate_audit_notification
 from crits.pcaps.pcap import PCAP
@@ -58,6 +60,44 @@ from crits.core.totp import valid_totp
 
 
 logger = logging.getLogger(__name__)
+
+def description_update(type_, id_, description, analyst):
+    """
+    Change the description of a top-level object.
+
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
+    :param description: The description to use.
+    :type description: str
+    :param analyst: The user setting the description.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(analyst)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser.HTMLParser()
+    description = h.unescape(description)
+    try:
+        obj.description = description
+        obj.save(username=analyst)
+        return {'success': True, 'message': "Description set."}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
 
 def get_favorites(analyst):
     """
@@ -78,12 +118,14 @@ def get_favorites(analyst):
 
     field_dict = {
         'Actor': 'name',
+        'Backdoor': 'name',
         'Campaign': 'name',
         'Certificate': 'filename',
         'Comment': 'object_id',
         'Domain': 'domain',
         'Email': 'id',
         'Event': 'title',
+        'Exploit': 'name',
         'Indicator': 'id',
         'IP': 'ip',
         'PCAP': 'filename',
@@ -185,11 +227,13 @@ def get_data_for_item(item_type, item_id):
 
     type_to_fields = {
         'Actor': ['name', ],
+        'Backdoor': ['name', ],
         'Campaign': ['name', ],
         'Certificate': ['filename', ],
         'Domain': ['domain', ],
         'Email': ['from_address', 'date', ],
         'Event': ['title', 'event_type', ],
+        'Exploit': ['name', 'cve', ],
         'Indicator': ['value', 'ind_type', ],
         'IP': ['ip', 'type', ],
         'PCAP': ['filename', ],
@@ -222,7 +266,7 @@ def get_data_for_item(item_type, item_id):
             response['data'][field.title()] = value
     return response
 
-def add_releasability(type_, _id, name, analyst):
+def add_releasability(type_, id_, name, user, **kwargs):
     """
     Add releasability to a top-level object.
 
@@ -232,18 +276,18 @@ def add_releasability(type_, _id, name, analyst):
     :type id_: str
     :param name: The source to add releasability for.
     :type name: str
-    :param analyst: The user adding the releasability.
-    :type analyst: str
+    :param user: The user adding the releasability.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    obj = class_from_id(type_, _id)
+    obj = class_from_id(type_, id_)
     if not obj:
         return {'success': False,
                 'message': "Could not find object."}
     try:
-        obj.add_releasability(name=name, analyst=analyst, instances=[])
-        obj.save(username=analyst)
+        obj.add_releasability(name=name, analyst=user, instances=[])
+        obj.save(username=user)
         obj.reload()
         return {'success': True,
                 'obj': obj.to_dict()['releasability']}
@@ -453,8 +497,8 @@ def merge_source_lists(left, right):
                 left.append(src)
     return left
 
-def source_add_update(obj_type, obj_id, action, source, method=None,
-                      reference=None, tlp=None, date=None, analyst=None):
+def source_add_update(obj_type, obj_id, action, source, method='',
+                      reference='', tlp=None, date=None, analyst=None):
     """
     Add or update a source for a top-level object.
 
@@ -667,6 +711,10 @@ def get_item_names(obj, active=None):
     :returns: :class:`crits.core.crits_mongoengine.CritsQuerySet`
     """
 
+    # Don't use this to get sources.
+    if isinstance(obj, SourceAccess):
+        return []
+
     if active is None:
        c = obj.objects().order_by('+name')
     else:
@@ -755,11 +803,13 @@ def alter_bucket_list(obj, buckets, val):
         if val == -1:
             Bucket.objects(name=name,
                            Actor=0,
+                           Backdoor=0,
                            Campaign=0,
                            Certificate=0,
                            Domain=0,
                            Email=0,
                            Event=0,
+                           Exploit=0,
                            Indicator=0,
                            IP=0,
                            PCAP=0,
@@ -798,11 +848,13 @@ def generate_bucket_jtable(request, option):
                                     request,
                                     includes=['name',
                                               'Actor',
+                                              'Backdoor',
                                               'Campaign',
                                               'Certificate',
                                               'Domain',
                                               'Email',
                                               'Event',
+                                              'Exploit',
                                               'Indicator',
                                               'IP',
                                               'PCAP',
@@ -812,9 +864,9 @@ def generate_bucket_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
-              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target',
-              'Promote']
+    fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
+              'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
+              'Sample', 'Target', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
@@ -842,7 +894,7 @@ def generate_bucket_jtable(request, option):
             if field['fieldname'].startswith("'" + ctype):
                 if ctype == 'name':
                     field['display'] = """ function (data) {
-                    return '<a href="%s&q='+data.record.name+'">' + data.record.name + '</a>';
+                    return '<a href="%s&q='+encodeURIComponent(data.record.name)+'">' + data.record.name + '</a>';
                     }
                     """ % url
                 elif ctype == 'Promote':
@@ -852,12 +904,12 @@ def generate_bucket_jtable(request, option):
                     # has a bucket parameter that is for the name of the
                     # to operate on.
                     field['display'] = """ function (data) {
-            return '<div class="icon-container"><span class="add_button" data-intro="Add a campaign" data-position="right"><a href="#" action="%s?name='+data.record.name+'" class="ui-icon ui-icon-plusthick dialogClick" dialog="campaign-add" persona="promote" title="Promote to campaign"></a></span></div>'
+            return '<div class="icon-container"><span class="add_button" data-intro="Add a campaign" data-position="right"><a href="#" action="%s?name='+encodeURIComponent(data.record.name)+'" class="ui-icon ui-icon-plusthick dialogClick" dialog="campaign-add" persona="promote" title="Promote to campaign"></a></span></div>'
                     }
                     """ % url
                 else:
                     field['display'] = """ function (data) {
-                    return '<a href="%s?bucket_list='+data.record.name+'">'+data.record.%s+'</a>';
+                    return '<a href="%s?bucket_list='+encodeURIComponent(data.record.name)+'">'+data.record.%s+'</a>';
                     }
                     """ % (url, ctype)
     return render_to_response('bucket_lists.html',
@@ -1417,7 +1469,6 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
 
     sample_queries = {
         'size' : {'size': search_query},
-        'backdoor': {'backdoor.name': search_query},
         'md5hash': {'md5': search_query},
         'sha1hash': {'sha1': search_query},
         'ssdeephash': {'ssdeep': search_query},
@@ -1427,7 +1478,6 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             {'filename': search_query},
             {'filenames': search_query},
         ]},
-        'exploit': {'exploit.cve': search_query},
         'campaign': {'campaign.name': search_query},
         # slightly slow in larger collections
         'object_value': {'objects.value': search_query},
@@ -1465,7 +1515,6 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         query = {'comment': search_query}
     elif search_type == "global":
         if type_ == "Sample":
-            search_list.append(sample_queries["backdoor"])
             search_list.append(sample_queries["object_value"])
             search_list.append(sample_queries["filename"])
             if len(term) == 32:
@@ -1539,6 +1588,12 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             search_list = [
                     {'description': search_query},
                     {'tags': search_query},
+                ]
+        elif type_ == "Target":
+            search_list = [
+                    {'email_address': search_query},
+                    {'firstname': search_query},
+                    {'lastname': search_query},
                 ]
         else:
             search_list = [{'name': search_query}]
@@ -2014,11 +2069,6 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                                                           "%Y-%m-%d %H:%M:%S")
                 if key == "password_reset":
                     doc['password_reset'] = None
-                if key == "exploit":
-                    exploits = []
-                    for ex in value:
-                        exploits.append(ex['cve'])
-                    doc[key] = "|||".join(exploits)
                 if key == "campaign":
                     camps = []
                     for campdict in value:
@@ -2053,7 +2103,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                             doc[key] = ",".join(value)
                     else:
                         doc[key] = ""
-                doc[key] = html_escape(doc[key])
+                if key != urlfieldparam:
+                    doc[key] = html_escape(doc[key])
             if col_obj._meta['crits_type'] == "Comment":
                 mapper = {
                     "Actor": 'crits.actors.views.actor_detail',
@@ -2070,9 +2121,6 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
                                     args=(doc['url_key'],))
-            elif col_obj._meta['crits_type'] == "Backdoor" and url:
-                doc['url'] = "{0}?q={1}&search_type=backdoor&force_full=1".format(
-                    reverse(url), doc['name'])
             elif col_obj._meta['crits_type'] == "AuditLog":
                 if doc.get('method', 'delete()') != 'delete()':
                     doc['url'] = details_from_id(doc['type'],
@@ -2359,17 +2407,11 @@ def generate_items_jtable(request, itype, option):
         fields = ['name', 'active', 'id']
     elif itype == 'ActorIntendedEffect':
         fields = ['name', 'active', 'id']
-    elif itype == 'Backdoor':
-        fields = ['name', 'sample_count', 'active', 'id']
-        click = "function () {window.parent.$('#backdoor_add').click();}"
     elif itype == 'Campaign':
         fields = ['name', 'description', 'active', 'id']
         click = "function () {window.parent.$('#new-campaign').click();}"
     elif itype == 'EventType':
         fields = ['name', 'active', 'id']
-    elif itype == 'Exploit':
-        fields = ['name', 'active', 'id']
-        click = "function () {window.parent.$('#exploit_add').click();}"
     elif itype == 'IndicatorAction':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#indicator_action_add').click();}"
@@ -2790,7 +2832,7 @@ def generate_user_profile(username, request):
     for sample in sample_md5s:
         md5s.append(sample.value.split(" ")[0])
     filter_data = ('md5', 'source', 'filename', 'mimetype',
-                   'size', 'campaign', 'backdoor', 'exploit')
+                   'size', 'campaign')
     sample_list = (Sample.objects(md5__in=md5s)
                    .only(*filter_data)
                    .sanitize_sources(username))
@@ -3311,11 +3353,13 @@ def generate_global_search(request):
     if ObjectId.is_valid(searchtext):
         for obj_type, url, key in [
                 ['Actor', 'crits.actors.views.actor_detail', 'id'],
+                ['Backdoor', 'crits.backdoors.views.backdoor_detail', 'id'],
                 ['Campaign', 'crits.campaigns.views.campaign_details', 'name'],
                 ['Certificate', 'crits.certificates.views.certificate_details', 'md5'],
                 ['Domain', 'crits.domains.views.domain_detail', 'domain'],
                 ['Email', 'crits.emails.views.email_detail', 'id'],
                 ['Event', 'crits.events.views.view_event', 'id'],
+                ['Exploit', 'crits.exploits.views.exploit_detail', 'id'],
                 ['Indicator', 'crits.indicators.views.indicator', 'id'],
                 ['IP', 'crits.ips.views.ip_detail', 'ip'],
                 ['PCAP', 'crits.pcaps.views.pcap_details', 'md5'],
@@ -3333,12 +3377,14 @@ def generate_global_search(request):
     for col_obj,url in [
                     [Actor, "crits.actors.views.actors_listing"],
                     [AnalysisResult, "crits.services.views.analysis_results_listing"],
+                    [Backdoor, "crits.backdoors.views.backdoors_listing"],
                     [Campaign, "crits.campaigns.views.campaigns_listing"],
                     [Certificate, "crits.certificates.views.certificates_listing"],
                     [Comment, "crits.comments.views.comments_listing"],
                     [Domain, "crits.domains.views.domains_listing"],
                     [Email, "crits.emails.views.emails_listing"],
                     [Event, "crits.events.views.events_listing"],
+                    [Exploit, "crits.exploits.views.exploits_listing"],
                     [Indicator,"crits.indicators.views.indicators_listing"],
                     [IP, "crits.ips.views.ips_listing"],
                     [PCAP, "crits.pcaps.views.pcaps_listing"],
@@ -3527,11 +3573,13 @@ def details_from_id(type_, id_):
     """
 
     type_map = {'Actor': 'crits.actors.views.actor_detail',
+                'Backdoor': 'crits.backdoors.views.backdoor_detail',
                 'Campaign': 'crits.campaigns.views.campaign_details',
                 'Certificate': 'crits.certificates.views.certificate_details',
                 'Domain': 'crits.domains.views.domain_detail',
                 'Email': 'crits.emails.views.email_detail',
                 'Event': 'crits.events.views.view_event',
+                'Exploit': 'crits.exploits.views.exploit_detail',
                 'Indicator': 'crits.indicators.views.indicator',
                 'IP': 'crits.ips.views.ip_detail',
                 'PCAP': 'crits.pcaps.views.pcap_details',
@@ -3831,11 +3879,13 @@ def generate_sector_jtable(request, option):
                                     request,
                                     includes=['name',
                                               'Actor',
+                                              'Backdoor',
                                               'Campaign',
                                               'Certificate',
                                               'Domain',
                                               'Email',
                                               'Event',
+                                              'Exploit',
                                               'Indicator',
                                               'IP',
                                               'PCAP',
@@ -3845,8 +3895,9 @@ def generate_sector_jtable(request, option):
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
-    fields = ['name', 'Actor', 'Campaign', 'Certificate', 'Domain', 'Email',
-              'Event', 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target']
+    fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
+              'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
+              'Sample', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',
@@ -3872,12 +3923,12 @@ def generate_sector_jtable(request, option):
             if field['fieldname'].startswith("'" + ctype):
                 if ctype == 'name':
                     field['display'] = """ function (data) {
-                    return '<a href="%s&q='+data.record.name+'">' + data.record.name + '</a>';
+                    return '<a href="%s&q='+encodeURIComponent(data.record.name)+'">' + data.record.name + '</a>';
                     }
                     """ % url
                 else:
                     field['display'] = """ function (data) {
-                    return '<a href="%s?sectors='+data.record.name+'">'+data.record.%s+'</a>';
+                    return '<a href="%s?sectors='+encodeURIComponent(data.record.name)+'">'+data.record.%s+'</a>';
                     }
                     """ % (url, ctype)
     return render_to_response('sector_lists.html',

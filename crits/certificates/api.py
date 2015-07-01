@@ -17,7 +17,7 @@ class CertificateResource(CRITsAPIResource):
 
     class Meta:
         object_class = Certificate
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "certificates"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

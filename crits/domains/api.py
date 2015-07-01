@@ -1,8 +1,6 @@
-from dateutil.parser import parse
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.domains.domain import Domain
 from crits.domains.handlers import add_new_domain
@@ -17,7 +15,7 @@ class DomainResource(CRITsAPIResource):
 
     class Meta:
         object_class = Domain
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "domains"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())

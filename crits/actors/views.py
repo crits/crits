@@ -18,7 +18,7 @@ from crits.actors.handlers import add_new_actor_identifier, actor_identifier_typ
 from crits.actors.handlers import actor_identifier_type_values
 from crits.actors.handlers import attribute_actor_identifier
 from crits.actors.handlers import set_identifier_confidence, remove_attribution
-from crits.actors.handlers import set_actor_name, set_actor_description
+from crits.actors.handlers import set_actor_name
 from crits.actors.handlers import update_actor_aliases
 from crits.core import form_consts
 from crits.core.data_tools import json_handler
@@ -248,13 +248,13 @@ def actor_tags_modify(request):
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
         tag_type = request.POST.get('tag_type', None)
-        actor_id = request.POST.get('oid', None)
+        id_ = request.POST.get('oid', None)
         tags = request.POST.get('tags', None)
         if not tag_type:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a tag type.'}),
                                 mimetype="application/json")
-        result = update_actor_tags(actor_id, tag_type, tags, request.user)
+        result = update_actor_tags(id_, tag_type, tags, request.user)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
     else:
@@ -455,37 +455,6 @@ def edit_actor_name(request, id_):
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)
-def edit_actor_description(request, id_):
-    """
-    Set actor description. Should be an AJAX POST.
-
-    :param request: Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :param id_: The ObjectId of the Actor.
-    :type id_: str
-    :returns: :class:`django.http.HttpResponseRedirect`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        request.user._setup()
-        description = request.POST.get('description', None)
-        if not description:
-            return HttpResponse(json.dumps({'success': False,
-                                            'message': 'Not all info provided.'}),
-                                mimetype="application/json")
-        result = set_actor_description(id_,
-                                       description,
-                                       request.user)
-        return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
-    else:
-        error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
-
-#TODO:
-@user_passes_test(user_can_view_data)
 def edit_actor_aliases(request):
     """
     Update aliases for an Actor.
@@ -498,8 +467,8 @@ def edit_actor_aliases(request):
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
         aliases = request.POST.get('aliases', None)
-        actor_id = request.POST.get('oid', None)
-        result = update_actor_aliases(actor_id, aliases, request.user)
+        id_ = request.POST.get('oid', None)
+        result = update_actor_aliases(id_, aliases, request.user)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
     else:

@@ -7,7 +7,7 @@ from django.template import RequestContext
 from mongoengine.base import ValidationError
 
 from crits.core import form_consts
-from crits.core.crits_mongoengine import json_handler
+from crits.core.crits_mongoengine import json_handler, EmbeddedCampaign
 from crits.core.handlers import jtable_ajax_list, build_jtable, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
@@ -46,12 +46,17 @@ def upsert_target(data, analyst):
     if 'email_address' not in data:
         return {'success': False,
                 'message': "No email address to look up"}
-    target = Target.objects(email_address__iexact=data['email_address']).first()
+
+    # check for exact match first
+    target = Target.objects(email_address=data['email_address']).first()
+
+    if not target: # if no exact match, look for case-insensitive match
+        target = Target.objects(email_address__iexact=data['email_address']).first()
     is_new = False
     if not target:
         is_new = True
         target = Target()
-        target.email_address = data['email_address']
+        target.email_address = data['email_address'].strip().lower()
 
     bucket_list = False
     ticket = False
@@ -69,6 +74,10 @@ def upsert_target(data, analyst):
         target.note = data['note']
     if 'title' in data:
         target.title = data['title']
+    if 'campaign' in data and 'camp_conf' in data:
+        target.add_campaign(EmbeddedCampaign(name=data['campaign'],
+                                             confidence=data['camp_conf'],
+                                             analyst=analyst))
     if 'bucket_list' in data:
         bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     if 'ticket' in data:
@@ -106,27 +115,13 @@ def remove_target(email_address=None, analyst=None):
     if not email_address:
         return {'success': False,
                 'message': "No email address to look up"}
-    target = Target.objects(email_address__iexact=email_address).first()
+    target = Target.objects(email_address=email_address).first()
     if not target:
         return {'success': False,
                 'message': "No target matching this email address."}
     target.delete(username=analyst)
     return {'success': True,
             'message': "Target removed successfully"}
-
-def get_target(email_address=None):
-    """
-    Get a target from the database.
-
-    :param email_address: The email address of the target to get.
-    :type email_address: str
-    :returns: None, :class:`crits.targets.target.Target`
-    """
-
-    if not email_address:
-        return None
-    target = Target.objects(email_address__iexact=email_address).first()
-    return target
 
 def get_target_details(email_address, analyst):
     """
@@ -144,14 +139,17 @@ def get_target_details(email_address, analyst):
         template = "error.html"
         args = {'error': "Must provide an email address."}
         return template, args
-    target = Target.objects(email_address__iexact=email_address).first()
+
+    # check for exact match first
+    target = Target.objects(email_address=email_address).first()
+
+    if not target: # if no exact match, look for case-insensitive match
+        target = Target.objects(email_address__iexact=email_address).first()
     if not target:
         target = Target()
-        target.email_address = email_address
+        target.email_address = email_address.strip().lower()
         form = TargetInfoForm(initial={'email_address': email_address})
     email_list = target.find_emails(analyst)
-    #initial_data = target.to_dict()
-    #initial_data['bucket_list'] = target.get_bucket_list_string();
     form = TargetInfoForm(initial=target.to_dict())
 
     if form.fields.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME) != None:
@@ -212,7 +210,7 @@ def get_target_details(email_address, analyst):
 
     return template, args
 
-def get_campaign_targets(campaign,user):
+def get_campaign_targets(campaign, user):
     """
     Get targets related to a specific campaign.
 
@@ -225,20 +223,21 @@ def get_campaign_targets(campaign,user):
 
     # Searching for campaign targets
     sourcefilt = user_sources(user)
+
+    # Get addresses from the 'to' field of emails attributed to this campaign
     emails = Email.objects(source__name__in=sourcefilt,
                            campaign__name=campaign).only('to')
     addresses = {}
     for email in emails:
         for to in email['to']:
+            addresses[to.strip().lower()] = 1 # add the way it should be
+            addresses[to] = 1 # also add the way it is in the Email
 
-            # This might be a slow operation since we're looking up all "to"
-            # targets, could possibly bulk search this.
-            target = Target.objects(email_address__iexact=to).first()
+    # Get addresses of Targets attributed to this campaign
+    targets = Target.objects(campaign__name=campaign).only('email_address')
+    for target in targets:
+        addresses[target.email_address] = 1
 
-            if target is not None:
-                addresses[target.email_address] = 1
-            else:
-                addresses[to] = 1
     uniq_addrs = addresses.keys()
     return uniq_addrs
 

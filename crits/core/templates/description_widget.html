@@ -1,0 +1,10 @@
+<script>
+    var description_update = "{% url 'crits.core.views.update_object_description' %}";
+</script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}js/descriptions.js"></script>
+
+<td class="key">Description</td>
+<td class="longtext">
+    <span class="edit_underline" id="object_description">{{description}}</span><span id="object_description_error"></span>
+</td>

@@ -19,6 +19,7 @@ from crits.actors.actor import ActorSophistication, ActorThreatType
 from crits.actors.actor import ActorThreatIdentifier
 from crits.actors.forms import AddActorForm, AddActorIdentifierTypeForm
 from crits.actors.forms import AddActorIdentifierForm, AttributeIdentifierForm
+from crits.backdoors.forms import AddBackdoorForm
 from crits.campaigns.campaign import Campaign
 from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
@@ -53,7 +54,7 @@ from crits.core.handlers import ticket_add, ticket_update, ticket_remove
 from crits.core.handlers import add_new_role, render_role_graph
 from crits.core.handlers import add_role_source, remove_role_source
 from crits.core.handlers import edit_role_description, edit_role_name
-from crits.core.handlers import modify_tlp
+from crits.core.handlers import modify_tlp, description_update
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, user_sources
@@ -73,10 +74,12 @@ from crits.domains.forms import TLDUpdateForm, AddDomainForm
 from crits.emails.forms import EmailUploadForm, EmailEMLForm, EmailYAMLForm, EmailRawUploadForm, EmailOutlookForm
 from crits.events.event import EventType
 from crits.events.forms import EventForm
+from crits.exploits.forms import AddExploitForm
 from crits.indicators.forms import UploadIndicatorCSVForm, UploadIndicatorTextForm
 from crits.indicators.forms import UploadIndicatorForm, NewIndicatorActionForm
 from crits.indicators.indicator import IndicatorAction
 from crits.ips.forms import AddIPForm
+from crits.locations.forms import AddLocationForm
 from crits.notifications.handlers import get_user_notifications
 from crits.notifications.handlers import remove_user_from_notification
 from crits.notifications.handlers import remove_user_notifications
@@ -87,15 +90,38 @@ from crits.raw_data.forms import UploadRawDataFileForm, UploadRawDataForm
 from crits.raw_data.forms import NewRawDataTypeForm
 from crits.raw_data.raw_data import RawDataType
 from crits.relationships.forms import ForgeRelationshipForm
-from crits.samples.backdoor import Backdoor
-from crits.samples.exploit import Exploit
-from crits.samples.forms import UploadFileForm, NewExploitForm, NewBackdoorForm
+from crits.samples.forms import UploadFileForm
 from crits.screenshots.forms import AddScreenshotForm
 from crits.standards.forms import UploadStandardsForm
 from crits.targets.forms import TargetInfoForm
 
 logger = logging.getLogger(__name__)
 
+
+@user_passes_test(user_can_view_data)
+def update_object_description(request):
+    """
+    Toggle favorite in a user profile.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        type_ = request.POST['type']
+        id_ = request.POST['id']
+        description = request.POST['description']
+        analyst = request.user.username
+        return HttpResponse(json.dumps(description_update(type_,
+                                                          id_,
+                                                          description,
+                                                          analyst)),
+                            mimetype="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def toggle_favorite(request):
@@ -472,26 +498,26 @@ def source_releasability(request):
 
     if request.method == 'POST' and request.is_ajax():
         type_ = request.POST.get('type', None)
-        _id = request.POST.get('id', None)
+        id_ = request.POST.get('id', None)
         name = request.POST.get('name', None)
         action = request.POST.get('action', None)
         date = request.POST.get('date', datetime.datetime.now())
         if not isinstance(date, datetime.datetime):
             date = parse(date, fuzzy=True)
-        analyst = str(request.user.username)
-        if not type_ or not _id or not name or not action:
+        user = str(request.user.username)
+        if not type_ or not id_ or not name or not action:
             error = "Modifying releasability requires a type, id, source, and action"
             return render_to_response("error.html",
                                       {"error" : error },
                                       RequestContext(request))
         if action  == "add":
-            result = add_releasability(type_, _id, name, analyst)
+            result = add_releasability(type_, id_, name, user)
         elif action  == "add_instance":
-            result = add_releasability_instance(type_, _id, name, analyst)
+            result = add_releasability_instance(type_, id_, name, user)
         elif action == "remove":
-            result = remove_releasability(type_, _id, name, analyst)
+            result = remove_releasability(type_, id_, name, user)
         elif action == "remove_instance":
-            result = remove_releasability_instance(type_, _id, name, date, analyst)
+            result = remove_releasability_instance(type_, id_, name, date, user)
         else:
             error = "Unknown releasability action: %s" % action
             return render_to_response("error.html",
@@ -500,7 +526,7 @@ def source_releasability(request):
         if result['success']:
             subscription = {
                 'type': type_,
-                'id': _id
+                'id': id_
             }
 
             html = render_to_string('releasability_header_widget.html',
@@ -1055,14 +1081,13 @@ def base_context(request):
     if request.user.is_authenticated():
         user = request.user.username
         # Forms that don't require a user
-        base_context['add_exploit'] = NewExploitForm()
-        base_context['add_backdoor'] = NewBackdoorForm()
         base_context['add_indicator_action'] = NewIndicatorActionForm()
         base_context['add_target'] = TargetInfoForm()
         base_context['campaign_add'] = AddCampaignForm()
         base_context['comment_add'] = AddCommentForm()
         base_context['inline_comment_add'] = InlineCommentForm()
         base_context['campaign_form'] = CampaignForm()
+        base_context['location_add'] = AddLocationForm()
         base_context['add_raw_data_type'] = NewRawDataTypeForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
         base_context['role_combine_preview'] = RoleCombinePreview()
@@ -1082,6 +1107,14 @@ def base_context(request):
             base_context['add_actor_identifier'] = AddActorIdentifierForm(user)
         except Exception, e:
             logger.warning("Base Context AddActorIdentifierForm Error: %s" % e)
+        try:
+            base_context['backdoor_add'] = AddBackdoorForm(user)
+        except Exception, e:
+            logger.warning("Base Context AddBackdoorForm Error: %s" % e)
+        try:
+            base_context['exploit_add'] = AddExploitForm(user)
+        except Exception, e:
+            logger.warning("Base Context AddExploitForm Error: %s" % e)
         try:
             base_context['add_domain'] = AddDomainForm(user)
         except Exception, e:
@@ -1211,14 +1244,12 @@ def base_context(request):
         logger.warning("Base Context AddSourceForm Error: %s" % e)
     base_context['category_list'] = [
                                     {'collection': '', 'name': ''},
-                                    {'collection': settings.COL_BACKDOOR_DETAILS,
+                                    {'collection': settings.COL_BACKDOORS,
                                         'name': 'Backdoors'},
                                     {'collection': settings.COL_CAMPAIGNS,
                                         'name': 'Campaigns'},
                                     {'collection': settings.COL_EVENT_TYPES,
                                         'name': 'Event Types'},
-                                    {'collection': settings.COL_EXPLOIT_DETAILS,
-                                        'name': 'Exploits'},
                                     {'collection': settings.COL_IDB_ACTIONS,
                                         'name': 'Indicator Actions'},
                                     {'collection': settings.COL_INTERNAL_LOCATIONS,
@@ -1231,6 +1262,8 @@ def base_context(request):
                                         'name': 'Relationship Types'},
                                     {'collection': settings.COL_SOURCE_ACCESS,
                                         'name': 'Sources'},
+                                    {'collection': settings.COL_USER_ROLES,
+                                        'name': 'User Roles'}
                                     ]
 
     return base_context
@@ -1695,10 +1728,8 @@ def item_editor(request):
                 ActorMotivation,
                 ActorSophistication,
                 ActorIntendedEffect,
-                Backdoor,
                 Campaign,
                 EventType,
-                Exploit,
                 IndicatorAction,
                 ObjectType,
                 RawDataType,

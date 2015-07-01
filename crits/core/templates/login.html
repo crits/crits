@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% csrf_token %}
 
 <script>
     var reset_password = "{% url 'crits.core.views.reset_password' %}";

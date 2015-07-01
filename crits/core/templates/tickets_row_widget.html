@@ -2,7 +2,7 @@
 {% load filters %}
 
 <tr>
-    <td data-field="ticket_number">{{ticket.ticket_number}}</td>
+    <td data-field="ticket_number"><a href="{% url 'crits.core.views.global_search_listing' %}?search_type=global&force_full=1&search=Search&q=field:tickets.ticket_number+{{ticket.ticket_number}}" title="See related"> {{ticket.ticket_number}}</a></td>
     <td data-field="url">
       {% if "http://" in ticket.ticket_number or "https://" in ticket.ticket_number %}
         {{ ticket.ticket_number|urlize|url_target_blank }}

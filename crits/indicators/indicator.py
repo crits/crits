@@ -111,11 +111,13 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
             'searchurl': 'crits.indicators.views.indicators_listing',
             'fields': ["value", "ind_type", "created", "modified", "source",
                        "campaign", "status", "id"],
-            'jtopts_fields': ["details", "value", "type", "created", "modified",
-                              "source", "campaign", "status", "favorite", "id"],
+            'jtopts_fields': ["details", "splunk", "value", "type", "created",
+                              "modified", "source", "campaign", "status",
+                              "favorite", "id"],
             'hidden_fields': [],
             'linked_fields': ["value", "source", "campaign", "type", "status"],
-            'details_link': 'details', 'no_sort': ['details'],
+            'details_link': 'details',
+            'no_sort': ['details', 'splunk'],
         }
     }
 

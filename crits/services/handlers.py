@@ -122,17 +122,19 @@ def service_work_handler(service_instance, final_config):
     service_instance.execute(final_config)
 
 
-def run_service(name, crits_type, identifier, user, obj=None,
-                execute='local', custom_config={}):
+def run_service(name, type_, id_, user, obj=None,
+                execute='local', custom_config={}, **kwargs):
     """
     Run a service.
 
     :param name: The name of the service to run.
     :type name: str
-    :param crits_type: The type of the object.
-    :type name: str
-    :param identifier: The identifier of the object.
-    :type name: str
+    :param type_: The type of the object.
+    :type type_: str
+    :param id_: The identifier of the object.
+    :type id_: str
+    :param user: The user running the service.
+    :type user: str
     :param obj: The CRITs object, if given this overrides crits_type and identifier.
     :type obj: CRITs object.
     :param user: The user updating the results.
@@ -144,7 +146,7 @@ def run_service(name, crits_type, identifier, user, obj=None,
     """
 
     result = {'success': False}
-    if crits_type not in settings.CRITS_TYPES:
+    if type_ not in settings.CRITS_TYPES:
         result['html'] = "Unknown CRITs type."
         return result
 
@@ -158,7 +160,7 @@ def run_service(name, crits_type, identifier, user, obj=None,
         return result
 
     if not obj:
-        obj = class_from_id(crits_type, identifier)
+        obj = class_from_id(type_, id_)
         if not obj:
             result['html'] = 'Could not find object.'
             return result
@@ -169,8 +171,8 @@ def run_service(name, crits_type, identifier, user, obj=None,
         return result
 
     # See if the object is a supported type for the service.
-    if not service_class.supported_for_type(crits_type):
-        result['html'] = "Service not supported for type '%s'" % crits_type
+    if not service_class.supported_for_type(type_):
+        result['html'] = "Service not supported for type '%s'" % type_
         return result
 
     # When running in threaded mode, each thread needs to have its own copy of

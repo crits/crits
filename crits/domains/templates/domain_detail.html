@@ -35,6 +35,11 @@
                 <td>{{domain.created}}</td>
             </tr>
             <tr>
+                {% with description=domain.description %}
+                    {% include 'description_widget.html' %}
+                {% endwith %}
+            </tr>
+            <tr>
                 <td class="key">DNSMon Enabled</td>
                 <td>{{domain.watchlistEnabled|default:"False"}}</td>
             </tr>
@@ -69,27 +74,21 @@
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
     </div>
-    {% if samples %}
-    <div class="content_box">
-    <div class="content_body">
-        <h3 class="titleheader">Matching Samples</h3>
-         {% with sample_list=samples %}
-           {% include 'samples_malware_mini_widget.html' %}
-         {% endwith %}
-    </div><!-- samples content_body -->
-    </div><!-- samples content_box -->
-    {% endif %}
-
     <div>
       {% with obj=domain obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
     </div>
-
-    {% with hit=domain col=COL_DOMAINS %}
-        {% include "campaigns_display_widget.html" %}
-    {% endwith %}
-
+    <div>
+        {% with hit=domain col=COL_DOMAINS %}
+            {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=domain col=COL_DOMAINS %}
+            {% include "locations_display_widget.html" %}
+        {% endwith %}
+    </div>
     <div>
        {% include 'relationships_listing_widget.html' %}
     </div>

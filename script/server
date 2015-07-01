@@ -6,7 +6,7 @@
 # This script starts the necessary services for a local or
 # development environment for CRITs.
 
-# If MongoDB isn't already running, ask to start it.
+# If MongoDB isn't already running, attempt to start it.
 # This can fail if MongoDB is running already but on a non-standard port.
 pgrep mongod &> /dev/null
 if [ $? == 1 ]

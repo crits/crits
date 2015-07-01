@@ -53,6 +53,9 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
     }
 
     analyst = StringField()
+    # Description is used here instead of inheriting from CritsBaseAttributes
+    # because screenshots don't need the rest of the attributes that come with
+    # inheriting.
     description = StringField()
     filename = StringField()
     height = IntField()

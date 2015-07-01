@@ -30,6 +30,11 @@
                         <td>{{ip.created}}</td>
                     </tr>
                     <tr>
+                        {% with description=ip.description %}
+                            {% include 'description_widget.html' %}
+                        {% endwith %}
+                    </tr>
+                    <tr>
                         <td class="key">Analyst</td>
                         <td>{{ip.analyst}}</td>
                     </tr>
@@ -76,6 +81,11 @@
     <div>
         {% with hit=ip col=COL_IPS %}
             {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=ip col=COL_IPS %}
+            {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
     <div>

@@ -120,36 +120,6 @@ $(document).ready(function() {
             }
         });
     };
-    $('#campaign_description').editable(function(value, settings) {
-        var revert = this.revert;
-        return function(value, settings, elem) {
-            var data = {
-                description: value,
-            };
-            $.ajax({
-                type: "POST",
-                async: false,
-                url: update_campaign_description,
-                data: data,
-                success: function(data) {
-                    if (!data.success) {
-                        value = revert;
-                        $('#campaign_description_error').text(data.message);
-                    }
-                }
-            });
-            return value;
-        }(value, settings, this);
-        },
-        {
-            type: 'textarea',
-            height: "50px",
-            width: "400px",
-            tooltip: "",
-            cancel: "Cancel",
-            submit: "Ok",
-            onblur: 'ignore',
-    });
     $("#campaign_aliases").tagit({
         allowSpaces: true,
         removeConfirmation: false,

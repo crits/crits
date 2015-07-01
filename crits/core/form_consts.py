@@ -1,6 +1,8 @@
 class Common():
     ADD_INDICATOR = "Add Indicator?"
     BUCKET_LIST = "Bucket List"
+    CAMPAIGN = "Campaign"
+    CAMPAIGN_CONFIDENCE = "Campaign Confidence"
     OBJECTS_DATA = "Objects Data"
     SOURCE = "Source"
     SOURCE_REFERENCE = "Source Reference"
@@ -16,11 +18,13 @@ class Common():
 
     # class names
     Actor = "Actor"
+    Backdoor = "Backdoor"
     Campaign = "Campaign"
     Certificate = "Certificate"
     Domain = "Domain"
     Email = "Email"
     Event = "Event"
+    Exploit = "Exploit"
     Indicator = "Indicator"
     IP = "IP"
     Object = "Object"
@@ -45,14 +49,46 @@ class Status():
 
 class Actor():
     """
-    Constants for Campaigns.
+    Constants for Actors.
     """
 
     NAME = "Name"
     ALIASES = "Aliases"
     DESCRIPTION = "Description"
-    CAMPAIGN = "Campaign"
-    CAMPAIGN_CONFIDENCE = "Campaign Confidence"
+    CAMPAIGN = Common.CAMPAIGN
+    CAMPAIGN_CONFIDENCE = Common.CAMPAIGN_CONFIDENCE
+    SOURCE = Common.SOURCE
+    SOURCE_METHOD = "Source Method"
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+
+
+class Backdoor():
+    """
+    Constants for Backdoors.
+    """
+
+    NAME = "Backdoor name"
+    ALIASES = "Aliases"
+    DESCRIPTION = "Description"
+    CAMPAIGN = Common.CAMPAIGN
+    CAMPAIGN_CONFIDENCE = Common.CAMPAIGN_CONFIDENCE
+    VERSION = "Version"
+    SOURCE = Common.SOURCE
+    SOURCE_METHOD = "Source Method"
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+
+
+class Exploit():
+    """
+    Constants for Exploits.
+    """
+
+    NAME = "Name"
+    DESCRIPTION = "Description"
+    CVE = "CVE"
+    CAMPAIGN = Common.CAMPAIGN
+    CAMPAIGN_CONFIDENCE = Common.CAMPAIGN_CONFIDENCE
+    VERSION = "Version"
     SOURCE = Common.SOURCE
     SOURCE_METHOD = "Source Method"
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
@@ -84,8 +120,8 @@ class IP():
     IP_ADDRESS = "IP Address"
     IP_TYPE = "IP Type"
     ANALYST = "Analyst"
-    CAMPAIGN = "Campaign"
-    CAMPAIGN_CONFIDENCE = "Campaign Confidence"
+    CAMPAIGN = Common.CAMPAIGN
+    CAMPAIGN_CONFIDENCE = Common.CAMPAIGN_CONFIDENCE
     SOURCE = Common.SOURCE
     SOURCE_METHOD = Common.SOURCE_METHOD
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
@@ -105,19 +141,20 @@ class Domain():
     """
 
     DOMAIN_NAME = "Domain Name"
-    CAMPAIGN = "Campaign"
-    CAMPAIGN_CONFIDENCE = "Campaign Confidence"
+    CAMPAIGN = Common.CAMPAIGN
+    CAMPAIGN_CONFIDENCE = Common.CAMPAIGN_CONFIDENCE
     DOMAIN_SOURCE = Common.SOURCE
     DOMAIN_METHOD = Common.SOURCE_METHOD
     DOMAIN_REFERENCE = Common.SOURCE_REFERENCE
     ADD_IP_ADDRESS = "Add IP Address?"
     IP_ADDRESS = IP.IP_ADDRESS
+    IP_TYPE = IP.IP_TYPE
     IP_DATE = IP.IP_DATE
     SAME_SOURCE = "Use Domain Source"
     IP_SOURCE = IP.IP_SOURCE
     IP_METHOD = IP.IP_METHOD
     IP_REFERENCE = IP.IP_REFERENCE
-    ADD_INDICATOR = Common.ADD_INDICATOR
+    ADD_INDICATORS = "Add Indicator(s)?"
 
     CACHED_RESULTS = "domain_cached_results"
 
@@ -211,8 +248,8 @@ class Sample():
     """
 
     BUCKET_LIST = Common.BUCKET_LIST
-    CAMPAIGN = "Campaign"
-    CAMPAIGN_CONFIDENCE = "Campaign Confidence"
+    CAMPAIGN = Common.CAMPAIGN
+    CAMPAIGN_CONFIDENCE = Common.CAMPAIGN_CONFIDENCE
     EMAIL_RESULTS = "Email Me Results"
     FILE_DATA = "File Data"
     FILE_FORMAT = "File Format"
@@ -240,6 +277,9 @@ class Target():
     """
 
     TITLE = "Title"
+    CAMPAIGN = Common.CAMPAIGN
+    CAMPAIGN_CONFIDENCE = Common.CAMPAIGN_CONFIDENCE
+
 
 
 def get_source_field_for_class(otype):
