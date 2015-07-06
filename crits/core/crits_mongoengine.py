@@ -1608,7 +1608,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         from crits.objects.handlers import delete_object_file
         for o in self.obj:
-            delete_object_file(o.value)
+            if o.datatype == 'file':
+                delete_object_file(o.value)
         self.obj = []
 
     def delete_all_favorites(self):
