@@ -110,7 +110,7 @@ if [ ! -f crits/config/database.py ]; then
   cp crits/config/database_example.py crits/config/database.py
   SC=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(-_=+)' | fold -w 50 | head -n 1)
   # This is going to escape the '&' character that is a special character in sed 
-  SE=$(echo ${SC} | sed -e 's/&/\\\&/g')
+  SE=$(echo ${SC} | sed -e 's/\//\\\//g' | sed -e 's/&/\\\&/g')
   sed -i -e "s/^\(SECRET_KEY = \).*$/\1\'${SE}\'/1" crits/config/database.py
 else
   echo "Database configuration file exists, skip secret_key generation!"
