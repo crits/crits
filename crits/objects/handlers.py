@@ -1,3 +1,5 @@
+import re
+
 from hashlib import md5
 
 from django.conf import settings
@@ -355,13 +357,19 @@ def delete_object_file(value):
     :type value: str
     """
 
+    if not re.match(r"^[a-f\d]{32}$", value, re.I):
+        return
+
     #XXX: MongoEngine provides no direct GridFS access so we
     #     need to use pymongo directly.
-    obj_list = ('Campaign',
+    obj_list = ('Actor',
+                'Backdoor',
+                'Campaign',
                 'Certificate',
                 'Domain',
                 'Email',
                 'Event',
+                'Exploit',
                 'Indicator',
                 'IP',
                 'PCAP',
@@ -374,20 +382,17 @@ def delete_object_file(value):
     # one instance, which is the one we are going to be removing. If we find
     # another instance, then we should not remove the object from GridFS.
     count = 0
-    found = False
     query = {'objects.value': value}
     for obj in obj_list:
         obj_class = class_from_type(obj)
-        c = len(obj_class.objects(__raw__=query))
-        if c > 0:
-            count += c
-            if count > 1:
-                found = True
-                break
-    if not found:
+        count += len(obj_class.objects(__raw__=query))
+        if count > 1:
+            break
+    else:
         col = settings.COL_OBJECTS
         grid = mongo_connector("%s.files" % col)
         grid.remove({'md5': value})
+    return
 
 def delete_object(type_, oid, object_type, value, analyst, get_objects=True):
     """

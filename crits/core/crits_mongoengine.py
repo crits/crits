@@ -26,6 +26,7 @@ from crits.core.user_tools import user_sources, is_admin
 from crits.core.fields import CritsDateTimeField
 from crits.core.class_mapper import class_from_id, class_from_type
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.objects import ObjectTypes
 
 # Hack to fix an issue with non-cached querysets and django-tastypie-mongoengine
 # The issue is in django-tastypie-mongoengine in resources.py from what I can
@@ -1424,7 +1425,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         from crits.objects.handlers import delete_object_file
         for o in self.obj:
-            delete_object_file(o.value)
+            if o.object_type == ObjectTypes.FILE_UPLOAD:
+                delete_object_file(o.value)
         self.obj = []
 
     def delete_all_favorites(self):
