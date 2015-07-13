@@ -23,6 +23,7 @@ from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict, validate_and_add_new_handler_object
 from crits.services.handlers import run_triage, get_supported_services
 
+from crits.vocabulary.ips import IPTypes
 from crits.vocabulary.indicators import (
     IndicatorAttackTypes,
     IndicatorThreatTypes
@@ -588,7 +589,7 @@ def validate_and_normalize_ip(ip_address, ip_type):
     """
 
     cleaned = None
-    if "cidr" in ip_type:
+    if ip_type in (IPTypes.IPV4_SUBNET, IPTypes.IPV6_SUBNET):
         try:
             if '/' not in ip_address:
                 raise ValidationError("")
@@ -601,7 +602,7 @@ def validate_and_normalize_ip(ip_address, ip_type):
         except (ValidationError, ValueError):
             return ("", "Invalid CIDR address")
 
-    if "Address - ipv4" in ip_type or "cidr" in ip_type:
+    if ip_type in (IPTypes.IPV4_ADDRESS, IPTypes.IPV4_SUBNET):
         try:
             validate_ipv4_address(ip_address)
 
@@ -611,12 +612,12 @@ def validate_and_normalize_ip(ip_address, ip_type):
                 cleaned.append(octet.lstrip('0') or '0')
             cleaned = '.'.join(cleaned)
         except ValidationError:
-            if "cidr" not in ip_type:
+            if ip_type == IPTypes.IPV4_ADDRESS:
                 return ("", "Invalid IPv4 address")
             else:
-                ip_type = "cidr_ipv6"
+                return ("", "Invalid IPv4 CIDR address")
 
-    if "Address - ipv6" in ip_type or ip_type == "cidr_ipv6":
+    if ip_type in (IPTypes.IPV6_ADDRESS, IPTypes.IPV6_SUBNET):
         try:
             validate_ipv6_address(ip_address)
 
@@ -624,14 +625,14 @@ def validate_and_normalize_ip(ip_address, ip_type):
             # removes leading zeroes and makes sure all hextets are lowercase.
             cleaned = clean_ipv6_address(ip_address)
         except ValidationError:
-            if "cidr" in ip_type:
-                return ("", "Invalid CIDR address")
-            else:
+            if ip_type == IPTypes.IPV6_ADDRESS:
                 return ("", "Invalid IPv6 address")
+            else:
+                return ("", "Invalid IPv6 CIDR address")
 
     if not cleaned:
         return ("", "Invalid IP type.")
-    elif "cidr" in ip_type:
+    elif ip_type in (IPTypes.IPV4_SUBNET, IPTypes.IPV6_SUBNET):
         return (cleaned + '/' + cidr_parts[1], "")
     else:
         return (cleaned, "")
