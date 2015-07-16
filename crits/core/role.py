@@ -7,11 +7,13 @@ from mongoengine import StringField, ListField, BooleanField
 from django.conf import settings
 
 from crits.actors.actor import ActorAccess, ActorIdentifierAccess
+from crits.backdoors.backdoor import BackdoorAccess
 from crits.campaigns.campaign import CampaignAccess
 from crits.certificates.certificate import CertificateAccess
 from crits.domains.domain import DomainAccess
 from crits.emails.email import EmailAccess
 from crits.events.event import EventAccess
+from crits.exploits.exploit import ExploitAccess
 from crits.indicators.indicator import IndicatorAccess
 from crits.ips.ip import IPAccess
 from crits.pcaps.pcap import PCAPAccess
@@ -76,6 +78,8 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
     ActorIdentifier = EmbeddedDocumentField(ActorIdentifierAccess,
                                             required=True,
                                             default=ActorIdentifierAccess())
+    Backdoor = EmbeddedDocumentField(BackdoorAccess, required=True,
+                                     default=BackdoorAccess())
     Campaign = EmbeddedDocumentField(CampaignAccess, required=True,
                                      default=CampaignAccess())
     Certificate = EmbeddedDocumentField(CertificateAccess, required=True,
@@ -86,6 +90,8 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
                                   default=EmailAccess())
     Event = EmbeddedDocumentField(EventAccess, required=True,
                                   default=EventAccess())
+    Exploit = EmbeddedDocumentField(ExploitAccess, required=True,
+                                  default=ExploitAccess())
     Indicator = EmbeddedDocumentField(IndicatorAccess, required=True,
                                       default=IndicatorAccess())
     IP = EmbeddedDocumentField(IPAccess, required=True,
@@ -106,8 +112,6 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
 
     # Add New
     add_new_actor_identifier_type = BooleanField(default=False)
-    add_new_backdoor = BooleanField(default=False)
-    add_new_exploit = BooleanField(default=False)
     add_new_indicator_action = BooleanField(default=False)
     add_new_raw_data_type = BooleanField(default=False)
     add_new_source = BooleanField(default=False)

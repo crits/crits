@@ -1,7 +1,13 @@
-from mongoengine import Document, StringField, ListField
+from mongoengine import Document, StringField, ListField, BooleanField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import (
+    CommonAccess,
+    CritsBaseAttributes,
+    CritsSourceDocument,
+    CritsDocumentFormatter
+)
 
 class Backdoor(CritsBaseAttributes, CritsSourceDocument, Document):
     """
@@ -59,3 +65,11 @@ class Backdoor(CritsBaseAttributes, CritsSourceDocument, Document):
             for a in aliases:
                 if a not in existing_aliases:
                     existing_aliases.append(a)
+
+
+class BackdoorAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Backdoors.
+    """
+
+    description_edit = BooleanField(default=False)

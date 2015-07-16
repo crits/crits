@@ -1262,8 +1262,6 @@ def base_context(request):
                                         'name': 'Relationship Types'},
                                     {'collection': settings.COL_SOURCE_ACCESS,
                                         'name': 'Sources'},
-                                    {'collection': settings.COL_USER_ROLES,
-                                        'name': 'User Roles'}
                                     ]
 
     return base_context

@@ -1106,7 +1106,7 @@ var stdDialogs = {
       "new-target": {title: "Target", open: new_target_dialog },
 
       "source_create": {title: "Source"},
-      "role_combine_preview": {title: "Role Combinator"},
+      "role_combine_preview": {title: "Role Combinator", submit: defaultSubmit},
       "new-role": {title: "Role", open: new_role_dialog},
 
       "campaign-add": { title: "Assign Campaign", personas: {
