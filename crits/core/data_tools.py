@@ -14,7 +14,6 @@ from dateutil.parser import parse
 from django.conf import settings
 from hashlib import md5
 
-from crits.config.config import CRITsConfig
 from crits.core.class_mapper import class_from_value
 from crits.core.exceptions import ZipFileError
 from crits.core.mongo_tools import get_file
