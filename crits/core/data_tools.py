@@ -90,6 +90,7 @@ def create_zip(files, pw_protect=True):
         # Save the sample as a file in a temp directory
         # NOTE: the following line was causing a "permission denied" exception.
         # Removed dir arg.
+        from crits.config.config import CRITsConfig
         crits_config = CRITsConfig.objects().first()
         if crits_config:
             zip7_password = crits_config.zip7_password
