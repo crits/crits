@@ -14,10 +14,12 @@ from dateutil.parser import parse
 from django.conf import settings
 from hashlib import md5
 
+from django.conf import settings
+from crits.config.config import CRITsConfig
+from crits.core.crits_mongoengine import CritsDocument
 from crits.core.class_mapper import class_from_value
 from crits.core.exceptions import ZipFileError
 from crits.core.mongo_tools import get_file
-from crits.config.config import CRITsConfig
 
 def get_file_fs(sample_md5):
     """
@@ -92,6 +94,10 @@ def create_zip(files, pw_protect=True):
         # NOTE: the following line was causing a "permission denied" exception.
         # Removed dir arg.
         crits_config = CRITsConfig.objects().first()
+        if crits_config:
+            zip7_password = crits_config.zip7_password
+        else:
+            zip7_password = settings.ZIP7_PASSWORD
         dumpdir = tempfile.mkdtemp() #dir=temproot
         #write out binary files
         for f in files:
@@ -118,7 +124,7 @@ def create_zip(files, pw_protect=True):
         zipname = "zip.zip" #The name we give it doesn't really matter
         args = ["/usr/bin/zip", "-r", "-j", dumpdir+"/"+zipname, dumpdir]
         if pw_protect:
-            args += ["-P", crits_config.zip7_password]
+            args += ["-P", zip7_password]
         args += [dumpdir+"/"+zipname, dumpdir]
 
         proc = subprocess.Popen(args,
