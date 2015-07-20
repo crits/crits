@@ -60,6 +60,13 @@ Date: 2015-06-30
     they are looking to the community to contribute enhancements to CybOX/STIX
     support in the TAXII Service if it is something they need/want.
 
+    Here an examples of a query you can perform to update the values in
+    your database to align with the new vocabulary:
+
+    db.indicators.update({'type': 'Address - ipv4-addr'}, {$set: {'type': 'IPv4
+    Address'}}, {'multi': 1})
+
+
 Author: brlogan
 Date: 2015-05-07
 
