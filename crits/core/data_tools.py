@@ -17,6 +17,7 @@ from hashlib import md5
 from crits.core.class_mapper import class_from_value
 from crits.core.exceptions import ZipFileError
 from crits.core.mongo_tools import get_file
+from crits.config.config import CRITsConfig
 
 def get_file_fs(sample_md5):
     """
@@ -70,7 +71,8 @@ def create_zip(files, pw_protect=True):
     Create a zip file. Creates a temporary directory to write files to on disk
     using :class:`tempfile`. Uses /usr/bin/zip as the zipping mechanism
     currently. Will password protect the zip file as a default. The password for
-    the zip file is hard-coded to be "infected".
+    the zip file defaults to "infected", but it can be changed in the config 
+    under zip7_password.
 
     :param files: The files to add to the zip file.
     :type files: list of files which are in the format of a list or tuple of
@@ -89,6 +91,7 @@ def create_zip(files, pw_protect=True):
         # Save the sample as a file in a temp directory
         # NOTE: the following line was causing a "permission denied" exception.
         # Removed dir arg.
+        crits_config = CRITsConfig.objects().first()
         dumpdir = tempfile.mkdtemp() #dir=temproot
         #write out binary files
         for f in files:
@@ -115,7 +118,7 @@ def create_zip(files, pw_protect=True):
         zipname = "zip.zip" #The name we give it doesn't really matter
         args = ["/usr/bin/zip", "-r", "-j", dumpdir+"/"+zipname, dumpdir]
         if pw_protect:
-            args += ["-P", "infected"]
+            args += ["-P", crits_config.zip7_password]
         args += [dumpdir+"/"+zipname, dumpdir]
 
         proc = subprocess.Popen(args,
