@@ -114,7 +114,6 @@ class SampleResource(CRITsAPIResource):
         result = {'success': False}
 
         if len(sample_md5) > 0:
-            result = sample_md5[0]
             if result.get('message'):
                 content['message'] = result.get('message')
             if result.get('object'):
