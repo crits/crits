@@ -205,14 +205,14 @@ class ChangeParser():
 
         # Try and detect which objects have changed
         for old_object in old_objects:
-            if old_object not in new_objects:
+            if old_object not in new_objects and object_key in old_object:
                 if old_object[object_key] not in changed_objects:
                     changed_objects[old_object[object_key]] = {'old': old_object}
                 else:
                     changed_objects[old_object[object_key]]['old'] = old_object
 
         for new_object in new_objects:
-            if new_object not in old_objects:
+            if new_object not in old_objects and object_key in new_object:
                 if new_object[object_key] not in changed_objects:
                     changed_objects[new_object[object_key]] = {'new': new_object}
                 else:

@@ -337,9 +337,16 @@ TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, 'samples/templates'),
     os.path.join(SITE_ROOT, 'screenshots/templates'),
     os.path.join(SITE_ROOT, 'services/templates'),
-    os.path.join(SITE_ROOT, 'standards/templates'),
     os.path.join(SITE_ROOT, 'stats/templates'),
     os.path.join(SITE_ROOT, 'targets/templates'),
+    os.path.join(SITE_ROOT, 'core/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'campaigns/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'comments/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'locations/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'objects/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'raw_data/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'relationships/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'screenshots/templates/dialogs'),
 )
 
 STATICFILES_DIRS = (
@@ -512,10 +519,14 @@ for service_directory in SERVICE_DIRS:
                 TEMPLATE_DIRS = TEMPLATE_DIRS + (abs_path,)
                 nav_items = os.path.join(abs_path, '%s_nav_items.html' % d)
                 cp_items = os.path.join(abs_path, '%s_cp_items.html' % d)
+                view_items = os.path.join(service_directory, d, 'views.py')
                 if os.path.isfile(nav_items):
                     SERVICE_NAV_TEMPLATES = SERVICE_NAV_TEMPLATES + ('%s_nav_items.html' % d,)
                 if os.path.isfile(cp_items):
                     SERVICE_CP_TEMPLATES = SERVICE_CP_TEMPLATES + ('%s_cp_items.html' % d,)
+                if os.path.isfile(view_items):
+                    if '%s_context' % d in open(view_items).read():
+                        TEMPLATE_CONTEXT_PROCESSORS = TEMPLATE_CONTEXT_PROCESSORS + ('%s.views.%s_context' % (d, d),)
                 for tab_temp in glob.glob('%s/*_tab.html' % abs_path):
                     head, tail = os.path.split(tab_temp)
                     ctype = tail.split('_')[-2]

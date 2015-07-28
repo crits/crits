@@ -1,6 +1,3 @@
-import re
-
-from datetime import datetime
 from django.conf import settings
 from django import forms
 from django.forms.util import ErrorList
@@ -9,11 +6,12 @@ from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.widgets import CalWidget
-from crits.core.handlers import get_source_names, get_item_names, get_object_types
+from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
-from crits.domains.domain import Domain
 
-ip_choices = [(c[0], c[0]) for c in get_object_types(active=False, query={'type':'Address', 'name':{'$in':['cidr', re.compile('^ipv')]}})]
+from crits.vocabulary.ips import IPTypes
+
+ip_choices = [(c,c) for c in IPTypes.values(sort=True)]
 
 class TLDUpdateForm(forms.Form):
     """

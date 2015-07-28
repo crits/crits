@@ -1,12 +1,6 @@
-import datetime
-
-from mongoengine import Document, StringField, ListField, EmbeddedDocumentField
+from mongoengine import Document, StringField
 from mongoengine import BooleanField, DynamicEmbeddedDocument
-from difflib import unified_diff
 from django.conf import settings
-
-from cybox.objects.domain_name_object import DomainName
-from cybox.core import Observable
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, CritsSourceDocument
@@ -98,35 +92,3 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
         # - would require adding relationships between the two as well
         return super(self.__class__, self)._custom_save(force_insert, validate,
             clean, write_concern, cascade, cascade_kwargs, _refs, username)
-
-    def to_cybox_observable(self):
-        """
-            Convert a Domain to a CybOX Observables.
-            Returns a tuple of (CybOX object, releasability list).
-
-            To get the cybox object as xml or json, call to_xml() or
-            to_json(), respectively, on the resulting CybOX object.
-        """
-        obj = DomainName()
-        obj.value = self.domain
-        obj.type_ = self.record_type
-        return ([Observable(obj)], self.releasability)
-
-    @classmethod
-    def from_cybox(cls, cybox_obs):
-        """
-        Convert a Cybox DefinedObject to a MongoEngine Domain object.
-
-        :param cybox_obs: The cybox observable to create the Domain from.
-        :type cybox_obs: :class:`cybox.core.Observable``
-        :returns: :class:`crits.domains.domain.Domain`
-        """
-        cybox_object = cybox_obs.object_.properties
-        db_obj = Domain.objects(domain=str(cybox_object.value)).first()
-        if db_obj:
-            return db_obj
-        else:
-            domain = cls()
-            domain.domain = str(cybox_object.value)
-            domain.record_type = str(cybox_object.type_)
-            return domain

@@ -1,7 +1,8 @@
 from django.conf import settings
 from django import forms
 from crits.core.widgets import CalWidget
-from crits.relationships.handlers import get_relationship_types
+
+from crits.vocabulary.relationships import RelationshipTypes
 
 class ForgeRelationshipForm(forms.Form):
     """
@@ -35,8 +36,12 @@ class ForgeRelationshipForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(ForgeRelationshipForm, self).__init__(*args, **kwargs)
-        self.fields['forward_type'].choices = self.fields['reverse_type'].choices = [(c, c) for c in sorted(settings.CRITS_TYPES.iterkeys())]
-        self.fields['forward_relationship'].choices = [(c, c) for c in get_relationship_types(True)]
+        self.fields['forward_type'].choices = self.fields['reverse_type'].choices = [
+            (c, c) for c in sorted(settings.CRITS_TYPES.iterkeys())
+        ]
+        self.fields['forward_relationship'].choices = [
+            (c, c) for c in RelationshipTypes.values(sort=True)
+        ]
         self.fields['rel_confidence'].choices = [('unknown', 'unknown'),
                                                  ('low', 'low'),
                                                  ('medium', 'medium'),

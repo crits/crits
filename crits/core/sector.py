@@ -59,22 +59,3 @@ class Sector(CritsDocument, CritsSchemaDocument, Document):
         """
 
         pass
-
-
-class SectorObject(CritsDocument, CritsSchemaDocument, Document):
-    """
-    Sector object class.
-    """
-
-    meta = {
-        "crits_type": "SectorObject",
-        "collection": settings.COL_SECTORS,
-        "latest_schema_version": 1,
-        "schema_doc": {
-            'name': 'The name of the sector',
-            'active': 'Enabled in the UI (on/off)',
-        }
-    }
-
-    name = StringField()
-    active = StringField(default="on")

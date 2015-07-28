@@ -1,6 +1,5 @@
 import datetime
 import json, yaml
-import uuid
 import StringIO
 import csv
 
@@ -10,11 +9,10 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
-from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
+from mongoengine import EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
 from mongoengine import IntField, DateTimeField, ObjectIdField
 from mongoengine.base import BaseDocument, ValidationError
-from mongoengine.queryset import Q
 
 # Determine if we should be caching queries or not.
 if settings.QUERY_CACHING:
@@ -27,6 +25,8 @@ from pprint import pformat
 from crits.core.user_tools import user_sources, is_admin
 from crits.core.fields import CritsDateTimeField
 from crits.core.class_mapper import class_from_id, class_from_type
+from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.objects import ObjectTypes
 
 # Hack to fix an issue with non-cached querysets and django-tastypie-mongoengine
 # The issue is in django-tastypie-mongoengine in resources.py from what I can
@@ -649,180 +649,8 @@ class CritsDocument(BaseDocument):
 
         return pformat(self.to_dict())
 
-    def to_stix(self, items_to_convert=[], loaded=False, bin_fmt="raw"):
-        """
-        Converts a CRITs object to a STIX document.
-
-        The resulting document includes standardized representations
-        of all related objects noted within items_to_convert.
-
-        :param items_to_convert: The list of items to convert to STIX/CybOX
-        :type items_to_convert: Either a list of CRITs objects OR
-                                a list of {'_type': CRITS_TYPE, '_id': CRITS_ID} dicts
-        :param loaded: Set to True if you've passed a list of CRITs objects as
-                       the value for items_to_convert, else leave False.
-        :type loaded: bool
-        :param bin_fmt: Specifies the format for Sample data encoding.
-                        Options: None (don't include binary data in STIX output),
-                                 "raw" (include binary data as is),
-                                 "base64" (base64 encode binary data)
-
-        :returns: A dict indicating which items mapped to STIX indicators, ['stix_indicators']
-                  which items mapped to STIX observables, ['stix_observables']
-                  which items are included in the resulting STIX doc, ['final_objects']
-                  and the STIX doc itself ['stix_obj'].
-        """
-
-        from cybox.common import Time, ToolInformationList, ToolInformation
-        from cybox.core import Observables
-        from stix.common import StructuredText, InformationSource
-        from stix.core import STIXPackage, STIXHeader
-        from stix.common.identity import Identity
-
-        # These lists are used to determine which CRITs objects
-        # go in which part of the STIX document.
-        ind_list = []
-        obs_list = []
-        actor_list = []
-
-        # determine which CRITs types support standardization
-        for ctype in settings.CRITS_TYPES:
-            cls = class_from_type(ctype)
-            if hasattr(cls, "to_stix_indicator"):
-                ind_list.append(ctype)
-            elif hasattr(cls, "to_cybox_observable"):
-                obs_list.append(ctype)
-            elif hasattr(cls, "to_stix_actor"):
-                actor_list.append(ctype)
-
-
-        # Store message
-        stix_msg = {
-                       'stix_incidents': [],
-                       'stix_indicators': [],
-                       'stix_observables': [],
-                       'stix_actors': [],
-                       'final_objects': []
-                   }
-
-        if not loaded: # if we have a list of object metadata, load it before processing
-            items_to_convert = [class_from_id(item['_type'], item['_id'])
-                                    for item in items_to_convert]
-
-        # add self to the list of items to STIXify
-        if self not in items_to_convert:
-            items_to_convert.append(self)
-
-        # add any email attachments
-        attachments = []
-        for obj in items_to_convert:
-            if obj._meta['crits_type'] == 'Email':
-                for rel in obj.relationships:
-                    if rel.relationship == 'Contains':
-                        atch = class_from_id('Sample', rel.object_id)
-                        if atch not in items_to_convert:
-                            attachments.append(atch)
-        items_to_convert.extend(attachments)
-
-        # grab ObjectId of items
-        refObjs = {key.id: 0 for key in items_to_convert}
-
-        relationships = {}
-        stix = []
-        from stix.indicator import Indicator as S_Ind
-        for obj in items_to_convert:
-            obj_type = obj._meta['crits_type']
-            if obj_type == class_from_type('Event')._meta['crits_type']:
-                stx, release = obj.to_stix_incident()
-                stix_msg['stix_incidents'].append(stx)
-            elif obj_type in ind_list: # convert to STIX indicators
-                stx, releas = obj.to_stix_indicator()
-                stix_msg['stix_indicators'].append(stx)
-                refObjs[obj.id] = S_Ind(idref=stx.id_)
-            elif obj_type in obs_list: # convert to CybOX observable
-                if obj_type == class_from_type('Sample')._meta['crits_type']:
-                    stx, releas = obj.to_cybox_observable(bin_fmt=bin_fmt)
-                else:
-                    stx, releas = obj.to_cybox_observable()
-
-                # wrap in stix Indicator
-                ind = S_Ind()
-                for ob in stx:
-                    ind.add_observable(ob)
-                ind.title = "CRITs %s Top-Level Object" % obj_type
-                ind.description = ("This is simply a CRITs %s top-level "
-                                   "object, not actually an Indicator. "
-                                   "The Observable is wrapped in an Indicator"
-                                   " to facilitate documentation of the "
-                                   "relationship." % obj_type)
-                ind.confidence = 'None'
-                stx = ind
-                stix_msg['stix_indicators'].append(stx)
-                refObjs[obj.id] = S_Ind(idref=stx.id_)
-            elif obj_type in actor_list: # convert to STIX actor
-                stx, releas = obj.to_stix_actor()
-                stix_msg['stix_actors'].append(stx)
-
-            # get relationships from CRITs objects
-            for rel in obj.relationships:
-                if rel.object_id in refObjs:
-                    relationships.setdefault(stx.id_, {})
-                    relationships[stx.id_][rel.object_id] = (rel.relationship,
-                                                             rel.rel_confidence.capitalize(),
-                                                             rel.rel_type)
-
-            stix_msg['final_objects'].append(obj)
-            stix.append(stx)
-
-        # set relationships on STIX objects
-        from cybox.objects.email_message_object import Attachments
-        for stix_obj in stix:
-            for rel in relationships.get(stix_obj.id_, {}):
-                if isinstance(refObjs.get(rel), S_Ind): # if is STIX Indicator
-                    stix_obj.related_indicators.append(refObjs[rel])
-                    rel_meta = relationships.get(stix_obj.id_)[rel]
-                    stix_obj.related_indicators[-1].relationship = rel_meta[0]
-                    stix_obj.related_indicators[-1].confidence = rel_meta[1]
-
-                    # Add any Email Attachments to CybOX EmailMessage Objects
-                    if isinstance(stix_obj, S_Ind):
-                        if 'EmailMessage' in stix_obj.observable.object_.id_:
-                            if rel_meta[0] == 'Contains' and rel_meta[2] == 'Sample':
-                                email = stix_obj.observable.object_.properties
-                                email.attachments.append(refObjs[rel].idref)
-
-        tool_list = ToolInformationList()
-        tool = ToolInformation("CRITs", "MITRE")
-        tool.version = settings.CRITS_VERSION
-        tool_list.append(tool)
-        i_s = InformationSource(
-            time=Time(produced_time= datetime.datetime.now()),
-            identity=Identity(name=settings.COMPANY_NAME),
-            tools=tool_list)
-
-        if self._meta['crits_type'] == "Event":
-            stix_desc = self.stix_description()
-            stix_int = self.stix_intent()
-            stix_title = self.stix_title()
-        else:
-            stix_desc = "STIX from %s" % settings.COMPANY_NAME
-            stix_int = "Collective Threat Intelligence"
-            stix_title = "Threat Intelligence Sharing"
-        header = STIXHeader(information_source=i_s,
-                            description=StructuredText(value=stix_desc),
-                            package_intents=[stix_int],
-                            title=stix_title)
-
-        stix_msg['stix_obj'] = STIXPackage(incidents=stix_msg['stix_incidents'],
-                        indicators=stix_msg['stix_indicators'],
-                        threat_actors=stix_msg['stix_actors'],
-                        stix_header=header,
-                        id_=uuid.uuid4())
-
-        return stix_msg
 
 # Embedded Documents common to most classes
-
 class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
     """
     Embedded Source.
@@ -1206,9 +1034,7 @@ class EmbeddedObject(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     analyst = StringField()
-    datatype = StringField(required=True)
     date = CritsDateTimeField(default=datetime.datetime.now)
-    name = StringField(required=True)
     source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
     object_type = StringField(required=True, db_field="type")
     value = StringField(required=True)
@@ -1528,15 +1354,13 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         else:
             return []
 
-    def add_object(self, object_type, name, value, source, method, reference,
+    def add_object(self, object_type, value, source, method, reference,
                    analyst, object_item=None):
         """
         Add an object to this top-level object.
 
         :param object_type: The Object Type being added.
         :type object_type: str
-        :param name: The name of the object being added.
-        :type name: str
         :param value: The value of the object being added.
         :type value: str
         :param source: The name of the source adding this object.
@@ -1552,12 +1376,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         if not isinstance(object_item, EmbeddedObject):
-            from crits.objects.handlers import get_objects_datatype
             object_item = EmbeddedObject()
             object_item.analyst = analyst
-            object_item.datatype = get_objects_datatype(name,
-                                                        object_type)
-            object_item.name = name
             object_item.source = [create_embedded_source(source,
                                                          method=method,
                                                          reference=reference,
@@ -1565,27 +1385,24 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             object_item.object_type = object_type
             object_item.value = value
         for o in self.obj:
-            if o.name == name and o.value == value:
+            if o.object_type == object_type and o.value == value:
                 break
         else:
             self.obj.append(object_item)
 
-    def remove_object(self, object_type, name, value):
+    def remove_object(self, object_type, value):
         """
         Remove an object from this top-level object.
 
         :param object_type: The type of the object being removed.
         :type object_type: str
-        :param name: The name of the object being removed.
-        :type name: str
         :param value: The value of the object being removed.
         :type value: str
         """
 
         for o in self.obj:
-            if (o.name == name and
-                    o.object_type == object_type and
-                    o.value == value):
+            if (o.object_type == object_type and
+                o.value == value):
                 from crits.objects.handlers import delete_object_file
                 self.obj.remove(o)
                 delete_object_file(value)
@@ -1608,7 +1425,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         from crits.objects.handlers import delete_object_file
         for o in self.obj:
-            delete_object_file(o.value)
+            if o.object_type == ObjectTypes.FILE_UPLOAD:
+                delete_object_file(o.value)
         self.obj = []
 
     def delete_all_favorites(self):
@@ -1624,14 +1442,12 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 user.favorites[type_].remove(str(self.id))
                 user.save()
 
-    def update_object_value(self, object_type, name, value, new_value):
+    def update_object_value(self, object_type, value, new_value):
         """
         Update the value for an object on this top-level object.
 
         :param object_type: The type of the object being updated.
         :type object_type: str
-        :param name: The name of the object being updated.
-        :type name: str
         :param value: The value of the object being updated.
         :type value: str
         :param new_value: The new value of the object being updated.
@@ -1639,13 +1455,12 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         for c, o in enumerate(self.obj):
-            if (o.name == name and
-                o.object_type == object_type and
+            if (o.object_type == object_type and
                 o.value == value):
                 self.obj[c].value = new_value
                 break
 
-    def update_object_source(self, object_type, name, value,
+    def update_object_source(self, object_type, value,
                              new_source=None, new_method='',
                              new_reference='', analyst=None):
         """
@@ -1653,8 +1468,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         :param object_type: The type of the object being updated.
         :type object_type: str
-        :param name: The name of the object being updated.
-        :type name: str
         :param value: The value of the object being updated.
         :type value: str
         :param new_source: The name of the new source.
@@ -1668,8 +1481,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         for c, o in enumerate(self.obj):
-            if (o.name == name and
-                o.object_type == object_type and
+            if (o.object_type == object_type and
                 o.value == value):
                 if not analyst:
                     analyst = self.obj[c].source[0].intances[0].analyst
@@ -1759,13 +1571,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         # get reverse relationship
-        r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
-        if len(r) == 0:
+        rev_type = RelationshipTypes.inverse(rel_type)
+        if rev_type is None:
             return {'success': False,
                     'message': 'Could not find relationship type'}
-        else:
-            r = r.first()
-        rev_type = r.reverse if rel_type == r.forward else r.forward
         date = datetime.datetime.now()
 
         # setup the relationship for me
@@ -1924,22 +1733,16 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             new_date = parse(new_date, fuzzy=True)
         if rel_item and rel_type and modification:
             # get reverse relationship
-            r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
-            if len(r) == 0:
+            rev_type = RelationshipTypes.inverse(rel_type)
+            if rev_type is None:
                 return {'success': False,
                         'message': 'Could not find relationship type'}
-            else:
-                r = r.first()
-            rev_type = r.reverse if rel_type == r.forward else r.forward
             if modification == "type":
                 # get new reverse relationship
-                r = RelationshipType.objects(Q(forward=new_type) | Q(reverse=new_type))
-                if len(r) == 0:
+                new_rev_type = RelationshipTypes.inverse(new_type)
+                if new_rev_type is None:
                     return {'success': False,
                             'message': 'Could not find reverse relationship type'}
-                else:
-                    r = r.first()
-                new_rev_type = r.reverse if new_type == r.forward else r.forward
             for c, r in enumerate(self.relationships):
                 if rel_date:
                     if (r.object_id == rel_item.id
@@ -2486,38 +2289,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         else:
             return None
 
-
-# Needs to be here to prevent circular imports with CritsBaseAttributes
-class RelationshipType(CritsDocument, CritsSchemaDocument, Document):
-    """
-    Relationship Type Class.
-    """
-
-    meta = {
-        "collection": settings.COL_RELATIONSHIP_TYPES,
-        "crits_type": 'RelationshipType',
-        "latest_schema_version": 1,
-        "minify_defaults": [
-            'forward',
-            'reverse',
-            'active',
-            'description',
-        ],
-        "schema_doc": {
-            'forward': 'The forward (left) side of the relationship pair',
-            'reverse': 'The reverse (right) side of the relationship pair',
-            'description': 'The description of the relationship pair',
-            'active': 'Enabled in the UI (on/off)'
-        },
-    }
-
-    forward = StringField(required=True)
-    reverse = StringField(required=True)
-    active = StringField(required=True)
-    description = StringField()
-
-    def migrate(self):
-        pass
 
 def merge(self, arg_dict=None, overwrite=False, **kwargs):
     """

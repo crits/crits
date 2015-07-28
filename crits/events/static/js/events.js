@@ -55,10 +55,9 @@ $(document).ready(function() {
                 var etypes = {};
                 var sorted = [];
                 $.ajax({
-                    type: "POST",
+                    type: "GET",
                     async: false,
                     url: get_event_types,
-                    data: {'all': false},
                     success: function(data) {
                         data.types.sort();
                         len = data.types.length;
