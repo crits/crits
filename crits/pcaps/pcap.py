@@ -7,9 +7,6 @@ from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
 from crits.core.fields import getFileField
 from crits.pcaps.migrate import migrate_pcap
 
-from cybox.objects.artifact_object import Artifact, Base64Encoding
-from cybox.objects.file_object import File
-from cybox.core import Observable
 
 class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
     """
@@ -122,52 +119,6 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, Document):
         if objectid:
             self.filedata.grid_id = objectid['_id']
             self.filedata._mark_as_changed()
-
-    def to_cybox_observable(self):
-        """
-            Convert a PCAP to a CybOX Observables.
-            Returns a tuple of (CybOX object, releasability list).
-
-            To get the cybox object as xml or json, call to_xml() or
-            to_json(), respectively, on the resulting CybOX object.
-        """
-        obj = File()
-        obj.md5 = self.md5
-        obj.file_name = self.filename
-        obj.file_format = self.contentType
-        obj.size_in_bytes = self.length
-        obs = Observable(obj)
-        obs.description = self.description
-        art = Artifact(self.filedata.read(), Artifact.TYPE_NETWORK)
-        art.packaging.append(Base64Encoding())
-        obj.add_related(art, "Child_Of") # relate artifact to file
-        return ([obs], self.releasability)
-
-    @classmethod
-    def from_cybox(cls, cybox_obs):
-        """
-        Convert a Cybox Artifact to a CRITs PCAP object.
-
-        :param cybox_obs: The cybox object to create the PCAP from.
-        :type cybox_obs: :class:`cybox.core.Observable`
-        :returns: :class:`crits.pcaps.pcap.PCAP`
-        """
-        cybox_object = cybox_obs.object_.properties
-        if cybox_object.md5:
-            db_obj = PCAP.objects(md5=cybox_object.md5).first()
-            if db_obj:
-                return db_obj
-        pcap = cls()
-        pcap.description = str(cybox_obs.description)
-        pcap.md5 = cybox_object.md5
-        pcap.filename = str(cybox_object.file_name)
-        pcap.contentType = cybox_object.file_format
-        pcap.length = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
-        for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
-            if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_NETWORK:
-                pcap.add_file_data(obj.properties.data)
-                break
-        return pcap
 
 
 class PCAPAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):

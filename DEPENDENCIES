@@ -70,14 +70,6 @@ python-dateutil
 Requires: six
 Provides: dateutil
 
-cybox==2.1.0.5
-Requires: lxml>=2.3, python-dateutil
-Provides: cybox
-
-stix==1.1.1.0
-Requires: cybox>=2.1.0.4,<2.1.1.0, lxml>=2.3, python-dateutil
-Provides: stix
-
 mongoengine==0.8.7
 Requires: pymongo>=2.5
 Provides: mongoengine

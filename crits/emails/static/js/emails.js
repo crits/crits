@@ -121,17 +121,6 @@ $(document).ready(function(){
             }
         });
     });
-    $("#cybox_button").click(function(event) {
-        event.preventDefault()
-        $.ajax({
-            type: "POST",
-            url: get_email_cybox,
-            dataType: "json",
-            success: function(data) {
-                $("#cybox_display").val(data);
-            }
-        });
-    });
 
     $("#yaml_edit").click(function(event) {
 	    $.ajax({

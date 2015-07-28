@@ -31,7 +31,7 @@ from crits.core.source_access import SourceAccess
 from crits.core.data_tools import create_zip, format_file
 from crits.core.mongo_tools import mongo_connector, get_file
 from crits.core.role import Role
-from crits.core.sector import Sector, SectorObject
+from crits.core.sector import Sector
 from crits.core.user import CRITsUser, EmbeddedSubscriptions
 from crits.core.user import EmbeddedLoginAttempt
 from crits.core.user_tools import user_sources
@@ -626,33 +626,6 @@ def source_remove_all(obj_type, obj_id, name, analyst=None):
     except ValidationError, e:
         return {'success':False, 'message': e}
 
-def get_object_types(active=True, query=None):
-    """
-    Get a list of available ObjectTypes in CRITs sorted alphabetically.
-
-    :param active: Whether or not the ObjectTypes returned should be active.
-    :type active: boolean
-    :param query: Custom query to use by default.
-    :type query: dict
-    :returns: list
-    """
-
-    from crits.objects.object_type import ObjectType
-    if query is None:
-        query = {}
-    if active:
-        query['active'] = "on"
-    result = ObjectType.objects(__raw__=query)
-    object_types = []
-    for r in result:
-        if r.name == r.object_type:
-            object_types.append((r.name, r.datatype))
-        else:
-            object_types.append(("%s - %s" % (r.object_type, r.name),
-                                 r.datatype))
-    object_types.sort()
-    return object_types
-
 def get_sources(obj_type, obj_id, analyst):
     """
     Get a list of sources for a top-level object.
@@ -960,8 +933,8 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
     :param rel_limit: The limit on how many relationhips a top-level object
                       should have before we ignore its relationships.
     :type rel_limit: int
-    :param rst_fmt: The format the results should be in ("zip", "stix",
-                    "stix_no_bin").
+    :param rst_fmt: The format the results should be in ("zip", "json",
+                    "json_no_bin").
     :type rst_fmt: str
     :param object_types: The types of top-level objects to include.
     :type object_types: list
@@ -979,14 +952,14 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
 
     result = {'success': False}
 
-    stix_docs = []
+    json_docs = []
     to_zip = []
-    need_filedata = rst_fmt != 'stix_no_bin'
+    need_filedata = rst_fmt != 'json_no_bin'
     if not need_filedata:
         bin_fmt = None
 
     # If bin_fmt is not zlib or base64, force it to base64.
-    if rst_fmt == 'stix' and bin_fmt not in ['zlib', 'base64']:
+    if rst_fmt == 'json' and bin_fmt not in ['zlib', 'base64']:
         bin_fmt = 'base64'
 
     for (obj_type, obj_id) in objs:
@@ -1013,66 +986,25 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                     obj.filedata.seek(0)
             else:
                 try:
-                    stix_docs.append(obj.to_stix(items_to_convert=[obj],
-                                                loaded=True,
-                                                bin_fmt=bin_fmt))
+                    json_docs.append(obj.to_json())
                 except:
-                    # Usually due to the object not being a supported exportable
-                    # object such as Indicators with a type that is not a CybOX
-                    # object.
                     pass
 
-    doc_count = len(stix_docs)
     zip_count = len(to_zip)
-    if doc_count == 1 and zip_count <= 0: # we have a single STIX doc to return
+    if zip_count <= 0:
         result['success'] = True
-        result['data'] = stix_docs[0]['stix_obj'].to_xml()
-        result['filename'] = "%s_%s.xml" % (stix_docs[0]['final_objects'][0]._meta['crits_type'],
-                                            stix_docs[0]['final_objects'][0].id)
-        result['mimetype'] = 'text/xml'
-    elif doc_count + zip_count >= 1: # we have multiple or mixed items to return
-        if not make_zip:
-            # We are making a single STIX document out of our results. Pop any
-            # STIX object out of the list and use it as the "main" STIX object.
-            # TODO: This fails miserably for Events since they are their own
-            # unique STIX document.
-            final_doc = stix_docs.pop()
-            final_doc = final_doc['stix_obj']
-            for doc in stix_docs:
-                doc = doc['stix_obj']
-                # Add any indicators from this doc into the "main" STIX object.
-                if doc.indicators:
-                    if isinstance(doc.indicators, list):
-                        final_doc.indicators.extend(doc.indicators)
-                    else:
-                        final_doc.indicators.append(doc.indicators)
-                # Add any observables from this doc into the "main" STIX object.
-                if doc.observables:
-                    if isinstance(doc.observables.observables, list):
-                        for d in doc.observables.observables:
-                            final_doc.observables.add(d)
-                    else:
-                        final_doc.observables.add(doc.observables)
-                # Add any Actors from this doc into the "main" STIX object.
-                if doc.threat_actors:
-                    if isinstance(doc.threat_actors, list):
-                        final_doc.threat_actors.extend(doc.threat_actors)
-                    else:
-                        final_doc.threat_actors.append(doc.threat_actors)
-            # Convert the "main" STIX object into XML and return.
-            result['success'] = True
-            result['data'] = final_doc.to_xml()
-            result['mimetype'] = 'application/xml'
-        else:
-            zip_data = to_zip
-            for doc in stix_docs:
-                inner_filename = "%s_%s.xml" % (doc['final_objects'][0]._meta['crits_type'],
-                                                doc['final_objects'][0].id)
-                zip_data.append((inner_filename, doc['stix_obj'].to_xml()))
-            result['success'] = True
-            result['data'] = create_zip(zip_data, True)
-            result['filename'] = "CRITS_%s.zip" % datetime.datetime.today().strftime("%Y-%m-%d")
-            result['mimetype'] = 'application/zip'
+        result['data'] = json_docs
+        result['filename'] = "crits.json"
+        result['mimetype'] = 'text/json'
+    else:
+        zip_data = to_zip
+        for doc in json_docs:
+            inner_filename = "%s.xml" % doc['id']
+            zip_data.append((inner_filename, doc))
+        result['success'] = True
+        result['data'] = create_zip(zip_data, True)
+        result['filename'] = "CRITS_%s.zip" % datetime.datetime.today().strftime("%Y-%m-%d")
+        result['mimetype'] = 'application/zip'
     return result
 
 def collect_objects(obj_type, obj_id, depth_limit, total_limit, rel_limit,
@@ -1318,16 +1250,7 @@ def get_item_state(type_, name):
     :returns: True if active, False if inactive.
     """
 
-    if type_ == 'RelationshipType':
-        query = {'forward': name}
-    elif type_ == 'ObjectType':
-        a = name.split(" - ")
-        if len(a) == 1:
-            query = {'name': name}
-        else:
-            query = {'type': a[0], 'name': a[1]}
-    else:
-        query = {'name': name}
+    query = {'name': name}
     obj = class_from_type(type_).objects(__raw__=query).first()
     if not obj:
         return False
@@ -2399,30 +2322,15 @@ def generate_items_jtable(request, itype, option):
     if itype == 'ActorThreatIdentifier':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#actor_identifier_type_add').click();}"
-    elif itype == 'ActorThreatType':
-        fields = ['name', 'active', 'id']
-    elif itype == 'ActorMotivation':
-        fields = ['name', 'active', 'id']
-    elif itype == 'ActorSophistication':
-        fields = ['name', 'active', 'id']
-    elif itype == 'ActorIntendedEffect':
-        fields = ['name', 'active', 'id']
     elif itype == 'Campaign':
         fields = ['name', 'description', 'active', 'id']
         click = "function () {window.parent.$('#new-campaign').click();}"
-    elif itype == 'EventType':
-        fields = ['name', 'active', 'id']
     elif itype == 'IndicatorAction':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#indicator_action_add').click();}"
-    elif itype == 'ObjectType':
-        fields = ['name', 'name_type', 'object_type', 'datatype', 'description',
-                  'active', 'id']
     elif itype == 'RawDataType':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#raw_data_type_add').click();}"
-    elif itype == 'RelationshipType':
-        fields = ['forward', 'reverse', 'description', 'active', 'id']
     elif itype == 'SourceAccess':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#source_create').click();}"
@@ -2434,10 +2342,6 @@ def generate_items_jtable(request, itype, option):
                                     request, includes=fields)
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type="application/json")
-
-    if itype == "ObjectType":
-        fields = ['name', 'name_type', 'type', 'datatype', 'description',
-                  'active', 'id']
 
     jtopts = {
         'title': "%ss" % itype,
@@ -2452,16 +2356,13 @@ def generate_items_jtable(request, itype, option):
         'details_link': '',
     }
     jtable = build_jtable(jtopts, request)
-    if itype not in ('ActorThreatType', 'ActorMotivation',
-                     'ActorSophistication', 'ActorIntendedEffect',
-                     'EventType', 'ObjectType', 'RelationshipType'):
-        jtable['toolbar'] = [
-            {
-                'tooltip': "'Add %s'" % itype,
-                'text': "'Add %s'" % itype,
-                'click': click,
-            },
-        ]
+    jtable['toolbar'] = [
+        {
+            'tooltip': "'Add %s'" % itype,
+            'text': "'Add %s'" % itype,
+            'click': click,
+        },
+    ]
 
     for field in jtable['fields']:
         if field['fieldname'].startswith("'active"):
@@ -2858,7 +2759,7 @@ def generate_user_profile(username, request):
     if 'PCAP' in subscriptions:
         subscription_count += len(subscriptions['PCAP'])
         final_pcaps = []
-        ids = [ObjectId(s['_id']) for s in subscriptions['PCAP']]
+        ids = [ObjectId(p['_id']) for p in subscriptions['PCAP']]
         pcaps = PCAP.objects(id__in=ids).only('md5', 'filename')
         m = map(itemgetter('_id'), subscriptions['PCAP'])
         for pcap in pcaps:
@@ -2871,7 +2772,7 @@ def generate_user_profile(username, request):
     if 'Email' in subscriptions:
         subscription_count += len(subscriptions['Email'])
         final_emails = []
-        ids = [ObjectId(s['_id']) for s in subscriptions['Email']]
+        ids = [ObjectId(e['_id']) for e in subscriptions['Email']]
         emails = Email.objects(id__in=ids).only('from_address',
                                                 'sender',
                                                 'subject')
@@ -2886,7 +2787,7 @@ def generate_user_profile(username, request):
     if 'Indicator' in subscriptions:
         subscription_count += len(subscriptions['Indicator'])
         final_indicators = []
-        ids = [ObjectId(s['_id']) for s in subscriptions['Indicator']]
+        ids = [ObjectId(i['_id']) for i in subscriptions['Indicator']]
         indicators = Indicator.objects(id__in=ids).only('value', 'ind_type')
         m = map(itemgetter('_id'), subscriptions['Indicator'])
         for indicator in indicators:
@@ -2899,7 +2800,7 @@ def generate_user_profile(username, request):
     if 'Event' in subscriptions:
         subscription_count += len(subscriptions['Event'])
         final_events = []
-        ids = [ObjectId(s['_id']) for s in subscriptions['Event']]
+        ids = [ObjectId(v['_id']) for v in subscriptions['Event']]
         events = Event.objects(id__in=ids).only('title', 'description')
         m = map(itemgetter('_id'), subscriptions['Event'])
         for event in events:
@@ -2912,7 +2813,7 @@ def generate_user_profile(username, request):
     if 'Domain' in subscriptions:
         subscription_count += len(subscriptions['Domain'])
         final_domains = []
-        ids = [ObjectId(s['_id']) for s in subscriptions['Domain']]
+        ids = [ObjectId(d['_id']) for d in subscriptions['Domain']]
         domains = Domain.objects(id__in=ids).only('domain')
         m = map(itemgetter('_id'), subscriptions['Domain'])
         for domain in domains:
@@ -2925,7 +2826,7 @@ def generate_user_profile(username, request):
     if 'IP' in subscriptions:
         subscription_count += len(subscriptions['IP'])
         final_ips = []
-        ids = [ObjectId(s['_id']) for s in subscriptions['IP']]
+        ids = [ObjectId(a['_id']) for a in subscriptions['IP']]
         ips = IP.objects(id__in=ids).only('ip')
         m = map(itemgetter('_id'), subscriptions['IP'])
         for ip in ips:
@@ -2938,7 +2839,7 @@ def generate_user_profile(username, request):
     if 'Campaign' in subscriptions:
         subscription_count += len(subscriptions['Campaign'])
         final_campaigns = []
-        ids = [ObjectId(s['_id']) for s in subscriptions['Campaign']]
+        ids = [ObjectId(c['_id']) for c in subscriptions['Campaign']]
         campaigns = Campaign.objects(id__in=ids).only('name')
         m = map(itemgetter('_id'), subscriptions['Campaign'])
         for campaign in campaigns:
@@ -2953,7 +2854,7 @@ def generate_user_profile(username, request):
     collected_favorites = {}
     total_favorites = 0
     for type_ in favorites.keys():
-        ids = [ObjectId(i) for i in favorites[type_]]
+        ids = [ObjectId(f) for f in favorites[type_]]
         if ids:
             count = class_from_type(type_).objects(id__in=ids).count()
         else:
@@ -3959,18 +3860,6 @@ def modify_sector_list(itype, oid, sectors, analyst):
         obj.save(username=analyst)
     except ValidationError:
         pass
-
-def get_sector_options():
-    """
-    Get available sector options.
-
-    :returns: list
-    """
-
-    sectors = SectorObject.objects()
-    sector_list = [s.name for s in sectors]
-    return HttpResponse(json.dumps(sector_list, default=json_handler),
-                        content_type='application/json')
 
 def get_bucket_autocomplete(term):
     """

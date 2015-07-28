@@ -14,7 +14,7 @@ from crits.emails.email import Email
 from crits.emails.forms import EmailYAMLForm, EmailOutlookForm
 from crits.emails.forms import EmailEMLForm, EmailUploadForm, EmailRawUploadForm
 from crits.emails.handlers import handle_email_fields, handle_yaml
-from crits.emails.handlers import handle_eml, generate_email_cybox, handle_msg
+from crits.emails.handlers import handle_eml, handle_msg
 from crits.emails.handlers import update_email_header_value, handle_pasted_eml
 from crits.emails.handlers import get_email_detail, generate_email_jtable
 from crits.emails.handlers import generate_email_csv
@@ -509,27 +509,6 @@ def indicator_from_header_field(request, email_id):
                 'message':  "Type is a required value."
             }
         return HttpResponse(json.dumps(result), mimetype="application/json")
-    else:
-        return render_to_response('error.html',
-                                  {'error': "Expected AJAX POST"},
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def get_email_cybox(request, email_id):
-    """
-    Get a CybOX representation of an email. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param email_id: The ObjectId of the email to get.
-    :type email_id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        cybox = generate_email_cybox(email_id)
-        return HttpResponse(json.dumps(cybox.to_xml()),
-                            mimetype="application/json")
     else:
         return render_to_response('error.html',
                                   {'error': "Expected AJAX POST"},

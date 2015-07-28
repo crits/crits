@@ -3,17 +3,19 @@ import datetime
 from mongoengine import Document, EmbeddedDocument, BooleanField
 from mongoengine import StringField, ListField
 from mongoengine import EmbeddedDocumentField
-from mongoengine.queryset import Q
 
 from django.conf import settings
-from cybox.core import Observable
 
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsSourceDocument, CommonAccess
 from crits.core.fields import CritsDateTimeField
-from crits.objects.object_mapper import make_cybox_object, make_crits_object
 from crits.indicators.migrate import migrate_indicator
+
+from crits.vocabulary.indicators import (
+    IndicatorAttackTypes,
+    IndicatorThreatTypes
+)
 
 
 class IndicatorAction(CritsDocument, CritsSchemaDocument, Document):
@@ -86,8 +88,10 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         "crits_type": 'Indicator',
         "latest_schema_version": 3,
         "schema_doc": {
+            'type': 'The type of this indicator.',
+            'threat_type': 'The threat type of this indicator.',
+            'attack_type': 'The attack type of this indicator.',
             'value': 'The value of this indicator',
-            'type': 'The type of this indicator based on CybOX Object Types',
             'created': 'The ISODate when this indicator was entered',
             'modified': 'The ISODate when this indicator was last modified',
             'actions': 'List [] of actions taken for this indicator',
@@ -109,12 +113,14 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
             'details_url_key': 'id',
             'default_sort': "created DESC",
             'searchurl': 'crits.indicators.views.indicators_listing',
-            'fields': ["value", "ind_type", "created", "modified", "source",
-                       "campaign", "status", "id"],
-            'jtopts_fields': ["details", "splunk", "value", "type", "created",
+            'fields': ["value", "ind_type", "threat_type", "attack_type",
+                       "created", "modified", "source", "campaign", "status",
+                       "id"],
+            'jtopts_fields': ["details", "splunk", "value", "type",
+                              "threat_type", "attack_type", "created",
                               "modified", "source", "campaign", "status",
                               "favorite", "id"],
-            'hidden_fields': [],
+            'hidden_fields': ["threat_type", "attack_type"],
             'linked_fields': ["value", "source", "campaign", "type", "status"],
             'details_link': 'details',
             'no_sort': ['details', 'splunk'],
@@ -128,6 +134,8 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
     impact = EmbeddedDocumentField(EmbeddedImpact,
                                    default=EmbeddedImpact())
     ind_type = StringField(db_field="type")
+    threat_type = StringField(default=IndicatorThreatTypes.UNKNOWN)
+    attack_type = StringField(default=IndicatorAttackTypes.UNKNOWN)
     value = StringField()
 
     def migrate(self):
@@ -156,90 +164,6 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         if 'impact' in self._data:
             self.impact = self.impact.rating
         return super(self.__class__, self).to_csv(fields=fields,headers=headers)
-
-    def to_stix_indicator(self):
-        """
-        Creates a STIX Indicator object from a CybOX object.
-
-        Returns the STIX Indicator and the original CRITs object's
-        releasability list.
-        """
-        from stix.indicator import Indicator as S_Ind
-        from stix.common.identity import Identity
-        ind = S_Ind()
-        obs, releas = self.to_cybox()
-        for ob in obs:
-            ind.add_observable(ob)
-        #TODO: determine if a source wants its name shared. This will
-        #   probably have to happen on a per-source basis rather than a per-
-        #   object basis.
-        identity = Identity(name=settings.COMPANY_NAME)
-        ind.set_producer_identity(identity)
-
-        return (ind, releas)
-
-    def to_cybox(self):
-        """
-        Convert an indicator to a CybOX Observable.
-
-        Returns a tuple of (CybOX object, releasability list).
-
-        To get the cybox object as xml or json, call to_xml() or
-        to_json(), respectively, on the resulting CybOX object.
-        """
-
-        observables = []
-
-        parts = self.ind_type.split(' - ')
-        if len(parts) == 2:
-            (type_, name) = parts
-        else:
-            type_ = parts[0]
-            name = None
-        obj = make_cybox_object(type_, name, self.value)
-
-        observables.append(Observable(obj))
-        return (observables, self.releasability)
-
-    @classmethod
-    def from_cybox(cls, cybox_object):
-        """
-        Convert a Cybox DefinedObject to a MongoEngine Indicator object.
-
-        :param cybox_object: The cybox object to create the indicator from.
-        :type cybox_object: :class:`cybox.core.Observable``
-        :returns: :class:`crits.indicators.indicator.Indicator`
-        """
-
-        obj = make_crits_object(cybox_object)
-        if obj.name and obj.name != obj.object_type:
-            ind_type = "%s - %s" % (obj.object_type, obj.name)
-        else:
-            ind_type = obj.object_type
-
-        db_indicator = Indicator.objects(Q(ind_type=ind_type) & Q(value=obj.value)).first()
-        if db_indicator:
-            indicator = db_indicator
-        else:
-            indicator = cls()
-            indicator.value = obj.value
-            indicator.created = obj.date
-            indicator.modified = obj.date
-
-        return indicator
-
-    def has_cybox_repr(self):
-        """
-        Determine if this indicator is of a type that can
-        successfully be converted to a CybOX object.
-
-        :return The CybOX representation if possible, else False.
-        """
-        try:
-            rep = self.to_cybox()
-            return rep
-        except:
-            return False
 
     def set_confidence(self, analyst, rating):
         """

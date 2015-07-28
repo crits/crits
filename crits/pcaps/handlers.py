@@ -7,7 +7,6 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from mongoengine.base import ValidationError
 
 from crits.core.class_mapper import class_from_id, class_from_value
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
@@ -19,6 +18,8 @@ from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.pcaps.pcap import PCAP
 from crits.services.handlers import run_triage, get_supported_services
+
+from crits.vocabulary.relationships import RelationshipTypes
 
 
 def generate_pcap_csv(request):
@@ -331,7 +332,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
     # update relationship if a related top-level object is supplied
     if related_obj and pcap:
         if not relationship:
-            relationship = "Related_To"
+            relationship = RelationshipTypes.RELATED_TO
         pcap.add_relationship(related_obj,
                               relationship,
                               analyst=user,

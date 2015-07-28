@@ -42,6 +42,13 @@ from crits.notifications.handlers import remove_user_from_notification
 from crits.samples.handlers import handle_file, handle_uploaded_file, mail_sample
 from crits.services.handlers import run_triage
 
+from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.indicators import (
+    IndicatorTypes,
+    IndicatorAttackTypes,
+    IndicatorThreatTypes
+)
+
 def create_email_field_dict(field_name,
                             field_type,
                             field_value,
@@ -189,7 +196,7 @@ def get_email_detail(email_id, analyst):
         email_fields = []
         email_fields.append(create_email_field_dict(
                 "from_address",  # field_name
-                "Address - e-mail",  # field_type
+                IndicatorTypes.EMAIL_FROM,  # field_type
                 email.from_address,  # field_value
                 "From",  # field_displayed_text
                 # is_allow_create_indicator
@@ -202,15 +209,14 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "sender",
-                "Address - e-mail",
+                IndicatorTypes.EMAIL_SENDER,
                 email.sender,
                 "Sender",
                 True, True, True, False, True,
                 href_search_field="sender"
                 ))
         email_fields.append(create_email_field_dict(
-                "to",
-                "String",
+                "Email To",
                 email.to,
                 "To",
                 False, True, True, True, False,
@@ -218,7 +224,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "cc",
-                "String",
+                "Email CC",
                 email.cc,
                 "CC",
                 False, True, True, True, False,
@@ -226,7 +232,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "date",
-                "String",
+                "Email Date",
                 email.date,
                 "Date",
                 False, False, True, False, False,
@@ -234,7 +240,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "isodate",
-                "String",
+                "Email ISODate",
                 email.isodate,
                 "ISODate",
                 False, False, False, False, False,
@@ -242,7 +248,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "subject",
-                "String",
+                IndicatorTypes.EMAIL_SUBJECT,
                 email.subject,
                 "Subject",
                 True, True, True, False, False,
@@ -250,7 +256,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "x_mailer",
-                "String",
+                IndicatorTypes.EMAIL_X_MAILER,
                 email.x_mailer,
                 "X-Mailer",
                 True, True, True, False, False,
@@ -258,7 +264,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "reply_to",
-                "Address - e-mail",
+                IndicatorTypes.EMAIL_REPLY_TO,
                 email.reply_to,
                 "Reply To",
                 True, True, True, False, False,
@@ -266,7 +272,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "message_id",
-                "String",
+                IndicatorTypes.EMAIL_MESSAGE_ID,
                 email.message_id,
                 "Message ID",
                 True, False, True, False, False,
@@ -274,7 +280,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "helo",
-                "String",
+                IndicatorTypes.EMAIL_HELO,
                 email.helo,
                 "helo",
                 True, True, True, False, False,
@@ -282,7 +288,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "boundary",
-                "String",
+                IndicatorTypes.EMAIL_BOUNDARY,
                 email.boundary,
                 "Boundary",
                 True, False, True, False, False,
@@ -290,7 +296,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "originating_ip",
-                "Address - ipv4-addr",
+                IndicatorTypes.EMAIL_ORIGINATING_IP,
                 email.originating_ip,
                 "Originating IP",
                 True, True, True, False, True,
@@ -298,7 +304,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "x_originating_ip",
-                "Address - ipv4-addr",
+                IndicatorTypes.EMAIL_X_ORIGINATING_IP,
                 email.x_originating_ip,
                 "X-Originating IP",
                 True, True, True, False, True,
@@ -1061,7 +1067,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
     if parent_id and parent_type:
         rel_item = class_from_id(parent_type, parent_id)
         if rel_item:
-            rel_type = 'Extracted_From'
+            rel_type = RelationshipTypes.CONTAINED_WITHIN
             ret = result['object'].add_relationship(rel_item,
                                                     rel_type,
                                                     analyst=analyst,
@@ -1091,7 +1097,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
                        related_type='Email',
                        campaign=campaign,
                        confidence=confidence,
-                       relationship='Extracted_From') == None:
+                       relationship=RelationshipTypes.CONTAINED_WITHIN) == None:
             result['reason'] = "Failed to save attachment.\n<br /><pre>"
             + md5_ + "</pre>"
             return result
@@ -1162,20 +1168,6 @@ def dict_to_email(d, save_unsupported=True):
     crits_email = Email()
     crits_email.merge(d)
     return crits_email
-
-def generate_email_cybox(email_id):
-    """
-    Generate Cybox for a given email.
-
-    :param email_id: The ObjectId of the email.
-    :returns: str
-    """
-
-    email = Email.objects(id=email_id).first()
-    if email:
-        return email.to_cybox_observable()[0][0]
-    else:
-        return None
 
 def update_email_header_value(email_id, type_, value, analyst):
     """
@@ -1278,11 +1270,13 @@ def create_indicator_from_header_field(email, header_field, ind_type,
     newindicator = handle_indicator_ind(value,
                                         email.source,
                                         ind_type,
+                                        threat_type=IndicatorThreatTypes.UNKNOWN,
+                                        attack_type=IndicatorAttackTypes.UNKNOWN,
                                         analyst=analyst)
     if newindicator.get('objectid'):
         indicator = Indicator.objects(id=newindicator['objectid']).first()
         results = email.add_relationship(indicator,
-                                         "Related_To",
+                                         RelationshipTypes.RELATED_TO,
                                          analyst=analyst,
                                          get_rels=True)
         if results['success']:

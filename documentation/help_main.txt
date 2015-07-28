@@ -174,8 +174,8 @@ in the system.
    relationship between each of these objects that would otherwise
    be independent. Relationships can be either horizontal (as in the
    above example) or vertical (as in hierarchical). CRITs supports
-   relationships as defined in the CybOX specification. Each object
-   has a \"child\" object in which related objects are declared.
+   relationships. Each object has a \"child\" object in which related
+   objects are declared.
 
 **Sample**
   Samples are binaries which you want to perform some level of analysis on due
@@ -194,8 +194,6 @@ in the system.
    universal \"right way\" to define them. Having a solid
    understanding of how your organization defines sources will ensure
    that your own efforts will be compliant.
-
-.. _CybOX Objects: http://cybox.mitre.org/about/faqs.html#B2
 
 Keyboard Shortcuts
 -------------------------------------------
@@ -808,8 +806,6 @@ define a new indicator. An indicator consists of eight pieces of
 information, as follows:
 
 :Indicator Type: Choose the type of indicator from the drop-down.
-        Additional types may be available by clicking "More Object
-        Types" at the bottom of the window.
 :Value: Define the value for the indicator
 :Confidence: Select the confidence level for the indicator
 :Impact: Select the level of impact for the indicator
@@ -1220,14 +1216,13 @@ Currently the available resources are:
 - domains
 - emails
 - events
-- exploits 
+- exploits
 - indicators
 - ips
 - pcaps
 - raw_data
 - samples
 - targets
-- standards
 
 For example, if you wanted to get a list of campaigns, you would use:
 
@@ -1241,10 +1236,6 @@ following formats:
 - json
 - yaml
 - xml
-- stix
-
-If you choose the stix format, you will get a single stix document from the API
-which contains all of the objects returned from that API call.
 
 If you wish to get information about a single document, you would use:
 
@@ -1366,7 +1357,7 @@ Adding a Domain
         | r = requests.post(url, data=data)
         | if r.status_code == 201:
         |     print "Successfully added "+params['domain']
-        
+
 Listing the Domains:
         | import requests
 
@@ -1700,6 +1691,8 @@ Unique POST Parameters:
 - Must be one of "unknown", "benign", "low", "medium", "high".
 
 :type: The type of the Indicator.
+:threat_type: The threat type of the Indicator.
+:attack_type: The attack type of the Indicator.
 :value: Indicator value.
 
 Indicator Activity API
@@ -1735,25 +1728,6 @@ Unique POST Parameters:
 :indicator_reference: Reference for the source of the Indicator.
 :ip: IP Address.
 :ip_type: Type of IP Address.
-
-Object API
--------------------------------------------
-
-POST:
-
-        /api/v1/objects/
-
-Unique POST Parameters:
-
-:crits_type: The type of top-level object to add this object to.
-:crits_id: The ObjectId of the top-level object to add this object to.
-:object_type: The Object Type of this object.
-:source: The name of the source adding this information.
-:method: The method of acquiring this information, or tool used to generate it.
-:reference: The reference to this data (or the name of the file you are uploading).
-:add_indicator: Also add as an Indicator if it is an Indicator type (boolean).
-:filedata: The file you are uploading if this Object Type is a file.
-:value: The value of the Object you are uploading (if no filedata).
 
 PCAP API
 -------------------------------------------
@@ -1805,27 +1779,6 @@ Unique POST Parameters:
 :tool_details: Details about the tool.
 :tool_name: The tool, utility, or host of the raw data.
 :tool_version: The version of the tool, utility, or host of the raw data.
-
-Relationship API
--------------------------------------------
-
-POST:
-
-        /api/v1/relationships/
-
-Unique POST Parameters:
-
-:left_type: The type of the first top-level object in the relationship.
-:left_id: The ObjectId of the first top-level object in the relationship.
-:right_type: The type of the second top-level object in the relationship.
-:right_id: The ObjectId of the second top-level object in the relationship.
-:rel_type: The relationship type.
-:rel_date: The date the relationship applies (optional).
-:rel_confidence: The confidence level for this relationship.
-
-- Must be one of 'unknown', 'low', 'medium', or 'high'.
-
-:rel_reason: A reason for this relationship, confidence level, etc.
 
 Sample API
 -------------------------------------------
@@ -1905,30 +1858,6 @@ If you include the "result" field, you will be required to also provide the
 "result_type" and "result_subtype". Also, if you include the "log_message"
 field, "log_level" will be set to "info" if it is not provided.
 
-Standards API
--------------------------------------------
-
-POST:
-
-        /api/v1/standards/
-
-Unique POST Parameters:
-
-:upload_type: must be 'file' or 'xml' (lower case)
-:filedata: The STIX document if uploading as a file using the 'file' upload_type.
-:xml: The STIX document if uploading as 'xml' using the 'xml' upload_type.
-:make_event: Wether to create an event within CRITS.  False if not present.  Set to True
-
-POST Response:
-
-Since it is possible to import multiple TLOs within a single standards document
-the format of the response is different from most others. You will find two fields
-called "imported" and "failed". The imported field is a list of dictionaries. Each
-dictionary contains the TLO type (type), ObjectId (id), and API details URL (url).
-The failed field is a list of dictionaries containing the TLO type (type) CRITs
-tried to create and a message (message) detailing what went wrong.
-
-
 Target API
 -------------------------------------------
 
@@ -1952,3 +1881,49 @@ Unique POST Parameters:
 :organization_id: The ID of the organization if they have one.
 :title: The job title of the Target.
 :note: Notes about the Target.
+
+
+Updating TLOs through the API using PATCH
+-----------------------------------------
+
+Over time we are beginning to expose handler functions to the API allowing you
+to make modifications to TLOs using them. This requires a PATCH request. We will
+not document the specific parameters to include as they will change along with
+the handler they map to. For information on what parameters to include, look at
+the handlers and provide the appropriate arguments. A couple notes, however:
+
+:`id_`: Anywhere you notice an `id_` argument to a handler, we provide it for you.
+:`type_`: Anywhere you notice a `type_` argument to a handler, we provide it for you.
+:user: Anywhere you notice a "user" argument to a handler, we provide it for you.
+
+Attempts at providing those values yourself will be dropped and replaced by the
+values we provide. For example, if you wanted to add releasability to a Sample,
+you don't need to provide a 'Sample' type nor the ObjectId of the sample since
+we can determine that from your PATCH request. PATCH requests are submitted to
+the details URL for a TLO like so:
+
+    /api/v1/samples/<object_id>/?action=add_releasability
+
+You would then look at what the "add_releasability" handler requires for
+arguments, and provide them in your request.
+
+Here is a list of currently exposed handlers:
+
+
+Common PATCH actions for all TLOs
+---------------------------------
+
+:add_object:
+:add_releasability:
+:forge_relationship:
+:run_service:
+
+Actor PATCH actions
+-------------------
+
+:update_actor_tags:
+:attribute_actor_identifier:
+:set_identifier_confidence:
+:remove_attribution:
+:set_actor_name:
+:update_actor_aliases:

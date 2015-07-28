@@ -9,7 +9,6 @@ from django.template import RequestContext
 from crits.core.form_consts import get_source_field_for_class
 from crits.core.class_mapper import class_from_id
 from crits.core.data_tools import json_handler
-from crits.core.handlers import get_object_types
 from crits.objects.handlers import add_object, delete_object
 from crits.objects.handlers import update_object_value, update_object_source
 from crits.objects.handlers import create_indicator_from_object
@@ -17,6 +16,8 @@ from crits.objects.handlers import parse_row_to_bound_object_form, add_new_handl
 from crits.objects.forms import AddObjectForm
 from crits.core.handsontable_tools import form_to_dict, parse_bulk_upload, get_field_from_label
 from crits.core.user_tools import user_can_view_data
+
+from crits.vocabulary.objects import ObjectTypes
 
 @user_passes_test(user_can_view_data)
 def add_new_object(request):
@@ -33,16 +34,10 @@ def add_new_object(request):
         result = ""
         message = ""
         my_type = request.POST['otype']
-        all_obj_type_choices = [(c[0],
-                                 c[0],
-                                 {'datatype':c[1].keys()[0],
-                                  'datatype_value':c[1].values()[0]}
-                                 ) for c in get_object_types(False)]
         form = AddObjectForm(analyst,
-                             all_obj_type_choices,
                              request.POST,
                              request.FILES)
-        if not form.is_valid() and not 'value' in request.FILES:
+        if not form.is_valid() and 'value' not in request.FILES:
             message = "Invalid Form: %s" % form.errors
             form = form.as_table()
             response = json.dumps({'message': message,
@@ -56,9 +51,7 @@ def add_new_object(request):
                                           RequestContext(request))
         source = request.POST['source']
         oid = request.POST['oid']
-        ot_array = request.POST['object_type'].split(" - ")
-        object_type = ot_array[0]
-        name = ot_array[1] if len(ot_array) == 2 else ot_array[0]
+        object_type = request.POST['object_type']
         method = request.POST['method']
         reference = request.POST['reference']
         add_indicator = request.POST.get('add_indicator', None)
@@ -72,7 +65,6 @@ def add_new_object(request):
         results = add_object(my_type,
                              oid,
                              object_type,
-                             name,
                              source,
                              method,
                              reference,
@@ -142,16 +134,14 @@ def bulk_add_object(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    all_obj_type_choices = [(c[0],
-                            c[0],
-                            {'datatype':c[1].keys()[0],
-                            'datatype_value':c[1].values()[0]}
-                            ) for c in get_object_types(False, query={'datatype.file':{'$exists':0}})]
-
-    formdict = form_to_dict(AddObjectForm(request.user, all_obj_type_choices))
+    formdict = form_to_dict(AddObjectForm(request.user))
 
     if request.method == "POST" and request.is_ajax():
-        response = parse_bulk_upload(request, parse_row_to_bound_object_form, add_new_handler_object_via_bulk, formdict)
+        response = parse_bulk_upload(
+            request,
+            parse_row_to_bound_object_form,
+            add_new_handler_object_via_bulk,
+            formdict)
 
         return HttpResponse(json.dumps(response,
                             default=json_handler),
@@ -172,19 +162,22 @@ def bulk_add_object_inline(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-    all_obj_type_choices = [(c[0], c[0], {'datatype':c[1].keys()[0],
-                            'datatype_value':c[1].values()[0]}
-                            ) for c in get_object_types(False, query={'datatype.file':{'$exists':0}})]
 
-    formdict = form_to_dict(AddObjectForm(request.user, all_obj_type_choices))
+    formdict = form_to_dict(AddObjectForm(request.user))
 
     if request.method == "POST" and request.is_ajax():
-        response = parse_bulk_upload(request, parse_row_to_bound_object_form, add_new_handler_object_via_bulk, formdict)
+        response = parse_bulk_upload(
+            request,
+            parse_row_to_bound_object_form,
+            add_new_handler_object_via_bulk,
+            formdict)
 
         secondary_data_array = response.get('secondary')
         if secondary_data_array:
             latest_secondary_data = secondary_data_array[-1]
-            class_type = class_from_id(latest_secondary_data['type'], latest_secondary_data['id'])
+            class_type = class_from_id(
+                latest_secondary_data['type'],
+                latest_secondary_data['id'])
 
             subscription = {'type': latest_secondary_data['type'],
                             'id': latest_secondary_data['id'],
@@ -267,7 +260,6 @@ def update_objects_value(request):
     if request.method == 'POST' and request.is_ajax():
         type_ = request.POST['coll']
         oid = request.POST['oid']
-        name = request.POST.get('name')
         object_type = request.POST.get('type')
         value = request.POST['value']
         new_value = request.POST['new_value']
@@ -275,7 +267,6 @@ def update_objects_value(request):
         results = update_object_value(type_,
                                       oid,
                                       object_type,
-                                      name,
                                       value,
                                       new_value,
                                       analyst)
@@ -305,7 +296,6 @@ def update_objects_source(request):
     if request.method == 'POST' and request.is_ajax():
         type_ = request.POST['coll']
         oid = request.POST['oid']
-        name = request.POST.get('name')
         object_type = request.POST.get('type')
         value = request.POST['value']
         new_source = request.POST['new_source']
@@ -315,7 +305,6 @@ def update_objects_source(request):
         results = update_object_source(type_,
                                        oid,
                                        object_type,
-                                       name,
                                        value,
                                        new_source,
                                        new_method,
@@ -345,33 +334,11 @@ def get_object_type_dropdown(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    # NOTE: query is no longer a free-form ajax object that is passed onto mongo
-    # There was a Mongo Injection issue here before. get_object_types
-    # query is passed into mongo as a raw WHERE clause, permitting
-    # javascript injection into mongo.
-    # Only searches seen used so far is {datatype.file:{$exists:0}}, so this was changed around to
-    # only look for a query:'no_file' and sets the where clause for the handler to remove the
-    # exposure here
-
     if request.method == 'POST' and request.is_ajax():
-        dd_types = ""
-        query = {}
-        if 'query' in request.POST and request.POST['query'] != "":
-            if request.POST['query'] == "no_file":
-                query = {'datatype.file':{'$exists':0}}
-            else:
-                message = "Invalid Query passed"
-                result = {'success': False, 'message': message}
-                return HttpResponse(json.dumps(result),
-                                    mimetype="application/json")
-
-        if 'all' in request.POST:
-            dd_types = get_object_types(False, query)
-        else:
-            dd_types = get_object_types(True, query)
+        dd_types = ObjectTypes.values(sort=True)
         dd_final = {}
         for obj_type in dd_types:
-            dd_final[obj_type[0]] = obj_type
+            dd_final[obj_type] = obj_type
         result = {'types': dd_final}
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
@@ -400,12 +367,10 @@ def delete_this_object(request):
             result = ""
             message = ""
             object_type = request.POST.get('object_type')
-            name = request.POST.get('name')
             value = request.POST['value']
             results = delete_object(type_,
                                     oid,
                                     object_type,
-                                    name,
                                     value,
                                     analyst)
             if results['success']:

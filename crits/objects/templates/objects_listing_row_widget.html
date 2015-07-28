@@ -22,7 +22,6 @@
             <table class='chart' id='object_listing_table' style="border: 0px;">
     {% endif %}
         <colgroup>
-            <col width="15%">
             <col width="30%">
             <col width="10%">
             <col width="10%">
@@ -33,23 +32,24 @@
         </thead>
         <tbody>
             {% for object in object_list %}
-            <tr coll="{{ subscription.type }}" oid="{{ subscription.id }}" {% if object.type != None %} name="{{ object.name }}" type="{{ object.type }}" {% endif %} vvalue="{{ object.value }}">
-                <td> {{ object.name }} </td>
+            <tr coll="{{ subscription.type }}" oid="{{ subscription.id }}" {% if object.type != None %} type="{{ object.type }}" {% endif %} vvalue="{{ object.value }}">
                 <td>
                     <div class="object_value">
-                    <a class="object_value_search" style="display: inline;" href="{% url 'crits.core.views.global_search_listing' %}?search_type=object&otype={{ object_type }} - {{ object.name }}&q={{ object.value|urlencode }}&force_full=1"><span name="object_value">{{ object.value }}</span></a>
+                    <a class="object_value_search" style="display: inline;" href="{% url 'crits.core.views.global_search_listing' %}?search_type=object&otype={{ object_type }}&q={{ object.value|urlencode }}&force_full=1"><span name="object_value">{{ object.value }}</span></a>
                     </div>
                     <div class="object_value_icon">
-                    {% if object.datatype == 'file' %}
+                    {% if object.type == 'File Upload' %}
                         <a style="display: inline;" href="{% url 'crits.core.views.download_file' object.value %}?type=object">
                             <div class="ui-icon ui-icon-disk download_file"></div>
                         </a>
                     {% else %}
                         <span class="ui-icon ui-icon-pencil edit_object_value" title="Edit Value" style="float: right;"></span>
                         {% if object|does_field_have_indicator:relationships %}
-                            <span class="ui-icon ui-icon-circle-plus indicator_from_object" title="Add Indicator: Warning: Indicator might already exist" data-type="{{ object_type }} - {{ object.name }}" style="float: right;"></span>
+                            <span class="ui-icon ui-icon-circle-plus indicator_from_object" title="Add Indicator: Warning: Indicator might already exist" data-type="{{ object_type }}" style="float: right;"></span>
+                        {% elif object.type|is_indicator_type %}
+                            <span class="ui-icon ui-icon-plusthick indicator_from_object" title="Add Indicator" data-type="{{ object_type }}" style="float: right;"></span>
                         {% else %}
-                            <span class="ui-icon ui-icon-plusthick indicator_from_object" title="Add Indicator" data-type="{{ object_type }} - {{ object.name }}" style="float: right;"></span>
+                            <span class="ui-icon ui-icon-alert" title="Cannot add Indicator: Object Type not an Indicator Type" style="float: right;"></span>
                         {% endif %}
                     {% endif %}
                     </div>
@@ -65,7 +65,7 @@
                 </td>
                 <td>
                     {% if source_add %}
-                            <div class="ui-icon ui-icon-trash deleteClick" title="Delete Object" action="{% url 'crits.objects.views.delete_this_object' %}" coll="{{ subscription.type }}" oid="{{ subscription.id }}" {% if object.type != None %} name="{{ object.name }}" type="{{ object.type }}"{% endif %} vvalue="{{ object.value }}"></div>
+                            <div class="ui-icon ui-icon-trash deleteClick" title="Delete Object" action="{% url 'crits.objects.views.delete_this_object' %}" coll="{{ subscription.type }}" oid="{{ subscription.id }}" {% if object.type != None %} type="{{ object.type }}"{% endif %} vvalue="{{ object.value }}"></div>
                     {% endif %}
                 </td>
             </tr>

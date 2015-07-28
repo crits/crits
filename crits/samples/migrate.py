@@ -1,3 +1,5 @@
+from crits.vocabulary.relationships import RelationshipTypes
+
 def migrate_backdoors(self):
     """
     Create backdoor objects from backdoors on samples.
@@ -27,7 +29,7 @@ def migrate_backdoors(self):
                               campaign=self.campaign)
     if result['success']:
         self.add_relationship(result['object'],
-                              "Related_To",
+                              RelationshipTypes.RELATED_TO,
                               rel_reason="Migrated")
         # Save the object after relationship was created.
         self.save()
@@ -59,7 +61,7 @@ def migrate_exploits(self):
                                  campaign=self.campaign)
         if result['success']:
             self.add_relationship(result['object'],
-                                  "Related_To",
+                                  RelationshipTypes.RELATED_TO,
                                   rel_reason="Migrated")
             # Save the object after relationship was created.
             self.save()

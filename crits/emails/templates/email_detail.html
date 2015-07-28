@@ -8,7 +8,6 @@
 <script>
     var indicator_from_header_field = "{% url 'crits.emails.views.indicator_from_header_field' email.id %}";
     var email_detail = "{% url 'crits.emails.views.email_detail' email.id %}";
-    var get_email_cybox = "{% url 'crits.emails.views.get_email_cybox' email.id %}";
     var update_header_value = "{% url 'crits.emails.views.update_header_value' email.id %}";
     var splunk_search_url = "{{ splunk_search_url }}";
 </script>
@@ -19,7 +18,6 @@
     <li><a href="#raw_section" id="raw_button"><span>Raw Email</span></a></li>
     <li><a href="#json_section" id="json_button"><span>JSON View</span></a></li>
     <li><a href="#yaml_section" id="yaml_button"><span>YAML View</span></a></li>
-    <li><a href="#cybox_section" id="cybox_button"><span>CybOX View</span></a></li>
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     </ul>
@@ -199,9 +197,6 @@
 </div>
 <div id="yaml_section">
     <textarea id="yaml_display" cols="150" rows="40"></textarea>
-</div>
-<div id="cybox_section">
-    <textarea id="cybox_display" cols="150" rows="40"></textarea>
 </div>
 
 {% with item=email %}

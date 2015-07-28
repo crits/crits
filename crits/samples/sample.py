@@ -1,18 +1,12 @@
-import datetime
-
 from mongoengine import Document, EmbeddedDocument
 from mongoengine import StringField, ListField
-from mongoengine import EmbeddedDocumentField, IntField, BooleanField
+from mongoengine import IntField, BooleanField
 from django.conf import settings
-from cybox.objects.file_object import File
-from cybox.objects.artifact_object import Artifact, Base64Encoding, ZlibCompression
-from cybox.core import Observable
-from cybox.common import UnsignedLong, Hash
 
 from crits.samples.migrate import migrate_sample
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsSourceDocument, CommonAccess
-from crits.core.fields import CritsDateTimeField, getFileField
+from crits.core.fields import getFileField
 
 class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
     """Sample object"""
@@ -131,74 +125,6 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
         """
 
         return self.filedata.grid_id != None and "%PDF-" in self.filedata.read(1024)
-
-    def to_cybox_observable(self, exclude=None, bin_fmt="raw"):
-        if exclude == None:
-            exclude = []
-
-        observables = []
-        f = File()
-        for attr in ['md5', 'sha1', 'sha256']:
-            if attr not in exclude:
-                val = getattr(self, attr, None)
-                if val:
-                    setattr(f, attr, val)
-        if self.ssdeep and 'ssdeep' not in exclude:
-            f.add_hash(Hash(self.ssdeep, Hash.TYPE_SSDEEP))
-        if 'size' not in exclude and 'size_in_bytes' not in exclude:
-            f.size_in_bytes = UnsignedLong(self.size)
-        if 'filename' not in exclude and 'file_name' not in exclude:
-            f.file_name = self.filename
-        # create an Artifact object for the binary if it exists
-        if 'filedata' not in exclude and bin_fmt:
-            data = self.filedata.read()
-            if data: # if sample data available
-                a = Artifact(data, Artifact.TYPE_FILE) # create artifact w/data
-                if bin_fmt == "zlib":
-                    a.packaging.append(ZlibCompression())
-                    a.packaging.append(Base64Encoding())
-                elif bin_fmt == "base64":
-                    a.packaging.append(Base64Encoding())
-                f.add_related(a, "Child_Of") # relate artifact to file
-        if 'filetype' not in exclude and 'file_format' not in exclude:
-            #NOTE: this doesn't work because the CybOX File object does not
-            #   have any support built in for setting the filetype to a
-            #   CybOX-binding friendly object (e.g., calling .to_dict() on
-            #   the resulting CybOX object fails on this field.
-            f.file_format = self.filetype
-        observables.append(Observable(f))
-        return (observables, self.releasability)
-
-    @classmethod
-    def from_cybox(cls, cybox_obs):
-        """
-        Convert a Cybox DefinedObject to a MongoEngine Sample object.
-
-        :param cybox_obs: The cybox object to create the Sample from.
-        :type cybox_obs: :class:`cybox.core.Observable``
-        :returns: :class:`crits.samples.sample.Sample`
-        """
-
-        cybox_object = cybox_obs.object_.properties
-        if cybox_object.md5:
-            db_obj = Sample.objects(md5=cybox_object.md5).first()
-            if db_obj: # if a sample with md5 already exists
-                return db_obj # don't modify, just return
-
-        sample = cls() # else, start creating new sample record
-        sample.filename = str(cybox_object.file_name)
-        sample.size = cybox_object.size_in_bytes.value if cybox_object.size_in_bytes else 0
-        for hash_ in cybox_object.hashes:
-            if hash_.type_.value.upper() in [Hash.TYPE_MD5, Hash.TYPE_SHA1,
-                Hash.TYPE_SHA256, Hash.TYPE_SSDEEP]:
-                setattr(sample, hash_.type_.value.lower(),
-                    str(hash_.simple_hash_value).strip().lower())
-        for obj in cybox_object.parent.related_objects: # attempt to find data in cybox
-            if isinstance(obj.properties, Artifact) and obj.properties.type_ == Artifact.TYPE_FILE:
-                sample.add_file_data(obj.properties.data)
-                break
-
-        return sample
 
     def discover_binary(self):
         """

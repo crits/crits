@@ -519,10 +519,6 @@
         {% endfor %}
       </ul>
     </li>
-    <li class='nav_standards mmenu_item'>
-      <a href class="noclick">STIX Import</a>
-      <a href id="new-standards" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-standards" persona="new" title="Import STIX Document"></a>
-    </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.targets.views.targets_listing' %}">Targets</a>
       <a href id="new-target" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-target" persona="new" title="New Target"></a>
@@ -602,35 +598,14 @@
                    <li class='mmenu_item'>
                         <a class='controlPanelNav' sub_node='actor_threat_identifiers_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_threat_identifiers_button">Actor Threat Identifiers</a>
                    </li>
-                   <li class='mmenu_item'>
-                       <a class='controlPanelNav' sub_node='actor_threat_types_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_threat_types_button">Actor Threat Types</a>
-                   </li>
-                   <li class='mmenu_item'>
-                       <a class='controlPanelNav' sub_node='actor_motiviations_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_motiviations_button">Actor Motivations</a>
-                   </li>
-                   <li class='mmenu_item'>
-                        <a class='controlPanelNav' sub_node='actor_sophistications_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_sophistications_button">Actor Sophistications</a>
-                   </li>
-                   <li class='mmenu_item'>
-                       <a class='controlPanelNav' sub_node='actor_intended_effects_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_intended_effects_button">Actor Intended Effects</a>
-                   </li>
                     <li class='mmenu_item'>
                         <a class='controlPanelNav' sub_node='campaign_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#campaign_button">Campaigns</a>
-                    </li>
-                    <li class='mmenu_item'>
-                        <a class='controlPanelNav' sub_node='eventtype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#eventtype_button">Event Types</a>
                     </li>
                     <li class='mmenu_item'>
                         <a class='controlPanelNav' sub_node='indicatoraction_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#indicatoraction_button">Indicator Actions</a>
                     </li>
                     <li class='mmenu_item'>
-                        <a class='controlPanelNav' sub_node='objecttype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#objecttype_button">Object Types</a>
-                    </li>
-                    <li class='mmenu_item'>
                         <a class='controlPanelNav' sub_node='rawdatatype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#rawdatatype_button">Raw Data Types</a>
-                    </li>
-                    <li class='mmenu_item'>
-                        <a class='controlPanelNav' sub_node='relationshiptype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#relationshiptype_button">Relationship Types</a>
                     </li>
                     <li class='mmenu_item'>
                         <a class='controlPanelNav' sub_node='sourceaccess_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#sourceaccess_button">Sources</a>

@@ -29,7 +29,6 @@ class Command(BaseCommand):
         imports = [ 'anyjson',
                    'bson',
                    'crits',
-                   'cybox',
                    'dateutil',
                    'gridfs',
                    'importlib',
@@ -42,7 +41,6 @@ class Command(BaseCommand):
                    'pydeep',
                    'pyparsing',
                    'requests',
-                   'stix',
                    'yaml',
                    ]
 

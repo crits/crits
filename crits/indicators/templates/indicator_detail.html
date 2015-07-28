@@ -5,6 +5,10 @@
 
 {% block content %}
 
+<script>
+    var get_indicator_type_dropdown = "{% url 'crits.indicators.views.get_indicator_type_dropdown' %}";
+</script>
+
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
@@ -37,11 +41,6 @@
         </td>
         </tr>
         <tr>
-            {% with description=indicator.description %}
-                {% include 'description_widget.html' %}
-            {% endwith %}
-        </tr>
-        <tr>
         <td class='key'>
             Type
             <span style="float: right;display: inline-block" id="indicator_type_error"></span>
@@ -50,21 +49,39 @@
             <span class="edit" id="indicator_type" action="{% url 'crits.indicators.views.update_indicator_type' indicator.id %}">{{indicator.ind_type}}</span>
         </td>
         </tr>
-    {% if indicator.ind_type == 'URI - Domain Name' %}
+        <tr>
+        <td class='key'>
+            Threat Type
+            <span style="float: right;display: inline-block" id="indicator_threat_type_error"></span>
+        </td>
+        <td>
+            <span class="edit" id="indicator_threat_type" action="{% url 'crits.indicators.views.update_indicator_threat_type' indicator.id %}">{{indicator.threat_type}}</span>
+        </td>
+        </tr>
+        <tr>
+        <td class='key'>
+            Attack Type
+            <span style="float: right;display: inline-block" id="indicator_attack_type_error"></span>
+        </td>
+        <td>
+            <span class="edit" id="indicator_attack_type" action="{% url 'crits.indicators.views.update_indicator_attack_type' indicator.id %}">{{indicator.attack_type}}</span>
+        </td>
+        </tr>
+    {% if indicator.ind_type == 'Domain' %}
         <tr>
         <td class='key'>
             Value
         </td>
         <td>
             <a href='{% url "crits.domains.views.domain_detail" indicator.value %}'>{{ indicator.value }}</a>
-    {% elif indicator.type == 'Address - e-mail' %}
+    {% elif indicator.type == 'Email Address' or indicator.type == 'Email Address From' or indicator.type == 'Email Reply-To' or indicator.type == 'Email Address Sender' %}
         <tr>
         <td class='key'>
             Value
         </td>
         <td>
             <a href='{% url 'crits.emails.views.emails_listing' %}?from={{indicator.value}}'>{{ indicator.value }}</a>
-    {% elif indicator.type == 'Address - ipv4-addr' or indicator.type == 'Address - ipv6-addr'%}
+    {% elif indicator.type == 'IPv4 Address' or indicator.type == 'IPv6 Address'%}
         <tr>
         <td class='key'>
             Value
@@ -86,6 +103,11 @@
         {% endif %}
          </td> 
          </tr>
+        <tr>
+            {% with description=indicator.description %}
+                {% include 'description_widget.html' %}
+            {% endwith %}
+        </tr>
         <tr>
         <td class='key'>
             Creation Date

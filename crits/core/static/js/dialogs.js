@@ -1033,8 +1033,6 @@ function new_indicator_dialog(e) {
     var dialog = $("#dialog-new-indicator").closest(".ui-dialog");
     var form = dialog.find("form");
 
-    add_more_object_types_button(form, 'no_file');
-
     // If there is selected text, default the value in the form
     check_selected('indicator', dialog);
 }
@@ -1137,7 +1135,6 @@ var stdDialogs = {
 
   var fileDialogs = {
       // File Upload Dialogs
-      "new-standards": {title: "STIX Document"},
       "new-email-outlook": {title: "Upload Outlook Email" },
       "new-email-eml": {title: "Email" },
       "new-pcap": {title: "PCAP", personas: {related: newPersona("Upload Related PCAP",
@@ -1160,8 +1157,8 @@ var stdDialogs = {
   $.each(fileDialogs, function(id,opt) {
       stdDialog(id, opt, {
           new: { open: file_upload_dialog, submit: defaultSubmit }}
-          )
-          });
+      )
+  });
 
   // New Sample dialog has some additional setup, so add that as an event callback
   $("#dialog-new-sample").on("dialogopen", new_sample_dialog);
@@ -1203,16 +1200,6 @@ var stdDialogs = {
 
 
   $("#dialog-new-indicator").on("dialogcreate", new_indicator_dialog);
-
-  $(document).on('change', "#id_rst_fmt", function(e) {
-      if (this.value == 'stix') {
-          console.log("disable");
-          $("#id_bin_fmt").val("base64").prop("disabled", true);
-      } else {
-          console.log("enable");
-          $("#id_bin_fmt").prop("disabled", false);
-      }
-  });
 
   // Releasability has plus instance and delete buttons that use same callback
   $(document).on('click', '.add_releasability_instance_button',
