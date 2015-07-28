@@ -1292,13 +1292,20 @@ def parse_search_term(term, force_full=False):
     # decode the term so we aren't dealing with weird encoded characters
     if force_full == False:
         term = urllib.unquote(term)
-    # setup lexer, parse our term, and define operators
-    sh = shlex.shlex(term.strip())
-    sh.wordchars += '!@#$%^&*()-_=+[]{}|\:;<,>.?/~`'
-    sh.commenters = ''
-    parsed = list(iter(sh.get_token, ''))
-    operators = ['regex', 'full', 'type', 'field']
+
     search = {}
+
+    # setup lexer, parse our term, and define operators
+    try:
+        sh = shlex.shlex(term.strip())
+        sh.wordchars += '!@#$%^&*()-_=+[]{}|\:;<,>.?/~`'
+        sh.commenters = ''
+        parsed = list(iter(sh.get_token, ''))
+    except Exception as e:
+        search['query'] = {'error': str(e)}
+        return search
+
+    operators = ['regex', 'full', 'type', 'field']
 
     # for each parsed term, check to see if we have an operator and a value
     regex_term = ""
