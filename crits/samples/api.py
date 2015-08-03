@@ -91,7 +91,7 @@ class SampleResource(CRITsAPIResource):
             content['message'] = "Must specify related_type and related_id"
             self.crits_response(content)
 
-        sample_md5 = handle_uploaded_file(filedata,
+        sample_results = handle_uploaded_file(filedata,
                                           source,
                                           method,
                                           reference,
@@ -113,20 +113,39 @@ class SampleResource(CRITsAPIResource):
 
         result = {'success': False}
 
-        if len(sample_md5) > 0:
-            if result.get('message'):
-                content['message'] = result.get('message')
-            if result.get('object'):
-                content['id'] = str(result.get('object').id)
-            if content.get('id'):
-                url = reverse('api_dispatch_detail',
-                            kwargs={'resource_name': 'samples',
-                                    'api_name': 'v1',
-                                    'pk': content.get('id')})
-                content['url'] = url
+        if len(sample_results) > 0:
+            result = sample_results[0]
+
+            if type(result) == dict:
+                # Metadata for raw file
+                if result.get('message'):
+                    content['message'] = result.get('message')
+                if result.get('object'):
+                    content['id'] = str(result.get('object').id)
+
+                    page_url = reverse('crits.samples.views.detail',
+                                args=[str(result.get('object').md5)])
+                    content['page_url'] = page_url
+                if content.get('id'):
+                    api_url = reverse('api_dispatch_detail',
+                                kwargs={'resource_name': 'samples',
+                                        'api_name': 'v1',
+                                        'pk': content.get('id')})
+
+                    content['url'] = api_url
+
+                if result.get('success'):
+                    content['return_code'] = 0
+
+            else:
+                # Metadata for Zip, RAR, etc
+                content['id'] = result
+                page_url = reverse('crits.samples.views.detail',
+                                   args=[result])
+
+                content['page_url'] = page_url
+
         else:
             content['message'] = "Could not create Sample for unknown reason."
 
-        if result['success']:
-            content['return_code'] = 0
         self.crits_response(content)
