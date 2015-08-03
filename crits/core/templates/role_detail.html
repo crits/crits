@@ -49,11 +49,13 @@
     <ul style="font-size: 125%">
     <li><a href="#general_section" id="general_button"><span>General</span></a></li>
     <li><a href="#actor_section" id="actor_button"><span>Actor</span></a></li>
+    <li><a href="#backdoor_section" id="backdoor_button"><span>Backdoor</span></a></li>
     <li><a href="#campaign_section" id="campaign_button"><span>Campaign</span></a></li>
     <li><a href="#certificate_section" id="certificate_button"><span>Certificate</span></a></li>
     <li><a href="#domain_section" id="domain_button"><span>Domain</span></a></li>
     <li><a href="#email_section" id="email_button"><span>Email</span></a></li>
     <li><a href="#event_section" id="event_button"><span>Event</span></a></li>
+    <li><a href="#exploit_section" id="exploit_button"><span>Exploit</span></a></li>
     <li><a href="#indicator_section" id="indicator_button"><span>Indicator</span></a></li>
     <li><a href="#ip_section" id="ip_button"><span>IP</span></a></li>
     <li><a href="#pcap_section" id="pcap_button"><span>PCAP</span></a></li>
@@ -111,6 +113,17 @@
         </tbody>
     </table>
 </div>
+<div id="backdoor_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Backdoor" %}
+                {% for k,v in role.Backdoor.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
 <div id="campaign_section">
     <table class="vertical">
         <tbody>
@@ -160,6 +173,17 @@
         <tbody>
             {% with tlo="Event" %}
                 {% for k,v in role.Event.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="exploit_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Exploit" %}
+                {% for k,v in role.Exploit.items %}
                     {% include 'role_item.html' %}
                 {% endfor %}
             {% endwith %}

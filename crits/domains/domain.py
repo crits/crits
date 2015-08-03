@@ -99,8 +99,3 @@ class DomainAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
     """
     ACL for Domains.
     """
-
-    whois_read = BooleanField(default=False)
-    whois_add = BooleanField(default=False)
-    whois_edit = BooleanField(default=False)
-    whois_delete = BooleanField(default=False)

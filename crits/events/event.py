@@ -98,6 +98,5 @@ class EventAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
 
     add_sample = BooleanField(default=False)
 
-    description_edit = BooleanField(default=False)
     title_edit = BooleanField(default=False)
     type_edit = BooleanField(default=False)

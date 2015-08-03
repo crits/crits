@@ -2367,6 +2367,8 @@ class CommonAccess(BaseDocument):
     write = BooleanField(default=False)
     delete = BooleanField(default=False)
     download = BooleanField(default=False)
+    description_read = BooleanField(default=False)
+    description_edit = BooleanField(default=False)
 
     # Bucket List
     bucketlist_read = BooleanField(default=False)
@@ -2384,6 +2386,12 @@ class CommonAccess(BaseDocument):
     comments_add = BooleanField(default=False)
     comments_edit = BooleanField(default=False)
     comments_delete = BooleanField(default=False)
+
+    # Locations
+    locations_read = BooleanField(default=False)
+    locations_add = BooleanField(default=False)
+    locations_edit = BooleanField(default=False)
+    locations_delete = BooleanField(default=False)
 
     # Objects
     objects_read = BooleanField(default=False)

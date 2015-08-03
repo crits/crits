@@ -249,7 +249,6 @@ class RawDataAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
     tool_edit = BooleanField(default=False)
     tool_description_edit = BooleanField(default=False)
     data_type_edit = BooleanField(default=False)
-    description_edit = BooleanField(default=False)
 
     line_comment_add = BooleanField(default=False)
 

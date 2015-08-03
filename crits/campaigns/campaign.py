@@ -224,8 +224,6 @@ class CampaignAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
     aliases_read = BooleanField(default=False)
     aliases_add = BooleanField(default=False)
     aliases_delete = BooleanField(default=False)
-    description_read = BooleanField(default=False)
-    description_edit = BooleanField(default=False)
 
     ttps_read = BooleanField(default=False)
     ttps_add = BooleanField(default=False)

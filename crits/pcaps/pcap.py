@@ -125,5 +125,3 @@ class PCAPAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
     """
     ACL for PCAPs.
     """
-
-    description_edit = BooleanField(default=False)

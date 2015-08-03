@@ -168,6 +168,3 @@ class SampleAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
     filename_edit = BooleanField(default=False)
     filenames_add = BooleanField(default=False)
     filenames_remove = BooleanField(default=False)
-
-    backdoor_edit = BooleanField(default=False)
-    exploit_add = BooleanField(default=False)

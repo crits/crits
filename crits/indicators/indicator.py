@@ -364,6 +364,8 @@ class IndicatorAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
     """
 
     type_edit = BooleanField(default=False)
+    threat_type_edit = BooleanField(default=False)
+    attack_type_edit = BooleanField(default=False)
     confidence_edit = BooleanField(default=False)
     impact_edit = BooleanField(default=False)
 
