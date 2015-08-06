@@ -123,27 +123,28 @@ class SampleResource(CRITsAPIResource):
                 if result.get('object'):
                     content['id'] = str(result.get('object').id)
 
-                    page_url = reverse('crits.samples.views.detail',
-                                args=[str(result.get('object').md5)])
-                    content['page_url'] = page_url
                 if content.get('id'):
-                    api_url = reverse('api_dispatch_detail',
+                    url = reverse('api_dispatch_detail',
                                 kwargs={'resource_name': 'samples',
                                         'api_name': 'v1',
                                         'pk': content.get('id')})
 
-                    content['url'] = api_url
+                    content['url'] = url
 
                 if result.get('success'):
                     content['return_code'] = 0
 
             else:
                 # Metadata for Zip, RAR, etc
-                content['id'] = result
-                page_url = reverse('crits.samples.views.detail',
-                                   args=[result])
+                sample = Sample.objects(md5=result).first()
 
-                content['page_url'] = page_url
+                url = reverse('api_dispatch_detail',
+                    kwargs={'resource_name': 'samples',
+                            'api_name': 'v1',
+                            'pk': sample['id']})
+
+                content['id'] = str(sample['id'])
+                content['url'] = url
 
         else:
             content['message'] = "Could not create Sample for unknown reason."
