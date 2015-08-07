@@ -23,6 +23,7 @@ python-magic==0.4.6
 python-mimeparse
 pytz
 pyyaml
+qrcode
 requests
 setuptools
 simplejson
