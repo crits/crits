@@ -4,9 +4,10 @@ from django import forms
 from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.widgets import CalWidget
-from crits.core.handlers import get_source_names, get_item_names
+from crits.core.handlers import get_source_names
 from crits.core.user_tools import get_user_organization
-from crits.events.event import EventType
+
+from crits.vocabulary.events import EventTypes
 
 class EventForm(forms.Form):
     """
@@ -40,9 +41,9 @@ class EventForm(forms.Form):
                                                                                True,
                                                                                username)]
         self.fields['source'].initial = get_user_organization(username)
-        self.fields['event_type'].choices = [(c.name,
-                                              c.name) for c in get_item_names(EventType,
-                                                                                 True)]
+        self.fields['event_type'].choices = [
+            (c,c) for c in EventTypes.values(sort=True)
+        ]
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

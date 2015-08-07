@@ -7,7 +7,6 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 
 from crits.actors.actor import Actor, ActorIdentifier, ActorThreatIdentifier
-from crits.core.class_mapper import class_from_type
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import create_embedded_source
 from crits.core.forms import DownloadFileForm
@@ -17,6 +16,13 @@ from crits.core.user_tools import is_admin, is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
+
+from crits.vocabulary.actors import (
+    ThreatTypes,
+    Motivations,
+    Sophistications,
+    IntendedEffects
+)
 
 def generate_actor_identifier_csv(request):
     """
@@ -438,15 +444,16 @@ def get_actor_tags_by_type(tag_type):
     :return: list
     """
 
-    tags = []
-    if tag_type in ('ActorIntendedEffect',
-                    'ActorMotivation',
-                    'ActorSophistication',
-                    'ActorThreatType'):
-        obj = class_from_type(tag_type)
-        results = obj.objects()
-        tags = [t.name for t in results]
-    return tags
+    if tag_type == 'ActorIntendedEffect':
+        return IntendedEffects.values(sort=True)
+    elif tag_type == 'ActorMotivation':
+        return Motivations.values(sort=True)
+    elif tag_type == 'ActorSophistication':
+        return Sophistications.values(sort=True)
+    elif tag_type == 'ActorThreatType':
+        return ThreatTypes.values(sort=True)
+    else:
+        return []
 
 def update_actor_tags(id_, tag_type, tags, user, **kwargs):
     """

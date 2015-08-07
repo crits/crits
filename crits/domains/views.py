@@ -1,9 +1,7 @@
 import urllib
 import json
-import datetime
 
 from django.http import HttpResponse, HttpResponseRedirect
-from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
@@ -20,7 +18,6 @@ from crits.domains.handlers import add_new_domain, get_domain_details
 from crits.domains.handlers import update_tlds, generate_domain_jtable
 from crits.domains.handlers import generate_domain_csv, process_bulk_add_domain
 from crits.objects.forms import AddObjectForm
-from crits.core.handlers import get_object_types
 
 
 @user_passes_test(user_can_view_data)
@@ -63,12 +60,6 @@ def bulk_add_domain(request):
             also contain helpful status messages about each operation.
     """
 
-    all_obj_type_choices = [(c[0],
-                            c[0],
-                            {'datatype':c[1].keys()[0],
-                            'datatype_value':c[1].values()[0]}
-                            ) for c in get_object_types(False)]
-
     formdict = form_to_dict(AddDomainForm(request.user))
 
     if request.method == "POST" and request.is_ajax():
@@ -78,7 +69,7 @@ def bulk_add_domain(request):
                             default=json_handler),
                             mimetype='application/json')
     else:
-        objectformdict = form_to_dict(AddObjectForm(request.user, all_obj_type_choices))
+        objectformdict = form_to_dict(AddObjectForm(request.user))
 
         return render_to_response('bulk_add_default.html',
                                  {'formdict': formdict,

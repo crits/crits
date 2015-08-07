@@ -244,8 +244,8 @@ class DownloadFileForm(forms.Form):
                                           "than this, ignore it. Max: %i")
 
     rst_fmt = forms.ChoiceField(choices=[("zip", "zip"),
-                                         ("stix", "STIX"),
-                                         ("stix_no_bin", "STIX (no binaries)")],
+                                         ("json", "JSON"),
+                                         ("json_no_bin", "JSON (no binaries)")],
                                          label="Result format")
 
     bin_fmt = forms.ChoiceField(choices=[("raw", "raw"),

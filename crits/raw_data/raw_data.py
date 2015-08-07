@@ -12,9 +12,6 @@ from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.fields import CritsDateTimeField
 from crits.raw_data.migrate import migrate_raw_data
 
-from cybox.objects.artifact_object import Artifact, Base64Encoding
-from cybox.core import Observable
-
 
 class RawDataType(CritsDocument, CritsSchemaDocument, Document):
     """
@@ -238,34 +235,3 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
             else:
                 highlights.append(h)
         self.highlights = highlights
-
-    def to_cybox_observable(self):
-        """
-            Convert a RawData to a CybOX Observables.
-            Returns a tuple of (CybOX object, releasability list).
-
-            To get the cybox object as xml or json, call to_xml() or
-            to_json(), respectively, on the resulting CybOX object.
-        """
-        obj = Artifact(self.data.encode('utf-8'), Artifact.TYPE_FILE)
-        obj.packaging.append(Base64Encoding())
-        obs = Observable(obj)
-        obs.description = self.description
-        return ([obs], self.releasability)
-
-    @classmethod
-    def from_cybox(cls, cybox_obs):
-        """
-        Convert a Cybox DefinedObject to a MongoEngine RawData object.
-
-        :param cybox_obs: The cybox object to create the RawData from.
-        :type cybox_obs: :class:`cybox.core.Observable``
-        :returns: :class:`crits.raw_data.raw_data.RawData`
-        """
-        cybox_object = cybox_obs.object_.properties
-        rawdata = cls()
-        rawdata.add_file_data(cybox_object.data)
-        db_obj = RawData.objects(md5=rawdata.md5).first()
-        if db_obj:
-            return db_obj
-        return rawdata

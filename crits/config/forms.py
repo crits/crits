@@ -71,6 +71,10 @@ class ConfigGeneralForm(forms.Form):
         widget=forms.TextInput,
         help_text='*Requires a web server restart.',
         required=True)
+    zip7_password = forms.CharField(
+        widget=forms.TextInput,
+        label='ZIP Password for downloaded artifacts',
+        required=False)
     enable_toasts = forms.BooleanField(initial=False,
         label="Enable Toast Notifications",
         help_text='*Requires a web server restart.',

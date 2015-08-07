@@ -14,8 +14,6 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
-from crits.actors.actor import ActorIntendedEffect, ActorMotivation
-from crits.actors.actor import ActorSophistication, ActorThreatType
 from crits.actors.actor import ActorThreatIdentifier
 from crits.actors.forms import AddActorForm, AddActorIdentifierTypeForm
 from crits.actors.forms import AddActorIdentifierForm, AttributeIdentifierForm
@@ -25,7 +23,6 @@ from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
 from crits.comments.forms import AddCommentForm, InlineCommentForm
 from crits.config.config import CRITsConfig
-from crits.core.crits_mongoengine import RelationshipType
 from crits.core.data_tools import json_handler
 from crits.core.forms import SourceAccessForm, AddSourceForm, AddUserRoleForm
 from crits.core.forms import SourceForm, DownloadFileForm, AddReleasabilityForm
@@ -36,7 +33,7 @@ from crits.core.handlers import add_new_source, generate_counts_jtable
 from crits.core.handlers import source_add_update, source_remove, source_remove_all
 from crits.core.handlers import modify_bucket_list, promote_bucket_list
 from crits.core.handlers import download_object_handler, unflatten
-from crits.core.handlers import modify_sector_list, get_sector_options
+from crits.core.handlers import modify_sector_list
 from crits.core.handlers import generate_bucket_jtable, generate_bucket_csv
 from crits.core.handlers import generate_sector_jtable, generate_sector_csv
 from crits.core.handlers import generate_dashboard, generate_global_search
@@ -70,7 +67,6 @@ from crits.core.user_tools import revoke_api_key_by_name, make_default_api_key_b
 from crits.core.class_mapper import class_from_id
 from crits.domains.forms import TLDUpdateForm, AddDomainForm
 from crits.emails.forms import EmailUploadForm, EmailEMLForm, EmailYAMLForm, EmailRawUploadForm, EmailOutlookForm
-from crits.events.event import EventType
 from crits.events.forms import EventForm
 from crits.exploits.forms import AddExploitForm
 from crits.indicators.forms import UploadIndicatorCSVForm, UploadIndicatorTextForm
@@ -82,7 +78,6 @@ from crits.notifications.handlers import get_user_notifications
 from crits.notifications.handlers import remove_user_from_notification
 from crits.notifications.handlers import remove_user_notifications
 from crits.objects.forms import AddObjectForm
-from crits.objects.object_type import ObjectType
 from crits.pcaps.forms import UploadPcapForm
 from crits.raw_data.forms import UploadRawDataFileForm, UploadRawDataForm
 from crits.raw_data.forms import NewRawDataTypeForm
@@ -90,8 +85,9 @@ from crits.raw_data.raw_data import RawDataType
 from crits.relationships.forms import ForgeRelationshipForm
 from crits.samples.forms import UploadFileForm
 from crits.screenshots.forms import AddScreenshotForm
-from crits.standards.forms import UploadStandardsForm
 from crits.targets.forms import TargetInfoForm
+
+from crits.vocabulary.sectors import Sectors
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +185,7 @@ def get_dialog(request):
 
     dialog = request.GET.get('dialog', '')
     # Regex in urls.py doesn't seem to be working, should sanity check dialog
-    return render_to_response("dialogs/" + dialog + ".html",
+    return render_to_response(dialog + ".html",
                               {"error" : 'Dialog not found'},
                               RequestContext(request))
 
@@ -849,15 +845,6 @@ def download_object(request):
                                   {"error" : "Expecting POST."},
                                   RequestContext(request))
 
-    # if the STIX format is chosen, force binary to be base64
-    # we force this in the UI as well, but because we disable the select box it
-    # winds up not including it in the POST data. we get a two-fer here by
-    # making the form valid again and also ensuring people can't submit bad
-    # requests and forcing a format they shouldn't be.
-    request.POST = request.POST.copy()
-    if request.POST['rst_fmt'] == 'stix':
-        request.POST['bin_fmt'] = 'base64'
-
     form = DownloadFileForm(request.POST)
     if form.is_valid():
         total_limit = form.cleaned_data['total_limit']
@@ -1150,10 +1137,6 @@ def base_context(request):
             base_context['upload_sample'] = UploadFileForm(user)
         except Exception, e:
             logger.warning("Base Context UploadFileForm Error: %s" % e)
-        try:
-            base_context['upload_standards'] = UploadStandardsForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadStandardsForm Error: %s" % e)
         try:
             base_context['object_form'] = AddObjectForm(user, None)
         except Exception, e:
@@ -1693,16 +1676,9 @@ def item_editor(request):
 
     counts = {}
     obj_list = [ActorThreatIdentifier,
-                ActorThreatType,
-                ActorMotivation,
-                ActorSophistication,
-                ActorIntendedEffect,
                 Campaign,
-                EventType,
                 IndicatorAction,
-                ObjectType,
                 RawDataType,
-                RelationshipType,
                 SourceAccess,
                 UserRole]
     for col_obj in obj_list:
@@ -2052,7 +2028,10 @@ def get_available_sectors(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        return get_sector_options()
+        return HttpResponse(
+            json.dumps(Sectors.values(sort=True), default=json_handler),
+            content_type='application/json'
+        )
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
