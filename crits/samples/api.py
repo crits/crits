@@ -91,7 +91,7 @@ class SampleResource(CRITsAPIResource):
             content['message'] = "Must specify related_type and related_id"
             self.crits_response(content)
 
-        sample_results = handle_uploaded_file(filedata,
+        sample_md5 = handle_uploaded_file(filedata,
                                           source,
                                           method,
                                           reference,
@@ -113,40 +113,21 @@ class SampleResource(CRITsAPIResource):
 
         result = {'success': False}
 
-        if len(sample_results) > 0:
-            result = sample_results[0]
-
-            if type(result) == dict:
-                # Metadata for raw file
-                if result.get('message'):
-                    content['message'] = result.get('message')
-                if result.get('object'):
-                    content['id'] = str(result.get('object').id)
-
-                if content.get('id'):
-                    url = reverse('api_dispatch_detail',
-                                kwargs={'resource_name': 'samples',
-                                        'api_name': 'v1',
-                                        'pk': content.get('id')})
-
-                    content['url'] = url
-
-                if result.get('success'):
-                    content['return_code'] = 0
-
-            else:
-                # Metadata for Zip, RAR, etc
-                sample = Sample.objects(md5=result).first()
-
+        if len(sample_md5) > 0:
+            result = sample_md5[0]
+            if result.get('message'):
+                content['message'] = result.get('message')
+            if result.get('object'):
+                content['id'] = str(result.get('object').id)
+            if content.get('id'):
                 url = reverse('api_dispatch_detail',
-                    kwargs={'resource_name': 'samples',
-                            'api_name': 'v1',
-                            'pk': sample['id']})
-
-                content['id'] = str(sample['id'])
+                            kwargs={'resource_name': 'samples',
+                                    'api_name': 'v1',
+                                    'pk': content.get('id')})
                 content['url'] = url
-
         else:
             content['message'] = "Could not create Sample for unknown reason."
 
+        if result['success']:
+            content['return_code'] = 0
         self.crits_response(content)
