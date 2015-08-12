@@ -68,6 +68,7 @@ class RelationshipTypes(vocab):
         if relationship is None:
             return None
 
+        relationship = repationship.replace('_', ' ')
         if relationship == cls.COMPRESSED_FROM:
             return cls.COMPRESSED_INTO
         elif relationship == cls.COMPRESSED_INTO:
