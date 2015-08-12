@@ -6,54 +6,54 @@ class RelationshipTypes(vocab):
     """
 
 
-    COMPRESSED_FROM = "Compressed From"
-    COMPRESSED_INTO = "Compressed Into"
+    COMPRESSED_FROM = "Compressed_From"
+    COMPRESSED_INTO = "Compressed_Into"
 
-    CONNECTED_FROM = "Connected From"
-    CONNECTED_TO = "Connected To"
+    CONNECTED_FROM = "Connected_From"
+    CONNECTED_TO = "Connected_To"
 
     CONTAINS = "Contains"
-    CONTAINED_WITHIN = "Contained Within"
+    CONTAINED_WITHIN = "Contained_Within"
 
     CREATED = "Created"
-    CREATED_BY = "Created By"
+    CREATED_BY = "Created_By"
 
     DECRYPTED = "Decrypted"
-    DECRYPTED_BY = "Decrypted By"
+    DECRYPTED_BY = "Decrypted_By"
 
     DOWNLOADED = "Downloaded"
-    DOWNLOADED_BY = "Downloaded By"
+    DOWNLOADED_BY = "Downloaded_By"
 
-    DOWNLOADED_FROM = "Downloaded From"
-    DOWNLOADED_TO = "Downloaded To"
+    DOWNLOADED_FROM = "Downloaded_From"
+    DOWNLOADED_TO = "Downloaded_To"
 
     DROPPED = "Dropped"
-    DROPPED_BY = "Dropped By"
+    DROPPED_BY = "Dropped_By"
 
     INSTALLED = "Installed"
-    INSTALLED_BY = "Installed By"
+    INSTALLED_BY = "Installed_By"
 
-    LOADED_FROM = "Loaded From"
-    LOADED_INTO = "Loaded Into"
+    LOADED_FROM = "Loaded_From"
+    LOADED_INTO = "Loaded_Into"
 
-    PACKED_FROM = "Packed From"
-    PACKED_INTO = "Packed Into"
+    PACKED_FROM = "Packed_From"
+    PACKED_INTO = "Packed_Into"
 
-    RECEIVED_FROM = "Received From"
-    SENT_TO = "Sent To"
+    RECEIVED_FROM = "Received_From"
+    SENT_TO = "Sent_To"
 
     REGISTERED = "Registered"
-    REGISTERED_TO = "Registered To"
+    REGISTERED_TO = "Registered_To"
 
-    RELATED_TO = "Related To"
+    RELATED_TO = "Related_To"
 
-    RESOLVED_TO = "Resolved To"
+    RESOLVED_TO = "Resolved_To"
 
     SENT = "Sent"
-    SENT_BY = "Sent By"
+    SENT_BY = "Sent_By"
 
-    SUB_DOMAIN_OF = "Sub-domain Of"
-    SUPRA_DOMAIN_OF = "Supra-domain Of"
+    SUB_DOMAIN_OF = "Sub-domain_Of"
+    SUPRA_DOMAIN_OF = "Supra-domain_Of"
 
     @classmethod
     def inverse(cls, relationship=None):
