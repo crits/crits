@@ -1,6 +1,6 @@
 import datetime
 import json, yaml
-import StringIO
+import io
 import csv
 
 from bson import json_util, ObjectId
@@ -513,7 +513,7 @@ class CritsDocument(BaseDocument):
 
         if not fields:
             fields = self._data.keys()
-        csv_string = StringIO.StringIO()
+        csv_string = io.BytesIO()
         csv_wr = csv.writer(csv_string)
         if headers:
             csv_wr.writerow([f.encode('utf-8') for f in fields])

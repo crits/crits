@@ -1,4 +1,4 @@
-import StringIO
+import io
 
 from mongoengine import Document, StringField, ListField, IntField
 from django.conf import settings
@@ -86,10 +86,11 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
 
         if not screenshot:
             return
-        self.filename = screenshot.name
+        if hasattr(screenshot, 'name'):
+            self.filename = screenshot.name
         im = Image.open(screenshot)
         self.width, self.height = im.size
-        fs = StringIO.StringIO()
+        fs = io.BytesIO()
         im.save(fs, "PNG")
         fs.seek(0)
         self.screenshot = fs.read()
@@ -131,7 +132,7 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
         size = (128, 128)
         im.thumbnail(size, Image.ANTIALIAS)
         im.save(self.thumb, "PNG")
-        fs = StringIO.StringIO()
+        fs = io.BytesIO()
         im.save(fs, "PNG")
         fs.seek(0)
         self.thumb = fs.read()

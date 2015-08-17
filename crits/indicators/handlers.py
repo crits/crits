@@ -4,7 +4,7 @@ import json
 import logging
 import urlparse
 
-from cStringIO import StringIO
+from io import BytesIO
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.urlresolvers import reverse
@@ -364,7 +364,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         cdata = csv_data.read()
     else:
         cdata = csv_data.encode('ascii')
-    data = csv.DictReader(StringIO(cdata), skipinitialspace=True)
+    data = csv.DictReader(BytesIO(cdata), skipinitialspace=True)
     result = {'success': True}
     result_message = ""
     # Compute permitted values in CSV

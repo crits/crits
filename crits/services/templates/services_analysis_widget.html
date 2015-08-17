@@ -4,7 +4,7 @@
 <div class="content_box">
 <a name="{{ analysis.service_name }}-{{ analysis.analysis_id }}"></a>
 <h3 class="titleheader">
-    <span class="collapsible">
+    <span id="analysis_{{ analysis.analysis_id }}" class="collapsible">
         {% if analysis.status == "error" %}
         <img src="/new_images/red_circle.png" class="analysisindicator" title="Error">
         {% elif analysis.status == "started" %}

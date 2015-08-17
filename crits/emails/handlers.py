@@ -9,7 +9,7 @@ import json
 import magic
 import re
 import yaml
-import StringIO
+import io
 import sys
 import olefile
 
@@ -217,6 +217,7 @@ def get_email_detail(email_id, analyst):
                 ))
         email_fields.append(create_email_field_dict(
                 "Email To",
+                None,
                 email.to,
                 "To",
                 False, True, True, True, False,
@@ -1446,7 +1447,7 @@ def parse_ole_file(file):
 
     file.seek(0)
     data = file.read()
-    msg_file = StringIO.StringIO(data)
+    msg_file = io.BytesIO(data)
     ole = olefile.OleFileIO(msg_file)
 
     # Helper function to grab data out of stream objects

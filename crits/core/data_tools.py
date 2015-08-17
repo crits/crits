@@ -589,7 +589,7 @@ def generate_qrcode(data, size):
     """
     Generate a QR Code Image from a string.
 
-    Will attempt to import qrcode (which also requires Pillow) and StringIO. If
+    Will attempt to import qrcode (which also requires Pillow) and io. If
     this fails we will return None.
 
     :param data: data to be converted into a QR Code
@@ -600,10 +600,10 @@ def generate_qrcode(data, size):
     """
 
     try:
-        import qrcode, StringIO
+        import qrcode, io
     except:
         return None
-    a = StringIO.StringIO()
+    a = io.BytesIO()
     qr = qrcode.QRCode()
     qr.add_data(data)
     img = qr.make_image().resize(size)

@@ -601,7 +601,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
             raise ZipFileError, "Unzip process failed to terminate"
         else:
             if related_md5 and related_md5 == zip_md5:
-                relationship = "Compressed_Into"
+                relationship = RelationshipTypes.COMPRESSED_INTO
             else:
                 relationship = RelationshipTypes.RELATED_TO
             for root, dirs, files in os.walk(extractdir):
@@ -723,7 +723,7 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
             raise ZipFileError, "Unrar process failed to terminate"
         else:
             if related_md5 and related_md5 == rar_md5:
-                relationship = "Compressed_Into"
+                relationship = RelationshipTypes.COMPRESSED_INTO
             else:
                 relationship = RelationshipTypes.RELATED_TO
             for root, dirs, files in os.walk(rardir):
@@ -987,7 +987,7 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
             if related_obj.id != sample.id: #don't form relationship to itself
                 if not relationship:
                     if related_obj._meta['crits_type'] == 'Email':
-                        relationship = "Contained_Within"
+                        relationship = RelationshipTypes.CONTAINED_WITHIN
                     else:
                         relationship = RelationshipTypes.RELATED_TO
                 sample.add_relationship(related_obj,
