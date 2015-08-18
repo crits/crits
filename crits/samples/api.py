@@ -85,6 +85,7 @@ class SampleResource(CRITsAPIResource):
         backdoor_version = bundle.data.get('backdoor_version', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
+        filepath = bundle.data.get('filepath', None)
 
         if ((related_id and not related_type) or
             (related_type and not related_id)):
@@ -107,6 +108,7 @@ class SampleResource(CRITsAPIResource):
                                           md5=md5,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
+                                          filepath=filepath,
                                           is_return_only_md5=False,
                                           backdoor_name=backdoor_name,
                                           backdoor_version=backdoor_version)
