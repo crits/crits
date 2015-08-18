@@ -1047,6 +1047,7 @@ information, as follows:
 
 :Upload type: Choose whether the sample is a file or metadata
 :Filename: The name of the file encountered
+:FIlepath: The path of the file encountered
 :MD5: The MD5 has for the sample
 :Email Me Results: Select to have CRITs email you analysis results
 :Parent md5: The MD5 hash for the Sample file
@@ -1797,6 +1798,7 @@ Unique POST Parameters:
 
 :upload_type: One of "metadata" or "file".
 :filename: The name of the file if this is a "metadata" upload.
+:filepath: The path of the file
 :md5: The MD5 of the file if this is a "metadata" upload.
 :filedata: The sample if the upload type is "file".
 :password: The password to unzip the file if it is zipped and the upload type is "file".
