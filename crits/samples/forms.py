@@ -49,6 +49,7 @@ class UploadFileForm(forms.Form):
     md5 = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1 required'}),
                           required=False,
                           label=form_consts.Sample.MD5)
+    filepath = forms.CharField(widget=forms.TextInput, required=False, label=form_consts.Sample.FILE_PATH)
     file_format = forms.ChoiceField(widget=RadioSelect(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_SKIP + ' id_upload_type_0 required'}),
                                     choices=[("zip", "Zip"),
                                              ("rar", "RAR"),
@@ -84,7 +85,6 @@ class UploadFileForm(forms.Form):
                                label=form_consts.Sample.EMAIL_RESULTS)
     backdoor = forms.ChoiceField(widget=forms.Select, required=False,
                                  label=form_consts.Backdoor.NAME)
-    filepath = forms.CharField(widget=forms.TextInput, required=False, label='filepath') #form_consts.Sample.FILE_PATH)
 
     def __init__(self, username, *args, **kwargs):
         super(UploadFileForm, self).__init__(*args, **kwargs)
