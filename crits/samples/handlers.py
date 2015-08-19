@@ -647,7 +647,7 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
                method="Generic", reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
                bucket_list=None, ticket=None, inherited_source=None,
-               backdoor_name=None, backdoor_version=None, filepath=None):
+               backdoor_name=None, backdoor_version=None):
     """
     Unrar a file.
 
@@ -769,8 +769,8 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
                 related_id=None, related_type='Sample', backdoor=None, user='',
                 campaign=None, confidence='low', md5_digest=None, bucket_list=None,
                 ticket=None, relationship=None, inherited_source=None, is_validate_only=False,
-                is_return_only_md5=True, cache={}, backdoor_name=None, filepath=None,
-                backdoor_version=None):
+                is_return_only_md5=True, cache={}, backdoor_name=None, 
+                backdoor_version=None, filepath=None):
     """
     Handle adding a file.
 
