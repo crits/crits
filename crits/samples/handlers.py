@@ -1459,31 +1459,6 @@ def update_sample_filename(id_, filename, analyst):
     except ValidationError, e:
         return {'success': False, 'message': e}
 
-def update_sample_filepaths(id_, filename, analyst):
-    """
-    Update a Sample filename.
-
-    :param id_: ObjectId of the Sample.
-    :type id_: str
-    :param filename: The new filename.
-    :type filename: str
-    :param analyst: The user setting the new filename.
-    :type analyst: str
-    :returns: dict with key 'success' (boolean) and 'message' (str) if failed.
-    """
-
-    if not filepath:
-        return {'success': False, 'message': "No filename to change"}
-    sample = Sample.objects(id=id_).first()
-    if not sample:
-        return {'success': False, 'message': "No sample to change"}
-    sample.filepath = filepath.strip()
-    try:
-        sample.save(username=analyst)
-        return {'success': True}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
-
 def modify_sample_filenames(id_, tags, analyst):
     """
     Modify the filenames for a Sample.
