@@ -875,15 +875,17 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
         is_sample_new = True
         sample = Sample()
         sample.filename = filename or md5_digest
-        if len(filepath) >0:
-            sample.filepaths.append(filepath)
+        if filepath != None: 
+            if len(filepath) >0:
+                sample.filepaths.append(filepath)
         sample.md5 = md5_digest
     else:
         if filename not in sample.filenames and filename != sample.filename:
             sample.filenames.append(filename)
-        if len(filepath) >0:
-            if filepath not in sample.filepaths:
-                sample.filepaths.append(filepath)
+        if filepath != None: 
+            if len(filepath) >0:
+                if filepath not in sample.filepaths:
+                    sample.filepaths.append(filepath)
 
         if cached_results != None:
             cached_results[md5_digest] = sample
