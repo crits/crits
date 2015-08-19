@@ -115,23 +115,47 @@ if [ ! -f crits/config/database.py ]; then
 else
   echo "Database configuration file exists, skip secret_key generation!"
 fi
+
+start_mongo () {
+  sudo mkdir -p /data/db
+  sudo mkdir -p /data/logs
+  sudo sh contrib/mongo/mongod_start.sh
+}
+
 # If MongoDB isn't already running, ask to start it.
 # This can fail if MongoDB is running already but on a non-standard port.
 pgrep mongod >/dev/null 2>&1
 if [ $? -ne 0 ]
 then
-  while true; do
-    read -p "Do you want to start 'mongod' now? [yn] " yn
-    case $yn in
-        [Yy]* ) sudo mkdir -p /data/db; sudo mkdir -p /data/logs; sudo sh contrib/mongo/mongod_start.sh; break;;
-        [Nn]* ) break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-  done
+  if [ "$IS_VAGRANT" ]
+  then
+    # For Vagrant, we always want to start Mongo automatically (though it
+    # should get started by the installation process).
+    start_mongo
+  else
+    while true; do
+      read -p "Do you want to start 'mongod' now? [yn] " yn
+      case $yn in
+          [Yy]* ) start_mongo; break;;
+          [Nn]* ) break;;
+          * ) echo "Please answer yes or no.";;
+      esac
+    done
+  fi
 fi
 
 echo "Creating default collections"
 python manage.py create_default_collections
+
+if [ "$IS_VAGRANT" ]
+then
+  echo "To get a usable system, you still need to use fabric to:"
+  echo "- Create an administrator account"
+  echo "    $ fab vagrant create_admin_user"
+  echo "- Run the development server"
+  echo "    $ fab vagrant runserver"
+  exit 0
+fi
 
 if [ $? -eq 0 ]
 then
