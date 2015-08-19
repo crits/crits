@@ -1047,7 +1047,7 @@ information, as follows:
 
 :Upload type: Choose whether the sample is a file or metadata
 :Filename: The name of the file encountered
-:FIlepath: The path of the file encountered
+:Filepath: The path of the file encountered
 :MD5: The MD5 has for the sample
 :Email Me Results: Select to have CRITs email you analysis results
 :Parent md5: The MD5 hash for the Sample file
