@@ -789,7 +789,7 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
     for file in result['attachments']:
         type_ = file.get('type', '')
         if 'pkcs7' not in type_:
-            mimetype = magic.from_buffer(file['data'], mime=True)
+            mimetype = magic.from_buffer(file.get('data', ''), mime=True)
             if mimetype is None:
                 file_format = 'raw'
             elif 'application/zip' in mimetype:
@@ -803,20 +803,20 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
                                 'password': password}
                 r = create_email_attachment(email, cleaned_data, analyst, sourcename,
                                         method, reference, campaign, confidence,
-                                        "", "", file['data'], file['name'])
+                                        "", "", file.get('data', ''), file.get('name', ''))
                 if 'success' in r:
                     if not r['success']:
-                        attach_messages.append("%s: %s" % (file['name'],
+                        attach_messages.append("%s: %s" % (file.get('name', ''),
                                                          r['message']))
                     else:
-                        attach_messages.append("%s: Added Successfully!" % file['name'])
+                        attach_messages.append("%s: Added Successfully!" % file.get('name', ''))
             except BaseException:
                 error_message = 'The email uploaded successfully, but there was an error\
                                 uploading the attachment ' + file['name'] + '\n\n' + str(sys.exc_info())
                 response['reason'] = error_message
                 return response
         else:
-            attach_messages.append('%s: Cannot decrypt attachment (pkcs7).' % file['name'])
+            attach_messages.append('%s: Cannot decrypt attachment (pkcs7).' % file.get('name', ''))
     if len(attach_messages):
         response['message'] = '<br/>'.join(attach_messages)
     response['status'] = True
