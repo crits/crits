@@ -975,7 +975,9 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
     msg = eml.message_from_string(str(stripped_mail))
 
     if not msg.items():
-        result['reason'] = "No items found."
+        result['reason'] = """Could not parse email. Possibly the input does
+                           not conform to a Internet Message style headers
+                           and header continuation lines..."""
         return result
 
     # clean up headers
