@@ -36,7 +36,6 @@ class IndicatorTypes(vocab):
     FILE_DELETED = "File Deleted"
     FILE_MOVED = "File Moved"
     FILE_NAME = "File Name"
-    FILE_PATH = "File Path"
     FILE_OPENED = "File Opened"
     FILE_READ = "File Read"
     FILE_WRITTEN = "File Written"
