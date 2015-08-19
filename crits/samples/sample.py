@@ -64,7 +64,6 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
 
     filedata = getFileField(collection_name=settings.COL_SAMPLES)
     filename = StringField(required=True)
-    filepath = StringField()
     filenames = ListField(StringField())
     filepaths = ListField(StringField())
     filetype = StringField()
