@@ -53,7 +53,7 @@ elif [ "$OS" == 'centos' ] || [ "$OS" == 'redhat' ]
 then
   REL=$(echo $VER | sed 's/\..//')
   echo "Adding EPEL Repo"
-  sudo yum install epel-release
+  sudo yum -y install epel-release
   echo "Adding RPMForge Repo" #unrar upx
   sudo rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
   sudo rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
