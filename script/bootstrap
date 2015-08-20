@@ -64,8 +64,6 @@ then
   sudo yum install unrar
   sudo yum install libyaml
   sudo yum install upx
-  # cleanup
-  rm rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
   
 # OSX: Install as many dependencies as we can using Homebrew.
 elif [ "$OS" = 'darwin' ]
