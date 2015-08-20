@@ -59,7 +59,7 @@ then
   sudo rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
   echo "Installing Yum Packages"
   # Probably should run the Yum equivelent of apt-get update
-  sudo yum install make gcc gcc-c++ kernel-devel pcre pcre-devel curl libpcap-devel python-devel python-pip zip unzip gzip bzip2 swig
+  sudo yum install make gcc gcc-c++ kernel-devel pcre pcre-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep openssl-devel zip unzip gzip bzip2 swig
   sudo yum install p7zip
   sudo yum install unrar
   sudo yum install libyaml
