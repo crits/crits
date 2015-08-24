@@ -167,7 +167,7 @@ then
   read -p "Organization name: " ORG
   
   echo "Adding a default admin account"
-  python manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
+  python manage.py users -a -A -s -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
   echo "Make note of the above password so you can authenticate!"
   
   # Attempt to start the runserver.
