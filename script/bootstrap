@@ -26,7 +26,7 @@ if [ -f /etc/lsb-release ]; then
   OS=$DISTRIB_ID
   VER=$DISTRIB_RELEASE
 elif [ -f /etc/redhat-release ]; then
-  OS=$(cat /etc/redhat-release | sed 's/ Enterprise.*//')
+  OS=$(cat /etc/redhat-release | sed 's/ [Enterprise|release].*//')
   VER=$(cat /etc/redhat-release | sed 's/.*release //;s/ .*$//')
 else
   OS=$(uname -s)
@@ -49,17 +49,22 @@ then
 
 # Redhat: Install as many dependencies as we can using yum.
 # TODO: Need to test centos dependencies
-# elif [ "$OS" == 'centos' ] || [ "$OS" == 'redhat' ]
-elif [ "$OS" = 'red hat' ]
+elif [ "$OS" == 'centos' ] || [ "$OS" == 'redhat' ]
 then
+  REL=$(echo $VER | sed 's/\..//')
+  echo "Adding EPEL Repo"
+  sudo yum -y install epel-release
+  echo "Adding RPMForge Repo" #unrar upx
+  sudo rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+  sudo rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
   echo "Installing Yum Packages"
   # Probably should run the Yum equivelent of apt-get update
-  sudo yum install make gcc gcc-c++ kernel-devel pcre pcre-devel curl libpcap-devel python-devel python-pip zip unzip gzip bzip2 swig
-  sudo yum install p7zip-9.20.1-2
-  sudo yum install unrar-4.2.3-1
-  sudo yum install libyaml-0.1.4-1
-  sudo yum install upx-3.07-1
-
+  sudo yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
+  sudo yum -y install p7zip
+  sudo yum -y install unrar
+  sudo yum -y install libyaml
+  sudo yum -y install upx
+  
 # OSX: Install as many dependencies as we can using Homebrew.
 elif [ "$OS" = 'darwin' ]
 then
