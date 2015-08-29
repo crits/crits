@@ -26,7 +26,7 @@ if [ -f /etc/lsb-release ]; then
   OS=$DISTRIB_ID
   VER=$DISTRIB_RELEASE
 elif [ -f /etc/redhat-release ]; then
-  OS=$(cat /etc/redhat-release | sed 's/ Enterprise.*//')
+  OS=$(cat /etc/redhat-release | sed 's/ Enterprise.*//;s/ Linux.*//')
   VER=$(cat /etc/redhat-release | sed 's/.*release //;s/ .*$//')
 else
   OS=$(uname -s)
@@ -48,17 +48,11 @@ then
   sudo ldconfig
 
 # Redhat: Install as many dependencies as we can using yum.
-# TODO: Need to test centos dependencies
-# elif [ "$OS" == 'centos' ] || [ "$OS" == 'redhat' ]
-elif [ "$OS" = 'red hat' ]
+elif [ "$OS" == 'centos' ] || [ "$OS" == 'red hat' ]
 then
   echo "Installing Yum Packages"
   # Probably should run the Yum equivelent of apt-get update
-  sudo yum install make gcc gcc-c++ kernel-devel pcre pcre-devel curl libpcap-devel python-devel python-pip zip unzip gzip bzip2 swig
-  sudo yum install p7zip-9.20.1-2
-  sudo yum install unrar-4.2.3-1
-  sudo yum install libyaml-0.1.4-1
-  sudo yum install upx-3.07-1
+  sudo yum install make gcc gcc-c++ kernel-devel pcre pcre-devel curl libpcap-devel python-devel python-pip zip unzip gzip bzip3 swig p7zip unrar libyaml upx mongodb mongodb-server libxslt-devel python-lxml m2crypto python-mongoengine python-dateutil python-ldap python-pyparsing python-magic python-mimeparse pytz PyYAML python-requests python-simplejson ssdeep-devel
 
 # OSX: Install as many dependencies as we can using Homebrew.
 elif [ "$OS" = 'darwin' ]
