@@ -5,6 +5,7 @@ descending.
 
 Author: frbapolkosnik
 Date: 2015-08-31
+
     Unzip functionality was set up to use the 7za rather than 7z. 7z suports
     much wider variety of formats. The defaults are changed for new installs,
     for existing installs just change the filename from  7za to 7z in 
