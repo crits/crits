@@ -10,6 +10,7 @@ Date: 2015-08-31
     much wider variety of formats. The defaults are changed for new installs,
     for existing installs just change the filename from  7za to 7z in 
     CRITs Control Panel -> SYSTEM -> General -> "Zip7 path:".
+    7z comes with p7zip-plugins on RHEL/Centos, on Ubuntu it's in p7zip-full.
 
 Author: mgoffin
 Date: 2015-06-30
