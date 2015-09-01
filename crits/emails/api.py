@@ -130,7 +130,7 @@ class EmailResource(CRITsAPIResource):
         if result.get('reason'):
             content['message'] += result.get('reason')
         if result.get('obj_id'):
-            content['id'] = result.get('obj_id', '')
+            content['id'] = str(result.get('obj_id', ''))
         elif result.get('object'):
             content['id'] = str(result.get('object').id)
         if content.get('id'):
