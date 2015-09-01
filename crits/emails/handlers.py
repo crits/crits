@@ -550,7 +550,8 @@ def handle_email_fields(data, analyst, method):
     return result
 
 def handle_json(data, sourcename, reference, analyst, method,
-                save_unsupported=True, campaign=None, confidence=None):
+                save_unsupported=True, campaign=None, confidence=None,
+                bucket_list=None, ticket=None):
     """
     Take email in JSON and convert them into an email object.
 
@@ -570,6 +571,10 @@ def handle_json(data, sourcename, reference, analyst, method,
     :type campaign: str
     :param confidence: Confidence level of the campaign.
     :type confidence: str
+    :param bucket_list: The bucket(s) to assign to this data.
+    :type bucket_list: str
+    :param ticket: The ticket to assign to this data.
+    :type ticket: str
     :returns: dict with keys:
               "status" (boolean),
               "object" The email object if successful,
@@ -595,6 +600,12 @@ def handle_json(data, sourcename, reference, analyst, method,
     result['data'] = converted
 
     new_email = dict_to_email(result['data'], save_unsupported=save_unsupported)
+
+    if bucket_list:
+        new_email.add_bucket_list(bucket_list, analyst)
+    if ticket:
+        new_email.add_ticket(ticket, analyst)
+
     if campaign:
         if not confidence:
             confidence = "low"
@@ -624,7 +635,8 @@ def handle_json(data, sourcename, reference, analyst, method,
 
 # if email_id is provided it is the existing email id to modify.
 def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
-                save_unsupported=True, campaign=None, confidence=None):
+                save_unsupported=True, campaign=None, confidence=None,
+                bucket_list=None, ticket=None):
     """
     Take email in YAML and convert them into an email object.
 
@@ -646,6 +658,10 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
     :type campaign: str
     :param confidence: Confidence level of the campaign.
     :type confidence: str
+    :param bucket_list: The bucket(s) to assign to this data.
+    :type bucket_list: str
+    :param ticket: The ticket to assign to this data.
+    :type ticket: str
     :returns: dict with keys:
               "status" (boolean),
               "object" The email object if successful,
@@ -671,6 +687,10 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
     result['data'] = converted
 
     new_email = dict_to_email(result['data'], save_unsupported=save_unsupported)
+    if bucket_list:
+        new_email.add_bucket_list(bucket_list, analyst)
+    if ticket:
+        new_email.add_ticket(ticket, analyst)
     if campaign:
         if not confidence:
             confidence = "low"
@@ -731,7 +751,7 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
 
 
 def handle_msg(data, sourcename, reference, analyst, method, password='',
-               campaign=None, confidence=None):
+               campaign=None, confidence=None, bucket_list=None, ticket=None):
     """
     Take email in MSG and convert them into an email object.
 
@@ -751,6 +771,10 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
     :type campaign: str
     :param confidence: Confidence level of the campaign.
     :type confidence: str
+    :param bucket_list: The bucket(s) to assign to this data.
+    :type bucket_list: str
+    :param ticket: The ticket to assign to this data.
+    :type ticket: str
     :returns: dict with keys:
               "status" (boolean),
               "obj_id" The email ObjectId if successful,
@@ -769,8 +793,8 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
     result['email']['source_reference'] = reference
     result['email']['campaign'] = campaign
     result['email']['campaign_confidence'] = confidence
-    result['email']['bucket_list'] = ""
-    result['email']['ticket'] = ""
+    result['email']['bucket_list'] = bucket_list
+    result['email']['ticket'] = ticket
 
     if result['email'].has_key('date'):
         result['email']['isodate'] = date_parser(result['email']['date'],
@@ -825,7 +849,7 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
 
 def handle_pasted_eml(data, sourcename, reference, analyst, method,
                       parent_type=None, parent_id=None, campaign=None,
-                      confidence=None):
+                      confidence=None, bucket_list=None, ticket=None):
     """
     Take email in EML and convert them into an email object.
 
@@ -847,6 +871,10 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     :type campaign: str
     :param confidence: Confidence level of the campaign.
     :type confidence: str
+    :param bucket_list: The bucket(s) to assign to this data.
+    :type bucket_list: str
+    :param ticket: The ticket to assign to this data.
+    :type ticket: str
     :returns: dict with keys:
               "status" (boolean),
               "reason" (str),
@@ -878,11 +906,12 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
         emldata.append(line)
     emldata = "\n".join(emldata)
     return handle_eml(emldata, sourcename, reference, analyst, method, parent_type,
-                      parent_id, campaign, confidence)
+                      parent_id, campaign, confidence, bucket_list, ticket)
 
 
 def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
-               parent_id=None, campaign=None, confidence=None):
+               parent_id=None, campaign=None, confidence=None, bucket_list=None,
+               ticket=None):
     """
     Take email in EML and convert them into an email object.
 
@@ -904,6 +933,10 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
     :type campaign: str
     :param confidence: Confidence level of the campaign.
     :type confidence: str
+    :param bucket_list: The bucket(s) to assign to this data.
+    :type bucket_list: str
+    :param ticket: The ticket to assign to this data.
+    :type ticket: str
     :returns: dict with keys:
               "status" (boolean),
               "reason" (str),
@@ -1037,6 +1070,10 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
     result['data'] = msg_import
 
     new_email = dict_to_email(result['data'])
+    if bucket_list:
+        new_email.add_bucket_list(bucket_list, analyst)
+    if ticket:
+        new_email.add_ticket(ticket, analyst)
     if campaign:
         if not confidence:
             confidence = "low"
@@ -1101,6 +1138,8 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
                        related_type='Email',
                        campaign=campaign,
                        confidence=confidence,
+                       bucket_list=bucket_list,
+                       ticket=ticket,
                        relationship=RelationshipTypes.CONTAINED_WITHIN) == None:
             result['reason'] = "Failed to save attachment.\n<br /><pre>"
             + md5_ + "</pre>"
