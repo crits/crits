@@ -223,7 +223,7 @@ SESSION_TIMEOUT =       int(crits_config.get('session_timeout', 12)) * 60 * 60
 SPLUNK_SEARCH_URL =         crits_config.get('splunk_search_url', None)
 TEMP_DIR =                  crits_config.get('temp_dir', '/tmp')
 TIME_ZONE =                 crits_config.get('timezone', 'America/New_York')
-ZIP7_PATH =                 crits_config.get('zip7_path', '/usr/bin/7za')
+ZIP7_PATH =                 crits_config.get('zip7_path', '/usr/bin/7z')
 ZIP7_PASSWORD =             crits_config.get('zip7_password', 'infected')
 REMOTE_USER =               crits_config.get('remote_user', False)
 PASSWORD_COMPLEXITY_REGEX = crits_config.get('password_complexity_regex', '(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$')

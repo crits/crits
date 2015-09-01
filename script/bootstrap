@@ -56,6 +56,7 @@ then
   # Probably should run the Yum equivelent of apt-get update
   sudo yum install make gcc gcc-c++ kernel-devel pcre pcre-devel curl libpcap-devel python-devel python-pip zip unzip gzip bzip2 swig
   sudo yum install p7zip-9.20.1-2
+  sudo yum install p7zip-plugins-9.20.1-2
   sudo yum install unrar-4.2.3-1
   sudo yum install libyaml-0.1.4-1
   sudo yum install upx-3.07-1
