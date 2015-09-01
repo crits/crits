@@ -948,7 +948,6 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             'data': None,
             'attachments': {}
           }
-
     if not sourcename:
         result['reason'] = "Missing source information."
         return result
@@ -1096,7 +1095,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
         result['object'].reload()
         run_triage(result['object'], analyst)
     except Exception, e:
-        result['reason'] = "Failed to save email.\n<br /><pre>" + \
+        result['reason'] = "Failed1 to save email.\n<br /><pre>" + \
             str(e) + "</pre>"
         return result
 

@@ -84,7 +84,7 @@ class EmailResource(CRITsAPIResource):
             filedata = file_.read()
             result = handle_eml(filedata, source, reference,
                                 analyst, 'EML Upload' + method, campaign,
-                                confidence, bucket_list, ticket)
+                                confidence, bucket_list=bucket_list, ticket=ticket)
         if type_ == 'msg':
             raw_email = bundle.data.get('filedata', None)
             password = bundle.data.get('password', None)
@@ -96,8 +96,8 @@ class EmailResource(CRITsAPIResource):
                                 password,
                                 campaign,
                                 confidence,
-                                bucket_list,
-                                ticket)
+                                bucket_list=bucket_list,
+                                ticket=ticket)
         if type_ == 'raw':
             raw_email = bundle.data.get('filedata', None)
             result = handle_pasted_eml(raw_email,
@@ -107,8 +107,8 @@ class EmailResource(CRITsAPIResource):
                                        'Raw Upload' + method,
                                        campaign,
                                        confidence,
-                                       bucket_list,
-                                       ticket)
+                                       bucket_list=bucket_list,
+                                       ticket=ticket)
         if type_ == 'yaml':
             yaml_data = bundle.data.get('filedata', None)
             email_id = bundle.data.get('email_id', None)
@@ -122,8 +122,8 @@ class EmailResource(CRITsAPIResource):
                                  save_unsupported,
                                  campaign,
                                  confidence,
-                                 bucket_list,
-                                 ticket)
+                                 bucket_list=bucket_list,
+                                 ticket=ticket)
         if type_ == 'fields':
             fields = bundle.data
             # Strip these so they don't get put in unsupported_attrs.
