@@ -319,8 +319,8 @@ def email_raw_add(request):
                     method,
                     campaign=fields_form.cleaned_data['campaign'],
                     confidence=fields_form.cleaned_data['campaign_confidence'],
-                    bucket_list=eml_form.cleaned_data['bucket_list'],
-                    ticket=eml_form.cleaned_data['ticket'])
+                    bucket_list=fields_form.cleaned_data['bucket_list'],
+                    ticket=fields_form.cleaned_data['ticket'])
     if not obj['status']:
         if request.is_ajax():
             json_reply['message'] = obj['reason']
