@@ -255,8 +255,8 @@ def email_yaml_add(request, email_id=None):
                       save_unsupported=yaml_form.cleaned_data['save_unsupported'],
                       campaign=yaml_form.cleaned_data['campaign'],
                       confidence=yaml_form.cleaned_data['campaign_confidence'],
-                      bucket_list=eml_form.cleaned_data['bucket_list'],
-                      ticket=eml_form.cleaned_data['ticket'])
+                      bucket_list=yaml_form.cleaned_data['bucket_list'],
+                      ticket=yaml_form.cleaned_data['ticket'])
     if not obj['status']:
         if request.is_ajax():
             json_reply['message'] = obj['reason']
@@ -429,8 +429,8 @@ def email_outlook_add(request):
     password = outlook_form.cleaned_data['password']
     campaign = outlook_form.cleaned_data['campaign']
     campaign_confidence = outlook_form.cleaned_data['campaign_confidence']
-    bucket_list=eml_form.cleaned_data['bucket_list']
-    ticket=eml_form.cleaned_data['ticket']
+    bucket_list = outlook_form.cleaned_data['bucket_list']
+    ticket = outlook_form.cleaned_data['ticket']
 
     result = handle_msg(request.FILES['msg_file'],
                         source,

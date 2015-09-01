@@ -518,13 +518,11 @@ def handle_email_fields(data, analyst, method):
         pass
 
     new_email = Email()
-    new_email.merge(data)
-
     if bucket_list:
         new_email.add_bucket_list(bucket_list, analyst)
     if ticket:
         new_email.add_ticket(ticket, analyst)
-
+    new_email.merge(data)
     new_email.source = [create_embedded_source(sourcename,
                                                reference=reference,
                                                method=method,
@@ -600,12 +598,10 @@ def handle_json(data, sourcename, reference, analyst, method,
     result['data'] = converted
 
     new_email = dict_to_email(result['data'], save_unsupported=save_unsupported)
-
     if bucket_list:
         new_email.add_bucket_list(bucket_list, analyst)
     if ticket:
         new_email.add_ticket(ticket, analyst)
-
     if campaign:
         if not confidence:
             confidence = "low"
@@ -1113,9 +1109,9 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
                                                     rel_type,
                                                     analyst=analyst,
                                                     get_rels=False)
-        if not ret['success']:
-            result['reason'] = "Failed to create relationship.\n<br /><pre>"
-            + result['message'] + "</pre>"
+            if not ret['success']:
+                result['reason'] = "Failed to create relationship.\n<br /><pre>"
+                + result['message'] + "</pre>"
             return result
 
         # Save the email again since it now has a new relationship.
