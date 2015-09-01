@@ -74,8 +74,8 @@ def does_field_have_indicator(field, relationships):
 
     return return_value
 
-@register.filter
-def type(value):
+@register.filter(name="type")
+def typeOf(value):
     """
     Get the type of value.
 
@@ -84,7 +84,7 @@ def type(value):
     :returns: str
     """
 
-    return type(value)
+    return str(type(value))
 
 @register.filter
 def nicify(value):
