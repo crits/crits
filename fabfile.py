@@ -51,3 +51,10 @@ def runserver():
     """Run CRITs using the built-in runserver."""
     with cd(APP_ROOT):
         run("python manage.py runserver 0.0.0.0:8080")
+
+
+@task
+def init_services(service_dirs="/data/crits_services"):
+    """Sets the service_dirs config setting and installs dependencies"""
+    with cd(APP_ROOT):
+        run("python manage.py setconfig service_dirs %s" % service_dirs)
