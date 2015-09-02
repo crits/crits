@@ -7,6 +7,7 @@ import sys
 import django
 import subprocess
 
+from django.conf import settings
 from pymongo import ReadPreference, MongoClient
 from mongoengine import connect
 
@@ -68,7 +69,8 @@ else:
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.dummy'
+        'ENGINE': 'django.db.backends.sqlite3',
+             'NAME': 'my_db_name',
     }
 }
 
@@ -287,6 +289,32 @@ TEMPLATE_LOADERS = (
     #'django.template.loaders.eggs.load_template_source',
 )
 
+
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            # insert your TEMPLATE_DIRS here
+           'crits/'
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
+                # list if you haven't customized them:
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -376,15 +404,14 @@ STATICFILES_DIRS = (
 )
 
 INSTALLED_APPS = (
-    'crits.core',
-    'crits.dashboards',
     'django.contrib.auth',
-    'mongoengine.django.mongo_auth',
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.staticfiles',
+    'crits.core',
+    'crits.dashboards',
     'crits.actors',
     'crits.campaigns',
     'crits.certificates',
@@ -403,8 +430,9 @@ INSTALLED_APPS = (
     'crits.services',
     'crits.stats',
     'crits.targets',
+    'mongoengine.django.mongo_auth',
     'tastypie',
-    'tastypie_mongoengine',
+    'tastypie_mongoengine', 
 )
 
 AUTH_USER_MODEL = 'mongo_auth.MongoUser'
@@ -503,6 +531,7 @@ CRITS_TYPES = {
     'Screenshot': COL_SCREENSHOTS,
     'Target': COL_TARGETS,
 }
+
 
 # Custom template lists for loading in different places in the UI
 SERVICE_NAV_TEMPLATES = ()

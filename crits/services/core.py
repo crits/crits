@@ -1,6 +1,12 @@
 from datetime import datetime
 from distutils.version import StrictVersion
-from importlib import import_module
+
+try:
+    from importlib import import_module
+except ImportError:
+    # Django < 1.7 and Python < 2.7
+    from django.utils.importlib import import_module
+
 import logging
 import os.path
 import shutil
@@ -102,8 +108,8 @@ class ServiceManager(object):
             supported_types = service_class.supported_types
             compatability_mode = service_class.compatability_mode
 
-            logger.debug("Found service subclass: %s version %s" %
-                            (service_name, service_version))
+            #logger.debug("Found service subclass: %s version %s" %
+            #                (service_name, service_version))
 
             try:
                 StrictVersion(service_version)
@@ -111,12 +117,12 @@ class ServiceManager(object):
                 # Unable to parse the service version
                 msg = ("Service %s is invalid, and will not be available." %
                        service_name)
-                logger.warning(msg)
-                logger.warning(e)
+                #logger.warning(msg)
+                #logger.warning(e)
                 continue
             else:
                 # Only register the service if it is valid.
-                logger.debug("Registering Service %s" % service_name)
+                #logger.debug("Registering Service %s" % service_name)
                 svc_obj = CRITsService.objects(name=service_class.name).first()
                 service = service_class()
                 if not svc_obj:
