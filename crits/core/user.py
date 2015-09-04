@@ -53,7 +53,7 @@ from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
 from django.contrib.auth.models import _user_has_module_perms
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-#from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _
 
 from crits.config.config import CRITsConfig
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
@@ -288,32 +288,32 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     }
 
     username = StringField(max_length=30, required=True,
-                           verbose_name='username',
-                           help_text="Required. 30 characters or fewer. Letters, numbers and @/./+/-/_ characters")
+                           verbose_name=_('username'),
+                           help_text=_("Required. 30 characters or fewer. Letters, numbers and @/./+/-/_ characters"))
 
     first_name = StringField(max_length=30,
-                             verbose_name='first name')
+                             verbose_name=_('first name'))
 
     last_name = StringField(max_length=30,
-                            verbose_name='last name')
-    email = EmailField(verbose_name='e-mail address')
+                            verbose_name=_('last name'))
+    email = EmailField(verbose_name=_('e-mail address'))
     password = StringField(max_length=128,
-                           verbose_name='password',
-                           help_text="Use '[algo]$[iterations]$[salt]$[hexdigest]' or use the <a href=\"password/\">change password form</a>.")
-    secret = StringField(verbose_name='TOTP Secret')
+                           verbose_name=_('password'),
+                           help_text=_("Use '[algo]$[iterations]$[salt]$[hexdigest]' or use the <a href=\"password/\">change password form</a>."))
+    secret = StringField(verbose_name=_('TOTP Secret'))
     is_staff = BooleanField(default=False,
-                            verbose_name='staff status',
-                            help_text="Designates whether the user can log into this admin site.")
+                            verbose_name=_('staff status'),
+                            help_text=_("Designates whether the user can log into this admin site."))
     is_active = BooleanField(default=True,
-                             verbose_name='active',
-                             help_text="Designates whether this user should be treated as active. Unselect this instead of deleting accounts.")
+                             verbose_name=_('active'),
+                             help_text=_("Designates whether this user should be treated as active. Unselect this instead of deleting accounts."))
     is_superuser = BooleanField(default=False,
-                                verbose_name='superuser status',
-                                help_text="Designates that this user has all permissions without explicitly assigning them.")
+                                verbose_name=_('superuser status'),
+                                help_text=_("Designates that this user has all permissions without explicitly assigning them."))
     last_login = DateTimeField(default=datetime_now,
-                               verbose_name='last login')
+                               verbose_name=_('last login'))
     date_joined = DateTimeField(default=datetime_now,
-                                verbose_name='date joined')
+                                verbose_name=_('date joined'))
 
     invalid_login_attempts = IntField(default=0)
     login_attempts = ListField(EmbeddedDocumentField(EmbeddedLoginAttempt))
