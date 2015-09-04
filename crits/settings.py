@@ -7,7 +7,6 @@ import sys
 import django
 import subprocess
 
-from django.conf import settings
 from pymongo import ReadPreference, MongoClient
 from mongoengine import connect
 
@@ -70,10 +69,10 @@ else:
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-             'NAME': 'my_db_name',
+        'ENGINE': 'django.db.backends.dummy'
     }
 }
+
 
 # MongoDB Default Configuration
 # Tip: To change database settings, override by using
@@ -290,8 +289,6 @@ TEMPLATE_LOADERS = (
     #'django.template.loaders.eggs.load_template_source',
 )
 
-
-
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -392,14 +389,15 @@ TEMPLATES = [
 ]
 
 INSTALLED_APPS = (
+    'crits.core',
+    'crits.dashboards',
     'django.contrib.auth',
+    'mongoengine.django.mongo_auth',
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.staticfiles',
-    'crits.core',
-    'crits.dashboards',
     'crits.actors',
     'crits.campaigns',
     'crits.certificates',
@@ -418,9 +416,8 @@ INSTALLED_APPS = (
     'crits.services',
     'crits.stats',
     'crits.targets',
-    'mongoengine.django.mongo_auth',
     'tastypie',
-    'tastypie_mongoengine', 
+    'tastypie_mongoengine',
 )
 
 AUTH_USER_MODEL = 'mongo_auth.MongoUser'
