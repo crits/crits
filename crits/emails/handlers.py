@@ -518,11 +518,11 @@ def handle_email_fields(data, analyst, method):
         pass
 
     new_email = Email()
+    new_email.merge(data)
     if bucket_list:
         new_email.add_bucket_list(bucket_list, analyst)
     if ticket:
         new_email.add_ticket(ticket, analyst)
-    new_email.merge(data)
     new_email.source = [create_embedded_source(sourcename,
                                                reference=reference,
                                                method=method,
