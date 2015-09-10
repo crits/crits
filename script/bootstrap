@@ -84,7 +84,7 @@ create_files()
 depend_crits()
 {
     printf "${HEAD}Installing Python Dependencies${END}\n"
-    sudo pip install -r requirements.txt
+    sudo pip2.7 install -r requirements.txt
     printf "${INFO}Dependency installations complete!${END}\n"
 }
 
@@ -104,7 +104,7 @@ start_mongo()
     fi
 
     printf "\nRunning Server on 0.0.0.0 Port 8080\n"
-    python manage.py runserver 0.0.0.0:8080
+    python2.7 manage.py runserver 0.0.0.0:8080
 }
 
 # Creates CRITs username and password for administrator
@@ -148,7 +148,7 @@ server_setup()
     fi
 
     echo "Creating default collections"
-    python manage.py create_default_collections
+    python2.7 manage.py create_default_collections
 
     if [ "$IS_VAGRANT" ]
     then
@@ -163,12 +163,12 @@ server_setup()
     if [ $? -eq 0 ]
     then
         read -p "Username: " USERNAME
-        read -p  "First name: " FIRSTNAME
+        read -p "First name: " FIRSTNAME
         read -p "Last name: " LASTNAME
         read -p "Email address: " EMAIL
         read -p "Organization name: " ORG
 
-        python manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
+        python2.7 manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
 
         printf "${FAIL}This is Your Temp Password${END}\n"
     fi
@@ -234,8 +234,6 @@ red_hat_install()
             sudo rpm -i http://dl.iuscommunity.org/pub/ius/stable/RedHat/${REL}/x86_64/ius-release-1.0-14.ius.el${REL}.noarch.rpm
         fi
         sudo yum -y install python27 python27-pip
-        printf "${INFO}setting up 'python' alias for 'python2.7'${END}\n"
-        alias python='python2.7'
     fi
     
     printf "${INFO}Installing Packages${END}\n"
@@ -276,8 +274,6 @@ centos_install()
             
         fi
         sudo yum -y install python27 python27-pip
-        printf "${INFO}setting up 'python' alias for 'python2.7'${END}\n"
-        alias python='python2.7'
     fi
 
     printf "${INFO}Installing Packages${END}\n"
