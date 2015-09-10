@@ -47,8 +47,10 @@ verify()
 install_mongo()
 {
     # Check if Mongo is Installed
-    if [ ! -f /usr/local/bin/mongod ];
+    if command -v mongo >/dev/null 2>&1
     then
+        printf "${PASS}Mongo Already installed${END}\n"  
+    else
         printf "${INFO}Installing MongoDB${END}\n"
         curl http://downloads.mongodb.org/linux/mongodb-linux-x86_64-2.6.4.tgz > mongodb-linux-x86_64-2.6.4.tgz
         tar -zxvf mongodb-linux-x86_64-2.6.4.tgz
@@ -60,8 +62,6 @@ install_mongo()
             printf "${FAIL}MongoDB Installation Failed${END}\n"
             exit_restart $STEP
         fi
-    else
-        printf "${PASS}Mongo Already installed${END}\n"
     fi
 }
 
@@ -88,6 +88,25 @@ depend_crits()
     printf "${INFO}Dependency installations complete!${END}\n"
 }
 
+# Starts up everything needed to run the server
+# Checks if mongodb is running, starts it if not and then
+# starts the server
+start_mongo()
+{
+    printf "${HEAD}Starting Server${END}\n"
+    printf "${INFO}To Restart Server: script/bootstrap 4\n"
+    printf "Warning MongoDB Will Still be Running After Server Ends${END}\n"
+
+    pgrep mongod >/dev/null 2>&1
+    if [ $? -ne 0 ]
+    then
+        sh contrib/mongo/mongod_start.sh
+    fi
+
+    printf "\nRunning Server on 0.0.0.0 Port 8080\n"
+    python manage.py runserver 0.0.0.0:8080
+}
+
 # Creates CRITs username and password for administrator
 server_setup()
 {
@@ -105,11 +124,39 @@ server_setup()
         echo "Database configuration file exists, skip secret_key generation!"
     fi
 
+    # If MongoDB isn't already running, ask to start it.
+    # This can fail if MongoDB is running already but on a non-standard port.
     pgrep mongod >/dev/null 2>&1
     if [ $? -ne 0 ]
     then
-        printf "${INFO}Starting Mongod${END}\n"
-        sh contrib/mongo/mongod_start.sh
+      if [ "$IS_VAGRANT" ]
+      then
+        # For Vagrant, we always want to start Mongo automatically (though it
+        # should get started by the installation process).
+        start_mongo
+      else
+        while true; do
+          read -p "Do you want to start 'mongod' now? [yn] " yn
+          case $yn in
+              [Yy]* ) start_mongo; break;;
+              [Nn]* ) break;;
+              * ) echo "Please answer yes or no.";;
+          esac
+        done
+      fi
+    fi
+
+    echo "Creating default collections"
+    python manage.py create_default_collections
+
+    if [ "$IS_VAGRANT" ]
+    then
+      echo "To get a usable system, you still need to use fabric to:"
+      echo "- Create an administrator account"
+      echo "    $ fab vagrant create_admin_user"
+      echo "- Run the development server"
+      echo "    $ fab vagrant runserver"
+      exit 0
     fi
 
     python manage.py create_default_collections
@@ -125,25 +172,6 @@ server_setup()
 
         printf "${FAIL}This is Your Temp Password${END}\n"
     fi
-}
-
-# Starts up everything needed to run the server
-# Checks if mongodb is running, starts it if not and then
-# starts the server
-run_server()
-{
-    printf "${HEAD}Starting Server${END}\n"
-    printf "${INFO}To Restart Server: script/bootstrap 4\n"
-    printf "Warning MongoDB Will Still be Running After Server Ends${END}\n"
-
-    pgrep mongod >/dev/null 2>&1
-    if [ $? -ne 0 ]
-    then
-        sh contrib/mongo/mongod_start.sh
-    fi
-
-    printf "\nRunning Server on 0.0.0.0 Port 8080\n"
-    python manage.py runserver 0.0.0.0:8080
 }
 
 # Error Message
@@ -227,7 +255,7 @@ else
     STEP=$1
 fi
 
-while [ $STEP -lt 6 ]
+while [ $STEP -lt 5 ]
 do
     case $STEP in
         1)
@@ -268,8 +296,6 @@ do
             create_files ||exit_restart $STEP ;;
         4)
             server_setup ||exit_restart $STEP ;;
-        5)
-            run_server ||exit_restart $STEP ;;
         *)
             exit
             ;;
