@@ -110,6 +110,7 @@ start_mongo()
 # Creates CRITs username and password for administrator
 server_setup()
 {
+
     touch logs/crits.log
     chmod 0644 logs/crits.log
 
@@ -159,7 +160,6 @@ server_setup()
       exit 0
     fi
 
-    python manage.py create_default_collections
     if [ $? -eq 0 ]
     then
         read -p "Username: " USERNAME
@@ -225,16 +225,20 @@ red_hat_install()
         printf "${INFO}Installing EPEL repo${END}\n"
         sudo yum -y install epel-release
     fi
-
-    if [ ! -f /etc/yum.repos.d/ius.repo ];
+    if [ $REL -eq 6 ];
     then
-        printf "${INFO}Installing IUS repo${END}\n"
-        # python27 comes from here
-        sudo rpm -i http://dl.iuscommunity.org/pub/ius/stable/RedHat/${REL}/x86_64/ius-release-1.0-14.ius.el${REL}.noarch.rpm
+        if [ ! -f /etc/yum.repos.d/ius.repo ];
+        then
+            printf "${INFO}Installing IUS repo${END}\n"
+            # python27 comes from here
+            sudo rpm -i http://dl.iuscommunity.org/pub/ius/stable/RedHat/${REL}/x86_64/ius-release-1.0-14.ius.el${REL}.noarch.rpm
+        fi
+        sudo yum -y install python27 python27-pip
+        printf "${INFO}setting up 'python' alias for 'python2.7'${END}\n"
+        alias python='python2.7'
     fi
     
     printf "${INFO}Installing Packages${END}\n"
-    sudo yum -y install python27 python27-pip
     sudo yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
     sudo yum -y install p7zip p7zip-plugins
     sudo yum -y install unrar libffi-devel
@@ -262,15 +266,21 @@ centos_install()
         sudo yum -y install epel-release
     fi
 
-    if [ ! -f /etc/yum.repos.d/ius.repo ];
+    if [ $REL -eq 6 ];
     then
-        printf "${INFO}Installing IUS repo${END}\n"
-        # python27 comes from here
-        sudo rpm -i http://dl.iuscommunity.org/pub/ius/stable/CentOS/${REL}/x86_64/ius-release-1.0-14.ius.centos${REL}.noarch.rpm
+        if [ ! -f /etc/yum.repos.d/ius.repo ];
+        then
+            printf "${INFO}Installing IUS repo${END}\n"
+            # python27 comes from here
+            sudo rpm -i http://dl.iuscommunity.org/pub/ius/stable/CentOS/${REL}/x86_64/ius-release-1.0-14.ius.centos${REL}.noarch.rpm
+            
+        fi
+        sudo yum -y install python27 python27-pip
+        printf "${INFO}setting up 'python' alias for 'python2.7'${END}\n"
+        alias python='python2.7'
     fi
-    
+
     printf "${INFO}Installing Packages${END}\n"
-    sudo yum -y install python27 python27-pip
     sudo yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
     sudo yum -y install p7zip p7zip-plugins
     sudo yum -y install unrar libffi-devel
