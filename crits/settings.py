@@ -2,7 +2,7 @@
 
 import errno
 import glob
-import importlib
+import imp
 import os
 import sys
 import django
@@ -525,7 +525,7 @@ for service_directory in SERVICE_DIRS:
                     try:
                         # Assume that importing the views for a service is
                         # required to use its navigation items.
-                        importlib.import_module("%s.views")
+                        imp.find_module('%s.views' % d)
                     except ImportError:
                         pass
                     else:
@@ -536,7 +536,7 @@ for service_directory in SERVICE_DIRS:
                     if '%s_context' % d in open(view_items).read():
                         context_module = '%s.views.%s_context' % (d, d)
                         try:
-                            importlib.import_module(context_module)
+                            imp.find_module(context_module)
                         except ImportError:
                             pass
                         else:
