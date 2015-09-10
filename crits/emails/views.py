@@ -254,7 +254,9 @@ def email_yaml_add(request, email_id=None):
                       email_id=email_id,
                       save_unsupported=yaml_form.cleaned_data['save_unsupported'],
                       campaign=yaml_form.cleaned_data['campaign'],
-                      confidence=yaml_form.cleaned_data['campaign_confidence'])
+                      confidence=yaml_form.cleaned_data['campaign_confidence'],
+                      bucket_list=yaml_form.cleaned_data['bucket_list'],
+                      ticket=yaml_form.cleaned_data['ticket'])
     if not obj['status']:
         if request.is_ajax():
             json_reply['message'] = obj['reason']
@@ -316,7 +318,9 @@ def email_raw_add(request):
                     request.user.username,
                     method,
                     campaign=fields_form.cleaned_data['campaign'],
-                    confidence=fields_form.cleaned_data['campaign_confidence'])
+                    confidence=fields_form.cleaned_data['campaign_confidence'],
+                    bucket_list=fields_form.cleaned_data['bucket_list'],
+                    ticket=fields_form.cleaned_data['ticket'])
     if not obj['status']:
         if request.is_ajax():
             json_reply['message'] = obj['reason']
@@ -374,7 +378,9 @@ def email_eml_add(request):
                      request.user.username,
                      method,
                      campaign=eml_form.cleaned_data['campaign'],
-                     confidence=eml_form.cleaned_data['campaign_confidence'])
+                     confidence=eml_form.cleaned_data['campaign_confidence'],
+                     bucket_list=eml_form.cleaned_data['bucket_list'],
+                     ticket=eml_form.cleaned_data['ticket'])
     if not obj['status']:
         json_reply['message'] = obj['reason']
         return render_to_response('file_upload_response.html',
@@ -423,6 +429,8 @@ def email_outlook_add(request):
     password = outlook_form.cleaned_data['password']
     campaign = outlook_form.cleaned_data['campaign']
     campaign_confidence = outlook_form.cleaned_data['campaign_confidence']
+    bucket_list = outlook_form.cleaned_data['bucket_list']
+    ticket = outlook_form.cleaned_data['ticket']
 
     result = handle_msg(request.FILES['msg_file'],
                         source,
@@ -431,7 +439,9 @@ def email_outlook_add(request):
                         method,
                         password,
                         campaign,
-                        campaign_confidence)
+                        campaign_confidence,
+                        bucket_list,
+                        ticket)
 
     json_reply['success'] = result['status']
     if not result['status']:
