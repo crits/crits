@@ -2,7 +2,6 @@
 
 import errno
 import glob
-import importlib
 import os
 import sys
 import django
@@ -522,25 +521,12 @@ for service_directory in SERVICE_DIRS:
                 cp_items = os.path.join(abs_path, '%s_cp_items.html' % d)
                 view_items = os.path.join(service_directory, d, 'views.py')
                 if os.path.isfile(nav_items):
-                    try:
-                        # Assume that importing the views for a service is
-                        # required to use its navigation items.
-                        importlib.import_module("%s.views")
-                    except ImportError:
-                        pass
-                    else:
-                        SERVICE_NAV_TEMPLATES = SERVICE_NAV_TEMPLATES + ('%s_nav_items.html' % d,)
+                    SERVICE_NAV_TEMPLATES = SERVICE_NAV_TEMPLATES + ('%s_nav_items.html' % d,)
                 if os.path.isfile(cp_items):
                     SERVICE_CP_TEMPLATES = SERVICE_CP_TEMPLATES + ('%s_cp_items.html' % d,)
                 if os.path.isfile(view_items):
                     if '%s_context' % d in open(view_items).read():
-                        context_module = '%s.views.%s_context' % (d, d)
-                        try:
-                            importlib.import_module(context_module)
-                        except ImportError:
-                            pass
-                        else:
-                            TEMPLATE_CONTEXT_PROCESSORS = TEMPLATE_CONTEXT_PROCESSORS + (context_module,)
+                        TEMPLATE_CONTEXT_PROCESSORS = TEMPLATE_CONTEXT_PROCESSORS + ('%s.views.%s_context' % (d, d),)
                 for tab_temp in glob.glob('%s/*_tab.html' % abs_path):
                     head, tail = os.path.split(tab_temp)
                     ctype = tail.split('_')[-2]
