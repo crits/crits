@@ -233,7 +233,7 @@ red_hat_install()
             # python27 comes from here
             sudo rpm -i http://dl.iuscommunity.org/pub/ius/stable/RedHat/${REL}/x86_64/ius-release-1.0-14.ius.el${REL}.noarch.rpm
         fi
-        sudo yum -y install python27 python27-pip
+        sudo yum -y install python27 python27-devel python27-pip
     fi
     
     printf "${INFO}Installing Packages${END}\n"
@@ -273,7 +273,7 @@ centos_install()
             sudo rpm -i http://dl.iuscommunity.org/pub/ius/stable/CentOS/${REL}/x86_64/ius-release-1.0-14.ius.centos${REL}.noarch.rpm
             
         fi
-        sudo yum -y install python27 python27-pip
+        sudo yum -y install python27 python27-devel python27-pip
     fi
 
     printf "${INFO}Installing Packages${END}\n"
