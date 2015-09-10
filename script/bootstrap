@@ -226,7 +226,7 @@ red_hat_install()
         sudo yum -y install epel-release
     fi
 
-    if [ ! -f /etc/yum.repos.d/epel.repo ];
+    if [ ! -f /etc/yum.repos.d/ius.repo ];
     then
         printf "${INFO}Installing IUS repo${END}\n"
         # python27 comes from here
