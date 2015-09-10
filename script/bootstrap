@@ -102,7 +102,9 @@ start_mongo()
     then
         sh contrib/mongo/mongod_start.sh
     fi
-
+}
+start_server()
+{
     printf "\nRunning Server on 0.0.0.0 Port 8080\n"
     python2.7 manage.py runserver 0.0.0.0:8080
 }
@@ -171,6 +173,7 @@ server_setup()
         python2.7 manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
 
         printf "${FAIL}This is Your Temp Password${END}\n"
+        start_server
     fi
 }
 
