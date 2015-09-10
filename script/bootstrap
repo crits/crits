@@ -153,6 +153,10 @@ then
   echo "To get a usable system, you still need to use fabric to:"
   echo "- Create an administrator account"
   echo "    $ fab vagrant create_admin_user"
+  echo "- (Optional) Set some development-specific CRITs config settings"
+  echo "    $ fab vagrant dev_setup"
+  echo "- (Optional) Set up services"
+  echo "    $ fab vagrant init_services"
   echo "- Run the development server"
   echo "    $ fab vagrant runserver"
   exit 0
