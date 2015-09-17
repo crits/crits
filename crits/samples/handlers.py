@@ -8,7 +8,6 @@ import tempfile, shutil
 import time
 
 from bson.objectid import ObjectId
-from django.conf import settings
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -19,6 +18,7 @@ from mongoengine.base import ValidationError
 
 from crits.backdoors.backdoor import Backdoor
 from crits.campaigns.forms import CampaignForm
+from crits.config.config import CRITsConfig
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_value, class_from_id
 from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
@@ -419,6 +419,7 @@ def mail_sample(sample_md5, recips=None):
     :returns: None, str
     """
 
+    crits_config = CRITsConfig.objects().first()
     if recips is not None:
         sample = Sample.objects(md5=sample_md5).first()
         if not sample:
@@ -426,7 +427,7 @@ def mail_sample(sample_md5, recips=None):
         try:
             send_mail('Details for %s' % sample_md5,
                       '%s' % pprint.pformat(sample.to_json()),
-                      settings.CRITS_EMAIL,
+                      crits_config.crits_email,
                       recips,
                       fail_silently=False)
         except Exception as e:
@@ -559,7 +560,8 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     :raises: ZipFileError, Exception
     """
 
-    temproot = settings.TEMP_DIR
+    crits_config = CRITsConfig.objects().first()
+    temproot = crits_config.temp_dir
     samples = []
     zipdir = ""
     extractdir = ""
@@ -574,7 +576,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
         zipfile.close()
 
         # Build argument string to popen()
-        args = [settings.ZIP7_PATH]
+        args = [crits_config.zip7_path]
         args.append("e")
         extractdir = tempfile.mkdtemp(dir=temproot)
         args.append("-o" + extractdir)  # Set output directory
@@ -691,12 +693,13 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
     :raises: ZipFileError, Exception
     """
 
+    crits_config = CRITsConfig.objects().first()
     samples = []
     try:
         rar_md5 = md5(data).hexdigest()
 
         # write the data to a file so we can read from it as a rar file
-        temproot = settings.TEMP_DIR
+        temproot = crits_config.temp_dir
         rardir = tempfile.mkdtemp(dir=temproot)
         # append '.rar' to help ensure rarfile doesn't have same
         # name as an extracted file.
@@ -710,7 +713,7 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
         # only to the current directory first save current directory
         old_dir = os.getcwd()
         os.chdir(rardir)
-        cmd = [settings.RAR_PATH,'e'] #,'-inul'
+        cmd = [crits_config.rar_path,'e'] #,'-inul'
         if password:
             cmd.append('-p'+password)
         else:
