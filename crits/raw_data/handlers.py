@@ -345,8 +345,6 @@ def handle_raw_data_file(data, source_name, user=None,
         }
         return status
 
-    data = data.encode('utf-8')
-
     if len(data) <= 0:
         status = {
             'success':   False,
