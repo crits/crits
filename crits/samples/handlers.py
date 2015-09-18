@@ -577,6 +577,9 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
 
         # Build argument string to popen()
         args = [crits_config.zip7_path]
+        if not os.access(crits_config.zip7_path, os.X_OK):
+            errmsg = "7z is not executable at path specified in the config setting: %s\n" % crits_config.zip7_path
+            raise ZipFileError, errmsg
         args.append("e")
         extractdir = tempfile.mkdtemp(dir=temproot)
         args.append("-o" + extractdir)  # Set output directory
