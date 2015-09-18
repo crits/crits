@@ -93,7 +93,7 @@ create_files()
 depend_crits()
 {
     printf "${HEAD}Installing Python Dependencies${END}\n"
-        sudo ${PIP} install -r requirements.txt
+    sudo ${PIP} install -r requirements.txt
     printf "${INFO}Dependency installations complete!${END}\n"
 }
 
