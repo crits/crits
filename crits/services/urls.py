@@ -1,4 +1,3 @@
-import importlib
 import os
 
 from django.conf import settings
@@ -26,11 +25,5 @@ for service_directory in settings.SERVICE_DIRS:
         for d in os.listdir(service_directory):
             abs_path = os.path.join(service_directory, d, 'urls.py')
             if os.path.isfile(abs_path):
-                # If a service and its dependencies are not installed
-                # correctly, skip its URLs
-                try:
-                    importlib.import_module("%s.views" % d)
-                    urlpatterns += patterns('',
-                        url(r'^%s/' % d, include('%s.urls' % d)))
-                except ImportError:
-                    pass
+                urlpatterns += patterns('',
+                    url(r'^%s/' % d, include('%s.urls' % d)))
