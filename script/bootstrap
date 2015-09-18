@@ -14,6 +14,8 @@ HEAD=$(tput setaf 5) #magenta
 INFO=$(tput setaf 6) #cyan
 END=$(tput sgr0)   #ends color
 #============================================================
+PIP='pip'
+PYTH='python'
 
 verify()
 {
@@ -32,6 +34,13 @@ verify()
     then
         OS=$(cat /etc/redhat-release | sed 's/ [Enterprise|release].*//')
         VER=$(cat /etc/redhat-release | sed 's/.*release //;s/ .*$//')
+        #Redhat/CentOS release version
+        REL=$(echo $VER | sed 's/\..//')
+        if [ $REL -lt 7 ];
+        then
+            #change for RHEL/CentOS < Release 7 
+            PIP='pip2.7'
+        fi
     elif [ -f /etc/lsb-release ]; then
         . /etc/lsb-release
         OS=$DISTRIB_ID
@@ -84,7 +93,7 @@ create_files()
 depend_crits()
 {
     printf "${HEAD}Installing Python Dependencies${END}\n"
-    sudo pip2.7 install -r requirements.txt
+        sudo ${PIP} install -r requirements.txt
     printf "${INFO}Dependency installations complete!${END}\n"
 }
 
@@ -106,7 +115,7 @@ start_mongo()
 start_server()
 {
     printf "\nRunning Server on 0.0.0.0 Port 8080\n"
-    python2.7 manage.py runserver 0.0.0.0:8080
+    ${PYTH} manage.py runserver 0.0.0.0:8080
 }
 
 # Creates CRITs username and password for administrator
@@ -150,7 +159,7 @@ server_setup()
     fi
 
     echo "Creating default collections"
-    python2.7 manage.py create_default_collections
+    ${PYTH} manage.py create_default_collections
 
     if [ "$IS_VAGRANT" ]
     then
@@ -170,7 +179,7 @@ server_setup()
         read -p "Email address: " EMAIL
         read -p "Organization name: " ORG
 
-        python2.7 manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
+        ${PYTH} manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
 
         printf "${FAIL}This is Your Temp Password${END}\n"
         start_server
@@ -214,9 +223,6 @@ freebsd_install()
 red_hat_install()
 {
     printf "${HEAD}Installing CRITs Dependencies${END}\n"
-
-    REL=$(echo $VER | sed 's/\..//')
-    
     if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
     then
         printf "${INFO}Installing RPMForge repo${END}\n"
@@ -228,7 +234,7 @@ red_hat_install()
         printf "${INFO}Installing EPEL repo${END}\n"
         sudo yum -y install epel-release
     fi
-    if [ $REL -eq 6 ];
+    if [ $REL -lt 7 ];
     then
         if [ ! -f /etc/yum.repos.d/ius.repo ];
         then
@@ -252,9 +258,6 @@ red_hat_install()
 centos_install()
 {
     printf "${HEAD}Installing CRITs Dependencies${END}\n"
-
-    REL=$(echo $VER | sed 's/\..//')
-    
     if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
     then
         printf "${INFO}Installing RPMForge repo${END}\n"
@@ -267,7 +270,7 @@ centos_install()
         sudo yum -y install epel-release
     fi
 
-    if [ $REL -eq 6 ];
+    if [ $REL -lt 7 ];
     then
         if [ ! -f /etc/yum.repos.d/ius.repo ];
         then
