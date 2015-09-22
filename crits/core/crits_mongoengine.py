@@ -1587,7 +1587,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         my_rel.object_id = rel_item.id
         my_rel.rel_confidence = rel_confidence
         my_rel.rel_reason = rel_reason
-        is_left_rel_exist = False
 
         # setup the relationship for them
         their_rel = EmbeddedRelationship()
@@ -1599,7 +1598,12 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         their_rel.object_id = self.id
         their_rel.rel_confidence = rel_confidence
         their_rel.rel_reason = rel_reason
+
+        # variables for detecting if an existing relationship exists
+        is_left_rel_exist = False
         is_right_rel_exist = False
+        left_found_rel = None
+        right_found_rel = None
 
         # check for existing relationship before
         # blindly adding them
@@ -1610,11 +1614,13 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                     and r.relationship_date == my_rel.relationship_date
                     and r.rel_type == my_rel.rel_type):
                     is_left_rel_exist = True
+                    left_found_rel = r
             else:
                 if (r.object_id == my_rel.object_id
                     and r.relationship == my_rel.relationship
                     and r.rel_type == my_rel.rel_type):
                     is_left_rel_exist = True
+                    left_found_rel = r
 
             # If the relationship already exists then we we're done looping
             if is_left_rel_exist:
@@ -1627,11 +1633,13 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                     and r.relationship_date == their_rel.relationship_date
                     and r.rel_type == their_rel.rel_type):
                     is_right_rel_exist = True
+                    right_found_rel = r
             else:
                 if (r.object_id == their_rel.object_id
                     and r.relationship == their_rel.relationship
                     and r.rel_type == their_rel.rel_type):
                     is_right_rel_exist = True
+                    right_found_rel = r
 
             # If the relationship already exists then we we're done looping
             if is_right_rel_exist:
@@ -1644,11 +1652,33 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         # If the relationship does not exist on the left side then add it.
         if is_left_rel_exist is False:
-            self.relationships.append(my_rel)
+            # If the right relationship exists then use the right relationship's data
+            if is_right_rel_exist:
+                my_rel.relationship = right_found_rel.relationship
+                my_rel.analyst = right_found_rel.analyst
+                my_rel.date = right_found_rel.date
+                my_rel.relationship_date = right_found_rel.relationship_date
+                my_rel.rel_confidence = right_found_rel.rel_confidence
+                my_rel.rel_reason = right_found_rel.rel_reason
+                self.relationships.append(my_rel)
+            # otherwise just normally add the new relationship
+            else:
+                self.relationships.append(my_rel)
 
         # If the relationship does not exist on the right side then add it.
         if is_right_rel_exist is False:
-            rel_item.relationships.append(their_rel)
+            # If the left relationship exists then use the left relationship's data
+            if is_left_rel_exist:
+                their_rel.relationship = left_found_rel.relationship
+                their_rel.analyst = left_found_rel.analyst
+                their_rel.date = left_found_rel.date
+                their_rel.relationship_date = left_found_rel.relationship_date
+                their_rel.rel_confidence = left_found_rel.rel_confidence
+                their_rel.rel_reason = left_found_rel.rel_reason
+                rel_item.relationships.append(their_rel)
+            else:
+                rel_item.relationships.append(their_rel)
+
             rel_item.save(username=analyst)
 
         if get_rels:
