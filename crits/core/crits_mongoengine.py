@@ -1587,6 +1587,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         my_rel.object_id = rel_item.id
         my_rel.rel_confidence = rel_confidence
         my_rel.rel_reason = rel_reason
+        is_left_rel_exist = False
 
         # setup the relationship for them
         their_rel = EmbeddedRelationship()
@@ -1598,6 +1599,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         their_rel.object_id = self.id
         their_rel.rel_confidence = rel_confidence
         their_rel.rel_reason = rel_reason
+        is_right_rel_exist = False
 
         # check for existing relationship before
         # blindly adding them
@@ -1607,15 +1609,16 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                     and r.relationship == my_rel.relationship
                     and r.relationship_date == my_rel.relationship_date
                     and r.rel_type == my_rel.rel_type):
-                    return {'success': False,
-                            'message': 'Left relationship already exists'}
+                    is_left_rel_exist = True
             else:
                 if (r.object_id == my_rel.object_id
                     and r.relationship == my_rel.relationship
                     and r.rel_type == my_rel.rel_type):
-                    return {'success': False,
-                            'message': 'Left relationship already exists'}
-        self.relationships.append(my_rel)
+                    is_left_rel_exist = True
+
+            # If the relationship already exists then we we're done looping
+            if is_left_rel_exist:
+                break
 
         for r in rel_item.relationships:
             if rel_date:
@@ -1623,17 +1626,30 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                     and r.relationship == their_rel.relationship
                     and r.relationship_date == their_rel.relationship_date
                     and r.rel_type == their_rel.rel_type):
-                    return {'success': False,
-                            'message': 'Right relationship already exists'}
+                    is_right_rel_exist = True
             else:
                 if (r.object_id == their_rel.object_id
                     and r.relationship == their_rel.relationship
                     and r.rel_type == their_rel.rel_type):
-                    return {'success': False,
-                            'message': 'Right relationship already exists'}
+                    is_right_rel_exist = True
 
-        rel_item.relationships.append(their_rel)
-        rel_item.save(username=analyst)
+            # If the relationship already exists then we we're done looping
+            if is_right_rel_exist:
+                break
+
+        # If the relationship already exists on both sides then do nothing
+        if is_left_rel_exist and is_right_rel_exist:
+            return {'success': False,
+                    'message': 'Relationship already exists'}
+
+        # If the relationship does not exist on the left side then add it.
+        if is_left_rel_exist is False:
+            self.relationships.append(my_rel)
+
+        # If the relationship does not exist on the right side then add it.
+        if is_right_rel_exist is False:
+            rel_item.relationships.append(their_rel)
+            rel_item.save(username=analyst)
 
         if get_rels:
             results = {'success': True,
