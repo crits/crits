@@ -41,10 +41,10 @@ verify()
             #change for RHEL/CentOS < Release 7 
             PIP='pip2.7'
         fi
-    elif [ -f /etc/lsb-release ]; then
-        . /etc/lsb-release
-        OS=$DISTRIB_ID
-        VER=$DISTRIB_RELEASE
+    elif command -v lsb_release >/dev/null 2>&1
+    then
+        OS=$(lsb_release -i| sed 's/Distributor ID:\t//')
+        VER=$(lsb_release -r| sed 's/Release:\t//')
     else
         OS=$(uname -s)
         VER=$(uname -r)
@@ -202,7 +202,18 @@ ubuntu_install()
     printf "${INFO}Installing dependencies with apt-get${END}\n"
     sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
     echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
-    sudo apt-add-repository universe
+    sudo add-apt-repository universe
+    sudo apt-get update
+    sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+    sudo ldconfig
+}
+
+debian_install()
+{
+    printf "${INFO}Installing dependencies with apt-get${END}\n"
+    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+    echo 'deb http://downloads-distro.mongodb.org/repo/debian-sysvinit dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
+    sudo add-apt-repository universe
     sudo apt-get update
     sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
     sudo ldconfig
@@ -316,6 +327,11 @@ do
                 printf "${PASS}ubuntu is Supported!${END}\n"
                 ubuntu_install || exit_restart $STEP
                 depend_crits ||exit_restart $STEP
+            elif [ "$OS" = 'debian' ]
+            then
+                printf "${PASS}Debian is Supported!${END}\n"
+                debian_install || exit_restart $STEP
+                depend_crits ||exit_restart $STEP
             elif [ "$OS" = 'darwin' ]
             then
                 printf "${PASS}OS X is Supported!${END}\n"
@@ -337,7 +353,7 @@ do
                 freebsd_install || exit_restart $STEP
                 depend_crits ||exit_restart $STEP
             else
-                printf "${FAIL}OS: $OS, need Ubuntu, Darwin (OS X), CentOS, Red Hat, or FreeBSD${END}\n"
+                printf "${FAIL}OS: $OS, need Ubuntu, Debian, Darwin (OS X), CentOS, Red Hat, or FreeBSD${END}\n"
                 exit
             fi
             ;;
