@@ -14,6 +14,8 @@ HEAD=$(tput setaf 5) #magenta
 INFO=$(tput setaf 6) #cyan
 END=$(tput sgr0)   #ends color
 #============================================================
+PIP='pip'
+PYTH='python'
 
 verify()
 {
@@ -32,10 +34,17 @@ verify()
     then
         OS=$(cat /etc/redhat-release | sed 's/ [Enterprise|release].*//')
         VER=$(cat /etc/redhat-release | sed 's/.*release //;s/ .*$//')
-    elif [ -f /etc/lsb-release ]; then
-        . /etc/lsb-release
-        OS=$DISTRIB_ID
-        VER=$DISTRIB_RELEASE
+        #Redhat/CentOS release version
+        REL=$(echo $VER | sed 's/\..//')
+        if [ $REL -lt 7 ];
+        then
+            #change for RHEL/CentOS < Release 7 
+            PIP='pip2.7'
+        fi
+    elif command -v lsb_release >/dev/null 2>&1
+    then
+        OS=$(lsb_release -i| sed 's/Distributor ID:\t//')
+        VER=$(lsb_release -r| sed 's/Release:\t//')
     else
         OS=$(uname -s)
         VER=$(uname -r)
@@ -84,7 +93,7 @@ create_files()
 depend_crits()
 {
     printf "${HEAD}Installing Python Dependencies${END}\n"
-    sudo pip2.7 install -r requirements.txt
+    sudo ${PIP} install -r requirements.txt
     printf "${INFO}Dependency installations complete!${END}\n"
 }
 
@@ -106,7 +115,7 @@ start_mongo()
 start_server()
 {
     printf "\nRunning Server on 0.0.0.0 Port 8080\n"
-    python2.7 manage.py runserver 0.0.0.0:8080
+    ${PYTH} manage.py runserver 0.0.0.0:8080
 }
 
 # Creates CRITs username and password for administrator
@@ -150,13 +159,17 @@ server_setup()
     fi
 
     echo "Creating default collections"
-    python2.7 manage.py create_default_collections
+    ${PYTH} manage.py create_default_collections
 
     if [ "$IS_VAGRANT" ]
     then
       echo "To get a usable system, you still need to use fabric to:"
       echo "- Create an administrator account"
       echo "    $ fab vagrant create_admin_user"
+      echo "- (Optional) Set some development-specific CRITs config settings"
+      echo "    $ fab vagrant dev_setup"
+      echo "- (Optional) Set up services"
+      echo "    $ fab vagrant init_services"
       echo "- Run the development server"
       echo "    $ fab vagrant runserver"
       exit 0
@@ -170,7 +183,7 @@ server_setup()
         read -p "Email address: " EMAIL
         read -p "Organization name: " ORG
 
-        python2.7 manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
+        ${PYTH} manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
 
         printf "${FAIL}This is Your Temp Password${END}\n"
         start_server
@@ -189,7 +202,18 @@ ubuntu_install()
     printf "${INFO}Installing dependencies with apt-get${END}\n"
     sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
     echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
-    sudo apt-add-repository universe
+    sudo add-apt-repository universe
+    sudo apt-get update
+    sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+    sudo ldconfig
+}
+
+debian_install()
+{
+    printf "${INFO}Installing dependencies with apt-get${END}\n"
+    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+    echo 'deb http://downloads-distro.mongodb.org/repo/debian-sysvinit dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
+    sudo add-apt-repository universe
     sudo apt-get update
     sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
     sudo ldconfig
@@ -214,9 +238,6 @@ freebsd_install()
 red_hat_install()
 {
     printf "${HEAD}Installing CRITs Dependencies${END}\n"
-
-    REL=$(echo $VER | sed 's/\..//')
-    
     if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
     then
         printf "${INFO}Installing RPMForge repo${END}\n"
@@ -228,7 +249,7 @@ red_hat_install()
         printf "${INFO}Installing EPEL repo${END}\n"
         sudo yum -y install epel-release
     fi
-    if [ $REL -eq 6 ];
+    if [ $REL -lt 7 ];
     then
         if [ ! -f /etc/yum.repos.d/ius.repo ];
         then
@@ -252,9 +273,6 @@ red_hat_install()
 centos_install()
 {
     printf "${HEAD}Installing CRITs Dependencies${END}\n"
-
-    REL=$(echo $VER | sed 's/\..//')
-    
     if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
     then
         printf "${INFO}Installing RPMForge repo${END}\n"
@@ -267,7 +285,7 @@ centos_install()
         sudo yum -y install epel-release
     fi
 
-    if [ $REL -eq 6 ];
+    if [ $REL -lt 7 ];
     then
         if [ ! -f /etc/yum.repos.d/ius.repo ];
         then
@@ -309,6 +327,11 @@ do
                 printf "${PASS}ubuntu is Supported!${END}\n"
                 ubuntu_install || exit_restart $STEP
                 depend_crits ||exit_restart $STEP
+            elif [ "$OS" = 'debian' ]
+            then
+                printf "${PASS}Debian is Supported!${END}\n"
+                debian_install || exit_restart $STEP
+                depend_crits ||exit_restart $STEP
             elif [ "$OS" = 'darwin' ]
             then
                 printf "${PASS}OS X is Supported!${END}\n"
@@ -330,7 +353,7 @@ do
                 freebsd_install || exit_restart $STEP
                 depend_crits ||exit_restart $STEP
             else
-                printf "${FAIL}OS: $OS, need Ubuntu, Darwin (OS X), CentOS, Red Hat, or FreeBSD${END}\n"
+                printf "${FAIL}OS: $OS, need Ubuntu, Debian, Darwin (OS X), CentOS, Red Hat, or FreeBSD${END}\n"
                 exit
             fi
             ;;
