@@ -21,7 +21,7 @@ from crits.emails.handlers import generate_email_csv
 from crits.emails.handlers import create_email_attachment, get_email_formatted
 from crits.emails.handlers import create_indicator_from_header_field
 from crits.samples.forms import UploadFileForm
-
+from crits.vocabulary.indicators import IndicatorTypes
 
 @user_passes_test(user_can_view_data)
 def emails_listing(request,option=None):
@@ -503,11 +503,22 @@ def indicator_from_header_field(request, email_id):
                 }
             else:
                 if header_field in ("from_address, sender, reply_to"):
-                    ind_type = "Address - e-mail"
+                    ind_type = IndicatorTypes.EMAIL_ADDRESS
                 elif header_field in ("originating_ip", "x_originating_ip"):
-                    ind_type = "Address - ipv4-addr"
+                    ind_type = IndicatorTypes.IPV4_ADDRESS
+                elif header_field in ("helo"):
+                    ind_type = IndicatorTypes.EMAIL_HELO
+                elif header_field in ("subject"):
+                    ind_type = IndicatorTypes.EMAIL_SUBJECT
+                elif header_field in ("x_mailer"):
+                    ind_type = IndicatorTypes.EMAIL_X_MAILER
+                elif header_field in ("message_id"):
+                    ind_type = IndicatorTypes.EMAIL_MESSAGE_ID
+                elif header_field in ("boundary"):
+                    ind_type = IndicatorTypes.EMAIL_BOUNDARY
                 else:
-                    ind_type = "String"
+                    # "String" used to be here
+                    ind_type = None
                 result = create_indicator_from_header_field(email,
                                                             header_field,
                                                             ind_type,
