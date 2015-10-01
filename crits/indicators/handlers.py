@@ -51,7 +51,7 @@ from crits.vocabulary.relationships import RelationshipTypes
 
 logger = logging.getLogger(__name__)
 
-email_regex = re.compile(b'<(.+>')
+email_regex = re.compile(b'<(.+>)')
 
 def generate_indicator_csv(request):
     """
