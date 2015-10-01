@@ -106,7 +106,7 @@ class Command(BaseCommand):
         for user in users:
             # only include notifications where the user is in the users list and
             # it wasn't created by them.
-            includes = [x for x in notifications if user.username in x.users and user.username != x.analyst]
+            includes = [x for x in notifications if user.username in x.users and user.username != x.analyst and x.obj_id != None]
 
             # only send an email if there's something to send
             if len(includes):
