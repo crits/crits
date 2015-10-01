@@ -586,13 +586,13 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
 
     if ind['type'] not in IndicatorTypes.values():
         return {'success': False,
-                'message': "Not a valid Indicator Type"}
+                'message': "Not a valid Indicator Type: %s" % ind['type']}
     if ind['threat_type'] not in IndicatorThreatTypes.values():
         return {'success': False,
-                'message': "Not a valid Indicator Threat Type"}
+                'message': "Not a valid Indicator Threat Type: %s" % ind['threat_type']}
     if ind['attack_type'] not in IndicatorAttackTypes.values():
         return {'success': False,
-                'message': "Not a valid Indicator Attack Type"}
+                'message': "Not a valid Indicator Attack Type: " % ind['attack_type']}
 
     (ind['value'], error) = validate_indicator_value(ind['value'], ind['type'])
     if error:
