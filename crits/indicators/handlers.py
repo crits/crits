@@ -3,7 +3,6 @@ import datetime
 import json
 import logging
 import urlparse
-import re
 
 from io import BytesIO
 from django.conf import settings
@@ -50,8 +49,6 @@ from crits.vocabulary.ips import IPTypes
 from crits.vocabulary.relationships import RelationshipTypes
 
 logger = logging.getLogger(__name__)
-
-email_regex = re.compile(b'<(.+>)')
 
 def generate_indicator_csv(request):
     """
@@ -1383,9 +1380,6 @@ def validate_indicator_value(value, ind_type):
                     IndicatorTypes.EMAIL_FROM,
                     IndicatorTypes.EMAIL_REPLY_TO,
                     IndicatorTypes.EMAIL_SENDER):
-        email_regex_results = email_regex.findall(value)
-        if len(email_regex_results) == 1:
-            value = email_regex_results[0]
         if '@' not in value:
             return ("", "Email address must contain an '@'")
         domain_or_ip = value.split('@')[-1]

@@ -12,6 +12,7 @@ import yaml
 import io
 import sys
 import olefile
+import re
 
 from dateutil.parser import parse as date_parser
 from django.conf import settings
@@ -48,6 +49,8 @@ from crits.vocabulary.indicators import (
     IndicatorAttackTypes,
     IndicatorThreatTypes
 )
+
+email_regex = re.compile(b'<(.+>)')
 
 def create_email_field_dict(field_name,
                             field_type,
@@ -1304,6 +1307,11 @@ def create_indicator_from_header_field(email, header_field, ind_type,
                         "with an empty type field",
         }
         return result
+
+    if '@' in value:
+        email_regex_results = email_regex.findall(value)
+        if len(email_regex_results) == 1:
+            value = email_regex_results[0]
 
     newindicator = handle_indicator_ind(value,
                                         email.source,
