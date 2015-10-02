@@ -50,7 +50,7 @@ from crits.vocabulary.indicators import (
     IndicatorThreatTypes
 )
 
-email_regex = re.compile(b'<(.+)>')
+email_regex = re.compile(b'<(.+@.+)>')
 
 def create_email_field_dict(field_name,
                             field_type,
