@@ -593,9 +593,27 @@ class Service(object):
         r['subtype'] = subtype
         r['result'] = result
         # Copy all of the other data into the result.
-        for key in data:
-            r[key] = data[key]
+        r.update(data)
+        #for key in data:
+        #    r[key] = data[key]
         self.current_task.results.append(r)
+
+
+    def _add_results(self, results=None):
+        """
+        Add a bunch of items to the list of results.
+
+        Arguments:
+        - results: The data that has been found. This should be formatted as described
+          in _add_results with the subtype and result field already set
+        """
+
+        self.ensure_current_task()
+
+        if results is None:
+            raise ValueError("results cannot be None")
+
+        self.current_task.results.extend(results)
 
 
 class TempAnalysisFile(object):
