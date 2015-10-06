@@ -254,6 +254,7 @@ class Sample():
     FILE_NAME = "File Name"
     FILE_PATH = "File Path"
     INHERIT_CAMPAIGNS = "Inherit Campaigns?"
+    INHERIT_FILEPATH = "Inherit File Path for all files in archive?"
     INHERIT_SOURCES = "Inherit Sources?"
     MD5 = "MD5"
     RELATED_MD5 = "Related MD5"
