@@ -56,6 +56,8 @@ class EventResource(CRITsAPIResource):
         date = bundle.data.get('date', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
+        campaign = bundle.data.get('campaign', None)
+        campaign_confidence = bundle.data.get('campaign_confidence', None)
 
         if not title and not event_type and not source:
             raise BadRequest('Must provide a title, event_type, and source.')
@@ -72,7 +74,9 @@ class EventResource(CRITsAPIResource):
                                date,
                                analyst,
                                bucket_list,
-                               ticket)
+                               ticket,
+                               campaign,
+                               campaign_confidence)
         if result['success']:
             return bundle
         else:
