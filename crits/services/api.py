@@ -55,6 +55,7 @@ class ServiceResource(CRITsAPIResource):
         result = bundle.data.get('result', None)
         result_type = bundle.data.get('result_type', None)
         result_subtype = bundle.data.get('result_subtype', None)
+        result_is_batch = bundle.data.get('result_is_batch', False)
         log_message = bundle.data.get('log_message', None)
         log_level = bundle.data.get('log_level', 'info')
         status = bundle.data.get('status', None)
@@ -70,14 +71,30 @@ class ServiceResource(CRITsAPIResource):
             content['message'] = 'Need an object type, object id, and analysis id.'
             self.crits_response(content)
         if result:
-            if not result_type or not result_subtype:
-                content['message'] = 'When adding a result, also need type and subtype'
-                self.crits_response(content)
-            result = add_result(object_type, object_id, analysis_id,
-                                result, result_type, result_subtype, analyst)
-            if not result['success']:
-                message += ", %s" % result['message']
-                success = False
+            if not result_is_batch:
+                if not result_type or not result_subtype:
+                    content['message'] = 'When adding a result, also need type and subtype'
+                    self.crits_response(content)
+                result = add_result(object_type, object_id, analysis_id,
+                                    result, result_type, result_subtype, analyst)
+                if not result['success']:
+                    message += ", %s" % result['message']
+                    success = False
+            else:
+                j_result = json.loads(result)
+                j_result_type = json.loads(result_type)
+                j_result_subtype = json.loads(result_subtype)
+
+                if not (len(j_result) == len(j_result_type) == len(j_result_subtype)):
+                    content['message'] = 'When adding results in batch result, result_type, ' +
+                                         'and result_subtype must have the same length!'
+                    self.crits_response(content)
+                for key, r in enumerate(j_result):
+                    result = add_result(object_type, object_id, analysis_id,
+                                        r, j_result_type[key], j_result_subtype[key], analyst)
+                    if not result['success']:
+                        message += ", %s" % result['message']
+                        success = False
         if log_message:
             result = add_log(object_type, object_id, analysis_id,
                              log_message, log_level, analyst)
