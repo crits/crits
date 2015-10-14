@@ -94,7 +94,13 @@ depend_crits()
 {
     printf "${HEAD}Installing Python Dependencies${END}\n"
     sudo ${PIP} install -r requirements.txt
-    printf "${INFO}Dependency installations complete!${END}\n"
+    if [ $? -ne 0 ]
+    then
+        printf "${FAIL}Dependency installation failed!${END}\n"
+        exit
+    else
+        printf "${INFO}Dependency installation complete!${END}\n"
+    fi
 }
 
 # Starts up everything needed to run the server
@@ -184,9 +190,14 @@ server_setup()
         read -p "Organization name: " ORG
 
         ${PYTH} manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
-
-        printf "${FAIL}This is Your Temp Password${END}\n"
-        start_server
+        if [ $? -ne 0 ]
+        then
+            printf "${FAIL}Failed to add an admin user${END}\n"
+            exit
+        else
+            printf "${FAIL}This is Your Temp Password${END}\n"
+            start_server
+        fi
     fi
 }
 
@@ -204,7 +215,7 @@ ubuntu_install()
     echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
     sudo add-apt-repository universe
     sudo apt-get update
-    sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev m2crypto mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+    sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev python-m2crypto mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
     sudo ldconfig
 }
 
@@ -215,7 +226,7 @@ debian_install()
     echo 'deb http://downloads-distro.mongodb.org/repo/debian-sysvinit dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
     sudo add-apt-repository universe
     sudo apt-get update
-    sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+    sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev python-m2crypto mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
     sudo ldconfig
 }
 
@@ -261,7 +272,7 @@ red_hat_install()
     fi
     
     printf "${INFO}Installing Packages${END}\n"
-    sudo yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
+    sudo yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel m2crypto numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
     sudo yum -y install p7zip p7zip-plugins
     sudo yum -y install unrar libffi-devel
     sudo yum -y install libyaml
@@ -298,7 +309,7 @@ centos_install()
     fi
 
     printf "${INFO}Installing Packages${END}\n"
-    sudo yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
+    sudo yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel m2crypto numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
     sudo yum -y install p7zip p7zip-plugins
     sudo yum -y install unrar libffi-devel
     sudo yum -y install libyaml
