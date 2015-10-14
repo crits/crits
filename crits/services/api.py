@@ -87,8 +87,7 @@ class ServiceResource(CRITsAPIResource):
                 j_result_subtype = json.loads(result_subtype)
 
                 if not (len(j_result) == len(j_result_type) == len(j_result_subtype)):
-                    content['message'] = 'When adding results in batch result, result_type, ' +
-                                         'and result_subtype must have the same length!'
+                    content['message'] = 'When adding results in batch result, result_type, and result_subtype must have the same length!'
                     self.crits_response(content)
                 for key, r in enumerate(j_result):
                     result = add_result(object_type, object_id, analysis_id,
