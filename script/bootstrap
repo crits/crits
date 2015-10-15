@@ -139,7 +139,7 @@ server_setup()
         SE=$(echo ${SC} | sed -e 's/\\/\\\\/g' | sed -e 's/\//\\\//g' | sed -e 's/&/\\\&/g')
         sed -i -e "s/^\(SECRET_KEY = \).*$/\1\'${SE}\'/1" crits/config/database.py
     else
-        echo "Database configuration file exists, skip secret_key generation!"
+        echo "Database configuration file exists. skipping!"
     fi
 
     # If MongoDB isn't already running, ask to start it.
@@ -183,22 +183,51 @@ server_setup()
 
     if [ $? -eq 0 ]
     then
+        while true; do
+            printf "${HEAD}Please choose:${END}\n"
+            printf "[${INFO}A${END}]dd admin user\n"
+            printf "[${INFO}R${END}]eset password\n"
+            printf "[${INFO}S${END}]tart server\n"
+            printf "[${INFO}Q${END}]uit\n"
+            read -p "Add/Reset/Start/Quit? [arsq] " arc
+            case $arc in
+                [Aa]* ) add_admin;;
+                [Rr]* ) reset_pass;;
+                [Ss]* ) start_server;;
+                [Qq]* ) break;;
+                * ) echo "${FAIL}Please answer [A]dd / [R]eset / [S]tart / [Q]uit.${END}\n";;
+            esac
+        done
+    fi
+}
+
+add_admin()
+{
+        printf "${HEAD}Add admin user:${END}\n"
         read -p "Username: " USERNAME
         read -p "First name: " FIRSTNAME
         read -p "Last name: " LASTNAME
         read -p "Email address: " EMAIL
         read -p "Organization name: " ORG
 
-        ${PYTH} manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
+        ${PYTH} manage.py users -a -A -e "${EMAIL}" -f "${FIRSTNAME}" -l "${LASTNAME}" -o "${ORG}" -u "${USERNAME}"
         if [ $? -ne 0 ]
         then
             printf "${FAIL}Failed to add an admin user${END}\n"
-            exit
         else
-            printf "${FAIL}This is Your Temp Password${END}\n"
-            start_server
+            printf "${PASS}This is Your Temp Password${END}\n"
         fi
-    fi
+}
+
+reset_pass()
+{
+        printf "${HEAD}Reset password:${END}\n"
+        read -p "Username: " USERNAME
+        ${PYTH} manage.py users -r -u "${USERNAME}"
+        if [ $? -ne 0 ]
+        then
+            printf "${FAIL}Failed to reset password for ${USERNAME}${END}\n"
+        fi
 }
 
 # Error Message
