@@ -96,7 +96,11 @@ depend_crits()
     sudo ${PIP} install -r requirements.txt
     if [ $? -ne 0 ]
     then
-        printf "${FAIL}Dependency installation failed!${END}\n"
+        printf "${FAIL}Dependency installation failed!${END}\n
+        If M2Crypto failed to install, you might try to install the 
+        OS-provided package with the package manager (apt-get/yum/brew)
+        or try to use pip to install a fixed version from git by:
+        ${INFO}pip install git+https://github.com/martinpaljak/M2Crypto.git${END}\n"
         exit
     else
         printf "${INFO}Dependency installation complete!${END}\n"
