@@ -13,6 +13,8 @@ from crits.core.user_role import UserRole
 from crits.domains.domain import TLD
 from crits.indicators.indicator import IndicatorAction
 from crits.raw_data.raw_data import RawDataType
+from crits.signatures.signature import SignatureType
+
 
 class Command(BaseCommand):
     """
@@ -42,6 +44,7 @@ class Command(BaseCommand):
         populate_user_roles(drop)
         populate_indicator_actions(drop)
         populate_raw_data_types(drop)
+        populate_signature_types(drop)
         # The following will always occur with every run of this script:
         #   - tlds are based off of a Mozilla TLD list so it should never
         #     contain  entries outside of the ones provided.
@@ -75,6 +78,7 @@ def populate_user_roles(drop):
     else:
         print "User Roles: existing documents detected. skipping!"
 
+
 def populate_indicator_actions(drop):
     """
     Populate default set of Indicator Actions into the system.
@@ -96,6 +100,7 @@ def populate_indicator_actions(drop):
     else:
         print "Indicator Actions: existing documents detected. skipping!"
 
+
 def populate_raw_data_types(drop):
     """
     Populate default set of raw data types into the system.
@@ -116,6 +121,29 @@ def populate_raw_data_types(drop):
         print "Raw Data Types: added %s types!" % len(data_types)
     else:
         print "Raw Data Types: existing documents detected. skipping!"
+
+
+def populate_signature_types(drop):
+    """
+    Populate default set of signature types into the system.
+
+    :param drop: Drop the existing collection before trying to populate.
+    :type: boolean
+    """
+
+    # define your signature types here
+    data_types = ['Bro', 'Snort', 'Yara']
+    if drop:
+        SignatureType.drop_collection()
+    if len(SignatureType.objects()) < 1:
+        for data_type in data_types:
+            dt = SignatureType()
+            dt.name = data_type
+            dt.save()
+        print "Signature Types: added %s types!" % len(data_types)
+    else:
+        print "Signature Types: existing documents detected. skipping!"
+
 
 def populate_tlds(drop):
     """

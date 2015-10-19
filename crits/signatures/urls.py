@@ -1,0 +1,21 @@
+from django.conf.urls import patterns
+
+urlpatterns = patterns('crits.signatures.views',
+    (r'^details/(?P<_id>\w+)/$', 'signature_detail'),
+    (r'^details_by_link/(?P<link>.+)/$', 'details_by_link'),
+    (r'^get_inline_comments/(?P<_id>\w+)/$', 'get_inline_comments'),
+    (r'^get_versions/(?P<_id>\w+)/$', 'get_signature_versions'),
+    (r'^set_signature_type/(?P<_id>\w+)/$', 'set_signature_type'),
+    (r'^set_signature_highlight_comment/(?P<_id>\w+)/$', 'set_signature_highlight_comment'),
+    (r'^set_signature_highlight_date/(?P<_id>\w+)/$', 'set_signature_highlight_date'),
+    (r'^add_inline_comment/(?P<_id>\w+)/$', 'add_inline_comment'),
+    (r'^add_highlight/(?P<_id>\w+)/$', 'add_highlight'),
+    (r'^remove_highlight/(?P<_id>\w+)/$', 'remove_highlight'),
+    (r'^upload/(?P<link_id>.+)/$', 'upload_signature'),
+    (r'^upload/$', 'upload_signature'),
+    (r'^remove/(?P<_id>[\S ]+)$', 'remove_signature'),
+    (r'^list/$', 'signature_listing'),
+    (r'^list/(?P<option>\S+)/$', 'signature_listing'),
+    (r'^add_data_type/$', 'new_signature_type'),
+    (r'^get_data_types/$', 'get_signature_type_dropdown'),
+)

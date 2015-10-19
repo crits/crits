@@ -51,6 +51,7 @@ from crits.raw_data.raw_data import RawData
 from crits.emails.email import Email
 from crits.samples.sample import Sample
 from crits.screenshots.screenshot import Screenshot
+from crits.signatures.signature import Signature
 from crits.targets.target import Target
 from crits.indicators.indicator import Indicator
 
@@ -130,6 +131,7 @@ def get_favorites(analyst):
         'RawData': 'title',
         'Sample': 'filename',
         'Screenshot': 'id',
+        'Signature': 'title',
         'Target': 'email_address'
     }
 
@@ -237,6 +239,7 @@ def get_data_for_item(item_type, item_id):
         'PCAP': ['filename', ],
         'RawData': ['title', ],
         'Sample': ['filename', ],
+        'Signature': ['title', ],
         'Target': ['email_address', ],
     }
     response = {'OK': 0, 'Msg': ''}
@@ -778,6 +781,7 @@ def alter_bucket_list(obj, buckets, val):
                            PCAP=0,
                            RawData=0,
                            Sample=0,
+                           Signature=0,
                            Target=0).delete()
 
 def generate_bucket_csv(request):
@@ -823,13 +827,14 @@ def generate_bucket_jtable(request, option):
                                               'PCAP',
                                               'RawData',
                                               'Sample',
+                                              'Signature',
                                               'Target'])
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
     fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
               'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
-              'Sample', 'Target', 'Promote']
+              'Sample', 'Signature', 'Target', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
@@ -1465,6 +1470,12 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                     {'data': search_query},
                     {'objects.value': search_query},
                 ]
+        elif type_ == "Signature":
+            search_list = [
+                    {'md5': search_query},
+                    {'data': search_query},
+                    {'objects.value': search_query},
+                ]
         elif type_ == "Indicator":
             search_list = [
                     {'value': search_query},
@@ -1534,6 +1545,17 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             else:
                 query = defaultquery
         elif type_ == "RawData":
+            if search_type == "data":
+                query = {'data': search_query}
+            elif search_type == "data_type":
+                query = {'data_type': search_query}
+            elif search_type == "title":
+                query = {'title': search_query}
+            elif search_type == "tool":
+                query = {'tool.name': search_query}
+            else:
+                query = defaultquery
+        elif type_ == "Signature":
             if search_type == "data":
                 query = {'data': search_query}
             elif search_type == "data_type":
@@ -2038,6 +2060,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     "PCAP": 'crits.pcaps.views.pcap_details',
                     "RawData": 'crits.raw_data.views.raw_data_details',
                     "Sample": 'crits.samples.views.detail',
+                    "Signature": 'crits.signatures.views.detail',
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
                                     args=(doc['url_key'],))
@@ -2332,6 +2355,9 @@ def generate_items_jtable(request, itype, option):
     elif itype == 'RawDataType':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#raw_data_type_add').click();}"
+    elif itype == 'SignatureType':
+        fields = ['name', 'active', 'id']
+        click = "function () {window.parent.$('#signature_type_add').click();}"
     elif itype == 'SourceAccess':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#source_create').click();}"
@@ -3204,6 +3230,7 @@ def generate_global_search(request):
                 ['PCAP', 'crits.pcaps.views.pcap_details', 'md5'],
                 ['RawData', 'crits.raw_data.views.raw_data_details', 'id'],
                 ['Sample', 'crits.samples.views.detail', 'md5'],
+                ['Signature', 'crits.signatures.views.signature_detail', 'id'],
                 ['Target', 'crits.targets.views.target_info', 'email_address']]:
             obj = class_from_id(obj_type, searchtext)
             if obj:
@@ -3230,6 +3257,7 @@ def generate_global_search(request):
                     [RawData, "crits.raw_data.views.raw_data_listing"],
                     [Sample, "crits.samples.views.samples_listing"],
                     [Screenshot, "crits.screenshots.views.screenshots_listing"],
+                    [Signature, "crits.signatures.views.signature_listing"],
                     [Target, "crits.targets.views.targets_listing"]]:
         ctype = col_obj._meta['crits_type']
         resp = get_query(col_obj, request)
@@ -3425,6 +3453,7 @@ def details_from_id(type_, id_):
                 'RawData': 'crits.raw_data.views.raw_data_details',
                 'Sample': 'crits.samples.views.detail',
                 'Screenshot': 'crits.screenshots.views.render_screenshot',
+                'Signature': 'crits.signatures.views.signature_detail',
                 'Target': 'crits.targets.views.target_info',
                 }
     if type_ in type_map and id_:
@@ -3685,6 +3714,7 @@ def alter_sector_list(obj, sectors, val):
                            PCAP=0,
                            RawData=0,
                            Sample=0,
+                           Signature=0,
                            Target=0).delete()
 
 def generate_sector_csv(request):
@@ -3730,13 +3760,14 @@ def generate_sector_jtable(request, option):
                                               'PCAP',
                                               'RawData',
                                               'Sample',
+                                              'Signature',
                                               'Target'])
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
     fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
               'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
-              'Sample', 'Target']
+              'Sample', 'Signature', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',

@@ -1085,6 +1085,9 @@ var stdDialogs = {
       "new-raw-data": {title: "Raw Data" },
       "raw_data_type_add": {title: "Raw Data Type"},
 
+      "new-signature": {title: "Signature" },
+      "signature_type_add": {title: "Signature Type"},
+
       "new-target": {title: "Target", open: new_target_dialog },
 
       "source_create": {title: "Source"},
@@ -1154,7 +1157,7 @@ var stdDialogs = {
   // to make that sort of global change before 3.0.
   var singleInputDialogs = "#dialog-actor-identifier-type,#dialog-ticket,"+
       "#dialog-source_create,#dialog-user_role," +
-      "#dialog-indicator_action_add,#dialog-raw_data_type_add";
+      "#dialog-indicator_action_add,#dialog-raw_data_type_add,#dialog-signature_type_add";
   $(singleInputDialogs).on("dialogopen", fix_form_submit(addEditSubmit));
 
 

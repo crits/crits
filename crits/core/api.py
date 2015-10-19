@@ -595,6 +595,7 @@ class CRITsAPIResource(MongoEngineResource):
             'PCAP': {},
             'RawData': {},
             'Sample': {},
+            'Signature': {},
             'Target': {},
         }
 

@@ -335,6 +335,18 @@
         <input class="inputbutton" type="submit" name="search" value="Search" />
       </form>
     </li>
+     <li>
+      <b>Signatures</b>
+      <form method="get" id="signature_search" action="{% url 'crits.signatures.views.signature_listing' %}">
+        <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
+        <select name="search_type" class='selectbox'>
+          <option value="data" selected="selected">Data</option>
+          <option value="data_type">Data Type</option>
+          <option value="title">Title</option>
+        </select>
+        <input class="inputbutton" type="submit" name="search" value="Search" />
+      </form>
+    </li>
     <li>
       <b>Comments</b>
       <form method="get" id="comment_search" action="{% url 'crits.comments.views.activity' %}">
@@ -525,6 +537,11 @@
         {% include nav_template %}
         {% endfor %}
       </ul>
+    </li>
+     <li class='nav_objects mmenu_item'>
+      <a href="{% url 'crits.signatures.views.signature_listing' %}">Signatures</a>
+      <a href id="new-signature" class="ui-icon ui-icon-plusthick add
+          dialogClick" dialog="new-signature" persona="new" title="New Signature"></a>
     </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.targets.views.targets_listing' %}">Targets</a>

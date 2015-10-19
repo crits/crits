@@ -85,6 +85,9 @@ from crits.raw_data.raw_data import RawDataType
 from crits.relationships.forms import ForgeRelationshipForm
 from crits.samples.forms import UploadFileForm
 from crits.screenshots.forms import AddScreenshotForm
+from crits.signatures.forms import UploadSignatureForm
+from crits.signatures.forms import NewSignatureTypeForm
+from crits.signatures.signature import SignatureType
 from crits.targets.forms import TargetInfoForm
 
 from crits.vocabulary.sectors import Sectors
@@ -1052,6 +1055,7 @@ def base_context(request):
         base_context['location_add'] = AddLocationForm()
         base_context['add_raw_data_type'] = NewRawDataTypeForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
+        base_context['add_signature_type'] = NewSignatureTypeForm()
         base_context['source_access'] = SourceAccessForm()
         base_context['upload_tlds'] = TLDUpdateForm()
         base_context['user_role_add'] = AddUserRoleForm()
@@ -1157,6 +1161,10 @@ def base_context(request):
             base_context['upload_raw_data_file'] = UploadRawDataFileForm(user)
         except Exception, e:
             logger.warning("Base Context UploadRawDataFileForm Error: %s" % e)
+        try:
+            base_context['upload_signature'] = UploadSignatureForm(user)
+        except Exception, e:
+            logger.warning("Base Context UploadSignatureForm Error: %s" % e)
 
         # Other info acquired from functions
         try:
@@ -1224,6 +1232,8 @@ def base_context(request):
                                             'name': 'Relationship Types'},
                                         {'collection': settings.COL_SOURCE_ACCESS,
                                             'name': 'Sources'},
+                                        {'collection': settings.COL_SIGNATURE_TYPES,
+                                            'name': 'Signature Types'},
                                         {'collection': settings.COL_USER_ROLES,
                                             'name': 'User Roles'}
                                         ]
@@ -1547,6 +1557,7 @@ def collections(request):
     colls['COL_PCAPS'] = settings.COL_PCAPS
     colls['COL_RAW_DATA'] = settings.COL_RAW_DATA
     colls['COL_SAMPLES'] = settings.COL_SAMPLES
+    colls['COL_SIGNATURES'] = settings.COL_SIGNATURES
     colls['COL_TARGETS'] = settings.COL_TARGETS
     return colls
 
@@ -1679,6 +1690,7 @@ def item_editor(request):
                 Campaign,
                 IndicatorAction,
                 RawDataType,
+                SignatureType,
                 SourceAccess,
                 UserRole]
     for col_obj in obj_list:

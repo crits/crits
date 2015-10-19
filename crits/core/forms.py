@@ -266,7 +266,8 @@ class DownloadFileForm(forms.Form):
                                           ('Indicator', 'Indicators'),
                                           ('PCAP', 'PCAPs'),
                                           ('RawData', 'Raw Data'),
-                                          ('Sample', 'Samples')]
+                                          ('Sample', 'Samples'),
+                                          ('Signature', 'Signatures')]
         self.fields['total_limit'].initial = total_max
         self.fields['rel_limit'].initial = rel_max
         self.fields['depth_limit'].help_text = self.fields['depth_limit'].help_text % depth_max
