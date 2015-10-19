@@ -1858,32 +1858,6 @@ If you include the "result" field, you will be required to also provide the
 "result_type" and "result_subtype". Also, if you include the "log_message"
 field, "log_level" will be set to "info" if it is not provided.
 
-Signature API
--------------------------------------------
-
-GET:
-
-        /api/v1/signatures/
-
-        /api/v1/signatures/<object_id>/
-
-POST:
-
-        /api/v1/signatures/
-
-Unique POST Parameters:
-
-:copy_relationships: Copy the relationships of the linked raw data version.
-
-- Requires a link_id
-
-:data: The raw data if the upload type is "metadata".
-:description: Description of the raw data.
-:data_type: The type of raw data. Must match choices in the database.
-:link_id: The Link ID of an existing version of this raw data.
-:title: Title for the raw data.
-
-
 Target API
 -------------------------------------------
 

@@ -26,7 +26,7 @@ from crits.signatures.handlers import update_signature_highlight_date
 from crits.signatures.signature import SignatureType
 
 @user_passes_test(user_can_view_data)
-def signature_listing(request,option=None):
+def signatures_listing(request,option=None):
     """
     Generate Signature Listing template.
 
@@ -349,7 +349,7 @@ def remove_signature(request, _id):
 
     result = delete_signature(_id, '%s' % request.user.username)
     if result:
-        return HttpResponseRedirect(reverse('crits.signatures.views.signature_listing'))
+        return HttpResponseRedirect(reverse('crits.signatures.views.signatures_listing'))
     else:
         return render_to_response('error.html',
                                   {'error': "Could not delete signature"})

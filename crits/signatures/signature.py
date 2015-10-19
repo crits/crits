@@ -10,7 +10,6 @@ from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocumen
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.fields import CritsDateTimeField
-from crits.signatures.migrate import migrate_signature
 
 
 class SignatureType(CritsDocument, CritsSchemaDocument, Document):
@@ -65,14 +64,14 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_SIGNATURES,
         "crits_type": 'Signature',
-        "latest_schema_version": 2,
+        "latest_schema_version": 1,
         "schema_doc": {
         },
         "jtable_opts": {
                          'details_url': 'crits.signatures.views.signature_detail',
                          'details_url_key': 'id',
                          'default_sort': "modified DESC",
-                         'searchurl': 'crits.signatures.views.signature_listing',
+                         'searchurl': 'crits.signatures.views.signatures_listing',
                          'fields': [ "title", "data_type", "version",
                                      "modified", "source", "campaign",
                                      "id", "status"],
@@ -101,13 +100,6 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, Document):
     md5 = StringField()
     title = StringField()
     version = IntField()
-
-    def migrate(self):
-        """
-        Migrate to the latest schema version.
-        """
-
-        migrate_signature(self)
 
     def _generate_file_metadata(self, data):
         """

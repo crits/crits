@@ -3257,7 +3257,7 @@ def generate_global_search(request):
                     [RawData, "crits.raw_data.views.raw_data_listing"],
                     [Sample, "crits.samples.views.samples_listing"],
                     [Screenshot, "crits.screenshots.views.screenshots_listing"],
-                    [Signature, "crits.signatures.views.signature_listing"],
+                    [Signature, "crits.signatures.views.signatures_listing"],
                     [Target, "crits.targets.views.targets_listing"]]:
         ctype = col_obj._meta['crits_type']
         resp = get_query(col_obj, request)

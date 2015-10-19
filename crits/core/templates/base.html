@@ -337,7 +337,7 @@
     </li>
      <li>
       <b>Signatures</b>
-      <form method="get" id="signature_search" action="{% url 'crits.signatures.views.signature_listing' %}">
+      <form method="get" id="signature_search" action="{% url 'crits.signatures.views.signatures_listing' %}">
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="data" selected="selected">Data</option>
@@ -539,7 +539,7 @@
       </ul>
     </li>
      <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.signatures.views.signature_listing' %}">Signatures</a>
+      <a href="{% url 'crits.signatures.views.signatures_listing' %}">Signatures</a>
       <a href id="new-signature" class="ui-icon ui-icon-plusthick add
           dialogClick" dialog="new-signature" persona="new" title="New Signature"></a>
     </li>
@@ -578,6 +578,9 @@
           <a href class="dialogClick" persona="new" dialog="raw_data_type_add" id="raw_data_type_add">Raw Data Type</a>
         </li>
         {% if user_role == 'Administrator' %}
+        <li class='mmenu_item'>
+          <a href class="dialogClick" persona="new" dialog="signature_type_add" id="signature_type_add">Signature Type</a>
+        </li>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="source_create" id="source_create">Source</a>
         </li>
