@@ -301,7 +301,7 @@ def run_triage(obj, user):
 def add_result(object_type, object_id, analysis_id, result, type_, subtype,
                analyst):
     """
-    Add a result to an analysis task.
+    add_results wrapper for a single result.
 
     :param object_type: The top-level object type.
     :type object_type: str
@@ -315,6 +315,32 @@ def add_result(object_type, object_id, analysis_id, result, type_, subtype,
     :type type_: str
     :param subtype: The result subtype.
     :type subtype: str
+    :param analyst: The user updating the results.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
+    """
+    
+    return add_results(object_type, object_id, analysis_id, [result], [type_],
+                      [subtype], analyst)
+
+
+def add_results(object_type, object_id, analysis_id, result, type_, subtype,
+               analyst):
+    """
+    Add multiple results to an analysis task.
+
+    :param object_type: The top-level object type.
+    :type object_type: str
+    :param object_id: The ObjectId to search for.
+    :type object_id: str
+    :param analysis_id: The ID of the task to update.
+    :type analysis_id: str
+    :param result: The list of result to append.
+    :type result: list of str
+    :param type_: The list of result types.
+    :type type_: list of str
+    :param subtype: The list of result subtypes.
+    :type subtype: list of str
     :param analyst: The user updating the results.
     :type analyst: str
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
@@ -333,20 +359,29 @@ def add_result(object_type, object_id, analysis_id, result, type_, subtype,
         res['message'] = "Could not find object to add results to."
         return res
 
-    # Update analysis results
-    if result and type_ and subtype:
-        final = {}
-        final['subtype'] = subtype
-        final['result'] = result
-        tmp = ast.literal_eval(type_)
-        for k in tmp:
-            final[k] = tmp[k]
-        ar = AnalysisResult.objects(analysis_id=analysis_id).first()
-        if ar:
-            AnalysisResult.objects(id=ar.id).update_one(push__results=final)
-    else:
+    if not(result and type_ and subtype):
         res['message'] = "Need a result, type, and subtype to add a result."
         return res
+
+    if not(len(result) == len(type_) == len(subtype)):
+        res['message'] = "result, type, and subtype need to be the same length."
+        return res
+
+    # Update analysis results
+    final_list = []
+    for key, r in enumerate(result):
+        final = {}
+        final['subtype'] = subtype[key]
+        final['result'] = r
+        tmp = ast.literal_eval(type_[key])
+        for k in tmp:
+            final[k] = tmp[k]
+        final_list.append(final)
+
+    ar = AnalysisResult.objects(analysis_id=analysis_id).first()
+    if ar:
+        AnalysisResult.objects(id=ar.id).update_one(push_all__results=final_list)
+        
     res['success'] = True
     return res
 
