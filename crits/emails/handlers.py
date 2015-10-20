@@ -1182,7 +1182,7 @@ def dict_to_email(d, save_unsupported=True):
 
     result = {'success': False,
               'message': "Successfuly converted dict to email.",
-              'email': None}
+              'email_obj': None}
 
     for key in d:
         newkey = re.sub('[\s-]', '_', key)
