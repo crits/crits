@@ -138,7 +138,11 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
                     self.isodate = self.date
                     self.date = convert_datetimes_to_string(self.date)
                 else:
-                    self.isodate = date_parser(self.date, fuzzy=True)
+                    try:
+                        self.isodate = date_parser(self.date, fuzzy=True)
+                    except:
+                        raise ValueError("Could not parse date, is it malformed?")
+
             else:
                 if self.isodate:
                     if isinstance(self.isodate, datetime.datetime):
