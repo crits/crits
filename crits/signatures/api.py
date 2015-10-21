@@ -82,7 +82,7 @@ class SignatureResource(CRITsAPIResource):
             content['message'] = result.get('message')
         if result.get('_id'):
             url = reverse('api_dispatch_detail',
-                          kwargs={'resource_name': 'signature',
+                          kwargs={'resource_name': 'signatures',
                                   'api_name': 'v1',
                                   'pk': str(result.get('_id'))})
             content['url'] = url
