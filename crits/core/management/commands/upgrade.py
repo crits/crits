@@ -79,7 +79,7 @@ class Command(BaseCommand):
                     dest="raw_data",
                     default=False,
                     help="Migrate raw data."),
-        make_option("-r", "--migrate_signatures", action="store_true",
+        make_option("-g", "--migrate_signatures", action="store_true",
                     dest="signatures",
                     default=False,
                     help="Migrate signatures."),
