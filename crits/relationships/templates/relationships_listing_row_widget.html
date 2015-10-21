@@ -68,7 +68,7 @@
                     {% else %}
                         <th>Details</th>
                     {% endif %}
-                    {% if rel_type in "RawDataPCAPCertificateIndicatorEvent" %}
+                    {% if rel_type in "RawDataSignaturePCAPCertificateIndicatorEvent" %}
                       <th>Campaign</th>
                     {% endif %}
                     <th>Analyst</th>
@@ -136,7 +136,7 @@
                             <td>{{ rel.description|truncatechars:100 }}</td>
                             <td>{{ rel.version }}</td>
                         {% endif %}
-                        {% if rel_type in "RawDataPCAPCertificateIndicatorEventActorExploitBackdoor" %}
+                        {% if rel_type in "RawDataSignaturePCAPCertificateIndicatorEventActorExploitBackdoor" %}
                             <td class='campaignWidth'>
                                 {% for campaign in rel.campaign %}
                                     <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
