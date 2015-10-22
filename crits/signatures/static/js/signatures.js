@@ -64,6 +64,8 @@ function upload_new_signature_version_dialog(e) {
             form.find("#id_data_type").val($('#signature_type').text());
             //description
             form.find("#id_description").val($('#object_description').text());
+            //data
+            form.find("#id_data").val($('#signature_data').text());
             //copy relationships
             form.find("#id_copy_relationships").prop('checked', true);
             //source
