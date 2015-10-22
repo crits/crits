@@ -1,13 +1,15 @@
 from django import forms
 from django.forms.util import ErrorList
 
-from crits.actors.actor import ActorThreatIdentifier
 from crits.campaigns.campaign import Campaign
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_item_names, get_source_names
 from crits.core.user_tools import get_user_organization
 from crits.core import form_consts
 
+from crits.vocabulary.actors import ThreatTypes
+
+actor_identifier_choices = [(c,c) for c in ThreatTypes.values(sort=True)]
 
 class AddActorForm(forms.Form):
     """
@@ -97,8 +99,7 @@ class AddActorIdentifierForm(forms.Form):
     def __init__(self, username, *args, **kwargs):
         super(AddActorIdentifierForm, self).__init__(*args, **kwargs)
 
-        self.fields['identifier_type'].choices = [
-            (c.name, c.name) for c in get_item_names(ActorThreatIdentifier, True)]
+        self.fields['identifier_type'].choices = actor_identifier_choices
         self.fields['source'].choices = [
             (c.name, c.name) for c in get_source_names(True, True, username)]
         self.fields['source'].initial = get_user_organization(username)
