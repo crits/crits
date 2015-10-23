@@ -2,12 +2,10 @@ import datetime
 import hashlib
 import json
 
-from dateutil.parser import parse
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.template.loader import render_to_string
 from mongoengine.base import ValidationError
 
 from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source, json_handler
@@ -128,30 +126,6 @@ def get_signature_details(_id, analyst):
                 "signature": signature}
 
     return template, args
-
-def generate_inline_comments(_id):
-    """
-    Generate the inline comments for Signature.
-
-    :param _id: The ObjectId of the Signature to generate inline comments for.
-    :type _id: str
-    :returns: list
-    """
-
-    signature = Signature.objects(id=_id).first()
-    if not signature:
-        return []
-    else:
-        inlines = []
-        for i in signature.inlines:
-            html = render_to_string('inline_comment.html',
-                                    {'username': i.analyst,
-                                    'comment': i.comment,
-                                    'date': i.date,
-                                    'line': i.line,
-                                    'signature': {'id': _id}})
-            inlines.append({'line': i.line, 'html': html})
-        return inlines
 
 def generate_signature_versions(_id):
     """
@@ -447,162 +421,6 @@ def update_signature_type(_id, data_type, analyst):
             return {'success': True}
         except ValidationError, e:
             return {'success': False, 'message': str(e)}
-
-def update_signature_highlight_comment(_id, comment, line, analyst):
-    """
-    Update a highlight comment.
-
-    :param _id: ObjectId of the Signature to update.
-    :type _id: str
-    :param comment: The comment to add.
-    :type comment: str
-    :param line: The line this comment is associated with.
-    :type line: str, int
-    :param analyst: The user updating the comment.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
-    """
-
-    signature = Signature.objects(id=_id).first()
-    if not signature:
-        return None
-    else:
-        for highlight in signature.highlights:
-            if highlight.line == int(line):
-                highlight.comment = comment
-                try:
-                    signature.save(username=analyst)
-                    return {'success': True}
-                except ValidationError, e:
-                    return {'success': False, 'message': str(e)}
-        return {'success': False, 'message': 'Could not find highlight.'}
-
-def update_signature_highlight_date(_id, date, line, analyst):
-    """
-    Update a highlight date.
-
-    :param _id: ObjectId of the Signature to update.
-    :type _id: str
-    :param date: The date to set.
-    :type date: str
-    :param line: The line this date is associated with.
-    :type line: str, int
-    :param analyst: The user updating the date.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
-    """
-
-    signature = Signature.objects(id=_id).first()
-    if not signature:
-        return None
-    else:
-        for highlight in signature.highlights:
-            if highlight.line == int(line):
-                highlight.line_date = parse(date, fuzzy=True)
-                try:
-                    signature.save(username=analyst)
-                    return {'success': True}
-                except ValidationError, e:
-                    return {'success': False, 'message': str(e)}
-        return {'success': False, 'message': 'Could not find highlight.'}
-
-def new_inline_comment(_id, comment, line_num, analyst):
-    """
-    Add a new inline comment.
-
-    :param _id: ObjectId of the Signature to update.
-    :type _id: str
-    :param comment: The comment to add.
-    :type comment: str
-    :param line_num: The line this comment is associated with.
-    :type line_num: str, int
-    :param analyst: The user adding this comment.
-    :type analyst: str
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str),
-              "line" (int),
-              "html" (str)
-    :raises: ValidationError
-    """
-
-    signature = Signature.objects(id=_id).first()
-    signature.add_inline_comment(comment, line_num, analyst)
-    try:
-        signature.save(username=analyst)
-        html = render_to_string('inline_comment.html',
-                                {'username': analyst,
-                                 'comment': comment,
-                                 'date': datetime.datetime.now(),
-                                 'line': line_num,
-                                 'signature': {'id': _id}})
-        return {'success': True,
-                'message': 'Comment for line %s added successfully!' % line_num,
-                'inline': True,
-                'line': line_num,
-                'html': html,
-                }
-    except ValidationError, e:
-        return e
-
-def new_highlight(_id, line_num, line_data, analyst):
-    """
-    Add a new highlight.
-
-    :param _id: ObjectId of the Signature to update.
-    :type _id: str
-    :param line_num: The line to highlight.
-    :type line_num: str, int
-    :param line_data: The data on this line.
-    :type line_data: str
-    :param analyst: The user highlighting this line.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "html" (str)
-    :raises: ValidationError
-    """
-
-    signature = Signature.objects(id=_id).first()
-    signature.add_highlight(line_num, line_data, analyst)
-    try:
-        signature.save(username=analyst)
-        html = render_to_string('signature_highlights.html',
-                                {'signature': {'id': _id,
-                                              'highlights': signature.highlights}})
-        return {'success': True,
-                'html': html,
-                }
-    except ValidationError, e:
-        return e
-
-def delete_highlight(_id, line_num, analyst):
-    """
-    Delete a highlight from Signature.
-
-    :param _id: The ObjectId of the Signature to update.
-    :type _id: str
-    :param line_num: Line number of the highlight to delete.
-    :type line_num: str, int
-    :param analyst: The user deleting this highlight.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "html" (str)
-    """
-
-    signature = Signature.objects(id=_id).first()
-    highlights = len(signature.highlights)
-    signature.remove_highlight(line_num, analyst)
-    if len(signature.highlights) < highlights:
-        try:
-            signature.save(username=analyst)
-            html = render_to_string('signature_highlights.html',
-                                    {'signature': {'id': _id,
-                                                'highlights': signature.highlights}})
-            return {'success': True,
-                    'html': html,
-                    }
-        except ValidationError, e:
-            return e
-    else:
-        return {'success': False}
 
 def delete_signature(_id, username=None):
     """

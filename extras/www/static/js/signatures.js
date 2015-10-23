@@ -19,18 +19,6 @@ function append_inline_comment(data) {
     }
 }
 
-function highlight_line(line) {
-    var line_el = $('tr.file_line[data-position="' + Number(line[0]) + '"]');
-    if (line_el.length == 1) {
-        var me = line_el.find('td.add_highlight');
-        me
-        .css({
-            'background-image': "url('/css/images/ui-icons_70b2e1_256x240.png')"})
-        .attr('data-highlighted', 1)
-        .attr('title', "Highlighted by " + line[1]);
-    }
-}
-
 function diffUsingJS(from_text, to_text, from_header, to_header, output_div) {
     var base = difflib.stringAsLines(from_text);
     var newtxt = difflib.stringAsLines(to_text);
@@ -313,59 +301,10 @@ $(document).ready(function() {
         .show();
     });
 
-    $.ajax({
-        type: 'POST',
-        url: get_inline_comments,
-        success: function(data) {
-            $.each(data, function(i, d) {
-                append_inline_comment(d);
-            });
-        }
-    });
-
     $('#jump_versions').on('change', function(e) {
         var version = this.value;
         window.location.href = details_by_link + "?version=" + version;
     });
-
-    $('.add_highlight').on('click', function(e) {
-        var me = $(this);
-        var parent = $(this).closest('tr');
-        var line = parent.attr('data-position');
-        var url = add_highlight;
-        var action = "add";
-        if (parent.find('td:first').attr('data-highlighted') == 1) {
-            action = "delete";
-            url = remove_highlight;
-        }
-        var line_data = parent.find('pre').text();
-        var data = {
-            line: line,
-            line_data: line_data,
-        };
-        $.ajax({
-            type: 'POST',
-            url: url,
-            data: data,
-            success: function(data) {
-                if (data.success) {
-                    if (action == "add") {
-                        me.css({
-                            'background-image': "url('/css/images/ui-icons_70b2e1_256x240.png')"})
-                        .attr('data-highlighted', 1)
-                        .attr('title', "You've highlighted this!");
-                    } else {
-                        me.css({
-                            'background-image': "url('/css/images/ui-icons_222222_256x240.png')"})
-                        .attr('title', '')
-                        .attr('data-highlighted', 0);
-                    }
-                    $('#highlights_section').html(data.html);
-                }
-
-            },
-        })
-    })
 
     var version = $('#jump_versions').attr('data-version');
     var versions = $('#jump_versions').attr('data-length');

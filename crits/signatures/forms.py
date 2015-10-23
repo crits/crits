@@ -28,7 +28,7 @@ class UploadSignatureForm(forms.Form):
                                 widget=forms.TextInput(attrs={'size': '90'}),
                                 label=form_consts.Signature.SOURCE_REFERENCE)
     data = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
-                                                        'rows':'2'}),
+                                                        'rows':'4'}),
                                                         required=True)
 
     def __init__(self, username, *args, **kwargs):

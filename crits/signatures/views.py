@@ -15,14 +15,10 @@ from crits.signatures.handlers import update_signature_type
 from crits.signatures.handlers import handle_signature_file
 from crits.signatures.handlers import delete_signature, get_signature_details
 from crits.signatures.handlers import generate_signature_jtable
-from crits.signatures.handlers import generate_signature_csv, new_inline_comment
-from crits.signatures.handlers import generate_inline_comments
+from crits.signatures.handlers import generate_signature_csv
 from crits.signatures.handlers import generate_signature_versions
 from crits.signatures.handlers import get_id_from_link_and_version
-from crits.signatures.handlers import add_new_signature_type, new_highlight
-from crits.signatures.handlers import update_signature_highlight_comment
-from crits.signatures.handlers import delete_highlight
-from crits.signatures.handlers import update_signature_highlight_date
+from crits.signatures.handlers import add_new_signature_type
 from crits.signatures.signature import SignatureType
 
 @user_passes_test(user_can_view_data)
@@ -59,160 +55,6 @@ def set_signature_type(request, _id):
         return HttpResponse(json.dumps(update_signature_type(_id,
                                                             data_type,
                                                             analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def set_signature_highlight_comment(request, _id):
-    """
-    Set a highlight comment in Signature. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param _id: The ObjectId of the Signature.
-    :type _id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        comment = request.POST['comment']
-        line = request.POST['line']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_signature_highlight_comment(_id,
-                                                                         comment,
-                                                                         line,
-                                                                         analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def set_signature_highlight_date(request, _id):
-    """
-    Set a highlight date in Signature. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param _id: The ObjectId of the Signature.
-    :type _id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        date = request.POST['date']
-        line = request.POST['line']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_signature_highlight_date(_id,
-                                                                      date,
-                                                                      line,
-                                                                      analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def add_inline_comment(request, _id):
-    """
-    Add an inline comment to Signature. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param _id: The ObjectId of the Signature.
-    :type _id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        comment = request.POST['comment']
-        analyst = request.user.username
-        line_num = request.GET.get('line', 1)
-        return HttpResponse(json.dumps(new_inline_comment(_id,
-                                                          comment,
-                                                          line_num,
-                                                          analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def add_highlight(request, _id):
-    """
-    Set a line as highlighted for Signature. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param _id: The ObjectId of the Signature.
-    :type _id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        analyst = request.user.username
-        line_num = request.POST.get('line', 1)
-        line_data = request.POST.get('line_data', None)
-        return HttpResponse(json.dumps(new_highlight(_id,
-                                                     line_num,
-                                                     line_data,
-                                                     analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def remove_highlight(request, _id):
-    """
-    Remove a line highlight from Signature. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param _id: The ObjectId of the Signature.
-    :type _id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        analyst = request.user.username
-        line_num = request.POST.get('line', 1)
-        return HttpResponse(json.dumps(delete_highlight(_id,
-                                                        line_num,
-                                                        analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def get_inline_comments(request, _id):
-    """
-    Get inline comments for Signature. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param _id: The ObjectId of the Signature.
-    :type _id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        return HttpResponse(json.dumps(generate_inline_comments(_id)),
                             mimetype="application/json")
     else:
         error = "Expected POST"

@@ -6,31 +6,6 @@ function escapeHtml(str) {
     return res;
 }
 
-function append_inline_comment(data) {
-    var line_el = $('tr.file_line[data-position="' + (Number(data.line) + 1) + '"]');
-    if (line_el.length < 1) {
-        var line_el = $('table.line_table tr.inline_comment:last');
-        if (line_el.length < 1) {
-            var line_el = $('tr.file_line[data-position="' + data.line + '"]');
-        }
-        line_el.after(data.html);
-    } else {
-        line_el.before(data.html);
-    }
-}
-
-function highlight_line(line) {
-    var line_el = $('tr.file_line[data-position="' + Number(line[0]) + '"]');
-    if (line_el.length == 1) {
-        var me = line_el.find('td.add_highlight');
-        me
-        .css({
-            'background-image': "url('/css/images/ui-icons_70b2e1_256x240.png')"})
-        .attr('data-highlighted', 1)
-        .attr('title', "Highlighted by " + line[1]);
-    }
-}
-
 function diffUsingJS(from_text, to_text, from_header, to_header, output_div) {
     var base = difflib.stringAsLines(from_text);
     var newtxt = difflib.stringAsLines(to_text);
@@ -65,7 +40,7 @@ function upload_new_signature_version_dialog(e) {
             //description
             form.find("#id_description").val($('#object_description').text());
             //data
-            form.find("#id_data").val($('#signature_data').text());
+            form.find("#id_data").val($('#object_data').text());
             //copy relationships
             form.find("#id_copy_relationships").prop('checked', true);
             //source
@@ -112,64 +87,6 @@ function upload_new_signature_version_dialog_submit(e) {
 }
 
 $(document).ready(function() {
-
-    $(document).on('click', '#highlight_comment', function(e) {
-        $(this).editable(function(value, settings) {
-            var line = $(this).closest('tr').find('td:nth-child(2)').text();
-            return function(value, settings, elem) {
-                var data = {
-                    comment: value,
-                    line: line,
-                };
-                $.ajax({
-                    type: "POST",
-                    async: false,
-                    url: update_signature_highlight_comment,
-                    data: data,
-                });
-                return value;
-            }(value, settings, this);
-            },
-            {
-                type: 'textarea',
-                height: "50px",
-                width: "400px",
-                tooltip: "",
-                cancel: "Cancel",
-                submit: "Ok",
-        });
-        $(this).trigger('click');
-    });
-
-    $(document).on('click', '#highlight_date', function(e) {
-        $(this).editable(function(value, settings) {
-            var line = $(this).closest('tr').find('td:nth-child(2)').text();
-            return function(value, settings, elem) {
-                var data = {
-                    date: value,
-                    line: line,
-                };
-                $.ajax({
-                    type: "POST",
-                    async: false,
-                    url: update_signature_highlight_date,
-                    data: data,
-                });
-                return value;
-            }(value, settings, this);
-            },
-            {
-                event: 'highlight_date',
-                type: 'datetimepicker',
-                width: "225px",
-                data: '',
-                style: "display: inline",
-                tooltip: "",
-                cancel: "Cancel",
-                submit: "Ok",
-        });
-        $(this).trigger('highlight_date');
-    });
 
     $('#signature_type').editable(function(value, settings) {
         revert = this.revert;
@@ -247,30 +164,6 @@ $(document).ready(function() {
                     },
     });
 
-    $('tr.file_line').on('mouseover', function(e) {
-        var dts = $('#add_inline_comment').detach();
-        var me = $(this);
-        dts.css({
-            display: 'inline-block',
-            float: 'right',
-        }).attr('data-position', me.attr('data-position'));
-        me.children('td:last').append(dts);
-    });
-
-    $('table.line_table').on('mouseout', function(e) {
-        $('#add_inline_comment').hide();
-    });
-
-    $('#add_inline_comment').on('click', function(e) {
-        var line_num = $(this).closest('tr').attr('data-position');
-        var act = $(this).attr('action');
-        if (act.lastIndexOf('/') != -1) {
-            act = act.substring(0, act.lastIndexOf('/'));
-        }
-        act = act + "/?line=" + line_num;
-        $(this).attr('action', act);
-    });
-
     $('#versions_button').on('click', function(e) {
         $.ajax({
             type: 'POST',
@@ -315,59 +208,10 @@ $(document).ready(function() {
         .show();
     });
 
-    $.ajax({
-        type: 'POST',
-        url: get_inline_comments,
-        success: function(data) {
-            $.each(data, function(i, d) {
-                append_inline_comment(d);
-            });
-        }
-    });
-
     $('#jump_versions').on('change', function(e) {
         var version = this.value;
         window.location.href = details_by_link + "?version=" + version;
     });
-
-    $('.add_highlight').on('click', function(e) {
-        var me = $(this);
-        var parent = $(this).closest('tr');
-        var line = parent.attr('data-position');
-        var url = add_highlight;
-        var action = "add";
-        if (parent.find('td:first').attr('data-highlighted') == 1) {
-            action = "delete";
-            url = remove_highlight;
-        }
-        var line_data = parent.find('pre').text();
-        var data = {
-            line: line,
-            line_data: line_data,
-        };
-        $.ajax({
-            type: 'POST',
-            url: url,
-            data: data,
-            success: function(data) {
-                if (data.success) {
-                    if (action == "add") {
-                        me.css({
-                            'background-image': "url('/css/images/ui-icons_70b2e1_256x240.png')"})
-                        .attr('data-highlighted', 1)
-                        .attr('title', "You've highlighted this!");
-                    } else {
-                        me.css({
-                            'background-image': "url('/css/images/ui-icons_222222_256x240.png')"})
-                        .attr('title', '')
-                        .attr('data-highlighted', 0);
-                    }
-                    $('#highlights_section').html(data.html);
-                }
-
-            },
-        })
-    })
 
     var version = $('#jump_versions').attr('data-version');
     var versions = $('#jump_versions').attr('data-length');
@@ -381,14 +225,6 @@ $(document).ready(function() {
         }
     }
 
-    var highlighted_lines = [];
-    $('div#highlights_section table tbody tr').each(function() {
-        highlighted_lines.push([$(this).find('td:nth-child(2)').text(),
-                                $(this).find('td:nth-child(4)').text()]);
-    });
-    $.each(highlighted_lines, function(i,v) {
-        highlight_line(v);
-    });
 
     var localDialogs = {
         "upload-new-signature-version": {title: "Upload New Version",

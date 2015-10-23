@@ -8,14 +8,9 @@
 
 <script>
     var signature_id = "{{ signature.id }}";
-    var add_highlight = "{% url 'crits.signatures.views.add_highlight' signature.id %}";
-    var remove_highlight = "{% url 'crits.signatures.views.remove_highlight' signature.id %}";
     var details_by_link = "{% url 'crits.signatures.views.details_by_link' signature.link_id|stringformat:"s" %}"
     var update_signature_type = "{% url 'crits.signatures.views.set_signature_type' signature.id %}";
-    var update_signature_highlight_comment = "{% url 'crits.signatures.views.set_signature_highlight_comment' signature.id %}";
-    var update_signature_highlight_date = "{% url 'crits.signatures.views.set_signature_highlight_date' signature.id %}";
     var get_signature_type_dropdown = "{% url 'crits.signatures.views.get_signature_type_dropdown' %}";
-    var get_inline_comments = "{% url 'crits.signatures.views.get_inline_comments' signature.id|stringformat:"s" %}";
     var get_signature_versions = "{% url 'crits.signatures.views.get_signature_versions' signature.id|stringformat:"s" %}";
 </script>
 
@@ -23,7 +18,6 @@
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#highlights_section" id="highlights_button"><span>Highlights</span></a></li>
     <li><a href="#signature_section" id="signature_button"><span>Signature</span></a></li>
     <li><a href="#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
@@ -112,9 +106,6 @@
         {% endwith %}
     </div>
     <div>
-        {% include 'signature_data.html' %}
-    </div>
-    <div>
       {% with obj=signature obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
@@ -142,18 +133,14 @@
         {% include "comments_listing_widget.html" %}
     </div>
 </div>
-<div id="highlights_section">
-    {% include 'signature_highlights.html' %}
-</div>
+
 <div id="signature_section">
     <div class="content_box">
         <h3 class="titleheader">
         <span>Data<span>
         </h3>
         <div>
-            <pre>
-                <span id="signature_data">{{ signature.data|cgi_escape }}</span>
-            </pre>
+            <pre>{{ signature.data|cgi_escape }}</pre>
         </div>
     </div>
 </div>
@@ -168,9 +155,6 @@
 <h3>Signature not found. If you just uploaded a Signature, try refreshing as the system might not have completed processing your upload yet.</h3>
 
 {% endif %}
-
-<a href="#" id="add_inline_comment" title="Add Comment" class="ui-icon
-ui-icon-comment dialogClick" dialog="comments" persona="new" action="{% url 'crits.signatures.views.add_inline_comment' signature.id|stringformat:"s" %}"></a>
 
 {% endblock %}
 
