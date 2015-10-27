@@ -324,19 +324,14 @@ def handle_signature_file(data, source_name, user=None,
     timestamp = datetime.datetime.now()
     
     # generate signature
-    is_signature_new = False
-    signature = Signature.objects(md5=md5).first()
-    if not signature:
-        signature = Signature()
-        signature.created = timestamp
-        signature.description = description
-        signature.md5 = md5
-        #signature.source = [source]
-        signature.data = data
-        signature.title = title
-        signature.data_type = data_type
-        is_signature_new = True
-    
+    signature = Signature()
+    signature.created = timestamp
+    signature.description = description
+    signature.md5 = md5
+    signature.data = data
+    signature.title = title
+    signature.data_type = data_type
+
     # generate new source information and add to sample
     if isinstance(source_name, basestring) and len(source_name) > 0:
         source = create_embedded_source(source_name,
@@ -352,8 +347,9 @@ def handle_signature_file(data, source_name, user=None,
         for s in source_name:
             if isinstance(s, EmbeddedSource):
                 signature.add_source(s, method=method, reference=reference)
-    
-    #XXX: need to validate this is a UUID
+
+    signature.version = len(Signature.objects(link_id=link_id)) + 1
+
     if link_id:
         signature.link_id = link_id
         if copy_rels:
@@ -364,15 +360,12 @@ def handle_signature_file(data, source_name, user=None,
                     signature.reload()
                     for rel in rd2.relationships:
                         # Get object to relate to.
-                        rel_item = class_from_id(rel.rel_type, rel.rel_object_id)
+                        rel_item = class_from_id(rel.rel_type, rel.object_id)
                         if rel_item:
                             signature.add_relationship(rel_item,
                                                       rel.relationship,
                                                       rel_date=rel.relationship_date,
                                                       analyst=user)
-
-
-    signature.version = len(Signature.objects(link_id=link_id)) + 1
 
     if bucket_list:
         signature.add_bucket_list(bucket_list, user)
@@ -382,11 +375,7 @@ def handle_signature_file(data, source_name, user=None,
 
     # save signature
     signature.save(username=user)
-
-    # run signature triage
-    if is_signature_new:
-        signature.reload()
-        run_triage(signature, user)
+    signature.reload()
 
     status = {
         'success':      True,

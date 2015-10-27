@@ -68,14 +68,3 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, Document):
     md5 = StringField()
     title = StringField()
     version = IntField()
-
-    def _generate_file_metadata(self, data):
-        """
-        Generate metadata from the signature. Uses the data to generate an MD5.
-
-        :param data: The data to generate metadata from.
-        """
-
-        from hashlib import md5
-        if not self.md5:
-            self.md5 = md5(data).hexdigest()
