@@ -209,31 +209,31 @@ def generate_signature_jtable(request, option):
         {
             'tooltip': "'All Signatures'",
             'text': "'All'",
-            'click': "function () {$('#signatures_listing').jtable('load', {'refresh': 'yes'});}",
+            'click': "function () {$('#signature_listing').jtable('load', {'refresh': 'yes'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
             'tooltip': "'New Signature'",
             'text': "'New'",
-            'click': "function () {$('#signatures_listing').jtable('load', {'refresh': 'yes', 'status': 'New'});}",
+            'click': "function () {$('#signature_listing').jtable('load', {'refresh': 'yes', 'status': 'New'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
             'tooltip': "'In Progress Signatures'",
             'text': "'In Progress'",
-            'click': "function () {$('#signatures_listing').jtable('load', {'refresh': 'yes', 'status': 'In Progress'});}",
+            'click': "function () {$('#signature_listing').jtable('load', {'refresh': 'yes', 'status': 'In Progress'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
             'tooltip': "'Analyzed Signatures'",
             'text': "'Analyzed'",
-            'click': "function () {$('#signatures_listing').jtable('load', {'refresh': 'yes', 'status': 'Analyzed'});}",
+            'click': "function () {$('#signature_listing').jtable('load', {'refresh': 'yes', 'status': 'Analyzed'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
             'tooltip': "'Deprecated Signatures'",
             'text': "'Deprecated'",
-            'click': "function () {$('#signatures_listing').jtable('load', {'refresh': 'yes', 'status': 'Deprecated'});}",
+            'click': "function () {$('#signature_listing').jtable('load', {'refresh': 'yes', 'status': 'Deprecated'});}",
             'cssClass': "'jtable-toolbar-center'",
         },
         {
