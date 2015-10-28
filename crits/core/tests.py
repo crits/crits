@@ -109,7 +109,7 @@ def prep_db():
     handlers.add_new_source(TSRC, TRANDUSER)
     # Create default dashboard and mute standard out during creation
     with mutestdout():
-        create_dashboard(drop=True)
+        create_dashboard()
     # Add User
     user = CRITsUser.create_user(username=TUSER_NAME,
                                  password=TUSER_PASS,
@@ -151,8 +151,6 @@ def clean_db():
     TestObject.drop_collection()
     TestSourceObject.drop_collection()
     CRITsConfig.drop_collection()
-    Dashboard.drop_collection()
-
 
 class SourceTests(SimpleTestCase):
     """
