@@ -1,4 +1,7 @@
 import re
+import sys
+import os
+import contextlib
 
 from django.test import SimpleTestCase
 from django.test.client import RequestFactory, Client
@@ -9,7 +12,9 @@ from crits.config.config import CRITsConfig
 from crits.core.user import CRITsUser
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsQuerySet
 from crits.core.crits_mongoengine import CritsSourceDocument
+from crits.dashboards.dashboard import Dashboard
 from crits.core.source_access import SourceAccess
+from crits.core.management.commands.create_default_dashboard import create_dashboard
 
 # We will be running tests against a bunch of functions from these files
 import crits.core.views as views
@@ -83,6 +88,13 @@ class TestObject(CritsBaseAttributes, Document):
     name = StringField(required=True)
     value = StringField(required=True)
 
+@contextlib.contextmanager
+def mutestdout():
+    save_stdout = sys.stdout
+    sys.stdout = open(os.devnull, "w")
+    yield
+    sys.stdout = save_stdout
+
 
 def prep_db():
     """
@@ -95,6 +107,9 @@ def prep_db():
     crits_config.save()
     # Add Source
     handlers.add_new_source(TSRC, TRANDUSER)
+    # Create default dashboard and mute standard out during creation
+    with mutestdout():
+        create_dashboard(drop=True)
     # Add User
     user = CRITsUser.create_user(username=TUSER_NAME,
                                  password=TUSER_PASS,
@@ -136,6 +151,7 @@ def clean_db():
     TestObject.drop_collection()
     TestSourceObject.drop_collection()
     CRITsConfig.drop_collection()
+    Dashboard.drop_collection()
 
 
 class SourceTests(SimpleTestCase):
