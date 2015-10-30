@@ -29,12 +29,14 @@ class IndicatorAction(CritsDocument, CritsSchemaDocument, Document):
         "latest_schema_version": 1,
         "schema_doc": {
             'name': 'The name of this Action',
-            'active': 'Enabled in the UI (on/off)'
+            'active': 'Enabled in the UI (on/off)',
+            'preferred': 'List of TLOs this is preferred for'
         },
     }
 
     name = StringField()
     active = StringField(default="on")
+    preferred = ListField(StringField())
 
 class EmbeddedAction(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -119,7 +121,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
             'jtopts_fields': ["details", "splunk", "value", "type",
                               "threat_type", "attack_type", "created",
                               "modified", "source", "campaign", "status",
-                              "favorite", "id"],
+                              "favorite", "actions", "id"],
             'hidden_fields': ["threat_type", "attack_type"],
             'linked_fields': ["value", "source", "campaign", "type", "status"],
             'details_link': 'details',

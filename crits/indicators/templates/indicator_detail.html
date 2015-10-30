@@ -183,7 +183,11 @@
         <span class="add_button" data-intro="Add an action" data-position="right">
           <a href="#" title="Add Action" style="display:inline-block;" 
 class="ui-icon ui-icon-plusthick dialogClick" dialog="add-action" persona="new" action="{% url 'crits.indicators.views.add_update_action' 'add' indicator.id %}"></a>
-	</span>
+	    </span>
+        <span id="preferred_actions" class="add_button" data-intro="Take preferred actions" data-position="right">
+          <a href="#" title="Take Preferred Actions" style="display:inline-block;"
+class="ui-icon ui-icon-heart"></a>
+	    </span>
     </h3>
     <div class="content_body">
     <table class="chart" id="action_listing">
@@ -191,7 +195,7 @@ class="ui-icon ui-icon-plusthick dialogClick" dialog="add-action" persona="new" 
         {% if indicator.actions %}
         <tr>
         {% else %}
-        <tr style="display:none;">
+        <tr id="action_listing_header" style="display:none;">
         {% endif %}
         <th>Type</th>
         <th>Begin</th>
