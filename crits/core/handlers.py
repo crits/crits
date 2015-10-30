@@ -1267,7 +1267,7 @@ def do_add_preferred_actions(obj_type, obj_id, username):
                   'active': 'on',
                   'analyst': username,
                   'begin_date': now,
-                  'end_date': now,
+                  'end_date': None,
                   'performed_date': now,
                   'reason': 'Preferred action toggle',
                   'date': now}
