@@ -124,7 +124,6 @@ $(document).ready(function(){
         $.proxy(file_upload_dialog, $('#form-add-object-static').parent())();
         add_object_submit(e);
     })
-    add_more_object_types_button($('#form-add-object-static'));
 
     // For samples_tools_widgets
     var comment_form = $('#form-comments');

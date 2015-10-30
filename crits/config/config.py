@@ -70,7 +70,7 @@ class CRITsConfig(CritsDocument, Document):
     total_max = IntField(default=250)
     totp_web = StringField(default='Disabled')
     totp_cli = StringField(default='Disabled')
-    zip7_path = StringField(default='/usr/bin/7za')
+    zip7_path = StringField(default='/usr/bin/7z')
     zip7_password = StringField(default='infected')
 
     def migrate(self):

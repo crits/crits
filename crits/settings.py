@@ -226,7 +226,7 @@ SESSION_TIMEOUT =       int(crits_config.get('session_timeout', 12)) * 60 * 60
 SPLUNK_SEARCH_URL =         crits_config.get('splunk_search_url', None)
 TEMP_DIR =                  crits_config.get('temp_dir', '/tmp')
 TIME_ZONE =                 crits_config.get('timezone', 'America/New_York')
-ZIP7_PATH =                 crits_config.get('zip7_path', '/usr/bin/7za')
+ZIP7_PATH =                 crits_config.get('zip7_path', '/usr/bin/7z')
 ZIP7_PASSWORD =             crits_config.get('zip7_password', 'infected')
 REMOTE_USER =               crits_config.get('remote_user', False)
 PASSWORD_COMPLEXITY_REGEX = crits_config.get('password_complexity_regex', '(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$')
@@ -530,7 +530,8 @@ for service_directory in SERVICE_DIRS:
                     SERVICE_CP_TEMPLATES = SERVICE_CP_TEMPLATES + ('%s_cp_items.html' % d,)
                 if os.path.isfile(view_items):
                     if '%s_context' % d in open(view_items).read():
-                        TEMPLATE_CONTEXT_PROCESSORS = TEMPLATE_CONTEXT_PROCESSORS + ('%s.views.%s_context' % (d, d),)
+                        context_module = '%s.views.%s_context' % (d, d)
+                        TEMPLATE_CONTEXT_PROCESSORS = TEMPLATE_CONTEXT_PROCESSORS + (context_module,)
                 for tab_temp in glob.glob('%s/*_tab.html' % abs_path):
                     head, tail = os.path.split(tab_temp)
                     ctype = tail.split('_')[-2]

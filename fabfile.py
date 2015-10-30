@@ -34,7 +34,27 @@ def create_admin_user(username=None, firstname=None, lastname=None,
 
 
 @task
+def dev_setup():
+    """Make some basic changes suitable for development environment"""
+    with cd(APP_ROOT):
+        # These let you set the password to a simpler string
+        run("python manage.py setconfig password_complexity_regex '.*'")
+        run("python manage.py setconfig password_complexity_desc 'Anything'")
+        # These aren't strictly required, but CRITs will complain if you try to
+        # change any other settings, if these aren't defined.
+        run("python manage.py setconfig crits_email 'crits@localhost'")
+        run("python manage.py setconfig instance_url 'http://localhost:8080/'")
+
+
+@task
 def runserver():
     """Run CRITs using the built-in runserver."""
     with cd(APP_ROOT):
         run("python manage.py runserver 0.0.0.0:8080")
+
+
+@task
+def init_services(service_dirs="/data/crits_services"):
+    """Sets the service_dirs config setting and installs dependencies"""
+    with cd(APP_ROOT):
+        run("python manage.py setconfig service_dirs %s" % service_dirs)

@@ -345,8 +345,6 @@ def handle_raw_data_file(data, source_name, user=None,
         }
         return status
 
-    data = data.encode('utf-8')
-
     if len(data) <= 0:
         status = {
             'success':   False,
@@ -402,7 +400,7 @@ def handle_raw_data_file(data, source_name, user=None,
                     raw_data.reload()
                     for rel in rd2.relationships:
                         # Get object to relate to.
-                        rel_item = class_from_id(rel.rel_type, rel.rel_object_id)
+                        rel_item = class_from_id(rel.rel_type, rel.object_id)
                         if rel_item:
                             raw_data.add_relationship(rel_item,
                                                       rel.relationship,

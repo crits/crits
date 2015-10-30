@@ -46,20 +46,12 @@ function getAllObjectTypes(sel) {
                         sorted.push(key);
                     });
                     sorted.sort();
+
                     $.each(sorted, function(index, value) {
-                        var details = data.types[value];
-                        var dkey;
-                        var dvalue;
-                        $.each(details[1], function(key, value) {
-                            dkey = key;
-                            dvalue = value;
-                            //should be only one key/value pair, so we can immediately return false to stop iterating
-                            return false;
-                        });
                         if (sel) {
-                            sel.append('<option value="'+details[0]+'">'+details[0]+'</option>');
+                            sel.append('<option value="'+value+'">'+value+'</option>');
                         } else {
-                            return_data[details[0]] = details[0];
+                            return_data[value] = value;
                         }
                     });
                 }
