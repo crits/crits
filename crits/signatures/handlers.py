@@ -1,6 +1,7 @@
 import datetime
 import hashlib
 import json
+import HTMLParser
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -10,7 +11,7 @@ from mongoengine.base import ValidationError
 
 from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
-from crits.core.class_mapper import class_from_id
+from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
@@ -257,7 +258,8 @@ def generate_signature_jtable(request, option):
 
 def handle_signature_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
-                         link_id=None, method='', reference='',
+                         data_type_min_version=None, data_type_max_version=None,
+                         data_type_dependencies=None, link_id=None, method='', reference='',
                          copy_rels=False, bucket_list=None, ticket=None):
     """
     Add Signature.
@@ -276,6 +278,13 @@ def handle_signature_file(data, source_name, user=None,
     :type title: str
     :param data_type: Datatype of the Signature.
     :type data_type: str
+    :param data_type: Datatype of the Signature.
+    :type data_type_min_version: str
+    :param data_type_min_version: Datatype tool minimum version.
+    :type data_type_max_version: str
+    :param data_type_max_version: Datatype tool maximum version.
+    :type data_type_dependencies: str
+    :param data_type_dependencies: Datatype tool dependencies to be run
     :param link_id: LinkId to tie this to another Signature as a new version.
     :type link_id: str
     :param method: The method of acquiring this Signature.
@@ -331,6 +340,9 @@ def handle_signature_file(data, source_name, user=None,
     signature.data = data
     signature.title = title
     signature.data_type = data_type
+    signature.data_type_min_version = data_type_min_version
+    signature.data_type_max_version = data_type_max_version
+    signature.data_type_dependencies = data_type_dependencies
 
     # generate new source information and add to sample
     if isinstance(source_name, basestring) and len(source_name) > 0:
@@ -454,3 +466,79 @@ def add_new_signature_type(data_type, analyst):
         return True
     except ValidationError:
         return False
+
+def update_min_version(type_, id_, data_type_min_version, analyst):
+    """
+    Change the min version of the data tool
+
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
+    :param data_type_min_version: The new min version to use.
+    :type data_type_min_version: str
+    :param analyst: The user setting the description.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(analyst)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser.HTMLParser()
+    data_type_min_version = h.unescape(data_type_min_version)
+    try:
+        obj.data_type_min_version = data_type_min_version
+        obj.save(username=analyst)
+        return {'success': True, 'message': "Data type min version set."}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
+def update_max_version(type_, id_, data_type_max_version, analyst):
+    """
+    Change the max version of the data tool
+
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
+    :param data_type_max_version: The new max version to use.
+    :type data_type_max_version: str
+    :param analyst: The user setting the description.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(analyst)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser.HTMLParser()
+    data_type_max_version = h.unescape(data_type_max_version)
+    try:
+        obj.data_type_max_version = data_type_max_version
+        obj.save(username=analyst)
+        return {'success': True, 'message': "Data type max version set."}
+    except ValidationError, e:
+        return {'success': False, 'message': e}

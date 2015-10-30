@@ -16,6 +16,9 @@ class UploadSignatureForm(forms.Form):
     required_css_class = 'required'
     title = forms.CharField(required=True)
     data_type = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
+    data_type_min_version = forms.CharField(required=False)
+    data_type_max_version = forms.CharField(required=False)
+    data_type_dependencies = forms.CharField(required=False)
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                                'rows':'2'}),
                                                                required=False)

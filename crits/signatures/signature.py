@@ -42,12 +42,17 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, Document):
                          'details_url_key': 'id',
                          'default_sort': "modified DESC",
                          'searchurl': 'crits.signatures.views.signatures_listing',
-                         'fields': [ "title", "data_type", "version",
+                         'fields': [ "title", "data_type", "data_type_min_version",
+                                     "data_type_max_version",
+                                     "data_type_dependencies", "version",
                                      "modified", "source", "campaign",
                                      "id", "status"],
                          'jtopts_fields': [ "details",
                                             "title",
                                             "data_type",
+                                            "data_type_min_version",
+                                            "data_type_max_version",
+                                            "data_type_dependencies",
                                             "version",
                                             "modified",
                                             "source",
@@ -63,6 +68,9 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, Document):
     }
 
     data_type = StringField()
+    data_type_min_version = StringField()
+    data_type_max_version = StringField()
+    data_type_dependencies = StringField()
     data = StringField()
     link_id = UUIDField(binary=True, required=True, default=uuid.uuid4)
     md5 = StringField()

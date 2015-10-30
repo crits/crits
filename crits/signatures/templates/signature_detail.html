@@ -10,6 +10,8 @@
     var signature_id = "{{ signature.id }}";
     var details_by_link = "{% url 'crits.signatures.views.details_by_link' signature.link_id|stringformat:"s" %}"
     var update_signature_type = "{% url 'crits.signatures.views.set_signature_type' signature.id %}";
+    var update_min_version = "{% url 'crits.signatures.views.update_data_type_min_version' %}";
+    var update_max_version = "{% url 'crits.signatures.views.update_data_type_max_version' %}";
     var get_signature_type_dropdown = "{% url 'crits.signatures.views.get_signature_type_dropdown' %}";
     var get_signature_versions = "{% url 'crits.signatures.views.get_signature_versions' signature.id|stringformat:"s" %}";
 </script>
@@ -52,10 +54,27 @@
             <tr>
                 <td class='key'>Data Type</td>
                     <span style="float: right;" class="object_status_response"></span>
-                </td>
                 <td>
                     <span class="edit" id="signature_type" action="{% url 'crits.signatures.views.set_signature_type' subscription.id %}">{{signature.data_type}}</span>
                 </td>
+            </tr>
+            <tr>
+                <td class="key">Data Type Min Version</td>
+                <td>
+                    <span class="edit_underline" id="data_type_min_version" action="{% url 'crits.signatures.views.update_data_type_min_version' %}">{{signature.data_type_min_version}}</span>
+                    <span id="data_type_min_version_error"></span>
+                </td>
+            </tr>
+            <tr>
+                <td class="key">Data Type Max Version</td>
+                <td>
+                    <span class="edit_underline" id="data_type_max_version" action="{% url 'crits.signatures.views.update_data_type_max_version' %}">{{signature.data_type_max_version}}</span>
+                    <span id="data_type_max_version_error"></span>
+                </td>
+            </tr>
+            <tr>
+            <td class='key'>Data Type Dependencies</td>
+            <td id="data_type_dependencies">{{ signature.data_type_dependencies }}</td>
             </tr>
             <tr>
             <td class='key'>Version</td>

@@ -11,7 +11,7 @@ from crits.core.user_tools import user_can_view_data
 from crits.core.user_tools import user_is_admin
 from crits.signatures.forms import UploadSignatureForm
 from crits.signatures.forms import NewSignatureTypeForm
-from crits.signatures.handlers import update_signature_type
+from crits.signatures.handlers import update_signature_type, update_min_version, update_max_version
 from crits.signatures.handlers import handle_signature_file
 from crits.signatures.handlers import delete_signature, get_signature_details
 from crits.signatures.handlers import generate_signature_jtable
@@ -141,6 +141,9 @@ def upload_signature(request, link_id=None):
             description = form.cleaned_data.get('description', '')
             title = form.cleaned_data.get('title', None)
             data_type = form.cleaned_data.get('data_type', None)
+            data_type_min_version = form.cleaned_data.get('data_type_min_version', None)
+            data_type_max_version = form.cleaned_data.get('data_type_max_version', None)
+            data_type_dependencies = form.cleaned_data.get('data_type_dependencies', None)
             copy_rels = request.POST.get('copy_relationships', False)
             link_id = link_id
             bucket_list = form.cleaned_data.get('bucket_list')
@@ -149,7 +152,9 @@ def upload_signature(request, link_id=None):
             reference = form.cleaned_data.get('reference', '')
             status = handle_signature_file(data, source, user,
                                           description, title, data_type,
-                                          link_id,
+                                          data_type_min_version,
+                                          data_type_max_version,
+                                          data_type_dependencies, link_id,
                                           method=method,
                                           reference=reference,
                                           copy_rels=copy_rels,
@@ -175,6 +180,56 @@ def upload_signature(request, link_id=None):
     else:
         return render_to_response('error.html',
                                   {'error': "Expected POST."},
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def update_data_type_min_version(request):
+    """
+    Update the min version number in the signature.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        type_ = request.POST['type']
+        id_ = request.POST['id']
+        data_type_min_version = request.POST['data_type_min_version']
+        analyst = request.user.username
+        return HttpResponse(json.dumps(update_min_version(type_,
+                                                          id_,
+                                                          data_type_min_version,
+                                                          analyst)),
+                            mimetype="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST.'},
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def update_data_type_max_version(request):
+    """
+    Update the max version number in the signature.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        type_ = request.POST['type']
+        id_ = request.POST['id']
+        data_type_max_version = request.POST['data_type_max_version']
+        analyst = request.user.username
+        return HttpResponse(json.dumps(update_max_version(type_,
+                                                          id_,
+                                                          data_type_max_version,
+                                                          analyst)),
+                            mimetype="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST.'},
                                   RequestContext(request))
 
 @user_passes_test(user_is_admin)

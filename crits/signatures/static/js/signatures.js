@@ -37,6 +37,12 @@ function upload_new_signature_version_dialog(e) {
             form.find("#id_title").val($('#signature_title').attr('data-title'));
             //data_type
             form.find("#id_data_type").val($('#signature_type').text());
+            //data_type
+            form.find("#id_data_type_min_version").val($('#data_type_min_version').text());
+            //data_type
+            form.find("#id_data_type_max_version").val($('#data_type_max_version').text());
+            //data_type
+            form.find("#id_data_type_dependencies").val($('#data_type_dependencies').text());
             //description
             form.find("#id_description").val($('#object_description').text());
             //data
@@ -236,4 +242,88 @@ $(document).ready(function() {
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt) });
     details_copy_id('Signature');
     toggle_favorite('Signature');
+
+    $('#data_type_min_version').editable(function(value, settings) {
+    var revert = this.revert;
+    return function(value, settings, elem) {
+        var data = {
+            type: subscription_type,
+            id: subscription_id,
+            data_type_min_version: value,
+        };
+        $.ajax({
+            type: "POST",
+            async: false,
+            url: update_min_version,
+            data: data,
+            success: function(data) {
+                if (!data.success) {
+                    value = revert;
+                    $('#data_type_min_version_error').text(' Error: ' + data.message);
+                }
+            }
+        });
+        var escapes = {
+            '&': '&amp;',
+            '"': '&quot;',
+            "'": '&apos;',
+            '>': '&gt;',
+            '<': '&lt;'
+        };
+
+        return value.replace(/&(?!amp;|quot;|apos;|gt;|lt;)|["'><]/g,
+                             function (s) { return escapes[s]; });
+    }(value, settings, this);
+    },
+    {
+        type: 'textarea',
+        height: "25px",
+        width: "200px",
+        tooltip: "",
+        cancel: "Cancel",
+        submit: "Ok",
+        onblur: 'ignore',
+    });
+
+    $('#data_type_max_version').editable(function(value, settings) {
+    var revert = this.revert;
+    return function(value, settings, elem) {
+        var data = {
+            type: subscription_type,
+            id: subscription_id,
+            data_type_max_version: value,
+        };
+        $.ajax({
+            type: "POST",
+            async: false,
+            url: update_max_version,
+            data: data,
+            success: function(data) {
+                if (!data.success) {
+                    value = revert;
+                    $('#data_type_max_version_error').text(' Error: ' + data.message);
+                }
+            }
+        });
+        var escapes = {
+            '&': '&amp;',
+            '"': '&quot;',
+            "'": '&apos;',
+            '>': '&gt;',
+            '<': '&lt;'
+        };
+
+        return value.replace(/&(?!amp;|quot;|apos;|gt;|lt;)|["'><]/g,
+                             function (s) { return escapes[s]; });
+    }(value, settings, this);
+    },
+    {
+        type: 'textarea',
+        height: "25px",
+        width: "200px",
+        tooltip: "",
+        cancel: "Cancel",
+        submit: "Ok",
+        onblur: 'ignore',
+    });
 });
