@@ -4,7 +4,7 @@
     <form id="form-{{ request.GET.dialog }}" 
 	  action='{% url "crits.core.views.new_action" %}'
 	  method='POST' enctype="multipart/form-data" item-type="indicator-action">
-    <table class="form">{{ add_indicator_action.as_table }}</table>
+    <table class="form">{{ add_new_action.as_table }}</table>
     </form>
 </div>
 
