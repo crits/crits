@@ -85,6 +85,10 @@ class SampleResource(CRITsAPIResource):
         backdoor_version = bundle.data.get('backdoor_version', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
+        sha1 = bundle.data.get('sha1', None)
+        sha256 = bundle.data.get('sha256', None)
+        size = bundle.data.get('size', None)
+        mimetype = bundle.data.get('mimetype', None)
 
         if ((related_id and not related_type) or
             (related_type and not related_id)):
@@ -100,11 +104,15 @@ class SampleResource(CRITsAPIResource):
                                           user=analyst,
                                           campaign=campaign,
                                           confidence=confidence,
-                                          related_md5 = related_md5,
-                                          related_id = related_id,
-                                          related_type = related_type,
+                                          related_md5=related_md5,
+                                          related_id=related_id,
+                                          related_type=related_type,
                                           filename=filename,
                                           md5=md5,
+                                          sha1=sha1,
+                                          sha256=sha256,
+                                          size=size,
+                                          mimetype=mimetype,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
                                           is_return_only_md5=False,

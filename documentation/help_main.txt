@@ -1798,6 +1798,10 @@ Unique POST Parameters:
 :upload_type: One of "metadata" or "file".
 :filename: The name of the file if this is a "metadata" upload.
 :md5: The MD5 of the file if this is a "metadata" upload.
+:sha1: The SHA1 of the file if this is a "metadata" upload.
+:sha256: The SHA256 of the file if this is a "metadata" upload.
+:size: The size of the file if this is a "metadata" upload.
+:mimetype: The mimetype of the file if this is a "metadata" upload.
 :filedata: The sample if the upload type is "file".
 :password: The password to unzip the file if it is zipped and the upload type is "file".
 :file_format: The format of the file if the upload type is "file".
