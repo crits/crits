@@ -255,7 +255,7 @@ class Sample():
     INHERIT_CAMPAIGNS = "Inherit Campaigns?"
     INHERIT_SOURCES = "Inherit Sources?"
     MD5 = "MD5"
-    MIMETYPE = "MIME TYPE"
+    MIMETYPE = "Mimetype"
     RELATED_MD5 = "Related MD5"
     PASSWORD = "Password"
     SHA1 = "SHA1"

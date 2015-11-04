@@ -148,10 +148,6 @@ class UploadFileForm(forms.Form):
         else: #Metadata Upload
             filename = cleaned_data.get('filename')
             md5 = cleaned_data.get('md5')
-            sha1 = cleaned_data.get('sha1')
-            sha256 = cleaned_data.get('sha256')
-            size = cleaned_data.get('size')
-            mimetype = cleaned_data.get('mimetype')
 
             if not filename:
                 self._errors.setdefault('filename', ErrorList())

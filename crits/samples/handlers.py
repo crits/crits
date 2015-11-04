@@ -778,11 +778,12 @@ def unrar_file(filename, user=None, password=None, data=None, source=None,
 
     return samples
 
-def handle_file(filename, data, source, method='Generic', reference='', related_md5=None,
-                related_id=None, related_type='Sample', backdoor=None, user='',
-                campaign=None, confidence='low', md5_digest=None, sha1_digest=None, sha256_digest=None,
-                size=None, mimetype=None, bucket_list=None,
-                ticket=None, relationship=None, inherited_source=None, is_validate_only=False,
+def handle_file(filename, data, source, method='Generic', reference='',
+                related_md5=None, related_id=None, related_type='Sample',
+                backdoor=None, user='', campaign=None, confidence='low',
+                md5_digest=None, sha1_digest=None, sha256_digest=None,
+                size=None, mimetype=None, bucket_list=None, ticket=None,
+                relationship=None, inherited_source=None, is_validate_only=False,
                 is_return_only_md5=True, cache={}, backdoor_name=None,
                 backdoor_version=None):
     """
@@ -854,37 +855,35 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
     is_sample_new = False
 
     # get sample from database, or create it if one doesn't exist
-    if not md5_digest and not data:
-        retVal['message'] += "Either the MD5 digest or data need to be supplied"
+    if not data and not md5_digest:
         retVal['success'] = False
-    elif md5_digest:
+        retVal['message'] = "At least MD5 hash is required."
+        return retVal
+
+    if md5_digest:
         # validate md5
         md5_digest = md5_digest.lower().strip()
         validate_md5_result = validate_md5_checksum(md5_digest)
         retVal['message'] += validate_md5_result.get('message')
         retVal['success'] = validate_md5_result.get('success')
-    else:
-        md5_digest = md5(data).hexdigest()
-        validate_md5_result = validate_md5_checksum(md5_digest)
-        retVal['message'] += validate_md5_result.get('message')
-        retVal['success'] = validate_md5_result.get('success')
-    if related_id or related_md5:
-        if  related_id:
-            related_obj = class_from_id(related_type, related_id)
+
+    if retVal['success'] == False:
+        if is_return_only_md5 == True:
+            return None
         else:
-            related_obj = class_from_value(related_type, related_md5)
-        if not related_obj:
-            retVal['message'] += (' Related %s not found. Sample not uploaded.'
-                                  % (related_type))
-            retVal['success'] = False
-    else:
-        related_obj = None
+            return retVal
 
     if sha1_digest != None and sha1_digest != "":
         sha1_digest = sha1_digest.lower().strip()
         validate_sha1_result = validate_sha1_checksum(sha1_digest)
         retVal['message'] += validate_sha1_result.get('message')
         retVal['success'] = validate_sha1_result.get('success')
+
+    if retVal['success'] == False:
+        if is_return_only_md5 == True:
+            return None
+        else:
+            return retVal
 
     if sha256_digest != None and sha256_digest != "":
         sha256_digest = sha256_digest.lower().strip()
@@ -897,6 +896,30 @@ def handle_file(filename, data, source, method='Generic', reference='', related_
             return None
         else:
             return retVal
+
+    if data:
+        md5_digest = md5(data).hexdigest()
+        validate_md5_result = validate_md5_checksum(md5_digest)
+        retVal['message'] += validate_md5_result.get('message')
+        retVal['success'] = validate_md5_result.get('success')
+
+    if retVal['success'] == False:
+        if is_return_only_md5 == True:
+            return None
+        else:
+            return retVal
+
+    if related_id or related_md5:
+        if  related_id:
+            related_obj = class_from_id(related_type, related_id)
+        else:
+            related_obj = class_from_value(related_type, related_md5)
+        if not related_obj:
+            retVal['message'] += (' Related %s not found. Sample not uploaded.'
+                                  % (related_type))
+            retVal['success'] = False
+    else:
+        related_obj = None
 
     cached_results = cache.get(form_consts.Sample.CACHED_RESULTS)
 
@@ -1217,12 +1240,16 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
     else:
         new_sample = handle_file(filename, data, source, method, reference,
                                  related_md5=related_md5, related_id=related_id,
-                                 related_type=related_type, backdoor='', user=user,
-                                 campaign=campaign, confidence=confidence, md5_digest=md5,
+                                 related_type=related_type, backdoor='',
+                                 user=user, campaign=campaign,
+                                 confidence=confidence, md5_digest=md5,
+                                 sha1_digest=sha1, sha256_digest=sha256,
+                                 size=size, mimetype=mimetype,
                                  bucket_list=bucket_list, ticket=ticket,
-                                 inherited_source=inherited_source, is_validate_only=is_validate_only,
-                                 is_return_only_md5=is_return_only_md5, cache=cache,
-                                 backdoor_name=backdoor_name,
+                                 inherited_source=inherited_source,
+                                 is_validate_only=is_validate_only,
+                                 is_return_only_md5=is_return_only_md5,
+                                 cache=cache, backdoor_name=backdoor_name,
                                  backdoor_version=backdoor_version)
 
         if new_sample:
@@ -1280,19 +1307,23 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
 
     samples = handle_uploaded_file(files, source, method, reference,
-                                  file_format=fileformat,
-                                  password=password,
-                                  user=username,
-                                  campaign=campaign,
-                                  confidence=confidence,
-                                  related_md5=related_md5,
-                                  filename=filename,
-                                  md5=md5,
-                                  bucket_list=bucket_list,
-                                  ticket=ticket,
-                                  is_validate_only=is_validate_only,
-                                  is_return_only_md5=False,
-                                  cache=cache)
+                                   file_format=fileformat,
+                                   password=password,
+                                   user=username,
+                                   campaign=campaign,
+                                   confidence=confidence,
+                                   related_md5=related_md5,
+                                   filename=filename,
+                                   md5=md5,
+                                   sha1=sha1,
+                                   sha256=sha256,
+                                   size=size,
+                                   mimetype=mimetype,
+                                   bucket_list=bucket_list,
+                                   ticket=ticket,
+                                   is_validate_only=is_validate_only,
+                                   is_return_only_md5=False,
+                                   cache=cache)
 
     # This block tries to add objects to the item
     if not errors or is_validate_only == True:
