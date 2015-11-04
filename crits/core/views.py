@@ -50,6 +50,7 @@ from crits.core.handlers import generate_favorites_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
 from crits.core.handlers import description_update
 from crits.core.handlers import do_add_preferred_actions, add_new_action
+from crits.core.handlers import do_modify_item_preferred
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_role import UserRole
@@ -1756,7 +1757,7 @@ def modify_item_preferred(request):
     if request.method == 'POST' and request.is_ajax():
         oid = request.POST.get('oid', None)
         analyst = request.user.username
-        if not oid or not type_:
+        if not oid:
             result = {'success': False}
         else:
             result = do_modify_item_preferred(oid, analyst)
