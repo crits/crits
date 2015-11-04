@@ -2259,9 +2259,8 @@ def modify_item_preferred(request):
 
     if request.method == 'POST' and request.is_ajax():
         oid = request.POST.get('oid', None)
-        type_ = request.POST.get('type', None)
         analyst = request.user.username
-        if not oid or not type_:
+        if not oid:
             result = {'success': False}
         else:
             result = do_modify_item_preferred(oid, analyst)
