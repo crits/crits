@@ -53,7 +53,6 @@ from crits.core.handlers import add_role_source, remove_role_source
 from crits.core.handlers import edit_role_description, edit_role_name
 from crits.core.handlers import modify_tlp, description_update
 from crits.core.handlers import do_add_preferred_actions, add_new_action
-from crits.core.handlers import do_modify_item_preferred
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, user_sources
@@ -2245,30 +2244,6 @@ def tlp_modify(request):
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def modify_item_preferred(request):
-    """
-    Toggle an item preferred. Should be an AJAX POST.
-
-    :param request: Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST' and request.is_ajax():
-        oid = request.POST.get('oid', None)
-        analyst = request.user.username
-        if not oid:
-            result = {'success': False}
-        else:
-            result = do_modify_item_preferred(oid, analyst)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
-    else:
-        error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)
