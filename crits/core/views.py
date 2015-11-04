@@ -50,7 +50,6 @@ from crits.core.handlers import generate_favorites_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
 from crits.core.handlers import description_update
 from crits.core.handlers import do_add_preferred_actions, add_new_action
-from crits.core.handlers import do_modify_item_preferred
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_role import UserRole
@@ -1737,30 +1736,6 @@ def toggle_item_active(request):
             result = {'success': False}
         else:
             result = toggle_item_state(type_, oid, analyst)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
-    else:
-        error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def modify_item_preferred(request):
-    """
-    Toggle an item preferred. Should be an AJAX POST.
-
-    :param request: Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST' and request.is_ajax():
-        oid = request.POST.get('oid', None)
-        analyst = request.user.username
-        if not oid:
-            result = {'success': False}
-        else:
-            result = do_modify_item_preferred(oid, analyst)
         return HttpResponse(json.dumps(result), mimetype="application/json")
     else:
         error = "Expected AJAX POST"
