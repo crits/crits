@@ -263,6 +263,26 @@ $(document).ready(function() {
         style:'display:inline',
         submit:'OK'
     });
+
+    // Handle preferred action clicks
+    // XXX: This can be moved to core.js when actions are not indicator
+    // specific.
+    $("#preferred_actions").click(function() {
+        $.ajax({
+            type: "POST",
+            async: false,
+            url: add_preferred_actions,
+            data: {'obj_type': subscription_type, 'obj_id': subscription_id},
+            success: function(data) {
+                if (data.success) {
+                    $("#action_listing_header").show();
+                    $("#action_listing > tbody:last-child").append(data.html);
+                } else {
+                    error_message_dialog('Action Error', data.message);
+                }
+            }
+        });
+    });
     details_copy_id('Indicator');
     toggle_favorite('Indicator');
 }); //document.ready
