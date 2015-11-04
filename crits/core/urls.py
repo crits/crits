@@ -24,6 +24,8 @@ urlpatterns = patterns('',
     (r'^object/sources/(?P<method>\S+)/(?P<obj_type>\S+)/(?P<obj_id>\S+)/$', 'crits.core.views.add_update_source'),
     (r'^source_releasability/$', 'crits.core.views.source_releasability'),
     (r'^tickets/(?P<method>\S+)/(?P<type_>\w+)/(?P<id_>\w+)/$', 'crits.core.views.add_update_ticket'),
+    (r'^preferred_actions/$', 'crits.core.views.add_preferred_actions'),
+
 
     # CRITs Configuration
     (r'^config/$', 'crits.config.views.crits_config'),
@@ -49,6 +51,7 @@ urlpatterns = patterns('',
     (r'^roles/update_name/$', 'crits.core.views.update_role_name'),
     (r'^roles/update_description/$', 'crits.core.views.update_role_description'),
     (r'^get_item_data/$', 'crits.core.views.get_item_data'),
+    (r'^add_action/$', 'crits.core.views.new_action'),
 
     # Default landing page
     (r'^$', 'crits.dashboards.views.dashboard'),

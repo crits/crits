@@ -54,7 +54,7 @@ from crits.emails.email import Email
 from crits.samples.sample import Sample
 from crits.screenshots.screenshot import Screenshot
 from crits.targets.target import Target
-from crits.indicators.indicator import Indicator
+from crits.indicators.indicator import Indicator, IndicatorAction
 
 from crits.core.totp import valid_totp
 
@@ -1239,6 +1239,69 @@ def toggle_item_state(type_, oid, analyst):
     except ValidationError:
         return {'success': False}
 
+def do_add_preferred_actions(obj_type, obj_id, username):
+    """
+    Add all preferred actions to an object.
+
+    :param obj_type: The type of object to update.
+    :type obj_type: str
+    :param obj_id: The ObjectId of the object to update.
+    :type obj_id: str
+    :param username: The user adding the preferred actions.
+    :type username: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str) if failed,
+              "object" (list of dicts) if successful.
+    """
+
+    klass = class_from_type(obj_type)
+    if not klass:
+        return {'success': False, 'message': 'Invalid type'}
+
+    preferred_actions = IndicatorAction.objects(preferred=obj_type)
+    if not preferred_actions:
+        return {'success': False, 'message': 'No preferred actions'}
+
+    sources = user_sources(username)
+    obj = klass.objects(id=obj_id, source__name__in=sources).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object'}
+
+    actions = []
+    now = datetime.datetime.now()
+    # Get preferred actions and add them.
+    for a in preferred_actions:
+        action = {'action_type': a.name,
+                  'active': 'on',
+                  'analyst': username,
+                  'begin_date': now,
+                  'end_date': None,
+                  'performed_date': now,
+                  'reason': 'Preferred action toggle',
+                  'date': now}
+        obj.add_action(action['action_type'],
+                             action['active'],
+                             action['analyst'],
+                             action['begin_date'],
+                             action['end_date'],
+                             action['performed_date'],
+                             action['reason'],
+                             action['date'])
+        actions.append(action)
+
+    # Change status to In Progress if it is currently 'New'
+    if obj.status == 'New':
+        obj.set_status('In Progress')
+
+    try:
+        obj.save(username=username)
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
+    return {'success': True, 'object': actions}
+
+
 def get_item_state(type_, name):
     """
     Get the state of an item.
@@ -2182,6 +2245,7 @@ def build_jtable(jtopts, request):
         "isodate":"'8%'",
         "id":"'4%'",
         "favorite":"'4%'",
+        "actions":"'4%'",
         "size":"'4%'",
         "added":"'8%'",
         "created":"'8%'",
@@ -2260,6 +2324,8 @@ def build_jtable(jtopts, request):
             fdict['display'] = """function (data) { return '<div class="icon-container"><span id="'+data.record.id+'" class="id_copy ui-icon ui-icon-copy"></span></div>';}"""
         if field == "favorite":
             fdict['display'] = """function (data) { return '<div class="icon-container"><span id="'+data.record.id+'" class="favorites_icon_jtable ui-icon ui-icon-star"></span></div>';}"""
+        if field == "actions":
+            fdict['display'] = """function (data) { return '<div class="icon-container"><span data-id="'+data.record.id+'" id="'+data.record.id+'" class="preferred_actions_jtable ui-icon ui-icon-heart"></span></div>';}"""
         if field == "thumb":
             fdict['display'] = """function (data) { return '<img src="%s'+data.record.id+'/thumb/" />';}""" % reverse('crits.screenshots.views.render_screenshot')
         if field == "description" and jtable['title'] == "Screenshots":
@@ -2332,7 +2398,7 @@ def generate_items_jtable(request, itype, option):
         fields = ['name', 'description', 'active', 'id']
         click = "function () {window.parent.$('#new-campaign').click();}"
     elif itype == 'IndicatorAction':
-        fields = ['name', 'active', 'id']
+        fields = ['name', 'active', 'preferred', 'id']
         click = "function () {window.parent.$('#indicator_action_add').click();}"
     elif itype == 'RawDataType':
         fields = ['name', 'active', 'id']
@@ -2376,6 +2442,11 @@ def generate_items_jtable(request, itype, option):
             return '<a id="is_active_' + data.record.id + '" href="#" onclick=\\'javascript:toggleItemActive("%s","'+data.record.id+'");\\'>' + data.record.active + '</a>';
             }
             """ % itype
+        if field['fieldname'].startswith("'name"):
+            field['display'] = """ function (data) {
+            return '<a href="#" onclick=\\'javascript:editAction("'+data.record.name+'");\\'>' + data.record.name + '</a>';
+            }
+            """
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
@@ -4267,3 +4338,28 @@ def modify_tlp(itype, oid, tlp, analyst):
     except ValidationError:
         return {'success': False,
                 'message': "Invalid TLP level."}
+
+def add_new_action(action, preferred, analyst):
+    """
+    Add a new action to CRITs.
+
+    :param action: The action to add to CRITs.
+    :type action: str
+    :param preferred: The TLOs this is preferred for.
+    :type preferred: list
+    :param analyst: The user adding this action.
+    :returns: True, False
+    """
+
+    action = action.strip()
+    idb_action = IndicatorAction.objects(name=action).first()
+    if not idb_action:
+        idb_action = IndicatorAction()
+    idb_action.name = action
+    idb_action.preferred = preferred
+    try:
+        idb_action.save(username=analyst)
+    except ValidationError:
+        return False
+
+    return True

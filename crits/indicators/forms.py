@@ -181,9 +181,21 @@ class UploadIndicatorForm(SourceInForm):
 
 class NewIndicatorActionForm(forms.Form):
     """
-    Django form for adding a new Indicator Action.
+    Django form for adding a new Action.
     """
 
     error_css_class = 'error'
     required_css_class = 'required'
     action = forms.CharField(widget=forms.TextInput, required=True)
+    preferred = forms.MultipleChoiceField(required=False,
+                                          label="Preferred TLOs",
+                                          widget=forms.SelectMultiple,
+                                          help_text="Which TLOs this is a preferred action for.")
+
+    def __init__(self, *args, **kwargs):
+        super(NewIndicatorActionForm, self).__init__(*args, **kwargs)
+
+        # Sort the available TLOs.
+        tlos = [tlo for tlo in settings.CRITS_TYPES.keys()]
+        tlos.sort()
+        self.fields['preferred'].choices = [(tlo, tlo) for tlo in tlos]

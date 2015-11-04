@@ -907,28 +907,6 @@ def set_indicator_attack_type(id_, attack_type, user):
         except ValidationError:
             return {'success': False}
 
-def add_new_indicator_action(action, analyst):
-    """
-    Add a new indicator action to CRITs.
-
-    :param action: The action to add to CRITs.
-    :type action: str
-    :param analyst: The user adding this action.
-    :returns: True, False
-    """
-
-    action = action.strip()
-    try:
-        idb_action = IndicatorAction.objects(name=action).first()
-        if idb_action:
-            return False
-        idb_action = IndicatorAction()
-        idb_action.name = action
-        idb_action.save(username=analyst)
-        return True
-    except ValidationError:
-        return False
-
 def indicator_remove(_id, username):
     """
     Remove an Indicator from CRITs.
