@@ -19,6 +19,7 @@ IP_REF = ""
 IP_SRC = TSRC
 IP_METH = ""
 IPADDR = "127.0.0.1"
+IP_TYPE = IPTypes.IPV4_ADDRESS
 IP_LIST = ["test", "test two"]
 IP_BUCKET = ",".join(IP_LIST)
 IP_TICKET = IP_LIST
@@ -70,11 +71,10 @@ class IPHandlerTests(SimpleTestCase):
         clean_db()
 
     def testIPAdd(self):
-        ip_type_vocab = IPTypes.IPV4_ADDRESS
         data = {
             'source_reference': IP_REF,
             'source': IP_SRC,
-            'ip_type': ip_type_vocab,
+            'ip_type': IP_TYPE,
             'ip': IPADDR,
             'analyst': TUSER_NAME,
             'bucket_list': IP_BUCKET,
@@ -107,11 +107,10 @@ class IPViewTests(SimpleTestCase):
         self.user = CRITsUser.objects(username=TUSER_NAME).first()
         self.user.sources.append(TSRC)
         self.user.save()
-        ip_type_vocab = IPTypes.IPV4_ADDRESS
         data = {
             'source_reference': IP_REF,
             'source': IP_SRC,
-            'ip_type': ip_type_vocab,
+            'ip_type': IP_TYPE,
             'ip': IPADDR,
             'analyst': TUSER_NAME,
             'bucket_list': IP_BUCKET,

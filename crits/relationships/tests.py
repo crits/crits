@@ -13,6 +13,7 @@ TUSER2_PASS = "!@#saasdfasfwefwe?>S<Dd"
 TUSER2_EMAIL = "asdfsaser@example.com"
 TCAMPAIGN1 = "Test_Campaign1"
 TCAMPAIGN2 = "Test_Campaign2"
+TRELATIONSHIP_TYPE = RelationshipTypes.CONNECTED_TO
 TRELATIONSHIP_CONFIDENCE = 'high'
 TRELATIONSHIP_NEW_CONFIDENCE = 'medium'
 TRELATIONSHIP_NEW_REASON = "Because I Said So"
@@ -65,10 +66,9 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
         self.user2 = CRITsUser.objects(username=TUSER2_NAME).first()
         self.campaign1 = Campaign.objects(name=TCAMPAIGN1).first()
         self.campaign2 = Campaign.objects(name=TCAMPAIGN2).first()
-        rel_type_vocab = RelationshipTypes.CONNECTED_TO
         forge_relationship(class_=self.campaign1,
                            right_class=self.campaign2,
-                           rel_type=rel_type_vocab,
+                           rel_type=TRELATIONSHIP_TYPE,
                            user=self.user.username,
                            rel_confidence=TRELATIONSHIP_CONFIDENCE)
     def tearDown(self):
@@ -85,10 +85,9 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
         relationship2 = self.campaign2.relationships[0]
         self.assertEqual(relationship1.rel_reason, "N/A")
         self.assertEqual(relationship2.rel_reason, "N/A")
-        rel_type_vocab = RelationshipTypes.CONNECTED_TO
         update_relationship_reasons(left_class=self.campaign1,
                                     right_class=self.campaign2,
-                                    rel_type=rel_type_vocab,
+                                    rel_type=TRELATIONSHIP_TYPE,
                                     analyst=self.user2.username,
                                     new_reason=TRELATIONSHIP_NEW_REASON)
         campaign1 = Campaign.objects.get(id=self.campaign1.id)
@@ -102,10 +101,9 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
         relationship2 = self.campaign2.relationships[0]
         self.assertEqual(relationship1.rel_confidence, TRELATIONSHIP_CONFIDENCE)
         self.assertEqual(relationship2.rel_confidence, TRELATIONSHIP_CONFIDENCE)
-        rel_type_vocab = RelationshipTypes.CONNECTED_TO
         update_relationship_confidences(left_class=self.campaign1,
                                     right_class=self.campaign2,
-                                    rel_type=rel_type_vocab,
+                                    rel_type=TRELATIONSHIP_TYPE,
                                     analyst=self.user2.username,
                                     new_confidence=TRELATIONSHIP_NEW_CONFIDENCE)
         self.assertEqual(relationship1.rel_confidence, TRELATIONSHIP_NEW_CONFIDENCE)
