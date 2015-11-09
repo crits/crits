@@ -62,7 +62,6 @@ class Command(BaseCommand):
         binaries = ['7z',
                     'mongod',
                     'mongos',
-                    'unrar',
                     'upx']
 
         cmd = "where" if platform.system() == "Windows" else "which"

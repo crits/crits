@@ -8,9 +8,9 @@ from crits.core.handlers import get_source_names, get_item_names
 from crits.backdoors.handlers import get_backdoor_names
 from crits.core.user_tools import get_user_organization
 
-class UnrarSampleForm(forms.Form):
+class UnzipSampleForm(forms.Form):
     """
-    Django form to handle unraring a sample.
+    Django form to handle unziping a sample.
     """
 
     error_css_class = 'error'
