@@ -65,10 +65,10 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
         self.user2 = CRITsUser.objects(username=TUSER2_NAME).first()
         self.campaign1 = Campaign.objects(name=TCAMPAIGN1).first()
         self.campaign2 = Campaign.objects(name=TCAMPAIGN2).first()
-        forge_relationship(left_class=self.campaign1,
+        forge_relationship(class_=self.campaign1,
                            right_class=self.campaign2,
                            rel_type=TRELATIONSHIP_TYPE,
-                           analyst=self.user.username,
+                           user=self.user.username,
                            rel_confidence=TRELATIONSHIP_CONFIDENCE)
     def tearDown(self):
         clean_db()

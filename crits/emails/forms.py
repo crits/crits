@@ -43,6 +43,8 @@ class EmailOutlookForm(forms.Form):
                                              ("low", "low"),
                                              ("medium", "medium"),
                                              ("high", "high")]
+        add_bucketlist_to_form(self)
+        add_ticket_to_form(self)
 
 class EmailYAMLForm(forms.Form):
     """
@@ -76,6 +78,8 @@ class EmailYAMLForm(forms.Form):
                                              ("low", "low"),
                                              ("medium", "medium"),
                                              ("high", "high")]
+        add_bucketlist_to_form(self)
+        add_ticket_to_form(self)
 
 class EmailEMLForm(forms.Form):
     """
@@ -108,6 +112,8 @@ class EmailEMLForm(forms.Form):
                                              ("low", "low"),
                                              ("medium", "medium"),
                                              ("high", "high")]
+        add_bucketlist_to_form(self)
+        add_ticket_to_form(self)
 
 class EmailRawUploadForm(forms.Form):
     """
@@ -140,6 +146,8 @@ class EmailRawUploadForm(forms.Form):
                                              ("low", "low"),
                                              ("medium", "medium"),
                                              ("high", "high")]
+        add_bucketlist_to_form(self)
+        add_ticket_to_form(self)
 
 class EmailUploadForm(forms.Form):
     """

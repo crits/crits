@@ -4,7 +4,6 @@ function updateObjectSource(value, settings, elem, update) {
         var data = {
             coll: $(guardian).attr('coll'),
             oid: $(guardian).attr('oid'),
-            name: $(guardian).attr('name'),
             type: $(guardian).attr('type'),
             value: $(guardian).attr('vvalue'),
         };
@@ -28,17 +27,13 @@ function updateObjectSource(value, settings, elem, update) {
         });
         return value;
 }
-function getAllObjectTypes(sel, filter) {
+
+function getAllObjectTypes(sel) {
     if (typeof(obj_types_url) != "undefined") {
         var return_data = {};
-        data = {};
-    //        if (filter && $.isPlainObject(filter)) { data = {'query': filter}; }
-        if (filter) { data = {'query': filter}; }
-        data['all'] = true;
         $.ajax({
             type: "POST",
             url: obj_types_url, //defined in base.html
-            data: data,
             async: false,
             datatype: 'json',
             success: function(data) {
@@ -51,20 +46,12 @@ function getAllObjectTypes(sel, filter) {
                         sorted.push(key);
                     });
                     sorted.sort();
+
                     $.each(sorted, function(index, value) {
-                        var details = data.types[value];
-                        var dkey;
-                        var dvalue;
-                        $.each(details[1], function(key, value) {
-                            dkey = key;
-                            dvalue = value;
-                            //should be only one key/value pair, so we can immediately return false to stop iterating
-                            return false;
-                        });
                         if (sel) {
-                            sel.append('<option value="'+details[0]+'" datatype="'+dkey+'" datatype_value="'+dvalue+'">'+details[0]+'</option>');
+                            sel.append('<option value="'+value+'">'+value+'</option>');
                         } else {
-                            return_data[details[0]] = details[0];
+                            return_data[value] = value;
                         }
                     });
                 }
@@ -85,6 +72,8 @@ function add_object_submit(e) {
     dialog = elem.closest("td");  // Not a dialog, but needed to find message box below
     form = $("#form-add-object-static");
     }
+    var csrftoken = readCookie('csrftoken');
+    form.append("<input type='hidden' name='csrfmiddlewaretoken' value='" + csrftoken + "'>");
 
     // log(elem);
     // log(form);
@@ -92,8 +81,8 @@ function add_object_submit(e) {
     form.find("#id_oid").val(my_id);
     form.find("#id_otype").val(my_type);
     var target = form.find('option:selected');
-    var value_type = target.attr('datatype');
-    if (value_type === "file") {
+    var value_type = target.val();
+    if (value_type === "File Upload") {
     form.submit();
     } else {
         e.preventDefault();
@@ -124,39 +113,6 @@ function add_object_submit(e) {
     }
 }
 
-function add_more_object_types_button(form,filter) {
-    var newButton = $('<button class="more_object_types">More</button>');
-
-    var type_fields = form.find(".object-types");
-    // Check if next item is a More button already and don't add a second one..
-    if (type_fields.length) {
-    var elem = type_fields.first();  // Doubt we'll have more than one in same form? else $.each here..
-    if (elem.next("button.more_object_types").length == 0) {
-        newButton.click(function(e) {
-            more_object_types(e, elem, filter);
-        })
-        .insertAfter(elem);
-    }
-    }
-
-    form.find("button.more_object_types").attr('disabled', false).removeClass('ui-state-disabled');
-    form.find(".object-types").change();
-}
-
-function more_object_types(e,field,filter) {
-    e.preventDefault();
-
-    if (typeof field !== "object") {
-    field = $(e.currentTarget).closest("form").find(field);
-    }
-    getAllObjectTypes(field, filter);
-    field.change(); // trigger the onchange
-
-    // button.more_object_types
-    // An alternative to disabling might be to turn it into a "Less" button instead?
-    $(e.currentTarget).attr('disabled', true).addClass('ui-state-disabled');
-}
-
 function change_object_type_field(e) {
     var elem = $(e.currentTarget);
     var dialog = elem.closest(".ui-dialog");
@@ -168,25 +124,14 @@ function change_object_type_field(e) {
     var value_field = $(form).find('#id_value');
     var indicator_field = $(form).find('#id_add_indicator');
     var target = elem.find('option:selected');
-    var value_type = target.attr('datatype');
-    var value_val = target.attr('datatype_value');
+    var value_val = target.val();
     var new_value_field;
 
-    if (value_type == "bigstring") {
-        new_value_field = $('<textarea name="value" rows="4" cols="28" id="id_value" />');
-        indicator_field.removeAttr("disabled");
-    } else if (value_type == "enum") {
-        var sel = $('<select name="value" id="id_value"></select>');
-        $.each(value_val.split(','), function(idx, val) {
-            sel.append('<option name="value" value="'+val+'">'+val+'</option>');
-        });
-        new_value_field = sel;
-        indicator_field.removeAttr("disabled");
-    } else if (value_type == "file") {
+    if (value_val == "File Upload") {
         new_value_field = $('<input type="file" name="value" id="id_value">');
         indicator_field.attr("disabled", true);
     } else { //assume "string"
-        new_value_field = $('<input type="text" name="value" id="id_value" />');
+        new_value_field = $('<textarea name="value" rows="4" cols="28" id="id_value" />');
         indicator_field.removeAttr("disabled");
     }
     value_field.replaceWith(new_value_field);
@@ -232,18 +177,10 @@ function object_indicator_duplicate_crosscheck() {
 
     $('table[name=object_listing_table] tbody tr').each(function() {
         var obj_value = $(this).attr('vvalue')
-        var obj_short_type = $(this).attr('type')
-        var obj_name = $(this).attr('name')
-        var obj_full_type = null
+        var obj_type = $(this).attr('type')
 
-        if(obj_short_type === obj_name) {
-            obj_full_type = obj_short_type
-        } else {
-            obj_full_type = obj_short_type + ' - ' + obj_name
-        }
-
-        if(obj_full_type in textTypeValueSet) {
-            if(obj_value in textTypeValueSet[obj_full_type]) {
+        if(obj_type in textTypeValueSet) {
+            if(obj_value in textTypeValueSet[obj_type]) {
                 var iconNode = $(this).find('.indicator_from_object')
                 var originalTitle = $(iconNode).prop('title')
                 $(iconNode).removeClass('ui-icon-plusthick').addClass('ui-icon-circle-plus')
@@ -268,8 +205,6 @@ function add_object_dialog(e) {
     var form = dialog.find("form");
 
     file_upload_dialog(e);
-
-    add_more_object_types_button(form);
 }
 
 $(document).ready(function() {
@@ -352,7 +287,6 @@ $(document).ready(function() {
         var data = {
             coll: $(guardian).attr('coll'),
             oid: $(guardian).attr('oid'),
-            name: $(guardian).attr('name'),
             type: $(guardian).attr('type'),
             value: $(guardian).attr('vvalue'),
             new_value: value,

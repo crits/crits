@@ -100,7 +100,8 @@ class Command(BaseCommand):
            total_max:\t\t\t<integer>
            totp_cli:\t\t\t<string> (ex: Disabled, Required, Optional)
            totp_web:\t\t\t<string> (ex: Disabled, Required, Optional)
-           zip7_path:\t\t\t<full file path>"""
+           zip7_path:\t\t\t<full file path>
+           zip7_password:\t\t\t<string> (ex: infected)"""
     help = 'Set a CRITs configuration option.'
 
     def handle(self, *args, **options):

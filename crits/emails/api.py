@@ -70,6 +70,8 @@ class EmailResource(CRITsAPIResource):
         reference = bundle.data.get('reference', None)
         campaign = bundle.data.get('campaign', None)
         confidence = bundle.data.get('confidence', None)
+        bucket_list = bundle.data.get('bucket_list', None)
+        ticket = bundle.data.get('ticket', None)
 
         if method:
             method = " - " + method
@@ -82,7 +84,7 @@ class EmailResource(CRITsAPIResource):
             filedata = file_.read()
             result = handle_eml(filedata, source, reference,
                                 analyst, 'EML Upload' + method, campaign,
-                                confidence)
+                                confidence, bucket_list=bucket_list, ticket=ticket)
         if type_ == 'msg':
             raw_email = bundle.data.get('filedata', None)
             password = bundle.data.get('password', None)
@@ -93,7 +95,9 @@ class EmailResource(CRITsAPIResource):
                                 'Outlook MSG Upload' + method,
                                 password,
                                 campaign,
-                                confidence)
+                                confidence,
+                                bucket_list=bucket_list,
+                                ticket=ticket)
         if type_ == 'raw':
             raw_email = bundle.data.get('filedata', None)
             result = handle_pasted_eml(raw_email,
@@ -102,7 +106,9 @@ class EmailResource(CRITsAPIResource):
                                        analyst,
                                        'Raw Upload' + method,
                                        campaign,
-                                       confidence)
+                                       confidence,
+                                       bucket_list=bucket_list,
+                                       ticket=ticket)
         if type_ == 'yaml':
             yaml_data = bundle.data.get('filedata', None)
             email_id = bundle.data.get('email_id', None)
@@ -115,7 +121,9 @@ class EmailResource(CRITsAPIResource):
                                  email_id,
                                  save_unsupported,
                                  campaign,
-                                 confidence)
+                                 confidence,
+                                 bucket_list=bucket_list,
+                                 ticket=ticket)
         if type_ == 'fields':
             fields = bundle.data
             # Strip these so they don't get put in unsupported_attrs.
@@ -130,7 +138,7 @@ class EmailResource(CRITsAPIResource):
         if result.get('reason'):
             content['message'] += result.get('reason')
         if result.get('obj_id'):
-            content['id'] = result.get('obj_id', '')
+            content['id'] = str(result.get('obj_id', ''))
         elif result.get('object'):
             content['id'] = str(result.get('object').id)
         if content.get('id'):

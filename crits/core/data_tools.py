@@ -70,7 +70,8 @@ def create_zip(files, pw_protect=True):
     Create a zip file. Creates a temporary directory to write files to on disk
     using :class:`tempfile`. Uses /usr/bin/zip as the zipping mechanism
     currently. Will password protect the zip file as a default. The password for
-    the zip file is hard-coded to be "infected".
+    the zip file defaults to "infected", but it can be changed in the config 
+    under zip7_password.
 
     :param files: The files to add to the zip file.
     :type files: list of files which are in the format of a list or tuple of
@@ -89,6 +90,12 @@ def create_zip(files, pw_protect=True):
         # Save the sample as a file in a temp directory
         # NOTE: the following line was causing a "permission denied" exception.
         # Removed dir arg.
+        from crits.config.config import CRITsConfig
+        crits_config = CRITsConfig.objects().first()
+        if crits_config:
+            zip7_password = crits_config.zip7_password
+        else:
+            zip7_password = settings.ZIP7_PASSWORD
         dumpdir = tempfile.mkdtemp() #dir=temproot
         #write out binary files
         for f in files:
@@ -115,7 +122,7 @@ def create_zip(files, pw_protect=True):
         zipname = "zip.zip" #The name we give it doesn't really matter
         args = ["/usr/bin/zip", "-r", "-j", dumpdir+"/"+zipname, dumpdir]
         if pw_protect:
-            args += ["-P", "infected"]
+            args += ["-P", zip7_password]
         args += [dumpdir+"/"+zipname, dumpdir]
 
         proc = subprocess.Popen(args,
@@ -234,7 +241,7 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
     :param obj_id: The ObjectId to search for.
     :type obj_id: str
     :param data_format: The format of the returned data.
-    :type data_format: str of "yaml", "json", or "cybox".
+    :type data_format: str of "yaml" or "json"
     :param cleanse: Remove "to", "actions", "releasability", and "bucket_list"
                     if this is an Email or Indicator.
     :type cleanse: boolean
@@ -323,9 +330,6 @@ def format_object(obj_type, obj_id, data_format="yaml", cleanse=True,
         data = yaml.dump(yaml.load(data), default_flow_style=False)
     elif data_format == "json":
         data = json.dumps(json.loads(data))
-    elif data_format == "cybox":
-        if hasattr(obj_class, "to_cybox_observable"):
-            data = obj_class.to_cybox_observable()[0][0].to_xml()
 
     return data
 
@@ -585,7 +589,7 @@ def generate_qrcode(data, size):
     """
     Generate a QR Code Image from a string.
 
-    Will attempt to import qrcode (which also requires Pillow) and StringIO. If
+    Will attempt to import qrcode (which also requires Pillow) and io. If
     this fails we will return None.
 
     :param data: data to be converted into a QR Code
@@ -596,10 +600,10 @@ def generate_qrcode(data, size):
     """
 
     try:
-        import qrcode, StringIO
+        import qrcode, io
     except:
         return None
-    a = StringIO.StringIO()
+    a = io.BytesIO()
     qr = qrcode.QRCode()
     qr.add_data(data)
     img = qr.make_image().resize(size)
@@ -620,6 +624,36 @@ def validate_md5_checksum(md5_checksum):
 
     if re.match("^[a-fA-F0-9]{32}$", md5_checksum) == None:
         retVal['message'] += "The MD5 digest needs to be 32 hex characters."
+        retVal['success'] = False
+
+    return retVal
+
+def validate_sha1_checksum(sha1_checksum):
+    """
+    Validates that string is truly a SHA1.
+    :param sha1_checksum: str
+    :return: dict with keys "success" (boolean) and "message" (str)
+    """
+    retVal = {'success': True, 'message': ''}
+
+    if re.match("^[a-fA-F0-9]{40}$", sha1_checksum) == None:
+        retVal['message'] += "The SHA1 digest needs to be 40 hex characters."
+        retVal['success'] = False
+
+    return retVal
+
+def validate_sha256_checksum(sha256_checksum):
+    """
+    Validates that string is truly a SHA256.
+
+    :param sha256_checksum: The string to validate.
+    :type sha256_checksum: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+    retVal = {'success': True, 'message': ''}
+
+    if re.match("^[a-fA-F0-9]{64}$", sha256_checksum) == None:
+        retVal['message'] += "The SHA256 digest needs to be 64 hex characters."
         retVal['success'] = False
 
     return retVal

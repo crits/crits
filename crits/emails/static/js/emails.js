@@ -67,7 +67,8 @@ $(document).ready(function(){
     $(".create-indicator").off().click(function(event) {
         var me = $(this);
         data = {
-            'type': $(this).attr('type'),
+            'type': $(this).attr('data-type'),
+            'field': $(this).attr('data-field'),
         };
 
         // Might be nicer if this was a spinning icon, but working with what we have handy
@@ -118,17 +119,6 @@ $(document).ready(function(){
             dataType: "json",
             success: function(data) {
                 $("#yaml_display").val(data.email_yaml);
-            }
-        });
-    });
-    $("#cybox_button").click(function(event) {
-        event.preventDefault()
-        $.ajax({
-            type: "POST",
-            url: get_email_cybox,
-            dataType: "json",
-            success: function(data) {
-                $("#cybox_display").val(data);
             }
         });
     });

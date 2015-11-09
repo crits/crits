@@ -29,57 +29,33 @@ def get_relationships(obj=None, type_=None, id_=None, analyst=None):
     else:
         return {}
 
-def get_relationship_types(active=True):
-    """
-    Get relationship types available in the database.
-
-    :param active: Only get active relationship types.
-    :type active: bool
-    :returns: list
-    """
-
-    from crits.core.crits_mongoengine import RelationshipType
-    if active:
-        result = RelationshipType.objects(active="on")
-    else:
-        result = RelationshipType.objects()
-    relationship_types = []
-    for r in result:
-        if r.forward != r.reverse:
-            relationship_types.append(r.forward)
-            relationship_types.append(r.reverse)
-        else:
-            relationship_types.append(r.forward)
-    relationship_types.sort()
-    return relationship_types
-
-def forge_relationship(left_class=None, right_class=None,
-                       left_type=None, left_id=None,
-                       right_type=None, right_id=None,
+def forge_relationship(type_=None, id_=None,
+                       class_=None, right_type=None,
+                       right_id=None, right_class=None,
                        rel_type=None, rel_date=None,
-                       analyst=None, rel_reason="N/A",
-                       rel_confidence='unknown', get_rels=False):
+                       user=None, rel_reason="N/A",
+                       rel_confidence='unknown', get_rels=False, **kwargs):
     """
     Forge a relationship between two top-level objects.
 
-    :param left_class: The first top-level object to relate to.
-    :type left_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-    :param right_class: The second top-level object to relate to.
-    :type right_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-    :param left_type: The type of first top-level object to relate to.
-    :type left_type: str
-    :param left_id: The ObjectId of the first top-level object.
-    :type left_id: str
+    :param type_: The type of first top-level object to relate to.
+    :type type_: str
+    :param id_: The ObjectId of the first top-level object.
+    :type id_: str
+    :param class_: The first top-level object to relate to.
+    :type class_: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     :param right_type: The type of second top-level object to relate to.
     :type right_type: str
     :param right_id: The ObjectId of the second top-level object.
     :type right_id: str
+    :param right_class: The second top-level object to relate to.
+    :type right_class: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     :param rel_type: The type of relationship.
     :type rel_type: str
     :param rel_date: The date this relationship applies.
     :type rel_date: datetime.datetime
-    :param analyst: The user forging this relationship.
-    :type analyst: str
+    :param user: The user forging this relationship.
+    :type user: str
     :param rel_reason: The reason for the relationship.
     :type rel_reason: str
     :param rel_confidence: The confidence of the relationship.
@@ -97,34 +73,37 @@ def forge_relationship(left_class=None, right_class=None,
     elif not isinstance(rel_date, datetime.datetime):
         rel_date = None
 
-    if not left_class:
-        if left_type and left_id:
-            left_class = class_from_id(left_type, left_id)
-            if not left_class:
+    if not class_:
+        if type_ and id_:
+            class_ = class_from_id(type_, id_)
+            if not class_:
                 return {'success': False,
-                        'message': "Unable to get object."}
+                        'message': "Unable to get left object."}
         else:
             return {'success': False,
                     'message': "Need a valid left type and id"}
     try:
         # forge relationship
         if right_class:
-            results = left_class.add_relationship(right_class,
+            results = class_.add_relationship(right_class,
                                         rel_type,
                                         rel_date=rel_date,
-                                        analyst=analyst,
+                                        analyst=user,
                                         rel_confidence=rel_confidence,
                                         rel_reason=rel_reason)
         else:
             if right_type and right_id:
                 rel_item = class_from_id(right_type, right_id)
                 if rel_item:
-                    results = left_class.add_relationship(rel_item,
+                    results = class_.add_relationship(rel_item,
                                                 rel_type,
                                                 rel_date=rel_date,
-                                                analyst=analyst,
+                                                analyst=user,
                                                 rel_confidence=rel_confidence,
                                                 rel_reason=rel_reason)
+                else:
+                    return {'success': False,
+                            'message': "Failed to get right object"}
             else:
                 return {'success': False,
                         'message': "Need a valid right type and id"}
@@ -132,10 +111,10 @@ def forge_relationship(left_class=None, right_class=None,
         return {'success': False, 'message': e}
 
     if results['success']:
-        left_class.save(username=analyst)
-        left_class.reload()
+        class_.save(username=user)
+        class_.reload()
         if get_rels:
-            results['relationships'] = left_class.sort_relationships("%s" % analyst, meta=True)
+            results['relationships'] = class_.sort_relationships("%s" % user, meta=True)
     return results
 
 def delete_all_relationships(left_class=None, left_type=None,

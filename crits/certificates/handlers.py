@@ -7,7 +7,6 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from mongoengine.base import ValidationError
 
 from crits.core.class_mapper import class_from_id, class_from_value
 from crits.core.crits_mongoengine import EmbeddedSource
@@ -20,6 +19,8 @@ from crits.certificates.certificate import Certificate
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import run_triage, get_supported_services
+
+from crits.vocabulary.relationships import RelationshipTypes
 
 
 def generate_cert_csv(request):
@@ -326,7 +327,7 @@ def handle_cert_file(filename, data, source_name, user=None,
     # update relationship if a related top-level object is supplied
     if related_obj and cert:
         if not relationship:
-            relationship = "Related_To"
+            relationship = RelationshipTypes.RELATED_TO
         cert.add_relationship(related_obj,
                               relationship,
                               analyst=user,

@@ -17,6 +17,8 @@ from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
 
+from crits.vocabulary.relationships import RelationshipTypes
+
 def generate_backdoor_csv(request):
     """
     Generate a CSV file of the Backdoor information
@@ -310,7 +312,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
 
     # If we have a family and specific object, attempt to relate the two.
     if len(objs) == 2:
-        objs[0].add_relationship(objs[1], 'Related_To')
+        objs[0].add_relationship(objs[1], RelationshipTypes.RELATED_TO)
         objs[0].save()
 
     retVal['success'] = True

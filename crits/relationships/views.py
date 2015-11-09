@@ -8,9 +8,10 @@ from django.template import RequestContext
 
 from crits.core.user_tools import user_can_view_data
 from crits.relationships.forms import ForgeRelationshipForm
-from crits.relationships.handlers import get_relationship_types
 from crits.relationships.handlers import forge_relationship, update_relationship_dates, update_relationship_confidences
 from crits.relationships.handlers import update_relationship_types, delete_relationship, update_relationship_reasons
+
+from crits.vocabulary.relationships import RelationshipTypes
 
 @user_passes_test(user_can_view_data)
 def add_new_relationship(request):
@@ -24,17 +25,17 @@ def add_new_relationship(request):
 
     if request.method == 'POST' and request.is_ajax():
         form = ForgeRelationshipForm(request.POST)
-        choices = [(c,c) for c in get_relationship_types(False)]
+        choices = [(c,c) for c in RelationshipTypes.values(sort=True)]
         form.fields['forward_relationship'].choices = choices
         if form.is_valid():
             cleaned_data = form.cleaned_data;
-            results = forge_relationship(left_type=cleaned_data.get('forward_type'),
-                                         left_id=cleaned_data.get('forward_value'),
+            results = forge_relationship(type_=cleaned_data.get('forward_type'),
+                                         id_=cleaned_data.get('forward_value'),
                                          right_type=cleaned_data.get('reverse_type'),
                                          right_id=cleaned_data.get('dest_id'),
                                          rel_type=cleaned_data.get('forward_relationship'),
                                          rel_date=cleaned_data.get('relationship_date'),
-                                         analyst=request.user.username,
+                                         user=request.user.username,
                                          rel_reason=cleaned_data.get('rel_reason'),
                                          rel_confidence=cleaned_data.get('rel_confidence'),
                                          get_rels=True)
@@ -246,14 +247,9 @@ def get_relationship_type_dropdown(request):
 
     if request.method == 'POST':
         if request.is_ajax():
-            dd_types = ""
-            if 'all' in request.POST:
-                dd_types = get_relationship_types(False)
-            else:
-                dd_types = get_relationship_types()
             dd_final = {}
-            for type in dd_types:
-                dd_final[type] = type
+            for type_ in RelationshipTypes.values(sort=True):
+                dd_final[type_] = type_
             result = {'types': dd_final}
             return HttpResponse(json.dumps(result), mimetype="application/json")
         else:

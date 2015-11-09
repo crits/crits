@@ -223,7 +223,8 @@ SESSION_TIMEOUT =       int(crits_config.get('session_timeout', 12)) * 60 * 60
 SPLUNK_SEARCH_URL =         crits_config.get('splunk_search_url', None)
 TEMP_DIR =                  crits_config.get('temp_dir', '/tmp')
 TIME_ZONE =                 crits_config.get('timezone', 'America/New_York')
-ZIP7_PATH =                 crits_config.get('zip7_path', '/usr/bin/7za')
+ZIP7_PATH =                 crits_config.get('zip7_path', '/usr/bin/7z')
+ZIP7_PASSWORD =             crits_config.get('zip7_password', 'infected')
 REMOTE_USER =               crits_config.get('remote_user', False)
 PASSWORD_COMPLEXITY_REGEX = crits_config.get('password_complexity_regex', '(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$')
 PASSWORD_COMPLEXITY_DESC =  crits_config.get('password_complexity_desc', '8 characters, at least 1 capital, 1 lowercase and 1 number/special')
@@ -336,9 +337,16 @@ TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, 'samples/templates'),
     os.path.join(SITE_ROOT, 'screenshots/templates'),
     os.path.join(SITE_ROOT, 'services/templates'),
-    os.path.join(SITE_ROOT, 'standards/templates'),
     os.path.join(SITE_ROOT, 'stats/templates'),
     os.path.join(SITE_ROOT, 'targets/templates'),
+    os.path.join(SITE_ROOT, 'core/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'campaigns/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'comments/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'locations/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'objects/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'raw_data/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'relationships/templates/dialogs'),
+    os.path.join(SITE_ROOT, 'screenshots/templates/dialogs'),
 )
 
 STATICFILES_DIRS = (
@@ -511,10 +519,15 @@ for service_directory in SERVICE_DIRS:
                 TEMPLATE_DIRS = TEMPLATE_DIRS + (abs_path,)
                 nav_items = os.path.join(abs_path, '%s_nav_items.html' % d)
                 cp_items = os.path.join(abs_path, '%s_cp_items.html' % d)
+                view_items = os.path.join(service_directory, d, 'views.py')
                 if os.path.isfile(nav_items):
                     SERVICE_NAV_TEMPLATES = SERVICE_NAV_TEMPLATES + ('%s_nav_items.html' % d,)
                 if os.path.isfile(cp_items):
                     SERVICE_CP_TEMPLATES = SERVICE_CP_TEMPLATES + ('%s_cp_items.html' % d,)
+                if os.path.isfile(view_items):
+                    if '%s_context' % d in open(view_items).read():
+                        context_module = '%s.views.%s_context' % (d, d)
+                        TEMPLATE_CONTEXT_PROCESSORS = TEMPLATE_CONTEXT_PROCESSORS + (context_module,)
                 for tab_temp in glob.glob('%s/*_tab.html' % abs_path):
                     head, tail = os.path.split(tab_temp)
                     ctype = tail.split('_')[-2]

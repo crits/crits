@@ -13,10 +13,12 @@ from crits.core.user_tools import user_can_view_data, user_is_admin
 from crits.events.forms import EventForm
 from crits.events.handlers import event_remove
 from crits.events.handlers import update_event_title, update_event_type
-from crits.events.handlers import get_event_types, get_event_details
+from crits.events.handlers import get_event_details
 from crits.events.handlers import generate_event_jtable, add_sample_for_event
 from crits.events.handlers import generate_event_csv, add_new_event
 from crits.samples.forms import UploadFileForm
+
+from crits.vocabulary.events import EventTypes
 
 
 @user_passes_test(user_can_view_data)
@@ -239,23 +241,13 @@ def get_event_type_dropdown(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if request.method == 'POST':
-        if request.is_ajax():
-            e_types = ""
-            if 'all' in request.POST:
-                e_types = get_event_types(False)
-            else:
-                e_types = get_event_types()
-            result = {'types': e_types}
-            return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
-        else:
-            error = "Expected AJAX"
-            return render_to_response("error.html",
-                                      {"error": error},
-                                      RequestContext(request))
+    if request.is_ajax():
+        e_types = EventTypes.values(sort=True)
+        result = {'types': e_types}
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
     else:
-        error = "Expected POST"
+        error = "Expected AJAX"
         return render_to_response("error.html",
-                                  {"error": error},
-                                  RequestContext(request))
+                                    {"error": error},
+                                    RequestContext(request))

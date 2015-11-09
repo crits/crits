@@ -3,6 +3,7 @@ import re
 import string
 
 from crits.indicators.handlers import does_indicator_relationship_exist
+from crits.vocabulary.indicators import IndicatorTypes
 
 from django import template
 from django.template.defaultfilters import stringfilter
@@ -73,8 +74,8 @@ def does_field_have_indicator(field, relationships):
 
     return return_value
 
-@register.filter
-def type(value):
+@register.filter(name="type")
+def typeOf(value):
     """
     Get the type of value.
 
@@ -83,7 +84,7 @@ def type(value):
     :returns: str
     """
 
-    return type(value)
+    return str(type(value))
 
 @register.filter
 def nicify(value):
@@ -166,7 +167,7 @@ def to_dict(obj):
 def absVal(value):
     """
     return absolute value
-    
+
     :param value: the int to get the absolute value of
     :type value: int
     :returns: int
@@ -185,3 +186,18 @@ def is_object_id_equal(obj1, obj2):
     if "id" in obj2:
         obj2 = obj2.id
     return str(obj1) == str(obj2)
+
+@register.filter
+def is_indicator_type(value):
+    """
+    Returns True if the value is a valid Indicator Type.
+
+    :param value: The string to validate as an Indicator Type.
+    :type value: str
+    :returns: bool
+    """
+
+    if value in IndicatorTypes.values():
+        return True
+    else:
+        return False

@@ -14,7 +14,7 @@ from crits.emails.email import Email
 from crits.emails.forms import EmailYAMLForm, EmailOutlookForm
 from crits.emails.forms import EmailEMLForm, EmailUploadForm, EmailRawUploadForm
 from crits.emails.handlers import handle_email_fields, handle_yaml
-from crits.emails.handlers import handle_eml, generate_email_cybox, handle_msg
+from crits.emails.handlers import handle_eml, handle_msg
 from crits.emails.handlers import update_email_header_value, handle_pasted_eml
 from crits.emails.handlers import get_email_detail, generate_email_jtable
 from crits.emails.handlers import generate_email_csv
@@ -254,7 +254,9 @@ def email_yaml_add(request, email_id=None):
                       email_id=email_id,
                       save_unsupported=yaml_form.cleaned_data['save_unsupported'],
                       campaign=yaml_form.cleaned_data['campaign'],
-                      confidence=yaml_form.cleaned_data['campaign_confidence'])
+                      confidence=yaml_form.cleaned_data['campaign_confidence'],
+                      bucket_list=yaml_form.cleaned_data['bucket_list'],
+                      ticket=yaml_form.cleaned_data['ticket'])
     if not obj['status']:
         if request.is_ajax():
             json_reply['message'] = obj['reason']
@@ -316,7 +318,9 @@ def email_raw_add(request):
                     request.user.username,
                     method,
                     campaign=fields_form.cleaned_data['campaign'],
-                    confidence=fields_form.cleaned_data['campaign_confidence'])
+                    confidence=fields_form.cleaned_data['campaign_confidence'],
+                    bucket_list=fields_form.cleaned_data['bucket_list'],
+                    ticket=fields_form.cleaned_data['ticket'])
     if not obj['status']:
         if request.is_ajax():
             json_reply['message'] = obj['reason']
@@ -374,7 +378,9 @@ def email_eml_add(request):
                      request.user.username,
                      method,
                      campaign=eml_form.cleaned_data['campaign'],
-                     confidence=eml_form.cleaned_data['campaign_confidence'])
+                     confidence=eml_form.cleaned_data['campaign_confidence'],
+                     bucket_list=eml_form.cleaned_data['bucket_list'],
+                     ticket=eml_form.cleaned_data['ticket'])
     if not obj['status']:
         json_reply['message'] = obj['reason']
         return render_to_response('file_upload_response.html',
@@ -423,6 +429,8 @@ def email_outlook_add(request):
     password = outlook_form.cleaned_data['password']
     campaign = outlook_form.cleaned_data['campaign']
     campaign_confidence = outlook_form.cleaned_data['campaign_confidence']
+    bucket_list = outlook_form.cleaned_data['bucket_list']
+    ticket = outlook_form.cleaned_data['ticket']
 
     result = handle_msg(request.FILES['msg_file'],
                         source,
@@ -431,7 +439,9 @@ def email_outlook_add(request):
                         method,
                         password,
                         campaign,
-                        campaign_confidence)
+                        campaign_confidence,
+                        bucket_list,
+                        ticket)
 
     json_reply['success'] = result['status']
     if not result['status']:
@@ -481,7 +491,8 @@ def indicator_from_header_field(request, email_id):
 
     if request.method == "POST" and request.is_ajax():
         if 'type' in request.POST:
-            header_field = request.POST['type']
+            header_field = request.POST.get('field')
+            header_type = request.POST.get('type')
             analyst = request.user.username
             sources = user_sources(analyst)
             email = Email.objects(id=email_id,
@@ -492,15 +503,9 @@ def indicator_from_header_field(request, email_id):
                     'message':  "Could not find email."
                 }
             else:
-                if header_field in ("from_address, sender, reply_to"):
-                    ind_type = "Address - e-mail"
-                elif header_field in ("originating_ip", "x_originating_ip"):
-                    ind_type = "Address - ipv4-addr"
-                else:
-                    ind_type = "String"
                 result = create_indicator_from_header_field(email,
                                                             header_field,
-                                                            ind_type,
+                                                            header_type,
                                                             analyst,
                                                             request)
         else:
@@ -509,27 +514,6 @@ def indicator_from_header_field(request, email_id):
                 'message':  "Type is a required value."
             }
         return HttpResponse(json.dumps(result), mimetype="application/json")
-    else:
-        return render_to_response('error.html',
-                                  {'error': "Expected AJAX POST"},
-                                  RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def get_email_cybox(request, email_id):
-    """
-    Get a CybOX representation of an email. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param email_id: The ObjectId of the email to get.
-    :type email_id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        cybox = generate_email_cybox(email_id)
-        return HttpResponse(json.dumps(cybox.to_xml()),
-                            mimetype="application/json")
     else:
         return render_to_response('error.html',
                                   {'error': "Expected AJAX POST"},

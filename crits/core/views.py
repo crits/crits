@@ -14,8 +14,6 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
-from crits.actors.actor import ActorIntendedEffect, ActorMotivation
-from crits.actors.actor import ActorSophistication, ActorThreatType
 from crits.actors.actor import ActorThreatIdentifier
 from crits.actors.forms import AddActorForm, AddActorIdentifierTypeForm
 from crits.actors.forms import AddActorIdentifierForm, AttributeIdentifierForm
@@ -25,7 +23,6 @@ from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
 from crits.comments.forms import AddCommentForm, InlineCommentForm
 from crits.config.config import CRITsConfig
-from crits.core.crits_mongoengine import RelationshipType
 from crits.core.data_tools import json_handler
 from crits.core.forms import SourceAccessForm, AddSourceForm, AddUserRoleForm
 from crits.core.forms import SourceForm, DownloadFileForm, AddReleasabilityForm
@@ -36,7 +33,7 @@ from crits.core.handlers import add_new_source, generate_counts_jtable
 from crits.core.handlers import source_add_update, source_remove, source_remove_all
 from crits.core.handlers import modify_bucket_list, promote_bucket_list
 from crits.core.handlers import download_object_handler, unflatten
-from crits.core.handlers import modify_sector_list, get_sector_options
+from crits.core.handlers import modify_sector_list
 from crits.core.handlers import generate_bucket_jtable, generate_bucket_csv
 from crits.core.handlers import generate_sector_jtable, generate_sector_csv
 from crits.core.handlers import generate_dashboard, generate_global_search
@@ -52,6 +49,7 @@ from crits.core.handlers import get_favorites, favorite_update
 from crits.core.handlers import generate_favorites_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
 from crits.core.handlers import description_update
+from crits.core.handlers import do_add_preferred_actions, add_new_action
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_role import UserRole
@@ -70,7 +68,6 @@ from crits.core.user_tools import revoke_api_key_by_name, make_default_api_key_b
 from crits.core.class_mapper import class_from_id
 from crits.domains.forms import TLDUpdateForm, AddDomainForm
 from crits.emails.forms import EmailUploadForm, EmailEMLForm, EmailYAMLForm, EmailRawUploadForm, EmailOutlookForm
-from crits.events.event import EventType
 from crits.events.forms import EventForm
 from crits.exploits.forms import AddExploitForm
 from crits.indicators.forms import UploadIndicatorCSVForm, UploadIndicatorTextForm
@@ -82,7 +79,6 @@ from crits.notifications.handlers import get_user_notifications
 from crits.notifications.handlers import remove_user_from_notification
 from crits.notifications.handlers import remove_user_notifications
 from crits.objects.forms import AddObjectForm
-from crits.objects.object_type import ObjectType
 from crits.pcaps.forms import UploadPcapForm
 from crits.raw_data.forms import UploadRawDataFileForm, UploadRawDataForm
 from crits.raw_data.forms import NewRawDataTypeForm
@@ -90,8 +86,9 @@ from crits.raw_data.raw_data import RawDataType
 from crits.relationships.forms import ForgeRelationshipForm
 from crits.samples.forms import UploadFileForm
 from crits.screenshots.forms import AddScreenshotForm
-from crits.standards.forms import UploadStandardsForm
 from crits.targets.forms import TargetInfoForm
+
+from crits.vocabulary.sectors import Sectors
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +186,7 @@ def get_dialog(request):
 
     dialog = request.GET.get('dialog', '')
     # Regex in urls.py doesn't seem to be working, should sanity check dialog
-    return render_to_response("dialogs/" + dialog + ".html",
+    return render_to_response(dialog + ".html",
                               {"error" : 'Dialog not found'},
                               RequestContext(request))
 
@@ -849,15 +846,6 @@ def download_object(request):
                                   {"error" : "Expecting POST."},
                                   RequestContext(request))
 
-    # if the STIX format is chosen, force binary to be base64
-    # we force this in the UI as well, but because we disable the select box it
-    # winds up not including it in the POST data. we get a two-fer here by
-    # making the form valid again and also ensuring people can't submit bad
-    # requests and forcing a format they shouldn't be.
-    request.POST = request.POST.copy()
-    if request.POST['rst_fmt'] == 'stix':
-        request.POST['bin_fmt'] = 'base64'
-
     form = DownloadFileForm(request.POST)
     if form.is_valid():
         total_limit = form.cleaned_data['total_limit']
@@ -1056,7 +1044,7 @@ def base_context(request):
     if request.user.is_authenticated():
         user = request.user.username
         # Forms that don't require a user
-        base_context['add_indicator_action'] = NewIndicatorActionForm()
+        base_context['add_new_action'] = NewIndicatorActionForm()
         base_context['add_target'] = TargetInfoForm()
         base_context['campaign_add'] = AddCampaignForm()
         base_context['comment_add'] = AddCommentForm()
@@ -1150,10 +1138,6 @@ def base_context(request):
             base_context['upload_sample'] = UploadFileForm(user)
         except Exception, e:
             logger.warning("Base Context UploadFileForm Error: %s" % e)
-        try:
-            base_context['upload_standards'] = UploadStandardsForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadStandardsForm Error: %s" % e)
         try:
             base_context['object_form'] = AddObjectForm(user, None)
         except Exception, e:
@@ -1693,16 +1677,9 @@ def item_editor(request):
 
     counts = {}
     obj_list = [ActorThreatIdentifier,
-                ActorThreatType,
-                ActorMotivation,
-                ActorSophistication,
-                ActorIntendedEffect,
                 Campaign,
-                EventType,
                 IndicatorAction,
-                ObjectType,
                 RawDataType,
-                RelationshipType,
                 SourceAccess,
                 UserRole]
     for col_obj in obj_list:
@@ -1765,6 +1742,37 @@ def toggle_item_active(request):
         return render_to_response("error.html",
                                   {"error" : error },
                                   RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def add_preferred_actions(request):
+    """
+    Add preferred actions to an indicator. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        if 'obj_type' not in request.POST and 'obj_id' not in request.POST:
+            result = {'success': False, 'message': "Invalid parameters."}
+        else:
+            username = request.user.username
+            obj_type = request.POST['obj_type']
+            obj_id = request.POST['obj_id']
+            result = do_add_preferred_actions(obj_type, obj_id, username)
+            if 'object' in result:
+                result['html'] = ''
+                for obj in result['object']:
+                    result['html'] += render_to_string('indicators_action_row_widget.html',
+                                                       {'action': obj,
+                                                        'admin': is_admin(username),
+                                                        'indicator_id': obj_id})
+    else:
+        result = {'success': False, 'message': "Expected AJAX POST"}
+    return HttpResponse(json.dumps(result, default=json_handler),
+                        mimetype='application/json')
+
 
 @user_passes_test(user_can_view_data)
 def download_file(request, sample_md5):
@@ -2052,7 +2060,10 @@ def get_available_sectors(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        return get_sector_options()
+        return HttpResponse(
+            json.dumps(Sectors.values(sort=True), default=json_handler),
+            content_type='application/json'
+        )
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -2070,3 +2081,33 @@ def bucket_autocomplete(request):
         if term:
             return get_bucket_autocomplete(term)
     return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def new_action(request):
+    """
+    Add a new action. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        form = NewIndicatorActionForm(request.POST)
+        analyst = request.user.username
+        if form.is_valid():
+            result = add_new_action(form.cleaned_data['action'],
+                                    form.cleaned_data['preferred'],
+                                    analyst)
+            if result:
+                message = {'message': '<div>Indicator Action added successfully!</div>',
+                           'success': True}
+            else:
+                message = {'message': '<div>Indicator Action addition failed!</div>',
+                           'success': False}
+        else:
+            message = {'form': form.as_table()}
+        return HttpResponse(json.dumps(message),
+                            mimetype="application/json")
+    return render_to_response('error.html',
+                              {'error': 'Expected AJAX POST'})
