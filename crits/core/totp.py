@@ -1,8 +1,6 @@
 import hmac, base64, struct, hashlib, time
 from django.utils.crypto import pbkdf2
-#from M2Crypto import EVP, Rand
-from Crypto import Random
-from Crypto.Cipher import AES
+from M2Crypto import EVP, Rand
 
 # from http://stackoverflow.com/questions/8529265/google-authenticator-implementation-in-python
 def get_hotp_token(secret, intervals_no):
@@ -52,10 +50,8 @@ def decrypt_secret(secret, password, username):
 
     secret = base64.b32decode(secret)
     pw_hash = pbkdf2(password.encode('ascii'), username.encode('ascii'), 10000)
-    cipher = AES.new(pw_hash, AES.MODE_ECB, '')
-    tmp = cipher.decrypt(secret)
-    #crypt_object = EVP.Cipher('aes_128_ecb', pw_hash, '', 0, padding=0)
-    #tmp = crypt_object.update(secret)
+    crypt_object = EVP.Cipher('aes_128_ecb', pw_hash, '', 0, padding=0)
+    tmp = crypt_object.update(secret)
     return tmp[:10]
 
 def encrypt_secret(secret, password, username):
@@ -79,10 +75,8 @@ def encrypt_secret(secret, password, username):
 
     secret += gen_random(6)
     pw_hash = pbkdf2(password.encode('ascii'), username.encode('ascii'), 10000)
-    cipher = AES.new(pw_hash, AES.MODE_ECB, '')
-    tmp = cipher.encrypt(secret)
-    #crypt_object = EVP.Cipher('aes_128_ecb', pw_hash, '', 1, padding=0)
-    #tmp = crypt_object.update(secret)
+    crypt_object = EVP.Cipher('aes_128_ecb', pw_hash, '', 1, padding=0)
+    tmp = crypt_object.update(secret)
     return tmp
 
 def gen_random(secret_len=10):
@@ -95,8 +89,8 @@ def gen_random(secret_len=10):
     :param secret_len: The length of the secret to generate.
     :type secret_len: int
     """
-    rndfile = Random.new()
-    return rndfile.read(secret_len)
+
+    return Rand.rand_bytes(10)
 
 def gen_user_secret(password, username):
     """
