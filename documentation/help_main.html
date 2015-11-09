@@ -2607,6 +2607,14 @@ only &quot;date&quot; is required:</p>
 </tr>
 <tr class="field"><th class="field-name">md5:</th><td class="field-body">The MD5 of the file if this is a &quot;metadata&quot; upload.</td>
 </tr>
+<tr class="field"><th class="field-name">sha1:</th><td class="field-body">The SHA1 of the file if this is a &quot;metadata&quot; upload.</td>
+</tr>
+<tr class="field"><th class="field-name">sha256:</th><td class="field-body">The SHA256 of the file if this is a &quot;metadata&quot; upload.</td>
+</tr>
+<tr class="field"><th class="field-name">size:</th><td class="field-body">The size of the file if this is a &quot;metadata&quot; upload.</td>
+</tr>
+<tr class="field"><th class="field-name">mimetype:</th><td class="field-body">The mimetype of the file if this is a &quot;metadata&quot; upload.</td>
+</tr>
 <tr class="field"><th class="field-name">filedata:</th><td class="field-body">The sample if the upload type is &quot;file&quot;.</td>
 </tr>
 <tr class="field"><th class="field-name">password:</th><td class="field-body">The password to unzip the file if it is zipped and the upload type is &quot;file&quot;.</td>
@@ -2685,6 +2693,9 @@ only &quot;date&quot; is required:</p>
 </tr>
 <tr class="field"><th class="field-name">result_subtype:</th><td class="field-body">The 'subtype' of your result.</td>
 </tr>
+<tr class="field"><th class="field-name" colspan="2">result_is_batch:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body">Set to &quot;1&quot; if you are pushing multiple results.</td>
+</tr>
 <tr class="field"><th class="field-name">log_message:</th><td class="field-body">The contents of the log message.</td>
 </tr>
 <tr class="field"><th class="field-name">log_level:</th><td class="field-body">The level of the log (defaults to 'info').</td>
@@ -2707,6 +2718,10 @@ only &quot;date&quot; is required:</p>
 <p>If you include the &quot;result&quot; field, you will be required to also provide the
 &quot;result_type&quot; and &quot;result_subtype&quot;. Also, if you include the &quot;log_message&quot;
 field, &quot;log_level&quot; will be set to &quot;info&quot; if it is not provided.</p>
+<p>If you want to submit multiple results at once you have to set &quot;result_is_batch&quot;
+to &quot;1&quot; and supply result, result_type, and result_subtype as JSON list. Make sure
+that all three lists have the same length so there is a type and subtype for each
+result.</p>
 </div>
 <div class="section" id="target-api">
 <h2><a class="toc-backref" href="#id99">17.25&nbsp;&nbsp;&nbsp;Target API</a></h2>

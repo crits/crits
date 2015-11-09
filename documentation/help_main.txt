@@ -1798,6 +1798,10 @@ Unique POST Parameters:
 :upload_type: One of "metadata" or "file".
 :filename: The name of the file if this is a "metadata" upload.
 :md5: The MD5 of the file if this is a "metadata" upload.
+:sha1: The SHA1 of the file if this is a "metadata" upload.
+:sha256: The SHA256 of the file if this is a "metadata" upload.
+:size: The size of the file if this is a "metadata" upload.
+:mimetype: The mimetype of the file if this is a "metadata" upload.
 :filedata: The sample if the upload type is "file".
 :password: The password to unzip the file if it is zipped and the upload type is "file".
 :file_format: The format of the file if the upload type is "file".
@@ -1846,6 +1850,7 @@ Unique POST Parameters:
 :result: The 'result' contents of your analysis result.
 :result_type: The 'Type' of your result.
 :result_subtype: The 'subtype' of your result.
+:result_is_batch: Set to "1" if you are pushing multiple results.
 :log_message: The contents of the log message.
 :log_level: The level of the log (defaults to 'info').
 :status: The status to set the task to when it is finished.
@@ -1857,6 +1862,11 @@ Unique POST Parameters:
 If you include the "result" field, you will be required to also provide the
 "result_type" and "result_subtype". Also, if you include the "log_message"
 field, "log_level" will be set to "info" if it is not provided.
+
+If you want to submit multiple results at once you have to set "result_is_batch"
+to "1" and supply result, result_type, and result_subtype as JSON list. Make sure
+that all three lists have the same length so there is a type and subtype for each
+result.
 
 Target API
 -------------------------------------------

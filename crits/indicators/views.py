@@ -18,7 +18,6 @@ from crits.indicators.forms import UploadIndicatorForm, UploadIndicatorTextForm
 from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
 from crits.indicators.handlers import (
-    add_new_indicator_action,
     indicator_remove,
     handle_indicator_csv,
     handle_indicator_ind,
@@ -82,35 +81,6 @@ def indicators_listing(request, option=None):
     if option == "csv":
         return generate_indicator_csv(request)
     return generate_indicator_jtable(request, option)
-
-@user_passes_test(user_can_view_data)
-def new_indicator_action(request):
-    """
-    Add a new Indicator action. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST' and request.is_ajax():
-        form = NewIndicatorActionForm(request.POST)
-        analyst = request.user.username
-        if form.is_valid():
-            result = add_new_indicator_action(form.cleaned_data['action'],
-                                              analyst)
-            if result:
-                message = {'message': '<div>Indicator Action added successfully!</div>',
-                           'success': True}
-            else:
-                message = {'message': '<div>Indicator Action addition failed!</div>',
-                           'success': False}
-        else:
-            message = {'form': form.as_table()}
-        return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
-    return render_to_response('error.html',
-                              {'error': 'Expected AJAX POST'})
 
 @user_passes_test(user_can_view_data)
 def remove_indicator(request, _id):
