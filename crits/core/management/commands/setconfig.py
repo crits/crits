@@ -86,7 +86,6 @@ class Command(BaseCommand):
            password_complexity_desc:\t<string>
            password_complexity_regex:\t<string>
            query_caching:\t\t<boolean> (ex: True, true, yes, or 1)
-           rar_path:\t\t\t<full file path>
            rel_max:\t\t\t<integer>
            remote_user:\t\t\t<boolean> (ex: True, true, yes, or 1)
            rt_url:\t\t\t<string>
@@ -230,7 +229,7 @@ def set_config_attribute(crits_config, attr, value):
         if attr == "log_level":
             if not value in ('INFO', 'WARN', 'DEBUG'):
                 raise CE('log_level must be INFO, WARN, or DEBUG.')
-        if attr in ('rar_path', 'temp_dir', 'zip7_path', 'log_directory'):
+        if attr in ('temp_dir', 'zip7_path', 'log_directory'):
             if not os.path.exists(value):
                 raise CE('Not a valid path: %s' % value)
         if attr == "allowed_hosts":
