@@ -56,6 +56,18 @@ class UploadFileForm(forms.Form):
     inherit_filepath = forms.BooleanField(initial=False,
                                          required=False,
                                          label=form_consts.Sample.INHERIT_FILEPATH)
+    sha1 = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1'}),
+                           required=False,
+                           label=form_consts.Sample.SHA1)
+    sha256 = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1'}),
+                             required=False,
+                             label=form_consts.Sample.SHA256)
+    size = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1'}),
+                           required=False,
+                           label=form_consts.Sample.SIZE)
+    mimetype = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1'}),
+                               required=False,
+                               label=form_consts.Sample.MIMETYPE)
     file_format = forms.ChoiceField(widget=RadioSelect(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_SKIP + ' id_upload_type_0 required'}),
                                     choices=[("zip", "Zip"),
                                              ("rar", "RAR"),

@@ -1,9 +1,10 @@
+import json
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import BadRequest
 
-from crits.services.handlers import add_result, add_log, finish_task
+from crits.services.handlers import add_result, add_results, add_log, finish_task
 from crits.services.service import CRITsService
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
@@ -55,6 +56,7 @@ class ServiceResource(CRITsAPIResource):
         result = bundle.data.get('result', None)
         result_type = bundle.data.get('result_type', None)
         result_subtype = bundle.data.get('result_subtype', None)
+        result_is_batch = bundle.data.get('result_is_batch', False)
         log_message = bundle.data.get('log_message', None)
         log_level = bundle.data.get('log_level', 'info')
         status = bundle.data.get('status', None)
@@ -73,8 +75,22 @@ class ServiceResource(CRITsAPIResource):
             if not result_type or not result_subtype:
                 content['message'] = 'When adding a result, also need type and subtype'
                 self.crits_response(content)
-            result = add_result(object_type, object_id, analysis_id,
-                                result, result_type, result_subtype, analyst)
+
+            if not result_is_batch:
+                result = add_result(object_type, object_id, analysis_id,
+                                    result, result_type, result_subtype, analyst)
+            else:
+                result_list = json.loads(result)
+                result_type_list = json.loads(result_type)
+                result_subtype_list = json.loads(result_subtype)
+
+                if not (len(result_list) == len(result_type_list) == len(result_subtype_list)):
+                    content['message'] = 'When adding results in batch result, result_type, and result_subtype must have the same length!'
+                    self.crits_response(content)
+                
+                result = add_results(object_type, object_id, analysis_id, result_list,
+                                     result_type_list, result_subtype_list, analyst)
+
             if not result['success']:
                 message += ", %s" % result['message']
                 success = False

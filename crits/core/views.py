@@ -49,6 +49,7 @@ from crits.core.handlers import get_favorites, favorite_update
 from crits.core.handlers import generate_favorites_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
 from crits.core.handlers import description_update
+from crits.core.handlers import do_add_preferred_actions, add_new_action
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_role import UserRole
@@ -1043,7 +1044,7 @@ def base_context(request):
     if request.user.is_authenticated():
         user = request.user.username
         # Forms that don't require a user
-        base_context['add_indicator_action'] = NewIndicatorActionForm()
+        base_context['add_new_action'] = NewIndicatorActionForm()
         base_context['add_target'] = TargetInfoForm()
         base_context['campaign_add'] = AddCampaignForm()
         base_context['comment_add'] = AddCommentForm()
@@ -1743,6 +1744,37 @@ def toggle_item_active(request):
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)
+def add_preferred_actions(request):
+    """
+    Add preferred actions to an indicator. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        if 'obj_type' not in request.POST and 'obj_id' not in request.POST:
+            result = {'success': False, 'message': "Invalid parameters."}
+        else:
+            username = request.user.username
+            obj_type = request.POST['obj_type']
+            obj_id = request.POST['obj_id']
+            result = do_add_preferred_actions(obj_type, obj_id, username)
+            if 'object' in result:
+                result['html'] = ''
+                for obj in result['object']:
+                    result['html'] += render_to_string('indicators_action_row_widget.html',
+                                                       {'action': obj,
+                                                        'admin': is_admin(username),
+                                                        'indicator_id': obj_id})
+    else:
+        result = {'success': False, 'message': "Expected AJAX POST"}
+    return HttpResponse(json.dumps(result, default=json_handler),
+                        mimetype='application/json')
+
+
+@user_passes_test(user_can_view_data)
 def download_file(request, sample_md5):
     """
     Download a file. Used mainly for situations where you are not using the
@@ -2049,3 +2081,33 @@ def bucket_autocomplete(request):
         if term:
             return get_bucket_autocomplete(term)
     return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def new_action(request):
+    """
+    Add a new action. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        form = NewIndicatorActionForm(request.POST)
+        analyst = request.user.username
+        if form.is_valid():
+            result = add_new_action(form.cleaned_data['action'],
+                                    form.cleaned_data['preferred'],
+                                    analyst)
+            if result:
+                message = {'message': '<div>Indicator Action added successfully!</div>',
+                           'success': True}
+            else:
+                message = {'message': '<div>Indicator Action addition failed!</div>',
+                           'success': False}
+        else:
+            message = {'form': form.as_table()}
+        return HttpResponse(json.dumps(message),
+                            mimetype="application/json")
+    return render_to_response('error.html',
+                              {'error': 'Expected AJAX POST'})
