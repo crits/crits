@@ -1047,7 +1047,7 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                 filename = md5(data).hexdigest()
             except:
                 filename = "unknown"
-    if file_format in ("zip", "rar") and f:
+    if file_format == "zip" and f:
         return unzip_file(
             filename,
             user=user,
