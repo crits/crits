@@ -1,3 +1,14 @@
+class Action():
+    ACTION_TYPE = "Action type"
+    BEGIN_DATE = "Begin date"
+    ANALYST = "Analyst"
+    END_DATE = "End date"
+    PERFORMED_DATE = "Performed date"
+    ACTIVE = "Active"
+    REASON = "Reason"
+    DATE = "Date"
+    PREFERRED = "Preferred TLOs"
+
 class Common():
     ADD_INDICATOR = "Add Indicator?"
     BUCKET_LIST = "Bucket List"

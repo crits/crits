@@ -37,13 +37,14 @@ def class_from_id(type_, _id):
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
+    from crits.core.crits_mongoengine import Action
     from crits.core.source_access import SourceAccess
     from crits.core.user_role import UserRole
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event
     from crits.exploits.exploit import Exploit
-    from crits.indicators.indicator import Indicator, IndicatorAction
+    from crits.indicators.indicator import Indicator
     from crits.ips.ip import IP
     from crits.pcaps.pcap import PCAP
     from crits.raw_data.raw_data import RawData, RawDataType
@@ -84,8 +85,8 @@ def class_from_id(type_, _id):
         return Exploit.objects(id=_id).first()
     elif type_ == 'Indicator':
         return Indicator.objects(id=_id).first()
-    elif type_ == 'IndicatorAction':
-        return IndicatorAction.objects(id=_id).first()
+    elif type_ == 'Action':
+        return Action.objects(id=_id).first()
     elif type_ == 'IP':
         return IP.objects(id=_id).first()
     elif type_ == 'PCAP':
@@ -207,13 +208,14 @@ def class_from_type(type_):
     from crits.campaigns.campaign import Campaign
     from crits.certificates.certificate import Certificate
     from crits.comments.comment import Comment
+    from crits.core.crits_mongoengine import Action
     from crits.core.source_access import SourceAccess
     from crits.core.user_role import UserRole
     from crits.domains.domain import Domain
     from crits.emails.email import Email
     from crits.events.event import Event
     from crits.exploits.exploit import Exploit
-    from crits.indicators.indicator import Indicator, IndicatorAction
+    from crits.indicators.indicator import Indicator
     from crits.ips.ip import IP
     from crits.pcaps.pcap import PCAP
     from crits.raw_data.raw_data import RawData, RawDataType
@@ -243,8 +245,8 @@ def class_from_type(type_):
         return Exploit
     elif type_ == 'Indicator':
         return Indicator
-    elif type_ == 'IndicatorAction':
-        return IndicatorAction
+    elif type_ == 'Action':
+        return Action
     elif type_ == 'IP':
         return IP
     elif type_ == 'PCAP':
