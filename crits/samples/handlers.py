@@ -1427,7 +1427,7 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         md5 = rowData.get(form_consts.Sample.MD5, "")
         sha1 = rowData.get(form_consts.Sample.SHA1, "")
         sha256 = rowData.get(form_consts.Sample.SHA256, "")
-        size = rowData.get(form_consts.Sample.SIZE, "")
+        size = rowData.get(form_consts.Sample.SIZE, 0)
         mimetype = rowData.get(form_consts.Sample.MIMETYPE, "")
 
     campaign = rowData.get(form_consts.Sample.CAMPAIGN, "")
