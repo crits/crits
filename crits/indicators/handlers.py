@@ -192,9 +192,6 @@ def get_indicator_details(indicator_id, analyst):
         args = {'error': error}
         return template, args
     forms = {}
-    forms['new_action'] = ActionsForm(initial={'analyst': analyst,
-                                                        'active': "off",
-                                                        'date': datetime.datetime.now()})
     forms['new_activity'] = IndicatorActivityForm(initial={'analyst': analyst,
                                                            'date': datetime.datetime.now()})
     forms['new_campaign'] = CampaignForm()#'date': datetime.datetime.now(),

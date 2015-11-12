@@ -1088,6 +1088,12 @@ def base_context(request):
         except Exception, e:
             logger.warning("Base Context AddIPForm Error: %s" % e)
         try:
+            base_context['new_action'] = ActionsForm(initial={'analyst': user,
+                'active': "off",
+                'date': datetime.datetime.now()})
+        except Exception, e:
+            logger.warning("Base Context ActionsForm Error: %s" % e)
+        try:
             base_context['source_add'] = SourceForm(user,
                                                     initial={'analyst': user})
         except Exception, e:

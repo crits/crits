@@ -1078,6 +1078,11 @@ var stdDialogs = {
       "new-domain": {title: "Domain", open: new_domain_dialog},
       "new-indicator": {title: "Indicator", open: new_indicator_dialog},
       "action_add": {title: "Action"},
+      "add-action": {title: "Action", href:"",
+		       new: {open: function(e) {
+                $('#id_action_performed_date').val(timenow());
+                }},
+		       update: { open: update_dialog} },
       "indicator-blob": {title: "New Indicator Blob"},
 
       "new-event": {title: "Event", open: new_event_dialog},
