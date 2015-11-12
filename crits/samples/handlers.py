@@ -570,7 +570,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     samples = []
     zipdir = ""
     extractdir = ""
-    filepathz = None
+    filepathz = ""
     try:
         zip_md5 = md5(data).hexdigest()
 
@@ -586,7 +586,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
         if not os.access(crits_config.zip7_path, os.X_OK):
             errmsg = "7z is not executable at path specified in the config setting: %s\n" % crits_config.zip7_path
             raise ZipFileError, errmsg
-        args.append("e")
+        args.append("x")
         extractdir = tempfile.mkdtemp(dir=temproot)
         args.append("-o" + extractdir)  # Set output directory
 
@@ -621,17 +621,17 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                 relationship = RelationshipTypes.COMPRESSED_INTO
             else:
                 relationship = RelationshipTypes.RELATED_TO
-            for root, dirs, files in os.walk(extractdir):
+            for root, dirs, files in os.walk(extractdir, topdown=True):
                 for filename in files:
-                    filepathz = None
-                    filep = extractdir + "/" + filename
+                    filep = os.path.join(root, filename)
                     filehandle = open(filep, 'rb')
+                    rel_fi = os.path.relpath(filep, extractdir)
                     if inherit_filepath:
-                        # if inherit_filepath checked, filepath + the zip's internal paths
-                        filepathz = os.join(filepath, dirs, filename)
+                        # if inherit_filepath checked, filepath + the zip's internal paths + filename
+                        filepathz = os.path.join(filepath, rel_fi)
                     else:
-                        # if inherit_filepath not checked, just use the filepath
-                        filepathz = filepath
+                        # if inherit_filepath not checked, just use the filepath + filename
+                        filepathz = os.path.join(filepath, filename)
                     new_sample = handle_file(filename, filehandle.read(),
                                              source, method, reference,
                                              related_md5=related_md5,

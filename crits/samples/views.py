@@ -205,8 +205,6 @@ def upload_file(request, related_md5=None):
                 backdoor = backdoor.split('|||')
                 if len(backdoor) == 2:
                     (backdoor_name, backdoor_version) = backdoor[0], backdoor[1]
-            if form.cleaned_data['inherit_filepath']:
-                inherit_filepath = form.cleaned_data['inherit_filepath']
             try:
                 if request.FILES:
                     result = handle_uploaded_file(
@@ -221,7 +219,7 @@ def upload_file(request, related_md5=None):
                         confidence=confidence,
                         related_md5=related_md5,
                         filepath=request.POST['filepath'].strip(),
-                        inherit_filepath=inherit_filepath,
+                        inherit_filepath=form.cleaned_data['inherit_filepath'],
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
                         inherited_source=inherited_source,
@@ -241,6 +239,7 @@ def upload_file(request, related_md5=None):
                         related_md5 = related_md5,
                         filename=request.POST['filename'].strip(),
                         filepath=request.POST['filepath'].strip(),
+                        inherit_filepath=inherit_filepath,
                         md5=request.POST['md5'].strip().lower(),
                         sha1=request.POST['sha1'].strip().lower(),
                         sha256=request.POST['sha256'].strip().lower(),
