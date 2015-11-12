@@ -2148,7 +2148,6 @@ def add_update_action(request, method, obj_type, obj_id):
             if method == "add":
                 add['date'] = datetime.datetime.now()
                 result = action_add(obj_type, obj_id, add)
-                print result
             else:
                 date = datetime.datetime.strptime(data['date'],
                                                   settings.PY_DATETIME_FORMAT)
