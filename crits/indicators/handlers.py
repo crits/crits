@@ -47,6 +47,7 @@ from crits.vocabulary.indicators import (
 
 from crits.vocabulary.ips import IPTypes
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.status import Status
 
 logger = logging.getLogger(__name__)
 
@@ -396,6 +397,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
         ind['threat_type'] = d.get('Threat Type', IndicatorThreatTypes.UNKNOWN)
         ind['attack_type'] = d.get('Attack Type', IndicatorAttackTypes.UNKNOWN)
+        ind['status'] = d.get('Status', Status.NEW)
         if not ind['value'] or not ind['type']:
             # Mandatory value missing or malformed, cannot process csv row
             i = ""
@@ -609,14 +611,20 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         'high': 4,
     }
 
+    if ind.get('status', None) is None:
+        ind['status'] = Status.NEW
+
     indicator = Indicator.objects(ind_type=ind['type'],
-                                  value=ind['value']).first()
+                                  value=ind['value'],
+                                  threat_type=ind['threat_type'],
+                                  attack_type=ind['attack_type']).first()
     if not indicator:
         indicator = Indicator()
         indicator.ind_type = ind['type']
         indicator.threat_type = ind['threat_type']
         indicator.attack_type = ind['attack_type']
         indicator.value = ind['value']
+        indicator.status = ind['status']
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)

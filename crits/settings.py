@@ -25,11 +25,11 @@ CRITS_VERSION = '4-stable'
 try:
     HIDE_GIT_HASH = False
     #get the short hand of current git hash
-    GIT_HASH = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
+    GIT_HASH = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], cwd=SITE_ROOT).strip()
     #get the long hand of the current git hash
-    GIT_HASH_LONG = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip()
+    GIT_HASH_LONG = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=SITE_ROOT).strip()
     #get the git branch
-    GIT_BRANCH = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).strip()
+    GIT_BRANCH = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], cwd=SITE_ROOT).strip()
 except:
     #if it is not a git repo, clear out all values and hide them
     GIT_HASH = ''
