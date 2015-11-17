@@ -12,8 +12,10 @@
     var update_signature_type = "{% url 'crits.signatures.views.set_signature_type' signature.id %}";
     var update_min_version = "{% url 'crits.signatures.views.update_data_type_min_version' %}";
     var update_max_version = "{% url 'crits.signatures.views.update_data_type_max_version' %}";
+    var update_dependency = "{% url 'crits.signatures.views.update_data_type_dependency' %}";
     var get_signature_type_dropdown = "{% url 'crits.signatures.views.get_signature_type_dropdown' %}";
     var get_signature_versions = "{% url 'crits.signatures.views.get_signature_versions' signature.id|stringformat:"s" %}";
+    var signature_autocomplete = "{% url 'crits.signatures.views.dependency_autocomplete' %}";
 </script>
 
 {% if signature %}
@@ -73,8 +75,12 @@
                 </td>
             </tr>
             <tr>
-            <td class='key'>Data Type Dependencies</td>
-            <td id="data_type_dependencies">{{ signature.data_type_dependencies }}</td>
+                <td class='key'>Dependencies</td>
+                <td>
+                    <span id="data_type_dependency">
+                            <input id="data_type_dependency_input" type="text" value="{{ signature.data_type_dependency|join:','}}">
+                    </span>
+                </td>
             </tr>
             <tr>
             <td class='key'>Version</td>

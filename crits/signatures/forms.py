@@ -4,7 +4,7 @@ from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
-from crits.signatures.signature import SignatureType
+from crits.signatures.signature import SignatureType, SignatureDependency
 
 
 class UploadSignatureForm(forms.Form):
@@ -18,7 +18,7 @@ class UploadSignatureForm(forms.Form):
     data_type = forms.ChoiceField(required=True, widget=forms.Select(attrs={'class': 'no_clear'}))
     data_type_min_version = forms.CharField(required=False)
     data_type_max_version = forms.CharField(required=False)
-    data_type_dependencies = forms.CharField(required=False)
+    data_type_dependency = forms.CharField(required=False)
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                                'rows':'2'}),
                                                                required=False)
@@ -59,3 +59,13 @@ class NewSignatureTypeForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     data_type = forms.CharField(widget=forms.TextInput, required=True)
+
+
+class NewSignatureDependencyForm(forms.Form):
+    """
+    Django form for uploading a new signature dependency. Might be done behind the scenes.
+    """
+
+    error_css_class = 'error'
+    required_css_class = 'required'
+    data_type_dependency = forms.CharField(widget=forms.TextInput, required=True)

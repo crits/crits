@@ -1087,6 +1087,7 @@ var stdDialogs = {
 
       "new-signature": {title: "Signature" },
       "signature_type_add": {title: "Signature Type"},
+      "signature_dependency_add": {title: "Signature Dependency"},
 
       "new-target": {title: "Target", open: new_target_dialog },
 
@@ -1157,7 +1158,7 @@ var stdDialogs = {
   // to make that sort of global change before 3.0.
   var singleInputDialogs = "#dialog-actor-identifier-type,#dialog-ticket,"+
       "#dialog-source_create,#dialog-user_role," +
-      "#dialog-indicator_action_add,#dialog-raw_data_type_add,#dialog-signature_type_add";
+      "#dialog-indicator_action_add,#dialog-raw_data_type_add,#dialog-signature_type_add,#dialog-signature_dependency_add";
   $(singleInputDialogs).on("dialogopen", fix_form_submit(addEditSubmit));
 
 

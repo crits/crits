@@ -50,7 +50,7 @@ def class_from_id(type_, _id):
     from crits.raw_data.raw_data import RawData, RawDataType
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot
-    from crits.signatures.signature import Signature, SignatureType
+    from crits.signatures.signature import Signature, SignatureType, SignatureDependency
     from crits.targets.target import Target
 
     if not _id:
@@ -102,6 +102,8 @@ def class_from_id(type_, _id):
         return Signature.objects(id=_id).first()
     elif type_ == 'SignatureType':
         return SignatureType.objects(id=_id).first()
+    elif type_ == 'SignatureDependency':
+        return SignatureDependency.objects(id=_id).first()
     elif type_ == 'SourceAccess':
         return SourceAccess.objects(id=_id).first()
     elif type_ == 'Screenshot':
@@ -228,7 +230,7 @@ def class_from_type(type_):
     from crits.raw_data.raw_data import RawData, RawDataType
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot
-    from crits.signatures.signature import Signature, SignatureType
+    from crits.signatures.signature import Signature, SignatureType, SignatureDependency
     from crits.targets.target import Target
 
     if type_ == 'Actor':
@@ -273,6 +275,8 @@ def class_from_type(type_):
         return Signature
     elif type_ == 'SignatureType':
         return SignatureType
+    elif type_ == 'SignatureDependency':
+        return SignatureDependency
     elif type_ == 'Target':
         return Target
     elif type_ == 'UserRole':

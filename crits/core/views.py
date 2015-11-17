@@ -88,7 +88,9 @@ from crits.samples.forms import UploadFileForm
 from crits.screenshots.forms import AddScreenshotForm
 from crits.signatures.forms import UploadSignatureForm
 from crits.signatures.forms import NewSignatureTypeForm
+from crits.signatures.forms import NewSignatureDependencyForm
 from crits.signatures.signature import SignatureType
+from crits.signatures.signature import SignatureDependency
 from crits.targets.forms import TargetInfoForm
 
 from crits.vocabulary.sectors import Sectors
@@ -1081,6 +1083,7 @@ def base_context(request):
         base_context['add_raw_data_type'] = NewRawDataTypeForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
         base_context['add_signature_type'] = NewSignatureTypeForm()
+        base_context['add_signature_dependency'] = NewSignatureDependencyForm()
         base_context['source_access'] = SourceAccessForm()
         base_context['upload_tlds'] = TLDUpdateForm()
         base_context['user_role_add'] = AddUserRoleForm()
@@ -1259,6 +1262,8 @@ def base_context(request):
                                             'name': 'Sources'},
                                         {'collection': settings.COL_SIGNATURE_TYPES,
                                             'name': 'Signature Types'},
+                                        {'collection': settings.COL_SIGNATURE_DEPENDENCY,
+                                            'name': 'Signature Dependency'},
                                         {'collection': settings.COL_USER_ROLES,
                                             'name': 'User Roles'}
                                         ]
@@ -1716,6 +1721,7 @@ def item_editor(request):
                 IndicatorAction,
                 RawDataType,
                 SignatureType,
+                SignatureDependency,
                 SourceAccess,
                 UserRole]
     for col_obj in obj_list:

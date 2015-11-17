@@ -16,7 +16,7 @@ from crits.core.handlers import csv_export
 from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
-from crits.signatures.signature import Signature, SignatureType
+from crits.signatures.signature import Signature, SignatureType, SignatureDependency
 from crits.services.handlers import run_triage, get_supported_services
 
 
@@ -31,6 +31,7 @@ def generate_signature_csv(request):
 
     response = csv_export(request,Signature)
     return response
+
 
 def get_id_from_link_and_version(link, version):
     """
@@ -48,6 +49,7 @@ def get_id_from_link_and_version(link, version):
         return None
     else:
         return signature.id
+
 
 def get_signature_details(_id, analyst):
     """
@@ -256,10 +258,11 @@ def generate_signature_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
 
+
 def handle_signature_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          data_type_min_version=None, data_type_max_version=None,
-                         data_type_dependencies=None, link_id=None, method='', reference='',
+                         data_type_dependency=None, link_id=None, method='', reference='',
                          copy_rels=False, bucket_list=None, ticket=None):
     """
     Add Signature.
@@ -283,8 +286,8 @@ def handle_signature_file(data, source_name, user=None,
     :param data_type_min_version: Datatype tool minimum version.
     :type data_type_max_version: str
     :param data_type_max_version: Datatype tool maximum version.
-    :type data_type_dependencies: str
-    :param data_type_dependencies: Datatype tool dependencies to be run
+    :type data_type_dependency: list
+    :param data_type_dependency: Datatype tool dependency to be run
     :param link_id: LinkId to tie this to another Signature as a new version.
     :type link_id: str
     :param method: The method of acquiring this Signature.
@@ -342,7 +345,17 @@ def handle_signature_file(data, source_name, user=None,
     signature.data_type = data_type
     signature.data_type_min_version = data_type_min_version
     signature.data_type_max_version = data_type_max_version
-    signature.data_type_dependencies = data_type_dependencies
+
+    if data_type_dependency:
+        if type(data_type_dependency) == unicode:
+            data_type_dependency = data_type_dependency.split(",")
+
+        for item in data_type_dependency:
+            if item:
+                item = item.strip()
+                signature.data_type_dependency.append(str(item))
+    else:
+        data_type_dependency = []
 
     # generate new source information and add to sample
     if isinstance(source_name, basestring) and len(source_name) > 0:
@@ -385,6 +398,7 @@ def handle_signature_file(data, source_name, user=None,
     if ticket:
         signature.add_ticket(ticket, user);
 
+
     # save signature
     signature.save(username=user)
     signature.reload()
@@ -397,6 +411,7 @@ def handle_signature_file(data, source_name, user=None,
     }
 
     return status
+
 
 def update_signature_type(_id, data_type, analyst):
     """
@@ -423,6 +438,26 @@ def update_signature_type(_id, data_type, analyst):
         except ValidationError, e:
             return {'success': False, 'message': str(e)}
 
+
+def delete_signature_dependency(_id, username=None):
+    """
+    Delete Signature Dependency from CRITs.
+    :param _id: The ObjectID of the signature dependency to delete.
+    :param username: The user deleting this Signature dependency.
+    :return: bool
+    """
+
+    if is_admin(username):
+        signature_dependency = SignatureDependency.objects(id=_id).first()
+        if signature_dependency:
+            signature_dependency.delete(username=username)
+            return {'success': True}
+        else:
+            return {'success': False}
+    else:
+       return {'success': False}
+
+
 def delete_signature(_id, username=None):
     """
     Delete Signature from CRITs.
@@ -443,6 +478,36 @@ def delete_signature(_id, username=None):
             return False
     else:
         return False
+
+
+def add_new_signature_dependency(data_type, analyst):
+    """
+    Add a new signature dependency to CRITs.
+
+    :param data_type: THe new dependency to add
+    :type data_type: str
+    :param analyst: The user adding the dependency.
+    :type analyst: str
+    :return: bool
+    """
+
+    if not data_type:
+        return False
+
+    data_type = str(data_type).strip();
+
+
+    try:
+        signature_dependency = SignatureDependency.objects(name=data_type).first()
+        if signature_dependency:
+            return False
+        signature_dependency = SignatureDependency()
+        signature_dependency.name = data_type
+        signature_dependency.save(username=analyst)
+        return True
+    except ValidationError:
+        return False
+
 
 def add_new_signature_type(data_type, analyst):
     """
@@ -466,6 +531,56 @@ def add_new_signature_type(data_type, analyst):
         return True
     except ValidationError:
         return False
+
+
+def update_dependency(type_, id_, dep, analyst):
+    """
+    Change the min version of the data tool
+
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
+    :param data_type_dependency: The new list of dependency
+    :type data_type_dependency: list
+    :param analyst: The user setting the description.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(analyst)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser.HTMLParser()
+    data_type_dependency = h.unescape(dep)
+    try:
+        deps = data_type_dependency.split(',')
+        del obj.data_type_dependency[:]
+
+        for item in deps:
+            item = item.strip()
+            item = str(item)
+            if item:
+                add_new_signature_dependency(item, analyst)
+                obj.data_type_dependency.append(item)
+
+        obj.save(username=analyst)
+        return {'success': True, 'message': "Data type dependency set."}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
 
 def update_min_version(type_, id_, data_type_min_version, analyst):
     """
@@ -505,6 +620,7 @@ def update_min_version(type_, id_, data_type_min_version, analyst):
     except ValidationError, e:
         return {'success': False, 'message': e}
 
+
 def update_max_version(type_, id_, data_type_max_version, analyst):
     """
     Change the max version of the data tool
@@ -542,3 +658,17 @@ def update_max_version(type_, id_, data_type_max_version, analyst):
         return {'success': True, 'message': "Data type max version set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
+
+
+def get_dependency_autocomplete(term):
+    """
+    Get existing dependencies to autocomplete.
+
+    :param term: The current term (string) to look for autocomplete options.
+    :type term: str
+    :returns: list
+    """
+    results = SignatureDependency.objects(name__istartswith=term)
+    deps = [b.name for b in results]
+    return HttpResponse(json.dumps(deps, default=json_handler),
+                        content_type='application/json')

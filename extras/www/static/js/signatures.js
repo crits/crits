@@ -6,19 +6,6 @@ function escapeHtml(str) {
     return res;
 }
 
-function append_inline_comment(data) {
-    var line_el = $('tr.file_line[data-position="' + (Number(data.line) + 1) + '"]');
-    if (line_el.length < 1) {
-        var line_el = $('table.line_table tr.inline_comment:last');
-        if (line_el.length < 1) {
-            var line_el = $('tr.file_line[data-position="' + data.line + '"]');
-        }
-        line_el.after(data.html);
-    } else {
-        line_el.before(data.html);
-    }
-}
-
 function diffUsingJS(from_text, to_text, from_header, to_header, output_div) {
     var base = difflib.stringAsLines(from_text);
     var newtxt = difflib.stringAsLines(to_text);
@@ -50,15 +37,57 @@ function upload_new_signature_version_dialog(e) {
             form.find("#id_title").val($('#signature_title').attr('data-title'));
             //data_type
             form.find("#id_data_type").val($('#signature_type').text());
+            //data_type
+            if($('#data_type_min_version').text()!=="Click to edit") {
+                form.find("#id_data_type_min_version").val($('#data_type_min_version').text());
+             } else {
+                form.find("#id_data_type_min_version").val("");
+             }
+            //data_type
+            if($('#data_type_max_version').text()!=="Click to edit") {
+                form.find("#id_data_type_max_version").val($('#data_type_max_version').text());
+            } else {
+                form.find("#id_data_type_max_version").val("");
+            }
+
+            //data_type_dependency
+            //Convert to list to display, make sure it's only data_type_dependency and not buckets
+            var dep_text_array = [];
+            $.each($('.tagit-label'), function(id,val) {
+                if($(val).closest("span").attr("id")==="data_type_dependency") {
+                    if($(val).text()) {
+                        dep_text_array.push($(val).text());
+                    }
+                }
+            });
+            for(var i = 0; i< dep_text_array.length; i++)
+            {
+                form.find("#id_data_type_dependency").tagit("createTag", dep_text_array[i]);
+            }
+
             //description
-            form.find("#id_description").val($('#object_description').text());
+            if($('#object_description').text()!=="Click to edit") {
+                form.find("#id_description").val($('#object_description').text());
+            } else {
+                form.find("#id_description").val("");
+            }
+            //data
+            if($('#object_data').text()!=="Click to edit") {
+                form.find("#id_data").val($('#object_data').text());
+            } else {
+                form.find("#id_data").val("");
+            }
             //copy relationships
             form.find("#id_copy_relationships").prop('checked', true);
             //source
             //bucket_list
+            //Modified for only bucket_list <ul id='bucket_list'>
             var buckets = "";
             $.each($('.tagit-label'), function(id,val) {
-                buckets = buckets + $(val).text() + ", ";
+                //Date type dependency also holds tagit, we don't want to add that to the buckets
+                //The UL of signature_detail of the bucket_list ID is "bucket_list"
+                if($(val).closest("ul").attr("id")==="bucket_list")
+                    buckets = buckets + $(val).text() + ", ";
             });
             if (buckets.length > 2) {
                 buckets = buckets.substring(0, buckets.length - 2);
@@ -98,64 +127,6 @@ function upload_new_signature_version_dialog_submit(e) {
 }
 
 $(document).ready(function() {
-
-    $(document).on('click', '#highlight_comment', function(e) {
-        $(this).editable(function(value, settings) {
-            var line = $(this).closest('tr').find('td:nth-child(2)').text();
-            return function(value, settings, elem) {
-                var data = {
-                    comment: value,
-                    line: line,
-                };
-                $.ajax({
-                    type: "POST",
-                    async: false,
-                    url: update_signature_highlight_comment,
-                    data: data,
-                });
-                return value;
-            }(value, settings, this);
-            },
-            {
-                type: 'textarea',
-                height: "50px",
-                width: "400px",
-                tooltip: "",
-                cancel: "Cancel",
-                submit: "Ok",
-        });
-        $(this).trigger('click');
-    });
-
-    $(document).on('click', '#highlight_date', function(e) {
-        $(this).editable(function(value, settings) {
-            var line = $(this).closest('tr').find('td:nth-child(2)').text();
-            return function(value, settings, elem) {
-                var data = {
-                    date: value,
-                    line: line,
-                };
-                $.ajax({
-                    type: "POST",
-                    async: false,
-                    url: update_signature_highlight_date,
-                    data: data,
-                });
-                return value;
-            }(value, settings, this);
-            },
-            {
-                event: 'highlight_date',
-                type: 'datetimepicker',
-                width: "225px",
-                data: '',
-                style: "display: inline",
-                tooltip: "",
-                cancel: "Cancel",
-                submit: "Ok",
-        });
-        $(this).trigger('highlight_date');
-    });
 
     $('#signature_type').editable(function(value, settings) {
         revert = this.revert;
@@ -233,30 +204,6 @@ $(document).ready(function() {
                     },
     });
 
-    $('tr.file_line').on('mouseover', function(e) {
-        var dts = $('#add_inline_comment').detach();
-        var me = $(this);
-        dts.css({
-            display: 'inline-block',
-            float: 'right',
-        }).attr('data-position', me.attr('data-position'));
-        me.children('td:last').append(dts);
-    });
-
-    $('table.line_table').on('mouseout', function(e) {
-        $('#add_inline_comment').hide();
-    });
-
-    $('#add_inline_comment').on('click', function(e) {
-        var line_num = $(this).closest('tr').attr('data-position');
-        var act = $(this).attr('action');
-        if (act.lastIndexOf('/') != -1) {
-            act = act.substring(0, act.lastIndexOf('/'));
-        }
-        act = act + "/?line=" + line_num;
-        $(this).attr('action', act);
-    });
-
     $('#versions_button').on('click', function(e) {
         $.ajax({
             type: 'POST',
@@ -290,6 +237,11 @@ $(document).ready(function() {
     $('#signature_versions_diff').on('submit', function(e) {
         e.preventDefault();
         var versions = $('#signature_diff_selector').val();
+
+        //This can be null if nothing selected.
+        if(!versions) {
+            return;
+        }
         var first = $('div#version_' + versions[0]).children('pre').text();
         var first_title = $("#signature_diff_selector option[value='" + versions[0] + "']").text()
         var second = $('div#version_' + versions[1]).children('pre').text();
@@ -318,14 +270,6 @@ $(document).ready(function() {
         }
     }
 
-    var highlighted_lines = [];
-    $('div#highlights_section table tbody tr').each(function() {
-        highlighted_lines.push([$(this).find('td:nth-child(2)').text(),
-                                $(this).find('td:nth-child(4)').text()]);
-    });
-    $.each(highlighted_lines, function(i,v) {
-        highlight_line(v);
-    });
 
     var localDialogs = {
         "upload-new-signature-version": {title: "Upload New Version",
@@ -337,4 +281,146 @@ $(document).ready(function() {
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt) });
     details_copy_id('Signature');
     toggle_favorite('Signature');
+
+    $('#data_type_min_version').editable(function(value, settings) {
+    var revert = this.revert;
+    return function(value, settings, elem) {
+        var data = {
+            type: subscription_type,
+            id: subscription_id,
+            data_type_min_version: value,
+        };
+        $.ajax({
+            type: "POST",
+            async: false,
+            url: update_min_version,
+            data: data,
+            success: function(data) {
+                if (!data.success) {
+                    value = revert;
+                    $('#data_type_min_version_error').text(' Error: ' + data.message);
+                }
+            }
+        });
+        var escapes = {
+            '&': '&amp;',
+            '"': '&quot;',
+            "'": '&apos;',
+            '>': '&gt;',
+            '<': '&lt;'
+        };
+
+        return value.replace(/&(?!amp;|quot;|apos;|gt;|lt;)|["'><]/g,
+                             function (s) { return escapes[s]; });
+    }(value, settings, this);
+    },
+    {
+        type: 'textarea',
+        height: "25px",
+        width: "200px",
+        tooltip: "",
+        cancel: "Cancel",
+        submit: "Ok",
+        onblur: 'ignore',
+    });
+
+    $('#data_type_max_version').editable(function(value, settings) {
+    var revert = this.revert;
+    return function(value, settings, elem) {
+        var data = {
+            type: subscription_type,
+            id: subscription_id,
+            data_type_max_version: value,
+        };
+        $.ajax({
+            type: "POST",
+            async: false,
+            url: update_max_version,
+            data: data,
+            success: function(data) {
+                if (!data.success) {
+                    value = revert;
+                    $('#data_type_max_version_error').text(' Error: ' + data.message);
+                }
+            }
+        });
+        var escapes = {
+            '&': '&amp;',
+            '"': '&quot;',
+            "'": '&apos;',
+            '>': '&gt;',
+            '<': '&lt;'
+        };
+
+        return value.replace(/&(?!amp;|quot;|apos;|gt;|lt;)|["'><]/g,
+                             function (s) { return escapes[s]; });
+    }(value, settings, this);
+    },
+    {
+        type: 'textarea',
+        height: "25px",
+        width: "200px",
+        tooltip: "",
+        cancel: "Cancel",
+        submit: "Ok",
+        onblur: 'ignore',
+    });
+
+    $("#data_type_dependency_input").tagit({
+        showAutocompleteOnFocus: true,
+        allowSpaces: true,
+        removeConfirmation: true,
+        afterTagAdded: function(event, ui) {
+            var data = $("#data_type_dependency_input").val();
+            update_deps(data);
+        },
+        afterTagRemoved: function(event, ui) {
+            var data = $("#data_type_dependency_input").val();
+            update_deps(data);
+        },
+        onTagClicked: function(event, ui) {
+            var data = $("#data_type_dependency_input").val();
+            update_deps(data);
+        },
+        autocomplete: {
+            delay: 0,
+            minLength: 2,
+            source: function(request, response) {
+            data = {term: request.term}
+            $.ajax({
+                type: 'POST',
+                url: signature_autocomplete,
+                data: data,
+                datatype: 'json',
+                success: function(data) {
+                    response(data);
+                    }
+                });
+            }
+        }
+      });
+
+
+      function update_deps(my_tags) {
+        var oid = subscription_id;
+        var itype = subscription_type;
+        var data = {
+           'id': oid,
+           'data_type_dependency': my_tags.toString(),
+           'type': itype
+        };
+
+
+        $.ajax({
+            type: "POST",
+               url: update_dependency,
+                data: data,
+                 datatype: 'json',
+                 success: function(data) {
+                    // console.log(my_tags);
+                 }
+          });
+
+        }
+
 });

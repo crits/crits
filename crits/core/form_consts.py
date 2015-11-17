@@ -275,7 +275,7 @@ class Sample():
 
 class Signature():
     """
-    Constants for Signature.
+    Constants for Signature. Dependencies as list? Similar to bucket list, but not in other classes
     """
 
     SOURCE = Common.SOURCE

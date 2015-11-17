@@ -1,11 +1,30 @@
 import uuid
 
-from mongoengine import Document, StringField, IntField
+from mongoengine import Document, StringField, IntField, ListField
 from mongoengine import UUIDField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
+
+
+class SignatureDependency(CritsDocument, CritsSchemaDocument, Document):
+    """
+    Signature dependency class.
+    """
+
+    meta = {
+        "collection": settings.COL_SIGNATURE_DEPENDENCY,
+        "crits_type": 'SignatureDependency',
+        "latest_schema_version": 1,
+        "schema_doc": {
+            'name': 'The name of this data dependency',
+            'active': 'Enabled in the UI (on/off)'
+        },
+    }
+
+    name = StringField()
+    active = StringField(default="on")
 
 
 class SignatureType(CritsDocument, CritsSchemaDocument, Document):
@@ -26,6 +45,7 @@ class SignatureType(CritsDocument, CritsSchemaDocument, Document):
     name = StringField()
     active = StringField(default="on")
 
+
 class Signature(CritsBaseAttributes, CritsSourceDocument, Document):
     """
     Signature class.
@@ -44,7 +64,7 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, Document):
                          'searchurl': 'crits.signatures.views.signatures_listing',
                          'fields': [ "title", "data_type", "data_type_min_version",
                                      "data_type_max_version",
-                                     "data_type_dependencies", "version",
+                                     "data_type_dependency", "version",
                                      "modified", "source", "campaign",
                                      "id", "status"],
                          'jtopts_fields': [ "details",
@@ -52,7 +72,7 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, Document):
                                             "data_type",
                                             "data_type_min_version",
                                             "data_type_max_version",
-                                            "data_type_dependencies",
+                                            "data_type_dependency",
                                             "version",
                                             "modified",
                                             "source",
@@ -70,7 +90,7 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, Document):
     data_type = StringField()
     data_type_min_version = StringField()
     data_type_max_version = StringField()
-    data_type_dependencies = StringField()
+    data_type_dependency = ListField()
     data = StringField()
     link_id = UUIDField(binary=True, required=True, default=uuid.uuid4)
     md5 = StringField()

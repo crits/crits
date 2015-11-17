@@ -38,22 +38,56 @@ function upload_new_signature_version_dialog(e) {
             //data_type
             form.find("#id_data_type").val($('#signature_type').text());
             //data_type
-            form.find("#id_data_type_min_version").val($('#data_type_min_version').text());
+            if($('#data_type_min_version').text()!=="Click to edit") {
+                form.find("#id_data_type_min_version").val($('#data_type_min_version').text());
+             } else {
+                form.find("#id_data_type_min_version").val("");
+             }
             //data_type
-            form.find("#id_data_type_max_version").val($('#data_type_max_version').text());
-            //data_type
-            form.find("#id_data_type_dependencies").val($('#data_type_dependencies').text());
+            if($('#data_type_max_version').text()!=="Click to edit") {
+                form.find("#id_data_type_max_version").val($('#data_type_max_version').text());
+            } else {
+                form.find("#id_data_type_max_version").val("");
+            }
+
+            //data_type_dependency
+            //Convert to list to display, make sure it's only data_type_dependency and not buckets
+            var dep_text_array = [];
+            $.each($('.tagit-label'), function(id,val) {
+                if($(val).closest("span").attr("id")==="data_type_dependency") {
+                    if($(val).text()) {
+                        dep_text_array.push($(val).text());
+                    }
+                }
+            });
+            for(var i = 0; i< dep_text_array.length; i++)
+            {
+                form.find("#id_data_type_dependency").tagit("createTag", dep_text_array[i]);
+            }
+
             //description
-            form.find("#id_description").val($('#object_description').text());
+            if($('#object_description').text()!=="Click to edit") {
+                form.find("#id_description").val($('#object_description').text());
+            } else {
+                form.find("#id_description").val("");
+            }
             //data
-            form.find("#id_data").val($('#object_data').text());
+            if($('#object_data').text()!=="Click to edit") {
+                form.find("#id_data").val($('#object_data').text());
+            } else {
+                form.find("#id_data").val("");
+            }
             //copy relationships
             form.find("#id_copy_relationships").prop('checked', true);
             //source
             //bucket_list
+            //Modified for only bucket_list <ul id='bucket_list'>
             var buckets = "";
             $.each($('.tagit-label'), function(id,val) {
-                buckets = buckets + $(val).text() + ", ";
+                //Date type dependency also holds tagit, we don't want to add that to the buckets
+                //The UL of signature_detail of the bucket_list ID is "bucket_list"
+                if($(val).closest("ul").attr("id")==="bucket_list")
+                    buckets = buckets + $(val).text() + ", ";
             });
             if (buckets.length > 2) {
                 buckets = buckets.substring(0, buckets.length - 2);
@@ -203,6 +237,11 @@ $(document).ready(function() {
     $('#signature_versions_diff').on('submit', function(e) {
         e.preventDefault();
         var versions = $('#signature_diff_selector').val();
+
+        //This can be null if nothing selected.
+        if(!versions) {
+            return;
+        }
         var first = $('div#version_' + versions[0]).children('pre').text();
         var first_title = $("#signature_diff_selector option[value='" + versions[0] + "']").text()
         var second = $('div#version_' + versions[1]).children('pre').text();
@@ -326,4 +365,62 @@ $(document).ready(function() {
         submit: "Ok",
         onblur: 'ignore',
     });
+
+    $("#data_type_dependency_input").tagit({
+        showAutocompleteOnFocus: true,
+        allowSpaces: true,
+        removeConfirmation: true,
+        afterTagAdded: function(event, ui) {
+            var data = $("#data_type_dependency_input").val();
+            update_deps(data);
+        },
+        afterTagRemoved: function(event, ui) {
+            var data = $("#data_type_dependency_input").val();
+            update_deps(data);
+        },
+        onTagClicked: function(event, ui) {
+            var data = $("#data_type_dependency_input").val();
+            update_deps(data);
+        },
+        autocomplete: {
+            delay: 0,
+            minLength: 2,
+            source: function(request, response) {
+            data = {term: request.term}
+            $.ajax({
+                type: 'POST',
+                url: signature_autocomplete,
+                data: data,
+                datatype: 'json',
+                success: function(data) {
+                    response(data);
+                    }
+                });
+            }
+        }
+      });
+
+
+      function update_deps(my_tags) {
+        var oid = subscription_id;
+        var itype = subscription_type;
+        var data = {
+           'id': oid,
+           'data_type_dependency': my_tags.toString(),
+           'type': itype
+        };
+
+
+        $.ajax({
+            type: "POST",
+               url: update_dependency,
+                data: data,
+                 datatype: 'json',
+                 success: function(data) {
+                    // console.log(my_tags);
+                 }
+          });
+
+        }
+
 });

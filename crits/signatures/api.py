@@ -57,7 +57,7 @@ class SignatureResource(CRITsAPIResource):
         data_type = bundle.data.get('data_type', None)
         data_type_min_version = bundle.data.get('data_type_min_version', None)
         data_type_max_version = bundle.data.get('data_type_max_version', None)
-        data_type_dependencies = bundle.data.get('data_type_dependencies', None)
+        data_type_dependency = bundle.data.get('data_type_dependency', None)
         link_id = bundle.data.get('link_id', None)
         copy_rels = bundle.data.get('copy_relationships', False)
         method = bundle.data.get('method', None) or 'Upload'
@@ -76,7 +76,7 @@ class SignatureResource(CRITsAPIResource):
                                       description, title, data_type,
                                       data_type_min_version,
                                       data_type_max_version,
-                                      data_type_dependencies,link_id,
+                                      data_type_dependency,link_id,
                                       method=method,
                                       reference=reference,
                                       copy_rels=copy_rels,

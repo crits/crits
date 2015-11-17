@@ -2462,6 +2462,9 @@ def generate_items_jtable(request, itype, option):
     elif itype == 'SignatureType':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#signature_type_add').click();}"
+    elif itype == 'SignatureDependency':
+        fields = ['name', 'id']
+        click = "function () {window.parent.$('#signature_dependency_add').click();}"
     elif itype == 'SourceAccess':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#source_create').click();}"
@@ -2476,6 +2479,13 @@ def generate_items_jtable(request, itype, option):
                                     request, includes=fields)
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type="application/json")
+
+
+    '''Special case for dependency, to allow for deletions, no more toggle on dependencies '''
+    ''' This is modified here to fit with rest of code, there is no delete field in mongo, but the user can delete '''
+
+    if itype == 'SignatureDependency':
+        fields = ['name', 'delete', 'id']
 
     jtopts = {
         'title': "%ss" % itype,
@@ -2509,6 +2519,16 @@ def generate_items_jtable(request, itype, option):
             return '<a href="#" onclick=\\'javascript:editAction("'+data.record.name+'");\\'>' + data.record.name + '</a>';
             }
             """
+
+    '''special case for signature dependency, add a delete button to allow for removal'''
+    if itype == 'SignatureDependency':
+        for field in jtable['fields']:
+            if field['fieldname'].startswith("'delete"):
+                field['display'] = """ function (data) {
+                return '<button title="Delete" class="jtable-command-button jtable-delete-command-button" id="to_delete_' + data.record.id + '" href="#" onclick=\\'javascript:deleteSignatureDependency("%s","'+data.record.id+'");\\'><span>Delete</span></button>';
+                }
+                """ % itype
+
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
