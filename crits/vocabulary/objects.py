@@ -35,6 +35,7 @@ class ObjectTypes(vocab):
     EMAIL_SUBJECT = "Email Subject"
     EMAIL_X_MAILER = "Email X-Mailer"
     EMAIL_X_ORIGINATING_IP = "Email X-Originating IP"
+    ENCRYPTION_KEY = "Encryption Key"
     FILE_CREATED = "File Created"
     FILE_DELETED = "File Deleted"
     FILE_MOVED = "File Moved"
