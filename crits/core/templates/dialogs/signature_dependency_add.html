@@ -1,0 +1,10 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Add New Signature Dependency">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "crits.signatures.views.new_signature_dependency" %}'
+	  method='POST' enctype="multipart/form-data" item-type="signature-dependency">
+    <table class="form">{{ add_signature_dependency.as_table }}</table>
+    </form>
+</div>
+

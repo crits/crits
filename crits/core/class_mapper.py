@@ -16,6 +16,7 @@ __obj_type_to_key_descriptor__ = {
     'PCAP': 'md5',
     'RawData': 'title',
     'Sample': 'md5',
+    'Signature': 'title',
     'Target': 'email_address',
 }
 
@@ -49,6 +50,7 @@ def class_from_id(type_, _id):
     from crits.raw_data.raw_data import RawData, RawDataType
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot
+    from crits.signatures.signature import Signature, SignatureType, SignatureDependency
     from crits.targets.target import Target
 
     if not _id:
@@ -96,6 +98,12 @@ def class_from_id(type_, _id):
         return RawDataType.objects(id=_id).first()
     elif type_ == 'Sample':
         return Sample.objects(id=_id).first()
+    elif type_ == 'Signature':
+        return Signature.objects(id=_id).first()
+    elif type_ == 'SignatureType':
+        return SignatureType.objects(id=_id).first()
+    elif type_ == 'SignatureDependency':
+        return SignatureDependency.objects(id=_id).first()
     elif type_ == 'SourceAccess':
         return SourceAccess.objects(id=_id).first()
     elif type_ == 'Screenshot':
@@ -138,6 +146,7 @@ def class_from_value(type_, value):
     from crits.raw_data.raw_data import RawData
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot
+    from crits.signatures.signature import Signature
     from crits.targets.target import Target
 
     # Make sure value is a string...
@@ -182,6 +191,8 @@ def class_from_value(type_, value):
         return Sample.objects(md5=value).first()
     elif type_ == 'Screenshot':
         return Screenshot.objects(id=value).first()
+    elif type_ == 'Signature':
+        return Signature.objects(md5=value).first()
     elif type_ == 'Target':
         target = Target.objects(email_address=value).first()
         if target:
@@ -219,6 +230,7 @@ def class_from_type(type_):
     from crits.raw_data.raw_data import RawData, RawDataType
     from crits.samples.sample import Sample
     from crits.screenshots.screenshot import Screenshot
+    from crits.signatures.signature import Signature, SignatureType, SignatureDependency
     from crits.targets.target import Target
 
     if type_ == 'Actor':
@@ -259,6 +271,12 @@ def class_from_type(type_):
         return SourceAccess
     elif type_ == 'Screenshot':
         return Screenshot
+    elif type_ == 'Signature':
+        return Signature
+    elif type_ == 'SignatureType':
+        return SignatureType
+    elif type_ == 'SignatureDependency':
+        return SignatureDependency
     elif type_ == 'Target':
         return Target
     elif type_ == 'UserRole':

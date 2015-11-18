@@ -48,7 +48,7 @@ from crits.core.handlers import details_from_id, status_update
 from crits.core.handlers import get_favorites, favorite_update
 from crits.core.handlers import generate_favorites_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
-from crits.core.handlers import description_update
+from crits.core.handlers import description_update, data_update
 from crits.core.handlers import do_add_preferred_actions, add_new_action
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
@@ -86,6 +86,11 @@ from crits.raw_data.raw_data import RawDataType
 from crits.relationships.forms import ForgeRelationshipForm
 from crits.samples.forms import UploadFileForm
 from crits.screenshots.forms import AddScreenshotForm
+from crits.signatures.forms import UploadSignatureForm
+from crits.signatures.forms import NewSignatureTypeForm
+from crits.signatures.forms import NewSignatureDependencyForm
+from crits.signatures.signature import SignatureType
+from crits.signatures.signature import SignatureDependency
 from crits.targets.forms import TargetInfoForm
 
 from crits.vocabulary.sectors import Sectors
@@ -111,6 +116,30 @@ def update_object_description(request):
         return HttpResponse(json.dumps(description_update(type_,
                                                           id_,
                                                           description,
+                                                          analyst)),
+                            mimetype="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST.'},
+                                  RequestContext(request))
+@user_passes_test(user_can_view_data)
+def update_object_data(request):
+    """
+    Update the data in a data element
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        type_ = request.POST['type']
+        id_ = request.POST['id']
+        data = request.POST['data']
+        analyst = request.user.username
+        return HttpResponse(json.dumps(data_update(type_,
+                                                          id_,
+                                                          data,
                                                           analyst)),
                             mimetype="application/json")
     else:
@@ -1053,6 +1082,8 @@ def base_context(request):
         base_context['location_add'] = AddLocationForm()
         base_context['add_raw_data_type'] = NewRawDataTypeForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
+        base_context['add_signature_type'] = NewSignatureTypeForm()
+        base_context['add_signature_dependency'] = NewSignatureDependencyForm()
         base_context['source_access'] = SourceAccessForm()
         base_context['upload_tlds'] = TLDUpdateForm()
         base_context['user_role_add'] = AddUserRoleForm()
@@ -1158,6 +1189,10 @@ def base_context(request):
             base_context['upload_raw_data_file'] = UploadRawDataFileForm(user)
         except Exception, e:
             logger.warning("Base Context UploadRawDataFileForm Error: %s" % e)
+        try:
+            base_context['upload_signature'] = UploadSignatureForm(user)
+        except Exception, e:
+            logger.warning("Base Context UploadSignatureForm Error: %s" % e)
 
         # Other info acquired from functions
         try:
@@ -1225,6 +1260,10 @@ def base_context(request):
                                             'name': 'Relationship Types'},
                                         {'collection': settings.COL_SOURCE_ACCESS,
                                             'name': 'Sources'},
+                                        {'collection': settings.COL_SIGNATURE_TYPES,
+                                            'name': 'Signature Types'},
+                                        {'collection': settings.COL_SIGNATURE_DEPENDENCY,
+                                            'name': 'Signature Dependency'},
                                         {'collection': settings.COL_USER_ROLES,
                                             'name': 'User Roles'}
                                         ]
@@ -1548,6 +1587,7 @@ def collections(request):
     colls['COL_PCAPS'] = settings.COL_PCAPS
     colls['COL_RAW_DATA'] = settings.COL_RAW_DATA
     colls['COL_SAMPLES'] = settings.COL_SAMPLES
+    colls['COL_SIGNATURES'] = settings.COL_SIGNATURES
     colls['COL_TARGETS'] = settings.COL_TARGETS
     return colls
 
@@ -1680,6 +1720,8 @@ def item_editor(request):
                 Campaign,
                 IndicatorAction,
                 RawDataType,
+                SignatureType,
+                SignatureDependency,
                 SourceAccess,
                 UserRole]
     for col_obj in obj_list:

@@ -639,11 +639,13 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.threat_type = ind['threat_type']
         indicator.attack_type = ind['attack_type']
         indicator.value = ind['value']
-        indicator.status = ind['status']
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)
         is_new_indicator = True
+
+    # Set the status whether new or existing.
+    indicator.status = ind['status']
 
     if 'campaign' in ind:
         if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:

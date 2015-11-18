@@ -12,6 +12,10 @@
     <script type="text/javascript">
         //used in item_editor
         var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
+
+        //Added to support deleting dependencies...
+        var delete_signature_dependency = "{% url 'crits.signatures.views.remove_signature_dependency' %}";
+
         //used in user_editor
         var user_source_access = "{% url 'crits.core.views.user_source_access' %}";
         var toggle_user_active = "{% url 'crits.core.views.toggle_user_active' %}";
@@ -21,6 +25,8 @@
                             "#campaign_button",
                             "#indicatoraction_button",
                             "#rawdatatype_button",
+                            "#signaturetype_button",
+                            "#signaturedependency_button",
                             "#sourceaccess_button"
                             ]
         var usersHash = "#users";

@@ -1,0 +1,31 @@
+{% load url from future %}
+    <table class="chart tablesorter" style="table-layout: fixed;">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Data Type</th>
+            <th>Data Type Minimum Version</th>
+            <th>Data Type Maximum Version</th>
+            <th>Data Type Dependencies</th>
+            <th>Description</th>
+            <th>Upload Date</th>
+            <th>ID</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for data in signature %}
+        <tr>
+            <td>
+                <a href="{% url 'crits.signatures.views.signature_detail' data.id %}">{{ data.title }}</a>
+            </td>
+            <td>{{ data.data_type }}</td>
+            <td>{{ data.data_type_min_version }}</td>
+            <td>{{ data.data_type_max_version }}</td>
+            <td>{{ data.data_type_dependency }}</td>
+            <td>{{ data.description }}</td>
+            <td>{{ data.created|date:"m/d/Y" }}</td>
+            <td>{{ data.id }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>

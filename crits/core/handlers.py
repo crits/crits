@@ -51,6 +51,7 @@ from crits.raw_data.raw_data import RawData
 from crits.emails.email import Email
 from crits.samples.sample import Sample
 from crits.screenshots.screenshot import Screenshot
+from crits.signatures.signature import Signature
 from crits.targets.target import Target
 from crits.indicators.indicator import Indicator, IndicatorAction
 
@@ -97,6 +98,44 @@ def description_update(type_, id_, description, analyst):
     except ValidationError, e:
         return {'success': False, 'message': e}
 
+def data_update(type_, id_, data, analyst):
+    """
+    Change the data of a top-level object.
+
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
+    :param data: The data to use.
+    :type data: str
+    :param analyst: The user setting the description.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(analyst)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser.HTMLParser()
+    data = h.unescape(data)
+    try:
+        obj.data = data
+        obj.save(username=analyst)
+        return {'success': True, 'message': "Data set."}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
 def get_favorites(analyst):
     """
     Get all favorites for a user.
@@ -130,6 +169,7 @@ def get_favorites(analyst):
         'RawData': 'title',
         'Sample': 'filename',
         'Screenshot': 'id',
+        'Signature': 'title',
         'Target': 'email_address'
     }
 
@@ -237,6 +277,7 @@ def get_data_for_item(item_type, item_id):
         'PCAP': ['filename', ],
         'RawData': ['title', ],
         'Sample': ['filename', ],
+        'Signature': ['title', ],
         'Target': ['email_address', ],
     }
     response = {'OK': 0, 'Msg': ''}
@@ -778,6 +819,7 @@ def alter_bucket_list(obj, buckets, val):
                            PCAP=0,
                            RawData=0,
                            Sample=0,
+                           Signature=0,
                            Target=0).delete()
 
 def generate_bucket_csv(request):
@@ -823,13 +865,14 @@ def generate_bucket_jtable(request, option):
                                               'PCAP',
                                               'RawData',
                                               'Sample',
+                                              'Signature',
                                               'Target'])
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
     fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
               'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
-              'Sample', 'Target', 'Promote']
+              'Sample', 'Signature', 'Target', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
@@ -1528,6 +1571,12 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                     {'data': search_query},
                     {'objects.value': search_query},
                 ]
+        elif type_ == "Signature":
+            search_list = [
+                    {'md5': search_query},
+                    {'data': search_query},
+                    {'objects.value': search_query},
+                ]
         elif type_ == "Indicator":
             search_list = [
                     {'value': search_query},
@@ -1597,6 +1646,17 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             else:
                 query = defaultquery
         elif type_ == "RawData":
+            if search_type == "data":
+                query = {'data': search_query}
+            elif search_type == "data_type":
+                query = {'data_type': search_query}
+            elif search_type == "title":
+                query = {'title': search_query}
+            elif search_type == "tool":
+                query = {'tool.name': search_query}
+            else:
+                query = defaultquery
+        elif type_ == "Signature":
             if search_type == "data":
                 query = {'data': search_query}
             elif search_type == "data_type":
@@ -2101,6 +2161,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     "PCAP": 'crits.pcaps.views.pcap_details',
                     "RawData": 'crits.raw_data.views.raw_data_details',
                     "Sample": 'crits.samples.views.detail',
+                    "Signature": 'crits.signatures.views.detail',
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
                                     args=(doc['url_key'],))
@@ -2398,6 +2459,12 @@ def generate_items_jtable(request, itype, option):
     elif itype == 'RawDataType':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#raw_data_type_add').click();}"
+    elif itype == 'SignatureType':
+        fields = ['name', 'active', 'id']
+        click = "function () {window.parent.$('#signature_type_add').click();}"
+    elif itype == 'SignatureDependency':
+        fields = ['name', 'id']
+        click = "function () {window.parent.$('#signature_dependency_add').click();}"
     elif itype == 'SourceAccess':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#source_create').click();}"
@@ -2412,6 +2479,13 @@ def generate_items_jtable(request, itype, option):
                                     request, includes=fields)
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type="application/json")
+
+
+    '''Special case for dependency, to allow for deletions, no more toggle on dependencies '''
+    ''' This is modified here to fit with rest of code, there is no delete field in mongo, but the user can delete '''
+
+    if itype == 'SignatureDependency':
+        fields = ['name', 'delete', 'id']
 
     jtopts = {
         'title': "%ss" % itype,
@@ -2445,6 +2519,16 @@ def generate_items_jtable(request, itype, option):
             return '<a href="#" onclick=\\'javascript:editAction("'+data.record.name+'");\\'>' + data.record.name + '</a>';
             }
             """
+
+    '''special case for signature dependency, add a delete button to allow for removal'''
+    if itype == 'SignatureDependency':
+        for field in jtable['fields']:
+            if field['fieldname'].startswith("'delete"):
+                field['display'] = """ function (data) {
+                return '<button title="Delete" class="jtable-command-button jtable-delete-command-button" id="to_delete_' + data.record.id + '" href="#" onclick=\\'javascript:deleteSignatureDependency("%s","'+data.record.id+'");\\'><span>Delete</span></button>';
+                }
+                """ % itype
+
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
@@ -3275,6 +3359,7 @@ def generate_global_search(request):
                 ['PCAP', 'crits.pcaps.views.pcap_details', 'md5'],
                 ['RawData', 'crits.raw_data.views.raw_data_details', 'id'],
                 ['Sample', 'crits.samples.views.detail', 'md5'],
+                ['Signature', 'crits.signatures.views.signature_detail', 'id'],
                 ['Target', 'crits.targets.views.target_info', 'email_address']]:
             obj = class_from_id(obj_type, searchtext)
             if obj:
@@ -3301,6 +3386,7 @@ def generate_global_search(request):
                     [RawData, "crits.raw_data.views.raw_data_listing"],
                     [Sample, "crits.samples.views.samples_listing"],
                     [Screenshot, "crits.screenshots.views.screenshots_listing"],
+                    [Signature, "crits.signatures.views.signatures_listing"],
                     [Target, "crits.targets.views.targets_listing"]]:
         ctype = col_obj._meta['crits_type']
         resp = get_query(col_obj, request)
@@ -3496,6 +3582,7 @@ def details_from_id(type_, id_):
                 'RawData': 'crits.raw_data.views.raw_data_details',
                 'Sample': 'crits.samples.views.detail',
                 'Screenshot': 'crits.screenshots.views.render_screenshot',
+                'Signature': 'crits.signatures.views.signature_detail',
                 'Target': 'crits.targets.views.target_info',
                 }
     if type_ in type_map and id_:
@@ -3756,6 +3843,7 @@ def alter_sector_list(obj, sectors, val):
                            PCAP=0,
                            RawData=0,
                            Sample=0,
+                           Signature=0,
                            Target=0).delete()
 
 def generate_sector_csv(request):
@@ -3801,13 +3889,14 @@ def generate_sector_jtable(request, option):
                                               'PCAP',
                                               'RawData',
                                               'Sample',
+                                              'Signature',
                                               'Target'])
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
     fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
               'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
-              'Sample', 'Target']
+              'Sample', 'Signature', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',
