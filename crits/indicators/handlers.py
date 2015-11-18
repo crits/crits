@@ -626,7 +626,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         'high': 4,
     }
 
-    if ind.get('status', None) is None:
+    if ind.get('status', None) is None or len(ind.get('status', '')) < 1:
         ind['status'] = Status.NEW
 
     indicator = Indicator.objects(ind_type=ind['type'],
@@ -642,10 +642,11 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)
+        indicator.status = ind['status']
         is_new_indicator = True
-
-    # Set the status whether new or existing.
-    indicator.status = ind['status']
+    else:
+        if ind['status'] != Status.NEW:
+            indicator.status = ind['status']
 
     if 'campaign' in ind:
         if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:
