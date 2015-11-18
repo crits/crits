@@ -397,6 +397,21 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
         ind['threat_type'] = d.get('Threat Type', IndicatorThreatTypes.UNKNOWN)
         ind['attack_type'] = d.get('Attack Type', IndicatorAttackTypes.UNKNOWN)
+
+        if len(ind['threat_type']) < 1:
+            ind['threat_type'] = IndicatorThreatTypes.UNKNOWN
+        if ind['threat_type'] not in IndicatorThreatTypes.values():
+            result['success'] = False
+            result_message += "Cannot process row %s: Invalid Threat Type<br />" % processed
+            continue
+
+        if len(ind['attack_type']) < 1:
+            ind['attack_type'] = IndicatorAttackTypes.UNKNOWN
+        if ind['attack_type'] not in IndicatorAttackTypes.values():
+            result['success'] = False
+            result_message += "Cannot process row %s: Invalid Attack Type<br />" % processed
+            continue
+
         ind['status'] = d.get('Status', Status.NEW)
         if not ind['value'] or not ind['type']:
             # Mandatory value missing or malformed, cannot process csv row
