@@ -18,10 +18,10 @@ $(document).ready(function() {
                 $( "#new-domain" ).click();
             } else if (e.keyCode==80) {
                 $( "#new-pcap" ).click();
+            } else if (e.keyCode==83 && e.shiftKey) {
+                $( "#new-signature" ).click();
             } else if (e.keyCode==83) {
                 $( "#new-sample" ).click();
-            } else if (e.keyCode==71) {
-                $( "#new-signature" ).click();
             } else if (e.keyCode==27) {
                 $( ".mm-opened").trigger('close');
             } else if (e.shiftKey && e.keyCode==191) {
