@@ -3,6 +3,18 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: dreardon
+Date: 2015-11-18
+    The new Signature TLO has two backend reference lists which can be managed
+    by an Administrator in the Control Panel.
+        - The Data Type drop-down values that are available can be added to and disabled
+        just like other reference values (Raw Data Types, etc.) in the Control Panel
+        under "Signature Types"
+        - The Signature Type Dependency list featured in the type-ahead component
+        can also be added to and managed in the Control Panel under "Signature Dependency".
+        Unlike most other Control Panel lists, this list allows entries to be deleted so
+        that this list doesn't become cumbersome over time.
+
 Author: frbapolkosnik
 Date: 2015-08-31
 
