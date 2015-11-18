@@ -336,6 +336,18 @@
         <input class="inputbutton" type="submit" name="search" value="Search" />
       </form>
     </li>
+     <li>
+      <b>Signatures</b>
+      <form method="get" id="signature_search" action="{% url 'crits.signatures.views.signatures_listing' %}">
+        <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
+        <select name="search_type" class='selectbox'>
+          <option value="data" selected="selected">Data</option>
+          <option value="data_type">Data Type</option>
+          <option value="title">Title</option>
+        </select>
+        <input class="inputbutton" type="submit" name="search" value="Search" />
+      </form>
+    </li>
     <li>
       <b>Comments</b>
       <form method="get" id="comment_search" action="{% url 'crits.comments.views.activity' %}">
@@ -527,6 +539,11 @@
         {% endfor %}
       </ul>
     </li>
+     <li class='nav_objects mmenu_item'>
+      <a href="{% url 'crits.signatures.views.signatures_listing' %}">Signatures</a>
+      <a href id="new-signature" class="ui-icon ui-icon-plusthick add
+          dialogClick" dialog="new-signature" persona="new" title="New Signature"></a>
+    </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.targets.views.targets_listing' %}">Targets</a>
       <a href id="new-target" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-target" persona="new" title="New Target"></a>
@@ -562,6 +579,12 @@
           <a href class="dialogClick" persona="new" dialog="raw_data_type_add" id="raw_data_type_add">Raw Data Type</a>
         </li>
         {% if user_role == 'Administrator' %}
+        <li class='mmenu_item'>
+          <a href class="dialogClick" persona="new" dialog="signature_type_add" id="signature_type_add">Signature Type</a>
+        </li>
+        <li class='mmenu_item'>
+          <a href class="dialogClick" persona="new" dialog="signature_dependency_add" id="signature_dependency_add">Signature Dependency</a>
+        </li>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="source_create" id="source_create">Source</a>
         </li>

@@ -17,6 +17,7 @@ from crits.indicators.indicator import Indicator
 from crits.ips.ip import IP
 from crits.pcaps.pcap import PCAP
 from crits.raw_data.raw_data import RawData
+from crits.signatures.signature import Signature
 from crits.samples.sample import Sample
 from crits.targets.target import Target
 
@@ -78,6 +79,10 @@ class Command(BaseCommand):
                     dest="raw_data",
                     default=False,
                     help="Migrate raw data."),
+        make_option("-g", "--migrate_signatures", action="store_true",
+                    dest="signatures",
+                    default=False,
+                    help="Migrate signatures."),
         make_option("-s", "--skip_prep", action="store_true", dest="skip",
                     default=False,
                     help="Skip prepping the database"),
@@ -115,6 +120,7 @@ class Command(BaseCommand):
         pcaps = options.get('pcaps')
         raw_data = options.get('raw_data')
         samples = options.get('samples')
+        signatures = options.get('signatures')
         targets = options.get('targets')
 
         if (not mall and
@@ -130,6 +136,7 @@ class Command(BaseCommand):
             not pcaps and
             not raw_data and
             not samples and
+            not signatures and
             not targets):
             print "You must select something to upgrade. See '-h' for options."
             sys.exit(1)
@@ -207,6 +214,7 @@ def upgrade(lv, options):
     pcaps = options.get('pcaps')
     raw_data = options.get('raw_data')
     samples = options.get('samples')
+    signatures = options.get('signatures')
     targets = options.get('targets')
     skip = options.get('skip')
     sort_ids = options.get('sort_ids')
@@ -240,6 +248,8 @@ def upgrade(lv, options):
         migrate_collection(RawData, sort_ids)
     if mall or samples:
         migrate_collection(Sample, sort_ids)
+    if mall or signatures:
+        migrate_collection(Signature, sort_ids)
     if mall or targets:
         migrate_collection(Target, sort_ids)
     if mall or exploits:

@@ -2064,6 +2064,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                        'mimetype',
                        'size',
                        'campaign'),
+            'Signature': ('id', 'title', 'data_type', 'description',
+                        'version', 'campaign'),
             'Target': ('id', 'firstname', 'lastname', 'email_address', 'email_count'),
         }
         rel_dict['Other'] = 0

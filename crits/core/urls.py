@@ -54,6 +54,7 @@ urlpatterns = patterns('',
     # General core pages
     (r'^details/(?P<type_>\S+)/(?P<id_>\S+)/$', 'crits.core.views.details'),
     (r'^update_object_description/', 'crits.core.views.update_object_description'),
+    (r'^update_object_data/', 'crits.core.views.update_object_data'),
 
     # Helper pages
     (r'^about/$', 'crits.core.views.about'),
