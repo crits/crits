@@ -22,7 +22,6 @@
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#signature_section" id="signature_button"><span>Signature</span></a></li>
     <li><a href="#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
@@ -160,16 +159,6 @@
     </div>
 </div>
 
-<div id="signature_section">
-    <div class="content_box">
-        <h3 class="titleheader">
-        <span>Data<span>
-        </h3>
-        <div>
-            <pre>{{ signature.data|cgi_escape }}</pre>
-        </div>
-    </div>
-</div>
 {% include 'signature_versions.html' %}
 {% with item=signature %}
     {% include "services_analysis_section.html" with crits_type="Signature" identifier=signature.id %}
