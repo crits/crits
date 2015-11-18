@@ -95,11 +95,6 @@
                     {% include 'description_widget.html' %}
                 {% endwith %}
             </tr>
-             <tr>
-                {% with data=signature.data %}
-                    {% include 'data_widget.html' %}
-                {% endwith %}
-            </tr>
             <tr>
                 <td class="key">Status
                     <span style="float: right;" class="object_status_response"></span>
@@ -124,10 +119,16 @@
         </tbody>
         </table>
     </div>
+
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
         {% with bucket_list=signature.bucket_list %}
             {% include 'bucket_list_widget.html' %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with data=signature.data %}
+            {% include 'data_widget.html' %}
         {% endwith %}
     </div>
     <div>
