@@ -662,12 +662,14 @@ class Action(CritsDocument, CritsSchemaDocument, Document):
         "schema_doc": {
             'name': 'The name of this Action',
             'active': 'Enabled in the UI (on/off)',
+            'object_types': 'List of TLOs this is for',
             'preferred': 'List of TLOs this is preferred for'
         },
     }
 
     name = StringField()
     active = StringField(default="on")
+    object_types = ListField(StringField())
     preferred = ListField(StringField())
 
 class EmbeddedAction(EmbeddedDocument, CritsDocumentFormatter):

@@ -28,6 +28,7 @@ urlpatterns = patterns('',
     (r'^actions/(?P<method>\S+)/(?P<obj_type>\S+)/(?P<obj_id>\w+)/$', 'crits.core.views.add_update_action'),
     (r'^action/remove/(?P<obj_type>\S+)/(?P<obj_id>\w+)/$', 'crits.core.views.remove_action'),
     (r'^add_action/$', 'crits.core.views.new_action'),
+    (r'^get_actions_for_tlo/$', 'crits.core.views.get_actions_for_tlo'),
 
 
     # CRITs Configuration

@@ -7,6 +7,7 @@ class Action():
     ACTIVE = "Active"
     REASON = "Reason"
     DATE = "Date"
+    OBJECT_TYPES = "TLOs"
     PREFERRED = "Preferred TLOs"
 
 class Common():

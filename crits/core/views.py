@@ -2148,6 +2148,7 @@ def new_action(request):
         analyst = request.user.username
         if form.is_valid():
             result = add_new_action(form.cleaned_data['action'],
+                                    form.cleaned_data['object_types'],
                                     form.cleaned_data['preferred'],
                                     analyst)
             if result:
@@ -2182,39 +2183,36 @@ def add_update_action(request, method, obj_type, obj_id):
     if request.method == "POST" and request.is_ajax():
         username = request.user.username
         form = ActionsForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            add = {
-                'action_type': data['action_type'],
-                'begin_date': data['begin_date'] if data['begin_date'] else '',
-                'end_date': data['end_date'] if data['end_date'] else '',
-                'performed_date': data['performed_date'] if data['performed_date'] else '',
-                'active': data['active'],
-                'reason': data['reason'],
-                'analyst': username,
-            }
-            if method == "add":
-                add['date'] = datetime.datetime.now()
-                result = action_add(obj_type, obj_id, add)
-            else:
-                date = datetime.datetime.strptime(data['date'],
-                                                  settings.PY_DATETIME_FORMAT)
-                date = date.replace(microsecond=date.microsecond/1000*1000)
-                add['date'] = date
-                result = action_update(obj_type, obj_id, add)
-            if 'object' in result:
-                result['html'] = render_to_string('action_row_widget.html',
-                                                  {'action': result['object'],
-                                                   'admin': is_admin(username),
-                                                   'obj_type':obj_type,
-                                                   'obj_id':obj_id})
-            return HttpResponse(json.dumps(result,
-                                           default=json_handler),
-                                mimetype='application/json')
-        else: #invalid form
-            return HttpResponse(json.dumps({'success': False,
-                                            'form': form.as_table()}),
-                                mimetype='application/json')
+        form.is_valid()
+        data = form.cleaned_data
+        data['action_type'] = request.POST.get('action_type')
+        add = {
+            'action_type': data['action_type'],
+            'begin_date': data['begin_date'] if data['begin_date'] else '',
+            'end_date': data['end_date'] if data['end_date'] else '',
+            'performed_date': data['performed_date'] if data['performed_date'] else '',
+            'active': data['active'],
+            'reason': data['reason'],
+            'analyst': username,
+        }
+        if method == "add":
+            add['date'] = datetime.datetime.now()
+            result = action_add(obj_type, obj_id, add)
+        else:
+            date = datetime.datetime.strptime(data['date'],
+                                                settings.PY_DATETIME_FORMAT)
+            date = date.replace(microsecond=date.microsecond/1000*1000)
+            add['date'] = date
+            result = action_update(obj_type, obj_id, add)
+        if 'object' in result:
+            result['html'] = render_to_string('action_row_widget.html',
+                                                {'action': result['object'],
+                                                'admin': is_admin(username),
+                                                'obj_type':obj_type,
+                                                'obj_id':obj_id})
+        return HttpResponse(json.dumps(result,
+                                        default=json_handler),
+                            mimetype='application/json')
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -2246,3 +2244,21 @@ def remove_action(request, obj_type, obj_id):
                                       {'error': error},
                                       RequestContext(request))
     return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def get_actions_for_tlo(request):
+    """
+    Get the actions for the specified TLO.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    type_ = request.GET.get('type', None)
+    final = []
+    if type_ is not None:
+        for a in Action.objects(object_types=type_).order_by("+name"):
+            final.append(a.name)
+    return HttpResponse(json.dumps({'results': final}),
+                mimetype="application/json")

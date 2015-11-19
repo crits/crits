@@ -5,7 +5,6 @@ from django.forms.util import ErrorList
 from django.forms.widgets import HiddenInput, RadioSelect, SelectMultiple
 
 from crits.core import form_consts
-from crits.core.crits_mongoengine import Action
 from crits.core.form_consts import Action as ActionConsts
 from crits.core.handlers import get_source_names, get_item_names, ui_themes
 from crits.core.user_role import UserRole
@@ -94,8 +93,6 @@ class ActionsForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(ActionsForm, self).__init__(*args, **kwargs)
-        self.fields['action_type'].choices = [
-            (c.name, c.name) for c in get_item_names(Action, True)]
 
 class NewActionForm(forms.Form):
     """
@@ -105,6 +102,10 @@ class NewActionForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     action = forms.CharField(widget=forms.TextInput, required=True)
+    object_types = forms.MultipleChoiceField(required=False,
+                                          label=ActionConsts.OBJECT_TYPES,
+                                          widget=forms.SelectMultiple,
+                                          help_text="Which TLOs this is for.")
     preferred = forms.MultipleChoiceField(required=False,
                                           label=ActionConsts.PREFERRED,
                                           widget=forms.SelectMultiple,
@@ -116,6 +117,7 @@ class NewActionForm(forms.Form):
         # Sort the available TLOs.
         tlos = [tlo for tlo in settings.CRITS_TYPES.keys()]
         tlos.sort()
+        self.fields['object_types'].choices = [(tlo, tlo) for tlo in tlos]
         self.fields['preferred'].choices = [(tlo, tlo) for tlo in tlos]
 
 

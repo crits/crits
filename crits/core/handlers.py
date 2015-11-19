@@ -173,7 +173,7 @@ def action_update(obj_type, obj_id, action):
                         action['performed_date'],
                         action['reason'],
                         action['date'])
-        indicator.save(username=action['analyst'])
+        obj.save(username=action['analyst'])
         return {'success': True, 'object': action}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -4091,12 +4091,14 @@ def get_bucket_autocomplete(term):
     return HttpResponse(json.dumps(buckets, default=json_handler),
                         content_type='application/json')
 
-def add_new_action(action, preferred, analyst):
+def add_new_action(action, object_types, preferred, analyst):
     """
     Add a new action to CRITs.
 
     :param action: The action to add to CRITs.
     :type action: str
+    :param object_types: The TLOs this is for.
+    :type object_types: list
     :param preferred: The TLOs this is preferred for.
     :type preferred: list
     :param analyst: The user adding this action.
@@ -4108,6 +4110,7 @@ def add_new_action(action, preferred, analyst):
     if not idb_action:
         idb_action = Action()
     idb_action.name = action
+    idb_action.object_types = object_types
     idb_action.preferred = preferred
     try:
         idb_action.save(username=analyst)

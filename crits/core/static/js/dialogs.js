@@ -1080,8 +1080,21 @@ var stdDialogs = {
       "action_add": {title: "Action"},
       "add-action": {title: "Action", href:"",
 		       new: {open: function(e) {
-                $('#id_action_performed_date').val(timenow());
-                }},
+                    $('#id_action_performed_date').val(timenow());
+                    var sel = $('#form-add-action').find('#id_action_type');
+                    if (typeof subscription_type !== "undefined") {
+                        $.ajax({
+                            type:'GET',
+                            data: {type: subscription_type},
+                            url: get_actions_for_tlo,
+                            success: function(data) {
+                                $.each(data.results, function(x,y) {
+                                    sel.append($('<option></option>').val(y).html(y));
+                                });
+                            }
+                        });
+                    }
+               }},
 		       update: { open: update_dialog} },
       "indicator-blob": {title: "New Indicator Blob"},
 
