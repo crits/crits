@@ -24,7 +24,7 @@ from crits.config.config import CRITsConfig
 from crits.core.audit import AuditLog
 from crits.core.bucket import Bucket
 from crits.core.class_mapper import class_from_id, class_from_type, key_descriptor_from_obj_type
-from crits.core.crits_mongoengine import Releasability, json_handler
+from crits.core.crits_mongoengine import Action, Releasability, json_handler
 from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.source_access import SourceAccess
 from crits.core.data_tools import create_zip, format_file
@@ -53,12 +53,130 @@ from crits.samples.sample import Sample
 from crits.screenshots.screenshot import Screenshot
 from crits.signatures.signature import Signature
 from crits.targets.target import Target
-from crits.indicators.indicator import Indicator, IndicatorAction
+from crits.indicators.indicator import Indicator
 
 from crits.core.totp import valid_totp
 
 
 logger = logging.getLogger(__name__)
+
+def action_add(obj_type, obj_id, action):
+    """
+    Add an action to a TLO.
+
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the to level object to update.
+    :type obj_id: str
+    :param action: The information about the action.
+    :type action: dict
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str) if failed,
+              "object" (dict) if successful.
+    """
+
+    obj_class = class_from_type(obj_type)
+    if not obj_class:
+        return {'success': False,
+                'message': 'Not a valid type: %s' % obj_type}
+
+    sources = user_sources(action['analyst'])
+    obj = obj_class.objects(id=obj_id,
+                            source__name__in=sources).first()
+
+    if not obj:
+        return {'success': False,
+                'message': 'Could not find TLO'}
+    try:
+        obj.add_action(action['action_type'],
+                       action['active'],
+                       action['analyst'],
+                       action['begin_date'],
+                       action['end_date'],
+                       action['performed_date'],
+                       action['reason'],
+                       action['date'])
+        obj.save(username=action['analyst'])
+        return {'success': True, 'object': action}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
+def action_remove(obj_type, obj_id, date, analyst):
+    """
+    Remove an action from a TLO.
+
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the TLO to remove an action from.
+    :type obj_id: str
+    :param date: The date of the action to remove.
+    :type date: datetime.datetime
+    :param analyst: The user removing the action.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
+    """
+
+    obj_class = class_from_type(obj_type)
+    if not obj_class:
+        return {'success': False,
+                'message': 'Not a valid type: %s' % obj_type}
+
+    sources = user_sources(analyst)
+    obj = obj_class.objects(id=obj_id,
+                            source__name__in=sources).first()
+
+    if not obj:
+        return {'success': False,
+                'message': 'Could not find TLO'}
+    try:
+        obj.delete_action(date)
+        obj.save(username=analyst)
+        return {'success': True}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
+def action_update(obj_type, obj_id, action):
+    """
+    Update an action for a TLO.
+
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the top level object to update.
+    :type obj_id: str
+    :param action: The information about the action.
+    :type action: dict
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str) if failed,
+              "object" (dict) if successful.
+    """
+
+    obj_class = class_from_type(obj_type)
+    if not obj_class:
+        return {'success': False,
+                'message': 'Not a valid type: %s' % obj_type}
+
+    sources = user_sources(action['analyst'])
+    obj = obj_class.objects(id=obj_id,
+                            source__name__in=sources).first()
+
+    if not obj:
+        return {'success': False,
+                'message': 'Could not find TLO'}
+    try:
+        obj.edit_action(action['action_type'],
+                        action['active'],
+                        action['analyst'],
+                        action['begin_date'],
+                        action['end_date'],
+                        action['performed_date'],
+                        action['reason'],
+                        action['date'])
+        indicator.save(username=action['analyst'])
+        return {'success': True, 'object': action}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
 
 def description_update(type_, id_, description, analyst):
     """
@@ -1293,7 +1411,7 @@ def do_add_preferred_actions(obj_type, obj_id, username):
     if not klass:
         return {'success': False, 'message': 'Invalid type'}
 
-    preferred_actions = IndicatorAction.objects(preferred=obj_type)
+    preferred_actions = Action.objects(preferred=obj_type)
     if not preferred_actions:
         return {'success': False, 'message': 'No preferred actions'}
 
@@ -2453,9 +2571,9 @@ def generate_items_jtable(request, itype, option):
     elif itype == 'Campaign':
         fields = ['name', 'description', 'active', 'id']
         click = "function () {window.parent.$('#new-campaign').click();}"
-    elif itype == 'IndicatorAction':
+    elif itype == 'Action':
         fields = ['name', 'active', 'preferred', 'id']
-        click = "function () {window.parent.$('#indicator_action_add').click();}"
+        click = "function () {window.parent.$('#action_add').click();}"
     elif itype == 'RawDataType':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#raw_data_type_add').click();}"
@@ -3986,9 +4104,9 @@ def add_new_action(action, preferred, analyst):
     """
 
     action = action.strip()
-    idb_action = IndicatorAction.objects(name=action).first()
+    idb_action = Action.objects(name=action).first()
     if not idb_action:
-        idb_action = IndicatorAction()
+        idb_action = Action()
     idb_action.name = action
     idb_action.preferred = preferred
     try:

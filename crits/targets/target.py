@@ -2,11 +2,12 @@ from mongoengine import Document, StringField, IntField, EmailField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.user_tools import user_sources
 from crits.emails.email import Email
 from crits.targets.migrate import migrate_target
 
-class Target(CritsBaseAttributes, Document):
+class Target(CritsBaseAttributes, CritsActionsDocument, Document):
     """
     Target class.
     """

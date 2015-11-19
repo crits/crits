@@ -88,6 +88,11 @@
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
     </div>
+    <div class="content_box">
+        {% with obj=campaign_detail obj_type="Campaign" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
     <div class='content_box'>
       <h3 class="titleheader">
         <span>Email Activity</span>

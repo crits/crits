@@ -99,6 +99,11 @@
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
      </div>
+    <div class="content_box">
+        {% with obj=actor obj_type="Actor" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
      <div id="actor_identifier_widget_container">
          {% include "actor_identifiers_widget.html" %}
      </div>

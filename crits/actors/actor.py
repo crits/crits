@@ -8,6 +8,7 @@ from crits.actors.migrate import migrate_actor
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsSchemaDocument, CritsDocument
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import CritsDateTimeField
 from crits.core.user_tools import user_sources
 
@@ -84,7 +85,8 @@ class ActorIdentifier(CritsDocument, CritsSchemaDocument, CritsSourceDocument,
         if it:
             self.identifier_type = identifier_type
 
-class Actor(CritsBaseAttributes, CritsSourceDocument, Document):
+class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+            Document):
     """
     Actor class.
     """

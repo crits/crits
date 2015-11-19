@@ -6,10 +6,12 @@ from django.conf import settings
 from crits.samples.migrate import migrate_sample
 from crits.core.crits_mongoengine import CritsBaseAttributes
 from crits.core.crits_mongoengine import CritsSourceDocument
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import getFileField
 
 
-class Sample(CritsBaseAttributes, CritsSourceDocument, Document):
+class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+             Document):
     """Sample object"""
 
     meta = {

@@ -2,8 +2,10 @@ from mongoengine import Document, StringField, ListField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import CritsActionsDocument
 
-class Backdoor(CritsBaseAttributes, CritsSourceDocument, Document):
+class Backdoor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+               Document):
     """
     Backdoor class.
     """

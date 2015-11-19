@@ -130,6 +130,11 @@
             {% include 'data_widget.html' %}
         {% endwith %}
     </div>
+    <div class="content_box">
+        {% with obj=signature obj_type="Signature" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
     <div>
       {% with obj=signature obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
