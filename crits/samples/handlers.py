@@ -37,7 +37,7 @@ from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
 from crits.objects.handlers import validate_and_add_new_handler_object
-from crits.samples.forms import XORSearchForm, UnrarSampleForm, UploadFileForm
+from crits.samples.forms import XORSearchForm, UnzipSampleForm, UploadFileForm
 from crits.samples.sample import Sample
 from crits.samples.yarahit import YaraHit
 from crits.services.analysis_result import AnalysisResult
@@ -116,7 +116,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
         #create forms
         xor_search_form = XORSearchForm()
         campaign_form = CampaignForm()
-        unrar_sample_form = UnrarSampleForm()
+        unzip_sample_form = UnzipSampleForm()
         download_form = DownloadFileForm(initial={"obj_type":'Sample',
                                                   "obj_id":sample.id,
                                                   "meta_format": "none"})
@@ -179,7 +179,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'campaign_form': campaign_form,
                 'download_form': download_form,
                 'xor_search_form': xor_search_form,
-                'unrar_sample_form': unrar_sample_form,
+                'unzip_sample_form': unzip_sample_form,
                 'binary_exists': binary_exists,
                 'favorite': favorite,
                 'screenshots': screenshots,
@@ -464,30 +464,6 @@ def get_yara_hits(version=None):
         hits = YaraHit.objects().order_by('+result')
     return hits
 
-def handle_unrar_sample(md5, user=None, password=None):
-    """
-    Unrar a sample.
-
-    :param md5: The MD5 of the sample to unrar.
-    :type md5: str
-    :param user: The user unraring this sample.
-    :type user: str
-    :param password: Password to use to unrar the sample.
-    :type password: str
-    :returns: list
-    :raises: ZipFileError, Exception
-    """
-
-    sample = class_from_value('Sample', md5)
-    if not sample:
-        return None
-    data = sample.filedata.read()
-    source = sample.source[0].name
-    campaign = sample.campaign
-    reference = ''
-    return unrar_file(md5, user, password, data, source, method="Unrar Existing Sample",
-                      reference=reference, campaign=campaign, related_md5=md5)
-
 def handle_unzip_file(md5, user=None, password=None):
     """
     Unzip a sample.
@@ -650,132 +626,6 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
             shutil.rmtree(zipdir)
         if os.path.isdir(extractdir):
             shutil.rmtree(extractdir)
-    return samples
-
-def unrar_file(filename, user=None, password=None, data=None, source=None,
-               method="Generic", reference='', campaign=None, confidence='low',
-               related_md5=None, related_id=None, related_type='Sample',
-               bucket_list=None, ticket=None, inherited_source=None,
-               is_return_only_md5=True,
-               backdoor_name=None, backdoor_version=None):
-    """
-    Unrar a file.
-
-    :param filename: The name of the file to unrar.
-    :type filename: str
-    :param user: The user unraring the file.
-    :type user: str
-    :param password: The password to use to unrar the file.
-    :type password: str
-    :param data: The filedata.
-    :type data: str
-    :param source: The name of the source that provided the data.
-    :type source: str
-    :param method: The source method to assign to the data.
-    :type method: str
-    :param reference: A reference to the data source.
-    :type reference: str
-    :param campaign: The campaign to attribute to the data.
-    :type campaign: str
-    :param confidence: The confidence level of the campaign attribution.
-    :type confidence: str ('low', 'medium', 'high')
-    :param related_md5: The MD5 of a related sample.
-    :type related_md5: str
-    :param related_id: The ObjectId of a related top-level object.
-    :type related_id: str
-    :param related_type: The type of the related top-level object.
-    :type related_type: str
-    :param bucket_list: The bucket(s) to assign to this data.
-    :type bucket_list: str
-    :param ticket: The ticket to assign to this data.
-    :type ticket: str
-    :param inherited_source: Source(s) to be inherited by the new Sample
-    :type inherited_source: list, :class:`crits.core.crits_mongoengine.EmbeddedSource`
-    :param is_return_only_md5: Only return the MD5s.
-    :type is_return_only_md5: bool
-    :returns: list
-    :raises: ZipFileError, Exception
-    """
-
-    crits_config = CRITsConfig.objects().first()
-    samples = []
-    try:
-        rar_md5 = md5(data).hexdigest()
-
-        # write the data to a file so we can read from it as a rar file
-        temproot = crits_config.temp_dir
-        rardir = tempfile.mkdtemp(dir=temproot)
-        # append '.rar' to help ensure rarfile doesn't have same
-        # name as an extracted file.
-        rarname = os.path.join(rardir, filename)+'.rar'
-        if data is None: #unraring an existing file
-            data = get_file(filename)
-        with open(rarname, "wb") as f:
-            f.write(data)
-
-        # change to temp directory since unrar allows extraction
-        # only to the current directory first save current directory
-        old_dir = os.getcwd()
-        os.chdir(rardir)
-        cmd = [crits_config.rar_path,'e'] #,'-inul'
-        if password:
-            cmd.append('-p'+password)
-        else:
-            cmd.append('-p-')
-        cmd.append('-y') #assume yes to all prompts
-        cmd.append(rarname)
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
-
-        waitSeconds = 30
-        while (proc.poll() is None and waitSeconds):
-            time.sleep(1)
-            waitSeconds -= 1
-
-        if proc.returncode:
-            errmsg = "Error while unraring archive\n" + proc.stdout.read()
-            raise ZipFileError, errmsg
-        elif not waitSeconds:
-            proc.terminate()
-            raise ZipFileError, "Unrar process failed to terminate"
-        else:
-            if related_md5 and related_md5 == rar_md5:
-                relationship = RelationshipTypes.COMPRESSED_INTO
-            else:
-                relationship = RelationshipTypes.RELATED_TO
-            for root, dirs, files in os.walk(rardir):
-                for filename in files:
-                    filepath = os.path.join(rardir, filename)
-                    if filepath != rarname:
-                        with open(filepath, 'rb') as filehandle:
-                            new_sample = handle_file(filename,
-                                                     filehandle.read(),
-                                                     source, method, reference,
-                                                     related_md5=related_md5,
-                                                     related_id=related_id,
-                                                     related_type=related_type,
-                                                     backdoor='', user=user,
-                                                     campaign=campaign,
-                                                     confidence=confidence,
-                                                     bucket_list=bucket_list,
-                                                     ticket=ticket,
-                                                     inherited_source=inherited_source,
-                                                     relationship=relationship,
-                                                     is_return_only_md5=is_return_only_md5,
-                                                     backdoor_name=backdoor_name,
-                                                     backdoor_version=backdoor_version)
-                            samples.append(new_sample)
-    except ZipFileError:
-        raise
-    except Exception:
-        raise
-        #raise ZipFileError, str(e)
-    finally:
-        #change back to original current directory
-        os.chdir(old_dir)
-        if os.path.isdir(rardir):
-            shutil.rmtree(rardir)
-
     return samples
 
 def handle_file(filename, data, source, method='Generic', reference='',
@@ -1199,26 +1049,6 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                 filename = "unknown"
     if file_format == "zip" and f:
         return unzip_file(
-            filename,
-            user=user,
-            password=password,
-            data=data,
-            source=source,
-            method=method,
-            reference=reference,
-            campaign=campaign,
-            confidence=confidence,
-            related_md5=related_md5,
-            related_id=related_id,
-            related_type=related_type,
-            bucket_list=bucket_list,
-            ticket=ticket,
-            inherited_source=inherited_source,
-            is_return_only_md5=is_return_only_md5,
-            backdoor_name=backdoor_name,
-            backdoor_version=backdoor_version)
-    elif file_format == "rar" and f:
-        return unrar_file(
             filename,
             user=user,
             password=password,

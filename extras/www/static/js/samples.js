@@ -107,7 +107,6 @@ $(document).ready(function(){
     "add-exploit": {title: "Add Exploit", submit: defaultSubmit, href:"" },
     "add-child": {title: "Add Child Sample", submit: defaultSubmit, href:"" },
     "unzip-sample": {title: "Unzip Sample", submit: defaultSubmit, href:"" },
-    "unrar-sample": {title: "Unrar Sample", submit: defaultSubmit, href:"" },
     "delete-sample": {title: "Delete Sample", submit: defaultSubmit, href:"" },
     "download-sample": {title: "Download Sample", submit: defaultSubmit, href:"" },
     };

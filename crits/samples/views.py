@@ -18,9 +18,9 @@ from crits.core.user_tools import user_can_view_data, user_is_admin
 from crits.core.user_tools import get_user_organization
 from crits.objects.forms import AddObjectForm
 from crits.samples.forms import UploadFileForm, XORSearchForm
-from crits.samples.forms import UnrarSampleForm
+from crits.samples.forms import UnzipSampleForm
 from crits.samples.handlers import handle_uploaded_file, mail_sample
-from crits.samples.handlers import handle_unrar_sample, generate_yarahit_jtable
+from crits.samples.handlers import generate_yarahit_jtable
 from crits.samples.handlers import delete_sample, handle_unzip_file
 from crits.samples.handlers import get_source_counts
 from crits.samples.handlers import get_sample_details
@@ -456,9 +456,7 @@ def unzip_sample(request, md5):
     """
 
     if request.method == "POST":
-        # Intentionally using UnrarSampleForm here. Both unrar and unzip use
-        # the same form because it's an identical form.
-        form = UnrarSampleForm(request.POST)
+        form = UnzipSampleForm(request.POST)
         if form.is_valid():
             pwd = form.cleaned_data['password']
             try:
@@ -474,30 +472,6 @@ def unzip_sample(request, md5):
                                   {'error': 'Expecting POST.'},
                                   RequestContext(request))
 
-@user_passes_test(user_can_view_data)
-def unrar_sample(request, md5):
-    """
-    Unrar a sample.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param md5: The MD5 of the sample to use.
-    :type md5: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST":
-        unrar_form = UnrarSampleForm(request.POST)
-        if unrar_form.is_valid():
-            pwd = unrar_form.cleaned_data['password']
-            try:
-                handle_unrar_sample(md5, user=request.user.username, password=pwd)
-            except ZipFileError, zfe:
-                return render_to_response('error.html',
-                                          {'error' : zfe.value},
-                                          RequestContext(request))
-        return HttpResponseRedirect(reverse('crits.samples.views.detail',
-                                            args=[md5]))
 
 #TODO: convert to jtable
 @user_passes_test(user_can_view_data)
