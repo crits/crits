@@ -106,10 +106,11 @@ class NewActionForm(forms.Form):
                                           label=ActionConsts.OBJECT_TYPES,
                                           widget=forms.SelectMultiple,
                                           help_text="Which TLOs this is for.")
-    preferred = forms.MultipleChoiceField(required=False,
-                                          label=ActionConsts.PREFERRED,
-                                          widget=forms.SelectMultiple,
-                                          help_text="Which TLOs this is a preferred action for.")
+    preferred = forms.CharField(required=False,
+                                label=ActionConsts.PREFERRED,
+                                widget=forms.Textarea(
+                                    attrs={'cols': '50', 'rows': '5'}),
+                                help_text="CSV of TLO Type, Field, Value.")
 
     def __init__(self, *args, **kwargs):
         super(NewActionForm, self).__init__(*args, **kwargs)
@@ -118,7 +119,6 @@ class NewActionForm(forms.Form):
         tlos = [tlo for tlo in settings.CRITS_TYPES.keys()]
         tlos.sort()
         self.fields['object_types'].choices = [(tlo, tlo) for tlo in tlos]
-        self.fields['preferred'].choices = [(tlo, tlo) for tlo in tlos]
 
 
 class AddSourceForm(forms.Form):

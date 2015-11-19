@@ -650,6 +650,16 @@ class CritsDocument(BaseDocument):
         return pformat(self.to_dict())
 
 
+class EmbeddedPreferredAction(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Preferred Action
+    """
+
+    object_type = StringField()
+    object_field = StringField()
+    object_value = StringField()
+
+
 class Action(CritsDocument, CritsSchemaDocument, Document):
     """
     Action type class.
@@ -663,14 +673,14 @@ class Action(CritsDocument, CritsSchemaDocument, Document):
             'name': 'The name of this Action',
             'active': 'Enabled in the UI (on/off)',
             'object_types': 'List of TLOs this is for',
-            'preferred': 'List of TLOs this is preferred for'
+            'preferred': 'List of dictionaries defining where this is preferred'
         },
     }
 
     name = StringField()
     active = StringField(default="on")
     object_types = ListField(StringField())
-    preferred = ListField(StringField())
+    preferred = ListField(EmbeddedDocumentField(EmbeddedPreferredAction))
 
 class EmbeddedAction(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -682,7 +692,7 @@ class EmbeddedAction(EmbeddedDocument, CritsDocumentFormatter):
     analyst = StringField()
     begin_date = CritsDateTimeField(default=datetime.datetime.now)
     date = CritsDateTimeField(default=datetime.datetime.now)
-    end_date = CritsDateTimeField(default=datetime.datetime.now)
+    end_date = CritsDateTimeField()
     performed_date = CritsDateTimeField(default=datetime.datetime.now)
     reason = StringField()
 
