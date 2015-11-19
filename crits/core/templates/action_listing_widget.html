@@ -1,0 +1,45 @@
+{% load url from future %}
+<div id="dialog-add-action" title="Add Action">
+    <form id="form-add-action"
+	  method='POST' enctype="multipart/form-data"
+	  item-type="action">
+    <table class="form"> {{ new_action.as_table }} </table>
+    </form>
+</div>
+<h3 class="titleheader">
+    <span>Actions</span>
+    <span class="add_button" data-intro="Add an action" data-position="right">
+        <a href="#" title="Add Action" style="display:inline-block;"
+           class="ui-icon ui-icon-plusthick dialogClick" dialog="add-action" persona="new" action="{% url 'crits.core.views.add_update_action' 'add' obj_type obj.id %}"></a>
+    </span>
+    <span id="preferred_actions" class="add_button" data-intro="Take preferred actions" data-position="right">
+        <a href="#" title="Take Preferred Actions" style="display:inline-block;" class="ui-icon ui-icon-heart"></a>
+    </span>
+</h3>
+<div class="content_body">
+    <table class="chart" id="action_listing">
+        <thead>
+            {% if obj.actions %}
+            <tr>
+                {% else %}
+                <tr id="action_listing_header" style="display:none;">
+                {% endif %}
+                <th>Type</th>
+                <th>Begin</th>
+                <th>End</th>
+                <th>Performed</th>
+                <th>Active</th>
+                <th>Reason</th>
+                <th>Date Added</th>
+                <th>Analyst</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% with obj_id=obj.id %}
+                {% for action in obj.actions %}
+                    {% include 'action_row_widget.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>

@@ -1077,7 +1077,25 @@ var stdDialogs = {
 
       "new-domain": {title: "Domain", open: new_domain_dialog},
       "new-indicator": {title: "Indicator", open: new_indicator_dialog},
-      "indicator_action_add": {title: "Indicator Action"},
+      "action_add": {title: "Action"},
+      "add-action": {title: "Action", href:"",
+		       new: {open: function(e) {
+                    $('#id_action_performed_date').val(timenow());
+                    var sel = $('#form-add-action').find('#id_action_type');
+                    if (typeof subscription_type !== "undefined") {
+                        $.ajax({
+                            type:'GET',
+                            data: {type: subscription_type},
+                            url: get_actions_for_tlo,
+                            success: function(data) {
+                                $.each(data.results, function(x,y) {
+                                    sel.append($('<option></option>').val(y).html(y));
+                                });
+                            }
+                        });
+                    }
+               }},
+		       update: { open: update_dialog} },
       "indicator-blob": {title: "New Indicator Blob"},
 
       "new-event": {title: "Event", open: new_event_dialog},
@@ -1158,7 +1176,7 @@ var stdDialogs = {
   // to make that sort of global change before 3.0.
   var singleInputDialogs = "#dialog-actor-identifier-type,#dialog-ticket,"+
       "#dialog-source_create,#dialog-user_role," +
-      "#dialog-indicator_action_add,#dialog-raw_data_type_add,#dialog-signature_type_add,#dialog-signature_dependency_add";
+      "#dialog-action_add,#dialog-raw_data_type_add,#dialog-signature_type_add,#dialog-signature_dependency_add";
   $(singleInputDialogs).on("dialogopen", fix_form_submit(addEditSubmit));
 
 

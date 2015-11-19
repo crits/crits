@@ -6,6 +6,7 @@ from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
+from crits.core.crits_mongoengine import CritsActionsDocument
 
 
 class SignatureDependency(CritsDocument, CritsSchemaDocument, Document):
@@ -46,7 +47,8 @@ class SignatureType(CritsDocument, CritsSchemaDocument, Document):
     active = StringField(default="on")
 
 
-class Signature(CritsBaseAttributes, CritsSourceDocument, Document):
+class Signature(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+                Document):
     """
     Signature class.
     """

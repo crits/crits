@@ -139,6 +139,11 @@
     <div>
         {% include 'raw_data_data.html' %}
     </div>
+    <div class="content_box">
+        {% with obj=raw_data obj_type="RawData" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
     <div>
       {% with obj=raw_data obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}

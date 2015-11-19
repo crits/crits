@@ -100,6 +100,7 @@
     var login_user = "{% url 'crits.core.views.login' %}";
     var get_item_data_url = "{% url 'crits.core.views.get_item_data' %}";
     var get_dialog_url = "{% url 'crits.core.views.get_dialog' %}";
+    var get_actions_for_tlo = "{% url 'crits.core.views.get_actions_for_tlo' %}";
     var add_preferred_actions = "{% url 'crits.core.views.add_preferred_actions' %}";
     //only activates the qtip if in production
     {% if not hide_git_hash%}
@@ -573,7 +574,7 @@
           <a href class="dialogClick" persona="new" dialog="actor_identifier_type_add" id="actor_identifier_type_add">Actor Identifier Type</a>
         </li>
         <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="indicator_action_add" id="indicator_action_add">Indicator Action</a>
+          <a href class="dialogClick" persona="new" dialog="action_add" id="action_add">Action</a>
         </li>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="raw_data_type_add" id="raw_data_type_add">Raw Data Type</a>
@@ -638,7 +639,7 @@
                             <a class='controlPanelNav' sub_node='campaign_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#campaign_button">Campaigns</a>
                         </li>
                         <li class='mmenu_item'>
-                            <a class='controlPanelNav' sub_node='indicatoraction_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#indicatoraction_button">Indicator Actions</a>
+                            <a class='controlPanelNav' sub_node='action_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#action_button">Actions</a>
                         </li>
                         <li class='mmenu_item'>
                             <a class='controlPanelNav' sub_node='objecttype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#objecttype_button">Object Types</a>

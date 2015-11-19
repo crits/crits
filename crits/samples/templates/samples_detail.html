@@ -139,6 +139,11 @@
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
     </div>
+    <div class="content_box">
+        {% with obj=sample obj_type="Sample" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
     <div>
         {% with obj=sample obj_type=subscription.type %}
                  {% include 'tickets_listing_widget.html' %}

@@ -25,6 +25,10 @@ urlpatterns = patterns('',
     (r'^source_releasability/$', 'crits.core.views.source_releasability'),
     (r'^tickets/(?P<method>\S+)/(?P<type_>\w+)/(?P<id_>\w+)/$', 'crits.core.views.add_update_ticket'),
     (r'^preferred_actions/$', 'crits.core.views.add_preferred_actions'),
+    (r'^actions/(?P<method>\S+)/(?P<obj_type>\S+)/(?P<obj_id>\w+)/$', 'crits.core.views.add_update_action'),
+    (r'^action/remove/(?P<obj_type>\S+)/(?P<obj_id>\w+)/$', 'crits.core.views.remove_action'),
+    (r'^add_action/$', 'crits.core.views.new_action'),
+    (r'^get_actions_for_tlo/$', 'crits.core.views.get_actions_for_tlo'),
 
 
     # CRITs Configuration
