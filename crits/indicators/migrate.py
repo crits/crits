@@ -5,7 +5,21 @@ def migrate_indicator(self):
     Migrate to the latest schema version.
     """
 
-    migrate_2_to_3(self)
+    migrate_3_to_4(self)
+
+def migrate_3_to_4(self):
+    """
+    Migrate from schema 3 to 4.
+    """
+
+    if self.schema_version < 3:
+        migrate_2_to_3(self)
+
+    if self.schema_version == 3:
+        self.schema_version = 4
+        self.lower = self.value.lower()
+        self.save()
+        self.reload()
 
 def migrate_2_to_3(self):
     """
@@ -19,8 +33,6 @@ def migrate_2_to_3(self):
         from crits.core.core_migrate import migrate_analysis_results
         migrate_analysis_results(self)
         self.schema_version = 3
-        self.save()
-        self.reload()
 
 def migrate_1_to_2(self):
     """

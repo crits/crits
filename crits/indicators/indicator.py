@@ -6,7 +6,6 @@ from mongoengine import EmbeddedDocumentField
 
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsSourceDocument, CritsActionsDocument
 from crits.core.fields import CritsDateTimeField
@@ -54,12 +53,13 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
     meta = {
         "collection": settings.COL_INDICATORS,
         "crits_type": 'Indicator',
-        "latest_schema_version": 3,
+        "latest_schema_version": 4,
         "schema_doc": {
             'type': 'The type of this indicator.',
             'threat_type': 'The threat type of this indicator.',
             'attack_type': 'The attack type of this indicator.',
             'value': 'The value of this indicator',
+            'lower': 'The lowered value of this indicator',
             'created': 'The ISODate when this indicator was entered',
             'modified': 'The ISODate when this indicator was last modified',
             'actions': 'List [] of actions taken for this indicator',
@@ -104,6 +104,7 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
     threat_type = StringField(default=IndicatorThreatTypes.UNKNOWN)
     attack_type = StringField(default=IndicatorAttackTypes.UNKNOWN)
     value = StringField()
+    lower = StringField()
 
     def migrate(self):
         """
