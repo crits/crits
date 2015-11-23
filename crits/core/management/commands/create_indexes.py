@@ -119,6 +119,7 @@ def create_indexes():
 
     indicators = mongo_connector(settings.COL_INDICATORS)
     indicators.ensure_index("value", background=True)
+    indicators.ensure_index("lower", background=True)
     indicators.ensure_index("objects.value", background=True)
     indicators.ensure_index("relationships.value", background=True)
     indicators.ensure_index("campaign.name", background=True)

@@ -20,9 +20,9 @@ from crits.config.config import CRITsConfig
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
-from crits.core.crits_mongoengine import json_handler
-from crits.core.forms import ActionsForm, SourceForm, DownloadFileForm
-from crits.core.handlers import build_jtable, csv_export
+from crits.core.crits_mongoengine import json_handler, Action
+from crits.core.forms import SourceForm, DownloadFileForm
+from crits.core.handlers import build_jtable, csv_export, action_add
 from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
 from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
@@ -388,7 +388,8 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     added = 0
     for processed, d in enumerate(data, 1):
         ind = {}
-        ind['value'] = d.get('Indicator', '').lower().strip()
+        ind['value'] = d.get('Indicator', '').strip()
+        ind['lower'] = d.get('Indicator', '').lower().strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
         ind['threat_type'] = d.get('Threat Type', IndicatorThreatTypes.UNKNOWN)
         ind['attack_type'] = d.get('Attack Type', IndicatorAttackTypes.UNKNOWN)
@@ -455,7 +456,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                           'date': datetime.datetime.now()}
                 for action_type in actions:
                     action['action_type'] = action_type
-                    action_add(response.get('objectid'), action)
+                    action_add('Indicator', response.get('objectid'), action)
         else:
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, response['message'])
@@ -535,7 +536,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         ind['type'] = ctype.strip()
         ind['threat_type'] = threat_type.strip()
         ind['attack_type'] = attack_type.strip()
-        ind['value'] = value.lower().strip()
+        ind['value'] = value.strip()
+        ind['lower'] = value.lower().strip()
 
         if campaign:
             ind['campaign'] = campaign
@@ -625,7 +627,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         ind['status'] = Status.NEW
 
     indicator = Indicator.objects(ind_type=ind['type'],
-                                  value=ind['value'],
+                                  lower=ind['lower'],
                                   threat_type=ind['threat_type'],
                                   attack_type=ind['attack_type']).first()
     if not indicator:
@@ -634,6 +636,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.threat_type = ind['threat_type']
         indicator.attack_type = ind['attack_type']
         indicator.value = ind['value']
+        indicator.lower = ind['lower']
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)
@@ -642,6 +645,12 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     else:
         if ind['status'] != Status.NEW:
             indicator.status = ind['status']
+        add_desc = "\nSeen on %s as: %s" % (str(datetime.datetime.now()),
+                                          ind['value'])
+        if indicator.description is None:
+            indicator.description = add_desc
+        else:
+            indicator.description += add_desc
 
     if 'campaign' in ind:
         if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:
@@ -696,7 +705,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
 
     if add_domain or add_relationship:
         ind_type = indicator.ind_type
-        ind_value = indicator.value
+        ind_value = indicator.lower
         url_contains_ip = False
         if ind_type in (IndicatorTypes.DOMAIN,
                         IndicatorTypes.URI):
