@@ -534,6 +534,21 @@ function update_dialog(e) {
             }
         }
      });
+    var sel = form.find('#id_action_type');
+    if (typeof sel !== "undefined") {
+        if (typeof subscription_type !== "undefined") {
+            $.ajax({
+                type:'GET',
+                data: {type: subscription_type},
+                url: get_actions_for_tlo,
+                success: function(data) {
+                    $.each(data.results, function(x,y) {
+                        sel.append($('<option></option>').val(y).html(y));
+                    });
+                }
+            });
+        }
+    }
 }
 
 function timenow() {
