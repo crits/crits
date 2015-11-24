@@ -20,18 +20,16 @@ from crits.config.config import CRITsConfig
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
-from crits.core.crits_mongoengine import json_handler
+from crits.core.crits_mongoengine import json_handler, Action
 from crits.core.forms import SourceForm, DownloadFileForm
-from crits.core.handlers import build_jtable, csv_export
+from crits.core.handlers import build_jtable, csv_export, action_add
 from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
 from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.domains.domain import Domain
 from crits.domains.handlers import upsert_domain, get_valid_root_domain
 from crits.events.event import Event
-from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
-from crits.indicators.indicator import IndicatorAction
 from crits.indicators.indicator import Indicator
 from crits.indicators.indicator import EmbeddedConfidence, EmbeddedImpact
 from crits.ips.handlers import ip_add_update, validate_and_normalize_ip
@@ -195,9 +193,6 @@ def get_indicator_details(indicator_id, analyst):
         args = {'error': error}
         return template, args
     forms = {}
-    forms['new_action'] = IndicatorActionsForm(initial={'analyst': analyst,
-                                                        'active': "off",
-                                                        'date': datetime.datetime.now()})
     forms['new_activity'] = IndicatorActivityForm(initial={'analyst': analyst,
                                                            'date': datetime.datetime.now()})
     forms['new_campaign'] = CampaignForm()#'date': datetime.datetime.now(),
@@ -383,7 +378,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     for c in Campaign.objects(active='on'):
         valid_campaigns[c['name'].lower().replace(' - ', '-')] = c['name']
     valid_actions = {}
-    for a in IndicatorAction.objects(active='on'):
+    for a in Action.objects(active='on'):
         valid_actions[a['name'].lower().replace(' - ', '-')] = a['name']
     valid_ind_types = {}
     for obj in IndicatorTypes.values(sort=True):
@@ -393,7 +388,8 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     added = 0
     for processed, d in enumerate(data, 1):
         ind = {}
-        ind['value'] = d.get('Indicator', '').lower().strip()
+        ind['value'] = d.get('Indicator', '').strip()
+        ind['lower'] = d.get('Indicator', '').lower().strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
         ind['threat_type'] = d.get('Threat Type', IndicatorThreatTypes.UNKNOWN)
         ind['attack_type'] = d.get('Attack Type', IndicatorAttackTypes.UNKNOWN)
@@ -460,7 +456,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                           'date': datetime.datetime.now()}
                 for action_type in actions:
                     action['action_type'] = action_type
-                    action_add(response.get('objectid'), action)
+                    action_add('Indicator', response.get('objectid'), action)
         else:
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, response['message'])
@@ -540,7 +536,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         ind['type'] = ctype.strip()
         ind['threat_type'] = threat_type.strip()
         ind['attack_type'] = attack_type.strip()
-        ind['value'] = value.lower().strip()
+        ind['value'] = value.strip()
+        ind['lower'] = value.lower().strip()
 
         if campaign:
             ind['campaign'] = campaign
@@ -630,7 +627,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         ind['status'] = Status.NEW
 
     indicator = Indicator.objects(ind_type=ind['type'],
-                                  value=ind['value'],
+                                  lower=ind['lower'],
                                   threat_type=ind['threat_type'],
                                   attack_type=ind['attack_type']).first()
     if not indicator:
@@ -639,6 +636,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.threat_type = ind['threat_type']
         indicator.attack_type = ind['attack_type']
         indicator.value = ind['value']
+        indicator.lower = ind['lower']
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)
@@ -647,6 +645,12 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     else:
         if ind['status'] != Status.NEW:
             indicator.status = ind['status']
+        add_desc = "\nSeen on %s as: %s" % (str(datetime.datetime.now()),
+                                          ind['value'])
+        if indicator.description is None:
+            indicator.description = add_desc
+        else:
+            indicator.description += add_desc
 
     if 'campaign' in ind:
         if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:
@@ -701,7 +705,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
 
     if add_domain or add_relationship:
         ind_type = indicator.ind_type
-        ind_value = indicator.value
+        ind_value = indicator.lower
         url_contains_ip = False
         if ind_type in (IndicatorTypes.DOMAIN,
                         IndicatorTypes.URI):
@@ -953,98 +957,6 @@ def indicator_remove(_id, username):
             return {'success': False, 'message': ['Cannot find Indicator']}
     else:
         return {'success': False, 'message': ['Must be an admin to delete']}
-
-def action_add(indicator_id, action):
-    """
-    Add an action to an indicator.
-
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
-    :param action: The information about the action.
-    :type action: dict
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str) if failed,
-              "object" (dict) if successful.
-    """
-
-    sources = user_sources(action['analyst'])
-    indicator = Indicator.objects(id=indicator_id,
-                                  source__name__in=sources).first()
-    if not indicator:
-        return {'success': False,
-                'message': 'Could not find Indicator'}
-    try:
-        indicator.add_action(action['action_type'],
-                             action['active'],
-                             action['analyst'],
-                             action['begin_date'],
-                             action['end_date'],
-                             action['performed_date'],
-                             action['reason'],
-                             action['date'])
-        indicator.save(username=action['analyst'])
-        return {'success': True, 'object': action}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
-
-def action_update(indicator_id, action):
-    """
-    Update an action for an indicator.
-
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
-    :param action: The information about the action.
-    :type action: dict
-    :returns: dict with keys:
-              "success" (boolean),
-              "message" (str) if failed,
-              "object" (dict) if successful.
-    """
-
-    sources = user_sources(action['analyst'])
-    indicator = Indicator.objects(id=indicator_id,
-                                  source__name__in=sources).first()
-    if not indicator:
-        return {'success': False,
-                'message': 'Could not find Indicator'}
-    try:
-        indicator.edit_action(action['action_type'],
-                              action['active'],
-                              action['analyst'],
-                              action['begin_date'],
-                              action['end_date'],
-                              action['performed_date'],
-                              action['reason'],
-                              action['date'])
-        indicator.save(username=action['analyst'])
-        return {'success': True, 'object': action}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
-
-def action_remove(indicator_id, date, analyst):
-    """
-    Remove an action from an indicator.
-
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
-    :param date: The date of the action to remove.
-    :type date: datetime.datetime
-    :param analyst: The user removing the action.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
-    """
-
-    indicator = Indicator.objects(id=indicator_id).first()
-    if not indicator:
-        return {'success': False,
-                'message': 'Could not find Indicator'}
-    try:
-        indicator.delete_action(date)
-        indicator.save(username=analyst)
-        return {'success': True}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
 
 def activity_add(indicator_id, activity):
     """

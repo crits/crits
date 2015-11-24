@@ -9,7 +9,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
-from mongoengine import EmbeddedDocument, DynamicEmbeddedDocument
+from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
 from mongoengine import IntField, DateTimeField, ObjectIdField
 from mongoengine.base import BaseDocument, ValidationError
@@ -649,6 +649,149 @@ class CritsDocument(BaseDocument):
 
         return pformat(self.to_dict())
 
+
+class EmbeddedPreferredAction(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Preferred Action
+    """
+
+    object_type = StringField()
+    object_field = StringField()
+    object_value = StringField()
+
+
+class Action(CritsDocument, CritsSchemaDocument, Document):
+    """
+    Action type class.
+    """
+
+    meta = {
+        "collection": settings.COL_IDB_ACTIONS,
+        "crits_type": 'Action',
+        "latest_schema_version": 1,
+        "schema_doc": {
+            'name': 'The name of this Action',
+            'active': 'Enabled in the UI (on/off)',
+            'object_types': 'List of TLOs this is for',
+            'preferred': 'List of dictionaries defining where this is preferred'
+        },
+    }
+
+    name = StringField()
+    active = StringField(default="on")
+    object_types = ListField(StringField())
+    preferred = ListField(EmbeddedDocumentField(EmbeddedPreferredAction))
+
+class EmbeddedAction(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded action class.
+    """
+
+    action_type = StringField()
+    active = StringField()
+    analyst = StringField()
+    begin_date = CritsDateTimeField(default=datetime.datetime.now)
+    date = CritsDateTimeField(default=datetime.datetime.now)
+    end_date = CritsDateTimeField()
+    performed_date = CritsDateTimeField(default=datetime.datetime.now)
+    reason = StringField()
+
+class CritsActionsDocument(BaseDocument):
+    """
+    Inherit if you want to track actions information on a top-level object.
+    """
+
+    actions = ListField(EmbeddedDocumentField(EmbeddedAction))
+
+    def add_action(self, type_, active, analyst, begin_date,
+                   end_date, performed_date, reason, date=None):
+        """
+        Add an action to an Indicator.
+
+        :param type_: The type of action.
+        :type type_: str
+        :param active: Whether this action is active or not.
+        :param active: str ("on", "off")
+        :param analyst: The user adding this action.
+        :type analyst: str
+        :param begin_date: The date this action begins.
+        :type begin_date: datetime.datetime
+        :param end_date: The date this action ends.
+        :type end_date: datetime.datetime
+        :param performed_date: The date this action was performed.
+        :type performed_date: datetime.datetime
+        :param reason: The reason for this action.
+        :type reason: str
+        :param date: The date this action was added to CRITs.
+        :type date: datetime.datetime
+        """
+
+        ea = EmbeddedAction()
+        ea.action_type = type_
+        ea.active = active
+        ea.analyst = analyst
+        ea.begin_date = begin_date
+        ea.end_date = end_date
+        ea.performed_date = performed_date
+        ea.reason = reason
+        if date:
+            ea.date = date
+        self.actions.append(ea)
+
+    def delete_action(self, date=None):
+        """
+        Delete an action.
+
+        :param date: The date of the action to delete.
+        :type date: datetime.datetime
+        """
+
+        if not date:
+            return
+        for t in self.actions:
+            if t.date == date:
+                self.actions.remove(t)
+                break
+
+    def edit_action(self, type_, active, analyst, begin_date,
+                    end_date, performed_date, reason, date=None):
+        """
+        Edit an action for an Indicator.
+
+        :param type_: The type of action.
+        :type type_: str
+        :param active: Whether this action is active or not.
+        :param active: str ("on", "off")
+        :param analyst: The user editing this action.
+        :type analyst: str
+        :param begin_date: The date this action begins.
+        :type begin_date: datetime.datetime
+        :param end_date: The date this action ends.
+        :type end_date: datetime.datetime
+        :param performed_date: The date this action was performed.
+        :type performed_date: datetime.datetime
+        :param reason: The reason for this action.
+        :type reason: str
+        :param date: The date this action was added to CRITs.
+        :type date: datetime.datetime
+        """
+
+        if not date:
+            return
+        for t in self.actions:
+            if t.date == date:
+                self.actions.remove(t)
+                ea = EmbeddedAction()
+                ea.action_type = type_
+                ea.active = active
+                ea.analyst = analyst
+                ea.begin_date = begin_date
+                ea.end_date = end_date
+                ea.performed_date = performed_date
+                ea.reason = reason
+                ea.date = date
+                self.actions.append(ea)
+                break
 
 # Embedded Documents common to most classes
 class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):

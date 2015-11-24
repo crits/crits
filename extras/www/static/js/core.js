@@ -237,10 +237,16 @@ function editUser(user) {
     $( "#add-new-user-form" ).dialog( "open" );
 }
 
-function editAction(action) {
+function editAction(action, object_types, preferred) {
     var me = $("#add-new-action-form input[name='action']");
+    var ots = $("#add-new-action-form select[name='object_types']");
+    var prefs = $("#add-new-action-form textarea[name='preferred']");
     me.val(action);
     me.change();
+	var ot_list = object_types.split(",");
+	ots.val(ot_list);
+	var prep = preferred.replace(/\|\|/g, "\n").replace(/\|/g, ", ");
+	prefs.val(prep);
     $("#add-new-action-form").dialog("open");
 }
 
@@ -1566,4 +1572,21 @@ $(document).ready(function() {
         });
     });
 
+    // Handle preferred action clicks
+    $("#preferred_actions").click(function() {
+        $.ajax({
+            type: "POST",
+            async: false,
+            url: add_preferred_actions,
+            data: {'obj_type': subscription_type, 'obj_id': subscription_id},
+            success: function(data) {
+                if (data.success) {
+                    $("#action_listing_header").show();
+                    $("#action_listing > tbody:last-child").append(data.html);
+                } else {
+                    error_message_dialog('Action Error', data.message);
+                }
+            }
+        });
+    });
 }); //document.ready

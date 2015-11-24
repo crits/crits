@@ -93,6 +93,11 @@
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
     </div>
+    <div class="content_box">
+        {% with obj=cert obj_type="Certificate" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
     <div>
       {% with obj=cert obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}

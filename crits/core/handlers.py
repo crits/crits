@@ -24,8 +24,9 @@ from crits.config.config import CRITsConfig
 from crits.core.audit import AuditLog
 from crits.core.bucket import Bucket
 from crits.core.class_mapper import class_from_id, class_from_type, key_descriptor_from_obj_type
-from crits.core.crits_mongoengine import Releasability, json_handler
+from crits.core.crits_mongoengine import Action, Releasability, json_handler
 from crits.core.crits_mongoengine import CritsSourceDocument
+from crits.core.crits_mongoengine import EmbeddedPreferredAction
 from crits.core.source_access import SourceAccess
 from crits.core.data_tools import create_zip, format_file
 from crits.core.mongo_tools import mongo_connector, get_file
@@ -53,12 +54,130 @@ from crits.samples.sample import Sample
 from crits.screenshots.screenshot import Screenshot
 from crits.signatures.signature import Signature
 from crits.targets.target import Target
-from crits.indicators.indicator import Indicator, IndicatorAction
+from crits.indicators.indicator import Indicator
 
 from crits.core.totp import valid_totp
 
 
 logger = logging.getLogger(__name__)
+
+def action_add(obj_type, obj_id, action):
+    """
+    Add an action to a TLO.
+
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the to level object to update.
+    :type obj_id: str
+    :param action: The information about the action.
+    :type action: dict
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str) if failed,
+              "object" (dict) if successful.
+    """
+
+    obj_class = class_from_type(obj_type)
+    if not obj_class:
+        return {'success': False,
+                'message': 'Not a valid type: %s' % obj_type}
+
+    sources = user_sources(action['analyst'])
+    obj = obj_class.objects(id=obj_id,
+                            source__name__in=sources).first()
+
+    if not obj:
+        return {'success': False,
+                'message': 'Could not find TLO'}
+    try:
+        obj.add_action(action['action_type'],
+                       action['active'],
+                       action['analyst'],
+                       action['begin_date'],
+                       action['end_date'],
+                       action['performed_date'],
+                       action['reason'],
+                       action['date'])
+        obj.save(username=action['analyst'])
+        return {'success': True, 'object': action}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
+def action_remove(obj_type, obj_id, date, analyst):
+    """
+    Remove an action from a TLO.
+
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the TLO to remove an action from.
+    :type obj_id: str
+    :param date: The date of the action to remove.
+    :type date: datetime.datetime
+    :param analyst: The user removing the action.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
+    """
+
+    obj_class = class_from_type(obj_type)
+    if not obj_class:
+        return {'success': False,
+                'message': 'Not a valid type: %s' % obj_type}
+
+    sources = user_sources(analyst)
+    obj = obj_class.objects(id=obj_id,
+                            source__name__in=sources).first()
+
+    if not obj:
+        return {'success': False,
+                'message': 'Could not find TLO'}
+    try:
+        obj.delete_action(date)
+        obj.save(username=analyst)
+        return {'success': True}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
+def action_update(obj_type, obj_id, action):
+    """
+    Update an action for a TLO.
+
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the top level object to update.
+    :type obj_id: str
+    :param action: The information about the action.
+    :type action: dict
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str) if failed,
+              "object" (dict) if successful.
+    """
+
+    obj_class = class_from_type(obj_type)
+    if not obj_class:
+        return {'success': False,
+                'message': 'Not a valid type: %s' % obj_type}
+
+    sources = user_sources(action['analyst'])
+    obj = obj_class.objects(id=obj_id,
+                            source__name__in=sources).first()
+
+    if not obj:
+        return {'success': False,
+                'message': 'Could not find TLO'}
+    try:
+        obj.edit_action(action['action_type'],
+                        action['active'],
+                        action['analyst'],
+                        action['begin_date'],
+                        action['end_date'],
+                        action['performed_date'],
+                        action['reason'],
+                        action['date'])
+        obj.save(username=action['analyst'])
+        return {'success': True, 'object': action}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
 
 def description_update(type_, id_, description, analyst):
     """
@@ -1293,7 +1412,7 @@ def do_add_preferred_actions(obj_type, obj_id, username):
     if not klass:
         return {'success': False, 'message': 'Invalid type'}
 
-    preferred_actions = IndicatorAction.objects(preferred=obj_type)
+    preferred_actions = Action.objects(preferred__object_type=obj_type)
     if not preferred_actions:
         return {'success': False, 'message': 'No preferred actions'}
 
@@ -1306,23 +1425,30 @@ def do_add_preferred_actions(obj_type, obj_id, username):
     now = datetime.datetime.now()
     # Get preferred actions and add them.
     for a in preferred_actions:
-        action = {'action_type': a.name,
-                  'active': 'on',
-                  'analyst': username,
-                  'begin_date': now,
-                  'end_date': None,
-                  'performed_date': now,
-                  'reason': 'Preferred action toggle',
-                  'date': now}
-        obj.add_action(action['action_type'],
-                             action['active'],
-                             action['analyst'],
-                             action['begin_date'],
-                             action['end_date'],
-                             action['performed_date'],
-                             action['reason'],
-                             action['date'])
-        actions.append(action)
+        for p in a.preferred:
+            if (p.object_type == obj_type and
+                obj.__getattribute__(p.object_field) == p.object_value):
+                action = {'action_type': a.name,
+                        'active': 'on',
+                        'analyst': username,
+                        'begin_date': now,
+                        'end_date': None,
+                        'performed_date': now,
+                        'reason': 'Preferred action toggle',
+                        'date': now}
+                obj.add_action(action['action_type'],
+                                    action['active'],
+                                    action['analyst'],
+                                    action['begin_date'],
+                                    action['end_date'],
+                                    action['performed_date'],
+                                    action['reason'],
+                                    action['date'])
+                actions.append(action)
+
+    if len(actions) < 1:
+        return {'success': False, 'message': 'No preferred actions'}
+
 
     # Change status to In Progress if it is currently 'New'
     if obj.status == 'New':
@@ -2138,6 +2264,16 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     doc[key] = value.keys()[0]
                 elif key == "results":
                     doc[key] = len(doc[key])
+                elif key == "preferred":
+                    final = ""
+                    for p in doc[key]:
+                        final += p['object_type']
+                        final += "|"
+                        final += p['object_field']
+                        final += "|"
+                        final += p['object_value']
+                        final += "||"
+                    doc[key] = final
                 elif isinstance(value, list):
                     if value:
                         for item in value:
@@ -2453,9 +2589,9 @@ def generate_items_jtable(request, itype, option):
     elif itype == 'Campaign':
         fields = ['name', 'description', 'active', 'id']
         click = "function () {window.parent.$('#new-campaign').click();}"
-    elif itype == 'IndicatorAction':
-        fields = ['name', 'active', 'preferred', 'id']
-        click = "function () {window.parent.$('#indicator_action_add').click();}"
+    elif itype == 'Action':
+        fields = ['name', 'active', 'object_types', 'preferred', 'id']
+        click = "function () {window.parent.$('#action_add').click();}"
     elif itype == 'RawDataType':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#raw_data_type_add').click();}"
@@ -2515,8 +2651,7 @@ def generate_items_jtable(request, itype, option):
             }
             """ % itype
         if field['fieldname'].startswith("'name"):
-            field['display'] = """ function (data) {
-            return '<a href="#" onclick=\\'javascript:editAction("'+data.record.name+'");\\'>' + data.record.name + '</a>';
+            field['display'] = """ function (data) { return '<a href="#" onclick=\\'javascript:editAction("'+data.record.name+'", "'+data.record.object_types+'", "'+data.record.preferred+'");\\'>' + data.record.name + '</a>';
             }
             """
 
@@ -3973,12 +4108,14 @@ def get_bucket_autocomplete(term):
     return HttpResponse(json.dumps(buckets, default=json_handler),
                         content_type='application/json')
 
-def add_new_action(action, preferred, analyst):
+def add_new_action(action, object_types, preferred, analyst):
     """
     Add a new action to CRITs.
 
     :param action: The action to add to CRITs.
     :type action: str
+    :param object_types: The TLOs this is for.
+    :type object_types: list
     :param preferred: The TLOs this is preferred for.
     :type preferred: list
     :param analyst: The user adding this action.
@@ -3986,11 +4123,22 @@ def add_new_action(action, preferred, analyst):
     """
 
     action = action.strip()
-    idb_action = IndicatorAction.objects(name=action).first()
+    idb_action = Action.objects(name=action).first()
     if not idb_action:
-        idb_action = IndicatorAction()
+        idb_action = Action()
     idb_action.name = action
-    idb_action.preferred = preferred
+    idb_action.object_types = object_types
+    idb_action.preferred = []
+    prefs = preferred.split('\n')
+    for pref in prefs:
+        cols = pref.split(',')
+        if len(cols) != 3:
+            continue
+        epa = EmbeddedPreferredAction()
+        epa.object_type = cols[0].strip()
+        epa.object_field = cols[1].strip()
+        epa.object_value = cols[2].strip()
+        idb_action.preferred.append(epa)
     try:
         idb_action.save(username=analyst)
     except ValidationError:

@@ -33,8 +33,7 @@
         <li><a href="#" class="dialogClick" dialog="new-pcap" persona="related">Upload Related PCAP</a></li>
         <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=text">Text</a></li>
         <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=yaml">YAML</a></li>
-        <li><a href="#" class="dialogClick" dialog="unrar-sample">Unrar</a></li>
-        <li><a href="#" class="dialogClick" dialog="unzip-sample">Unzip</a></li>
+        <li><a href="#" class="dialogClick" dialog="unzip-sample">Un7zip</a></li>
         {% if admin %}
             <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="sample" action='{% url "crits.samples.views.remove_sample" sample.md5 %}'>Delete Sample</a></li>
         {% endif %}
@@ -139,6 +138,11 @@
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
     </div>
+    <div class="content_box">
+        {% with obj=sample obj_type="Sample" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
     <div>
         {% with obj=sample obj_type=subscription.type %}
                  {% include 'tickets_listing_widget.html' %}
@@ -183,19 +187,12 @@
     </form>
 </div>
 
-<div id="dialog-unrar-sample" title="Unrar Sample">
-    <form id="form-unrar-sample" action="{% url 'crits.samples.views.unrar_sample' sample.md5 %}" method="POST" enctype="multipart/form-data">
-    <table class="form">{{unrar_sample_form.as_table}}</table>
-    </form>
-</div>
-
 <div id="dialog-unzip-sample" title="Unzip Sample">
     <form id="form-unzip-sample" action="{% url 'crits.samples.views.unzip_sample' sample.md5 %}" method="POST" enctype="multipart/form-data">
     {% comment %}
-        This is intentionally using unrar_sample_form here.
-        No need to pass an identical form in.
+        This is intentionally using unzip_sample_form here.
     {% endcomment %}
-    <table class="form">{{unrar_sample_form.as_table}}</table>
+    <table class="form">{{unzip_sample_form.as_table}}</table>
     </form>
 </div>
 

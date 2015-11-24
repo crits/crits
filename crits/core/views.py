@@ -23,7 +23,9 @@ from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
 from crits.comments.forms import AddCommentForm, InlineCommentForm
 from crits.config.config import CRITsConfig
+from crits.core.crits_mongoengine import Action
 from crits.core.data_tools import json_handler
+from crits.core.forms import ActionsForm, NewActionForm
 from crits.core.forms import SourceAccessForm, AddSourceForm, AddUserRoleForm
 from crits.core.forms import SourceForm, DownloadFileForm, AddReleasabilityForm
 from crits.core.forms import TicketForm
@@ -50,6 +52,7 @@ from crits.core.handlers import generate_favorites_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
 from crits.core.handlers import description_update, data_update
 from crits.core.handlers import do_add_preferred_actions, add_new_action
+from crits.core.handlers import action_add, action_remove, action_update
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_role import UserRole
@@ -71,8 +74,7 @@ from crits.emails.forms import EmailUploadForm, EmailEMLForm, EmailYAMLForm, Ema
 from crits.events.forms import EventForm
 from crits.exploits.forms import AddExploitForm
 from crits.indicators.forms import UploadIndicatorCSVForm, UploadIndicatorTextForm
-from crits.indicators.forms import UploadIndicatorForm, NewIndicatorActionForm
-from crits.indicators.indicator import IndicatorAction
+from crits.indicators.forms import UploadIndicatorForm
 from crits.ips.forms import AddIPForm
 from crits.locations.forms import AddLocationForm
 from crits.notifications.handlers import get_user_notifications
@@ -1073,7 +1075,7 @@ def base_context(request):
     if request.user.is_authenticated():
         user = request.user.username
         # Forms that don't require a user
-        base_context['add_new_action'] = NewIndicatorActionForm()
+        base_context['add_new_action'] = NewActionForm()
         base_context['add_target'] = TargetInfoForm()
         base_context['campaign_add'] = AddCampaignForm()
         base_context['comment_add'] = AddCommentForm()
@@ -1116,6 +1118,12 @@ def base_context(request):
             base_context['ip_form'] = AddIPForm(user, None)
         except Exception, e:
             logger.warning("Base Context AddIPForm Error: %s" % e)
+        try:
+            base_context['new_action'] = ActionsForm(initial={'analyst': user,
+                'active': "off",
+                'date': datetime.datetime.now()})
+        except Exception, e:
+            logger.warning("Base Context ActionsForm Error: %s" % e)
         try:
             base_context['source_add'] = SourceForm(user,
                                                     initial={'analyst': user})
@@ -1249,7 +1257,7 @@ def base_context(request):
                                         {'collection': settings.COL_EVENT_TYPES,
                                             'name': 'Event Types'},
                                         {'collection': settings.COL_IDB_ACTIONS,
-                                            'name': 'Indicator Actions'},
+                                            'name': 'Actions'},
                                         {'collection': settings.COL_INTERNAL_LOCATIONS,
                                             'name': 'Internal Locations'},
                                         {'collection': settings.COL_OBJECT_TYPES,
@@ -1718,7 +1726,7 @@ def item_editor(request):
     counts = {}
     obj_list = [ActorThreatIdentifier,
                 Campaign,
-                IndicatorAction,
+                Action,
                 RawDataType,
                 SignatureType,
                 SignatureDependency,
@@ -1806,10 +1814,11 @@ def add_preferred_actions(request):
             if 'object' in result:
                 result['html'] = ''
                 for obj in result['object']:
-                    result['html'] += render_to_string('indicators_action_row_widget.html',
+                    result['html'] += render_to_string('action_row_widget.html',
                                                        {'action': obj,
                                                         'admin': is_admin(username),
-                                                        'indicator_id': obj_id})
+                                                        'obj_type':obj_type,
+                                                        'obj_id':obj_id})
     else:
         result = {'success': False, 'message': "Expected AJAX POST"}
     return HttpResponse(json.dumps(result, default=json_handler),
@@ -2135,17 +2144,18 @@ def new_action(request):
     """
 
     if request.method == 'POST' and request.is_ajax():
-        form = NewIndicatorActionForm(request.POST)
+        form = NewActionForm(request.POST)
         analyst = request.user.username
         if form.is_valid():
             result = add_new_action(form.cleaned_data['action'],
+                                    form.cleaned_data['object_types'],
                                     form.cleaned_data['preferred'],
                                     analyst)
             if result:
-                message = {'message': '<div>Indicator Action added successfully!</div>',
+                message = {'message': '<div>Action added successfully!</div>',
                            'success': True}
             else:
-                message = {'message': '<div>Indicator Action addition failed!</div>',
+                message = {'message': '<div>Action addition failed!</div>',
                            'success': False}
         else:
             message = {'form': form.as_table()}
@@ -2153,3 +2163,102 @@ def new_action(request):
                             mimetype="application/json")
     return render_to_response('error.html',
                               {'error': 'Expected AJAX POST'})
+
+@user_passes_test(user_can_view_data)
+def add_update_action(request, method, obj_type, obj_id):
+    """
+    Add/update an object's action. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param method: Whether we are adding or updating.
+    :type method: str ("add", "update")
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the top level object to update.
+    :type obj_id: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        username = request.user.username
+        form = ActionsForm(request.POST)
+        form.is_valid()
+        data = form.cleaned_data
+        data['action_type'] = request.POST.get('action_type')
+        add = {
+            'action_type': data['action_type'],
+            'begin_date': data['begin_date'] if data['begin_date'] else '',
+            'end_date': data['end_date'] if data['end_date'] else '',
+            'performed_date': data['performed_date'] if data['performed_date'] else '',
+            'active': data['active'],
+            'reason': data['reason'],
+            'analyst': username,
+        }
+        if method == "add":
+            add['date'] = datetime.datetime.now()
+            result = action_add(obj_type, obj_id, add)
+        else:
+            date = datetime.datetime.strptime(data['date'],
+                                                settings.PY_DATETIME_FORMAT)
+            date = date.replace(microsecond=date.microsecond/1000*1000)
+            add['date'] = date
+            result = action_update(obj_type, obj_id, add)
+        if 'object' in result:
+            result['html'] = render_to_string('action_row_widget.html',
+                                                {'action': result['object'],
+                                                'admin': is_admin(username),
+                                                'obj_type':obj_type,
+                                                'obj_id':obj_id})
+        return HttpResponse(json.dumps(result,
+                                        default=json_handler),
+                            mimetype='application/json')
+    return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def remove_action(request, obj_type, obj_id):
+    """
+    Remove a TLO's action. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the object to remove the action from.
+    :type obj_id: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        analyst = request.user.username
+        if is_admin(analyst):
+            date = datetime.datetime.strptime(request.POST['key'],
+                                              settings.PY_DATETIME_FORMAT)
+            date = date.replace(microsecond=date.microsecond/1000*1000)
+            result = action_remove(obj_type, obj_id, date, analyst)
+            return HttpResponse(json.dumps(result),
+                                mimetype="application/json")
+        else:
+            error = "You do not have permission to remove this item."
+            return render_to_response("error.html",
+                                      {'error': error},
+                                      RequestContext(request))
+    return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def get_actions_for_tlo(request):
+    """
+    Get the actions for the specified TLO.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    type_ = request.GET.get('type', None)
+    final = []
+    if type_ is not None:
+        for a in Action.objects(object_types=type_).order_by("+name"):
+            final.append(a.name)
+    return HttpResponse(json.dumps({'results': final}),
+                mimetype="application/json")

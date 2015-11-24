@@ -13,17 +13,13 @@ from django.template.loader import render_to_string
 from crits.core.crits_mongoengine import json_handler
 from crits.core.user_tools import user_can_view_data, is_admin
 from crits.core import form_consts
-from crits.indicators.forms import NewIndicatorActionForm, UploadIndicatorCSVForm
+from crits.indicators.forms import UploadIndicatorCSVForm
 from crits.indicators.forms import UploadIndicatorForm, UploadIndicatorTextForm
-from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
 from crits.indicators.handlers import (
     indicator_remove,
     handle_indicator_csv,
     handle_indicator_ind,
-    action_add,
-    action_update,
-    action_remove,
     activity_add,
     activity_update,
     activity_remove,
@@ -224,85 +220,6 @@ def upload_indicator(request):
             return render_to_response('file_upload_response.html',
                                       {'response': json.dumps(message)},
                                       RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def add_update_action(request, method, indicator_id):
-    """
-    Add/update an indicator's action. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param method: Whether we are adding or updating.
-    :type method: str ("add", "update")
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        username = request.user.username
-        form = IndicatorActionsForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            add = {
-                'action_type': data['action_type'],
-                'begin_date': data['begin_date'] if data['begin_date'] else '',
-                'end_date': data['end_date'] if data['end_date'] else '',
-                'performed_date': data['performed_date'] if data['performed_date'] else '',
-                'active': data['active'],
-                'reason': data['reason'],
-                'analyst': username,
-            }
-            if method == "add":
-                add['date'] = datetime.datetime.now()
-                result = action_add(indicator_id, add)
-            else:
-                date = datetime.datetime.strptime(data['date'],
-                                                  settings.PY_DATETIME_FORMAT)
-                date = date.replace(microsecond=date.microsecond/1000*1000)
-                add['date'] = date
-                result = action_update(indicator_id, add)
-            if 'object' in result:
-                result['html'] = render_to_string('indicators_action_row_widget.html',
-                                                  {'action': result['object'],
-                                                   'admin': is_admin(username),
-                                                   'indicator_id': indicator_id})
-            return HttpResponse(json.dumps(result,
-                                           default=json_handler),
-                                mimetype='application/json')
-        else: #invalid form
-            return HttpResponse(json.dumps({'success': False,
-                                            'form': form.as_table()}),
-                                mimetype='application/json')
-    return HttpResponse({})
-
-@user_passes_test(user_can_view_data)
-def remove_action(request, indicator_id):
-    """
-    Remove an indicator's action. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        analyst = request.user.username
-        if is_admin(analyst):
-            date = datetime.datetime.strptime(request.POST['key'],
-                                              settings.PY_DATETIME_FORMAT)
-            date = date.replace(microsecond=date.microsecond/1000*1000)
-            result = action_remove(indicator_id, date, analyst)
-            return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
-        else:
-            error = "You do not have permission to remove this item."
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
-    return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
 def add_update_activity(request, method, indicator_id):
