@@ -1412,7 +1412,8 @@ def do_add_preferred_actions(obj_type, obj_id, username):
     if not klass:
         return {'success': False, 'message': 'Invalid type'}
 
-    preferred_actions = Action.objects(preferred__object_type=obj_type)
+    preferred_actions = Action.objects(preferred__object_type=obj_type,
+                                       active='on')
     if not preferred_actions:
         return {'success': False, 'message': 'No preferred actions'}
 

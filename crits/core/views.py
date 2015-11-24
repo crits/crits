@@ -2258,7 +2258,8 @@ def get_actions_for_tlo(request):
     type_ = request.GET.get('type', None)
     final = []
     if type_ is not None:
-        for a in Action.objects(object_types=type_).order_by("+name"):
+        for a in Action.objects(object_types=type_,
+                                active='on').order_by("+name"):
             final.append(a.name)
     return HttpResponse(json.dumps({'results': final}),
                 mimetype="application/json")
