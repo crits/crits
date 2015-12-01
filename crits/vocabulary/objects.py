@@ -97,6 +97,7 @@ class ObjectTypes(vocab):
     SERVICE_NAME = "Service Name"
     SMS_ORIGIN = "SMS Origin"
     SOURCE_PORT = "Source Port"
+    STRING = "String"
     TELEPHONE = "Telephone"
     TIME_CREATED = "Time Created"
     TIME_UPDATED = "Time Updated"
