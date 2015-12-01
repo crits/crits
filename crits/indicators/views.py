@@ -244,17 +244,16 @@ def add_update_activity(request, method, indicator_id):
                 'start_date': data['start_date'] if data['start_date'] else '',
                 'end_date': data['end_date'] if data['end_date'] else '',
                 'description': data['description'],
-                'analyst': username,
             }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                result = activity_add(indicator_id, add)
+                result = activity_add(indicator_id, add, username)
             else:
                 date = datetime.datetime.strptime(data['date'],
                                                   settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                result = activity_update(indicator_id, add)
+                result = activity_update(indicator_id, add, username)
             if 'object' in result:
                 result['html'] = render_to_string('indicators_activity_row_widget.html',
                                                   {'activity': result['object'],
