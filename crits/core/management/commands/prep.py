@@ -116,6 +116,13 @@ def prep_relationships():
 
     pass
 
+def prep_signature():
+    """
+    Migrate signatures.
+    """
+
+    pass
+
 def prep_sources():
     """
     Migrate sources.

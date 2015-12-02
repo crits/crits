@@ -3,6 +3,38 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: mgoffin
+Date: 2015-11-19
+
+    Actions have several changes.
+
+    1) Actions are now a feature of all TLOs, not just indicators.
+    2) Actions can be modified to specify a set of TLOs they apply to.
+
+        NOTE: Without setting this for existing Actions, none of them will show
+        up in the dropdown menu when adding an Action.
+
+    3) Actions can now set up preferred criteria. This allows you to specify the
+    conditions which make this Action preferred for a given TLO.
+        When editing an Action you will see a "Preferred" section. This section
+        is a comma-separated list of TLO Type, Field Name, and Value. Newlines
+        will separate different conditions. Conditions are an "OR".
+        For example: Indicator, ind_type, Domain
+            This will be a preferred action for any Indicator with a type of
+            Domain.
+
+Author: dreardon
+Date: 2015-11-18
+    The new Signature TLO has two backend reference lists which can be managed
+    by an Administrator in the Control Panel.
+        - The Data Type drop-down values that are available can be added to and disabled
+        just like other reference values (Raw Data Types, etc.) in the Control Panel
+        under "Signature Types"
+        - The Signature Type Dependency list featured in the type-ahead component
+        can also be added to and managed in the Control Panel under "Signature Dependency".
+        Unlike most other Control Panel lists, this list allows entries to be deleted so
+        that this list doesn't become cumbersome over time.
+
 Author: frbapolkosnik
 Date: 2015-08-31
 

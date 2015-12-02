@@ -54,6 +54,11 @@
                         <th>Tool</th>
                         <th>Description</th>
                         <th>Version</th>
+                    {% elif rel_type == 'Signature' %}
+                        <th>Title</th>
+                        <th>Data Type</th>
+                        <th>Description</th>
+                        <th>Version</th>
                     {% elif rel_type == 'IP' %}
                         <th>IP Address</th>
                     {% elif rel_type == 'Domain' %}
@@ -63,7 +68,7 @@
                     {% else %}
                         <th>Details</th>
                     {% endif %}
-                    {% if rel_type in "RawDataPCAPCertificateIndicatorEvent" %}
+                    {% if rel_type in "RawDataSignaturePCAPCertificateIndicatorEvent" %}
                       <th>Campaign</th>
                     {% endif %}
                     <th>Analyst</th>
@@ -125,8 +130,13 @@
                             <td>{{ rel.tool.name }}</td>
                             <td>{{ rel.description|truncatechars:100 }}</td>
                             <td>{{ rel.version }}</td>
+                        {% elif rel_type == 'Signature' %}
+                            <td>{{ rel.title }}</td>
+                            <td>{{ rel.data_type }}</td>
+                            <td>{{ rel.description|truncatechars:100 }}</td>
+                            <td>{{ rel.version }}</td>
                         {% endif %}
-                        {% if rel_type in "RawDataPCAPCertificateIndicatorEventActorExploitBackdoor" %}
+                        {% if rel_type in "RawDataSignaturePCAPCertificateIndicatorEventActorExploitBackdoor" %}
                             <td class='campaignWidth'>
                                 {% for campaign in rel.campaign %}
                                     <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">

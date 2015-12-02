@@ -103,6 +103,7 @@ class EmbeddedFavorites(EmbeddedDocument, CritsDocumentFormatter):
     RawData = ListField(StringField())
     Sample = ListField(StringField())
     Screenshot = ListField(StringField())
+    Signature = ListField(StringField())
     Target = ListField(StringField())
 
 class EmbeddedSubscriptions(EmbeddedDocument, CritsDocumentFormatter):
@@ -123,6 +124,7 @@ class EmbeddedSubscriptions(EmbeddedDocument, CritsDocumentFormatter):
     PCAP = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     RawData = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Sample = ListField(EmbeddedDocumentField(EmbeddedSubscription))
+    Signature = ListField(EmbeddedDocumentField(EmbeddedSubscription))
     Source = ListField(EmbeddedDocumentField(EmbeddedSourceSubscription))
     Target = ListField(EmbeddedDocumentField(EmbeddedSubscription))
 

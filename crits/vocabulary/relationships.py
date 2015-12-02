@@ -17,6 +17,9 @@ class RelationshipTypes(vocab):
 
     CREATED = "Created"
     CREATED_BY = "Created By"
+    
+    DECODED = "Decoded"
+    DECODED_BY = "Decoded By"
 
     DECRYPTED = "Decrypted"
     DECRYPTED_BY = "Decrypted By"
@@ -84,6 +87,10 @@ class RelationshipTypes(vocab):
             return cls.CREATED_BY
         elif relationship == cls.CREATED_BY:
             return cls.CREATED
+        elif relationship == cls.DECODED:
+            return cls.DECODED_BY
+        elif relationship == cls.DECODED_BY:
+            return cls.DECODED
         elif relationship == cls.DECRYPTED:
             return cls.DECRYPTED_BY
         elif relationship == cls.DECRYPTED_BY:

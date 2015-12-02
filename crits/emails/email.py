@@ -7,10 +7,12 @@ from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import CritsDateTimeField
 from crits.emails.migrate import migrate_email
 
 from crits.core.data_tools import convert_datetimes_to_string
+
 
 class RawHeadersField(StringField):
     """
@@ -34,7 +36,8 @@ class RawHeadersField(StringField):
         return value
 
 
-class Email(CritsBaseAttributes, CritsSourceDocument, Document):
+class Email(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+            Document):
     """
     Email Class.
     """

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% load filters %}
+
+{% block title %} Signature Details {% endblock %}
+
+{% block content %}
+
+<script>
+    var signature_id = "{{ signature.id }}";
+    var details_by_link = "{% url 'crits.signatures.views.details_by_link' signature.link_id|stringformat:"s" %}"
+    var update_signature_type = "{% url 'crits.signatures.views.set_signature_type' signature.id %}";
+    var update_min_version = "{% url 'crits.signatures.views.update_data_type_min_version' %}";
+    var update_max_version = "{% url 'crits.signatures.views.update_data_type_max_version' %}";
+    var update_dependency = "{% url 'crits.signatures.views.update_data_type_dependency' %}";
+    var get_signature_type_dropdown = "{% url 'crits.signatures.views.get_signature_type_dropdown' %}";
+    var get_signature_versions = "{% url 'crits.signatures.views.get_signature_versions' signature.id|stringformat:"s" %}";
+    var signature_autocomplete = "{% url 'crits.signatures.views.dependency_autocomplete' %}";
+</script>
+
+{% if signature %}
+<div id="tabnav" class="tabnav" style="font-size:90%;">
+    <ul style="font-size: 125%;">
+    <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
+    <li><a href="#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+    {% include 'services_tab_list_widget.html' %}
+</ul>
+
+<div id="details_section">
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        <li><a href="#" id="upload-new-signature-version" class="dialogClick" dialog="upload-new-signature-version" data-action="{% url 'crits.signatures.views.upload_signature' signature.link_id|stringformat:"s" %}">Upload New Version</a></li>
+        {% if admin %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="signature" action='{% url "crits.signatures.views.remove_signature" signature.id %}'>Delete Signature</a></li>
+        {% endif %}
+    </ul>
+    </span>
+    <div class="content_box content_details">
+        <h3 class="titleheader">
+            <span id="signature_title" title="Copy to clipboard" data-title="{{ signature.title }}">"{{ signature.title }}" Details<span>
+        </h3>
+        <table class="vertical" width="100%">
+        <thead>
+        </thead>
+        <tbody>
+            <tr>
+            <td class='key'>ID</td>
+            <td>{{ signature.id }}</td>
+            </tr>
+            <tr>
+            <td class='key'>Created</td>
+            <td>{{ signature.created }}</td>
+            </tr>
+            <tr>
+                <td class='key'>Data Type</td>
+                    <span style="float: right;" class="object_status_response"></span>
+                <td>
+                    <span class="edit" id="signature_type" action="{% url 'crits.signatures.views.set_signature_type' subscription.id %}">{{signature.data_type}}</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="key">Data Type Min Version</td>
+                <td>
+                    <span class="edit_underline" id="data_type_min_version" action="{% url 'crits.signatures.views.update_data_type_min_version' %}">{{signature.data_type_min_version}}</span>
+                    <span id="data_type_min_version_error"></span>
+                </td>
+            </tr>
+            <tr>
+                <td class="key">Data Type Max Version</td>
+                <td>
+                    <span class="edit_underline" id="data_type_max_version" action="{% url 'crits.signatures.views.update_data_type_max_version' %}">{{signature.data_type_max_version}}</span>
+                    <span id="data_type_max_version_error"></span>
+                </td>
+            </tr>
+            <tr>
+                <td class='key'>Dependencies</td>
+                <td>
+                    <span id="data_type_dependency">
+                            <input id="data_type_dependency_input" type="text" value="{{ signature.data_type_dependency|join:','}}">
+                    </span>
+                </td>
+            </tr>
+            <tr>
+            <td class='key'>Version</td>
+            <td>
+                <select id="jump_versions" data-link="{{ signature.link_id }}"
+                    data-length={{ versions }} data-version={{ signature.version }}>
+                </select>
+            </td>
+            </tr>
+            <tr>
+                {% with description=signature.description %}
+                    {% include 'description_widget.html' %}
+                {% endwith %}
+            </tr>
+            <tr>
+                <td class="key">Status
+                    <span style="float: right;" class="object_status_response"></span>
+                </td>
+                <td>
+                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{signature.status}}</span>
+                </td>
+            </tr>
+            {% with sectors=signature.sectors %}
+                {% include "sector_widget.html" %}
+            {% endwith %}
+            <tr>
+            {% with sources=signature.source obj_id=signature.id obj_type=subscription.type %}
+                {% include "sources_listing_widget.html" %}
+            {% endwith %}
+            </tr>
+            <tr>
+                {% with releasability=signature.releasability %}
+                    {% include 'releasability_list_widget.html' %}
+                {% endwith %}
+            </tr>
+        </tbody>
+        </table>
+    </div>
+
+    <div id="detail_floaters">
+        {% include 'details_options_widget.html' %}
+        {% with bucket_list=signature.bucket_list %}
+            {% include 'bucket_list_widget.html' %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with data=signature.data %}
+            {% include 'data_widget.html' %}
+        {% endwith %}
+    </div>
+    <div class="content_box">
+        {% with obj=signature obj_type="Signature" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
+    <div>
+      {% with obj=signature obj_type=subscription.type %}
+         {% include 'tickets_listing_widget.html' %}
+      {% endwith %}
+    </div>
+    <div>
+        {% with hit=signature col=COL_SIGNATURE %}
+            {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=signature col=COL_SIGNATURE %}
+            {% include "locations_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% include 'relationships_listing_widget.html' %}
+    </div>
+    <div>
+        {% include 'objects_listing_widget.html' %}
+    </div>
+    <div>
+    {% include 'screenshot_widget.html' %}
+    </div>
+    <div>
+        {% include "comments_listing_widget.html" %}
+    </div>
+</div>
+
+{% include 'signature_versions.html' %}
+{% with item=signature %}
+    {% include "services_analysis_section.html" with crits_type="Signature" identifier=signature.id %}
+{% endwith %}
+{% include 'services_tab_tabs_widget.html' %}
+</div>
+
+{% else %}
+<h3>Signature not found. If you just uploaded a Signature, try refreshing as the system might not have completed processing your upload yet.</h3>
+
+{% endif %}
+
+{% endblock %}
+
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/signatures.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/diffview.js"></script><script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/jsdiff.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/difflib.js"></script>
+{% endblock %}
+

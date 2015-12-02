@@ -1,0 +1,60 @@
+{% load url from future %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Upload Signature">
+   <script type="text/javascript">
+   $(document).ready(function() {
+       $("#id_data_type_dependency").tagit({
+            showAutocompleteOnFocus: true,
+            allowSpaces: true,
+            removeConfirmation: true,
+
+            afterTagAdded: function(event, ui) {
+                //Issue with tagit height is too high...
+                $("li.tagit-choice").height('14px');
+            },
+            afterTagRemoved: function(event, ui) {
+            },
+            onTagClicked: function(event, ui) {
+            },
+            autocomplete: {
+                delay: 0,
+                minLength: 2,
+                source: function(request, response) {
+                    data = {term: request.term}
+
+                     $.ajax({
+                        type: 'POST',
+                        url: "{% url 'crits.signatures.views.dependency_autocomplete' %}",
+                        data: data,
+                        datatype: 'json',
+                        success: function(data) {
+                            response(data);
+                        }
+                    });
+                }
+            }
+        });
+
+
+        //These are changes to make tagit work with a modal dialog, these are not ideal changes.
+        //Put these in css file and change class to fix it for modal
+        $("#form-new-signature").find("ul.tagit").height($("#id_data_type_dependency").height()*3);
+        $("#form-new-signature").find("ul.tagit").width($("#id_data_type_dependency").width()*2);
+        //The autocomplete shows up behind the modal dialog, this will bring the autocomplete to the foreground
+        //This should be fixed, probably not the best way to do this.
+       var autoSuggestion = $('.ui-autocomplete');
+        var dialogZ = $(".ui-dialog").css("z-index");
+        if(autoSuggestion.length > 0) {
+            for(var i = 0; i <autoSuggestion.length; i++)
+                autoSuggestion[i].style.zIndex=dialogZ+1;
+        }
+   });
+   </script>
+    <form id="form-{{ request.GET.dialog }}"
+	  action='{% url "crits.signatures.views.upload_signature" %}'
+      method='POST' enctype="multipart/form-data"
+	  item-type="new-signature">
+      <table class="form">{{ upload_signature.as_table }}</table>
+    <div id="form-new-signature-results" class="form_results"></div>
+    </form>
+</div>

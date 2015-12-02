@@ -42,6 +42,7 @@ class ForgeRelationshipForm(forms.Form):
         self.fields['forward_relationship'].choices = [
             (c, c) for c in RelationshipTypes.values(sort=True)
         ]
+        self.fields['forward_relationship'].initial = RelationshipTypes.RELATED_TO
         self.fields['rel_confidence'].choices = [('unknown', 'unknown'),
                                                  ('low', 'low'),
                                                  ('medium', 'medium'),

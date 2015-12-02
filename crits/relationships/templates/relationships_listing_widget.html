@@ -92,6 +92,11 @@
                             {% include 'samples_malware_mini_widget.html' %}
                         {% endwith %}
                     {% endif %}
+                    {% if relationships.Signature %}
+                        {% with rel_list=relationships.Signature rel_type='Signature' %}
+                            {% include 'relationships_listing_row_widget.html' %}
+                        {% endwith %}
+                    {% endif %}
                     {% if relationships.Other > 0 %}
                         <tr>
                             <td colspan="2" class="relationship_spacer"></td>

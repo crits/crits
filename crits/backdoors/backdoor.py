@@ -6,10 +6,13 @@ from crits.core.crits_mongoengine import (
     CommonAccess,
     CritsBaseAttributes,
     CritsSourceDocument,
-    CritsDocumentFormatter
+    CritsDocumentFormatter,
+    CritsActionsDocument
 )
 
-class Backdoor(CritsBaseAttributes, CritsSourceDocument, Document):
+
+class Backdoor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+               Document):
     """
     Backdoor class.
     """

@@ -7,9 +7,11 @@ from django.conf import settings
 from crits.core.crits_mongoengine import CritsBaseAttributes
 from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.events.migrate import migrate_event
 
 from crits.vocabulary.events import EventTypes
+
 
 class UnreleasableEventError(Exception):
     """
@@ -25,7 +27,8 @@ releasability list." % value
     def __str__(self):
         return repr(self.message)
 
-class Event(CritsBaseAttributes, CritsSourceDocument, Document):
+class Event(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+            Document):
     """
     Event class.
     """

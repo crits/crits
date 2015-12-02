@@ -7,6 +7,7 @@ from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
 from crits.core.crits_mongoengine import CommonAccess
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.campaigns.migrate import migrate_campaign
 
 
@@ -19,7 +20,7 @@ class EmbeddedTTP(EmbeddedDocument, CritsDocumentFormatter):
     ttp = StringField(required=True)
     date = DateTimeField(default=datetime.datetime.now)
 
-class Campaign(CritsBaseAttributes, Document):
+class Campaign(CritsBaseAttributes, CritsActionsDocument, Document):
     """
     Campaign Class.
     """
