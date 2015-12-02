@@ -61,56 +61,57 @@ from crits.core.totp import valid_totp
 
 logger = logging.getLogger(__name__)
 
-def action_add(obj_type, obj_id, action):
+def action_add(type_, id_, tlo_action, user=None, **kwargs):
     """
     Add an action to a TLO.
 
-    :param obj_type: The class type of the top level object.
-    :type obj_id: str
-    :param obj_id: The ObjectId of the to level object to update.
-    :type obj_id: str
-    :param action: The information about the action.
-    :type action: dict
+    :param type_: The class type of the top level object.
+    :type type_: str
+    :param id_: The ObjectId of the to level object to update.
+    :type id_: str
+    :param tlo_action: The information about the action.
+    :type tlo_action: dict
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed,
               "object" (dict) if successful.
     """
 
-    obj_class = class_from_type(obj_type)
+    obj_class = class_from_type(type_)
     if not obj_class:
         return {'success': False,
-                'message': 'Not a valid type: %s' % obj_type}
+                'message': 'Not a valid type: %s' % type_}
 
-    sources = user_sources(action['analyst'])
-    obj = obj_class.objects(id=obj_id,
+    sources = user_sources(user)
+    obj = obj_class.objects(id=id_,
                             source__name__in=sources).first()
-
     if not obj:
         return {'success': False,
                 'message': 'Could not find TLO'}
     try:
-        obj.add_action(action['action_type'],
-                       action['active'],
-                       action['analyst'],
-                       action['begin_date'],
-                       action['end_date'],
-                       action['performed_date'],
-                       action['reason'],
-                       action['date'])
-        obj.save(username=action['analyst'])
-        return {'success': True, 'object': action}
-    except ValidationError, e:
+        tlo_action = datetime_parser(tlo_action)
+        tlo_action['analyst'] = user
+        obj.add_action(tlo_action['action_type'],
+                       tlo_action['active'],
+                       tlo_action['analyst'],
+                       tlo_action['begin_date'],
+                       tlo_action['end_date'],
+                       tlo_action['performed_date'],
+                       tlo_action['reason'],
+                       tlo_action['date'])
+        obj.save(username=user)
+        return {'success': True, 'object': tlo_action}
+    except (ValidationError, TypeError, KeyError), e:
         return {'success': False, 'message': e}
 
-def action_remove(obj_type, obj_id, date, analyst):
+def action_remove(type_, id_, date, user, **kwargs):
     """
-    Remove an action from a TLO.
+    Remove an action from a TLO. 
 
-    :param obj_type: The class type of the top level object.
-    :type obj_id: str
-    :param obj_id: The ObjectId of the TLO to remove an action from.
-    :type obj_id: str
+    :param type_: The class type of the top level object.
+    :type type_: str
+    :param id_: The ObjectId of the TLO to remove an action from.
+    :type id_: str
     :param date: The date of the action to remove.
     :type date: datetime.datetime
     :param analyst: The user removing the action.
@@ -118,68 +119,71 @@ def action_remove(obj_type, obj_id, date, analyst):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    obj_class = class_from_type(obj_type)
+    obj_class = class_from_type(type_)
     if not obj_class:
         return {'success': False,
-                'message': 'Not a valid type: %s' % obj_type}
+                'message': 'Not a valid type: %s' % type_}
 
-    sources = user_sources(analyst)
-    obj = obj_class.objects(id=obj_id,
+    sources = user_sources(user)
+    obj = obj_class.objects(id=id_,
                             source__name__in=sources).first()
 
     if not obj:
         return {'success': False,
                 'message': 'Could not find TLO'}
     try:
+        date = datetime_parser(date)
         obj.delete_action(date)
-        obj.save(username=analyst)
+        obj.save(username=user)
         return {'success': True}
-    except ValidationError, e:
+    except (ValidationError, TypeError), e:
         return {'success': False, 'message': e}
-
-def action_update(obj_type, obj_id, action):
+    
+def action_update(type_, id_, tlo_action, user=None, **kwargs):
     """
     Update an action for a TLO.
 
-    :param obj_type: The class type of the top level object.
-    :type obj_id: str
-    :param obj_id: The ObjectId of the top level object to update.
-    :type obj_id: str
-    :param action: The information about the action.
-    :type action: dict
+    :param type_: The class type of the top level object.
+    :type type_: str
+    :param id_: The ObjectId of the top level object to update.
+    :type id_: str
+    :param tlo_action: The information about the action.
+    :type tlo_action: dict
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed,
               "object" (dict) if successful.
     """
 
-    obj_class = class_from_type(obj_type)
+    obj_class = class_from_type(type_)
     if not obj_class:
         return {'success': False,
-                'message': 'Not a valid type: %s' % obj_type}
+                'message': 'Not a valid type: %s' % type_}
 
-    sources = user_sources(action['analyst'])
-    obj = obj_class.objects(id=obj_id,
+    sources = user_sources(user)
+    obj = obj_class.objects(id=id_,
                             source__name__in=sources).first()
 
     if not obj:
         return {'success': False,
                 'message': 'Could not find TLO'}
     try:
-        obj.edit_action(action['action_type'],
-                        action['active'],
-                        action['analyst'],
-                        action['begin_date'],
-                        action['end_date'],
-                        action['performed_date'],
-                        action['reason'],
-                        action['date'])
-        obj.save(username=action['analyst'])
-        return {'success': True, 'object': action}
-    except ValidationError, e:
+        tlo_action = datetime_parser(tlo_action)
+        tlo_action['analyst'] = user
+        obj.edit_action(tlo_action['action_type'],
+                        tlo_action['active'],
+                        tlo_action['analyst'],
+                        tlo_action['begin_date'],
+                        tlo_action['end_date'],
+                        tlo_action['performed_date'],
+                        tlo_action['reason'],
+                        tlo_action['date'])
+        obj.save(username=user)
+        return {'success': True, 'object': tlo_action}
+    except (ValidationError, TypeError), e:
         return {'success': False, 'message': e}
 
-def description_update(type_, id_, description, analyst):
+def description_update(type_, id_, description, user, **kwargs):
     """
     Change the description of a top-level object.
 
@@ -189,8 +193,8 @@ def description_update(type_, id_, description, analyst):
     :type id_: str
     :param description: The description to use.
     :type description: str
-    :param analyst: The user setting the description.
-    :type analyst: str
+    :param user: The user setting the description.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -199,7 +203,7 @@ def description_update(type_, id_, description, analyst):
         return {'success': False, 'message': 'Could not find object.'}
 
     if hasattr(klass, 'source'):
-        sources = user_sources(analyst)
+        sources = user_sources(user)
         obj = klass.objects(id=id_, source__name__in=sources).first()
     else:
         obj = klass.objects(id=id_).first()
@@ -212,7 +216,7 @@ def description_update(type_, id_, description, analyst):
     description = h.unescape(description)
     try:
         obj.description = description
-        obj.save(username=analyst)
+        obj.save(username=user)
         return {'success': True, 'message': "Description set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -344,7 +348,7 @@ def favorite_update(type_, id_, analyst):
     return {'success': True}
 
 
-def status_update(type_, id_, value="In Progress", analyst=None):
+def status_update(type_, id_, value="In Progress", user=None, **kwargs):
     """
     Update the status of a top-level object.
 
@@ -354,8 +358,8 @@ def status_update(type_, id_, value="In Progress", analyst=None):
     :type id_: str
     :param value: The status to set it to.
     :type value: str
-    :param analyst: The user setting the status.
-    :type analyst: str
+    :param user: The user setting the status.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -364,7 +368,11 @@ def status_update(type_, id_, value="In Progress", analyst=None):
         return {'success': False, 'message': 'Could not find object.'}
     try:
         obj.set_status(value)
-        obj.save(username=analyst)
+        # Check to see if the set_status was successful or not.
+        if obj.status != value:
+            return {'success': False, 'message': 'Invalid status: %s.' % value }
+
+        obj.save(username=user)
         return {'success': True, 'value': value}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -649,17 +657,17 @@ def merge_source_lists(left, right):
                 left.append(src)
     return left
 
-def source_add_update(obj_type, obj_id, action, source, method='',
-                      reference='', date=None, analyst=None):
+def source_add_update(type_, id_, action_type, source, method='',  
+                      reference='', date=None, user=None, **kwargs):
     """
     Add or update a source for a top-level object.
 
-    :param obj_type: The CRITs type of the top-level object.
-    :type obj_type: str
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
     :param obj_id: The ObjectId to search for.
     :type obj_id: str
-    :param action: Whether or not we are doing an "add" or "update".
-    :type action: str
+    :param action_type: Whether or not we are doing an "add" or "update".
+    :type action_type: str
     :param source: The name of the source.
     :type source: str
     :param method: The method of data acquisition for the source.
@@ -668,8 +676,8 @@ def source_add_update(obj_type, obj_id, action, source, method='',
     :type reference: str
     :param date: The date of the instance to add/update.
     :type date: datetime.datetime
-    :param analyst: The user performing the add/update.
-    :type analyst: str
+    :param user: The user performing the add/update.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -677,32 +685,34 @@ def source_add_update(obj_type, obj_id, action, source, method='',
                 :class:`crits.core.crits_mongoengine.EmbeddedSource.SourceInstance`
     """
 
-    obj = class_from_id(obj_type, obj_id)
+    obj = class_from_id(type_, id_)
     if not obj:
         return {'success': False,
                 'message': 'Unable to find object in database.'}
     try:
-        if action == "add":
+        date = datetime_parser(date)
+
+        if action_type == "add":
             obj.add_source(source=source,
                         method=method,
                         reference=reference,
                         date=date,
-                        analyst=analyst)
+                        analyst=user)
         else:
             obj.edit_source(source=source,
                             method=method,
                             reference=reference,
                             date=date,
-                            analyst=analyst)
-        obj.save(username=analyst)
+                            analyst=user)
+        obj.save(username=user)
         obj.reload()
-        obj.sanitize_sources(username=analyst)
+        obj.sanitize_sources(username=user)
         if not obj.source:
             return {'success': False,
                     'message': 'Object has no sources.'}
         for s in obj.source:
             if s.name == source:
-                if action == "add":
+                if action_type == "add":
                     return {'success': True,
                             'object': s,
                             'message': "Source addition successful!"}
@@ -717,36 +727,37 @@ def source_add_update(obj_type, obj_id, action, source, method='',
         return {'success': False,
                 'message': ('Could not make source changes. '
                             'Refresh page and try again.')}
-    except ValidationError, e:
+    except (ValidationError, TypeError), e:
         return {'success':False, 'message': e}
 
-def source_remove(obj_type, obj_id, name, date, analyst=None):
+def source_remove(type_, id_, name, date, user=None, **kwargs):
     """
     Remove a source instance from a top-level object.
 
-    :param obj_type: The CRITs type of the top-level object.
-    :type obj_type: str
-    :param obj_id: The ObjectId to search for.
-    :type obj_id: str
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
     :param name: The name of the source.
     :type name: str
     :param date: The date of the instance to remove.
     :type date: datetime.datetime
-    :param analyst: The user performing the removal.
-    :type analyst: str
+    :param user: The user performing the removal.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    obj = class_from_id(obj_type, obj_id)
+    obj = class_from_id(type_, id_)
     if not obj:
         return {'success': False,
                 'message': 'Unable to find object in database.'}
     try:
+        date = datetime_parser(date)
         result = obj.remove_source(source=name,
                                    date=date)
-        obj.save(username=analyst)
+        obj.save(username=user)
         return result
-    except ValidationError, e:
+    except (ValidationError, TypeError), e:
         return {'success':False, 'message': e}
 
 def source_remove_all(obj_type, obj_id, name, analyst=None):
@@ -1340,20 +1351,28 @@ def modify_source_access(analyst, data):
         return {'success': False,
                 'message': format_error(e)}
 
-def datetime_parser(d):
+def datetime_parser(value):
     """
-    Iterate over a dictionary for any key of "date" and try to convert its value
-    into a datetime object.
+    Iterate over a dict to confirm that keys containing the word 'dict' are 
+    in fact datetime.datetime objects.
+    If a string is passed, returns a datetime.datetime 
 
-    :param d: A dictionary to iterate over.
-    :type d: dict
-    :returns: dict
+    :param value: str or a dictionary to iterate over.
+    :type value: str or dict
+    :returns: str or dict
     """
-
-    for k,v in d.items():
-        if k == "date":
-            d[k] = datetime.datetime.strptime(v, settings.PY_DATETIME_FORMAT)
-    return d
+    if isinstance(value,datetime.datetime):
+        return value
+    elif isinstance(value,basestring) and value:
+        return datetime.datetime.strptime(value, settings.PY_DATETIME_FORMAT)
+    elif isinstance(value,dict):
+        for k,v in value.items():
+            # Make sure that date is in the key, value is a string, and val is not ''
+            if "date" in k and isinstance(v,basestring) and v:
+                value[k] = datetime.datetime.strptime(v, settings.PY_DATETIME_FORMAT)
+        return value
+    else:
+        raise TypeError("Invalid type passed.")
 
 def format_error(e):
     """
@@ -3828,7 +3847,7 @@ def audit_entry(self, username, type_, new_doc=False):
     # Generate audit notification
     generate_audit_notification(username, type_, self, changed_fields, what_changed, new_doc)
 
-def ticket_add(type_, id_, ticket):
+def ticket_add(type_, id_, ticket, user, **kwargs):
     """
     Add a ticket to a top-level object.
 
@@ -3837,7 +3856,9 @@ def ticket_add(type_, id_, ticket):
     :param id_: The ObjectId to search for.
     :type id_: str
     :param ticket: The ticket to add.
-    :type ticket: dict with keys "analyst", "date", and "ticket_number".
+    :type ticket: dict with keys "date", and "ticket_number".
+    :param user: The user creating the ticket.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "object" (str) if successful,
@@ -3847,17 +3868,18 @@ def ticket_add(type_, id_, ticket):
     obj = class_from_id(type_, id_)
     if not obj:
         return {'success': False, 'message': 'Could not find object.'}
-
     try:
+        ticket = datetime_parser(ticket)
+        ticket['analyst'] = user
         obj.add_ticket(ticket['ticket_number'],
                              ticket['analyst'],
                              ticket['date'])
-        obj.save(username=ticket['analyst'])
+        obj.save(username=user)
         return {'success': True, 'object': ticket}
-    except ValidationError, e:
+    except (ValidationError, TypeError, KeyError), e:
         return {'success': False, 'message': e}
 
-def ticket_update(type_, id_, ticket):
+def ticket_update(type_, id_, ticket, user=None, **kwargs):
     """
     Update a ticket for a top-level object.
 
@@ -3865,28 +3887,33 @@ def ticket_update(type_, id_, ticket):
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
-    :type ticket: dict with keys "analyst", "date", and "ticket_number".
-    :type ticket: str
+    :param ticket: The ticket to add.
+    :type ticket: dict with keys "date", and "ticket_number".
+    :param date: The date of the ticket which will be updated.
+    :type date: datetime.datetime.
+    :param user: The user updating the ticket.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "object" (str) if successful,
               "message" (str) if failed.
     """
-
     obj = class_from_id(type_, id_)
     if not obj:
         return {'success': False, 'message': 'Could not find object.'}
-
     try:
+        ticket = datetime_parser(ticket)
+        ticket['analyst'] = user
         obj.edit_ticket(ticket['analyst'],
                         ticket['ticket_number'],
                         ticket['date'])
-        obj.save(username=ticket['analyst'])
+        obj.save(username=user)
         return {'success': True, 'object': ticket}
-    except ValidationError, e:
+    except (ValidationError, TypeError, KeyError), e:
         return {'success': False, 'message': e}
 
-def ticket_remove(type_, id_, date, analyst):
+
+def ticket_remove(type_, id_, date, user, **kwargs):
     """
     Remove a ticket from a top-level object.
 
@@ -3896,8 +3923,8 @@ def ticket_remove(type_, id_, date, analyst):
     :type id_: str
     :param date: The date of the ticket to remove.
     :type date: datetime.datetime.
-    :param analyst: The user removing the ticket.
-    :type analyst: str
+    :param user: The user removing the ticket.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed.
@@ -3908,8 +3935,9 @@ def ticket_remove(type_, id_, date, analyst):
         return {'success': False, 'message': 'Could not find object.'}
 
     try:
+        date = datetime_parser(date)
         obj.delete_ticket(date)
-        obj.save(username=analyst)
+        obj.save(username=user)
         return {'success': True}
     except ValidationError, e:
         return {'success': False, 'message': e}

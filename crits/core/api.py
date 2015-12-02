@@ -567,6 +567,7 @@ class CRITsAPIResource(MongoEngineResource):
         import crits.objects.handlers as objh
         import crits.relationships.handlers as relh
         import crits.services.handlers as servh
+        import crits.indicators.handlers as indh
 
         actions = {
             'Common': {
@@ -574,6 +575,16 @@ class CRITsAPIResource(MongoEngineResource):
                 'add_releasability': coreh.add_releasability,
                 'forge_relationship': relh.forge_relationship,
                 'run_service': servh.run_service,
+                'status_update' : coreh.status_update,
+                'ticket_add' : coreh.ticket_add,
+                'ticket_update' : coreh.ticket_update,
+                'ticket_remove' : coreh.ticket_remove,
+                'source_add_update': coreh.source_add_update,
+                'source_remove': coreh.source_remove,
+                'action_add' : coreh.action_add,
+                'action_update' : coreh.action_update,
+                'action_remove' : coreh.action_remove,
+                'description_update' : coreh.description_update,
             },
             'Actor': {
                 'update_actor_tags': ah.update_actor_tags,
@@ -590,7 +601,14 @@ class CRITsAPIResource(MongoEngineResource):
             'Email': {},
             'Event': {},
             'Exploit': {},
-            'Indicator': {},
+            'Indicator': {
+                'set_indicator_attack_type' : indh.set_indicator_attack_type,
+                'set_indicator_threat_type' : indh.set_indicator_threat_type,
+                'activity_add' : indh.activity_add,
+                'activity_update' : indh.activity_update,
+                'activity_remove' : indh.activity_remove,
+                'ci_update' : indh.ci_update
+                          },
             'IP': {},
             'PCAP': {},
             'RawData': {},

@@ -691,9 +691,9 @@ def add_update_source(request, method, obj_type, obj_id):
         form = SourceForm(request.user.username, request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            analyst = request.user.username
+            user = request.user.username
             # check to see that this user can already see the object
-            if (data['name'] in user_sources(analyst)):
+            if (data['name'] in user_sources(user)):
                 if method == "add":
                     date = datetime.datetime.now()
                 else:
@@ -706,7 +706,7 @@ def add_update_source(request, method, obj_type, obj_id):
                                            method=data['method'],
                                            reference=data['reference'],
                                            date=date,
-                                           analyst=analyst)
+                                           user=user)
                 if 'object' in result:
                     if method == "add":
                         result['header'] = result['object'].name
@@ -1911,19 +1911,19 @@ def add_update_ticket(request, method, type_=None, id_=None):
         form = TicketForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            user = request.user.username
             add = {
                     'ticket_number': data['ticket_number'],
-                    'analyst': request.user.username
             }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                result = ticket_add(type_, id_, add)
+                result = ticket_add(type_, id_, add, user)
             else:
                 date = datetime.datetime.strptime(data['date'],
                                                          settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                result = ticket_update(type_, id_, add)
+                result = ticket_update(type_, id_, add, user)
 
             crits_config = CRITsConfig.objects().first()
             if 'object' in result:
@@ -2193,17 +2193,16 @@ def add_update_action(request, method, obj_type, obj_id):
             'performed_date': data['performed_date'] if data['performed_date'] else '',
             'active': data['active'],
             'reason': data['reason'],
-            'analyst': username,
         }
         if method == "add":
             add['date'] = datetime.datetime.now()
-            result = action_add(obj_type, obj_id, add)
+            result = action_add(obj_type, obj_id, add, username)
         else:
             date = datetime.datetime.strptime(data['date'],
                                                 settings.PY_DATETIME_FORMAT)
             date = date.replace(microsecond=date.microsecond/1000*1000)
             add['date'] = date
-            result = action_update(obj_type, obj_id, add)
+            result = action_update(obj_type, obj_id, add, username)
         if 'object' in result:
             result['html'] = render_to_string('action_row_widget.html',
                                                 {'action': result['object'],
