@@ -901,7 +901,11 @@ def set_indicator_threat_type(id_, threat_type, user, **kwargs):
     ind_check = Indicator.objects(threat_type=threat_type, value=value).first()
     if ind_check:
         # we found a dupe
-        return {'success': False}
+        return {'success': False,
+                'message': "Duplicate would exist making this change."}
+    elif threat_type not in IndicatorThreatTypes.values():
+        return {'success': False,
+                'message': "Not a valid Threat Type."}
     else:
         try:
             indicator.threat_type = threat_type
@@ -929,7 +933,11 @@ def set_indicator_attack_type(id_, attack_type, user, **kwargs):
     ind_check = Indicator.objects(attack_type=attack_type, value=value).first()
     if ind_check:
         # we found a dupe
-        return {'success': False}
+        return {'success': False,
+                'message': "Duplicate would exist making this change."}
+    elif attack_type not in IndicatorAttackTypes.values():
+        return {'success': False,
+                'message': "Not a valid Attack Type."}
     else:
         try:
             indicator.attack_type = attack_type
@@ -982,7 +990,7 @@ def activity_add(id_, activity, user, **kwargs):
         return {'success': False,
                 'message': 'Could not find Indicator'}
     try:
-        
+
         activity['analyst'] = user
         indicator.add_activity(activity['analyst'],
                                activity['start_date'],
@@ -1011,7 +1019,7 @@ def activity_update(id_, activity, user=None, **kwargs):
               "message" (str) if failed,
               "object" (dict) if successful.
     """
-    
+
     sources = user_sources(user)
     indicator = Indicator.objects(id=id_,
                                   source__name__in=sources).first()
