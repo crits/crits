@@ -2200,7 +2200,6 @@ def add_update_action(request, method, obj_type, obj_id):
                     'performed_date': data.get('performed_date', ''),
                     'active': data['active'],
                     'reason': data['reason'],
-                    'analyst': username
                     }
             if method == "add":
                 add['date'] = datetime.datetime.now()
