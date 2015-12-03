@@ -831,6 +831,15 @@ def get_source_names(active=False, limited=False, username=None):
     c = SourceAccess.objects(__raw__=query).order_by('+name')
     return c
 
+def get_action_types_for_tlo(obj_type):
+    final = []
+    if obj_type is not None:
+        for a in Action.objects(object_types=obj_type,
+                                active='on').order_by("+name"):
+            final.append(a.name)
+
+    return final
+
 def get_item_names(obj, active=None):
     """
     Get a list of item names for a specific item in CRITs.
