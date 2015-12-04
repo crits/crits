@@ -53,6 +53,7 @@ from crits.core.handlers import ticket_add, ticket_update, ticket_remove
 from crits.core.handlers import description_update, data_update
 from crits.core.handlers import do_add_preferred_actions, add_new_action
 from crits.core.handlers import action_add, action_remove, action_update
+from crits.core.handlers import get_action_types_for_tlo
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_role import UserRole
@@ -2183,35 +2184,45 @@ def add_update_action(request, method, obj_type, obj_id):
     if request.method == "POST" and request.is_ajax():
         username = request.user.username
         form = ActionsForm(request.POST)
-        form.is_valid()
-        data = form.cleaned_data
-        data['action_type'] = request.POST.get('action_type')
-        add = {
-            'action_type': data['action_type'],
-            'begin_date': data['begin_date'] if data['begin_date'] else '',
-            'end_date': data['end_date'] if data['end_date'] else '',
-            'performed_date': data['performed_date'] if data['performed_date'] else '',
-            'active': data['active'],
-            'reason': data['reason'],
-        }
-        if method == "add":
-            add['date'] = datetime.datetime.now()
-            result = action_add(obj_type, obj_id, add, username)
-        else:
-            date = datetime.datetime.strptime(data['date'],
-                                                settings.PY_DATETIME_FORMAT)
-            date = date.replace(microsecond=date.microsecond/1000*1000)
-            add['date'] = date
-            result = action_update(obj_type, obj_id, add, username)
-        if 'object' in result:
-            result['html'] = render_to_string('action_row_widget.html',
-                                                {'action': result['object'],
-                                                'admin': is_admin(username),
-                                                'obj_type':obj_type,
-                                                'obj_id':obj_id})
-        return HttpResponse(json.dumps(result,
-                                        default=json_handler),
-                            mimetype='application/json')
+
+        action_types = get_action_types_for_tlo(obj_type)
+
+        form.fields['action_type'].choices = [
+            (c, c) for c in action_types
+        ]
+
+        if form.is_valid():
+            data = form.cleaned_data
+            add = {
+                    'action_type': data['action_type'],
+                    'begin_date': data.get('begin_date', ''),
+                    'end_date': data.get('end_date', ''),
+                    'performed_date': data.get('performed_date', ''),
+                    'active': data['active'],
+                    'reason': data['reason'],
+                    }
+            if method == "add":
+                add['date'] = datetime.datetime.now()
+                result = action_add(obj_type, obj_id, add)
+            else:
+                date = datetime.datetime.strptime(data['date'],
+                                                         settings.PY_DATETIME_FORMAT)
+                date = date.replace(microsecond=date.microsecond/1000*1000)
+                add['date'] = date
+                result = action_update(obj_type, obj_id, add)
+            if 'object' in result:
+                result['html'] = render_to_string('action_row_widget.html',
+                                                  {'action': result['object'],
+                                                   'admin': is_admin(username),
+                                                   'obj_type':obj_type,
+                                                   'obj_id':obj_id})
+            return HttpResponse(json.dumps(result,
+                                           default=json_handler),
+                                mimetype='application/json')
+        else: #invalid form
+            return HttpResponse(json.dumps({'success':False,
+                                            'form':form.as_table()}),
+                                mimetype='application/json')
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -2255,10 +2266,6 @@ def get_actions_for_tlo(request):
     """
 
     type_ = request.GET.get('type', None)
-    final = []
-    if type_ is not None:
-        for a in Action.objects(object_types=type_,
-                                active='on').order_by("+name"):
-            final.append(a.name)
+    final = get_action_types_for_tlo(type_)
     return HttpResponse(json.dumps({'results': final}),
                 mimetype="application/json")
