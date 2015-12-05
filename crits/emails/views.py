@@ -491,7 +491,8 @@ def indicator_from_header_field(request, email_id):
 
     if request.method == "POST" and request.is_ajax():
         if 'type' in request.POST:
-            header_field = request.POST['type']
+            header_field = request.POST.get('field')
+            header_type = request.POST.get('type')
             analyst = request.user.username
             sources = user_sources(analyst)
             email = Email.objects(id=email_id,
@@ -502,15 +503,9 @@ def indicator_from_header_field(request, email_id):
                     'message':  "Could not find email."
                 }
             else:
-                if header_field in ("from_address, sender, reply_to"):
-                    ind_type = "Address - e-mail"
-                elif header_field in ("originating_ip", "x_originating_ip"):
-                    ind_type = "Address - ipv4-addr"
-                else:
-                    ind_type = "String"
                 result = create_indicator_from_header_field(email,
                                                             header_field,
-                                                            ind_type,
+                                                            header_type,
                                                             analyst,
                                                             request)
         else:

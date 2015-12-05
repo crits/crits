@@ -12,9 +12,6 @@ Provides: The language CRITs is written in. 2.7.x is a minimum requirement!
 mongodb 2.6.4
 Provides: MongoDB which is the backend database CRITs uses.
 
-unrar
-Provides: unrar
-
 zip
 Provides: zip
 

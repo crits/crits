@@ -8,9 +8,9 @@ from crits.core.handlers import get_source_names, get_item_names
 from crits.backdoors.handlers import get_backdoor_names
 from crits.core.user_tools import get_user_organization
 
-class UnrarSampleForm(forms.Form):
+class UnzipSampleForm(forms.Form):
     """
-    Django form to handle unraring a sample.
+    Django form to handle unziping a sample.
     """
 
     error_css_class = 'error'
@@ -49,9 +49,20 @@ class UploadFileForm(forms.Form):
     md5 = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1 required'}),
                           required=False,
                           label=form_consts.Sample.MD5)
+    sha1 = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1'}),
+                           required=False,
+                           label=form_consts.Sample.SHA1)
+    sha256 = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1'}),
+                             required=False,
+                             label=form_consts.Sample.SHA256)
+    size = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1'}),
+                           required=False,
+                           label=form_consts.Sample.SIZE)
+    mimetype = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1'}),
+                               required=False,
+                               label=form_consts.Sample.MIMETYPE)
     file_format = forms.ChoiceField(widget=RadioSelect(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_SKIP + ' id_upload_type_0 required'}),
-                                    choices=[("zip", "Zip"),
-                                             ("rar", "RAR"),
+                                    choices=[("zip", "7z/Zip/RAR"),
                                              ("raw", "raw")],
                                     initial="zip",
                                     required=False,

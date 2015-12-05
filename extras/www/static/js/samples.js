@@ -107,7 +107,6 @@ $(document).ready(function(){
     "add-exploit": {title: "Add Exploit", submit: defaultSubmit, href:"" },
     "add-child": {title: "Add Child Sample", submit: defaultSubmit, href:"" },
     "unzip-sample": {title: "Unzip Sample", submit: defaultSubmit, href:"" },
-    "unrar-sample": {title: "Unrar Sample", submit: defaultSubmit, href:"" },
     "delete-sample": {title: "Delete Sample", submit: defaultSubmit, href:"" },
     "download-sample": {title: "Download Sample", submit: defaultSubmit, href:"" },
     };
@@ -124,7 +123,6 @@ $(document).ready(function(){
         $.proxy(file_upload_dialog, $('#form-add-object-static').parent())();
         add_object_submit(e);
     })
-    add_more_object_types_button($('#form-add-object-static'));
 
     // For samples_tools_widgets
     var comment_form = $('#form-comments');

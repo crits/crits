@@ -7,182 +7,409 @@
 # CRITs install, walk through some basic setup, and help you start a quick
 # instance of CRITs.
 
+#=====================Message Colors=========================
+FAIL=$(tput setaf 1) #red
+PASS=$(tput setaf 2) #green
+HEAD=$(tput setaf 5) #magenta
+INFO=$(tput setaf 6) #cyan
+END=$(tput sgr0)   #ends color
+#============================================================
+PIP='pip'
+PYTH='python'
 
-# Make sure we are working with a 64-bit system.
-ARCH=$(uname -m | sed 's/x86_//;s/amd//;s/i[3-6]86/32/')
-echo "Architecture: $ARCH"
+verify()
+{
+    printf "${INFO}Testing Computer's Architecture${END}\n"
+    ARCH=$(uname -m | sed 's/x86_//;s/amd//;s/i[3-6]86/32/')
+    if [ "$ARCH" -ne '64' ];
+    then
+        printf "${FAIL}Non 64-bit system detected${END}\n"
+        exit
+    else
+        printf "${PASS}Architecure 64-bit Passed${END}\n"
+    fi
+    printf "${INFO}Testing the distro type${END}\n"
+    # Using lsb-release because os-release not available on Ubuntu 10.04
+    if [ -f /etc/redhat-release ];
+    then
+        OS=$(cat /etc/redhat-release | sed 's/ [Enterprise|release].*//')
+        VER=$(cat /etc/redhat-release | sed 's/.*release //;s/ .*$//')
+        #Redhat/CentOS release version
+        REL=$(echo $VER | sed 's/\..//')
+        if [ $REL -lt 7 ];
+        then
+            #change for RHEL/CentOS < Release 7 
+            PIP='pip2.7'
+        fi
+    elif command -v lsb_release >/dev/null 2>&1
+    then
+        OS=$(lsb_release -i| sed 's/Distributor ID:\t//')
+        VER=$(lsb_release -r| sed 's/Release:\t//')
+    else
+        OS=$(uname -s)
+        VER=$(uname -r)
+    fi
+    OS="$(echo "$OS" | tr "[:upper:]" "[:lower:]")"
+    VER="$(echo "$VER" | tr "[:upper:]" "[:lower:]")"
+}
 
-if [ $ARCH -ne '64' ]; then
-  echo "** Non 64-bit system detected **"
-  echo "These dependencies are for a 64-bit system."
-  echo "Exiting.."
-  exit
-fi
+install_mongo()
+{
+    # Check if Mongo is Installed
+    if command -v mongo >/dev/null 2>&1
+    then
+        printf "${PASS}Mongo already installed${END}\n"  
+    else
+        printf "${INFO}Installing MongoDB${END}\n"
+        curl http://downloads.mongodb.org/linux/mongodb-linux-x86_64-2.6.4.tgz > mongodb-linux-x86_64-2.6.4.tgz
+        tar -zxvf mongodb-linux-x86_64-2.6.4.tgz
+        sudo cp ./mongodb-linux-x86_64-2.6.4/bin/* /usr/local/bin/
+        rm  mongodb-linux-x86_64-2.6.4.tgz
+        rm -r mongodb-linux-x86_64-2.6.4
+        if [ ! -f /usr/local/bin/mongod ];
+        then
+            printf "${FAIL}MongoDB Installation Failed${END}\n"
+            exit_restart $STEP
+        fi
+    fi
+}
 
-# Determine the OS we are working with.
-# Using lsb-release because os-release not available on Ubuntu 10.04
-if [ -f /etc/lsb-release ]; then
-  . /etc/lsb-release
-  OS=$DISTRIB_ID
-  VER=$DISTRIB_RELEASE
-elif [ -f /etc/redhat-release ]; then
-  OS=$(cat /etc/redhat-release | sed 's/ Enterprise.*//')
-  VER=$(cat /etc/redhat-release | sed 's/.*release //;s/ .*$//')
-else
-  OS=$(uname -s)
-  VER=$(uname -r)
-fi
+# Creates Default Database Files
+create_files()
+{
+    if [ ! -e /data ];
+    then
+        printf "${HEAD}Creating Database Folders${END}\n"
+        sudo mkdir -v -p /data/db
+        sudo mkdir -v -p /data/logs
+    fi
+    # The original script had root remain the owner of these files but
+    # that ended up causing some difficulties
+    sudo chown -R $USER:$GROUP /data
+    chmod -R -v 0755 /data
+}
 
-OS="$(echo "$OS" | tr "[:upper:]" "[:lower:]")"
-VER="$(echo "$VER" | tr "[:upper:]" "[:lower:]")"
 
-# Ubuntu: Install as many dependencies as we can using apt-get.
-if [ "$OS" = 'ubuntu' ]
-then
-  echo "Installing dependencies with apt-get"
-  sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
-  echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
-  sudo apt-add-repository universe
-  sudo apt-get update
-  sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep unrar-free upx zip swig libssl-dev
-  sudo ldconfig
+depend_crits()
+{
+    printf "${HEAD}Installing Python Dependencies${END}\n"
+    sudo ${PIP} install -r requirements.txt
+    if [ $? -ne 0 ]
+    then
+        printf "${FAIL}Dependency installation failed!${END}\n
+        If M2Crypto failed to install, you might try to install the 
+        OS-provided package with the package manager (apt-get/yum/brew)
+        or try to use pip to install a fixed version from git by:
+        ${INFO}pip install git+https://github.com/martinpaljak/M2Crypto.git${END}\n"
+        exit
+    else
+        printf "${INFO}Dependency installation complete!${END}\n"
+    fi
+}
 
-# Redhat: Install as many dependencies as we can using yum.
-# TODO: Need to test centos dependencies
-# elif [ "$OS" == 'centos' ] || [ "$OS" == 'redhat' ]
-elif [ "$OS" = 'red hat' ]
-then
-  echo "Installing Yum Packages"
-  # Probably should run the Yum equivelent of apt-get update
-  sudo yum install make gcc gcc-c++ kernel-devel pcre pcre-devel curl libpcap-devel python-devel python-pip zip unzip gzip bzip2 swig
-  sudo yum install p7zip-9.20.1-2
-  sudo yum install p7zip-plugins-9.20.1-2
-  sudo yum install unrar-4.2.3-1
-  sudo yum install libyaml-0.1.4-1
-  sudo yum install upx-3.07-1
+# Starts up everything needed to run the server
+# Checks if mongodb is running, starts it if not and then
+# starts the server
+start_mongo()
+{
+    printf "${HEAD}Starting Server${END}\n"
+    printf "${INFO}To Restart Server: script/bootstrap 4\n"
+    printf "Warning MongoDB Will Still be Running After Server Ends${END}\n"
 
-# OSX: Install as many dependencies as we can using Homebrew.
-elif [ "$OS" = 'darwin' ]
-then
-  command -v brew >/dev/null 2>&1 || {
-    echo "Installation for OSX requires Homebrew. Please visit http://brew.sh/."
+    pgrep mongod >/dev/null 2>&1
+    if [ $? -ne 0 ]
+    then
+        sh contrib/mongo/mongod_start.sh
+    fi
+}
+start_server()
+{
+    printf "\nRunning Server on 0.0.0.0 Port 8080\n"
+    ${PYTH} manage.py runserver 0.0.0.0:8080
+}
+
+# Creates CRITs username and password for administrator
+server_setup()
+{
+
+    touch logs/crits.log
+    chmod 0644 logs/crits.log
+
+    if [ ! -f crits/config/database.py ]; then
+        echo "Creating default database configuration file"
+        cp crits/config/database_example.py crits/config/database.py
+        SC=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(-_=+)' | fold -w 50 | head -n 1)
+        # This is going to escape the '&' character that is a special character in sed 
+        SE=$(echo ${SC} | sed -e 's/\\/\\\\/g' | sed -e 's/\//\\\//g' | sed -e 's/&/\\\&/g')
+        sed -i -e "s/^\(SECRET_KEY = \).*$/\1\'${SE}\'/1" crits/config/database.py
+    else
+        echo "Database configuration file exists. skipping!"
+    fi
+
+    # If MongoDB isn't already running, ask to start it.
+    # This can fail if MongoDB is running already but on a non-standard port.
+    pgrep mongod >/dev/null 2>&1
+    if [ $? -ne 0 ]
+    then
+      if [ "$IS_VAGRANT" ]
+      then
+        # For Vagrant, we always want to start Mongo automatically (though it
+        # should get started by the installation process).
+        start_mongo
+      else
+        while true; do
+          read -p "Do you want to start 'mongod' now? [yn] " yn
+          case $yn in
+              [Yy]* ) start_mongo; break;;
+              [Nn]* ) break;;
+              * ) echo "Please answer yes or no.";;
+          esac
+        done
+      fi
+    fi
+
+    echo "Creating default collections"
+    ${PYTH} manage.py create_default_collections
+
+    if [ "$IS_VAGRANT" ]
+    then
+      echo "To get a usable system, you still need to use fabric to:"
+      echo "- Create an administrator account"
+      echo "    $ fab vagrant create_admin_user"
+      echo "- (Optional) Set some development-specific CRITs config settings"
+      echo "    $ fab vagrant dev_setup"
+      echo "- (Optional) Set up services"
+      echo "    $ fab vagrant init_services"
+      echo "- Run the development server"
+      echo "    $ fab vagrant runserver"
+      exit 0
+    fi
+
+    if [ $? -eq 0 ]
+    then
+        while true; do
+            printf "${HEAD}Please choose:${END}\n"
+            printf "[${INFO}A${END}]dd admin user\n"
+            printf "[${INFO}R${END}]eset password\n"
+            printf "[${INFO}S${END}]tart server\n"
+            printf "[${INFO}Q${END}]uit\n"
+            read -p "Add/Reset/Start/Quit? [arsq] " arc
+            case $arc in
+                [Aa]* ) add_admin;;
+                [Rr]* ) reset_pass;;
+                [Ss]* ) start_server;;
+                [Qq]* ) break;;
+                * ) echo "${FAIL}Please answer [A]dd / [R]eset / [S]tart / [Q]uit.${END}\n";;
+            esac
+        done
+    fi
+}
+
+add_admin()
+{
+        printf "${HEAD}Add admin user:${END}\n"
+        read -p "Username: " USERNAME
+        read -p "First name: " FIRSTNAME
+        read -p "Last name: " LASTNAME
+        read -p "Email address: " EMAIL
+        read -p "Organization name: " ORG
+
+        ${PYTH} manage.py users -a -A -e "${EMAIL}" -f "${FIRSTNAME}" -l "${LASTNAME}" -o "${ORG}" -u "${USERNAME}"
+        if [ $? -ne 0 ]
+        then
+            printf "${FAIL}Failed to add an admin user${END}\n"
+        else
+            printf "${PASS}This is Your Temp Password${END}\n"
+        fi
+}
+
+reset_pass()
+{
+        printf "${HEAD}Reset password:${END}\n"
+        read -p "Username: " USERNAME
+        ${PYTH} manage.py users -r -u "${USERNAME}"
+        if [ $? -ne 0 ]
+        then
+            printf "${FAIL}Failed to reset password for ${USERNAME}${END}\n"
+        fi
+}
+
+# Error Message
+exit_restart()
+{
+    printf "\n${HEAD}Error: To restart at this step: sh $0 $1${END}\n"
     exit
-  }
-  brew install mongodb ssdeep upx p7zip libmagic libyaml pcre libxml2 openssl
-  brew install https://raw.githubusercontent.com/destijl/homebrew-versions/master/swig304.rb
-  command -v pip >/dev/null 2>&1 || {
-    echo "Installation for OSX requires pip. We will try to install pip now."
-    sudo easy_install pip
-  }  
-elif [ "$OS" = 'freebsd' ]
-then
-  echo "Installing ports"
-  sudo pkg install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl swig py27-m2crypto py27-pydeep py27-ldap2 py27-mongoengine
-else
-  echo "Unknown distro!"
-  echo "Detected: $OS $VER"
-  exit
-fi
-
-# Determine if MongoDB is already installed.
-# NOTE: This does not do a version check, which we should probably do somehow.
-command -v mongo >/dev/null 2>&1 || {
-  echo "Installing MongoDB 2.6.4..."
-  curl http://downloads.mongodb.org/linux/mongodb-linux-x86_64-2.6.4.tgz > mongodb-linux-x86_64-2.6.4.tgz
-  tar -zxvf mongodb-linux-x86_64-2.6.4.tgz
-  sudo cp ./mongodb-linux-x86_64-2.6.4/bin/* /usr/local/bin/
-  rm  mongodb-linux-x86_64-2.6.4.tgz
-  rm -r mongodb-linux-x86_64-2.6.4
 }
 
-# Install the rest of our dependencies which are python libraries.
-echo "Installing Python Dependencies"
-sudo pip install -r requirements.txt
-
-echo "Dependency installations complete!"
-
-# Create log file and generate default database configuration.
-echo "Setting up crits.log file"
-touch logs/crits.log
-chmod 664 logs/crits.log
-
-if [ ! -f crits/config/database.py ]; then
-  echo "Creating default database configuration file"
-  cp crits/config/database_example.py crits/config/database.py
-  SC=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(-_=+)' | fold -w 50 | head -n 1)
-  # This is going to escape the '&' character that is a special character in sed 
-  SE=$(echo ${SC} | sed -e 's/\\/\\\\/g' | sed -e 's/\//\\\//g' | sed -e 's/&/\\\&/g')
-  sed -i -e "s/^\(SECRET_KEY = \).*$/\1\'${SE}\'/1" crits/config/database.py
-else
-  echo "Database configuration file exists, skip secret_key generation!"
-fi
-
-start_mongo () {
-  sudo mkdir -p /data/db
-  sudo mkdir -p /data/logs
-  sudo sh contrib/mongo/mongod_start.sh
+ubuntu_install()
+{
+    printf "${INFO}Installing dependencies with apt-get${END}\n"
+    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+    echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
+    sudo add-apt-repository universe
+    sudo apt-get update
+    sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+    sudo ldconfig
 }
 
-# If MongoDB isn't already running, ask to start it.
-# This can fail if MongoDB is running already but on a non-standard port.
-pgrep mongod >/dev/null 2>&1
-if [ $? -ne 0 ]
+debian_install()
+{
+    printf "${INFO}Installing dependencies with apt-get${END}\n"
+    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+    echo 'deb http://downloads-distro.mongodb.org/repo/debian-sysvinit dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
+    sudo add-apt-repository universe
+    sudo apt-get update
+    sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+    sudo ldconfig
+}
+
+darwin_install()
+{
+    command -v brew >/dev/null 2>&1 || {
+    printf "${FAIL}Installation for OSX requires Homebrew. Please visit http://brew.sh/.${END}\n"
+    exit
+    }
+    brew install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl
+    brew install https://raw.githubusercontent.com/destijl/homebrew-versions/master/swig304.rb
+}
+
+freebsd_install()
+{
+    printf "${PASS}Installing ports${END}\n"
+    sudo pkg install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl swig py27-m2crypto py27-pydeep py27-ldap2 py27-mongoengine
+}
+
+red_hat_install()
+{
+    printf "${HEAD}Installing CRITs Dependencies${END}\n"
+    if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
+    then
+        printf "${INFO}Installing RPMForge repo${END}\n"
+        sudo rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+        sudo rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
+    fi
+    if [ ! -f /etc/yum.repos.d/epel.repo ];
+    then
+        printf "${INFO}Installing EPEL repo${END}\n"
+        sudo yum -y install epel-release
+    fi
+    if [ $REL -lt 7 ];
+    then
+        if [ ! -f /etc/yum.repos.d/ius.repo ];
+        then
+            printf "${INFO}Installing IUS repo${END}\n"
+            # python27 comes from here
+            sudo rpm -i http://dl.iuscommunity.org/pub/ius/stable/RedHat/${REL}/x86_64/ius-release-1.0-14.ius.el${REL}.noarch.rpm
+        fi
+        sudo yum -y install python27 python27-devel python27-pip
+    fi
+    
+    printf "${INFO}Installing Packages${END}\n"
+    sudo yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
+    sudo yum -y install p7zip p7zip-plugins
+    sudo yum -y install libffi-devel
+    sudo yum -y install libyaml
+    sudo yum -y install upx
+
+    printf "${INFO}Dependency Install Complete${END}\n"
+}
+
+centos_install()
+{
+    printf "${HEAD}Installing CRITs Dependencies${END}\n"
+    if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
+    then
+        printf "${INFO}Installing RPMForge repo${END}\n"
+        sudo rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+        sudo rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
+    fi
+    if [ ! -f /etc/yum.repos.d/epel.repo ];
+    then
+        printf "${INFO}Installing EPEL repo${END}\n"
+        sudo yum -y install epel-release
+    fi
+
+    if [ $REL -lt 7 ];
+    then
+        if [ ! -f /etc/yum.repos.d/ius.repo ];
+        then
+            printf "${INFO}Installing IUS repo${END}\n"
+            # python27 comes from here
+            sudo rpm -i http://dl.iuscommunity.org/pub/ius/stable/CentOS/${REL}/x86_64/ius-release-1.0-14.ius.centos${REL}.noarch.rpm
+            
+        fi
+        sudo yum -y install python27 python27-devel python27-pip
+    fi
+
+    printf "${INFO}Installing Packages${END}\n"
+    sudo yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
+    sudo yum -y install p7zip p7zip-plugins
+    sudo yum -y install libffi-devel
+    sudo yum -y install libyaml
+    sudo yum -y install upx
+
+    printf "${INFO}Dependency Install Complete${END}\n"
+}
+#===============================================================
+# This is the Beginning of the Script
+#===============================================================
+# Sees if there is an argument
+if [ -z $1 ];
 then
-  if [ "$IS_VAGRANT" ]
-  then
-    # For Vagrant, we always want to start Mongo automatically (though it
-    # should get started by the installation process).
-    start_mongo
-  else
-    while true; do
-      read -p "Do you want to start 'mongod' now? [yn] " yn
-      case $yn in
-          [Yy]* ) start_mongo; break;;
-          [Nn]* ) break;;
-          * ) echo "Please answer yes or no.";;
-      esac
-    done
-  fi
+    STEP=1
+else
+    STEP=$1
 fi
 
-echo "Creating default collections"
-python manage.py create_default_collections
-
-if [ "$IS_VAGRANT" ]
-then
-  echo "To get a usable system, you still need to use fabric to:"
-  echo "- Create an administrator account"
-  echo "    $ fab vagrant create_admin_user"
-  echo "- Run the development server"
-  echo "    $ fab vagrant runserver"
-  exit 0
-fi
-
-if [ $? -eq 0 ]
-then
-  # Setup the first admin user.
-  read -p "Username: " USERNAME
-  read -p "First name: " FIRSTNAME
-  read -p "Last name: " LASTNAME
-  read -p "Email address: " EMAIL
-  read -p "Organization name: " ORG
-  
-  echo "Adding a default admin account"
-  python manage.py users -a -A -e "$EMAIL" -f "$FIRSTNAME" -l "$LASTNAME" -o "$ORG" -u "$USERNAME"
-  echo "Make note of the above password so you can authenticate!"
-  
-  # Attempt to start the runserver.
-  while true; do
-    read -p "Do you want to start 'runserver' now? [yn] " yn
-    case $yn in
-        [Yy]* ) break;;
-        [Nn]* ) exit;;
-        * ) echo "Please answer yes or no.";;
+while [ $STEP -lt 5 ]
+do
+    case $STEP in
+        1)
+            verify
+            if [ "$OS" = 'ubuntu' ]
+            then
+                printf "${PASS}ubuntu is Supported!${END}\n"
+                ubuntu_install || exit_restart $STEP
+                depend_crits ||exit_restart $STEP
+            elif [ "$OS" = 'debian' ]
+            then
+                printf "${PASS}Debian is Supported!${END}\n"
+                debian_install || exit_restart $STEP
+                depend_crits ||exit_restart $STEP
+            elif [ "$OS" = 'darwin' ]
+            then
+                printf "${PASS}OS X is Supported!${END}\n"
+                darwin_install || exit_restart $STEP
+                depend_crits ||exit_restart $STEP
+            elif [ "$OS" = "centos" ]
+            then
+                printf "${PASS}CentOS is Supported!${END}\n"
+                centos_install || exit_restart $STEP
+                depend_crits ||exit_restart $STEP
+            elif [ "$OS" = "red hat" ]
+            then
+                printf "${PASS}Red Hat is Supported!${END}\n"
+                red_hat_install || exit_restart $STEP
+                depend_crits ||exit_restart $STEP
+            elif [ "$OS" = 'freebsd' ]
+            then
+                printf "${PASS}FreeBSD is Supported${END}\n"
+                freebsd_install || exit_restart $STEP
+                depend_crits ||exit_restart $STEP
+            else
+                printf "${FAIL}OS: $OS, need Ubuntu, Debian, Darwin (OS X), CentOS, Red Hat, or FreeBSD${END}\n"
+                exit
+            fi
+            ;;
+        2)
+            install_mongo ||exit_restart $STEP ;;
+        3)
+            create_files ||exit_restart $STEP ;;
+        4)
+            server_setup ||exit_restart $STEP ;;
+        *)
+            exit
+            ;;
     esac
-  done
-  
-  echo "Attempting to start runserver on port 8080"
-  echo "If you exit bootstrap you can start runserver again using:"
-  echo "python manage.py runserver 0.0.0.0:8080"
-  python manage.py runserver 0.0.0.0:8080
-fi
+    STEP=$((STEP+1))
+done

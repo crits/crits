@@ -3,9 +3,11 @@ from django.conf import settings
 
 from crits.certificates.migrate import migrate_certificate
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import getFileField
 
-class Certificate(CritsBaseAttributes, CritsSourceDocument, Document):
+class Certificate(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+                  Document):
     """
     Certificate Class.
     """

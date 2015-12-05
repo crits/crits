@@ -73,6 +73,11 @@
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
      </div>
+    <div class="content_box">
+        {% with obj=ip obj_type="IP" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
      <div>
 	    {% with obj=ip obj_type=subscription.type %}
                 {% include 'tickets_listing_widget.html' %}

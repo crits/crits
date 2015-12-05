@@ -345,8 +345,6 @@ def handle_raw_data_file(data, source_name, user=None,
         }
         return status
 
-    data = data.encode('utf-8')
-
     if len(data) <= 0:
         status = {
             'success':   False,
@@ -355,9 +353,9 @@ def handle_raw_data_file(data, source_name, user=None,
         return status
 
     # generate md5 and timestamp
-    md5 = hashlib.md5(data).hexdigest()
+    md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
     timestamp = datetime.datetime.now()
-    
+
     # generate raw_data
     is_rawdata_new = False
     raw_data = RawData.objects(md5=md5).first()
@@ -374,7 +372,7 @@ def handle_raw_data_file(data, source_name, user=None,
                           version=tool_version,
                           details=tool_details)
         is_rawdata_new = True
-    
+
     # generate new source information and add to sample
     if isinstance(source_name, basestring) and len(source_name) > 0:
         source = create_embedded_source(source_name,
@@ -390,7 +388,7 @@ def handle_raw_data_file(data, source_name, user=None,
         for s in source_name:
             if isinstance(s, EmbeddedSource):
                 raw_data.add_source(s, method=method, reference=reference)
-    
+
     #XXX: need to validate this is a UUID
     if link_id:
         raw_data.link_id = link_id
@@ -402,7 +400,7 @@ def handle_raw_data_file(data, source_name, user=None,
                     raw_data.reload()
                     for rel in rd2.relationships:
                         # Get object to relate to.
-                        rel_item = class_from_id(rel.rel_type, rel.rel_object_id)
+                        rel_item = class_from_id(rel.rel_type, rel.object_id)
                         if rel_item:
                             raw_data.add_relationship(rel_item,
                                                       rel.relationship,

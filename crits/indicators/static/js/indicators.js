@@ -89,12 +89,6 @@ $(document).ready(function() {
 		$("#form-download-indicator").submit();
                 $(this).dialog("close");
 	    }},
-
-	"add-action": {title: "Action", href:"",
-		       new: {open: function(e) {
-		    $('#id_action_performed_date').val(timenow());
-		}},
-		       update: { open: update_dialog} },
 	"add-activity": {title: "Activity", href:"",
 			 update: { open: update_dialog} },
 
@@ -263,6 +257,7 @@ $(document).ready(function() {
         style:'display:inline',
         submit:'OK'
     });
+
     details_copy_id('Indicator');
     toggle_favorite('Indicator');
 }); //document.ready

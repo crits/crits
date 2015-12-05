@@ -103,7 +103,7 @@
                  <a href="{{ splunk_search_url }}{{ indicator.value }}"><img src="/new_images/splunk.png" /></a>
              </span>
         {% endif %}
-         </td> 
+         </td>
          </tr>
         <tr>
             {% with description=indicator.description %}
@@ -178,40 +178,9 @@
     {% endwith %}
 </div>
 <div class="content_box">
-    <h3 class="titleheader">
-    <span>Actions</span>
-        <span class="add_button" data-intro="Add an action" data-position="right">
-          <a href="#" title="Add Action" style="display:inline-block;" 
-class="ui-icon ui-icon-plusthick dialogClick" dialog="add-action" persona="new" action="{% url 'crits.indicators.views.add_update_action' 'add' indicator.id %}"></a>
-	</span>
-    </h3>
-    <div class="content_body">
-    <table class="chart" id="action_listing">
-    <thead>
-        {% if indicator.actions %}
-        <tr>
-        {% else %}
-        <tr style="display:none;">
-        {% endif %}
-        <th>Type</th>
-        <th>Begin</th>
-        <th>End</th>
-        <th>Performed</th>
-        <th>Active</th>
-        <th>Reason</th>
-        <th>Date Added</th>
-        <th>Analyst</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% with indicator_id=indicator.id %}
-        {% for action in indicator.actions %}
-            {% include 'indicators_action_row_widget.html' %}
-        {% endfor %}
-        {% endwith %}
-    </tbody>
-    </table>
-    </div>
+    {% with obj=indicator obj_type="Indicator" %}
+        {% include 'action_listing_widget.html' %}
+    {% endwith %}
 </div>
 <div>
     {% with obj=indicator obj_type=subscription.type %}
@@ -290,14 +259,6 @@ class="ui-icon ui-icon-plusthick dialogClick" dialog="add-action" persona="new" 
     </form>
 </div>
 
-<div id="dialog-add-action" title="Add Action">
-    <form id="form-add-action" 
-	  method='POST' enctype="multipart/form-data" 
-	  item-type="action">
-    <table class="form"> {{ forms.new_action.as_table }} </table>
-    </form>
-</div>
-
 <div id="dialog-add-activity" title="Add Activity">
     <form id="form-add-activity" method='POST' enctype="multipart/form-data" item-type="activity">
     <table class="form"> {{ forms.new_activity.as_table }} </table>
@@ -315,7 +276,7 @@ class="ui-icon ui-icon-plusthick dialogClick" dialog="add-action" persona="new" 
 {% block javascript_includes %}
  <script type="text/javascript" src="{{ STATIC_URL }}js/indicators.js"></script>
 
- {% comment %} 
+ {% comment %}
  Moved relationship setup here, so we can get dialogs to init
  {% endcomment %}
 

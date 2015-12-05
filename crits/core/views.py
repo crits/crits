@@ -23,7 +23,9 @@ from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
 from crits.comments.forms import AddCommentForm, InlineCommentForm
 from crits.config.config import CRITsConfig
+from crits.core.crits_mongoengine import Action
 from crits.core.data_tools import json_handler
+from crits.core.forms import ActionsForm, NewActionForm
 from crits.core.forms import SourceAccessForm, AddSourceForm, AddUserRoleForm
 from crits.core.forms import SourceForm, DownloadFileForm, AddReleasabilityForm
 from crits.core.forms import TicketForm
@@ -48,7 +50,10 @@ from crits.core.handlers import details_from_id, status_update
 from crits.core.handlers import get_favorites, favorite_update
 from crits.core.handlers import generate_favorites_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
-from crits.core.handlers import description_update
+from crits.core.handlers import description_update, data_update
+from crits.core.handlers import do_add_preferred_actions, add_new_action
+from crits.core.handlers import action_add, action_remove, action_update
+from crits.core.handlers import get_action_types_for_tlo
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_role import UserRole
@@ -70,8 +75,7 @@ from crits.emails.forms import EmailUploadForm, EmailEMLForm, EmailYAMLForm, Ema
 from crits.events.forms import EventForm
 from crits.exploits.forms import AddExploitForm
 from crits.indicators.forms import UploadIndicatorCSVForm, UploadIndicatorTextForm
-from crits.indicators.forms import UploadIndicatorForm, NewIndicatorActionForm
-from crits.indicators.indicator import IndicatorAction
+from crits.indicators.forms import UploadIndicatorForm
 from crits.ips.forms import AddIPForm
 from crits.locations.forms import AddLocationForm
 from crits.notifications.handlers import get_user_notifications
@@ -85,6 +89,11 @@ from crits.raw_data.raw_data import RawDataType
 from crits.relationships.forms import ForgeRelationshipForm
 from crits.samples.forms import UploadFileForm
 from crits.screenshots.forms import AddScreenshotForm
+from crits.signatures.forms import UploadSignatureForm
+from crits.signatures.forms import NewSignatureTypeForm
+from crits.signatures.forms import NewSignatureDependencyForm
+from crits.signatures.signature import SignatureType
+from crits.signatures.signature import SignatureDependency
 from crits.targets.forms import TargetInfoForm
 
 from crits.vocabulary.sectors import Sectors
@@ -110,6 +119,30 @@ def update_object_description(request):
         return HttpResponse(json.dumps(description_update(type_,
                                                           id_,
                                                           description,
+                                                          analyst)),
+                            mimetype="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST.'},
+                                  RequestContext(request))
+@user_passes_test(user_can_view_data)
+def update_object_data(request):
+    """
+    Update the data in a data element
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        type_ = request.POST['type']
+        id_ = request.POST['id']
+        data = request.POST['data']
+        analyst = request.user.username
+        return HttpResponse(json.dumps(data_update(type_,
+                                                          id_,
+                                                          data,
                                                           analyst)),
                             mimetype="application/json")
     else:
@@ -659,9 +692,9 @@ def add_update_source(request, method, obj_type, obj_id):
         form = SourceForm(request.user.username, request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            analyst = request.user.username
+            user = request.user.username
             # check to see that this user can already see the object
-            if (data['name'] in user_sources(analyst)):
+            if (data['name'] in user_sources(user)):
                 if method == "add":
                     date = datetime.datetime.now()
                 else:
@@ -674,7 +707,7 @@ def add_update_source(request, method, obj_type, obj_id):
                                            method=data['method'],
                                            reference=data['reference'],
                                            date=date,
-                                           analyst=analyst)
+                                           user=user)
                 if 'object' in result:
                     if method == "add":
                         result['header'] = result['object'].name
@@ -1043,7 +1076,7 @@ def base_context(request):
     if request.user.is_authenticated():
         user = request.user.username
         # Forms that don't require a user
-        base_context['add_indicator_action'] = NewIndicatorActionForm()
+        base_context['add_new_action'] = NewActionForm()
         base_context['add_target'] = TargetInfoForm()
         base_context['campaign_add'] = AddCampaignForm()
         base_context['comment_add'] = AddCommentForm()
@@ -1052,6 +1085,8 @@ def base_context(request):
         base_context['location_add'] = AddLocationForm()
         base_context['add_raw_data_type'] = NewRawDataTypeForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
+        base_context['add_signature_type'] = NewSignatureTypeForm()
+        base_context['add_signature_dependency'] = NewSignatureDependencyForm()
         base_context['source_access'] = SourceAccessForm()
         base_context['upload_tlds'] = TLDUpdateForm()
         base_context['user_role_add'] = AddUserRoleForm()
@@ -1084,6 +1119,12 @@ def base_context(request):
             base_context['ip_form'] = AddIPForm(user, None)
         except Exception, e:
             logger.warning("Base Context AddIPForm Error: %s" % e)
+        try:
+            base_context['new_action'] = ActionsForm(initial={'analyst': user,
+                'active': "off",
+                'date': datetime.datetime.now()})
+        except Exception, e:
+            logger.warning("Base Context ActionsForm Error: %s" % e)
         try:
             base_context['source_add'] = SourceForm(user,
                                                     initial={'analyst': user})
@@ -1157,6 +1198,10 @@ def base_context(request):
             base_context['upload_raw_data_file'] = UploadRawDataFileForm(user)
         except Exception, e:
             logger.warning("Base Context UploadRawDataFileForm Error: %s" % e)
+        try:
+            base_context['upload_signature'] = UploadSignatureForm(user)
+        except Exception, e:
+            logger.warning("Base Context UploadSignatureForm Error: %s" % e)
 
         # Other info acquired from functions
         try:
@@ -1213,7 +1258,7 @@ def base_context(request):
                                         {'collection': settings.COL_EVENT_TYPES,
                                             'name': 'Event Types'},
                                         {'collection': settings.COL_IDB_ACTIONS,
-                                            'name': 'Indicator Actions'},
+                                            'name': 'Actions'},
                                         {'collection': settings.COL_INTERNAL_LOCATIONS,
                                             'name': 'Internal Locations'},
                                         {'collection': settings.COL_OBJECT_TYPES,
@@ -1224,6 +1269,10 @@ def base_context(request):
                                             'name': 'Relationship Types'},
                                         {'collection': settings.COL_SOURCE_ACCESS,
                                             'name': 'Sources'},
+                                        {'collection': settings.COL_SIGNATURE_TYPES,
+                                            'name': 'Signature Types'},
+                                        {'collection': settings.COL_SIGNATURE_DEPENDENCY,
+                                            'name': 'Signature Dependency'},
                                         {'collection': settings.COL_USER_ROLES,
                                             'name': 'User Roles'}
                                         ]
@@ -1547,6 +1596,7 @@ def collections(request):
     colls['COL_PCAPS'] = settings.COL_PCAPS
     colls['COL_RAW_DATA'] = settings.COL_RAW_DATA
     colls['COL_SAMPLES'] = settings.COL_SAMPLES
+    colls['COL_SIGNATURES'] = settings.COL_SIGNATURES
     colls['COL_TARGETS'] = settings.COL_TARGETS
     return colls
 
@@ -1677,8 +1727,10 @@ def item_editor(request):
     counts = {}
     obj_list = [ActorThreatIdentifier,
                 Campaign,
-                IndicatorAction,
+                Action,
                 RawDataType,
+                SignatureType,
+                SignatureDependency,
                 SourceAccess,
                 UserRole]
     for col_obj in obj_list:
@@ -1741,6 +1793,38 @@ def toggle_item_active(request):
         return render_to_response("error.html",
                                   {"error" : error },
                                   RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def add_preferred_actions(request):
+    """
+    Add preferred actions to an indicator. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        if 'obj_type' not in request.POST and 'obj_id' not in request.POST:
+            result = {'success': False, 'message': "Invalid parameters."}
+        else:
+            username = request.user.username
+            obj_type = request.POST['obj_type']
+            obj_id = request.POST['obj_id']
+            result = do_add_preferred_actions(obj_type, obj_id, username)
+            if 'object' in result:
+                result['html'] = ''
+                for obj in result['object']:
+                    result['html'] += render_to_string('action_row_widget.html',
+                                                       {'action': obj,
+                                                        'admin': is_admin(username),
+                                                        'obj_type':obj_type,
+                                                        'obj_id':obj_id})
+    else:
+        result = {'success': False, 'message': "Expected AJAX POST"}
+    return HttpResponse(json.dumps(result, default=json_handler),
+                        mimetype='application/json')
+
 
 @user_passes_test(user_can_view_data)
 def download_file(request, sample_md5):
@@ -1828,19 +1912,19 @@ def add_update_ticket(request, method, type_=None, id_=None):
         form = TicketForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            user = request.user.username
             add = {
                     'ticket_number': data['ticket_number'],
-                    'analyst': request.user.username
             }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                result = ticket_add(type_, id_, add)
+                result = ticket_add(type_, id_, add, user)
             else:
                 date = datetime.datetime.strptime(data['date'],
                                                          settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                result = ticket_update(type_, id_, add)
+                result = ticket_update(type_, id_, add, user)
 
             crits_config = CRITsConfig.objects().first()
             if 'object' in result:
@@ -2049,3 +2133,139 @@ def bucket_autocomplete(request):
         if term:
             return get_bucket_autocomplete(term)
     return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def new_action(request):
+    """
+    Add a new action. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == 'POST' and request.is_ajax():
+        form = NewActionForm(request.POST)
+        analyst = request.user.username
+        if form.is_valid():
+            result = add_new_action(form.cleaned_data['action'],
+                                    form.cleaned_data['object_types'],
+                                    form.cleaned_data['preferred'],
+                                    analyst)
+            if result:
+                message = {'message': '<div>Action added successfully!</div>',
+                           'success': True}
+            else:
+                message = {'message': '<div>Action addition failed!</div>',
+                           'success': False}
+        else:
+            message = {'form': form.as_table()}
+        return HttpResponse(json.dumps(message),
+                            mimetype="application/json")
+    return render_to_response('error.html',
+                              {'error': 'Expected AJAX POST'})
+
+@user_passes_test(user_can_view_data)
+def add_update_action(request, method, obj_type, obj_id):
+    """
+    Add/update an object's action. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param method: Whether we are adding or updating.
+    :type method: str ("add", "update")
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the top level object to update.
+    :type obj_id: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        username = request.user.username
+        form = ActionsForm(request.POST)
+
+        action_types = get_action_types_for_tlo(obj_type)
+
+        form.fields['action_type'].choices = [
+            (c, c) for c in action_types
+        ]
+
+        if form.is_valid():
+            data = form.cleaned_data
+            add = {
+                    'action_type': data['action_type'],
+                    'begin_date': data.get('begin_date', ''),
+                    'end_date': data.get('end_date', ''),
+                    'performed_date': data.get('performed_date', ''),
+                    'active': data['active'],
+                    'reason': data['reason'],
+                    }
+            if method == "add":
+                add['date'] = datetime.datetime.now()
+                result = action_add(obj_type, obj_id, add)
+            else:
+                date = datetime.datetime.strptime(data['date'],
+                                                         settings.PY_DATETIME_FORMAT)
+                date = date.replace(microsecond=date.microsecond/1000*1000)
+                add['date'] = date
+                result = action_update(obj_type, obj_id, add)
+            if 'object' in result:
+                result['html'] = render_to_string('action_row_widget.html',
+                                                  {'action': result['object'],
+                                                   'admin': is_admin(username),
+                                                   'obj_type':obj_type,
+                                                   'obj_id':obj_id})
+            return HttpResponse(json.dumps(result,
+                                           default=json_handler),
+                                mimetype='application/json')
+        else: #invalid form
+            return HttpResponse(json.dumps({'success':False,
+                                            'form':form.as_table()}),
+                                mimetype='application/json')
+    return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def remove_action(request, obj_type, obj_id):
+    """
+    Remove a TLO's action. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the object to remove the action from.
+    :type obj_id: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        analyst = request.user.username
+        if is_admin(analyst):
+            date = datetime.datetime.strptime(request.POST['key'],
+                                              settings.PY_DATETIME_FORMAT)
+            date = date.replace(microsecond=date.microsecond/1000*1000)
+            result = action_remove(obj_type, obj_id, date, analyst)
+            return HttpResponse(json.dumps(result),
+                                mimetype="application/json")
+        else:
+            error = "You do not have permission to remove this item."
+            return render_to_response("error.html",
+                                      {'error': error},
+                                      RequestContext(request))
+    return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def get_actions_for_tlo(request):
+    """
+    Get the actions for the specified TLO.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    type_ = request.GET.get('type', None)
+    final = get_action_types_for_tlo(type_)
+    return HttpResponse(json.dumps({'results': final}),
+                mimetype="application/json")

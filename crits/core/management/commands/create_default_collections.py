@@ -9,10 +9,12 @@ from create_locations import add_location_objects
 from setconfig import create_config_if_not_exist
 from create_default_dashboard import create_dashboard
 
+from crits.core.crits_mongoengine import Action
 from crits.core.user_role import UserRole
 from crits.domains.domain import TLD
-from crits.indicators.indicator import IndicatorAction
 from crits.raw_data.raw_data import RawDataType
+from crits.signatures.signature import SignatureType
+
 
 class Command(BaseCommand):
     """
@@ -40,8 +42,9 @@ class Command(BaseCommand):
         else:
             print "Drop protection enabled. Will not drop existing content!"
         populate_user_roles(drop)
-        populate_indicator_actions(drop)
+        populate_actions(drop)
         populate_raw_data_types(drop)
+        populate_signature_types(drop)
         # The following will always occur with every run of this script:
         #   - tlds are based off of a Mozilla TLD list so it should never
         #     contain  entries outside of the ones provided.
@@ -75,26 +78,27 @@ def populate_user_roles(drop):
     else:
         print "User Roles: existing documents detected. skipping!"
 
-def populate_indicator_actions(drop):
+def populate_actions(drop):
     """
-    Populate default set of Indicator Actions into the system.
+    Populate default set of Actions into the system.
 
     :param drop: Drop the existing collection before trying to populate.
     :type: boolean
     """
 
-    # define your indicator actions here
+    # define your Actions here
     actions = ['Blocked Outbound At Firewall', 'Blocked Outbound At Desktop Firewall']
     if drop:
-        IndicatorAction.drop_collection()
-    if len(IndicatorAction.objects()) < 1:
+        Action.drop_collection()
+    if len(Action.objects()) < 1:
         for action in actions:
-            ia = IndicatorAction()
+            ia = Action()
             ia.name = action
             ia.save()
-        print "Indicator Actions: added %s actions!" % len(actions)
+        print "Actions: added %s actions!" % len(actions)
     else:
-        print "Indicator Actions: existing documents detected. skipping!"
+        print "Actions: existing documents detected. skipping!"
+
 
 def populate_raw_data_types(drop):
     """
@@ -116,6 +120,29 @@ def populate_raw_data_types(drop):
         print "Raw Data Types: added %s types!" % len(data_types)
     else:
         print "Raw Data Types: existing documents detected. skipping!"
+
+
+def populate_signature_types(drop):
+    """
+    Populate default set of signature types into the system.
+
+    :param drop: Drop the existing collection before trying to populate.
+    :type: boolean
+    """
+
+    # define your signature types here
+    data_types = ['Bro', 'Snort', 'Yara']
+    if drop:
+        SignatureType.drop_collection()
+    if len(SignatureType.objects()) < 1:
+        for data_type in data_types:
+            dt = SignatureType()
+            dt.name = data_type
+            dt.save()
+        print "Signature Types: added %s types!" % len(data_types)
+    else:
+        print "Signature Types: existing documents detected. skipping!"
+
 
 def populate_tlds(drop):
     """

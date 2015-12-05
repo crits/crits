@@ -24,8 +24,9 @@ from crits.config.config import CRITsConfig
 from crits.core.audit import AuditLog
 from crits.core.bucket import Bucket
 from crits.core.class_mapper import class_from_id, class_from_type, key_descriptor_from_obj_type
-from crits.core.crits_mongoengine import Releasability, json_handler
+from crits.core.crits_mongoengine import Action, Releasability, json_handler
 from crits.core.crits_mongoengine import CritsSourceDocument
+from crits.core.crits_mongoengine import EmbeddedPreferredAction
 from crits.core.source_access import SourceAccess
 from crits.core.data_tools import create_zip, format_file
 from crits.core.mongo_tools import mongo_connector, get_file
@@ -51,6 +52,7 @@ from crits.raw_data.raw_data import RawData
 from crits.emails.email import Email
 from crits.samples.sample import Sample
 from crits.screenshots.screenshot import Screenshot
+from crits.signatures.signature import Signature
 from crits.targets.target import Target
 from crits.indicators.indicator import Indicator
 
@@ -59,7 +61,129 @@ from crits.core.totp import valid_totp
 
 logger = logging.getLogger(__name__)
 
-def description_update(type_, id_, description, analyst):
+def action_add(type_, id_, tlo_action, user=None, **kwargs):
+    """
+    Add an action to a TLO.
+
+    :param type_: The class type of the top level object.
+    :type type_: str
+    :param id_: The ObjectId of the to level object to update.
+    :type id_: str
+    :param tlo_action: The information about the action.
+    :type tlo_action: dict
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str) if failed,
+              "object" (dict) if successful.
+    """
+
+    obj_class = class_from_type(type_)
+    if not obj_class:
+        return {'success': False,
+                'message': 'Not a valid type: %s' % type_}
+
+    sources = user_sources(user)
+    obj = obj_class.objects(id=id_,
+                            source__name__in=sources).first()
+    if not obj:
+        return {'success': False,
+                'message': 'Could not find TLO'}
+    try:
+        tlo_action = datetime_parser(tlo_action)
+        tlo_action['analyst'] = user
+        obj.add_action(tlo_action['action_type'],
+                       tlo_action['active'],
+                       tlo_action['analyst'],
+                       tlo_action['begin_date'],
+                       tlo_action['end_date'],
+                       tlo_action['performed_date'],
+                       tlo_action['reason'],
+                       tlo_action['date'])
+        obj.save(username=user)
+        return {'success': True, 'object': tlo_action}
+    except (ValidationError, TypeError, KeyError), e:
+        return {'success': False, 'message': e}
+
+def action_remove(type_, id_, date, user, **kwargs):
+    """
+    Remove an action from a TLO. 
+
+    :param type_: The class type of the top level object.
+    :type type_: str
+    :param id_: The ObjectId of the TLO to remove an action from.
+    :type id_: str
+    :param date: The date of the action to remove.
+    :type date: datetime.datetime
+    :param analyst: The user removing the action.
+    :type analyst: str
+    :returns: dict with keys "success" (boolean) and "message" (str) if failed.
+    """
+
+    obj_class = class_from_type(type_)
+    if not obj_class:
+        return {'success': False,
+                'message': 'Not a valid type: %s' % type_}
+
+    sources = user_sources(user)
+    obj = obj_class.objects(id=id_,
+                            source__name__in=sources).first()
+
+    if not obj:
+        return {'success': False,
+                'message': 'Could not find TLO'}
+    try:
+        date = datetime_parser(date)
+        obj.delete_action(date)
+        obj.save(username=user)
+        return {'success': True}
+    except (ValidationError, TypeError), e:
+        return {'success': False, 'message': e}
+    
+def action_update(type_, id_, tlo_action, user=None, **kwargs):
+    """
+    Update an action for a TLO.
+
+    :param type_: The class type of the top level object.
+    :type type_: str
+    :param id_: The ObjectId of the top level object to update.
+    :type id_: str
+    :param tlo_action: The information about the action.
+    :type tlo_action: dict
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str) if failed,
+              "object" (dict) if successful.
+    """
+
+    obj_class = class_from_type(type_)
+    if not obj_class:
+        return {'success': False,
+                'message': 'Not a valid type: %s' % type_}
+
+    sources = user_sources(user)
+    obj = obj_class.objects(id=id_,
+                            source__name__in=sources).first()
+
+    if not obj:
+        return {'success': False,
+                'message': 'Could not find TLO'}
+    try:
+        tlo_action = datetime_parser(tlo_action)
+        tlo_action['analyst'] = user
+        obj.edit_action(tlo_action['action_type'],
+                        tlo_action['active'],
+                        tlo_action['analyst'],
+                        tlo_action['begin_date'],
+                        tlo_action['end_date'],
+                        tlo_action['performed_date'],
+                        tlo_action['reason'],
+                        tlo_action['date'])
+        obj.save(username=user)
+        return {'success': True, 'object': tlo_action}
+    except (ValidationError, TypeError), e:
+        return {'success': False, 'message': e}
+
+def description_update(type_, id_, description, user, **kwargs):
     """
     Change the description of a top-level object.
 
@@ -69,6 +193,44 @@ def description_update(type_, id_, description, analyst):
     :type id_: str
     :param description: The description to use.
     :type description: str
+    :param user: The user setting the description.
+    :type user: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(user)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser.HTMLParser()
+    description = h.unescape(description)
+    try:
+        obj.description = description
+        obj.save(username=user)
+        return {'success': True, 'message': "Description set."}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
+def data_update(type_, id_, data, analyst):
+    """
+    Change the data of a top-level object.
+
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
+    :param data: The data to use.
+    :type data: str
     :param analyst: The user setting the description.
     :type analyst: str
     :returns: dict with keys "success" (boolean) and "message" (str)
@@ -89,11 +251,11 @@ def description_update(type_, id_, description, analyst):
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
     h = HTMLParser.HTMLParser()
-    description = h.unescape(description)
+    data = h.unescape(data)
     try:
-        obj.description = description
+        obj.data = data
         obj.save(username=analyst)
-        return {'success': True, 'message': "Description set."}
+        return {'success': True, 'message': "Data set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
 
@@ -130,6 +292,7 @@ def get_favorites(analyst):
         'RawData': 'title',
         'Sample': 'filename',
         'Screenshot': 'id',
+        'Signature': 'title',
         'Target': 'email_address'
     }
 
@@ -185,7 +348,7 @@ def favorite_update(type_, id_, analyst):
     return {'success': True}
 
 
-def status_update(type_, id_, value="In Progress", analyst=None):
+def status_update(type_, id_, value="In Progress", user=None, **kwargs):
     """
     Update the status of a top-level object.
 
@@ -195,8 +358,8 @@ def status_update(type_, id_, value="In Progress", analyst=None):
     :type id_: str
     :param value: The status to set it to.
     :type value: str
-    :param analyst: The user setting the status.
-    :type analyst: str
+    :param user: The user setting the status.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -205,7 +368,11 @@ def status_update(type_, id_, value="In Progress", analyst=None):
         return {'success': False, 'message': 'Could not find object.'}
     try:
         obj.set_status(value)
-        obj.save(username=analyst)
+        # Check to see if the set_status was successful or not.
+        if obj.status != value:
+            return {'success': False, 'message': 'Invalid status: %s.' % value }
+
+        obj.save(username=user)
         return {'success': True, 'value': value}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -237,6 +404,7 @@ def get_data_for_item(item_type, item_id):
         'PCAP': ['filename', ],
         'RawData': ['title', ],
         'Sample': ['filename', ],
+        'Signature': ['title', ],
         'Target': ['email_address', ],
     }
     response = {'OK': 0, 'Msg': ''}
@@ -489,17 +657,17 @@ def merge_source_lists(left, right):
                 left.append(src)
     return left
 
-def source_add_update(obj_type, obj_id, action, source, method='',
-                      reference='', date=None, analyst=None):
+def source_add_update(type_, id_, action_type, source, method='',  
+                      reference='', date=None, user=None, **kwargs):
     """
     Add or update a source for a top-level object.
 
-    :param obj_type: The CRITs type of the top-level object.
-    :type obj_type: str
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
     :param obj_id: The ObjectId to search for.
     :type obj_id: str
-    :param action: Whether or not we are doing an "add" or "update".
-    :type action: str
+    :param action_type: Whether or not we are doing an "add" or "update".
+    :type action_type: str
     :param source: The name of the source.
     :type source: str
     :param method: The method of data acquisition for the source.
@@ -508,8 +676,8 @@ def source_add_update(obj_type, obj_id, action, source, method='',
     :type reference: str
     :param date: The date of the instance to add/update.
     :type date: datetime.datetime
-    :param analyst: The user performing the add/update.
-    :type analyst: str
+    :param user: The user performing the add/update.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -517,32 +685,34 @@ def source_add_update(obj_type, obj_id, action, source, method='',
                 :class:`crits.core.crits_mongoengine.EmbeddedSource.SourceInstance`
     """
 
-    obj = class_from_id(obj_type, obj_id)
+    obj = class_from_id(type_, id_)
     if not obj:
         return {'success': False,
                 'message': 'Unable to find object in database.'}
     try:
-        if action == "add":
+        date = datetime_parser(date)
+
+        if action_type == "add":
             obj.add_source(source=source,
                         method=method,
                         reference=reference,
                         date=date,
-                        analyst=analyst)
+                        analyst=user)
         else:
             obj.edit_source(source=source,
                             method=method,
                             reference=reference,
                             date=date,
-                            analyst=analyst)
-        obj.save(username=analyst)
+                            analyst=user)
+        obj.save(username=user)
         obj.reload()
-        obj.sanitize_sources(username=analyst)
+        obj.sanitize_sources(username=user)
         if not obj.source:
             return {'success': False,
                     'message': 'Object has no sources.'}
         for s in obj.source:
             if s.name == source:
-                if action == "add":
+                if action_type == "add":
                     return {'success': True,
                             'object': s,
                             'message': "Source addition successful!"}
@@ -557,36 +727,37 @@ def source_add_update(obj_type, obj_id, action, source, method='',
         return {'success': False,
                 'message': ('Could not make source changes. '
                             'Refresh page and try again.')}
-    except ValidationError, e:
+    except (ValidationError, TypeError), e:
         return {'success':False, 'message': e}
 
-def source_remove(obj_type, obj_id, name, date, analyst=None):
+def source_remove(type_, id_, name, date, user=None, **kwargs):
     """
     Remove a source instance from a top-level object.
 
-    :param obj_type: The CRITs type of the top-level object.
-    :type obj_type: str
-    :param obj_id: The ObjectId to search for.
-    :type obj_id: str
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
     :param name: The name of the source.
     :type name: str
     :param date: The date of the instance to remove.
     :type date: datetime.datetime
-    :param analyst: The user performing the removal.
-    :type analyst: str
+    :param user: The user performing the removal.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    obj = class_from_id(obj_type, obj_id)
+    obj = class_from_id(type_, id_)
     if not obj:
         return {'success': False,
                 'message': 'Unable to find object in database.'}
     try:
+        date = datetime_parser(date)
         result = obj.remove_source(source=name,
                                    date=date)
-        obj.save(username=analyst)
+        obj.save(username=user)
         return result
-    except ValidationError, e:
+    except (ValidationError, TypeError), e:
         return {'success':False, 'message': e}
 
 def source_remove_all(obj_type, obj_id, name, analyst=None):
@@ -659,6 +830,15 @@ def get_source_names(active=False, limited=False, username=None):
         query['active'] = 'on'
     c = SourceAccess.objects(__raw__=query).order_by('+name')
     return c
+
+def get_action_types_for_tlo(obj_type):
+    final = []
+    if obj_type is not None:
+        for a in Action.objects(object_types=obj_type,
+                                active='on').order_by("+name"):
+            final.append(a.name)
+
+    return final
 
 def get_item_names(obj, active=None):
     """
@@ -778,6 +958,7 @@ def alter_bucket_list(obj, buckets, val):
                            PCAP=0,
                            RawData=0,
                            Sample=0,
+                           Signature=0,
                            Target=0).delete()
 
 def generate_bucket_csv(request):
@@ -823,13 +1004,14 @@ def generate_bucket_jtable(request, option):
                                               'PCAP',
                                               'RawData',
                                               'Sample',
+                                              'Signature',
                                               'Target'])
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
     fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
               'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
-              'Sample', 'Target', 'Promote']
+              'Sample', 'Signature', 'Target', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
@@ -1178,20 +1360,28 @@ def modify_source_access(analyst, data):
         return {'success': False,
                 'message': format_error(e)}
 
-def datetime_parser(d):
+def datetime_parser(value):
     """
-    Iterate over a dictionary for any key of "date" and try to convert its value
-    into a datetime object.
+    Iterate over a dict to confirm that keys containing the word 'dict' are 
+    in fact datetime.datetime objects.
+    If a string is passed, returns a datetime.datetime 
 
-    :param d: A dictionary to iterate over.
-    :type d: dict
-    :returns: dict
+    :param value: str or a dictionary to iterate over.
+    :type value: str or dict
+    :returns: str or dict
     """
-
-    for k,v in d.items():
-        if k == "date":
-            d[k] = datetime.datetime.strptime(v, settings.PY_DATETIME_FORMAT)
-    return d
+    if isinstance(value,datetime.datetime):
+        return value
+    elif isinstance(value,basestring) and value:
+        return datetime.datetime.strptime(value, settings.PY_DATETIME_FORMAT)
+    elif isinstance(value,dict):
+        for k,v in value.items():
+            # Make sure that date is in the key, value is a string, and val is not ''
+            if "date" in k and isinstance(v,basestring) and v:
+                value[k] = datetime.datetime.strptime(v, settings.PY_DATETIME_FORMAT)
+        return value
+    else:
+        raise TypeError("Invalid type passed.")
 
 def format_error(e):
     """
@@ -1229,6 +1419,77 @@ def toggle_item_state(type_, oid, analyst):
         return {'success': True}
     except ValidationError:
         return {'success': False}
+
+def do_add_preferred_actions(obj_type, obj_id, username):
+    """
+    Add all preferred actions to an object.
+
+    :param obj_type: The type of object to update.
+    :type obj_type: str
+    :param obj_id: The ObjectId of the object to update.
+    :type obj_id: str
+    :param username: The user adding the preferred actions.
+    :type username: str
+    :returns: dict with keys:
+              "success" (boolean),
+              "message" (str) if failed,
+              "object" (list of dicts) if successful.
+    """
+
+    klass = class_from_type(obj_type)
+    if not klass:
+        return {'success': False, 'message': 'Invalid type'}
+
+    preferred_actions = Action.objects(preferred__object_type=obj_type,
+                                       active='on')
+    if not preferred_actions:
+        return {'success': False, 'message': 'No preferred actions'}
+
+    sources = user_sources(username)
+    obj = klass.objects(id=obj_id, source__name__in=sources).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object'}
+
+    actions = []
+    now = datetime.datetime.now()
+    # Get preferred actions and add them.
+    for a in preferred_actions:
+        for p in a.preferred:
+            if (p.object_type == obj_type and
+                obj.__getattribute__(p.object_field) == p.object_value):
+                action = {'action_type': a.name,
+                        'active': 'on',
+                        'analyst': username,
+                        'begin_date': now,
+                        'end_date': None,
+                        'performed_date': now,
+                        'reason': 'Preferred action toggle',
+                        'date': now}
+                obj.add_action(action['action_type'],
+                                    action['active'],
+                                    action['analyst'],
+                                    action['begin_date'],
+                                    action['end_date'],
+                                    action['performed_date'],
+                                    action['reason'],
+                                    action['date'])
+                actions.append(action)
+
+    if len(actions) < 1:
+        return {'success': False, 'message': 'No preferred actions'}
+
+
+    # Change status to In Progress if it is currently 'New'
+    if obj.status == 'New':
+        obj.set_status('In Progress')
+
+    try:
+        obj.save(username=username)
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
+    return {'success': True, 'object': actions}
+
 
 def get_item_state(type_, name):
     """
@@ -1465,6 +1726,12 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
                     {'data': search_query},
                     {'objects.value': search_query},
                 ]
+        elif type_ == "Signature":
+            search_list = [
+                    {'md5': search_query},
+                    {'data': search_query},
+                    {'objects.value': search_query},
+                ]
         elif type_ == "Indicator":
             search_list = [
                     {'value': search_query},
@@ -1534,6 +1801,17 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
             else:
                 query = defaultquery
         elif type_ == "RawData":
+            if search_type == "data":
+                query = {'data': search_query}
+            elif search_type == "data_type":
+                query = {'data_type': search_query}
+            elif search_type == "title":
+                query = {'title': search_query}
+            elif search_type == "tool":
+                query = {'tool.name': search_query}
+            else:
+                query = defaultquery
+        elif type_ == "Signature":
             if search_type == "data":
                 query = {'data': search_query}
             elif search_type == "data_type":
@@ -2015,6 +2293,16 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     doc[key] = value.keys()[0]
                 elif key == "results":
                     doc[key] = len(doc[key])
+                elif key == "preferred":
+                    final = ""
+                    for p in doc[key]:
+                        final += p['object_type']
+                        final += "|"
+                        final += p['object_field']
+                        final += "|"
+                        final += p['object_value']
+                        final += "||"
+                    doc[key] = final
                 elif isinstance(value, list):
                     if value:
                         for item in value:
@@ -2038,6 +2326,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     "PCAP": 'crits.pcaps.views.pcap_details',
                     "RawData": 'crits.raw_data.views.raw_data_details',
                     "Sample": 'crits.samples.views.detail',
+                    "Signature": 'crits.signatures.views.detail',
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
                                     args=(doc['url_key'],))
@@ -2176,6 +2465,7 @@ def build_jtable(jtopts, request):
         "isodate":"'8%'",
         "id":"'4%'",
         "favorite":"'4%'",
+        "actions":"'4%'",
         "size":"'4%'",
         "added":"'8%'",
         "created":"'8%'",
@@ -2255,6 +2545,8 @@ def build_jtable(jtopts, request):
             fdict['display'] = """function (data) { return '<div class="icon-container"><span id="'+data.record.id+'" class="id_copy ui-icon ui-icon-copy"></span></div>';}"""
         if field == "favorite":
             fdict['display'] = """function (data) { return '<div class="icon-container"><span id="'+data.record.id+'" class="favorites_icon_jtable ui-icon ui-icon-star"></span></div>';}"""
+        if field == "actions":
+            fdict['display'] = """function (data) { return '<div class="icon-container"><span data-id="'+data.record.id+'" id="'+data.record.id+'" class="preferred_actions_jtable ui-icon ui-icon-heart"></span></div>';}"""
         if field == "thumb":
             fdict['display'] = """function (data) { return '<img src="%s'+data.record.id+'/thumb/" />';}""" % reverse('crits.screenshots.views.render_screenshot')
         if field == "description" and jtable['title'] == "Screenshots":
@@ -2326,12 +2618,18 @@ def generate_items_jtable(request, itype, option):
     elif itype == 'Campaign':
         fields = ['name', 'description', 'active', 'id']
         click = "function () {window.parent.$('#new-campaign').click();}"
-    elif itype == 'IndicatorAction':
-        fields = ['name', 'active', 'id']
-        click = "function () {window.parent.$('#indicator_action_add').click();}"
+    elif itype == 'Action':
+        fields = ['name', 'active', 'object_types', 'preferred', 'id']
+        click = "function () {window.parent.$('#action_add').click();}"
     elif itype == 'RawDataType':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#raw_data_type_add').click();}"
+    elif itype == 'SignatureType':
+        fields = ['name', 'active', 'id']
+        click = "function () {window.parent.$('#signature_type_add').click();}"
+    elif itype == 'SignatureDependency':
+        fields = ['name', 'id']
+        click = "function () {window.parent.$('#signature_dependency_add').click();}"
     elif itype == 'SourceAccess':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#source_create').click();}"
@@ -2346,6 +2644,13 @@ def generate_items_jtable(request, itype, option):
                                     request, includes=fields)
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type="application/json")
+
+
+    '''Special case for dependency, to allow for deletions, no more toggle on dependencies '''
+    ''' This is modified here to fit with rest of code, there is no delete field in mongo, but the user can delete '''
+
+    if itype == 'SignatureDependency':
+        fields = ['name', 'delete', 'id']
 
     jtopts = {
         'title': "%ss" % itype,
@@ -2374,6 +2679,20 @@ def generate_items_jtable(request, itype, option):
             return '<a id="is_active_' + data.record.id + '" href="#" onclick=\\'javascript:toggleItemActive("%s","'+data.record.id+'");\\'>' + data.record.active + '</a>';
             }
             """ % itype
+        if field['fieldname'].startswith("'name"):
+            field['display'] = """ function (data) { return '<a href="#" onclick=\\'javascript:editAction("'+data.record.name+'", "'+data.record.object_types+'", "'+data.record.preferred+'");\\'>' + data.record.name + '</a>';
+            }
+            """
+
+    '''special case for signature dependency, add a delete button to allow for removal'''
+    if itype == 'SignatureDependency':
+        for field in jtable['fields']:
+            if field['fieldname'].startswith("'delete"):
+                field['display'] = """ function (data) {
+                return '<button title="Delete" class="jtable-command-button jtable-delete-command-button" id="to_delete_' + data.record.id + '" href="#" onclick=\\'javascript:deleteSignatureDependency("%s","'+data.record.id+'");\\'><span>Delete</span></button>';
+                }
+                """ % itype
+
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
@@ -3204,6 +3523,7 @@ def generate_global_search(request):
                 ['PCAP', 'crits.pcaps.views.pcap_details', 'md5'],
                 ['RawData', 'crits.raw_data.views.raw_data_details', 'id'],
                 ['Sample', 'crits.samples.views.detail', 'md5'],
+                ['Signature', 'crits.signatures.views.signature_detail', 'id'],
                 ['Target', 'crits.targets.views.target_info', 'email_address']]:
             obj = class_from_id(obj_type, searchtext)
             if obj:
@@ -3230,6 +3550,7 @@ def generate_global_search(request):
                     [RawData, "crits.raw_data.views.raw_data_listing"],
                     [Sample, "crits.samples.views.samples_listing"],
                     [Screenshot, "crits.screenshots.views.screenshots_listing"],
+                    [Signature, "crits.signatures.views.signatures_listing"],
                     [Target, "crits.targets.views.targets_listing"]]:
         ctype = col_obj._meta['crits_type']
         resp = get_query(col_obj, request)
@@ -3425,6 +3746,7 @@ def details_from_id(type_, id_):
                 'RawData': 'crits.raw_data.views.raw_data_details',
                 'Sample': 'crits.samples.views.detail',
                 'Screenshot': 'crits.screenshots.views.render_screenshot',
+                'Signature': 'crits.signatures.views.signature_detail',
                 'Target': 'crits.targets.views.target_info',
                 }
     if type_ in type_map and id_:
@@ -3534,7 +3856,7 @@ def audit_entry(self, username, type_, new_doc=False):
     # Generate audit notification
     generate_audit_notification(username, type_, self, changed_fields, what_changed, new_doc)
 
-def ticket_add(type_, id_, ticket):
+def ticket_add(type_, id_, ticket, user, **kwargs):
     """
     Add a ticket to a top-level object.
 
@@ -3543,7 +3865,9 @@ def ticket_add(type_, id_, ticket):
     :param id_: The ObjectId to search for.
     :type id_: str
     :param ticket: The ticket to add.
-    :type ticket: dict with keys "analyst", "date", and "ticket_number".
+    :type ticket: dict with keys "date", and "ticket_number".
+    :param user: The user creating the ticket.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "object" (str) if successful,
@@ -3553,17 +3877,18 @@ def ticket_add(type_, id_, ticket):
     obj = class_from_id(type_, id_)
     if not obj:
         return {'success': False, 'message': 'Could not find object.'}
-
     try:
+        ticket = datetime_parser(ticket)
+        ticket['analyst'] = user
         obj.add_ticket(ticket['ticket_number'],
                              ticket['analyst'],
                              ticket['date'])
-        obj.save(username=ticket['analyst'])
+        obj.save(username=user)
         return {'success': True, 'object': ticket}
-    except ValidationError, e:
+    except (ValidationError, TypeError, KeyError), e:
         return {'success': False, 'message': e}
 
-def ticket_update(type_, id_, ticket):
+def ticket_update(type_, id_, ticket, user=None, **kwargs):
     """
     Update a ticket for a top-level object.
 
@@ -3571,28 +3896,33 @@ def ticket_update(type_, id_, ticket):
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
-    :type ticket: dict with keys "analyst", "date", and "ticket_number".
-    :type ticket: str
+    :param ticket: The ticket to add.
+    :type ticket: dict with keys "date", and "ticket_number".
+    :param date: The date of the ticket which will be updated.
+    :type date: datetime.datetime.
+    :param user: The user updating the ticket.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "object" (str) if successful,
               "message" (str) if failed.
     """
-
     obj = class_from_id(type_, id_)
     if not obj:
         return {'success': False, 'message': 'Could not find object.'}
-
     try:
+        ticket = datetime_parser(ticket)
+        ticket['analyst'] = user
         obj.edit_ticket(ticket['analyst'],
                         ticket['ticket_number'],
                         ticket['date'])
-        obj.save(username=ticket['analyst'])
+        obj.save(username=user)
         return {'success': True, 'object': ticket}
-    except ValidationError, e:
+    except (ValidationError, TypeError, KeyError), e:
         return {'success': False, 'message': e}
 
-def ticket_remove(type_, id_, date, analyst):
+
+def ticket_remove(type_, id_, date, user, **kwargs):
     """
     Remove a ticket from a top-level object.
 
@@ -3602,8 +3932,8 @@ def ticket_remove(type_, id_, date, analyst):
     :type id_: str
     :param date: The date of the ticket to remove.
     :type date: datetime.datetime.
-    :param analyst: The user removing the ticket.
-    :type analyst: str
+    :param user: The user removing the ticket.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed.
@@ -3614,8 +3944,9 @@ def ticket_remove(type_, id_, date, analyst):
         return {'success': False, 'message': 'Could not find object.'}
 
     try:
+        date = datetime_parser(date)
         obj.delete_ticket(date)
-        obj.save(username=analyst)
+        obj.save(username=user)
         return {'success': True}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -3685,6 +4016,7 @@ def alter_sector_list(obj, sectors, val):
                            PCAP=0,
                            RawData=0,
                            Sample=0,
+                           Signature=0,
                            Target=0).delete()
 
 def generate_sector_csv(request):
@@ -3730,13 +4062,14 @@ def generate_sector_jtable(request, option):
                                               'PCAP',
                                               'RawData',
                                               'Sample',
+                                              'Signature',
                                               'Target'])
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type='application/json')
 
     fields = ['name', 'Actor', 'Backdoor', 'Campaign', 'Certificate', 'Domain',
               'Email', 'Event', 'Exploit', 'Indicator', 'IP', 'PCAP', 'RawData',
-              'Sample', 'Target']
+              'Sample', 'Signature', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',
@@ -3812,3 +4145,41 @@ def get_bucket_autocomplete(term):
     buckets = [b.name for b in results]
     return HttpResponse(json.dumps(buckets, default=json_handler),
                         content_type='application/json')
+
+def add_new_action(action, object_types, preferred, analyst):
+    """
+    Add a new action to CRITs.
+
+    :param action: The action to add to CRITs.
+    :type action: str
+    :param object_types: The TLOs this is for.
+    :type object_types: list
+    :param preferred: The TLOs this is preferred for.
+    :type preferred: list
+    :param analyst: The user adding this action.
+    :returns: True, False
+    """
+
+    action = action.strip()
+    idb_action = Action.objects(name=action).first()
+    if not idb_action:
+        idb_action = Action()
+    idb_action.name = action
+    idb_action.object_types = object_types
+    idb_action.preferred = []
+    prefs = preferred.split('\n')
+    for pref in prefs:
+        cols = pref.split(',')
+        if len(cols) != 3:
+            continue
+        epa = EmbeddedPreferredAction()
+        epa.object_type = cols[0].strip()
+        epa.object_field = cols[1].strip()
+        epa.object_value = cols[2].strip()
+        idb_action.preferred.append(epa)
+    try:
+        idb_action.save(username=analyst)
+    except ValidationError:
+        return False
+
+    return True

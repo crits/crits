@@ -24,6 +24,12 @@ urlpatterns = patterns('',
     (r'^object/sources/(?P<method>\S+)/(?P<obj_type>\S+)/(?P<obj_id>\S+)/$', 'crits.core.views.add_update_source'),
     (r'^source_releasability/$', 'crits.core.views.source_releasability'),
     (r'^tickets/(?P<method>\S+)/(?P<type_>\w+)/(?P<id_>\w+)/$', 'crits.core.views.add_update_ticket'),
+    (r'^preferred_actions/$', 'crits.core.views.add_preferred_actions'),
+    (r'^actions/(?P<method>\S+)/(?P<obj_type>\S+)/(?P<obj_id>\w+)/$', 'crits.core.views.add_update_action'),
+    (r'^action/remove/(?P<obj_type>\S+)/(?P<obj_id>\w+)/$', 'crits.core.views.remove_action'),
+    (r'^add_action/$', 'crits.core.views.new_action'),
+    (r'^get_actions_for_tlo/$', 'crits.core.views.get_actions_for_tlo'),
+
 
     # CRITs Configuration
     (r'^config/$', 'crits.config.views.crits_config'),
@@ -38,6 +44,7 @@ urlpatterns = patterns('',
     (r'^users/list/$', 'crits.core.views.users_listing'),
     (r'^users/list/(?P<option>\S+)/$', 'crits.core.views.users_listing'),
     (r'^get_item_data/$', 'crits.core.views.get_item_data'),
+    (r'^add_action/$', 'crits.core.views.new_action'),
 
     # Default landing page
     (r'^$', 'crits.dashboards.views.dashboard'),
@@ -51,6 +58,7 @@ urlpatterns = patterns('',
     # General core pages
     (r'^details/(?P<type_>\S+)/(?P<id_>\S+)/$', 'crits.core.views.details'),
     (r'^update_object_description/', 'crits.core.views.update_object_description'),
+    (r'^update_object_data/', 'crits.core.views.update_object_data'),
 
     # Helper pages
     (r'^about/$', 'crits.core.views.about'),
