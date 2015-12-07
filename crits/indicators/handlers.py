@@ -24,6 +24,7 @@ from crits.core.crits_mongoengine import json_handler, Action
 from crits.core.forms import SourceForm, DownloadFileForm
 from crits.core.handlers import build_jtable, csv_export, action_add
 from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
+from crits.core.handlers import datetime_parser
 from crits.core.user_tools import is_admin, user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.domains.domain import Domain
@@ -721,8 +722,12 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             if not url_contains_ip:
                 success = None
                 if add_domain:
-                    success = upsert_domain(domain_or_ip, indicator.source, '%s' % analyst,
-                                            None, bucket_list=bucket_list, cache=cache)
+                    success = upsert_domain(domain_or_ip,
+                                            indicator.source,
+                                            username='%s' % analyst,
+                                            campaign=indicator.campaign,
+                                            bucket_list=bucket_list,
+                                            cache=cache)
                     if not success['success']:
                         return {'success': False, 'message': success['message']}
 
@@ -881,7 +886,7 @@ def set_indicator_type(indicator_id, itype, username):
         except ValidationError:
             return {'success': False}
 
-def set_indicator_threat_type(id_, threat_type, user):
+def set_indicator_threat_type(id_, threat_type, user, **kwargs):
     """
     Set the Indicator threat type.
 
@@ -900,7 +905,11 @@ def set_indicator_threat_type(id_, threat_type, user):
     ind_check = Indicator.objects(threat_type=threat_type, value=value).first()
     if ind_check:
         # we found a dupe
-        return {'success': False}
+        return {'success': False,
+                'message': "Duplicate would exist making this change."}
+    elif threat_type not in IndicatorThreatTypes.values():
+        return {'success': False,
+                'message': "Not a valid Threat Type."}
     else:
         try:
             indicator.threat_type = threat_type
@@ -909,7 +918,7 @@ def set_indicator_threat_type(id_, threat_type, user):
         except ValidationError:
             return {'success': False}
 
-def set_indicator_attack_type(id_, attack_type, user):
+def set_indicator_attack_type(id_, attack_type, user, **kwargs):
     """
     Set the Indicator attack type.
 
@@ -928,7 +937,11 @@ def set_indicator_attack_type(id_, attack_type, user):
     ind_check = Indicator.objects(attack_type=attack_type, value=value).first()
     if ind_check:
         # we found a dupe
-        return {'success': False}
+        return {'success': False,
+                'message': "Duplicate would exist making this change."}
+    elif attack_type not in IndicatorAttackTypes.values():
+        return {'success': False,
+                'message': "Not a valid Attack Type."}
     else:
         try:
             indicator.attack_type = attack_type
@@ -958,120 +971,130 @@ def indicator_remove(_id, username):
     else:
         return {'success': False, 'message': ['Must be an admin to delete']}
 
-def activity_add(indicator_id, activity):
+def activity_add(id_, activity, user, **kwargs):
     """
     Add activity to an Indicator.
 
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
+    :param id_: The ObjectId of the indicator to update.
+    :type id_: str
     :param activity: The activity information.
     :type activity: dict
+    :param user: The user adding the activitty.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed,
               "object" (dict) if successful.
     """
 
-    sources = user_sources(activity['analyst'])
-    indicator = Indicator.objects(id=indicator_id,
+    sources = user_sources(user)
+    indicator = Indicator.objects(id=id_,
                                   source__name__in=sources).first()
     if not indicator:
         return {'success': False,
                 'message': 'Could not find Indicator'}
     try:
+
+        activity['analyst'] = user
         indicator.add_activity(activity['analyst'],
                                activity['start_date'],
                                activity['end_date'],
                                activity['description'],
                                activity['date'])
-        indicator.save(username=activity['analyst'])
+        indicator.save(username=user)
         return {'success': True, 'object': activity,
                 'id': str(indicator.id)}
     except ValidationError, e:
         return {'success': False, 'message': e,
                 'id': str(indicator.id)}
 
-def activity_update(indicator_id, activity):
+def activity_update(id_, activity, user=None, **kwargs):
     """
     Update activity for an Indicator.
 
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
+    :param id_: The ObjectId of the indicator to update.
+    :type id_: str
     :param activity: The activity information.
     :type activity: dict
+    :param user: The user updating the activity.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed,
               "object" (dict) if successful.
     """
 
-    sources = user_sources(activity['analyst'])
-    indicator = Indicator.objects(id=indicator_id,
+    sources = user_sources(user)
+    indicator = Indicator.objects(id=id_,
                                   source__name__in=sources).first()
     if not indicator:
         return {'success': False,
                 'message': 'Could not find Indicator'}
     try:
+        activity = datetime_parser(activity)
+        activity['analyst'] = user
         indicator.edit_activity(activity['analyst'],
                                 activity['start_date'],
                                 activity['end_date'],
                                 activity['description'],
                                 activity['date'])
-        indicator.save(username=activity['analyst'])
+        indicator.save(username=user)
         return {'success': True, 'object': activity}
     except ValidationError, e:
         return {'success': False, 'message': e}
 
-def activity_remove(indicator_id, date, analyst):
+def activity_remove(id_, date, user, **kwargs):
     """
     Remove activity from an Indicator.
 
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
+    :param id_: The ObjectId of the indicator to update.
+    :type id_: str
     :param date: The date of the activity to remove.
     :type date: datetime.datetime
-    :param analyst: The user removing this activity.
-    :type analyst: str
+    :param user: The user removing this activity.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    indicator = Indicator.objects(id=indicator_id).first()
+    indicator = Indicator.objects(id=id_).first()
     if not indicator:
         return {'success': False,
                 'message': 'Could not find Indicator'}
     try:
+
+        date = datetime_parser(date)
         indicator.delete_activity(date)
-        indicator.save(username=analyst)
+        indicator.save(username=user)
         return {'success': True}
     except ValidationError, e:
         return {'success': False, 'message': e}
 
-def ci_update(indicator_id, ci_type, value, analyst):
+def ci_update(id_, ci_type, value, user, **kwargs):
     """
     Update confidence or impact for an indicator.
 
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
+    :param id_: The ObjectId of the indicator to update.
+    :type id_: str
     :param ci_type: What we are updating.
     :type ci_type: str ("confidence" or "impact")
     :param value: The value to set.
     :type value: str ("unknown", "benign", "low", "medium", "high")
-    :param analyst: The user updating this indicator.
+    :param user: The user updating this indicator.
     :type analyst: str
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    indicator = Indicator.objects(id=indicator_id).first()
+    indicator = Indicator.objects(id=id_).first()
     if not indicator:
         return {'success': False,
                 'message': 'Could not find Indicator'}
     if ci_type == "confidence" or ci_type == "impact":
         try:
             if ci_type == "confidence":
-                indicator.set_confidence(analyst, value)
+                indicator.set_confidence(user, value)
             else:
-                indicator.set_impact(analyst, value)
-            indicator.save(username=analyst)
+                indicator.set_impact(user, value)
+            indicator.save(username=user)
             return {'success': True}
         except ValidationError, e:
             return {'success': False, "message": e}
