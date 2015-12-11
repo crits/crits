@@ -135,6 +135,8 @@
         {% with bucket_list=raw_data.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div>
         {% include 'raw_data_data.html' %}

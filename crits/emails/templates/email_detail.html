@@ -127,6 +127,8 @@
         {% with bucket_list=email.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div class="content_box">
         {% with obj=email obj_type="Email" %}

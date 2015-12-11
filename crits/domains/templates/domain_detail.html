@@ -73,6 +73,8 @@
         {% with bucket_list=domain.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div class="content_box">
         {% with obj=domain obj_type="Domain" %}

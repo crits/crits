@@ -93,6 +93,8 @@
         {% with bucket_list=event.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div class="content_box">
         {% with obj=event obj_type="Event" %}

@@ -87,6 +87,8 @@
         {% with bucket_list=pcap.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div class="content_box">
         {% with obj=pcap obj_type="PCAP" %}

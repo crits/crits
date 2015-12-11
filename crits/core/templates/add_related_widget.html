@@ -1,0 +1,24 @@
+{% load url from future %}
+<div class="content_box" id="add_related">
+    <h3 class='titleheader'>
+        <span>Add Related</span>
+    </h3>
+    <div data-intro="Add related TLOs to to this object!" data-position="bottom">
+        <form id="add_related_form" method="post" >{% csrf_token %}
+            <select id="add_related" class="icon-menu">
+                <option value="<li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.samples.views.upload_file' %} ">Upload Related Sample</a></li></option>
+                <option value="<li><a href="#" class="dialogClick" dialog="new-pcap" persona="related"></a></li>Upload Related PCAP</option>
+                <option value="<li><a href="#" class="dialogClick" dialog="new-ip" persona="related"></a></li>Upload Related IP</option>
+                <option value="<li><a href="#" class="dialogClick" dialog="new-domain" persona="related"></a></li>Upload Related Domain</option>
+                <option value="<li><a href="#" class="dialogClick" dialog="new-target" persona="related"></a></li>Upload Related Target</option>
+                <option value="<li><a href="#" class="dialogClick" dialog="new-actor" persona="related"></a></li>Upload Related Actor</option>
+                <option value="<li><a href="#" class="dialogClick" dialog="new-email-eml" persona="related"></a></li>Upload Related E-Mail</option>
+            </select>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    document.getElementById('add_related').onchange = function() {
+        document.getElementById('add_related_form').action = '/'+this.value;
+    }
+</script>

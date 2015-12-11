@@ -176,6 +176,8 @@
     {% with bucket_list=indicator.bucket_list %}
         {% include 'bucket_list_widget.html' %}
     {% endwith %}
+    {% include 'add_related_widget.html' %}
+
 </div>
 <div class="content_box">
     {% with obj=indicator obj_type="Indicator" %}
