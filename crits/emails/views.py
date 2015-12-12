@@ -380,7 +380,9 @@ def email_eml_add(request):
                      campaign=eml_form.cleaned_data['campaign'],
                      confidence=eml_form.cleaned_data['campaign_confidence'],
                      bucket_list=eml_form.cleaned_data['bucket_list'],
-                     ticket=eml_form.cleaned_data['ticket'])
+                     ticket=eml_form.cleaned_data['ticket'],
+                     related_id=eml_form.cleaned_data['related_id'],
+                     related_type=eml_form.cleaned_data['related_type'])
     if not obj['status']:
         json_reply['message'] = obj['reason']
         return render_to_response('file_upload_response.html',

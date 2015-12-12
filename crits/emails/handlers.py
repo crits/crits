@@ -907,7 +907,7 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
 
 def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
                parent_id=None, campaign=None, confidence=None, bucket_list=None,
-               ticket=None):
+               ticket=None, related_id=None, related_type=None):
     """
     Take email in EML and convert them into an email object.
 
@@ -1120,6 +1120,32 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             result['reason'] = "Failed to save email.\n<br /><pre>"
             + str(e) + "</pre>"
             return result
+
+    # Relate the email to any other object 
+    related_obj = None
+    if related_id and related_type:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+    if related_obj:
+        relationship = RelationshipTypes.RELATED_TO
+        result['object'].add_relationship(related_obj,
+                                          relationship,
+                                          analyst=analyst,
+                                          get_rels=False)
+        #result['object'].save(username=analyst)
+
+        # Save the email again since it now has a new relationship.
+        try:
+            result['object'].save(username=analyst)
+        except Exception, e:
+            result['reason'] = "Failed to save email.\n<br /><pre>"
+            + str(e) + "</pre>"
+            return result
+
 
     for (md5_, attachment) in result['attachments'].items():
         if handle_file(attachment['filename'],
