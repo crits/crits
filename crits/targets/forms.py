@@ -33,6 +33,8 @@ class TargetInfoForm(forms.Form):
                                  label=form_consts.Target.CAMPAIGN)
     camp_conf = forms.ChoiceField(required=False,
                                   label=form_consts.Target.CAMPAIGN_CONFIDENCE)
+    related_id = forms.CharField(widget=forms.TextInput(), required=False)
+    related_type = forms.CharField(widget=forms.TextInput(), required=False)
 
     def __init__(self, *args, **kwargs):
         super(TargetInfoForm, self).__init__(*args, **kwargs)
