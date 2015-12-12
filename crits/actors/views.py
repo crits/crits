@@ -120,6 +120,8 @@ def add_actor(request):
             analyst = request.user.username
             bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+            related_id = cleaned_data['related_id']
+            related_type = cleaned_data['related_type']
 
             result = add_new_actor(name,
                                    aliases=aliases,
@@ -131,7 +133,9 @@ def add_actor(request):
                                    confidence=confidence,
                                    analyst=analyst,
                                    bucket_list=bucket_list,
-                                   ticket=ticket)
+                                   ticket=ticket,
+                                   related_id=related_id,
+                                   related_type=related_type)
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
                                 mimetype='application/json')

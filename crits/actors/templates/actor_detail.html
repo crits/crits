@@ -98,6 +98,7 @@
          {% with bucket_list=actor.bucket_list %}
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
+         {% include 'add_related_widget.html' %}
      </div>
     <div class="content_box">
         {% with obj=actor obj_type="Actor" %}

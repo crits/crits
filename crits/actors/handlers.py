@@ -7,6 +7,7 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 
 from crits.actors.actor import Actor, ActorIdentifier, ActorThreatIdentifier
+from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import create_embedded_source
 from crits.core.forms import DownloadFileForm
@@ -23,6 +24,8 @@ from crits.vocabulary.actors import (
     Sophistications,
     IntendedEffects
 )
+from crits.vocabulary.relationships import RelationshipTypes
+
 
 def generate_actor_identifier_csv(request):
     """
@@ -295,7 +298,7 @@ def get_actor_by_name(allowed_sources, actor):
 
 def add_new_actor(name, aliases=None, description=None, source=None,
                   source_method='', source_reference='', campaign=None,
-                  confidence=None, analyst=None, bucket_list=None, ticket=None):
+                  confidence=None, analyst=None, bucket_list=None, ticket=None, related_id=None, related_type=None):
     """
     Add an Actor to CRITs.
 
@@ -371,7 +374,23 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     if ticket:
         actor.add_ticket(ticket, analyst)
 
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
     actor.save(username=analyst)
+
+    if related_obj and actor:
+            relationship = RelationshipTypes.RELATED_TO
+            actor.add_relationship(related_obj,
+                                  relationship,
+                                  analyst=analyst,
+                                  get_rels=False)
+            actor.save(username=analyst)
 
     # run actor triage
     if is_item_new:
