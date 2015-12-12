@@ -137,6 +137,8 @@
         {% with bucket_list=sample.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div class="content_box">
         {% with obj=sample obj_type="Sample" %}
