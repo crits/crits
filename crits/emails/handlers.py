@@ -508,7 +508,7 @@ def handle_email_fields(data, analyst, method):
             if isinstance(y, basestring):
                 if len(y) > 0:
                     tmp_y = y.split(',')
-                    y_final = [ty.strip() for ty in tmp_y]
+                    y_final = [ty.strip() for ty in tmp_y if len(ty.strip()) > 0]
                     data[x] = y_final
                 else:
                     data[x] = []
