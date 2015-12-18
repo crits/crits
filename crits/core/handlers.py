@@ -106,7 +106,7 @@ def action_add(type_, id_, tlo_action, user=None, **kwargs):
 
 def action_remove(type_, id_, date, user, **kwargs):
     """
-    Remove an action from a TLO. 
+    Remove an action from a TLO.
 
     :param type_: The class type of the top level object.
     :type type_: str
@@ -138,7 +138,7 @@ def action_remove(type_, id_, date, user, **kwargs):
         return {'success': True}
     except (ValidationError, TypeError), e:
         return {'success': False, 'message': e}
-    
+
 def action_update(type_, id_, tlo_action, user=None, **kwargs):
     """
     Update an action for a TLO.
@@ -657,7 +657,7 @@ def merge_source_lists(left, right):
                 left.append(src)
     return left
 
-def source_add_update(type_, id_, action_type, source, method='',  
+def source_add_update(type_, id_, action_type, source, method='',
                       reference='', date=None, user=None, **kwargs):
     """
     Add or update a source for a top-level object.
@@ -1362,9 +1362,9 @@ def modify_source_access(analyst, data):
 
 def datetime_parser(value):
     """
-    Iterate over a dict to confirm that keys containing the word 'dict' are 
+    Iterate over a dict to confirm that keys containing the word 'dict' are
     in fact datetime.datetime objects.
-    If a string is passed, returns a datetime.datetime 
+    If a string is passed, returns a datetime.datetime
 
     :param value: str or a dictionary to iterate over.
     :type value: str or dict
