@@ -640,6 +640,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.attack_type = ind['attack_type']
         indicator.value = ind['value']
         indicator.lower = ind['lower']
+        indicator.description = ind['description']
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)
