@@ -391,6 +391,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind = {}
         ind['value'] = d.get('Indicator', '').strip()
         ind['lower'] = d.get('Indicator', '').lower().strip()
+        ind['description'] = d.get('Description', '').strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
         ind['threat_type'] = d.get('Threat Type', IndicatorThreatTypes.UNKNOWN)
         ind['attack_type'] = d.get('Attack Type', IndicatorAttackTypes.UNKNOWN)
@@ -541,6 +542,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         ind['attack_type'] = attack_type.strip()
         ind['value'] = value.strip()
         ind['lower'] = value.lower().strip()
+	ind['description'] = description.strip()
 
         if campaign:
             ind['campaign'] = campaign

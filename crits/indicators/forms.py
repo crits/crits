@@ -51,9 +51,6 @@ class UploadIndicatorCSVForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     filedata = forms.FileField()
-    description = forms.CharField(
-        widget=forms.TextInput(attrs={'size': '50'}),
-        required=False)
     source = forms.ChoiceField(
         widget=forms.Select(attrs={'class': 'no_clear'}),
         label=form_consts.Indicator.SOURCE,
@@ -79,9 +76,6 @@ class UploadIndicatorTextForm(forms.Form):
 
     error_css_class = 'error'
     required_css_class = 'required'
-    description = forms.CharField(
-        widget=forms.TextInput(attrs={'size': '50'}),
-        required=False)
     source = forms.ChoiceField(
         widget=forms.Select(attrs={'class': 'no_clear'}),
         label=form_consts.Indicator.SOURCE,
@@ -102,7 +96,7 @@ class UploadIndicatorTextForm(forms.Form):
         self.fields['source'].choices = [
             (c.name, c.name) for c in get_source_names(True, True, username)]
         self.fields['source'].initial = get_user_organization(username)
-        dt = "Indicator, Type, Threat Type, Attack Type, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action, Status\n"
+        dt = "Indicator, Type, Threat Type, Attack Type, Description, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action, Status\n"
         self.fields['data'].initial = dt
 
 class UploadIndicatorForm(forms.Form):
@@ -137,7 +131,6 @@ class UploadIndicatorForm(forms.Form):
         widget=forms.TextInput(attrs={'size': '90'}),
         label=form_consts.Indicator.SOURCE_REFERENCE,
         required=False)
-
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorForm, self).__init__(*args, **kwargs)
         self.fields['source'].choices = [

@@ -183,6 +183,7 @@ def upload_indicator(request):
                     request.POST['method'],
                     request.POST['reference'],
                     add_domain=True,
+                    description=request.POST['description'],
                     campaign=request.POST['campaign'],
                     campaign_confidence=request.POST['campaign_confidence'],
                     confidence=request.POST['confidence'],
