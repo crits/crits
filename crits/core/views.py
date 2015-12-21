@@ -2203,13 +2203,13 @@ def add_update_action(request, method, obj_type, obj_id):
                     }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                result = action_add(obj_type, obj_id, add)
+                result = action_add(obj_type, obj_id, add, user=username)
             else:
                 date = datetime.datetime.strptime(data['date'],
                                                          settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                result = action_update(obj_type, obj_id, add)
+                result = action_update(obj_type, obj_id, add, user=username)
             if 'object' in result:
                 result['html'] = render_to_string('action_row_widget.html',
                                                   {'action': result['object'],

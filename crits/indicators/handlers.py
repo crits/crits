@@ -722,8 +722,12 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             if not url_contains_ip:
                 success = None
                 if add_domain:
-                    success = upsert_domain(domain_or_ip, indicator.source, '%s' % analyst,
-                                            None, bucket_list=bucket_list, cache=cache)
+                    success = upsert_domain(domain_or_ip,
+                                            indicator.source,
+                                            username='%s' % analyst,
+                                            campaign=indicator.campaign,
+                                            bucket_list=bucket_list,
+                                            cache=cache)
                     if not success['success']:
                         return {'success': False, 'message': success['message']}
 

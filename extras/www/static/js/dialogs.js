@@ -501,6 +501,7 @@ function update_dialog(e) {
 
     // get the form's inputs
     var inputs = form.find('input,select,textarea');
+    var sel_val = null;
 
     // pre-populate form
     inputs.each(function(index) {
@@ -521,17 +522,20 @@ function update_dialog(e) {
     if (data_elem.length) { // some fields are set by default on page request and don't
                 // need to be set here set here
         var value = data_elem.text();
-            if (input.attr('type') == 'radio') {
-                // check the correct radio element
-                input.filter('[value="'+value+'"]').prop('checked', true);
+        if (field == 'action_type') {
+            sel_val = value;
+        }
+        if (input.attr('type') == 'radio') {
+            // check the correct radio element
+            input.filter('[value="'+value+'"]').prop('checked', true);
+        } else {
+            // handle empty analysis fields (default to current user)
+            if (field == 'analyst' && !value) {
+                input.val(username);                // defined in base.html
             } else {
-                // handle empty analysis fields (default to current user)
-                if (field == 'analyst' && !value) {
-                    input.val(username);                // defined in base.html
-                } else {
-                    input.val(value.trim());
-                }
+                input.val(value.trim());
             }
+        }
         }
      });
     var sel = form.find('#id_action_type');
@@ -545,6 +549,7 @@ function update_dialog(e) {
                     $.each(data.results, function(x,y) {
                         sel.append($('<option></option>').val(y).html(y));
                     });
+                    sel.find('option[value="' + sel_val + '"]').attr('selected', true);
                 }
             });
         }
