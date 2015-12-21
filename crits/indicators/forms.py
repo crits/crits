@@ -63,6 +63,9 @@ class UploadIndicatorCSVForm(forms.Form):
         widget=forms.TextInput(attrs={'size': '90'}),
         label=form_consts.Indicator.SOURCE_REFERENCE,
         required=False)
+    description = forms.CharField(
+        widget=forms.TextInput(attrs={'size': '50'}),
+        required=False)
 
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorCSVForm, self).__init__(*args, **kwargs)
@@ -88,6 +91,9 @@ class UploadIndicatorTextForm(forms.Form):
     reference = forms.CharField(
         widget=forms.TextInput(attrs={'size': '90'}),
         label=form_consts.Indicator.SOURCE_REFERENCE,
+        required=False)
+    description = forms.CharField(
+        widget=forms.TextInput(attrs={'size': '50'}),
         required=False)
     data = forms.CharField(
         widget=forms.Textarea(attrs={'cols': '80', 'rows': '20'}),
@@ -128,6 +134,9 @@ class UploadIndicatorForm(forms.Form):
     reference = forms.CharField(
         widget=forms.TextInput(attrs={'size': '90'}),
         label=form_consts.Indicator.SOURCE_REFERENCE,
+        required=False)
+    description = forms.CharField(
+        widget=forms.TextInput(attrs={'size': '50'}),
         required=False)
 
     def __init__(self, username, *args, **kwargs):

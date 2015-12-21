@@ -472,7 +472,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
 def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
                          analyst, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
-                         campaign_confidence=None, confidence=None, impact=None,
+                         campaign_confidence=None, confidence=None, description=None, impact=None,
                          bucket_list=None, ticket=None, cache={}):
     """
     Handle adding an individual indicator.
@@ -504,6 +504,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     :type campaign_confidence: str
     :param confidence: Indicator confidence.
     :type confidence: str
+    :param description: The description of this data.
+    :type description: str
     :param impact: Indicator impact.
     :type impact: str
     :param bucket_list: The bucket(s) to assign to this indicator.
