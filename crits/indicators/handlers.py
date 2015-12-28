@@ -440,8 +440,9 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind[form_consts.Common.BUCKET_LIST_VARIABLE_NAME] = d.get(form_consts.Common.BUCKET_LIST, '')
         ind[form_consts.Common.TICKET_VARIABLE_NAME] = d.get(form_consts.Common.TICKET, '')
         try:
-            response = handle_indicator_insert(ind, source, reference, analyst=username,
-                                               method=method, add_domain=add_domain)
+            response = handle_indicator_insert(ind, source, reference,
+                                               analyst=username, method=method,
+                                               add_domain=add_domain)
         except Exception, e:
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, str(e))
@@ -457,7 +458,8 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                           'date': datetime.datetime.now()}
                 for action_type in actions:
                     action['action_type'] = action_type
-                    action_add('Indicator', response.get('objectid'), action)
+                    action_add('Indicator', response.get('objectid'), action,
+                               user=username)
         else:
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, response['message'])
