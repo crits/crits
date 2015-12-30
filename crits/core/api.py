@@ -567,6 +567,7 @@ class CRITsAPIResource(MongoEngineResource):
         import crits.objects.handlers as objh
         import crits.relationships.handlers as relh
         import crits.services.handlers as servh
+        import crits.signatures.handlers as sigh
         import crits.indicators.handlers as indh
 
         actions = {
@@ -613,7 +614,14 @@ class CRITsAPIResource(MongoEngineResource):
             'PCAP': {},
             'RawData': {},
             'Sample': {},
-            'Signature': {},
+            'Signature': {
+                'update_dependency': sigh.update_dependency,
+                'update_min_version': sigh.update_min_version,
+                'update_max_version': sigh.update_max_version,
+                'update_signature_data': sigh.update_signature_data,
+                'update_signature_type': sigh.update_signature_type,
+                'update_title': sigh.update_title
+            },
             'Target': {},
         }
 
