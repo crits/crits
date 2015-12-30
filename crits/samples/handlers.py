@@ -169,6 +169,18 @@ def get_sample_details(sample_md5, analyst, format_=None):
 
         # analysis results
         service_results = sample.get_analysis_results()
+        
+        # template
+        from crits.services.core import ServiceManager
+        service_manager     = ServiceManager()
+        tmp_service_results = []
+        
+        for result in service_results:
+            result.template = service_manager.get_service_class(result.service_name).template
+            tmp_service_results.append(result)
+        
+        service_results = tmp_service_results
+        
 
         args = {'objects': objects,
                 'relationships': relationships,
