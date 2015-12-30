@@ -42,21 +42,23 @@ def signatures_listing(request,option=None):
     return generate_signature_jtable(request, option)
 
 @user_passes_test(user_can_view_data)
-def set_signature_type(request, _id):
+def set_signature_type(request, id_):
     """
     Set the Signature datatype. Should be an AJAX POST.
 
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
-    :param _id: The ObjectId of the Signature.
-    :type _id: str
+    :param id_: The ObjectId of the Signature.
+    :type id_: str
     :returns: :class:`django.http.HttpResponse`
     """
 
     if request.method == 'POST':
         data_type = request.POST['data_type']
+        type_ = request.POST['type']
         analyst = request.user.username
-        return HttpResponse(json.dumps(update_signature_type(_id,
+        return HttpResponse(json.dumps(update_signature_type(type_,
+                                                             id_,
                                                             data_type,
                                                             analyst)),
                             mimetype="application/json")
@@ -202,7 +204,7 @@ def upload_signature(request, link_id=None):
 @user_passes_test(user_can_view_data)
 def update_data_type_dependency(request):
     """
-    Update the dependency listr in the signature.
+    Update the dependency list in the signature.
 
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
@@ -210,22 +212,16 @@ def update_data_type_dependency(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-
         type_ = request.POST['type']
-
         id_ = request.POST['id']
-
         data_deps = request.POST['data_type_dependency']
-
         analyst = request.user.username
-
         return HttpResponse(json.dumps(update_dependency(type_,
                                                           id_,
                                                           data_deps,
                                                           analyst)),
                             mimetype="application/json")
     else:
-
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
                                   RequestContext(request))

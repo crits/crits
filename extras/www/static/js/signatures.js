@@ -134,6 +134,7 @@ $(document).ready(function() {
         return function(value, settings, elem) {
             var data = {
                 data_type: value,
+                type: subscription_type,
             };
             $.ajax({
                 type: "POST",
