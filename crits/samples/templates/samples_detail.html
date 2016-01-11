@@ -15,6 +15,8 @@
     var update_sample_filename = "{% url 'crits.samples.views.set_sample_filename' %}";
     var update_sample_filenames = "{% url 'crits.samples.views.set_sample_filenames' %}";
     var is_admin = "{{ admin }}";
+    var related_id = "{{sample.id|escapejs }}";
+    var related_type = "Sample"
 </script>
 
 {% if sample %}

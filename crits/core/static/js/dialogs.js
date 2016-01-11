@@ -1079,7 +1079,7 @@ function new_target_dialog() {
 /// Standard Dialog setup below
 
 var stdDialogs = {
-      "new-actor": {title: "Actor"},
+      "new-actor": {title: "Actor", personas: {related: newPersona("Add Related Actor", {}, addEditSubmit) } },
       "new-actor-identifier": {title: "Actor Identifier"},
       "actor_identifier_type_add": {title: "Actor Identifier Type"},
       "new-email-raw": {title: "Email (Raw)"},
@@ -1088,9 +1088,9 @@ var stdDialogs = {
 
       "new-campaign": {title: "Campaign"},
       "new-backdoor": {title: "Backdoor"},
-      "new-exploit": {title: "Exploit"},
+      "new-exploit": {title: "Exploit", personas: {related: newPersona("Add Related Exploit",{}, addEditSubmit) } },
 
-      "new-domain": {title: "Domain", open: new_domain_dialog},
+      "new-domain": {title: "Domain", personas: {related: newPersona("Add Related Domain", {open: new_domain_dialog}, addEditSubmit ) } },
       "new-indicator": {title: "Indicator", open: new_indicator_dialog},
       "action_add": {title: "Action"},
       "add-action": {title: "Action", href:"",
@@ -1113,8 +1113,8 @@ var stdDialogs = {
 		       update: { open: update_dialog} },
       "indicator-blob": {title: "New Indicator Blob"},
 
-      "new-event": {title: "Event", open: new_event_dialog},
-      "new-ip": {title: "IP Address", open: new_ip_dialog},
+      "new-event": {title: "Event", personas: {related: newPersona("Add Related Event", {open: new_event_dialog}, addEditSubmit ) } },
+      "new-ip": {title: "IP Address", personas: {related: newPersona("Add Related IP", {open: new_ip_dialog}, addEditSubmit ) } },
       "new-raw-data": {title: "Raw Data" },
       "raw_data_type_add": {title: "Raw Data Type"},
 
@@ -1122,7 +1122,7 @@ var stdDialogs = {
       "signature_type_add": {title: "Signature Type"},
       "signature_dependency_add": {title: "Signature Dependency"},
 
-      "new-target": {title: "Target", open: new_target_dialog },
+      "new-target": {title: "Target", personas: {related: newPersona("Add Related Target", {open: new_target_dialog}, addEditSubmit ) } },
 
       "source_create": {title: "Source"},
       "user_role": {title: "User Role"},
@@ -1156,7 +1156,9 @@ var stdDialogs = {
   var fileDialogs = {
       // File Upload Dialogs
       "new-email-outlook": {title: "Upload Outlook Email" },
-      "new-email-eml": {title: "Email" },
+      "new-email-eml": {title: "Email", personas: {related: newPersona("Upload Related Email",
+                                                                 {open: file_upload_dialog},
+                                 defaultSubmit) } },
       "new-pcap": {title: "PCAP", personas: {related: newPersona("Upload Related PCAP",
                                                                  {open: file_upload_dialog},
                                  defaultSubmit) } },
