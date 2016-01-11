@@ -100,8 +100,8 @@ class EmailEMLForm(forms.Form):
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     filedata = forms.FileField(required=True)
-    related_id = forms.CharField(widget=forms.TextInput(), required=False)
-    related_type = forms.CharField(widget=forms.TextInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
     def __init__(self, username, *args, **kwargs):
         super(EmailEMLForm, self).__init__(*args, **kwargs)
         self.fields['source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]

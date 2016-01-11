@@ -74,8 +74,8 @@ class AddDomainForm(forms.Form):
     add_indicators = forms.BooleanField(required=False,
                                         widget=forms.CheckboxInput(attrs={'class':'bulkskip'}),
                                         label=form_consts.Domain.ADD_INDICATORS)
-    related_id = forms.CharField(widget=forms.TextInput(), required=False)
-    related_type = forms.CharField(widget=forms.TextInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     def __init__(self, username, *args, **kwargs):
         super(AddDomainForm, self).__init__(*args, **kwargs)

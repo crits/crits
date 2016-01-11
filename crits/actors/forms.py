@@ -40,8 +40,8 @@ class AddActorForm(forms.Form):
         widget=forms.TextInput(attrs={'size': '90'}),
         label=form_consts.Actor.SOURCE_REFERENCE,
         required=False)
-    related_id = forms.CharField(widget=forms.TextInput(), required=False)
-    related_type = forms.CharField(widget=forms.TextInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     def __init__(self, username, *args, **kwargs):
         super(AddActorForm, self).__init__(*args, **kwargs)

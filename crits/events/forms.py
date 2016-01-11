@@ -34,8 +34,8 @@ class EventForm(forms.Form):
     reference = forms.CharField(required=False, widget=forms.TextInput,
                                 label=form_consts.Event.SOURCE_REFERENCE)
 
-    related_id = forms.CharField(widget=forms.TextInput(), required=False)
-    related_type = forms.CharField(widget=forms.TextInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     def __init__(self, username, *args, **kwargs):
         super(EventForm, self).__init__(*args, **kwargs)
