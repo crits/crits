@@ -544,7 +544,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         ind['attack_type'] = attack_type.strip()
         ind['value'] = value.strip()
         ind['lower'] = value.lower().strip()
-	ind['description'] = description.strip()
+        ind['description'] = description
 
         if campaign:
             ind['campaign'] = campaign
