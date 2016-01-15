@@ -632,7 +632,7 @@ class CRITsAPIResource(MongoEngineResource):
         view, args, kwargs = resolve(uri)
 
         type_ = kwargs['resource_name'].title()
-        if type_ == "Raw_data":
+        if type_ == "Raw_Data":
             type_ = "RawData"
         if type_[-1] == 's':
             type_ = type_[:-1]
