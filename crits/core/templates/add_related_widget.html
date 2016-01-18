@@ -3,27 +3,29 @@
     <h3 class='titleheader'>
         <span>Add Related</span>
     </h3>
-    <div data-intro="TLOs to to this object!" data-position="bottom">
-        <form id="add_related_form" method="post" >{% csrf_token %}
-            <select id="add_related" class="icon-menu">
-                <option value="<li><a href="#" class="dialogClick" dialog="new-actor" persona="related"></a></li>Actor</option>
-                <option value="<li><a href="#" class="dialogClick" dialog="new-domain" persona="related"></a></li>Domain</option>
-                <option value="<li><a href="#" class="dialogClick" dialog="new-email-eml" persona="related"></a></li>E-Mail (eml)</option>
-                <option value="<li><a href="#" class="dialogClick" dialog="new-event" persona="related"></a></li>Event</option>
-                <option value="<li><a href="#" class="dialogClick" dialog="new-exploit" persona="related"></a></li>Exploit</option>
-                <option value="<li><a href="#" class="dialogClick" dialog="new-ip" persona="related"></a></li>IP</option>
-                <option value="<li><a href="#" class="dialogClick" dialog="new-pcap" persona="related"></a></li>PCAP</option>
-                <option value="<li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.samples.views.upload_file' %} ">Sample</a></li></option>
-                <option value="<li><a href="#" class="dialogClick" dialog="new-target" persona="related"></a></li>Target</option>
-
-
-
+    <div data-intro"Section for adding related Objects." data-position="bottom">
+        <form id="add_related_form" method="post"> {% csrf_token %}
+            <select id="add_related_options" class="icon-menu">
+                <option>Selected Related TLO</option>
+                <option value='new-actor'>Actor</option>
+                <option value='new-domain' class='dialogClick'>Domain</option>
+                <option value='new-ip'>IP</option>
+                <option value='new-email-eml'>Email (eml)</option>
+                <option value='new-event'>Event</option>
+                <option value='new-exploit'>Exploit</option>
+                <option value='new-pcap'>PCAP</option>
+                <option value='new-sample'>Sample</option>
+                <option value='new-target'>Target</option>
             </select>
         </form>
     </div>
 </div>
+
 <script type="text/javascript">
-    document.getElementById('add_related').onchange = function() {
-        document.getElementById('add_related_form').action = '/'+this.value;
+    var selected_option = document.getElementById('add_related_options');
+    selected_option.onchange = function() {
+        selected_option.setAttribute("class","dialogClick");
+        selected_option.setAttribute("dialog", this.value);
+        selected_option.setAttribute("persona", "related");
     }
 </script>
