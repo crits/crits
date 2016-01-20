@@ -1,15 +1,15 @@
 {% load url from future %}
-<div class="content_box" id="add_related">
+<div class="content_box" id="add_related_box">
+    <div id="add_related" hidden></div>
     <h3 class='titleheader'>
         <span>Add Related</span>
     </h3>
     <div data-intro"Section for adding related Objects." data-position="bottom">
         <form id="add_related_form" method="post"> {% csrf_token %}
-            <select id="add_related_options" class="icon-menu">
-                <option>Selected Related TLO</option>
-                <option value='new-actor'>Actor</option>
-                <option value='new-domain' class='dialogClick'>Domain</option>
-                <option value='new-ip'>IP</option>
+            <select id="add_related_options" onchange="populateList()" class="dialogClick" persona="related">
+                <option value='new-actor' class="dialogClick">Actor</option>
+                <option value='new-domain' class="dialogClick" >Domain</option>
+                <option value='new-ip' class="dialogClick" >IP</option>
                 <option value='new-email-eml'>Email (eml)</option>
                 <option value='new-event'>Event</option>
                 <option value='new-exploit'>Exploit</option>
@@ -21,11 +21,15 @@
     </div>
 </div>
 
+
 <script type="text/javascript">
-    var selected_option = document.getElementById('add_related_options');
-    selected_option.onchange = function() {
-        selected_option.setAttribute("class","dialogClick");
-        selected_option.setAttribute("dialog", this.value);
-        selected_option.setAttribute("persona", "related");
+    function populateList() {
+        var selected_option = document.getElementById('add_related_options');
+        var add_related_div = document.getElementById('add_related');
+        add_related_div.setAttribute("dialog", selected_option.value);
+        add_related_div.setAttribute("persona", "related");
+        add_related_div.setAttribute("class", "dialogClick");
+        add_related_div.click();
+
     }
 </script>
