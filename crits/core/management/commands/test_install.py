@@ -33,7 +33,7 @@ class Command(BaseCommand):
                    'gridfs',
                    'importlib',
                    'lxml',
-                   'M2Crypto',
+                   'cryptography',
                    'magic',
                    'mongoengine',
                    'nids',
