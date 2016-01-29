@@ -55,7 +55,7 @@ def add_new_relationship(request):
             message = "Invalid Form: %s" % form.errors
             form = form.as_table()
             result = {'success': False, 'form': form, 'message': message}
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -87,7 +87,7 @@ def update_relationship_type(request):
         else:
             message = "Error updating relationship: %s" % results['message']
             result = {'success': False, 'message': message}
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -108,7 +108,7 @@ def update_relationship_confidence(request):
         if new_confidence not in ('unknown', 'low', 'medium', 'high'):
             result = {'success': False,
                       'message': 'Unknown confidence level.'}
-            return HttpResponse(json.dumps(result), mimetype="application/json")
+            return HttpResponse(json.dumps(result), content_type="application/json")
         else:
             results = update_relationship_confidences(left_type=request.POST['my_type'],
                                                 left_id=request.POST['my_value'],
@@ -125,7 +125,7 @@ def update_relationship_confidence(request):
         else:
             message = "Error updating relationship: %s" % results['message']
             result = {'success': False, 'message': message}
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -159,7 +159,7 @@ def update_relationship_reason(request):
         else:
             message = "Error updating relationship: %s" % results['message']
             result = {'success': False, 'message': message}
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -191,7 +191,7 @@ def update_relationship_date(request):
         else:
             message = "Error updating relationship: %s" % results['message']
             result = {'success': False, 'message': message}
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -228,7 +228,7 @@ def break_relationship(request):
         else:
             message = "Error deleting relationship: %s" % results['message']
             result = {'success': False, 'message': message}
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -251,7 +251,7 @@ def get_relationship_type_dropdown(request):
             for type_ in RelationshipTypes.values(sort=True):
                 dd_final[type_] = type_
             result = {'types': dd_final}
-            return HttpResponse(json.dumps(result), mimetype="application/json")
+            return HttpResponse(json.dumps(result), content_type="application/json")
         else:
             error = "Expected AJAX"
             return render_to_response("error.html",
