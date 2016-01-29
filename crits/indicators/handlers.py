@@ -391,6 +391,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind = {}
         ind['value'] = d.get('Indicator', '').strip()
         ind['lower'] = d.get('Indicator', '').lower().strip()
+        ind['description'] = d.get('Description', '').strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
         ind['threat_type'] = d.get('Threat Type', IndicatorThreatTypes.UNKNOWN)
         ind['attack_type'] = d.get('Attack Type', IndicatorAttackTypes.UNKNOWN)
@@ -474,7 +475,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
 def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
                          analyst, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
-                         campaign_confidence=None, confidence=None, impact=None,
+                         campaign_confidence=None, confidence=None, description=None, impact=None,
                          bucket_list=None, ticket=None, cache={}):
     """
     Handle adding an individual indicator.
@@ -506,6 +507,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     :type campaign_confidence: str
     :param confidence: Indicator confidence.
     :type confidence: str
+    :param description: The description of this data.
+    :type description: str
     :param impact: Indicator impact.
     :type impact: str
     :param bucket_list: The bucket(s) to assign to this indicator.
@@ -541,6 +544,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         ind['attack_type'] = attack_type.strip()
         ind['value'] = value.strip()
         ind['lower'] = value.lower().strip()
+        ind['description'] = description
 
         if campaign:
             ind['campaign'] = campaign
@@ -640,6 +644,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.attack_type = ind['attack_type']
         indicator.value = ind['value']
         indicator.lower = ind['lower']
+        indicator.description = ind['description']
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)

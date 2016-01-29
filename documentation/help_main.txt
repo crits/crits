@@ -811,6 +811,7 @@ information, as follows:
 
 :Indicator Type: Choose the type of indicator from the drop-down.
 :Value: Define the value for the indicator
+:Description: Enter a brief description for the indicator
 :Confidence: Select the confidence level for the indicator
 :Impact: Select the level of impact for the indicator
 :Campaign: (Optional) Select a campaign with which to associate the
@@ -1763,6 +1764,7 @@ Unique POST Parameters:
 :threat_type: The threat type of the Indicator.
 :attack_type: The attack type of the Indicator.
 :value: Indicator value.
+:description: A description of the Indicator.
 
 Indicator Activity API
 -------------------------------------------
@@ -2031,3 +2033,12 @@ Actor PATCH actions
 :remove_attribution:
 :set_actor_name:
 :update_actor_aliases:
+
+Signature PATCH actions
+-----------------------
+:update_dependency:
+:update_max_version:
+:update_min_version:
+:update_signature_type:
+:update_signature_data:
+:update_title:
