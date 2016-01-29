@@ -109,9 +109,9 @@ depend_crits()
         OS-provided package with the package manager (apt-get/yum/brew)
         or try to adjust the CFLAGS, LDFLAGS, and SWIG_FEATURES
         with the right path to openssl headers and libs:
-        ${INFO}sudo env LDFLAGS="-L/opt/local/lib" \
-                    CFLAGS="-I/opt/local/include" \
-                    SWIG_FEATURES="-cpperraswarn -includeall -I/opt/local/include"
+        ${INFO}sudo env LDFLAGS=\"-L/opt/local/lib\" \
+                    CFLAGS=\"-I/opt/local/include\" \
+                    SWIG_FEATURES=\"-cpperraswarn -includeall -I/opt/local/include\" \
                     pip install M2Crypto ${END}\n"
         exit
     else
