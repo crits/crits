@@ -93,14 +93,26 @@ create_files()
 depend_crits()
 {
     printf "${HEAD}Installing Python Dependencies${END}\n"
-    sudo ${PIP} install -r requirements.txt
+    if [ "$OS" = 'darwin' ]
+    then
+         sudo env LDFLAGS=-L$(brew --prefix openssl)/lib \
+         CFLAGS=-I$(brew --prefix openssl)/include \
+         SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include" \
+         ${PIP} install -r requirements.txt
+    else
+         sudo ${PIP} install -r requirements.txt
+    fi
     if [ $? -ne 0 ]
     then
         printf "${FAIL}Dependency installation failed!${END}\n
         If M2Crypto failed to install, you might try to install the 
         OS-provided package with the package manager (apt-get/yum/brew)
-        or try to use pip to install a fixed version from git by:
-        ${INFO}pip install git+https://github.com/martinpaljak/M2Crypto.git${END}\n"
+        or try to adjust the CFLAGS, LDFLAGS, and SWIG_FEATURES
+        with the right path to openssl headers and libs:
+        ${INFO}sudo env LDFLAGS="-L/opt/local/lib" \
+                    CFLAGS="-I/opt/local/include" \
+                    SWIG_FEATURES="-cpperraswarn -includeall -I/opt/local/include"
+                    pip install M2Crypto ${END}\n"
         exit
     else
         printf "${INFO}Dependency installation complete!${END}\n"
