@@ -61,7 +61,7 @@ def set_raw_data_tool_details(request, _id):
         return HttpResponse(json.dumps(update_raw_data_tool_details(_id,
                                                                details,
                                                                analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -86,7 +86,7 @@ def set_raw_data_tool_name(request, _id):
         return HttpResponse(json.dumps(update_raw_data_tool_name(_id,
                                                                name,
                                                                analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -111,7 +111,7 @@ def set_raw_data_type(request, _id):
         return HttpResponse(json.dumps(update_raw_data_type(_id,
                                                             data_type,
                                                             analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -138,7 +138,7 @@ def set_raw_data_highlight_comment(request, _id):
                                                                          comment,
                                                                          line,
                                                                          analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -165,7 +165,7 @@ def set_raw_data_highlight_date(request, _id):
                                                                       date,
                                                                       line,
                                                                       analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -192,7 +192,7 @@ def add_inline_comment(request, _id):
                                                           comment,
                                                           line_num,
                                                           analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -219,7 +219,7 @@ def add_highlight(request, _id):
                                                      line_num,
                                                      line_data,
                                                      analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -244,7 +244,7 @@ def remove_highlight(request, _id):
         return HttpResponse(json.dumps(delete_highlight(_id,
                                                         line_num,
                                                         analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -265,7 +265,7 @@ def get_inline_comments(request, _id):
 
     if request.method == 'POST':
         return HttpResponse(json.dumps(generate_inline_comments(_id)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -286,7 +286,7 @@ def get_raw_data_versions(request, _id):
 
     if request.method == 'POST':
         return HttpResponse(json.dumps(generate_raw_data_versions(_id)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -384,7 +384,7 @@ def upload_raw_data(request, link_id=None):
                     % reverse('crits.raw_data.views.raw_data_details',
                               args=[status['_id']]), 'success': True})
                 if not has_file:
-                    return HttpResponse(jdump, mimetype="application/json")
+                    return HttpResponse(jdump, content_type="application/json")
                 return render_to_response('file_upload_response.html',
                                           {'response': jdump},
                                           RequestContext(request))
@@ -392,7 +392,7 @@ def upload_raw_data(request, link_id=None):
                 jdump = json.dumps({'success': False,
                                     'message': status['message']})
                 if not has_file:
-                    return HttpResponse(jdump, mimetype="application/json")
+                    return HttpResponse(jdump, content_type="application/json")
                 return render_to_response('file_upload_response.html',
                                           {'response': jdump},
                                           RequestContext(request))
@@ -400,7 +400,7 @@ def upload_raw_data(request, link_id=None):
             jdump = json.dumps({'success': False,
                                 'form': form.as_table()})
             if not has_file:
-                return HttpResponse(jdump, mimetype="application/json")
+                return HttpResponse(jdump, content_type="application/json")
             return render_to_response('file_upload_response.html',
                                       {'response': jdump},
                                       RequestContext(request))
@@ -453,7 +453,7 @@ def new_raw_data_type(request):
         else:
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response('error.html',
                               {'error':'Expected AJAX POST'})
 
@@ -475,7 +475,7 @@ def get_raw_data_type_dropdown(request):
             dt_final.append(dt.name)
             result = {'data': dt_final}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",

@@ -3597,7 +3597,7 @@ def download_grid_file(request, dtype, sample_md5):
         else:
             data = [(obj['filename'], get_file(sample_md5, "objects"))]
             zip_data = create_zip(data, False)
-            response = HttpResponse(zip_data, mimetype='application/octet-stream')
+            response = HttpResponse(zip_data, content_type="application/octet-stream")
             response['Content-Disposition'] = 'attachment; filename=%s' % obj['filename'] + ".zip"
             return response
     if dtype == 'pcap':
@@ -3610,7 +3610,7 @@ def download_grid_file(request, dtype, sample_md5):
                                       RequestContext(request))
         data = [(pcap['filename'], get_file(sample_md5, "pcaps"))]
         zip_data = create_zip(data, False)
-        response = HttpResponse(zip_data, mimetype='application/octet-stream')
+        response = HttpResponse(zip_data, content_type="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s' % pcap['filename'] + ".zip"
         return response
     if dtype == 'cert':
@@ -3623,7 +3623,7 @@ def download_grid_file(request, dtype, sample_md5):
                                       RequestContext(request))
         data = [(cert['filename'], get_file(sample_md5, "certificates"))]
         zip_data = create_zip(data, False)
-        response = HttpResponse(zip_data, mimetype='application/octet-stream')
+        response = HttpResponse(zip_data, content_type="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s' % cert['filename'] + ".zip"
         return response
 

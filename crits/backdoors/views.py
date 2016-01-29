@@ -96,10 +96,10 @@ def add_backdoor(request):
                                       bucket_list=bucket_list,
                                       ticket=ticket)
             return HttpResponse(json.dumps(result, default=json_handler),
-                                mimetype='application/json')
+                                content_type="application/json")
         return HttpResponse(json.dumps({'success': False,
                                         'form':form.as_table()}),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response("error.html",
                               {'error': 'Expected AJAX/POST'},
                               RequestContext(request))
@@ -146,12 +146,12 @@ def edit_backdoor_name(request, id_):
         if not name:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = set_backdoor_name(id_,
                                    name,
                                    user)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -174,7 +174,7 @@ def edit_backdoor_aliases(request):
         user = request.user.username
         result = update_backdoor_aliases(id_, aliases, user)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -199,9 +199,9 @@ def edit_backdoor_version(request, id_):
         if version == None:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = set_backdoor_version(id_, version, user)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
