@@ -86,7 +86,6 @@ create_files()
     # The original script had root remain the owner of these files but
     # that ended up causing some difficulties
     sudo chown -R $USER:$GROUP /data
-    chmod -R -v 0755 /data
 }
 
 
