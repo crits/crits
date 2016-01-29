@@ -107,7 +107,7 @@ def get_email_formatted(email_id, analyst, data_format):
     sources = user_sources(analyst)
     email = Email.objects(id=email_id, source__name__in=sources).first()
     if not email:
-        return HttpResponse(json.dumps({}), mimetype="application/json")
+        return HttpResponse(json.dumps({}), content_type="application/json")
     exclude = [
                 "created",
                 "source",
@@ -134,7 +134,7 @@ def get_email_formatted(email_id, analyst, data_format):
         data = {"email_yaml": email.to_json(exclude=exclude)}
     else:
         data = {"email_yaml": {}}
-    return HttpResponse(json.dumps(data), mimetype="application/json")
+    return HttpResponse(json.dumps(data), content_type="application/json")
 
 def get_email_detail(email_id, analyst):
     """

@@ -98,7 +98,7 @@ def bulk_add_ip(request):
 
         return HttpResponse(json.dumps(response,
                             default=json_handler),
-                            mimetype='application/json')
+                            content_type="application/json")
     else:
         return render_to_response('bulk_add_default.html', {'formdict': formdict,
                                                             'title': "Bulk Add IPs",
@@ -163,11 +163,11 @@ def add_update_ip(request, method):
                 result['message'].insert(0, message)
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
-                                mimetype='application/json')
+                                content_type="application/json")
 
         return HttpResponse(json.dumps({'success': False,
                                         'form':form.as_table()}),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response("error.html",
                               {'error': 'Expected AJAX/POST'},
                               RequestContext(request))
@@ -187,7 +187,7 @@ def remove_ip(request):
             result = ip_remove(request.POST['key'],
                                request.user.username)
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         error = 'You do not have permission to remove this item.'
         return render_to_response("error.html",
                                   {'error': error},

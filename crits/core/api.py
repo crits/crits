@@ -180,7 +180,7 @@ class CRITsSerializer(Serializer):
                 if len(files):
                     zipfile = create_zip(files)
                     response =  HttpResponse(zipfile,
-                                                mimetype='application/octet-stream; charset=utf-8')
+                                                content_type="application/octet-stream; charset=utf-8")
                     response['Content-Disposition'] = 'attachment; filename="results.zip"'
                 else:
                     response = BadRequest("No files found!")
@@ -319,7 +319,7 @@ class CRITsAPIResource(MongoEngineResource):
         """
 
         raise ImmediateHttpResponse(HttpResponse(json.dumps(content),
-                                                 mimetype="application/json",
+                                                 content_type="application/json",
                                                  status=status))
 
     def create_response(self, request, data, response_class=HttpResponse,

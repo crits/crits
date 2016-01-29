@@ -45,7 +45,7 @@ def campaign_stats(request):
         data_list = get_campaign_stats(campaign)
         return HttpResponse(json.dumps(data_list,
                                        default=json_util.default),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("campaign_monthly.html",
                                   {'campaign': campaign},
@@ -81,7 +81,7 @@ def campaign_names(request, active_only=True):
     """
 
     campaign_list = get_campaign_names_list(active_only)
-    return HttpResponse(json.dumps(campaign_list), mimetype="application/json")
+    return HttpResponse(json.dumps(campaign_list), content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def campaign_details(request, campaign_name):
@@ -137,9 +137,9 @@ def add_campaign(request):
                 message = {
                     'message': ['Campaign addition failed!']+result['message'],
                     'success': False}
-            return HttpResponse(json.dumps(message), mimetype="application/json")
+            return HttpResponse(json.dumps(message), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({'form': campaign_form.as_table(), 'success': False, 'message': "Please correct form errors."}), mimetype="application/json")
+            return HttpResponse(json.dumps({'form': campaign_form.as_table(), 'success': False, 'message': "Please correct form errors."}), content_type="application/json")
     return render_to_response("error.html", {"error": 'Expected AJAX POST'}, RequestContext(request))
 
 @user_passes_test(user_can_view_data)
@@ -176,15 +176,15 @@ def campaign_add(request, ctype, objectid):
                                    update=False)
             if result['success']:
                 return HttpResponse(json.dumps(result),
-                                    mimetype="application/json")
+                                    content_type="application/json")
         result['form'] = form.as_table()
         result['success'] = False
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return HttpResponse(json.dumps({'success': False,
                                         'message': "Expected AJAX request."}),
-                            mimetype="application/json")
+                            content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def edit_campaign(request, ctype, objectid):
@@ -225,18 +225,18 @@ def edit_campaign(request, ctype, objectid):
                                    analyst)
             if result['success']:
                 return HttpResponse(json.dumps(result),
-                                    mimetype="application/json")
+                                    content_type="application/json")
             else:
                 result.update({'form': form.as_table()})
                 return HttpResponse(json.dumps(result),
-                                    mimetype="application/json")
+                                    content_type="application/json")
         else:
             return HttpResponse(json.dumps({'success': False,
                                             'form': form.as_table()}),
-                                mimetype="application/json")
+                                content_type="application/json")
     else:
         return HttpResponse(json.dumps({'success': False}),
-                            mimetype="application/json")
+                            content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def remove_campaign(request, ctype, objectid):
@@ -258,7 +258,7 @@ def remove_campaign(request, ctype, objectid):
                                  objectid,
                                  campaign=data.get('key'),
                                  analyst=request.user.username)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error": 'Expected AJAX POST.'},
@@ -297,7 +297,7 @@ def campaign_ttp(request, cid):
                                     RequestContext(request))
             del result['campaign']
             result['html'] = html
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error": 'Expected AJAX POST.'},
@@ -319,7 +319,7 @@ def campaign_aliases(request):
         return HttpResponse(json.dumps(modify_campaign_aliases(name,
                                                                tags,
                                                                request.user.username)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html", {"error": error}, RequestContext(request))

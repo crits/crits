@@ -67,7 +67,7 @@ def bulk_add_domain(request):
 
         return HttpResponse(json.dumps(response,
                             default=json_handler),
-                            mimetype='application/json')
+                            content_type="application/json")
     else:
         objectformdict = form_to_dict(AddObjectForm(request.user))
 
@@ -138,7 +138,7 @@ def add_domain(request):
         retVal['success'] = result
         return HttpResponse(json.dumps(retVal,
                                        default=json_handler),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected POST' },
