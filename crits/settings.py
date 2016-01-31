@@ -291,12 +291,12 @@ _TEMPLATE_LOADERS = (
     #'django.template.loaders.eggs.load_template_source',
 )
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': 'unix:/data/memcached.sock',
-    }
-}
+#CACHES = {
+#    'default': {
+#        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#        'LOCATION': 'unix:/data/memcached.sock',
+#    }
+#}
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -312,7 +312,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-_TEMPLATE_CONTEXT_PROCESSORS = (
+TTEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
     'django.core.context_processors.static',
     'django.contrib.auth.context_processors.auth',
@@ -324,7 +324,7 @@ _TEMPLATE_CONTEXT_PROCESSORS = (
 
 ROOT_URLCONF = 'crits.urls'
 
-_TEMPLATE_DIRS = (
+TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, '../documentation'),
     os.path.join(SITE_ROOT, 'core/templates'),
     os.path.join(SITE_ROOT, 'actors/templates'),
@@ -362,6 +362,7 @@ _TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, 'signatures/templates/dialogs'),
 )
 
+
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'core/static'),
     os.path.join(SITE_ROOT, 'actors/static'),
@@ -389,8 +390,6 @@ STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'targets/static'),
 )
 
-
-
 INSTALLED_APPS = (
     'crits.core',
     'crits.dashboards',
@@ -404,8 +403,6 @@ INSTALLED_APPS = (
     'crits.actors',
     'crits.campaigns',
     'crits.certificates',
-    'crits.comments',
-    #'crits.config',
     'crits.domains',
     'crits.emails',
     'crits.events',
@@ -425,6 +422,7 @@ INSTALLED_APPS = (
     'tastypie',
     'tastypie_mongoengine',
 )
+
 
 AUTH_USER_MODEL = 'mongo_auth.MongoUser'
 MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
@@ -550,23 +548,23 @@ for service_directory in SERVICE_DIRS:
         for d in os.listdir(service_directory):
             abs_path = os.path.join(service_directory, d, 'templates')
             if os.path.isdir(abs_path):
-                _TEMPLATE_DIRS = _TEMPLATE_DIRS + (abs_path,)
+                TEMPLATE_DIRS = TEMPLATE_DIRS + (str(abs_path),)
                 nav_items = os.path.join(abs_path, '%s_nav_items.html' % d)
                 cp_items = os.path.join(abs_path, '%s_cp_items.html' % d)
                 view_items = os.path.join(service_directory, d, 'views.py')
                 if os.path.isfile(nav_items):
-                    SERVICE_NAV_TEMPLATES = SERVICE_NAV_TEMPLATES + ('%s_nav_items.html' % d,)
+                    SERVICE_NAV_TEMPLATES = SERVICE_NAV_TEMPLATES + (str('%s_nav_items.html' % d),)
                 if os.path.isfile(cp_items):
-                    SERVICE_CP_TEMPLATES = SERVICE_CP_TEMPLATES + ('%s_cp_items.html' % d,)
+                    SERVICE_CP_TEMPLATES = SERVICE_CP_TEMPLATES + (str('%s_cp_items.html' % d),)
                 if os.path.isfile(view_items):
                     if '%s_context' % d in open(view_items).read():
                         context_module = '%s.views.%s_context' % (d, d)
-                        _TEMPLATE_CONTEXT_PROCESSORS = _TEMPLATE_CONTEXT_PROCESSORS + (context_module,)
+                        TTEMPLATE_CONTEXT_PROCESSORS = TTEMPLATE_CONTEXT_PROCESSORS + (str(context_module),)
                 for tab_temp in glob.glob('%s/*_tab.html' % abs_path):
                     head, tail = os.path.split(tab_temp)
                     ctype = tail.split('_')[-2]
                     name = "_".join(tail.split('_')[:-2])
-                    SERVICE_TAB_TEMPLATES = SERVICE_TAB_TEMPLATES + ((ctype, name, tail),)
+                    SERVICE_TAB_TEMPLATES = SERVICE_TAB_TEMPLATES + ((str(ctype), str(name), str(tail)),)
 
 # Allow configuration of the META or HEADER variable is used to find
 # remote username when REMOTE_USER is enabled.
@@ -583,16 +581,18 @@ REMOTE_USER_META = 'REMOTE_USER'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        #'DIRS': _TEMPLATE_DIRS,
-        'APP_DIRS': True,
+        'DIRS': TEMPLATE_DIRS,
+        #'APP_DIRS': False,
         'OPTIONS': {
-            'context_processors' : _TEMPLATE_CONTEXT_PROCESSORS,
-            'dirs' : _TEMPLATE_DIRS,
-            #'loaders' : _TEMPLATE_LOADERS,
+            'context_processors' : TTEMPLATE_CONTEXT_PROCESSORS,
+            #'dirs' : #_TEMPLATE_DIRS,
+            'loaders' : _TEMPLATE_LOADERS,
             'debug' : True,
         },
     },
 ]
+
+#TEMPLATE_CONTEXT_PROCESSORS = TEMPLATE_CONTEXT_PROCESSORS
 
 # Import custom settings if it exists
 csfile = os.path.join(SITE_ROOT, 'config/overrides.py')
