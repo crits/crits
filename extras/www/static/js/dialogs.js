@@ -1091,7 +1091,7 @@ var stdDialogs = {
       "new-exploit": {title: "Exploit", personas: {related: newPersona("Add Related Exploit",{}, addEditSubmit) } },
 
       "new-domain": {title: "Domain", personas: {related: newPersona("Add Related Domain", {open: new_domain_dialog}, addEditSubmit ) } },
-      "new-indicator": {title: "Indicator", open: new_indicator_dialog},
+      "new-indicator": {title: "Indicator",  personas: {related: newPersona("Add Related Indicator", {open: new_indicator_dialog}, addEditSubmit ) } },
       "action_add": {title: "Action"},
       "add-action": {title: "Action", href:"",
 		       new: {open: function(e) {

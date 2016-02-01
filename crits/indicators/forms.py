@@ -129,6 +129,8 @@ class UploadIndicatorForm(forms.Form):
         widget=forms.TextInput(attrs={'size': '90'}),
         label=form_consts.Indicator.SOURCE_REFERENCE,
         required=False)
+    related_id = forms.CharField( required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorForm, self).__init__(*args, **kwargs)

@@ -188,7 +188,9 @@ def upload_indicator(request):
                     confidence=request.POST['confidence'],
                     impact=request.POST['impact'],
                     bucket_list=request.POST[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
-                    ticket=request.POST[form_consts.Common.TICKET_VARIABLE_NAME])
+                    ticket=request.POST[form_consts.Common.TICKET_VARIABLE_NAME],
+                    related_id=request.POST['related_id'],
+                    related_type=request.POST['related_type'])
                 if result['success']:
                     indicator_link = ((' - <a href=\"%s\">Go to this '
                                        'indicator</a> or <a href="%s">all '

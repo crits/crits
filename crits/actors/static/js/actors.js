@@ -76,6 +76,13 @@ $(document).ready(function() {
         $(this).find("form #id_related_type").val("Actor");
         }
     });
+    // Add a related Indicator (Using the related dialog persona)
+    $( "#dialog-new-indicator" ).on("dialogopen.add_related_indicator", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(actor_id);
+        $(this).find("form #id_related_type").val("Actor");
+        }
+    });
     // Add a related IP (Using the related dialog persona)
     $( "#dialog-new-ip" ).on("dialogopen.add_related_ip", function(e) {
         if ($(this).dialog("persona") == "related") {

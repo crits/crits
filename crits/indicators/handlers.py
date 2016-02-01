@@ -473,7 +473,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
                          analyst, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
                          campaign_confidence=None, confidence=None, impact=None,
-                         bucket_list=None, ticket=None, cache={}):
+                         bucket_list=None, ticket=None, cache={}, related_id=None, related_type=None):
     """
     Handle adding an individual indicator.
 
@@ -556,14 +556,14 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
 
         try:
             return handle_indicator_insert(ind, source, reference, analyst,
-                                           method, add_domain, add_relationship, cache=cache)
+                                           method, add_domain, add_relationship, cache=cache, related_id=related_id, related_type=related_type)
         except Exception, e:
             return {'success': False, 'message': repr(e)}
 
     return result
 
 def handle_indicator_insert(ind, source, reference='', analyst='', method='',
-                            add_domain=False, add_relationship=False, cache={}):
+                            add_domain=False, add_relationship=False, cache={}, related_id=None, related_type=None):
     """
     Insert an individual indicator into the database.
 
@@ -773,6 +773,26 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                             analyst="%s" % analyst,
                             get_rels=False)
         ip.save(username=analyst)
+
+
+    # Code for the "Add Related " Dropdown
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+    indicator.save(username=analyst)
+
+    if related_obj and indicator:
+        relationship = RelationshipTypes.RELATED_TO
+        indicator.add_relationship(related_obj,
+                              relationship,
+                              analyst=analyst,
+                              get_rels=False)
+        indicator.save(username=analyst)
 
     # run indicator triage
     if is_new_indicator:
