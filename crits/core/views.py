@@ -1279,7 +1279,6 @@ def base_context(request):
 
     return base_context
 
-@user_passes_test(user_can_view_data)
 def user_context(request):
     """
     Set of common content about the user to include in the Response so it is
