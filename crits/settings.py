@@ -312,7 +312,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-TTEMPLATE_CONTEXT_PROCESSORS = (
+TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
     'django.core.context_processors.static',
     'django.contrib.auth.context_processors.auth',
@@ -548,23 +548,23 @@ for service_directory in SERVICE_DIRS:
         for d in os.listdir(service_directory):
             abs_path = os.path.join(service_directory, d, 'templates')
             if os.path.isdir(abs_path):
-                TEMPLATE_DIRS = TEMPLATE_DIRS + (str(abs_path),)
+                TEMPLATE_DIRS = TEMPLATE_DIRS + (abs_path,)
                 nav_items = os.path.join(abs_path, '%s_nav_items.html' % d)
                 cp_items = os.path.join(abs_path, '%s_cp_items.html' % d)
                 view_items = os.path.join(service_directory, d, 'views.py')
                 if os.path.isfile(nav_items):
-                    SERVICE_NAV_TEMPLATES = SERVICE_NAV_TEMPLATES + (str('%s_nav_items.html' % d),)
+                    SERVICE_NAV_TEMPLATES = SERVICE_NAV_TEMPLATES + ('%s_nav_items.html' % d,)
                 if os.path.isfile(cp_items):
-                    SERVICE_CP_TEMPLATES = SERVICE_CP_TEMPLATES + (str('%s_cp_items.html' % d),)
+                    SERVICE_CP_TEMPLATES = SERVICE_CP_TEMPLATES + ('%s_cp_items.html' % d,)
                 if os.path.isfile(view_items):
                     if '%s_context' % d in open(view_items).read():
                         context_module = '%s.views.%s_context' % (d, d)
-                        TTEMPLATE_CONTEXT_PROCESSORS = TTEMPLATE_CONTEXT_PROCESSORS + (str(context_module),)
+                        TEMPLATE_CONTEXT_PROCESSORS += (context_module,)
                 for tab_temp in glob.glob('%s/*_tab.html' % abs_path):
                     head, tail = os.path.split(tab_temp)
                     ctype = tail.split('_')[-2]
                     name = "_".join(tail.split('_')[:-2])
-                    SERVICE_TAB_TEMPLATES = SERVICE_TAB_TEMPLATES + ((str(ctype), str(name), str(tail)),)
+                    SERVICE_TAB_TEMPLATES = SERVICE_TAB_TEMPLATES + ((ctype, name, tail),)
 
 # Allow configuration of the META or HEADER variable is used to find
 # remote username when REMOTE_USER is enabled.
@@ -584,7 +584,7 @@ TEMPLATES = [
         'DIRS': TEMPLATE_DIRS,
         #'APP_DIRS': False,
         'OPTIONS': {
-            'context_processors' : TTEMPLATE_CONTEXT_PROCESSORS,
+            'context_processors' : TEMPLATE_CONTEXT_PROCESSORS,
             #'dirs' : #_TEMPLATE_DIRS,
             'loaders' : _TEMPLATE_LOADERS,
             'debug' : True,
