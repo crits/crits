@@ -77,7 +77,7 @@ install_mongo()
 # Creates Default Database Files
 create_files()
 {
-    if [ ! -e /data ];
+    if [ ! -e /data/db ];
     then
         printf "${HEAD}Creating Database Folders${END}\n"
         sudo mkdir -v -p /data/db
@@ -413,9 +413,9 @@ do
             fi
             ;;
         2)
-            install_mongo ||exit_restart $STEP ;;
-        3)
             create_files ||exit_restart $STEP ;;
+        3)
+            install_mongo ||exit_restart $STEP ;;
         4)
             server_setup ||exit_restart $STEP ;;
         *)
