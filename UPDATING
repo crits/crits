@@ -14,6 +14,10 @@ Date:   2016-02-03
     before every occurrence of the following:
         super(YourCustomServiceConfigForm, self).__init__(*args, **kwargs)
     in forms.py inside your custom-made services.
+    
+    For CRITs to run on Django 1.7 you also need to update th following:
+    django-tastypie==0.12.2
+    django-tastypie-mongoengine==0.4.6
 
 Author: mgoffin
 Date: 2015-11-19
