@@ -1279,7 +1279,6 @@ def base_context(request):
 
     return base_context
 
-@user_passes_test(user_can_view_data)
 def user_context(request):
     """
     Set of common content about the user to include in the Response so it is
@@ -1298,13 +1297,14 @@ def user_context(request):
         context['admin'] = False
     # Get user theme
     user = CRITsUser.objects(username=request.user.username).first()
-    context['theme'] = user.get_preference('ui', 'theme', 'default')
-    favorite_count = 0
-    favorites = user.favorites.to_dict()
-    for favorite in favorites.values():
-        favorite_count += len(favorite)
-    context['user_favorites'] = user.favorites.to_json()
-    context['favorite_count'] = favorite_count
+    if user:
+        context['theme'] = user.get_preference('ui', 'theme', 'default')
+        favorite_count = 0
+        favorites = user.favorites.to_dict()
+        for favorite in favorites.values():
+            favorite_count += len(favorite)
+        context['user_favorites'] = user.favorites.to_json()
+        context['favorite_count'] = favorite_count
     return context
 
 @user_passes_test(user_can_view_data)

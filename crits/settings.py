@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 DJANGO_ROOT = os.path.dirname(os.path.realpath(django.__file__))
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 # Version
 CRITS_VERSION = '4-master'
 
@@ -71,6 +72,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.dummy'
     }
 }
+
 
 # MongoDB Default Configuration
 # Tip: To change database settings, override by using
@@ -283,11 +285,18 @@ STATIC_ROOT = os.path.join(SITE_ROOT, '../extras/www/static')
 STATIC_URL = '/static/'
 
 # List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
+_TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
     #'django.template.loaders.eggs.load_template_source',
 )
+
+#CACHES = {
+#    'default': {
+#        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#        'LOCATION': 'unix:/data/memcached.sock',
+#    }
+#}
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -353,6 +362,7 @@ TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, 'signatures/templates/dialogs'),
 )
 
+
 STATICFILES_DIRS = (
     os.path.join(SITE_ROOT, 'core/static'),
     os.path.join(SITE_ROOT, 'actors/static'),
@@ -413,10 +423,14 @@ INSTALLED_APPS = (
     'tastypie_mongoengine',
 )
 
+
 AUTH_USER_MODEL = 'mongo_auth.MongoUser'
 MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
 
 SESSION_ENGINE = 'mongoengine.django.sessions'
+#SESSION_ENGINE = 'django_mongoengine.sessions'
+#SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
+
 AUTHENTICATION_BACKENDS = (
     #'mongoengine.django.auth.MongoEngineBackend',
     'crits.core.user.CRITsAuthBackend',
@@ -434,6 +448,16 @@ if REMOTE_USER:
         'crits.core.user.CRITsRemoteUserBackend',
     )
 
+MONGODB_DATABASES = {
+    "default": {
+        "name": 'crits',
+        "host": '127.0.0.1',
+        "password": None,
+        "username": None,
+        "tz_aware": True, # if you using timezones in django (USE_TZ = True)
+    },
+}
+
 # Handle logging after all custom configuration
 LOGGING = {
     'version': 1,
@@ -446,7 +470,7 @@ LOGGING = {
     'handlers': {
         'null': {
             'level': 'DEBUG',
-            'class': 'django.utils.log.NullHandler',
+            'class': 'logging.NullHandler',
         },
         'normal': {
             'level': LOG_LEVEL,
@@ -511,6 +535,7 @@ CRITS_TYPES = {
     'Target': COL_TARGETS,
 }
 
+
 # Custom template lists for loading in different places in the UI
 SERVICE_NAV_TEMPLATES = ()
 SERVICE_CP_TEMPLATES = ()
@@ -534,7 +559,7 @@ for service_directory in SERVICE_DIRS:
                 if os.path.isfile(view_items):
                     if '%s_context' % d in open(view_items).read():
                         context_module = '%s.views.%s_context' % (d, d)
-                        TEMPLATE_CONTEXT_PROCESSORS = TEMPLATE_CONTEXT_PROCESSORS + (context_module,)
+                        TEMPLATE_CONTEXT_PROCESSORS += (context_module,)
                 for tab_temp in glob.glob('%s/*_tab.html' % abs_path):
                     head, tail = os.path.split(tab_temp)
                     ctype = tail.split('_')[-2]
@@ -552,6 +577,22 @@ REMOTE_USER_META = 'REMOTE_USER'
 # directly accessible and this header could be spoofed by an attacker.
 #
 # REMOTE_USER_META = 'HTTP_REMOTE_USER'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': TEMPLATE_DIRS,
+        #'APP_DIRS': False,
+        'OPTIONS': {
+            'context_processors' : TEMPLATE_CONTEXT_PROCESSORS,
+            #'dirs' : #_TEMPLATE_DIRS,
+            'loaders' : _TEMPLATE_LOADERS,
+            'debug' : True,
+        },
+    },
+]
+
+#TEMPLATE_CONTEXT_PROCESSORS = TEMPLATE_CONTEXT_PROCESSORS
 
 # Import custom settings if it exists
 csfile = os.path.join(SITE_ROOT, 'config/overrides.py')
