@@ -2,6 +2,7 @@ import json
 import re
 import datetime
 
+from pymongo import read_preferences
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response

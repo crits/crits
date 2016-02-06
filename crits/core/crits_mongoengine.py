@@ -38,7 +38,7 @@ QUERY_TERMS_ALL = getattr(mongoengine_tranform, 'MATCH_OPERATORS', (
     'not', 'within_distance', 'within_spherical_distance', 'within_box',
     'within_polygon', 'near', 'near_sphere', 'contains', 'icontains',
     'startswith', 'istartswith', 'endswith', 'iendswith', 'exact', 'iexact',
-    'match'
+    'match', 'match_operators',
 ))
 
 class Query(object):

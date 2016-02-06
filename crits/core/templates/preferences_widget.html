@@ -1,4 +1,4 @@
-{% load url from future %}
+
 
 <form class="ajaxPost" action="{% url 'crits.core.views.user_preference_update' pref.section %}" 
       method='POST' enctype="multipart/form-data" data-key="ui">{% csrf_token %}
