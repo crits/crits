@@ -306,6 +306,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'crits.core.user.AuthenticationMiddleware',
 )
 
 STATICFILES_FINDERS = (
@@ -429,11 +430,8 @@ AUTH_USER_MODEL = 'mongo_auth.MongoUser'
 MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
 
 SESSION_ENGINE = 'mongoengine.django.sessions'
-#SESSION_ENGINE = 'django_mongoengine.sessions'
-#SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
 
 AUTHENTICATION_BACKENDS = (
-    #'mongoengine.django.auth.MongoEngineBackend',
     'crits.core.user.CRITsAuthBackend',
 )
 if REMOTE_USER:

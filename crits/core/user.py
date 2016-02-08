@@ -885,6 +885,32 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         from crits.dashboards.handlers import getDashboardsForUser
         return getDashboardsForUser(self)
 
+class AuthenticationMiddleware(object):
+    # This has been added to make theSessions work on Django 1.8+ and
+    # mongoengine 0.8.8 see:
+    # https://github.com/MongoEngine/mongoengine/issues/966
+
+    def _get_user_session_key(self, request):
+        from bson.objectid import ObjectId
+
+        # This value in the session is always serialized to a string, so we need
+        # to convert it back to Python whenever we access it.
+        SESSION_KEY = '_auth_user_id'
+        if SESSION_KEY in request.session:
+            return ObjectId(request.session[SESSION_KEY])
+
+    def process_request(self, request):
+        from django.utils.functional import SimpleLazyObject
+        from mongoengine.django.auth import get_user
+
+        assert hasattr(request, 'session'), (
+            "The Django authentication middleware requires session middleware "
+            "to be installed. Edit your MIDDLEWARE_CLASSES setting to insert "
+            "'django.contrib.sessions.middleware.SessionMiddleware' before "
+            "'django.contrib.auth.middleware.AuthenticationMiddleware'."
+        )
+        request.user = SimpleLazyObject(lambda: get_user(self._get_user_session_key(request)))
+
 # stolen from MongoEngine and modified to use the CRITsUser class.
 class CRITsAuthBackend(object):
     """
