@@ -1,4 +1,4 @@
-Django<2
+Django<1.9
 Pillow
 amqp
 anyjson

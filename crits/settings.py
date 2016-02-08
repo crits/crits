@@ -593,10 +593,12 @@ TEMPLATES = [
         },
     },
 ]
-
-#TEMPLATE_DEBUG = _TEMPLATE_DEBUG
-#TEMPLATE_DIRS = _TEMPLATE_DIRS
-#TEMPLATE_CONTEXT_PROCESSORS = _TEMPLATE_CONTEXT_PROCESSORS
+django_version = django.get_version()
+from distutils.version import StrictVersion
+if StrictVersion(django_version) < StrictVersion('1.8.0'):
+    TEMPLATE_DEBUG = _TEMPLATE_DEBUG
+    TEMPLATE_DIRS = _TEMPLATE_DIRS
+    TEMPLATE_CONTEXT_PROCESSORS = _TEMPLATE_CONTEXT_PROCESSORS
 
 # Import custom settings if it exists
 csfile = os.path.join(SITE_ROOT, 'config/overrides.py')
