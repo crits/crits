@@ -10,14 +10,18 @@ import urllib
 
 from bson.objectid import ObjectId
 from django.conf import settings
+
+from django.contrib.auth.signals import user_logged_in
+from django.middleware.csrf import rotate_token
 from django.contrib.auth import authenticate
-# we implement login as user_login down here
+# we implement django.contrib.auth.login as user_login in here to accomodate mongoengine 
 from django.core.urlresolvers import reverse, resolve, get_script_prefix
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.html import escape as html_escape
 from django.utils.http import urlencode
+
 try:
     from mongoengine.base import ValidationError
 except ImportError:
@@ -3353,20 +3357,17 @@ def user_login(request, user):
     Persist a user id and a backend in the request. This way a user doesn't
     have to reauthenticate on every request. Note that data set during
     the anonymous session is retained when the user logs in.
+
+    This is basically same as django.contrib.auth.login from Django 1.7
+    Django 1.8+ uses user._meta.pk.value_to_string(user) instead of user.pk
+    once mongoengine is fixed, we'll be able to just import 
+    django.contrib.auth.login as user_login
     """
-    #print('user_login1')
-    from django.contrib.auth.signals import user_logged_in
-    from django.middleware.csrf import rotate_token
-    #print('user_login2')
-    #from crits.core.user import _get_user_session_key
-    #print("user.pk: %s" % user.pk)
-    #print('user_login3')
+
     SESSION_KEY = '_auth_user_id'
     BACKEND_SESSION_KEY = '_auth_user_backend'
     HASH_SESSION_KEY = '_auth_user_hash'
     REDIRECT_FIELD_NAME = 'next'
-    #print('user_login4')
-    #print("user_login: %s" % user)
     session_auth_hash = ''
     if user is None:
         user = request.user
@@ -3374,33 +3375,23 @@ def user_login(request, user):
         session_auth_hash = user.get_session_auth_hash()
 
     if SESSION_KEY in request.session:
-        #from bson.objectid import ObjectId
-        # This value in the session is always serialized to a string, so we need
-        # to convert it back to Python whenever we access it.
         boo = request.session[SESSION_KEY]
-        #print("SESSION_KEY in request.session")
-        #print("boo: %s" % boo)
         if boo != user.pk or (
                 session_auth_hash and
                 request.session.get(HASH_SESSION_KEY) != session_auth_hash):
             # To avoid reusing another user's session, create a new, empty
             # session if the existing session corresponds to a different
             # authenticated user.
-            #print("request.session.flush")
             request.session.flush()
     else:
-        #print("cycle key")
         request.session.cycle_key()
-    #print("SESSION_KEY: %s" % user.pk )
     #request.session[SESSION_KEY] = user._meta.pk.value_to_string(user)
     request.session[SESSION_KEY] = user.pk
     request.session[BACKEND_SESSION_KEY] = user.backend
     request.session[HASH_SESSION_KEY] = session_auth_hash
     if hasattr(request, 'user'):
         request.user = user
-    #print("before rotate")
     rotate_token(request)
-    #print("after rotate")
     user_logged_in.send(sender=user.__class__, request=request, user=user)
 
 
