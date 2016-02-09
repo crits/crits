@@ -17,7 +17,10 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.html import escape as html_escape
 from django.utils.http import urlencode
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 from operator import itemgetter
 
 from crits.config.config import CRITsConfig

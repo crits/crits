@@ -12,7 +12,10 @@ from django.core.validators import validate_ipv4_address, validate_ipv46_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.campaigns.forms import CampaignForm
 from crits.campaigns.campaign import Campaign
