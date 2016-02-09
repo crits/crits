@@ -10,7 +10,8 @@ import urllib
 
 from bson.objectid import ObjectId
 from django.conf import settings
-from django.contrib.auth import authenticate, login as user_login
+from django.contrib.auth import authenticate
+# we implement login as user_login down here
 from django.core.urlresolvers import reverse, resolve, get_script_prefix
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -3346,6 +3347,62 @@ reset code expires.\n\nThank you!
                                                            analyst),
                                         default=json_handler),
                             content_type="application/json")
+
+def user_login(request, user):
+    """
+    Persist a user id and a backend in the request. This way a user doesn't
+    have to reauthenticate on every request. Note that data set during
+    the anonymous session is retained when the user logs in.
+    """
+    #print('user_login1')
+    from django.contrib.auth.signals import user_logged_in
+    from django.middleware.csrf import rotate_token
+    #print('user_login2')
+    #from crits.core.user import _get_user_session_key
+    #print("user.pk: %s" % user.pk)
+    #print('user_login3')
+    SESSION_KEY = '_auth_user_id'
+    BACKEND_SESSION_KEY = '_auth_user_backend'
+    HASH_SESSION_KEY = '_auth_user_hash'
+    REDIRECT_FIELD_NAME = 'next'
+    #print('user_login4')
+    #print("user_login: %s" % user)
+    session_auth_hash = ''
+    if user is None:
+        user = request.user
+    if hasattr(user, 'get_session_auth_hash'):
+        session_auth_hash = user.get_session_auth_hash()
+
+    if SESSION_KEY in request.session:
+        #from bson.objectid import ObjectId
+        # This value in the session is always serialized to a string, so we need
+        # to convert it back to Python whenever we access it.
+        boo = request.session[SESSION_KEY]
+        #print("SESSION_KEY in request.session")
+        #print("boo: %s" % boo)
+        if boo != user.pk or (
+                session_auth_hash and
+                request.session.get(HASH_SESSION_KEY) != session_auth_hash):
+            # To avoid reusing another user's session, create a new, empty
+            # session if the existing session corresponds to a different
+            # authenticated user.
+            #print("request.session.flush")
+            request.session.flush()
+    else:
+        #print("cycle key")
+        request.session.cycle_key()
+    #print("SESSION_KEY: %s" % user.pk )
+    #request.session[SESSION_KEY] = user._meta.pk.value_to_string(user)
+    request.session[SESSION_KEY] = user.pk
+    request.session[BACKEND_SESSION_KEY] = user.backend
+    request.session[HASH_SESSION_KEY] = session_auth_hash
+    if hasattr(request, 'user'):
+        request.user = user
+    #print("before rotate")
+    rotate_token(request)
+    #print("after rotate")
+    user_logged_in.send(sender=user.__class__, request=request, user=user)
+
 
 def login_user(username, password, next_url=None, user_agent=None,
                remote_addr=None, accept_language=None, request=None,
