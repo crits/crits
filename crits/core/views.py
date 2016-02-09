@@ -346,7 +346,7 @@ def login(request):
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     remote_addr = request.META.get('REMOTE_ADDR', '')
     accept_language = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
-    #next_url = request.REQUEST.get('next', None)
+    next_url = request.REQUEST.get('next', None)
 
     # Setup defaults
     username = None
