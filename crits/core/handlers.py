@@ -8,6 +8,7 @@ import re
 import ushlex as shlex
 import urllib
 
+from urlparse import urlparse
 from bson.objectid import ObjectId
 from django.conf import settings
 from django.contrib.auth import authenticate, login as user_login
@@ -3472,7 +3473,7 @@ def login_user(username, password, next_url=None, user_agent=None,
                     next_url = urlunquote(tmp_url)
                     if not is_safe_url(next_url):
                         raise Exception
-                    res = resolve(next_url)
+                    resolve(urlparse(next_url).path)
                     response['success'] = True
                     response['message'] = next_url
                 except Exception:
