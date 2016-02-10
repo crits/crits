@@ -3521,10 +3521,10 @@ def login_user(username, password, next_url=None, user_agent=None,
                     if next_url.startswith(prefix):
                         tmp_url = tmp_url.replace(prefix, '/', 1)
                     res = resolve(tmp_url)
-                    url_func = res.func
+                    url_name = res.url_name
                     args = res.args
                     kwargs = res.kwargs
-                    redir = reverse(url_func, args=args, kwargs=kwargs)
+                    redir = reverse(url_name, args=args, kwargs=kwargs)
                     del redir
                     response['success'] = True
                     response['message'] = next_url
