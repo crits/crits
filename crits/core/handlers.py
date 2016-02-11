@@ -8,6 +8,7 @@ import re
 import ushlex as shlex
 import urllib
 
+from urlparse import urlparse
 from bson.objectid import ObjectId
 from django.conf import settings
 
@@ -20,12 +21,13 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.html import escape as html_escape
-from django.utils.http import urlencode
+from django.utils.http import urlencode, urlunquote, is_safe_url
 
 try:
     from mongoengine.base import ValidationError
 except ImportError:
     from mongoengine.errors import ValidationError
+
 from operator import itemgetter
 
 from crits.config.config import CRITsConfig
@@ -3520,17 +3522,16 @@ def login_user(username, password, next_url=None, user_agent=None,
                     tmp_url = next_url
                     if next_url.startswith(prefix):
                         tmp_url = tmp_url.replace(prefix, '/', 1)
-                    res = resolve(tmp_url)
-                    url_name = res.url_name
-                    args = res.args
-                    kwargs = res.kwargs
-                    redir = reverse(url_name, args=args, kwargs=kwargs)
-                    del redir
+                    next_url = urlunquote(tmp_url)
+                    if not is_safe_url(next_url):
+                        raise Exception
+                    resolve(urlparse(next_url).path)
                     response['success'] = True
                     response['message'] = next_url
-                except:
+                except Exception:
                     response['success'] = False
                     response['message'] = 'ALERT - attempted open URL redirect attack to %s. Please report this to your system administrator.' % next_url
+                    logger.info('ALERT: redirect attack: %s' % next_url)
                 return response
             response['success'] = True
             if 'message' not in response:
