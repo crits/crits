@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.forms.util import ErrorList
+from django.forms.utils import ErrorList
 
 from crits.core import form_consts
 from crits.core.data_tools import json_handler

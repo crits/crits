@@ -5,7 +5,10 @@ from hashlib import md5
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.template import RequestContext
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id, class_from_type

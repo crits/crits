@@ -121,7 +121,7 @@ class UploadFileForm(forms.Form):
         add_ticket_to_form(self)
 
     def clean(self):
-        from django.forms.util import ErrorList
+        from django.forms.utils import ErrorList
         cleaned_data = super(UploadFileForm, self).clean()
         upload_type = cleaned_data.get('upload_type')
         if 'filedata' in self.files:

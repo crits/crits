@@ -114,6 +114,7 @@ if TEST_RUN:
 # http://api.mongodb.org/python/current/api/pymongo/index.html
 MONGO_READ_PREFERENCE = ReadPreference.PRIMARY
 
+
 # MongoDB default collections
 COL_ACTORS = "actors"                                     # main collection for actors
 COL_ACTOR_IDENTIFIERS = "actor_identifiers"               # main collection for actor identifiers
@@ -249,7 +250,7 @@ if not os.path.exists(LOG_DIRECTORY):
     LOG_DIRECTORY = os.path.join(SITE_ROOT, '..', 'logs')
 
 # Custom settings for Django
-TEMPLATE_DEBUG = DEBUG
+_TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
@@ -285,11 +286,11 @@ STATIC_ROOT = os.path.join(SITE_ROOT, '../extras/www/static')
 STATIC_URL = '/static/'
 
 # List of callables that know how to import templates from various sources.
-_TEMPLATE_LOADERS = (
+_TEMPLATE_LOADERS = [
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
     #'django.template.loaders.eggs.load_template_source',
-)
+]
 
 #CACHES = {
 #    'default': {
@@ -305,6 +306,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'crits.core.user.AuthenticationMiddleware',
 )
 
 STATICFILES_FINDERS = (
@@ -312,7 +314,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-TEMPLATE_CONTEXT_PROCESSORS = (
+_TEMPLATE_CONTEXT_PROCESSORS = [
     'django.core.context_processors.request',
     'django.core.context_processors.static',
     'django.contrib.auth.context_processors.auth',
@@ -320,11 +322,11 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'crits.core.views.base_context',
     'crits.core.views.collections',
     'crits.core.views.user_context',
-)
+]
 
 ROOT_URLCONF = 'crits.urls'
 
-TEMPLATE_DIRS = (
+_TEMPLATE_DIRS = [
     os.path.join(SITE_ROOT, '../documentation'),
     os.path.join(SITE_ROOT, 'core/templates'),
     os.path.join(SITE_ROOT, 'actors/templates'),
@@ -360,7 +362,7 @@ TEMPLATE_DIRS = (
     os.path.join(SITE_ROOT, 'relationships/templates/dialogs'),
     os.path.join(SITE_ROOT, 'screenshots/templates/dialogs'),
     os.path.join(SITE_ROOT, 'signatures/templates/dialogs'),
-)
+]
 
 
 STATICFILES_DIRS = (
@@ -428,11 +430,8 @@ AUTH_USER_MODEL = 'mongo_auth.MongoUser'
 MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
 
 SESSION_ENGINE = 'mongoengine.django.sessions'
-#SESSION_ENGINE = 'django_mongoengine.sessions'
-#SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
 
 AUTHENTICATION_BACKENDS = (
-    #'mongoengine.django.auth.MongoEngineBackend',
     'crits.core.user.CRITsAuthBackend',
 )
 if REMOTE_USER:
@@ -548,7 +547,7 @@ for service_directory in SERVICE_DIRS:
         for d in os.listdir(service_directory):
             abs_path = os.path.join(service_directory, d, 'templates')
             if os.path.isdir(abs_path):
-                TEMPLATE_DIRS = TEMPLATE_DIRS + (abs_path,)
+                _TEMPLATE_DIRS += (abs_path,)
                 nav_items = os.path.join(abs_path, '%s_nav_items.html' % d)
                 cp_items = os.path.join(abs_path, '%s_cp_items.html' % d)
                 view_items = os.path.join(service_directory, d, 'views.py')
@@ -559,7 +558,7 @@ for service_directory in SERVICE_DIRS:
                 if os.path.isfile(view_items):
                     if '%s_context' % d in open(view_items).read():
                         context_module = '%s.views.%s_context' % (d, d)
-                        TEMPLATE_CONTEXT_PROCESSORS += (context_module,)
+                        _TEMPLATE_CONTEXT_PROCESSORS += (context_module,)
                 for tab_temp in glob.glob('%s/*_tab.html' % abs_path):
                     head, tail = os.path.split(tab_temp)
                     ctype = tail.split('_')[-2]
@@ -581,18 +580,25 @@ REMOTE_USER_META = 'REMOTE_USER'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': TEMPLATE_DIRS,
-        #'APP_DIRS': False,
+        #'APP_DIRS': False,'
+        'DIRS': _TEMPLATE_DIRS,
+ 
         'OPTIONS': {
-            'context_processors' : TEMPLATE_CONTEXT_PROCESSORS,
+
             #'dirs' : #_TEMPLATE_DIRS,
+            'context_processors' : _TEMPLATE_CONTEXT_PROCESSORS,
+            'debug' : _TEMPLATE_DEBUG,
             'loaders' : _TEMPLATE_LOADERS,
-            'debug' : True,
+            
         },
     },
 ]
-
-#TEMPLATE_CONTEXT_PROCESSORS = TEMPLATE_CONTEXT_PROCESSORS
+django_version = django.get_version()
+from distutils.version import StrictVersion
+if StrictVersion(django_version) < StrictVersion('1.8.0'):
+    TEMPLATE_DEBUG = _TEMPLATE_DEBUG
+    TEMPLATE_DIRS = _TEMPLATE_DIRS
+    TEMPLATE_CONTEXT_PROCESSORS = _TEMPLATE_CONTEXT_PROCESSORS
 
 # Import custom settings if it exists
 csfile = os.path.join(SITE_ROOT, 'config/overrides.py')
