@@ -179,7 +179,8 @@ def get_sample_details(sample_md5, analyst, format_=None):
         tmp_service_results = []
         
         for result in service_results:
-            result.template = service_manager.get_service_class(result.service_name).template
+            if hasattr(service_manager.get_service_class(result.service_name).template):
+                result.template = service_manager.get_service_class(result.service_name).template
             tmp_service_results.append(result)
         
         service_results = tmp_service_results
