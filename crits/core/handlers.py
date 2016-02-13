@@ -2159,7 +2159,7 @@ def get_query(col_obj,request):
             return response
         query.update(qdict)
         term = request.GET['q']
-    qparams = request.REQUEST.copy()
+    qparams = request.GET.copy()
     qparams = check_query(qparams,request.user.username,col_obj)
     for key,value in qparams.items():
         if key in keymaps:
