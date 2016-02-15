@@ -954,6 +954,14 @@ function new_domain_dialog(e) {
     var ip_check = dialog.find('#id_add_ip');
     var ip_fields = dialog.find('.togglewithip').parents('tr');
 
+    // Only show Relationship Type dropdown if needed
+    if ($(this).dialog("persona") == "related") {
+        dialog.find('#relationship_type').parents('tr').show();
+    }
+    else {
+        dialog.find('#relationship_type').parents('tr').hide();
+    }
+
     //define function for seeing source dropdown should be visible
     var toggle_source_visibility = function() {
     //definitely should hide if use domain source is checked
@@ -1090,7 +1098,7 @@ var stdDialogs = {
       "new-backdoor": {title: "Backdoor"},
       "new-exploit": {title: "Exploit", personas: {related: newPersona("Add Related Exploit",{}, addEditSubmit) } },
 
-      "new-domain": {title: "Domain", personas: {related: newPersona("Add Related Domain", {open: new_domain_dialog}, addEditSubmit ) } },
+      "new-domain": {title: "Domain", personas: {related: newPersona("Add Related Domain", {open: new_domain_dialog}, addEditSubmit ) }, open: new_domain_dialog },
       "new-indicator": {title: "Indicator",  personas: {related: newPersona("Add Related Indicator", {open: new_indicator_dialog}, addEditSubmit ) } },
       "action_add": {title: "Action"},
       "add-action": {title: "Action", href:"",

@@ -355,6 +355,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
         ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
         related_id = data.get('related_id')
         related_type = data.get('related_type')
+        relationship_type = data.get('relationship_type')
 
         if data.get('campaign') and data.get('confidence'):
             campaign = [EmbeddedCampaign(name=data.get('campaign'),
@@ -364,7 +365,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
             campaign = []
 
         retVal = upsert_domain(domain, source, username, campaign,
-                               bucket_list=bucket_list, ticket=ticket, cache=cache, related_id=related_id, related_type=related_type)
+                               bucket_list=bucket_list, ticket=ticket, cache=cache, related_id=related_id, related_type=related_type, relationship_type=relationship_type)
 
         if not retVal['success']:
             errors.append(retVal.get('message'))
@@ -514,7 +515,7 @@ def edit_domain_name(domain, new_domain, analyst):
         return False
 
 def upsert_domain(domain, source, username=None, campaign=None,
-                  confidence=None, bucket_list=None, ticket=None, cache={}, related_id=None, related_type=None):
+                  confidence=None, bucket_list=None, ticket=None, cache={}, related_id=None, related_type=None, relationship_type=None):
     """
     Add or update a domain/FQDN. Campaign is assumed to be a list of campaign
     dictionary objects.
@@ -664,17 +665,16 @@ def upsert_domain(domain, source, username=None, campaign=None,
         fqdn_domain.save(username=username)
 
     #Add relationships from object domain is being added from
-    if related_obj and (root_domain or fqdn_domain):
-        relationship = RelationshipTypes.RELATED_TO
+    if related_obj and relationship_type and (root_domain or fqdn_domain):
         if root_domain:
             root_domain.add_relationship(related_obj,
-                                         relationship,
+                                         relationship_type,
                                          analyst=username,
                                          get_rels=False)
             root_domain.save(username=username)
         if fqdn_domain:
             fqdn_domain.add_relationship(related_obj,
-                                         relationship,
+                                         relationship_type,
                                          analyst=username,
                                          get_rels=False)
             fqdn_domain.save(username=username)
