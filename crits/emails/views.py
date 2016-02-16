@@ -382,7 +382,8 @@ def email_eml_add(request):
                      bucket_list=eml_form.cleaned_data['bucket_list'],
                      ticket=eml_form.cleaned_data['ticket'],
                      related_id=eml_form.cleaned_data['related_id'],
-                     related_type=eml_form.cleaned_data['related_type'])
+                     related_type=eml_form.cleaned_data['related_type'],
+                     relationship_type=eml_form.cleaned_data['relationship_type'])
     if not obj['status']:
         json_reply['message'] = obj['reason']
         return render_to_response('file_upload_response.html',

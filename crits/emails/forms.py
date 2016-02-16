@@ -11,6 +11,10 @@ from crits.core.handlers import get_source_names, get_item_names
 
 from datetime import datetime
 
+from crits.vocabulary.relationships import RelationshipTypes
+
+relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
+
 class EmailOutlookForm(forms.Form):
     """
     Django form for uploading MSG files.
@@ -102,6 +106,10 @@ class EmailEMLForm(forms.Form):
     filedata = forms.FileField(required=True)
     related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
     related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
+
     def __init__(self, username, *args, **kwargs):
         super(EmailEMLForm, self).__init__(*args, **kwargs)
         self.fields['source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]
@@ -115,6 +123,9 @@ class EmailEMLForm(forms.Form):
                                              ("low", "low"),
                                              ("medium", "medium"),
                                              ("high", "high")]
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = "Related To"
+        
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 

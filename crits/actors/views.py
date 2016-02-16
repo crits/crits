@@ -122,6 +122,7 @@ def add_actor(request):
             ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
             related_id = cleaned_data['related_id']
             related_type = cleaned_data['related_type']
+            relationship_type = cleaned_data['relationship_type']
 
             result = add_new_actor(name,
                                    aliases=aliases,
@@ -135,7 +136,8 @@ def add_actor(request):
                                    bucket_list=bucket_list,
                                    ticket=ticket,
                                    related_id=related_id,
-                                   related_type=related_type)
+                                   related_type=related_type,
+                                   relationship_type=relationship_type)
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
                                 mimetype='application/json')

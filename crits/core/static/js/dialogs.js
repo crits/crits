@@ -130,6 +130,100 @@ function delete_object_click(e, item_type, del_label, data) {
     confirmDelete(del_label, fn);
 }
 
+function populate_id(id, type) {
+    // Upload a related pcap (Using the related dialog persona)
+    $( "#dialog-new-pcap" ).on("dialogopen.add_related_pcap", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        // $(this).find("form").removeAttr("target"); // Get rid of target to refresh page
+        // Unlike new-sample below, this does not redirect us nor refresh the
+        // Relationships list of the Sample, so delay for a few seconds then reload the
+        // page after uploaded.  Added a fileUploadComplete event to work around this.
+        $(this).find("form").bind("fileUploadComplete",
+                      function(e, response) {
+                          if (response.success)
+                          setTimeout(function() {
+                              document.location = document.location },
+                              3000); });
+        }
+    });
+    // Upload a related Domain (Using the related dialog persona)
+    $( "#dialog-new-domain" ).on("dialogopen.add_related_domain", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+    // Upload a related Domain (Using the related dialog persona)
+    $( "#dialog-new-sample" ).on("dialogopen.add_related_domain", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+    // Add a related Actor (Using the related dialog persona)
+    $( "#dialog-new-actor" ).on("dialogopen.add_related_actor", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+    // Add a related Target (Using the related dialog persona)
+    $( "#dialog-new-target" ).on("dialogopen.add_related_target", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+    // Add a related Email (Using the related dialog persona)
+    $( "#dialog-new-email-eml" ).on("dialogopen.add_related_email", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        // $(this).find("form").removeAttr("target"); // Get rid of target to refresh page
+
+        // Unlike new-sample below, this does not redirect us nor refresh the
+        // Relationships list of the Sample, so delay for a few seconds then reload the
+        // page after uploaded.  Added a fileUploadComplete event to work around this.
+        $(this).find("form").bind("fileUploadComplete",
+                      function(e, response) {
+                          if (response.success)
+                          setTimeout(function() {
+                              document.location = document.location },
+                              3000); });
+        }
+    });
+    // Add a related Event (Using the related dialog persona)
+    $( "#dialog-new-event" ).on("dialogopen.add_related_event", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+    // Add a related Exploit (Using the related dialog persona)
+    $( "#dialog-new-exploit" ).on("dialogopen.add_related_exploit", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+    // Add a related Indicator (Using the related dialog persona)
+    $( "#dialog-new-indicator" ).on("dialogopen.add_related_indicator", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+    // Add a related IP (Using the related dialog persona)
+    $( "#dialog-new-ip" ).on("dialogopen.add_related_ip", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+}
+
 function delete_item_click(e, item_type, del_label, data) {
     e.preventDefault();
 
@@ -638,6 +732,13 @@ function dialogClick(e) {
             form.append('<div class="message"></div>');
         }
         form.find('.message').hide().html('');
+            // Only show Relationship Type dropdown if needed
+        if (persona == "related") {
+            $dialog.find('#relationship_type').parents('tr').show();
+        }
+        else {
+            $dialog.find('#relationship_type').parents('tr').hide();
+        }
 
         $dialog.off("dialogopen.dialogClick");
         });
@@ -954,14 +1055,6 @@ function new_domain_dialog(e) {
     var ip_check = dialog.find('#id_add_ip');
     var ip_fields = dialog.find('.togglewithip').parents('tr');
 
-    // Only show Relationship Type dropdown if needed
-    if ($(this).dialog("persona") == "related") {
-        dialog.find('#relationship_type').parents('tr').show();
-    }
-    else {
-        dialog.find('#relationship_type').parents('tr').hide();
-    }
-
     //define function for seeing source dropdown should be visible
     var toggle_source_visibility = function() {
     //definitely should hide if use domain source is checked
@@ -1060,7 +1153,7 @@ function new_sample_dialog() {
     // The action target takes care of passing the parent sample_id here
     if ($(this).dialog("persona") === "related") {
     $('id_related_md5, label[for="id_related_md5"]').closest("tr").hide();
-    $('#id_related_md5').prop('value', 'N/A');
+    $('#id_related_md5').prop('value', '');
     $('#id_inherit_sources').prop('checked', true);
     $('#id_inherit_campaigns').prop('checked', true);
     }

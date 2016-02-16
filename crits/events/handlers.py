@@ -231,7 +231,8 @@ def generate_event_id(event):
     return uuid.uuid4()
 
 def add_new_event(title, description, event_type, source, method, reference,
-                  date, analyst, bucket_list=None, ticket=None, related_id=None, related_type=None):
+                  date, analyst, bucket_list=None, ticket=None, related_id=None, 
+                  related_type=None, relationship_type=None):
     """
     Add a new Event to CRITs.
 
@@ -290,10 +291,9 @@ def add_new_event(title, description, event_type, source, method, reference,
     try:
         event.save(username=analyst)
 
-        if related_obj and event:
-            relationship = RelationshipTypes.RELATED_TO
+        if related_obj and event and relationship_type:
             event.add_relationship(related_obj,
-                                  relationship,
+                                  relationship_type,
                                   analyst=analyst,
                                   get_rels=False)
             event.save(username=analyst)

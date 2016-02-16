@@ -473,7 +473,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
                          analyst, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
                          campaign_confidence=None, confidence=None, impact=None,
-                         bucket_list=None, ticket=None, cache={}, related_id=None, related_type=None):
+                         bucket_list=None, ticket=None, cache={}, related_id=None, related_type=None, relationship_type=None):
     """
     Handle adding an individual indicator.
 
@@ -556,14 +556,17 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
 
         try:
             return handle_indicator_insert(ind, source, reference, analyst,
-                                           method, add_domain, add_relationship, cache=cache, related_id=related_id, related_type=related_type)
+                                           method, add_domain, add_relationship, cache=cache,
+                                        related_id=related_id, related_type=related_type, 
+                                        relationship_type=relationship_type)
         except Exception, e:
             return {'success': False, 'message': repr(e)}
 
     return result
 
 def handle_indicator_insert(ind, source, reference='', analyst='', method='',
-                            add_domain=False, add_relationship=False, cache={}, related_id=None, related_type=None):
+                            add_domain=False, add_relationship=False, cache={}, 
+                            related_id=None, related_type=None, relationship_type=None):
     """
     Insert an individual indicator into the database.
 
@@ -786,10 +789,9 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
 
     indicator.save(username=analyst)
 
-    if related_obj and indicator:
-        relationship = RelationshipTypes.RELATED_TO
+    if related_obj and indicator and relationship_type:
         indicator.add_relationship(related_obj,
-                              relationship,
+                              relationship_type,
                               analyst=analyst,
                               get_rels=False)
         indicator.save(username=analyst)

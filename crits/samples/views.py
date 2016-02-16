@@ -186,7 +186,23 @@ def upload_file(request, related_md5=None):
             if related_md5:
                 related_sample = Sample.objects(md5=related_md5).first()
                 if not related_sample:
-                    response['message'] = "Upload Failed. Unable to locate related sample."
+                    response['message'] = ("Upload Failed. Unable to locate related sample. %s" % related_md5)
+                    return render_to_response("file_upload_response.html",
+                                              {'response': json.dumps(response)},
+                                              RequestContext(request))
+                # If selected, new sample inherits the campaigns of the related sample.
+                if form.cleaned_data['inherit_campaigns']:
+                    if campaign:
+                        related_sample.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+                    campaign = related_sample.campaign
+                # If selected, new sample inherits the sources of the related sample
+                if form.cleaned_data['inherit_sources']:
+                    inherited_source = related_sample.source
+
+            if related_id:
+                related_sample = Sample.objects(id=related_id).first()
+                if not related_sample:
+                    response['message'] = ("Upload Failed. Unable to locate related sample. %s" % "related_md5")
                     return render_to_response("file_upload_response.html",
                                               {'response': json.dumps(response)},
                                               RequestContext(request))

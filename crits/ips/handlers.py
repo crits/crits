@@ -273,6 +273,7 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
     indicator_reference = data.get('indicator_reference')
     related_id = data.get('related_id')
     related_type = data.get('related_type')
+    relationship_type = data.get('relationship_type')
 
     retVal = ip_add_update(ip, ip_type,
             source=source,
@@ -288,7 +289,8 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
             is_validate_only=is_validate_only,
             cache=cache,
             related_id=related_id,
-            related_type=related_type)
+            related_type=related_type,
+            relationship_type=relationship_type)
 
     if not retVal['success']:
         errors.append(retVal.get('message'))
@@ -335,7 +337,8 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
 def ip_add_update(ip_address, ip_type, source=None, source_method='',
                   source_reference='', campaign=None, confidence='low',
                   analyst=None, is_add_indicator=False, indicator_reference='',
-                  bucket_list=None, ticket=None, is_validate_only=False, cache={}, related_id=None, related_type=None):
+                  bucket_list=None, ticket=None, is_validate_only=False, cache={}, 
+                  related_id=None, related_type=None, relationship_type=None):
     """
     Add/update an IP address.
 
@@ -478,10 +481,9 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
                              ticket=ticket,
                              cache=cache)
 
-    if related_obj and ip_object:
-        relationship = RelationshipTypes.RELATED_TO
+    if related_obj and ip_object and relationship_type:
         ip_object.add_relationship(related_obj,
-                              relationship,
+                              relationship_type,
                               analyst=analyst,
                               get_rels=False)
         ip_object.save(username=analyst)

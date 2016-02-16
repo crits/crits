@@ -63,7 +63,8 @@ def add_event(request):
                                    ticket=data[form_consts.Common.TICKET_VARIABLE_NAME],
                                    analyst=request.user.username,
                                    related_id=data['related_id'],
-                                   related_type=data['related_type'])
+                                   related_type=data['related_type'],
+                                   relationship_type=data['relationship_type'])
             if 'object' in result:
                 del result['object']
             return HttpResponse(json.dumps(result), mimetype="application/json")

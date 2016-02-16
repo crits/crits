@@ -95,6 +95,9 @@ class UploadFileForm(forms.Form):
                                label=form_consts.Sample.EMAIL_RESULTS)
     backdoor = forms.ChoiceField(widget=forms.Select, required=False,
                                  label=form_consts.Backdoor.NAME)
+    related_id = forms.CharField(required=False)
+    related_type = forms.CharField(required=False)
+    relationship_type = forms.CharField(required=False)
 
     def __init__(self, username, *args, **kwargs):
         super(UploadFileForm, self).__init__(*args, **kwargs)
@@ -168,7 +171,7 @@ class UploadFileForm(forms.Form):
         inherit_sources = cleaned_data.get('inherit_sources')
         if inherit_campaigns or inherit_sources:
             related_md5 = cleaned_data.get('related_md5')
-            if not related_md5:
+            if not (related_md5 or related_id):
                 if inherit_campaigns:
                     self._errors.setdefault('inherit_campaigns', ErrorList())
                     self._errors['inherit_campaigns'].append(u'Nothing to inherit from.')

@@ -89,6 +89,8 @@ def upsert_target(data, analyst):
         related_id = data['related_id']
     if 'related_type' in data:
         related_type = data['related_type']
+    if 'relationship_type' in data:
+        relationship_type = data['relationship_type']
 
 
     if bucket_list:
@@ -109,9 +111,8 @@ def upsert_target(data, analyst):
         target.save(username=analyst)
 
         if related_obj and target:
-            relationship = RelationshipTypes.RELATED_TO
             target.add_relationship(related_obj,
-                                  relationship,
+                                  relationship_type,
                                   analyst=analyst,
                                   get_rels=False)
             target.save(username=analyst)

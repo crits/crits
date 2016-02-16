@@ -14,6 +14,10 @@ from crits.vocabulary.indicators import (
     IndicatorAttackTypes
 )
 
+from crits.vocabulary.relationships import RelationshipTypes
+
+relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
+
 class IndicatorActivityForm(forms.Form):
     """
     Django form for adding activity.
@@ -131,6 +135,9 @@ class UploadIndicatorForm(forms.Form):
         required=False)
     related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
     related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorForm, self).__init__(*args, **kwargs)
@@ -169,6 +176,8 @@ class UploadIndicatorForm(forms.Form):
             ("low", "low"),
             ("medium", "medium"),
             ("high", "high")]
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = "Related To"
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

@@ -298,7 +298,8 @@ def get_actor_by_name(allowed_sources, actor):
 
 def add_new_actor(name, aliases=None, description=None, source=None,
                   source_method='', source_reference='', campaign=None,
-                  confidence=None, analyst=None, bucket_list=None, ticket=None, related_id=None, related_type=None):
+                  confidence=None, analyst=None, bucket_list=None, ticket=None, 
+                  related_id=None, related_type=None, relationship_type=None):
     """
     Add an Actor to CRITs.
 
@@ -385,9 +386,8 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     actor.save(username=analyst)
 
     if related_obj and actor:
-            relationship = RelationshipTypes.RELATED_TO
             actor.add_relationship(related_obj,
-                                  relationship,
+                                  relationship_type,
                                   analyst=analyst,
                                   get_rels=False)
             actor.save(username=analyst)

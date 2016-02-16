@@ -907,7 +907,7 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
 
 def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
                parent_id=None, campaign=None, confidence=None, bucket_list=None,
-               ticket=None, related_id=None, related_type=None):
+               ticket=None, related_id=None, related_type=None, relationship_type=None):
     """
     Take email in EML and convert them into an email object.
 
@@ -1123,7 +1123,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
     # Relate the email to any other object 
     related_obj = None
-    if related_id and related_type:
+    if related_id and related_type and relationship_type:
         related_obj = class_from_id(related_type, related_id)
         if not related_obj:
             retVal['success'] = False
@@ -1131,9 +1131,8 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             return retVal
 
     if related_obj:
-        relationship = RelationshipTypes.RELATED_TO
         result['object'].add_relationship(related_obj,
-                                          relationship,
+                                          relationship_type,
                                           analyst=analyst,
                                           get_rels=False)
         #result['object'].save(username=analyst)
