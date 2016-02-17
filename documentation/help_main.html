@@ -1946,11 +1946,16 @@ you use search operators in the global search box. Here's an example:</p>
 /api/v1/samples/?c-campaign.name=Bad Guys&amp;c-filename=foo.txt</blockquote>
 <p>You'll notice a couple things here. The first is that there is a &quot;c-&quot; in front
 of the field name. This tells the API that this parameter should be used as a
-field to search against to limit your results. Second is that there is no
-operators for defining AND or OR. Currently this only supports AND operations.
-In our example, only samples with a Campaign Name of &quot;Bad Guys&quot; AND a filename
-of &quot;foo.txt&quot; will be returned to us. Finally, in this format the fields are both
-full matches.</p>
+field to search against to limit your results. In our example, only samples with
+a Campaign Name of &quot;Bad Guys&quot; AND a filename of &quot;foo.txt&quot; will be returned to
+us. Finally, in this format the fields are both full matches.</p>
+<p>The above assumes the parameters are to be used in an AND query. If you wish to
+instead use your parameters in an OR query, you can add &quot;or=1&quot; to your parameter
+list:</p>
+<blockquote>
+/api/v1/samples/?or=1&amp;c-campaign.name=Bad Guys&amp;c-filename=foo.txt</blockquote>
+<p>This will return samples with a Campaign Name of &quot;Bad Guys&quot; OR a filename of
+&quot;foo.txt&quot;.</p>
 <p>As long as you have a &quot;c-&quot; in front of the parameter, you can search against any
 field in the database, whether it is a CRITs supported field or not!</p>
 <p>If you wish to use regex, you can add &quot;&amp;regex=1&quot;. This will convert <em>all</em> &quot;c-&quot;
