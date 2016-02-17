@@ -430,6 +430,7 @@ class CRITsAPIResource(MongoEngineResource):
             else:
                 querydict['_id'] = path[-1]
 
+        do_or = False
         for k,v in get_params.iteritems():
             v = v.strip()
             try:
@@ -507,6 +508,12 @@ class CRITsAPIResource(MongoEngineResource):
                     querydict[field] = generate_regex(v)
                 else:
                     querydict[field] = remove_quotes(v)
+            if k == 'or':
+                do_or = True
+        if do_or:
+            tmp = {}
+            tmp['$or'] = [{x:y} for x,y in querydict.iteritems()]
+            querydict = tmp
         if no_sources and sources:
             querydict['source.name'] = {'$in': source_list}
         if only or exclude:
