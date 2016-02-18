@@ -176,6 +176,7 @@ class UploadIndicatorForm(forms.Form):
             ("low", "low"),
             ("medium", "medium"),
             ("high", "high")]
+            
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = "Related To"
 

@@ -766,7 +766,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
         elif related_md5:
             related_obj = class_from_value(related_type, related_md5)
         if not related_obj:
-            retVal['message'] += (' Related %s not found. Sample not uploaded. %s'
+            retVal['message'] += (' Related %s not found. Sample not uploaded.'
                                   % (related_id))
             retVal['success'] = False
     else:
@@ -911,7 +911,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
                     if related_obj._meta['crits_type'] == 'Email':
                         relationship = RelationshipTypes.CONTAINED_WITHIN
                     else:
-                        relationship = RelationshipTypes.RELATED_TO
+                        relationship = relationship_type
                 sample.add_relationship(related_obj,
                                         relationship,
                                         analyst=user,
