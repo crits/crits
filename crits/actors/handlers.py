@@ -325,6 +325,12 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     :type bucket_list: str
     :param ticket: Ticket to assign to this actor.
     :type ticket: str
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_id: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -376,7 +382,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
         actor.add_ticket(ticket, analyst)
 
     related_obj = None
-    if related_id:
+    if related_id and related_type:
         related_obj = class_from_id(related_type, related_id)
         if not related_obj:
             retVal['success'] = False
@@ -391,6 +397,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
                                   analyst=analyst,
                                   get_rels=False)
             actor.save(username=analyst)
+            actor.reload()
 
     # run actor triage
     if is_item_new:

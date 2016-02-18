@@ -263,7 +263,8 @@ def handle_signature_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          data_type_min_version=None, data_type_max_version=None,
                          data_type_dependency=None, link_id=None, method='', reference='',
-                         copy_rels=False, bucket_list=None, ticket=None):
+                         copy_rels=False, bucket_list=None, ticket=None,
+                         related_id=None, related_type=None, relationship_type=None):
     """
     Add Signature.
 
@@ -397,6 +398,25 @@ def handle_signature_file(data, source_name, user=None,
 
     if ticket:
         signature.add_ticket(ticket, user);
+
+    related_obj = None
+    if related_id and related_type:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+    signature.save(username=user)
+
+    if related_obj and signature and relationship_type:
+        signature.add_relationship(related_obj,
+                                   relationship_type,
+                                   analyst=user,
+                                   get_rels=False)
+        signature.save(username=user)
+        signature.reload()
+
 
 
     # save signature

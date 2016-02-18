@@ -7,7 +7,11 @@
     <div data-intro"Section for adding related Objects." data-position="bottom">
         <form id="add_related_form" method="post"> {% csrf_token %}
             <select id="add_related_options" onchange="populateList()">
+                <option>Choose TLO</option>
                 <option value='new-actor'>Actor</option>
+                <option value='new-backdoor'>Backdoor</option>
+                <option value='new-campaign'>Campaign</option>
+                <option value='new-certificate'>Certificate</option>
                 <option value='new-domain'>Domain</option>
                 <option value='new-indicator'>Indicator</option>
                 <option value='new-ip'>IP</option>
@@ -16,6 +20,7 @@
                 <option value='new-exploit'>Exploit</option>
                 <option value='new-pcap'>PCAP</option>
                 <option value='new-sample'>Sample</option>
+                <option value='new-signature'>Signature</option>
                 <option value='new-target'>Target</option>
             </select>
         </form>

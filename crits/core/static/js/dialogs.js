@@ -140,12 +140,13 @@ function populate_id(id, type) {
         // Unlike new-sample below, this does not redirect us nor refresh the
         // Relationships list of the Sample, so delay for a few seconds then reload the
         // page after uploaded.  Added a fileUploadComplete event to work around this.
-        $(this).find("form").bind("fileUploadComplete",
+        /*$(this).find("form").bind("fileUploadComplete",
                       function(e, response) {
                           if (response.success)
                           setTimeout(function() {
                               document.location = document.location },
                               3000); });
+        }*/
         }
     });
     // Upload a related Domain (Using the related dialog persona)
@@ -154,6 +155,7 @@ function populate_id(id, type) {
         $(this).find("form #id_related_id").val(id);
         $(this).find("form #id_related_type").val(type);
         }
+
     });
     // Upload a related Domain (Using the related dialog persona)
     $( "#dialog-new-sample" ).on("dialogopen.add_related_domain", function(e) {
@@ -186,12 +188,13 @@ function populate_id(id, type) {
         // Unlike new-sample below, this does not redirect us nor refresh the
         // Relationships list of the Sample, so delay for a few seconds then reload the
         // page after uploaded.  Added a fileUploadComplete event to work around this.
-        $(this).find("form").bind("fileUploadComplete",
-                      function(e, response) {
-                          if (response.success)
-                          setTimeout(function() {
-                              document.location = document.location },
-                              3000); });
+        /*$(this).find("form").bind("fileUploadComplete",
+                                              function(e, response) {
+                                                  if (response.success)
+                                                  setTimeout(function() {
+                                                      document.location = document.location },
+                                                      3000); });
+                                }*/
         }
     });
     // Add a related Event (Using the related dialog persona)
@@ -217,6 +220,32 @@ function populate_id(id, type) {
     });
     // Add a related IP (Using the related dialog persona)
     $( "#dialog-new-ip" ).on("dialogopen.add_related_ip", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+    // Add a related backdoor (Using the related dialog persona)
+    $( "#dialog-new-backdoor" ).on("dialogopen.add_related_backdoor", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+    // Add a related campaign (Using the related dialog persona)
+    $( "#dialog-new-campaign" ).on("dialogopen.add_related_campaign", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+    $( "#dialog-new-certificate" ).on("dialogopen.add_related_certificate", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        }
+    });
+    $( "#dialog-new-signature" ).on("dialogopen.add_related_signatures", function(e) {
         if ($(this).dialog("persona") == "related") {
         $(this).find("form #id_related_id").val(id);
         $(this).find("form #id_related_type").val(type);
@@ -1187,8 +1216,8 @@ var stdDialogs = {
       "new-email-fields": {title: "Email"},
       "new-email-yaml": {title: "Email (YAML)", open: new_email_yaml_dialog},
 
-      "new-campaign": {title: "Campaign"},
-      "new-backdoor": {title: "Backdoor"},
+      "new-campaign": {title: "Campaign", personas: {related: newPersona("Add Related Campaign", {}, addEditSubmit) } },
+      "new-backdoor": {title: "Backdoor", personas: {related: newPersona("Add Related Backdoor", {}, addEditSubmit) } },
       "new-exploit": {title: "Exploit", personas: {related: newPersona("Add Related Exploit",{}, addEditSubmit) } },
 
       "new-domain": {title: "Domain", personas: {related: newPersona("Add Related Domain", {open: new_domain_dialog}, addEditSubmit ) }, open: new_domain_dialog },
@@ -1219,7 +1248,7 @@ var stdDialogs = {
       "new-raw-data": {title: "Raw Data" },
       "raw_data_type_add": {title: "Raw Data Type"},
 
-      "new-signature": {title: "Signature" },
+      "new-signature": {title: "Signature", personas: {related: newPersona("Add Related Signature", {}, addEditSubmit) } },
       "signature_type_add": {title: "Signature Type"},
       "signature_dependency_add": {title: "Signature Dependency"},
 
@@ -1267,7 +1296,9 @@ var stdDialogs = {
       "new-sample": {title: "Sample", personas: {related: newPersona("Upload Related Sample",
                                                                      {open: file_upload_dialog},
                                      defaultSubmit) } },
-      "new-certificate": {title: "Certificate" },
+      "new-certificate": {title: "Certificate", personas: {related: newPersona("Upload Related Certificate",
+                                                                     {open: file_upload_dialog},
+                                     defaultSubmit) } },
       "new-raw-data-file": {title: "Raw Data File" },
       "new-indicator-csv": {title: "New Indicator CSV" },
   };

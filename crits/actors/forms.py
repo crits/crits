@@ -10,7 +10,6 @@ from crits.core import form_consts
 
 from crits.vocabulary.relationships import RelationshipTypes
 
-
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
 class AddActorForm(forms.Form):
@@ -44,7 +43,7 @@ class AddActorForm(forms.Form):
         widget=forms.TextInput(attrs={'size': '90'}),
         label=form_consts.Actor.SOURCE_REFERENCE,
         required=False)
-    related_id = forms.CharField(required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
     related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
     relationship_type = forms.ChoiceField(required=False,
                                           label='Relationship Type',

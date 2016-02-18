@@ -124,6 +124,7 @@
         {% with bucket_list=signature.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
     </div>
     <div>
         {% with data=signature.data %}

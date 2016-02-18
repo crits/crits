@@ -6,6 +6,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from crits.backdoors.backdoor import Backdoor
+from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.crits_mongoengine import create_embedded_source
@@ -178,7 +179,8 @@ def get_backdoor_details(id_, user):
 def add_new_backdoor(name, version=None, aliases=None, description=None,
                      source=None, source_method=None, source_reference=None,
                      campaign=None, confidence=None, user=None,
-                     bucket_list=None, ticket=None):
+                     bucket_list=None, ticket=None, related_id=None,
+                     related_type=None, relationship_type=None):
     """
     Add an Backdoor to CRITs.
 
@@ -206,6 +208,12 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
     :type bucket_list: str
     :param ticket: Ticket to assign to this backdoor.
     :type ticket: str
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_id: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -293,6 +301,22 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
 
         if ticket:
             backdoor.add_ticket(ticket, user)
+
+        related_obj = None
+        if related_id and related_type:
+            related_obj = class_from_id(related_type, related_id)
+            if not related_obj:
+                retVal['success'] = False
+                retVal['message'] = 'Related Object not found.'
+                return retVal
+
+        if related_obj and relationship_type and backdoor:
+                backdoor.add_relationship(related_obj,
+                                      relationship_type,
+                                      analyst=user,
+                                      get_rels=False)
+                backdoor.save(username=user)
+                backdoor.reload()
 
         backdoor.save(username=user)
 
