@@ -6,7 +6,6 @@ from crits.core.handlers import get_source_names
 from crits.core.user_tools import get_user_organization
 from crits.vocabulary.relationships import RelationshipTypes
 
-
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
 class UploadCertificateForm(forms.Form):

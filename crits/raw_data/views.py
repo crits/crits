@@ -369,6 +369,9 @@ def upload_raw_data(request, link_id=None):
             ticket = form.cleaned_data.get('ticket')
             method = form.cleaned_data.get('method', '') or 'Upload'
             reference = form.cleaned_data.get('reference', '')
+            related_id = form.cleaned_data.get('related_id', '')
+            related_type = form.cleaned_data.get('related_type', '')
+            relationship_type = form.cleaned_data.get('relationship_type')
             status = handle_raw_data_file(data, source, user,
                                           description, title, data_type,
                                           tool_name, tool_version, tool_details,
@@ -377,7 +380,12 @@ def upload_raw_data(request, link_id=None):
                                           reference=reference,
                                           copy_rels=copy_rels,
                                           bucket_list=bucket_list,
-                                          ticket=ticket)
+                                          ticket=ticket,
+                                          related_id=related_id,
+                                          related_type=related_type,
+                                          relationship_type=relationship_type)
+            
+
             if status['success']:
                 jdump = json.dumps({
                     'message': 'raw_data uploaded successfully! <a href="%s">View raw_data</a>'

@@ -299,6 +299,30 @@ function populate_id(id, type) {
                               3000); });
         }
     });
+    // Add a related Raw Data (Using the related dialog persona)
+    $( "#dialog-new-raw-data" ).on("dialogopen.add_related_raw_data", function() {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+                      function() {
+                          setTimeout(function() {
+                              document.location = document.location },
+                              3000); });
+        }
+    });
+    $( "#dialog-new-raw-data-file" ).on("dialogopen.add_related_raw_data_file", function() {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("fileUploadComplete",
+                      function(e, response) {
+                          if (response.success)
+                          setTimeout(function() {
+                              document.location = document.location },
+                              3000); });
+        }
+    });
     $( "#dialog-new-signature" ).on("dialogopen.add_related_signatures", function(e) {
         if ($(this).dialog("persona") == "related") {
         $(this).find("form #id_related_id").val(id);
@@ -1304,7 +1328,7 @@ var stdDialogs = {
 
       "new-event": {title: "Event", personas: {related: newPersona("Add Related Event", {open: new_event_dialog}, addEditSubmit ) } },
       "new-ip": {title: "IP Address", personas: {related: newPersona("Add Related IP", {open: new_ip_dialog}, addEditSubmit ) } },
-      "new-raw-data": {title: "Raw Data" },
+      "new-raw-data": {title: "Raw Data", personas: {related: newPersona("Add Related Raw Data", {}, addEditSubmit) } },
       "raw_data_type_add": {title: "Raw Data Type"},
 
       "new-signature": {title: "Signature", personas: {related: newPersona("Add Related Signature", {}, addEditSubmit) } },
@@ -1358,7 +1382,9 @@ var stdDialogs = {
       "new-certificate": {title: "Certificate", personas: {related: newPersona("Upload Related Certificate",
                                                                      {open: file_upload_dialog},
                                      defaultSubmit) } },
-      "new-raw-data-file": {title: "Raw Data File" },
+      "new-raw-data-file": {title: "Raw Data File", personas: {related: newPersona("Upload Related Raw Data",
+                                                                     {open: file_upload_dialog},
+                                     defaultSubmit) } },
       "new-indicator-csv": {title: "New Indicator CSV" },
   };
 
