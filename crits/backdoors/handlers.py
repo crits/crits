@@ -302,22 +302,6 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         if ticket:
             backdoor.add_ticket(ticket, user)
 
-        related_obj = None
-        if related_id and related_type:
-            related_obj = class_from_id(related_type, related_id)
-            if not related_obj:
-                retVal['success'] = False
-                retVal['message'] = 'Related Object not found.'
-                return retVal
-
-        if related_obj and relationship_type and backdoor:
-                backdoor.add_relationship(related_obj,
-                                      relationship_type,
-                                      analyst=user,
-                                      get_rels=False)
-                backdoor.save(username=user)
-                backdoor.reload()
-
         backdoor.save(username=user)
 
         # run backdoor triage
@@ -334,6 +318,23 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         retVal['object'] = backdoor
         retVal['id'] = str(backdoor.id)
 
+    # Only relate to the most specific object created. 
+    related_obj = None
+    if related_id and related_type:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+    if related_obj and relationship_type and backdoor:
+        backdoor.add_relationship(related_obj,
+                                  relationship_type,
+                                  analyst=user,
+                                  get_rels=False)
+        backdoor.save(username=user)
+        backdoor.reload()
+            
     # If we have a family and specific object, attempt to relate the two.
     if len(objs) == 2:
         objs[0].add_relationship(objs[1], RelationshipTypes.RELATED_TO)
