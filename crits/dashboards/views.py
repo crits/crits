@@ -354,7 +354,7 @@ def respondWithError(message, isAjax=False, request=None):
     """
     if isAjax:
         return HttpResponse(json.dumps({'success': False, 'message': message}),
-                                    mimetype="application/json")
+                                    content_type="application/json")
     return render("error.html", {"error": message}, request)
 
 def respondWithSuccess(message):
@@ -362,7 +362,7 @@ def respondWithSuccess(message):
     ajax response with success message
     """
     return HttpResponse(json.dumps({'success': True, 'message': message}),
-                         mimetype="application/json")
+                         content_type="application/json")
 
 def render(html, args, request):
     """
@@ -374,4 +374,4 @@ def httpResponse(response):
     """
     Returns response for ajax calls.
     """
-    return HttpResponse(json.dumps(response), mimetype="application/json")
+    return HttpResponse(json.dumps(response), content_type="application/json")

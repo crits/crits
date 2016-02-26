@@ -3,6 +3,22 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: frbapolkosnik
+Date:   2016-02-03
+
+    You can run your CRITs-master on Django 1.7 with the latest commit!
+    In order to run on 1.7 you'll have to add an one-liner to forms.py in your
+    custom-made services.
+    You'll need to add the following line:
+        kwargs.setdefault('label_suffix', ':')
+    before every occurrence of the following:
+        super(YourCustomServiceConfigForm, self).__init__(*args, **kwargs)
+    in forms.py inside your custom-made services.
+    
+    For CRITs to run on Django 1.7 you also need to update the following:
+    django-tastypie==0.12.2
+    django-tastypie-mongoengine==0.4.6
+
 Author: mgoffin
 Date: 2015-11-19
 

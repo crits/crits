@@ -62,6 +62,7 @@ class IndicatorResource(CRITsAPIResource):
         campaign = bundle.data.get('campaign', None)
         campaign_confidence = bundle.data.get('confidence', None)
         confidence = bundle.data.get('indicator_confidence', None)
+        description = bundle.data.get('description', None)
         impact = bundle.data.get('indicator_impact', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
@@ -79,6 +80,7 @@ class IndicatorResource(CRITsAPIResource):
                                        campaign,
                                        campaign_confidence,
                                        confidence,
+                                       description,
                                        impact,
                                        bucket_list,
                                        ticket)

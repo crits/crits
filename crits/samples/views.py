@@ -52,9 +52,9 @@ def detail(request, sample_md5):
     if new_template:
         template = new_template
     if template == "yaml":
-        return HttpResponse(args, mimetype="text/plain")
+        return HttpResponse(args, content_type="text/plain")
     elif template == "json":
-        return HttpResponse(json.dumps(args), mimetype="application/json")
+        return HttpResponse(json.dumps(args), content_type="application/json")
     return render_to_response(template,
                               args,
                               RequestContext(request))
@@ -140,7 +140,7 @@ def bulk_add_md5_sample(request):
 
         return HttpResponse(json.dumps(response,
                             default=json_handler),
-                            mimetype='application/json')
+                            content_type="application/json")
     else:
         return render_to_response('bulk_add_default.html',
                                   {'formdict': formdict,
@@ -344,7 +344,7 @@ def strings(request, sample_md5):
         strings_data += make_unicode_strings(md5=sample_md5)
         result = {"strings": strings_data}
         return HttpResponse(json.dumps(result),
-                            mimetype='application/json')
+                            content_type="application/json")
     else:
         return render_to_response('error.html',
                                   {'error': "Expected AJAX."},
@@ -366,7 +366,7 @@ def stackstrings(request, sample_md5):
         strings = make_stackstrings(md5=sample_md5)
         result = {"strings": strings}
         return HttpResponse(json.dumps(result),
-                            mimetype='application/json')
+                            content_type="application/json")
     else:
         return render_to_response('error.html',
                                   {'error': "Expected AJAX."},
@@ -388,7 +388,7 @@ def hex(request,sample_md5):
         hex_data = make_hex(md5=sample_md5)
         result = {"strings": hex_data}
         return HttpResponse(json.dumps(result),
-                            mimetype='application/json')
+                            content_type="application/json")
     else:
         return render_to_response('error.html',
                                   {'error': "Expected AJAX."},
@@ -414,7 +414,7 @@ def xor(request,sample_md5):
         xor_data = make_ascii_strings(data=xor_data)
         result = {"strings": xor_data}
         return HttpResponse(json.dumps(result),
-                            mimetype='application/json')
+                            content_type="application/json")
     else:
         return render_to_response('error.html',
                                   {'error': "Expected AJAX."},
@@ -460,7 +460,7 @@ def xor_searcher(request, sample_md5):
                                      skip_nulls=skip_nulls)
                 result = {"keys": results}
             return HttpResponse(json.dumps(result),
-                                mimetype='application/json')
+                                content_type="application/json")
         else:
             return render_to_response('error.html',
                                       {'error': "Invalid Form."},
@@ -558,7 +558,7 @@ def set_sample_filename(request):
         return HttpResponse(json.dumps(update_sample_filename(id_,
                                                               filename,
                                                               analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -581,7 +581,7 @@ def set_sample_filenames(request):
         return HttpResponse(json.dumps(modify_sample_filenames(id_,
                                                                tags,
                                                                request.user.username)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html", {"error" : error },

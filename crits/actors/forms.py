@@ -1,5 +1,5 @@
 from django import forms
-from django.forms.util import ErrorList
+from django.forms.utils import ErrorList
 
 from crits.actors.actor import ActorThreatIdentifier
 from crits.campaigns.campaign import Campaign

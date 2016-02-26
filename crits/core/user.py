@@ -44,16 +44,16 @@ from mongoengine import BooleanField, ObjectIdField, EmailField
 from mongoengine import EmbeddedDocumentField, IntField
 from mongoengine import DictField, DynamicEmbeddedDocument
 from mongoengine.django.utils import datetime_now
-from mongoengine.django.auth import SiteProfileNotAvailable
+#from mongoengine.django.auth import SiteProfileNotAvailable
 
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.hashers import check_password, make_password
-from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
-from django.contrib.auth.models import _user_has_module_perms
+#from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
+#from django.contrib.auth.models import _user_has_module_perms
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+#from django.utils.translation import ugettext_lazy as _
 
 from crits.config.config import CRITsConfig
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
@@ -290,32 +290,32 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     }
 
     username = StringField(max_length=30, required=True,
-                           verbose_name=_('username'),
-                           help_text=_("Required. 30 characters or fewer. Letters, numbers and @/./+/-/_ characters"))
+                           verbose_name='username',
+                           help_text="Required. 30 characters or fewer. Letters, numbers and @/./+/-/_ characters")
 
     first_name = StringField(max_length=30,
-                             verbose_name=_('first name'))
+                             verbose_name='first name')
 
     last_name = StringField(max_length=30,
-                            verbose_name=_('last name'))
-    email = EmailField(verbose_name=_('e-mail address'))
+                            verbose_name='last name')
+    email = EmailField(verbose_name='e-mail address')
     password = StringField(max_length=128,
-                           verbose_name=_('password'),
-                           help_text=_("Use '[algo]$[iterations]$[salt]$[hexdigest]' or use the <a href=\"password/\">change password form</a>."))
-    secret = StringField(verbose_name=_('TOTP Secret'))
+                           verbose_name='password',
+                           help_text="Use '[algo]$[iterations]$[salt]$[hexdigest]' or use the <a href=\"password/\">change password form</a>.")
+    secret = StringField(verbose_name='TOTP Secret')
     is_staff = BooleanField(default=False,
-                            verbose_name=_('staff status'),
-                            help_text=_("Designates whether the user can log into this admin site."))
+                            verbose_name='staff status',
+                            help_text="Designates whether the user can log into this admin site.")
     is_active = BooleanField(default=True,
-                             verbose_name=_('active'),
-                             help_text=_("Designates whether this user should be treated as active. Unselect this instead of deleting accounts."))
+                             verbose_name='active',
+                             help_text="Designates whether this user should be treated as active. Unselect this instead of deleting accounts.")
     is_superuser = BooleanField(default=False,
-                                verbose_name=_('superuser status'),
-                                help_text=_("Designates that this user has all permissions without explicitly assigning them."))
+                                verbose_name='superuser status',
+                                help_text="Designates that this user has all permissions without explicitly assigning them.")
     last_login = DateTimeField(default=datetime_now,
-                               verbose_name=_('last login'))
+                               verbose_name='last login')
     date_joined = DateTimeField(default=datetime_now,
-                                verbose_name=_('date joined'))
+                                verbose_name='date joined')
 
     invalid_login_attempts = IntField(default=0)
     login_attempts = ListField(EmbeddedDocumentField(EmbeddedLoginAttempt))
@@ -744,7 +744,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
 
     def get_username(self):
         return self.username
-
+    '''
     def get_profile(self):
         """
         Returns site-specific profile for this user. Raises
@@ -773,7 +773,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             except (ImportError, ImproperlyConfigured):
                 raise SiteProfileNotAvailable
         return self._profile_cache
-
+    '''
     def get_preference(self, section, setting, default=None):
         """
         Get a user preference setting out of the deep dynamic dictionary
@@ -884,6 +884,32 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     def getDashboards(self):
         from crits.dashboards.handlers import getDashboardsForUser
         return getDashboardsForUser(self)
+
+class AuthenticationMiddleware(object):
+    # This has been added to make theSessions work on Django 1.8+ and
+    # mongoengine 0.8.8 see:
+    # https://github.com/MongoEngine/mongoengine/issues/966
+
+    def _get_user_session_key(self, request):
+        from bson.objectid import ObjectId
+
+        # This value in the session is always serialized to a string, so we need
+        # to convert it back to Python whenever we access it.
+        SESSION_KEY = '_auth_user_id'
+        if SESSION_KEY in request.session:
+            return ObjectId(request.session[SESSION_KEY])
+
+    def process_request(self, request):
+        from django.utils.functional import SimpleLazyObject
+        from mongoengine.django.auth import get_user
+
+        assert hasattr(request, 'session'), (
+            "The Django authentication middleware requires session middleware "
+            "to be installed. Edit your MIDDLEWARE_CLASSES setting to insert "
+            "'django.contrib.sessions.middleware.SessionMiddleware' before "
+            "'django.contrib.auth.middleware.AuthenticationMiddleware'."
+        )
+        request.user = SimpleLazyObject(lambda: get_user(self._get_user_session_key(request)))
 
 # stolen from MongoEngine and modified to use the CRITsUser class.
 class CRITsAuthBackend(object):

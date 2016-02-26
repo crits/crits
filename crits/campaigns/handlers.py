@@ -5,7 +5,10 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.http import HttpResponse
 from django.core.urlresolvers import reverse
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.campaigns.campaign import Campaign, EmbeddedTTP
 from crits.campaigns.forms import TTPForm

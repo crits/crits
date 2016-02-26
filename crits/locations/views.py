@@ -28,7 +28,7 @@ def location_names(request, active_only=True):
     """
 
     location_list = get_location_names_list(active_only)
-    return HttpResponse(json.dumps(location_list), mimetype="application/json")
+    return HttpResponse(json.dumps(location_list), content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def add_location(request, type_, id_):
@@ -65,15 +65,15 @@ def add_location(request, type_, id_):
                                   longitude=longitude)
             if result['success']:
                 return HttpResponse(json.dumps(result),
-                                    mimetype="application/json")
+                                    content_type="application/json")
         result['form'] = form.as_table()
         result['success'] = False
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return HttpResponse(json.dumps({'success': False,
                                         'message': "Expected AJAX request."}),
-                            mimetype="application/json")
+                            content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def remove_location(request, type_, id_):
@@ -100,7 +100,7 @@ def remove_location(request, type_, id_):
                                  location_type=location_type,
                                  date=date,
                                  user=request.user.username)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error": 'Expected AJAX POST.'},
@@ -133,7 +133,7 @@ def edit_location(request, type_, id_):
                                                      description=description,
                                                      latitude=latitude,
                                                      longitude=longitude)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
