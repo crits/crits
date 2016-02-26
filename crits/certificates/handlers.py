@@ -334,7 +334,7 @@ def handle_cert_file(filename, data, source_name, user=None,
     # update relationship if a related top-level object is supplied
     if related_obj and cert:
         if relationship_type:
-            relationship=relationship_type
+            relationship=RelationshipTypes.inverse(relationship=relationship_type)
         if not relationship:
             relationship = RelationshipTypes.RELATED_TO
             

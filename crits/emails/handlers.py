@@ -1133,6 +1133,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             return retVal
 
     if related_obj:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         result['object'].add_relationship(related_obj,
                                           relationship_type,
                                           analyst=analyst,

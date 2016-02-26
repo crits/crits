@@ -805,6 +805,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     indicator.save(username=analyst)
 
     if related_obj and indicator and relationship_type:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         indicator.add_relationship(related_obj,
                               relationship_type,
                               analyst=analyst,

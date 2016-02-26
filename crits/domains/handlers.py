@@ -668,14 +668,21 @@ def upsert_domain(domain, source, username=None, campaign=None,
         fqdn_domain.save(username=username)
 
     #Add relationships from object domain is being added from
-    if related_obj and relationship_type and fqdn_domain: 
+    if related_obj and relationship_type:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         if fqdn_domain and (related_obj != fqdn_domain):
             fqdn_domain.add_relationship(related_obj,
                                          relationship_type,
                                          analyst=username,
                                          get_rels=False)
             fqdn_domain.save(username=username)
-            
+        if root_domain and (related_obj != root_domain):
+            root_domain.add_relationship(related_obj,
+                                         relationship_type,
+                                         analyst=username,
+                                         get_rels=False)
+            root_domain.save(username=username)
+    
     # run domain triage
     if is_fqdn_domain_new:
         fqdn_domain.reload()

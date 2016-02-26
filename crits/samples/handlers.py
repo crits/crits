@@ -927,7 +927,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
                     if related_obj._meta['crits_type'] == 'Email':
                         relationship = RelationshipTypes.CONTAINED_WITHIN
                     else:
-                        relationship = relationship_type
+                        relationship=RelationshipTypes.inverse(relationship=relationship_type)
                 sample.add_relationship(related_obj,
                                         relationship,
                                         analyst=user,

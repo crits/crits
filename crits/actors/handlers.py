@@ -392,6 +392,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     actor.save(username=analyst)
 
     if related_obj and actor:
+            relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
             actor.add_relationship(related_obj,
                                   relationship_type,
                                   analyst=analyst,

@@ -22,6 +22,8 @@ from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.raw_data.raw_data import RawData, RawDataType
 from crits.services.handlers import run_triage, get_supported_services
+from crits.vocabulary.relationships import RelationshipTypes
+
 
 
 def generate_raw_data_csv(request):
@@ -437,12 +439,13 @@ def handle_raw_data_file(data, source_name, user=None,
     raw_data.save(username=user)
 
     if related_obj and relationship_type and raw_data:
-            raw_data.add_relationship(related_obj,
-                                  relationship_type,
-                                  analyst=user,
-                                  get_rels=False)
-            raw_data.save(username=user)
-            raw_data.reload()
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        raw_data.add_relationship(related_obj,
+                              relationship_type,
+                              analyst=user,
+                              get_rels=False)
+        raw_data.save(username=user)
+        raw_data.reload()
 
     # save raw_data
     raw_data.save(username=user)

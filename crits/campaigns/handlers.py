@@ -35,6 +35,7 @@ from crits.samples.sample import Sample
 from crits.targets.handlers import get_campaign_targets
 from crits.targets.target import Target
 
+from crits.vocabulary.relationships import RelationshipTypes
 
 # Functions for top level Campaigns.
 def get_campaign_names_list(active):
@@ -348,12 +349,13 @@ def add_campaign(name, description, aliases, analyst,
     campaign.save(username=analyst)
 
     if related_obj and relationship_type and campaign:
-            campaign.add_relationship(related_obj,
-                                  relationship_type,
-                                  analyst=analyst,
-                                  get_rels=False)
-            campaign.save(username=analyst)
-            campaign.reload()
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        campaign.add_relationship(related_obj,
+                              relationship_type,
+                              analyst=analyst,
+                              get_rels=False)
+        campaign.save(username=analyst)
+        campaign.reload()
 
     try:
         campaign.save(username=analyst)

@@ -7,7 +7,6 @@ from crits.core.user_tools import get_user_organization
 from crits.raw_data.raw_data import RawDataType
 from crits.vocabulary.relationships import RelationshipTypes
 
-
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
 class UploadRawDataFileForm(forms.Form):

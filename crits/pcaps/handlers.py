@@ -331,7 +331,9 @@ def handle_pcap_file(filename, data, source_name, user=None,
 
     # update relationship if a related top-level object is supplied
     if related_obj and pcap:
-        if not relationship:
+        if relationship:
+            relationship=RelationshipTypes.inverse(relationship=relationship)
+        else:
             relationship = RelationshipTypes.RELATED_TO
         pcap.add_relationship(related_obj,
                               relationship,

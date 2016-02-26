@@ -21,6 +21,7 @@ from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.signatures.signature import Signature, SignatureType, SignatureDependency
 from crits.services.handlers import run_triage, get_supported_services
+from crits.vocabulary.relationships import RelationshipTypes
 
 
 def generate_signature_csv(request):
@@ -413,6 +414,7 @@ def handle_signature_file(data, source_name, user=None,
     signature.save(username=user)
 
     if related_obj and signature and relationship_type:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         signature.add_relationship(related_obj,
                                    relationship_type,
                                    analyst=user,

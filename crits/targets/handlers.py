@@ -114,6 +114,7 @@ def upsert_target(data, analyst):
         target.save(username=analyst)
 
         if related_obj and target:
+            relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
             target.add_relationship(related_obj,
                                   relationship_type,
                                   analyst=analyst,

@@ -328,6 +328,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
             return retVal
 
     if related_obj and relationship_type and backdoor:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         backdoor.add_relationship(related_obj,
                                   relationship_type,
                                   analyst=user,

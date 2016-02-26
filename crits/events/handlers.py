@@ -295,6 +295,7 @@ def add_new_event(title, description, event_type, source, method, reference,
         event.save(username=analyst)
 
         if related_obj and event and relationship_type:
+            relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
             event.add_relationship(related_obj,
                                   relationship_type,
                                   analyst=analyst,

@@ -482,6 +482,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
                              cache=cache)
 
     if related_obj and ip_object and relationship_type:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         ip_object.add_relationship(related_obj,
                               relationship_type,
                               analyst=analyst,
