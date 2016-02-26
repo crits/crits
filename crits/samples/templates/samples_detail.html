@@ -31,8 +31,6 @@
     <span class="horizontal_menu">
     <ul class="hmenu">
         <li><a href="#" class="dialogClick" dialog="download-sample">Download Sample</a></li>
-        <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.samples.views.upload_file' sample.md5 %}">Upload Related Sample</a></li>
-        <li><a href="#" class="dialogClick" dialog="new-pcap" persona="related">Upload Related PCAP</a></li>
         <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=text">Text</a></li>
         <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=yaml">YAML</a></li>
         <li><a href="#" class="dialogClick" dialog="unzip-sample">Un7zip</a></li>
