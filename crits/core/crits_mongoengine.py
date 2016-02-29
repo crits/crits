@@ -16,10 +16,7 @@ from mongoengine import IntField, DateTimeField, ObjectIdField, BooleanField
 from mongoengine.base import BaseDocument, ValidationError
 
 # Determine if we should be caching queries or not.
-if settings.QUERY_CACHING:
-    from mongoengine import QuerySet as QS
-else:
-    from mongoengine import QuerySetNoCache as QS
+from mongoengine import QuerySet as QS
 
 from pprint import pformat
 
@@ -69,10 +66,9 @@ class CritsQuerySet(QS):
 
         if self._len is not None:
             return self._len
-        if settings.QUERY_CACHING:
-            if self._has_more:
-                # populate the cache
-                list(self._iter_results())
+        if self._has_more:
+            # populate the cache
+            list(self._iter_results())
             self._len = len(self._result_cache)
         else:
             self._len = self.count()

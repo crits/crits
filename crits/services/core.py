@@ -1,6 +1,12 @@
 from datetime import datetime
 from distutils.version import StrictVersion
-from importlib import import_module
+
+try:
+    from importlib import import_module
+except ImportError:
+    # Django < 1.7 and Python < 2.7
+    from django.utils.importlib import import_module
+
 import logging
 import os.path
 import shutil

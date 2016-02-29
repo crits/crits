@@ -1,0 +1,11 @@
+
+
+{% if user_role %}
+
+<div id="dialog-{{ request.GET.dialog }}" title="Add New User Role">
+  <form id="form-{{ request.GET.dialog }}" action='{% url "crits.core.views.user_role_add" %}' method='POST' enctype="multipart/form-data" item-type="">
+    <table class="form">{{ user_role_add.as_table }}</table>
+  </form>
+</div>
+
+{% endif %}

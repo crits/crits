@@ -1,9 +1,9 @@
-{% load url from future %}
+
 
 <div id="dialog-{{ request.GET.dialog }}" title="Upload Indicator Blob">
     <p><b>Indicator Blob upload accepts a CSV formatted input.<br/>
 	It must have the following column names to be processed properly:<br/>
-        Indicator, Type, Threat Type, Attack Type, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action, Status</b><br/><br/>
+        Indicator, Type, Threat Type, Attack Type, Description, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action, Status</b><br/><br/>
         Separate multiple Tickets, Actions, and/or Bucket List values with commas, and<br/>
         surround with quotes (e.g. "value1,value2,value3").</p>
     <form id="form-{{ request.GET.dialog }}"

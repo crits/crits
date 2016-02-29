@@ -12,7 +12,10 @@ from django.core.validators import validate_ipv4_address, validate_ipv46_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.campaigns.forms import CampaignForm
 from crits.campaigns.campaign import Campaign
@@ -391,6 +394,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind = {}
         ind['value'] = d.get('Indicator', '').strip()
         ind['lower'] = d.get('Indicator', '').lower().strip()
+        ind['description'] = d.get('Description', '').strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
         ind['threat_type'] = d.get('Threat Type', IndicatorThreatTypes.UNKNOWN)
         ind['attack_type'] = d.get('Attack Type', IndicatorAttackTypes.UNKNOWN)
@@ -440,8 +444,9 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind[form_consts.Common.BUCKET_LIST_VARIABLE_NAME] = d.get(form_consts.Common.BUCKET_LIST, '')
         ind[form_consts.Common.TICKET_VARIABLE_NAME] = d.get(form_consts.Common.TICKET, '')
         try:
-            response = handle_indicator_insert(ind, source, reference, analyst=username,
-                                               method=method, add_domain=add_domain)
+            response = handle_indicator_insert(ind, source, reference,
+                                               analyst=username, method=method,
+                                               add_domain=add_domain)
         except Exception, e:
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, str(e))
@@ -457,7 +462,8 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                           'date': datetime.datetime.now()}
                 for action_type in actions:
                     action['action_type'] = action_type
-                    action_add('Indicator', response.get('objectid'), action)
+                    action_add('Indicator', response.get('objectid'), action,
+                               user=username)
         else:
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, response['message'])
@@ -472,7 +478,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
 def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
                          analyst, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
-                         campaign_confidence=None, confidence=None, impact=None,
+                         campaign_confidence=None, confidence=None, description=None, impact=None,
                          bucket_list=None, ticket=None, cache={}):
     """
     Handle adding an individual indicator.
@@ -504,6 +510,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     :type campaign_confidence: str
     :param confidence: Indicator confidence.
     :type confidence: str
+    :param description: The description of this data.
+    :type description: str
     :param impact: Indicator impact.
     :type impact: str
     :param bucket_list: The bucket(s) to assign to this indicator.
@@ -539,6 +547,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         ind['attack_type'] = attack_type.strip()
         ind['value'] = value.strip()
         ind['lower'] = value.lower().strip()
+        ind['description'] = description
 
         if campaign:
             ind['campaign'] = campaign
@@ -638,6 +647,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.attack_type = ind['attack_type']
         indicator.value = ind['value']
         indicator.lower = ind['lower']
+        indicator.description = ind['description']
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)
@@ -722,8 +732,12 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             if not url_contains_ip:
                 success = None
                 if add_domain:
-                    success = upsert_domain(domain_or_ip, indicator.source, '%s' % analyst,
-                                            None, bucket_list=bucket_list, cache=cache)
+                    success = upsert_domain(domain_or_ip,
+                                            indicator.source,
+                                            username='%s' % analyst,
+                                            campaign=indicator.campaign,
+                                            bucket_list=bucket_list,
+                                            cache=cache)
                     if not success['success']:
                         return {'success': False, 'message': success['message']}
 

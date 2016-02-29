@@ -110,7 +110,7 @@ def add_update_target(request):
             result = {'message': ['<div>Form is invalid!</div>']}
             result['form'] = form.as_table()
         if request.is_ajax():
-            return HttpResponse(json.dumps(result), mimetype="application/json")
+            return HttpResponse(json.dumps(result), content_type="application/json")
         else:
             return HttpResponseRedirect(reverse('crits.targets.views.target_info',
                                                 args=[email]))

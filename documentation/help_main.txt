@@ -811,6 +811,7 @@ information, as follows:
 
 :Indicator Type: Choose the type of indicator from the drop-down.
 :Value: Define the value for the indicator
+:Description: Enter a brief description for the indicator
 :Confidence: Select the confidence level for the indicator
 :Impact: Select the level of impact for the indicator
 :Campaign: (Optional) Select a campaign with which to associate the
@@ -1335,11 +1336,18 @@ you use search operators in the global search box. Here's an example:
 
 You'll notice a couple things here. The first is that there is a "c-" in front
 of the field name. This tells the API that this parameter should be used as a
-field to search against to limit your results. Second is that there is no
-operators for defining AND or OR. Currently this only supports AND operations.
-In our example, only samples with a Campaign Name of "Bad Guys" AND a filename
-of "foo.txt" will be returned to us. Finally, in this format the fields are both
-full matches.
+field to search against to limit your results. In our example, only samples with
+a Campaign Name of "Bad Guys" AND a filename of "foo.txt" will be returned to
+us. Finally, in this format the fields are both full matches.
+
+The above assumes the parameters are to be used in an AND query. If you wish to
+instead use your parameters in an OR query, you can add "or=1" to your parameter
+list:
+
+        /api/v1/samples/?or=1&c-campaign.name=Bad Guys&c-filename=foo.txt
+
+This will return samples with a Campaign Name of "Bad Guys" OR a filename of
+"foo.txt".
 
 As long as you have a "c-" in front of the parameter, you can search against any
 field in the database, whether it is a CRITs supported field or not!
@@ -1763,6 +1771,7 @@ Unique POST Parameters:
 :threat_type: The threat type of the Indicator.
 :attack_type: The attack type of the Indicator.
 :value: Indicator value.
+:description: A description of the Indicator.
 
 Indicator Activity API
 -------------------------------------------
@@ -2031,3 +2040,12 @@ Actor PATCH actions
 :remove_attribution:
 :set_actor_name:
 :update_actor_aliases:
+
+Signature PATCH actions
+-----------------------
+:update_dependency:
+:update_max_version:
+:update_min_version:
+:update_signature_type:
+:update_signature_data:
+:update_title:

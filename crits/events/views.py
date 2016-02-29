@@ -64,11 +64,11 @@ def add_event(request):
                                    analyst=request.user.username)
             if 'object' in result:
                 del result['object']
-            return HttpResponse(json.dumps(result), mimetype="application/json")
+            return HttpResponse(json.dumps(result), content_type="application/json")
         else:
             return HttpResponse(json.dumps({'form': event_form.as_table(),
                                             'success': False}),
-                                mimetype="application/json")
+                                content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error": "Expected AJAX POST"},
@@ -197,7 +197,7 @@ def set_event_title(request, event_id):
         return HttpResponse(json.dumps(update_event_title(event_id,
                                                           title,
                                                           analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -223,7 +223,7 @@ def set_event_type(request, event_id):
         return HttpResponse(json.dumps(update_event_type(event_id,
                                                          event_type,
                                                          analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -245,7 +245,7 @@ def get_event_type_dropdown(request):
         e_types = EventTypes.values(sort=True)
         result = {'types': e_types}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX"
         return render_to_response("error.html",

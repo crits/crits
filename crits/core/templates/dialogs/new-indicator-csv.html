@@ -1,8 +1,8 @@
-{% load url from future %}
+
 
 <div id="dialog-{{ request.GET.dialog }}" title="Upload Indicator CSV">
     <p><b>CSV must have the following column names to be processed properly:<br/>
-        Indicator, Type, Threat Type, Attack Type, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action</b><br/><br/>
+        Indicator, Type, Threat Type, Attack Type, Description, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action</b><br/><br/>
         In the raw CSV, separate multiple Tickets, Actions, and/or Bucket List values with commas, and<br/>
         surround with quotes (e.g. "value1,value2,value3").<br/><br/>
         Note: Some programs/libraries (e.g. Excel) will automatically insert quotes for you when<br/>
