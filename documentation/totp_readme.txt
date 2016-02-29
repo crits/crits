@@ -80,6 +80,21 @@ Secrets can theoretically be recovered using the users OTP password by
 decrypting the value in the database. There is no supported way to do this,
 someone would need to do this manually.
 
+The supported method is to contact your local CRITs administratior who may 
+clear the encrypted blob that is stored in the users mongodb profile document. 
+This may be performed either in the CRITs Web UI or from the command line using
+the following command executed from your base CRITs installation directory:
+
+"python manage.py users -u [USER] -c "
+
+This will clear the affected users encrypted blob and allow them to re-establish 
+a new OTP account.
+
+* When TOTP is enabled, will my API calls be affected?
+
+TOTP is enforced based on originating authentication source through the CRITs Web
+UI control panel under System/Auth/Security settings.
+
 * What platforms are supported by Google Authenticator?
 
 A lot. See [4].

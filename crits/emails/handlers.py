@@ -107,7 +107,7 @@ def get_email_formatted(email_id, analyst, data_format):
     sources = user_sources(analyst)
     email = Email.objects(id=email_id, source__name__in=sources).first()
     if not email:
-        return HttpResponse(json.dumps({}), mimetype="application/json")
+        return HttpResponse(json.dumps({}), content_type="application/json")
     exclude = [
                 "created",
                 "source",
@@ -134,7 +134,7 @@ def get_email_formatted(email_id, analyst, data_format):
         data = {"email_yaml": email.to_json(exclude=exclude)}
     else:
         data = {"email_yaml": {}}
-    return HttpResponse(json.dumps(data), mimetype="application/json")
+    return HttpResponse(json.dumps(data), content_type="application/json")
 
 def get_email_detail(email_id, analyst):
     """
@@ -886,6 +886,8 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     emldata = []
     boundary = None
     isbody = False
+    if not isinstance(data, str):
+        data = data.read()
     for line in data.split("\n"):
         # We match the regex for a boundary definition
         m = boundaryre.search(line)
@@ -1525,7 +1527,7 @@ def parse_ole_file(file):
     ole.close()
 
     # Process headers to extract data
-    headers = Parser().parsestr(email.get('raw_header', ''), headersonly=True)
+    headers = Parser().parse(io.StringIO(email.get('raw_header', '')), headersonly=True)
     email['from_address'] = headers.get('From', '')
     email['reply_to'] = headers.get('Reply-To', '')
     email['date'] = headers.get('Date', '')

@@ -493,6 +493,7 @@ phrase.</p>
 <li><a class="reference internal" href="#updating-tlos-through-the-api-using-patch" id="id105">18.27&nbsp;&nbsp;&nbsp;Updating TLOs through the API using PATCH</a></li>
 <li><a class="reference internal" href="#common-patch-actions-for-all-tlos" id="id106">18.28&nbsp;&nbsp;&nbsp;Common PATCH actions for all TLOs</a></li>
 <li><a class="reference internal" href="#actor-patch-actions" id="id107">18.29&nbsp;&nbsp;&nbsp;Actor PATCH actions</a></li>
+<li><a class="reference internal" href="#signature-patch-actions" id="id108">18.30&nbsp;&nbsp;&nbsp;Signature PATCH actions</a></li>
 </ul>
 </li>
 </ul>
@@ -1346,6 +1347,8 @@ information, as follows:</p>
 </tr>
 <tr class="field"><th class="field-name">Value:</th><td class="field-body">Define the value for the indicator</td>
 </tr>
+<tr class="field"><th class="field-name">Description:</th><td class="field-body">Enter a brief description for the indicator</td>
+</tr>
 <tr class="field"><th class="field-name">Confidence:</th><td class="field-body">Select the confidence level for the indicator</td>
 </tr>
 <tr class="field"><th class="field-name">Impact:</th><td class="field-body">Select the level of impact for the indicator</td>
@@ -1943,11 +1946,16 @@ you use search operators in the global search box. Here's an example:</p>
 /api/v1/samples/?c-campaign.name=Bad Guys&amp;c-filename=foo.txt</blockquote>
 <p>You'll notice a couple things here. The first is that there is a &quot;c-&quot; in front
 of the field name. This tells the API that this parameter should be used as a
-field to search against to limit your results. Second is that there is no
-operators for defining AND or OR. Currently this only supports AND operations.
-In our example, only samples with a Campaign Name of &quot;Bad Guys&quot; AND a filename
-of &quot;foo.txt&quot; will be returned to us. Finally, in this format the fields are both
-full matches.</p>
+field to search against to limit your results. In our example, only samples with
+a Campaign Name of &quot;Bad Guys&quot; AND a filename of &quot;foo.txt&quot; will be returned to
+us. Finally, in this format the fields are both full matches.</p>
+<p>The above assumes the parameters are to be used in an AND query. If you wish to
+instead use your parameters in an OR query, you can add &quot;or=1&quot; to your parameter
+list:</p>
+<blockquote>
+/api/v1/samples/?or=1&amp;c-campaign.name=Bad Guys&amp;c-filename=foo.txt</blockquote>
+<p>This will return samples with a Campaign Name of &quot;Bad Guys&quot; OR a filename of
+&quot;foo.txt&quot;.</p>
 <p>As long as you have a &quot;c-&quot; in front of the parameter, you can search against any
 field in the database, whether it is a CRITs supported field or not!</p>
 <p>If you wish to use regex, you can add &quot;&amp;regex=1&quot;. This will convert <em>all</em> &quot;c-&quot;
@@ -2542,6 +2550,8 @@ only &quot;date&quot; is required:</p>
 </tr>
 <tr class="field"><th class="field-name">value:</th><td class="field-body">Indicator value.</td>
 </tr>
+<tr class="field"><th class="field-name">description:</th><td class="field-body">A description of the Indicator.</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -2954,6 +2964,32 @@ arguments, and provide them in your request.</p>
 </tr>
 <tr class="field"><th class="field-name" colspan="2">update_actor_aliases:</th></tr>
 <tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="signature-patch-actions">
+<h2><a class="toc-backref" href="#id108">18.30&nbsp;&nbsp;&nbsp;Signature PATCH actions</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name" colspan="2">update_dependency:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">update_max_version:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">update_min_version:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">update_signature_type:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name" colspan="2">update_signature_data:</th></tr>
+<tr class="field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+<tr class="field"><th class="field-name">update_title:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>

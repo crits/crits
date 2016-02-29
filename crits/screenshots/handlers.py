@@ -87,7 +87,7 @@ def get_screenshot(_id=None, tag=None, analyst=None, thumb=False):
         im = Image.open(screenshot.thumb)
     else:
         im = Image.open(screenshot.screenshot)
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(content_type="image/png")
     im.save(response, "PNG")
     return response
 

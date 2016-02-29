@@ -81,7 +81,7 @@ def add_update_comment(request, method, obj_type, obj_id):
                                       subscr, analyst)
         return HttpResponse(json.dumps({'success':False,
                                         'form':form.as_table()}),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response("error.html", {'error':'Expected AJAX/POST'})
 
 @user_passes_test(user_can_view_data)
@@ -101,7 +101,7 @@ def remove_comment(request, obj_id):
         date = datetime.datetime.strptime(request.POST['key'],
                                           settings.PY_DATETIME_FORMAT)
         result = comment_remove(obj_id, analyst, date)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     return render_to_response("error.html", {'error':'Expected AJAX/POST'})
 
 @user_passes_test(user_can_view_data)
@@ -141,7 +141,7 @@ def get_new_comments(request):
         result = {'success': True, 'html': html}
         return HttpResponse(json.dumps(result,
                                        default=json_handler),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html", {'error':'Expected AJAX/POST'})
 

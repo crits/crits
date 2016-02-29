@@ -120,7 +120,7 @@ def update_object_description(request):
                                                           id_,
                                                           description,
                                                           analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -144,7 +144,7 @@ def update_object_data(request):
                                                           id_,
                                                           data,
                                                           analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -167,7 +167,7 @@ def toggle_favorite(request):
         return HttpResponse(json.dumps(favorite_update(type_,
                                                        id_,
                                                        analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -186,7 +186,7 @@ def favorites(request):
     if request.method == "POST" and request.is_ajax():
         analyst = request.user.username
         return HttpResponse(json.dumps(get_favorites(analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -243,7 +243,7 @@ def update_status(request, type_, id_):
                                                      id_,
                                                      value,
                                                      analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -346,7 +346,7 @@ def login(request):
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     remote_addr = request.META.get('REMOTE_ADDR', '')
     accept_language = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
-    next_url = request.REQUEST.get('next', None)
+    next_url = request.GET.get('next', request.POST.get('next', None))
 
     # Setup defaults
     username = None
@@ -406,7 +406,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
             response['success'] = False
             response['message'] = 'Unknown user or bad password.'
             return HttpResponse(json.dumps(response),
-                                mimetype="application/json")
+                                content_type="application/json")
 
         #This casues auth failures with LDAP and upper case name parts
         #username = username.lower()
@@ -420,7 +420,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
         resp = login_user(username, password, next_url, user_agent,
                           remote_addr, accept_language, request,
                           totp_pass=totp_pass)
-        return HttpResponse(json.dumps(resp), mimetype="application/json")
+        return HttpResponse(json.dumps(resp), content_type="application/json")
 
     # Display template for authentication
     return render_to_response('login.html',
@@ -566,7 +566,7 @@ def source_releasability(request):
             response = {'success': result['success'],
                         'error': result['message']}
         return HttpResponse(json.dumps(response),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST!"
         return render_to_response("error.html",
@@ -597,10 +597,10 @@ def source_access(request):
                 message = '<div>User modified successfully!</div>'
                 result['message'] = message
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return HttpResponse(json.dumps({'form':form.as_table()}),
-                                mimetype="application/json")
+                                content_type="application/json")
     else:
         error = "Expected AJAX POST!"
         return render_to_response("error.html",
@@ -636,7 +636,7 @@ def source_add(request):
             message = {'success': False,
                        'form': source_form.as_table()}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response("error.html",
                               {"error" : 'Expected AJAX POST' },
                               RequestContext(request))
@@ -667,7 +667,7 @@ def user_role_add(request):
             message = {'success': False,
                        'form': role_form.as_table()}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response("error.html",
                               {"error" : 'Expected AJAX POST'},
                               RequestContext(request))
@@ -726,15 +726,15 @@ def add_update_source(request, method, obj_type, obj_id):
                                                           RequestContext(request))
                 return HttpResponse(json.dumps(result,
                                                default=json_handler),
-                                    mimetype='application/json')
+                                    content_type="application/json")
             else:
                 return HttpResponse(json.dumps({'success': False,
                                                 'form': form.as_table()}),
-                                    mimetype='application/json')
+                                    content_type="application/json")
         else:
             return HttpResponse(json.dumps({'success': False,
                                             'form':form.as_table()}),
-                                mimetype='application/json')
+                                content_type="application/json")
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -762,7 +762,7 @@ def remove_source(request, obj_type, obj_id):
                                    date,
                                    '%s' % request.user.username)
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             error = "You do not have permission to remove this item"
             return render_to_response("error.html",
@@ -792,7 +792,7 @@ def remove_all_source(request, obj_type, obj_id):
                                        name, '%s' % request.user.username)
             result['last'] = True
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             error = "You do not have permission to remove this item"
             return render_to_response("error.html",
@@ -828,7 +828,7 @@ def bucket_promote(request):
                                      related,
                                      description,
                                      analyst)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def bucket_modify(request):
@@ -999,7 +999,7 @@ def timeline(request, data_type="dns"):
         timeglider.append(tline)
         return HttpResponse(json.dumps(timeglider,
                                        default=json_util.default),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response('timeline.html',
                                   {'data_type': data_type,
@@ -1279,7 +1279,6 @@ def base_context(request):
 
     return base_context
 
-@user_passes_test(user_can_view_data)
 def user_context(request):
     """
     Set of common content about the user to include in the Response so it is
@@ -1298,13 +1297,14 @@ def user_context(request):
         context['admin'] = False
     # Get user theme
     user = CRITsUser.objects(username=request.user.username).first()
-    context['theme'] = user.get_preference('ui', 'theme', 'default')
-    favorite_count = 0
-    favorites = user.favorites.to_dict()
-    for favorite in favorites.values():
-        favorite_count += len(favorite)
-    context['user_favorites'] = user.favorites.to_json()
-    context['favorite_count'] = favorite_count
+    if user:
+        context['theme'] = user.get_preference('ui', 'theme', 'default')
+        favorite_count = 0
+        favorites = user.favorites.to_dict()
+        for favorite in favorites.values():
+            favorite_count += len(favorite)
+        context['user_favorites'] = user.favorites.to_json()
+        context['favorite_count'] = favorite_count
     return context
 
 @user_passes_test(user_can_view_data)
@@ -1322,7 +1322,7 @@ def get_user_source_list(request):
         message = {'success': True,
                    'data': user_source_access}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1357,7 +1357,7 @@ def user_source_access(request, username=None):
         message = {'success': True,
                    'message': form.as_table()}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1401,7 +1401,7 @@ def user_preference_toggle(request, section, setting):
                 result["reload"] = pref['reload']
 
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1456,7 +1456,7 @@ def user_preference_update(request, section):
                                               RequestContext(request))
 
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1497,7 +1497,7 @@ def delete_user_notification(request, type_, oid):
         message = "<p style=\"text-align: center;\">You have no new notifications!</p>"
         result['message'] = message
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1533,7 +1533,7 @@ def change_subscription(request, stype, oid):
         result = {'success': True,
                   'message': message}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1568,7 +1568,7 @@ def source_subscription(request):
             message = "subscribed"
         result = {'success': True, 'message': message}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1620,7 +1620,7 @@ def change_password(request):
                                       new_p,
                                       new_p_c)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1653,7 +1653,7 @@ def change_totp_pin(request):
         else:
             result = {'message': "Please provide a pin"}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1707,7 +1707,7 @@ def toggle_user_active(request):
             toggle_active(user, analyst)
             result = {'success': True}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1787,7 +1787,7 @@ def toggle_item_active(request):
             result = {'success': False}
         else:
             result = toggle_item_state(type_, oid, analyst)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1823,7 +1823,7 @@ def add_preferred_actions(request):
     else:
         result = {'success': False, 'message': "Expected AJAX POST"}
     return HttpResponse(json.dumps(result, default=json_handler),
-                        mimetype='application/json')
+                        content_type="application/json")
 
 
 @user_passes_test(user_can_view_data)
@@ -1901,7 +1901,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
             date = date.replace(microsecond=date.microsecond/1000*1000)
             result = ticket_remove(type_, id_, date, analyst)
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             error = "You do not have permission to remove this item."
             return render_to_response("error.html",
@@ -1936,11 +1936,11 @@ def add_update_ticket(request, method, type_=None, id_=None):
                                                    'obj': class_from_id(type_, id_)})
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
-                                mimetype="application/json")
+                                content_type="application/json")
         else: #invalid form
             return HttpResponse(json.dumps({'success':False,
                                             'form': form.as_table()}),
-                                mimetype="application/json")
+                                content_type="application/json")
     #default. Should we do anything else here?
     return HttpResponse({})
 
@@ -1956,7 +1956,7 @@ def get_search_help(request):
 
     result = {'template': render_to_string('search_help.html', {})}
     return HttpResponse(json.dumps(result, default=json_handler),
-                        mimetype="application/json")
+                        content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def get_api_key(request):
@@ -1974,16 +1974,16 @@ def get_api_key(request):
         if not name:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = get_api_key_by_name(username, name)
         if result:
             return HttpResponse(json.dumps({'success': True,
                                             'message': result}),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'No key for that name.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -2006,10 +2006,10 @@ def create_api_key(request):
         if not name:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = create_api_key_by_name(username, name)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -2032,10 +2032,10 @@ def make_default_api_key(request):
         if not name:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = make_default_api_key_by_name(username, name)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -2058,10 +2058,10 @@ def revoke_api_key(request):
         if not name:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = revoke_api_key_by_name(username, name)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -2161,7 +2161,7 @@ def new_action(request):
         else:
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response('error.html',
                               {'error': 'Expected AJAX POST'})
 
@@ -2218,11 +2218,11 @@ def add_update_action(request, method, obj_type, obj_id):
                                                    'obj_id':obj_id})
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
-                                mimetype='application/json')
+                                content_type="application/json")
         else: #invalid form
             return HttpResponse(json.dumps({'success':False,
                                             'form':form.as_table()}),
-                                mimetype='application/json')
+                                content_type="application/json")
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -2247,7 +2247,7 @@ def remove_action(request, obj_type, obj_id):
             date = date.replace(microsecond=date.microsecond/1000*1000)
             result = action_remove(obj_type, obj_id, date, analyst)
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             error = "You do not have permission to remove this item."
             return render_to_response("error.html",
@@ -2268,4 +2268,4 @@ def get_actions_for_tlo(request):
     type_ = request.GET.get('type', None)
     final = get_action_types_for_tlo(type_)
     return HttpResponse(json.dumps({'results': final}),
-                mimetype="application/json")
+                content_type="application/json")

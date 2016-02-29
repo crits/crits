@@ -4,7 +4,10 @@ import threading
 from django.utils.html import escape as html_escape
 
 from mongoengine import EmbeddedDocument
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 from mongoengine.base.datastructures import BaseList
 from mongoengine.queryset import Q
 

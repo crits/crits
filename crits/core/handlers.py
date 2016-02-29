@@ -8,16 +8,26 @@ import re
 import ushlex as shlex
 import urllib
 
+from urlparse import urlparse
 from bson.objectid import ObjectId
 from django.conf import settings
-from django.contrib.auth import authenticate, login as user_login
+
+from django.contrib.auth.signals import user_logged_in
+from django.middleware.csrf import rotate_token
+from django.contrib.auth import authenticate
+# we implement django.contrib.auth.login as user_login in here to accomodate mongoengine 
 from django.core.urlresolvers import reverse, resolve, get_script_prefix
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.html import escape as html_escape
-from django.utils.http import urlencode
-from mongoengine.base import ValidationError
+from django.utils.http import urlencode, urlunquote, is_safe_url
+
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
+
 from operator import itemgetter
 
 from crits.config.config import CRITsConfig
@@ -2149,7 +2159,7 @@ def get_query(col_obj,request):
             return response
         query.update(qdict)
         term = request.GET['q']
-    qparams = request.REQUEST.copy()
+    qparams = request.GET.copy()
     qparams = check_query(qparams,request.user.username,col_obj)
     for key,value in qparams.items():
         if key in keymaps:
@@ -3344,6 +3354,49 @@ reset code expires.\n\nThank you!
                                         default=json_handler),
                             content_type="application/json")
 
+def user_login(request, user):
+    """
+    Persist a user id and a backend in the request. This way a user doesn't
+    have to reauthenticate on every request. Note that data set during
+    the anonymous session is retained when the user logs in.
+
+    This is basically same as django.contrib.auth.login from Django 1.7
+    Django 1.8+ uses user._meta.pk.value_to_string(user) instead of user.pk
+    once mongoengine is fixed, we'll be able to just import 
+    django.contrib.auth.login as user_login
+    """
+
+    SESSION_KEY = '_auth_user_id'
+    BACKEND_SESSION_KEY = '_auth_user_backend'
+    HASH_SESSION_KEY = '_auth_user_hash'
+    REDIRECT_FIELD_NAME = 'next'
+    session_auth_hash = ''
+    if user is None:
+        user = request.user
+    if hasattr(user, 'get_session_auth_hash'):
+        session_auth_hash = user.get_session_auth_hash()
+
+    if SESSION_KEY in request.session:
+        boo = request.session[SESSION_KEY]
+        if boo != user.pk or (
+                session_auth_hash and
+                request.session.get(HASH_SESSION_KEY) != session_auth_hash):
+            # To avoid reusing another user's session, create a new, empty
+            # session if the existing session corresponds to a different
+            # authenticated user.
+            request.session.flush()
+    else:
+        request.session.cycle_key()
+    #request.session[SESSION_KEY] = user._meta.pk.value_to_string(user)
+    request.session[SESSION_KEY] = user.pk
+    request.session[BACKEND_SESSION_KEY] = user.backend
+    request.session[HASH_SESSION_KEY] = session_auth_hash
+    if hasattr(request, 'user'):
+        request.user = user
+    rotate_token(request)
+    user_logged_in.send(sender=user.__class__, request=request, user=user)
+
+
 def login_user(username, password, next_url=None, user_agent=None,
                remote_addr=None, accept_language=None, request=None,
                totp_pass=None):
@@ -3469,17 +3522,16 @@ def login_user(username, password, next_url=None, user_agent=None,
                     tmp_url = next_url
                     if next_url.startswith(prefix):
                         tmp_url = tmp_url.replace(prefix, '/', 1)
-                    res = resolve(tmp_url)
-                    url_name = res.url_name
-                    args = res.args
-                    kwargs = res.kwargs
-                    redir = reverse(url_name, args=args, kwargs=kwargs)
-                    del redir
+                    next_url = urlunquote(tmp_url)
+                    if not is_safe_url(next_url):
+                        raise Exception
+                    resolve(urlparse(next_url).path)
                     response['success'] = True
                     response['message'] = next_url
-                except:
+                except Exception:
                     response['success'] = False
                     response['message'] = 'ALERT - attempted open URL redirect attack to %s. Please report this to your system administrator.' % next_url
+                    logger.info('ALERT: redirect attack: %s' % next_url)
                 return response
             response['success'] = True
             if 'message' not in response:
@@ -3597,7 +3649,7 @@ def download_grid_file(request, dtype, sample_md5):
         else:
             data = [(obj['filename'], get_file(sample_md5, "objects"))]
             zip_data = create_zip(data, False)
-            response = HttpResponse(zip_data, mimetype='application/octet-stream')
+            response = HttpResponse(zip_data, content_type="application/octet-stream")
             response['Content-Disposition'] = 'attachment; filename=%s' % obj['filename'] + ".zip"
             return response
     if dtype == 'pcap':
@@ -3610,7 +3662,7 @@ def download_grid_file(request, dtype, sample_md5):
                                       RequestContext(request))
         data = [(pcap['filename'], get_file(sample_md5, "pcaps"))]
         zip_data = create_zip(data, False)
-        response = HttpResponse(zip_data, mimetype='application/octet-stream')
+        response = HttpResponse(zip_data, content_type="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s' % pcap['filename'] + ".zip"
         return response
     if dtype == 'cert':
@@ -3623,7 +3675,7 @@ def download_grid_file(request, dtype, sample_md5):
                                       RequestContext(request))
         data = [(cert['filename'], get_file(sample_md5, "certificates"))]
         zip_data = create_zip(data, False)
-        response = HttpResponse(zip_data, mimetype='application/octet-stream')
+        response = HttpResponse(zip_data, content_type="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s' % cert['filename'] + ".zip"
         return response
 

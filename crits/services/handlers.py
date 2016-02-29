@@ -8,7 +8,10 @@ from django.http import HttpResponse
 from multiprocessing import Process
 from threading import Thread, local
 
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from multiprocessing.pool import Pool, ThreadPool
 
