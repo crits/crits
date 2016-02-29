@@ -13,7 +13,7 @@ from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source,
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, user_sources, is_user_favorite
+from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.signatures.signature import Signature, SignatureType, SignatureDependency
@@ -446,16 +446,13 @@ def delete_signature_dependency(_id, username=None):
     :param username: The user deleting this Signature dependency.
     :return: bool
     """
-
-    if is_admin(username):
-        signature_dependency = SignatureDependency.objects(id=_id).first()
-        if signature_dependency:
-            signature_dependency.delete(username=username)
-            return {'success': True}
-        else:
-            return {'success': False}
+    signature_dependency = SignatureDependency.objects(id=_id).first()
+    if signature_dependency:
+        signature_dependency.delete(username=username)
+        return {'success': True}
     else:
-       return {'success': False}
+        return {'success': False}
+
 
 
 def delete_signature(_id, username=None):
@@ -469,15 +466,13 @@ def delete_signature(_id, username=None):
     :returns: bool
     """
 
-    if is_admin(username):
-        signature = Signature.objects(id=_id).first()
-        if signature:
-            signature.delete(username=username)
-            return True
-        else:
-            return False
+    signature = Signature.objects(id=_id).first()
+    if signature:
+        signature.delete(username=username)
+        return True
     else:
         return False
+
 
 
 def add_new_signature_dependency(data_type, analyst):

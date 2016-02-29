@@ -8,7 +8,6 @@ from django.template import RequestContext
 
 from crits.core.handlers import get_item_names
 from crits.core.user_tools import user_can_view_data
-from crits.core.user_tools import user_is_admin
 from crits.signatures.forms import UploadSignatureForm
 from crits.signatures.forms import NewSignatureTypeForm
 from crits.signatures.forms import NewSignatureDependencyForm
@@ -281,7 +280,7 @@ def update_data_type_max_version(request):
                                   RequestContext(request))
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def remove_signature_dependency(request):
     """
     Remove Signature Dependency from CRITs
@@ -308,7 +307,7 @@ def remove_signature_dependency(request):
                                   RequestContext(request))
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def remove_signature(request, _id):
     """
     Remove Signature from CRITs.
