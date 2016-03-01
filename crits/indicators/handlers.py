@@ -547,7 +547,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         ind['attack_type'] = attack_type.strip()
         ind['value'] = value.strip()
         ind['lower'] = value.lower().strip()
-        ind['description'] = description
+        ind['description'] = description.strip()
 
         if campaign:
             ind['campaign'] = campaign
@@ -658,8 +658,10 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             indicator.status = ind['status']
         add_desc = "\nSeen on %s as: %s" % (str(datetime.datetime.now()),
                                           ind['value'])
-        if indicator.description is None:
-            indicator.description = add_desc
+        if not indicator.description:
+            indicator.description = ind['description'] + add_desc
+        elif indicator.description != ind['description']:
+            indicator.description += "\n" + ind['description'] + add_desc
         else:
             indicator.description += add_desc
 
