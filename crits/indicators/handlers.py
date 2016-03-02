@@ -478,7 +478,8 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
 def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
                          analyst, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
-                         campaign_confidence=None, confidence=None, description=None, impact=None,
+                         campaign_confidence=None, confidence=None,
+                         description=None, impact=None,
                          bucket_list=None, ticket=None, cache={}):
     """
     Handle adding an individual indicator.
@@ -533,6 +534,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         threat_type = IndicatorThreatTypes.UNKNOWN
     if attack_type is None:
         attack_type = IndicatorAttackTypes.UNKNOWN
+    if description is None:
+        description = ''
 
     if value == None or value.strip() == "":
         result = {'success': False,
@@ -642,16 +645,16 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                   attack_type=ind['attack_type']).first()
     if not indicator:
         indicator = Indicator()
-        indicator.ind_type = ind['type']
-        indicator.threat_type = ind['threat_type']
-        indicator.attack_type = ind['attack_type']
-        indicator.value = ind['value']
-        indicator.lower = ind['lower']
-        indicator.description = ind['description']
+        indicator.ind_type = ind.get('type')
+        indicator.threat_type = ind.get('threat_type')
+        indicator.attack_type = ind.get('attack_type')
+        indicator.value = ind.get('value')
+        indicator.lower = ind.get('lower')
+        indicator.description = ind.get('description', '')
         indicator.created = datetime.datetime.now()
         indicator.confidence = EmbeddedConfidence(analyst=analyst)
         indicator.impact = EmbeddedImpact(analyst=analyst)
-        indicator.status = ind['status']
+        indicator.status = ind.get('status')
         is_new_indicator = True
     else:
         if ind['status'] != Status.NEW:
@@ -659,9 +662,9 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         add_desc = "\nSeen on %s as: %s" % (str(datetime.datetime.now()),
                                           ind['value'])
         if not indicator.description:
-            indicator.description = ind['description'] + add_desc
+            indicator.description = ind.get('description', '') + add_desc
         elif indicator.description != ind['description']:
-            indicator.description += "\n" + ind['description'] + add_desc
+            indicator.description += "\n" + ind.get('description', '') + add_desc
         else:
             indicator.description += add_desc
 
