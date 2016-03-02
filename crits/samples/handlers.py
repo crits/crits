@@ -648,10 +648,10 @@ def handle_file(filename, data, source, method='Generic', reference='',
                 related_md5=None, related_id=None, related_type='Sample',
                 backdoor=None, user='', campaign=None, confidence='low',
                 md5_digest=None, sha1_digest=None, sha256_digest=None,
-                size=None, mimetype=None, bucket_list=None, ticket=None,
+                size=0, mimetype=None, bucket_list=None, ticket=None,
                 relationship=None, inherited_source=None, is_validate_only=False,
                 is_return_only_md5=True, cache={}, backdoor_name=None,
-                backdoor_version=None):
+                backdoor_version=None, description=''):
     """
     Handle adding a file.
 
@@ -708,6 +708,8 @@ def handle_file(filename, data, source, method='Generic', reference='',
     :type backdoor_name: str
     :param backdoor_version: Version of the backdoor to relate the file to.
     :type backdoor_version: str
+    :param description: A description for this Sample
+    :type description: str
     :returns: str,
               dict with keys:
               "success" (boolean),
@@ -801,14 +803,22 @@ def handle_file(filename, data, source, method='Generic', reference='',
         sample.md5 = md5_digest
         sample.sha1 = sha1_digest
         sample.sha256 = sha256_digest
-        sample.size = size
         sample.mimetype = mimetype
+        sample.description = description
     else:
         if filename not in sample.filenames and filename != sample.filename:
             sample.filenames.append(filename)
 
+        if not sample.description:
+            sample.description = description
+        elif sample.description != description:
+            sample.description += "\n" + description
+
         if cached_results != None:
             cached_results[md5_digest] = sample
+
+    # this will be overwritten if binary exists
+    sample.size = size
 
     # attempt to discover binary in GridFS before assuming we don't
     # have it

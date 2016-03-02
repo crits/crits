@@ -7,7 +7,7 @@ biplist
 celery
 defusedxml
 django-celery
-django-tastypie==0.13.1
+django-tastypie==0.13.3
 django-tastypie-mongoengine==0.4.6
 kombu
 lxml
