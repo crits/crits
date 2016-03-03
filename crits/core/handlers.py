@@ -1024,7 +1024,7 @@ def generate_bucket_jtable(request, option):
               'Sample', 'Signature', 'Target', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
-              'listurl': 'jtlist',
+              'listurl': reverse('crits.core.views.bucket_list', args=('jtlist',)),
               'searchurl': reverse('crits.core.views.global_search_listing'),
               'default_sort': 'name ASC',
               'no_sort': ['Promote'],
@@ -4128,7 +4128,7 @@ def generate_sector_jtable(request, option):
               'Sample', 'Signature', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
-              'listurl': 'jtlist',
+              'listurl': reverse('crits.core.views.sector_list', args=('jtlist',)),
               'searchurl': reverse('crits.core.views.global_search_listing'),
               'default_sort': 'name ASC',
               'no_sort': [],
