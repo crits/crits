@@ -40,7 +40,7 @@
                 <td><a href="{% url 'crits.emails.views.emails_listing' %}?search_type=from&q={{rel.from}}&force_full=1">{{ rel.from }}</a>
                 {% if splunk_search_url %}
                 <span style="float: right;">
-                    <a href="{{ splunk_search_url }}{{ rel.from }}"><img src="/new_images/splunk.png" border="0px"/></a>
+                    <a href="{{ splunk_search_url }}{{ rel.from }}"><img src="new_images/splunk.png" border="0px"/></a>
                 </span>
                 {% endif %}
                 </td>
@@ -49,7 +49,7 @@
                     <a href="{% url 'crits.emails.views.emails_listing' %}?search_type=sender&q={{rel.sender|urlencode}}&force_full=1">{{ rel.sender }}</a>
                     {% if splunk_search_url %}
                     <span style="float: right;">
-                        <a href="{{ splunk_search_url }}{{ rel.sender }}"><img src="/new_images/splunk.png" border="0px"/></a>
+                        <a href="{{ splunk_search_url }}{{ rel.sender }}"><img src="new_images/splunk.png" border="0px"/></a>
                     </span>
                     {% endif %}
                 {% endif %}

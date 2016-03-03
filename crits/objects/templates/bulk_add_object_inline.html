@@ -1,6 +1,6 @@
 {% block css_includes %}
-<link rel="stylesheet" media="screen" href="/css/handsontable/default.css">
-<link rel="stylesheet" media="screen" href="/css/handsontable/jquery.handsontable.full.css">
+<link rel="stylesheet" media="screen" href="css/handsontable/default.css">
+<link rel="stylesheet" media="screen" href="css/handsontable/jquery.handsontable.full.css">
 {% endblock %}
 
 {% block content %}
@@ -34,7 +34,7 @@
 
     {% with height='undefined' navigation_control='false' %}
     if(typeof(Handsontable) === 'undefined') {
-        $.when($.getScript("/js/handsontable/jquery.handsontable.full.js"),
+        $.when($.getScript("js/handsontable/jquery.handsontable.full.js"),
                $.getScript("{{ STATIC_URL }}js/bulk_add_default.js")).done(function() {
             var defaultInlineTableName = '{{ table_name }}';
 

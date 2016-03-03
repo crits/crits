@@ -6,13 +6,13 @@
 <h3 class="titleheader">
     <span id="analysis_{{ analysis.analysis_id }}" class="collapsible">
         {% if analysis.status == "error" %}
-        <img src="/new_images/red_circle.png" class="analysisindicator" title="Error">
+        <img src="new_images/red_circle.png" class="analysisindicator" title="Error">
         {% elif analysis.status == "started" %}
-        <img src="/new_images/loader_circle.gif" class="analysisindicator" title="Running">
+        <img src="new_images/loader_circle.gif" class="analysisindicator" title="Running">
         {% elif not analysis.results %}
-        <img src="/new_images/yellow_circle.png" class="analysisindicator" title="No Results">
+        <img src="new_images/yellow_circle.png" class="analysisindicator" title="No Results">
         {% else %}
-        <img src="/new_images/green_circle.png" class="analysisindicator" title="Complete">
+        <img src="new_images/green_circle.png" class="analysisindicator" title="Complete">
         {% endif %}
         {{ analysis.service_name }} (v.{{ analysis.version}})</span>
    <span style="float: right;" class="ui-icon ui-icon-triangle-1-s collapsible"></span>
