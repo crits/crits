@@ -3531,7 +3531,7 @@ def login_user(username, password, next_url=None, user_agent=None,
                         raise Exception
                     resolve(urlparse(next_url).path)
                     response['success'] = True
-                    response['message'] = next_url
+                    response['message'] = prefix.rstrip('/') + '/' + next_url.lstrip('/')
                 except Exception:
                     response['success'] = False
                     response['message'] = 'ALERT - attempted open URL redirect attack to %s. Please report this to your system administrator.' % next_url
