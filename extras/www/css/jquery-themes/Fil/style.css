@@ -97,7 +97,7 @@ div.right {
 div.logo {
     width: 145px;
     height: 150px;
-    background: #dfdfdf url('/new_images/menu_item_shadow.png') repeat-y;
+    background: #dfdfdf url('../../../new_images/menu_item_shadow.png') repeat-y;
     border-bottom: 1px solid #dfdfdf;
     padding: 0px;
     margin: 0px;
@@ -159,7 +159,7 @@ span.nav-menu-icon {
     display: block;
     width: 18px;
     height: 18px;
-    background: url('/images/preferences.png') no-repeat;
+    background: url('../../../images/preferences.png') no-repeat;
     background-size: 15px 15px;
 }
 
@@ -182,7 +182,7 @@ span.search-menu-icon {
     display: block;
     width: 18px;
     height: 18px;
-    background: url('/images/search_magnifier.png') no-repeat;
+    background: url('../../../images/search_magnifier.png') no-repeat;
     background-size: 15px 15px;
 }
 
@@ -207,7 +207,7 @@ span.search-menu-icon {
 }
 
 .mmenu a.add {
-    background-image: url('/css/images/ui-icons_70b2e1_256x240.png');
+    background-image: url('../../images/ui-icons_70b2e1_256x240.png');
     display: inline-block;
     float: left;
     width: 10px;
@@ -238,7 +238,7 @@ span.favorites_icon_inactive {
 
 span.favorites_icon_active {
     margin-top: 3px;
-    background-image: url('/css/images/ui-icons_70b2e1_256x240.png');
+    background-image: url('../../images/ui-icons_70b2e1_256x240.png');
 }
 div#favorites_results {
     position: absolute;
@@ -268,7 +268,7 @@ span.clipboard_icon_empty {
 
 span.clipboard_icon_full {
     margin-top: 3px;
-    background-image: url('/css/images/ui-icons_70b2e1_256x240.png');
+    background-image: url('../../images/ui-icons_70b2e1_256x240.png');
 }
 
 div.top div.top_item p {
@@ -318,7 +318,7 @@ span.help_overlay_icon {
     width: 15px;
     height: 20px;
     display: block;
-    background: url('/images/help.png');
+    background: url('../../../images/help.png');
     background-size: 18px 18px;
     cursor: pointer;
 }
@@ -458,28 +458,28 @@ div.notifications table tr td.go_icon {
 }
 
 div.notifications table a.delete_notification {
-    background-image: url('/css/images/ui-icons_70b2e1_256x240.png');
+    background-image: url('../../images/ui-icons_70b2e1_256x240.png');
 }
 
 div.notifications table a.go_to_notification {
-    background-image: url('/css/images/ui-icons_70b2e1_256x240.png');
+    background-image: url('../../images/ui-icons_70b2e1_256x240.png');
     display: block;
     float: right;
 }
 
 div.top div.top_item span.subscription_link_enable {
     margin-top: 4px;
-    background-image: url('/css/images/ui-icons_70b2e1_256x240.png');
+    background-image: url('../../images/ui-icons_70b2e1_256x240.png');
     color: #000;
 }
 
 div.top div.top_item span.subscription_link_disable {
     margin-top: 4px;
-    background-image: url('/css/images/ui-icons_70b2e1_256x240.png');
+    background-image: url('../../images/ui-icons_70b2e1_256x240.png');
 }
 
 span.subscription_link_enable {
-    background-image: url('/css/images/ui-icons_70b2e1_256x240.png');
+    background-image: url('../../images/ui-icons_70b2e1_256x240.png');
 }
 
 span.subscription_link_disable {
@@ -487,7 +487,7 @@ span.subscription_link_disable {
 
 .textbox {
     width: 221px;
-    background: transparent url('/new_images/textbox_bg.jpg') no-repeat;
+    background: transparent url('../../../new_images/textbox_bg.jpg') no-repeat;
     color : #747862;
     height: 20px;
     border: 0px;
@@ -498,7 +498,7 @@ span.subscription_link_disable {
 
 .selectbox {
     width: 221px;
-    background: white url('/new_images/textbox_bg.jpg') no-repeat;
+    background: white url('../../../new_images/textbox_bg.jpg') no-repeat;
     color : #747862;
     height: 20px;
     border: 0px;
@@ -995,7 +995,7 @@ table.form tbody tr td textarea {
 }
 
 table.form tbody tr td select {
-    background: white url('/new_images/textbox_bg.jpg') no-repeat;
+    background: white url('../../../new_images/textbox_bg.jpg') no-repeat;
     color : #747862;
     height: 20px;
     border: 0px;
@@ -1014,7 +1014,7 @@ table.form tbody tr td select[multiple] {
 }
 
 table.form tbody tr td input[type="text"] {
-    background: transparent url('/new_images/textbox_bg.jpg') no-repeat;
+    background: transparent url('../../../new_images/textbox_bg.jpg') no-repeat;
     color : #747862;
     height: 20px;
     border: 0px;
@@ -1256,7 +1256,7 @@ table.services td.unavailable{
 
 span.missing_binary {
     float: right;
-    background-image: url('/css/images/ui-icons_cc0000_256x240.png');
+    background-image: url('../../images/ui-icons_cc0000_256x240.png');
     width: 15px;
     height: 10px;
     padding-top: 2px;
@@ -1270,7 +1270,7 @@ span.missing_binary {
 
 span.campaign_nav_icon {
     display: inline-block;
-    background-image: url('/new_images/STIX/STIX_Campaign.png');
+    background-image: url('../../../new_images/STIX/STIX_Campaign.png');
     background-size: 100%;
     width: 21px;
     height: 21px;
@@ -1279,7 +1279,7 @@ span.campaign_nav_icon {
 
 span.email_nav_icon {
     display: inline-block;
-    background-image: url('/new_images/STIX/STIX_ExploitTarget.png');
+    background-image: url('../../../new_images/STIX/STIX_ExploitTarget.png');
     background-size: 100%;
     width: 21px;
     height: 21px;
@@ -1288,7 +1288,7 @@ span.email_nav_icon {
 
 span.event_nav_icon {
     display: inline-block;
-    background-image: url('/new_images/STIX/STIX_Incident.png');
+    background-image: url('../../../new_images/STIX/STIX_Incident.png');
     background-size: 100%;
     width: 21px;
     height: 21px;
@@ -1297,7 +1297,7 @@ span.event_nav_icon {
 
 span.indicator_nav_icon {
     display: inline-block;
-    background-image: url('/new_images/STIX/STIX_Indicator.png');
+    background-image: url('../../../new_images/STIX/STIX_Indicator.png');
     background-size: 100%;
     width: 21px;
     height: 21px;
@@ -1306,7 +1306,7 @@ span.indicator_nav_icon {
 
 span.pcap_nav_icon {
     display: inline-block;
-    background-image: url('/new_images/STIX/STIX_ThreatActor.png');
+    background-image: url('../../../new_images/STIX/STIX_ThreatActor.png');
     background-size: 100%;
     width: 21px;
     height: 21px;
@@ -1315,7 +1315,7 @@ span.pcap_nav_icon {
 
 span.sample_nav_icon {
     display: inline-block;
-    background-image: url('/new_images/STIX/STIX_Course_of_Action.png');
+    background-image: url('../../../new_images/STIX/STIX_Course_of_Action.png');
     background-size: 100%;
     width: 21px;
     height: 21px;

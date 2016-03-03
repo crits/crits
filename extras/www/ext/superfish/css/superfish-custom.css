@@ -123,7 +123,7 @@
 
 .responsive .global_search_box {
     width: 220px;
-    background: transparent url('/new_images/textbox_bg.jpg') no-repeat;
+    background: transparent url('../../../new_images/textbox_bg.jpg') no-repeat;
     color : #747862;
     height: 20px;
     border: 0px;
