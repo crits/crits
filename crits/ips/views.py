@@ -1,5 +1,6 @@
 import json
 import urllib
+import logging
 
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
@@ -91,7 +92,7 @@ def bulk_add_ip(request):
             also contain helpful status messages about each operation.
     """
 
-    formdict = form_to_dict(AddIPForm(request.user, None))
+    formdict = form_to_dict(AddIPForm(request.user.username, None))
 
     if request.method == "POST" and request.is_ajax():
         response = process_bulk_add_ip(request, formdict)
@@ -119,37 +120,42 @@ def add_update_ip(request, method):
     """
 
     if request.method == "POST" and request.is_ajax():
+        request.user._setup()
         data = request.POST
-        form = AddIPForm(request.user, None, data)
+        form = AddIPForm(request.user.username, None, data)
+
         if form.is_valid():
             cleaned_data = form.cleaned_data
             ip = cleaned_data['ip']
-            name = cleaned_data['source']
-            reference = cleaned_data['source_reference']
-            method = cleaned_data['source_method']
+            source_name = cleaned_data['source_name']
+            source_reference = cleaned_data['source_reference']
+            source_method = cleaned_data['source_method']
+            source_tlp= cleaned_data['source_tlp']
             campaign = cleaned_data['campaign']
             confidence = cleaned_data['confidence']
-            analyst = cleaned_data['analyst']
             ip_type = cleaned_data['ip_type']
             add_indicator = False
             if cleaned_data.get('add_indicator'):
                 add_indicator = True
             indicator_reference = cleaned_data.get('indicator_reference')
             bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
-            ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+            ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)        
+
 
             result = ip_add_update(ip,
                                    ip_type,
-                                   source=name,
-                                   source_method=method,
-                                   source_reference=reference,
+                                   source=source_name,
+                                   source_method=source_method,
+                                   source_reference=source_reference,
+                                   source_tlp=source_tlp,
                                    campaign=campaign,
                                    confidence=confidence,
-                                   analyst=analyst,
+                                   user=request.user,
                                    bucket_list=bucket_list,
                                    ticket=ticket,
                                    is_add_indicator=add_indicator,
                                    indicator_reference=indicator_reference)
+
             if 'message' in result:
                 if not isinstance(result['message'], list):
                     result['message'] = [result['message']]
