@@ -64,8 +64,9 @@ def add_backdoor(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
+    
     if request.method == "POST" and request.is_ajax():
+        request.user._setup()
         data = request.POST
         form = AddBackdoorForm(request.user, data)
         if form.is_valid():
@@ -74,14 +75,16 @@ def add_backdoor(request):
             aliases = cleaned_data['aliases']
             description = cleaned_data['description']
             version = cleaned_data['version']
-            source = cleaned_data['source']
+            source = cleaned_data['source_name']
             reference = cleaned_data['source_reference']
             method = cleaned_data['source_method']
+            tlp = cleaned_data['source_tlp']
             campaign = cleaned_data['campaign']
             confidence = cleaned_data['confidence']
-            user = request.user.username
+            user = request.user
             bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+
 
             result = add_new_backdoor(name,
                                       version=version,
@@ -90,6 +93,7 @@ def add_backdoor(request):
                                       source=source,
                                       source_method=method,
                                       source_reference=reference,
+                                      source_tlp=tlp,
                                       campaign=campaign,
                                       confidence=confidence,
                                       user=user,

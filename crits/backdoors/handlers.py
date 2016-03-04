@@ -177,7 +177,7 @@ def get_backdoor_details(id_, user):
 
 def add_new_backdoor(name, version=None, aliases=None, description=None,
                      source=None, source_method=None, source_reference=None,
-                     campaign=None, confidence=None, user=None,
+                     source_tlp=None, campaign=None, confidence=None, user=None,
                      bucket_list=None, ticket=None):
     """
     Add an Backdoor to CRITs.
@@ -214,12 +214,14 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
     """
 
     retVal = {'success': False, 'message': ''}
+    username = user.username
 
     if isinstance(source, basestring):
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
-                                         analyst=user)]
+                                         tlp=source_tlp,
+                                         analyst=username)]
     elif isinstance(source, EmbeddedSource):
         source = [source]
 
@@ -294,11 +296,11 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         if ticket:
             backdoor.add_ticket(ticket, user)
 
-        backdoor.save(username=user)
+        backdoor.save(username=username)
 
         # run backdoor triage
         backdoor.reload()
-        run_triage(backdoor, user)
+        run_triage(backdoor, username)
 
         # Because family objects are put in the list first we will always
         # return a link to the most specific object created. If there is only

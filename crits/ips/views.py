@@ -193,10 +193,7 @@ def remove_ip(request):
                             request.user.username)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
-<<<<<<< HEAD
-
-=======
->>>>>>> 5715ae3de40c3a3fd6950ea09a84e1bf64c3469c
+        
     return render_to_response('error.html',
                               {'error':'Expected AJAX/POST'},
                               RequestContext(request))
