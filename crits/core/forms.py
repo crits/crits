@@ -1,7 +1,7 @@
 import re
 
 from django import forms
-from django.forms.util import ErrorList
+from django.forms.utils import ErrorList
 from django.forms.widgets import HiddenInput, RadioSelect, SelectMultiple
 
 from crits.core import form_consts

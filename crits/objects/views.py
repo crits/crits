@@ -44,7 +44,7 @@ def add_new_object(request):
                                    'form': form,
                                    'success': False})
             if request.is_ajax():
-                return HttpResponse(response, mimetype="application/json")
+                return HttpResponse(response, content_type="application/json")
             else:
                 return render_to_response("file_upload_response.html",
                                           {'response':response},
@@ -113,7 +113,7 @@ def add_new_object(request):
             result = {'success': False, 'message': message}
         if request.is_ajax():
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return render_to_response("file_upload_response.html",
                                       {'response': json.dumps(result)},
@@ -145,7 +145,7 @@ def bulk_add_object(request):
 
         return HttpResponse(json.dumps(response,
                             default=json_handler),
-                            mimetype='application/json')
+                            content_type="application/json")
     else:
         return render_to_response('bulk_add_default.html',
                                   {'formdict': formdict,
@@ -207,7 +207,7 @@ def bulk_add_object_inline(request):
 
         return HttpResponse(json.dumps(response,
                             default=json_handler),
-                            mimetype='application/json')
+                            content_type="application/json")
     else:
         is_prevent_initial_table = request.GET.get('isPreventInitialTable', False)
         is_use_item_source = request.GET.get('useItemSource', False)
@@ -276,7 +276,7 @@ def update_objects_value(request):
         else:
             message = "Error updating object value: %s" % results['message']
             result = {'success': False, 'message': message}
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -317,7 +317,7 @@ def update_objects_source(request):
             message = "Error updating object source: %s" % results['message']
             result = {'success': False, 'message': message}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -341,7 +341,7 @@ def get_object_type_dropdown(request):
             dd_final[obj_type] = obj_type
         result = {'types': dd_final}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -380,7 +380,7 @@ def delete_this_object(request):
                 message = "Error deleting object: %s" % results['message']
                 result = {'success': False, 'message': message}
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             error = "Expected AJAX"
     else:
@@ -418,7 +418,7 @@ def indicator_from_object(request):
                                               analyst,
                                               request)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",

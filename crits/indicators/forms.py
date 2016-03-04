@@ -72,7 +72,7 @@ class UploadIndicatorTextForm(SourceInForm):
         self.fields['source'].choices = [
             (c.name, c.name) for c in get_source_names(True, True, username)]
         self.fields['source'].initial = get_user_organization(username)
-        dt = "Indicator, Type, Threat Type, Attack Type, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action, Status\n"
+        dt = "Indicator, Type, Threat Type, Attack Type, Description, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action, Status\n"
         self.fields['data'].initial = dt
 
 class UploadIndicatorForm(SourceInForm):
@@ -88,6 +88,9 @@ class UploadIndicatorForm(SourceInForm):
     value = forms.CharField(
         widget=forms.Textarea(attrs={'rows': '5', 'cols': '28'}),
         required=True)
+    description = forms.CharField(
+        widget=forms.TextInput(attrs={'size': '50'}),
+        required=False)
     confidence = forms.ChoiceField(widget=forms.Select, required=True)
     impact = forms.ChoiceField(widget=forms.Select, required=True)
     campaign = forms.ChoiceField(widget=forms.Select, required=False)

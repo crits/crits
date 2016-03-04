@@ -33,7 +33,7 @@ def poll(request):
             # have changed since a long period of blocking.
             if is_user_toast_enabled and settings.ENABLE_TOASTS:
                 return HttpResponse(json.dumps(data),
-                                    mimetype="application/json")
+                                    content_type="application/json")
             else:
                 return HttpResponse(status=403)
         else:
@@ -62,7 +62,7 @@ def acknowledge(request):
             remove_user_from_notification_id(request.user.username, id)
 
             return HttpResponse(json.dumps({}),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             error = "Expected AJAX POST"
             return render_to_response("error.html",

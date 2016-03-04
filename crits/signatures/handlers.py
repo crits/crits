@@ -7,7 +7,10 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
@@ -413,27 +416,41 @@ def handle_signature_file(data, source_name, user=None,
     return status
 
 
-def update_signature_type(_id, data_type, analyst):
+def update_signature_type(type_, id_, data_type, user, **kwargs):
     """
     Update the Signature data type.
 
-    :param _id: ObjectId of the Signature to update.
-    :type _id: str
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: ObjectId of the Signature to update.
+    :type id_: str
     :param data_type: The data type to set.
     :type data_type: str
-    :param analyst: The user updating the data type.
-    :type analyst: str
+    :param user: The user updating the data type.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    signature = Signature.objects(id=_id).first()
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(user)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    signature = Signature.objects(id=id_).first()
     data_type = SignatureType.objects(name=data_type).first()
     if not data_type:
         return None
     else:
         signature.data_type = data_type.name
         try:
-            signature.save(username=analyst)
+            signature.save(username=user)
             return {'success': True}
         except ValidationError, e:
             return {'success': False, 'message': str(e)}
@@ -533,18 +550,20 @@ def add_new_signature_type(data_type, analyst):
         return False
 
 
-def update_dependency(type_, id_, dep, analyst):
+def update_dependency(type_, id_, dep, user, append=False, **kwargs):
     """
-    Change the min version of the data tool
+    Change the dependencies needed for a signature
 
     :param type_: The CRITs type of the top-level object.
     :type type_: str
     :param id_: The ObjectId to search for.
     :type id_: str
-    :param data_type_dependency: The new list of dependency
+    :param data_type_dependency: The new list of dependencies
     :type data_type_dependency: list
-    :param analyst: The user setting the description.
-    :type analyst: str
+    :param user: The user setting the dependency.
+    :type user: str
+    :param append: Should be appended to dependency list?
+    :type append: boolean
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -554,7 +573,7 @@ def update_dependency(type_, id_, dep, analyst):
         return {'success': False, 'message': 'Could not find object.'}
 
     if hasattr(klass, 'source'):
-        sources = user_sources(analyst)
+        sources = user_sources(user)
         obj = klass.objects(id=id_, source__name__in=sources).first()
     else:
         obj = klass.objects(id=id_).first()
@@ -567,22 +586,23 @@ def update_dependency(type_, id_, dep, analyst):
     data_type_dependency = h.unescape(dep)
     try:
         deps = data_type_dependency.split(',')
-        del obj.data_type_dependency[:]
-
+        if append is False:
+            del obj.data_type_dependency[:]
         for item in deps:
             item = item.strip()
             item = str(item)
             if item:
-                add_new_signature_dependency(item, analyst)
+                add_new_signature_dependency(item, user)
                 obj.data_type_dependency.append(item)
 
-        obj.save(username=analyst)
+        obj.save(username=user)
         return {'success': True, 'message': "Data type dependency set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
 
 
-def update_min_version(type_, id_, data_type_min_version, analyst):
+
+def update_min_version(type_, id_, data_type_min_version, user, **kwargs):
     """
     Change the min version of the data tool
 
@@ -592,8 +612,8 @@ def update_min_version(type_, id_, data_type_min_version, analyst):
     :type id_: str
     :param data_type_min_version: The new min version to use.
     :type data_type_min_version: str
-    :param analyst: The user setting the description.
-    :type analyst: str
+    :param user: The user setting the description.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -602,7 +622,7 @@ def update_min_version(type_, id_, data_type_min_version, analyst):
         return {'success': False, 'message': 'Could not find object.'}
 
     if hasattr(klass, 'source'):
-        sources = user_sources(analyst)
+        sources = user_sources(user)
         obj = klass.objects(id=id_, source__name__in=sources).first()
     else:
         obj = klass.objects(id=id_).first()
@@ -615,13 +635,13 @@ def update_min_version(type_, id_, data_type_min_version, analyst):
     data_type_min_version = h.unescape(data_type_min_version)
     try:
         obj.data_type_min_version = data_type_min_version
-        obj.save(username=analyst)
+        obj.save(username=user)
         return {'success': True, 'message': "Data type min version set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
 
 
-def update_max_version(type_, id_, data_type_max_version, analyst):
+def update_max_version(type_, id_, data_type_max_version, user, **kwargs):
     """
     Change the max version of the data tool
 
@@ -631,8 +651,8 @@ def update_max_version(type_, id_, data_type_max_version, analyst):
     :type id_: str
     :param data_type_max_version: The new max version to use.
     :type data_type_max_version: str
-    :param analyst: The user setting the description.
-    :type analyst: str
+    :param user: The user setting the description.
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -641,7 +661,7 @@ def update_max_version(type_, id_, data_type_max_version, analyst):
         return {'success': False, 'message': 'Could not find object.'}
 
     if hasattr(klass, 'source'):
-        sources = user_sources(analyst)
+        sources = user_sources(user)
         obj = klass.objects(id=id_, source__name__in=sources).first()
     else:
         obj = klass.objects(id=id_).first()
@@ -654,7 +674,7 @@ def update_max_version(type_, id_, data_type_max_version, analyst):
     data_type_max_version = h.unescape(data_type_max_version)
     try:
         obj.data_type_max_version = data_type_max_version
-        obj.save(username=analyst)
+        obj.save(username=user)
         return {'success': True, 'message': "Data type max version set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -672,3 +692,79 @@ def get_dependency_autocomplete(term):
     deps = [b.name for b in results]
     return HttpResponse(json.dumps(deps, default=json_handler),
                         content_type='application/json')
+
+def update_signature_data(type_, id_, data, user, **kwargs):
+    """
+    Change signature data for the current version
+
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
+    :param data: The new signature value to use.
+    :type data: str
+    :param user: The user setting the data value.
+    :type user: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(user)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser.HTMLParser()
+    data = h.unescape(data)
+    try:
+        obj.data = data
+        obj.save(username=user)
+        return {'success': True, 'message': "Signature value updated."}
+    except ValidationError, e:
+        return {'success': False, 'message': e}
+
+def update_title(type_, id_, title, user, **kwargs):
+    """
+    Change signature data for the current version
+
+    :param type_: The CRITs type of the top-level object.
+    :type type_: str
+    :param id_: The ObjectId to search for.
+    :type id_: str
+    :param title: The new signature title to use.
+    :type title: str
+    :param user: The user setting the data value.
+    :type user: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+    klass = class_from_type(type_)
+    if not klass:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    if hasattr(klass, 'source'):
+        sources = user_sources(user)
+        obj = klass.objects(id=id_, source__name__in=sources).first()
+    else:
+        obj = klass.objects(id=id_).first()
+    if not obj:
+        return {'success': False, 'message': 'Could not find object.'}
+
+    # Have to unescape the submitted data. Use unescape() to escape
+    # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
+    h = HTMLParser.HTMLParser()
+    data = h.unescape(title)
+    try:
+        obj.title = data
+        obj.save(username=title)
+        return {'success': True, 'message': "Signature title updated."}
+    except ValidationError, e:
+        return {'success': False, 'message': e}

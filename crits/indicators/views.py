@@ -183,6 +183,7 @@ def upload_indicator(request):
                     request.POST['method'],
                     request.POST['reference'],
                     add_domain=True,
+                    description=request.POST['description'],
                     campaign=request.POST['campaign'],
                     campaign_confidence=request.POST['campaign_confidence'],
                     confidence=request.POST['confidence'],
@@ -215,7 +216,7 @@ def upload_indicator(request):
 
         if request.is_ajax():
             return HttpResponse(json.dumps(message),
-                                mimetype="application/json")
+                                content_type="application/json")
         else: #file upload
             return render_to_response('file_upload_response.html',
                                       {'response': json.dumps(message)},
@@ -259,11 +260,11 @@ def add_update_activity(request, method, indicator_id):
                                                   {'activity': result['object'],
                                                    'indicator_id': indicator_id})
             return HttpResponse(json.dumps(result, default=json_handler),
-                                mimetype='application/json')
+                                content_type="application/json")
         else: #invalid form
             return HttpResponse(json.dumps({'success': False,
                                             'form': form.as_table()}),
-                                mimetype='application/json')
+                                content_type="application/json")
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -309,7 +310,7 @@ def update_ci(request, indicator_id, ci_type):
                                                  ci_type,
                                                  value,
                                                  analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def indicator_and_ip(request):
@@ -357,7 +358,7 @@ def indicator_and_ip(request):
             'success': False,
             'message': "Expected AJAX POST",
         }
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def indicator_from_tlo(request):
@@ -405,7 +406,7 @@ def indicator_from_tlo(request):
             'success':  False,
             'message':  "Expected AJAX POST"
         }
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def get_indicator_type_dropdown(request):
@@ -432,7 +433,7 @@ def get_indicator_type_dropdown(request):
             for type_ in type_list:
                 dd_final[type_] = type_
             result = {'types': dd_final}
-            return HttpResponse(json.dumps(result), mimetype="application/json")
+            return HttpResponse(json.dumps(result), content_type="application/json")
         else:
             error = "Expected AJAX"
             return render_to_response("error.html",
@@ -468,7 +469,7 @@ def update_indicator_type(request, indicator_id):
         else:
             message = {'success': False}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -499,7 +500,7 @@ def update_indicator_threat_type(request, indicator_id):
         else:
             message = {'success': False}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -530,7 +531,7 @@ def update_indicator_attack_type(request, indicator_id):
         else:
             message = {'success': False}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",

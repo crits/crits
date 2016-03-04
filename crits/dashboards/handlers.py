@@ -437,7 +437,7 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
         resp = get_query_without_request(obj_type, user.username, searchTerm, search_type)
     else:
         return HttpResponse(json.dumps(response, default=json_handler),
-                             mimetype='application/json')
+                             content_type="application/json")
     if resp['Result'] in ["ERROR", "IGNORE"]:
         return resp
     query = resp['query']
@@ -466,7 +466,7 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
     response['Result'] = response.pop('result')
     if request:
         return HttpResponse(json.dumps(response, default=json_handler),
-                             mimetype='application/json')
+                             content_type="application/json")
     else:
         return response
 

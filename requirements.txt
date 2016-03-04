@@ -1,4 +1,4 @@
-Django<1.7
+Django<1.9
 Pillow
 amqp
 anyjson
@@ -7,13 +7,13 @@ biplist
 celery
 defusedxml
 django-celery
-django-tastypie==0.11.0
-django-tastypie-mongoengine==0.4.5
+django-tastypie==0.13.1
+django-tastypie-mongoengine==0.4.6
 kombu
 lxml
 m2crypto
 --allow-external mongoengine
-mongoengine==0.8.7
+mongoengine==0.8.8
 pydeep==0.2
 pymongo==2.7.2
 pyparsing

@@ -161,7 +161,7 @@ def email_fields_add(request):
         if request.is_ajax():
             json_reply['message'] = message
             return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return render_to_response('error.html',
                                       {'error': message},
@@ -172,7 +172,7 @@ def email_fields_add(request):
         if request.is_ajax():
             json_reply['message'] = message
             return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return render_to_response('error.html',
                                       {'error': message},
@@ -185,7 +185,7 @@ def email_fields_add(request):
         if request.is_ajax():
             json_reply['message'] = obj['reason']
             return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return render_to_response('error.html',
                                       {'error': obj['reason']},
@@ -196,7 +196,7 @@ def email_fields_add(request):
         del json_reply['form']
         json_reply['message'] = 'Email uploaded successfully. <a href="%s">View email.</a>' % reverse('crits.emails.views.email_detail', args=[obj['object'].id])
         return HttpResponse(json.dumps(json_reply),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return HttpResponseRedirect(reverse('crits.emails.views.email_detail',
                                             args=[obj['object'].id]))
@@ -225,7 +225,7 @@ def email_yaml_add(request, email_id=None):
         if request.is_ajax():
             json_reply['message'] = message
             return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return render_to_response('error.html',
                                       {'error': message},
@@ -236,7 +236,7 @@ def email_yaml_add(request, email_id=None):
         if request.is_ajax():
             json_reply['message'] = message
             return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return render_to_response('error.html',
                                       {'error': message},
@@ -261,7 +261,7 @@ def email_yaml_add(request, email_id=None):
         if request.is_ajax():
             json_reply['message'] = obj['reason']
             return HttpResponse(json.dumps(json_reply),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return render_to_response('error.html',
                                       {'error': obj['reason']},
@@ -271,7 +271,7 @@ def email_yaml_add(request, email_id=None):
         json_reply['success'] = True
         json_reply['message'] = 'Email uploaded successfully. <a href="%s">View email.</a>' % reverse('crits.emails.views.email_detail', args=[obj['object'].id])
         return HttpResponse(json.dumps(json_reply),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return HttpResponseRedirect(reverse('crits.emails.views.email_detail',
                                             args=[obj['object'].id]))
@@ -296,7 +296,7 @@ def email_raw_add(request):
         message = "Must submit via POST"
         if request.is_ajax():
             json_reply['message'] = message
-            return HttpResponse(json.dumps(json_reply), mimetype="application/json")
+            return HttpResponse(json.dumps(json_reply), content_type="application/json")
         else:
             return render_to_response('error.html', {'error': message}, RequestContext(request))
 
@@ -304,7 +304,7 @@ def email_raw_add(request):
         message = "Form is invalid."
         if request.is_ajax():
             json_reply['message'] = message
-            return HttpResponse(json.dumps(json_reply), mimetype="application/json")
+            return HttpResponse(json.dumps(json_reply), content_type="application/json")
         else:
             return render_to_response('error.html', {'error': message}, RequestContext(request))
 
@@ -324,7 +324,7 @@ def email_raw_add(request):
     if not obj['status']:
         if request.is_ajax():
             json_reply['message'] = obj['reason']
-            return HttpResponse(json.dumps(json_reply), mimetype="application/json")
+            return HttpResponse(json.dumps(json_reply), content_type="application/json")
         else:
             return render_to_response('error.html', {'error': obj['reason']}, RequestContext(request))
 
@@ -332,7 +332,7 @@ def email_raw_add(request):
         json_reply['success'] = True
         del json_reply['form']
         json_reply['message'] = 'Email uploaded successfully. <a href="%s">View email.</a>' % reverse('crits.emails.views.email_detail', args=[obj['object'].id])
-        return HttpResponse(json.dumps(json_reply), mimetype="application/json")
+        return HttpResponse(json.dumps(json_reply), content_type="application/json")
     else:
         return HttpResponseRedirect(reverse('crits.emails.views.email_detail', args=[obj['object'].id]))
 
@@ -513,7 +513,7 @@ def indicator_from_header_field(request, email_id):
                 'success':  False,
                 'message':  "Type is a required value."
             }
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         return render_to_response('error.html',
                                   {'error': "Expected AJAX POST"},
@@ -540,7 +540,7 @@ def update_header_value(request, email_id):
                                            value,
                                            analyst)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response('error.html',
                                   {'error': "Expected AJAX POST"},
