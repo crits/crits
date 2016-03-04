@@ -1048,7 +1048,6 @@ class AuthenticationMiddleware(object):
         )
         request.user = SimpleLazyObject(lambda: get_user(self._get_user_session_key(request)))
 
-
 # stolen from MongoEngine and modified to use the CRITsUser class.
 class CRITsAuthBackend(object):
     """

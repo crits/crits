@@ -53,7 +53,6 @@ class UploadIndicatorCSVForm(SourceInForm):
     error_css_class = 'error'
     required_css_class = 'required'
     filedata = forms.FileField()
-
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorCSVForm, self).__init__(username, *args, **kwargs)
 
