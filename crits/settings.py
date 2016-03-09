@@ -99,7 +99,7 @@ BUCKET_SAMPLES = "samples"
 # Import custom Database config
 dbfile = os.path.join(SITE_ROOT, 'config/database.py')
 if os.path.exists(dbfile):
-    execfile(dbfile)
+    exec(open(dbfile).read())
 
 if TEST_RUN:
     MONGO_DATABASE = 'crits-unittest'
