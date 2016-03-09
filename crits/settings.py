@@ -603,4 +603,4 @@ if StrictVersion(django_version) < StrictVersion('1.8.0'):
 # Import custom settings if it exists
 csfile = os.path.join(SITE_ROOT, 'config/overrides.py')
 if os.path.exists(csfile):
-    execfile(csfile)
+    exec(open(csfile).read())
