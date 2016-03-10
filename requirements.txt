@@ -18,7 +18,7 @@ pydeep==0.2
 pymongo==2.7.2
 pyparsing
 python-dateutil
-python-ldap
+ldap3
 python-magic==0.4.6
 python-mimeparse
 pytz
