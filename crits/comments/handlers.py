@@ -246,7 +246,7 @@ def comment_add(cleaned_data, obj_type, obj_id, method, subscr, analyst):
                                  'subscription': subscr})
         message = "Comment added successfully!"
         result = {'success': True, 'html': html, 'message': message}
-    except ValidationError, e:
+    except ValidationError as e:
         result = {'success': False, 'message': e}
     return HttpResponse(json.dumps(result,
                         default=json_handler),
@@ -291,7 +291,7 @@ def comment_update(cleaned_data, obj_type, obj_id, subscr, analyst):
                                      'subscription': subscr})
             message = "Comment updated successfully!"
             result = {'success': True, 'html': html, 'message': message}
-        except ValidationError, e:
+        except ValidationError as e:
             result = {'success': False, 'message': e}
     return HttpResponse(json.dumps(result,
                                    default=json_handler),

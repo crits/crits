@@ -1,6 +1,6 @@
 import hmac, base64, struct, hashlib, time
 from django.utils.crypto import pbkdf2
-from M2Crypto import EVP, Rand
+#from M2Crypto import EVP, Rand
 
 # from http://stackoverflow.com/questions/8529265/google-authenticator-implementation-in-python
 def get_hotp_token(secret, intervals_no):

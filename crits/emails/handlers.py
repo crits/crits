@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from six import string_types
+
 import datetime
 import email as eml
 from email.parser import Parser
@@ -505,7 +507,7 @@ def handle_email_fields(data, analyst, method):
     try:
         for x in ('cc', 'to'):
             y = data.get(x, None)
-            if isinstance(y, basestring):
+            if isinstance(y, string_types):
                 if len(y) > 0:
                     tmp_y = y.split(',')
                     y_final = [ty.strip() for ty in tmp_y if len(ty.strip()) > 0]
@@ -542,7 +544,7 @@ def handle_email_fields(data, analyst, method):
         run_triage(new_email, analyst)
         result['object'] = new_email
         result['status'] = True
-    except Exception, e:
+    except Exception as e:
         result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
 
     return result
@@ -591,7 +593,7 @@ def handle_json(data, sourcename, reference, analyst, method,
         converted = json.loads(data)
         if isinstance(converted, dict) == False:
             raise
-    except Exception, e:
+    except Exception as e:
         result["reason"] = "Cannot convert data to JSON.\n<br /><pre>%s</pre>" % str(e)
         return result
 
@@ -623,7 +625,7 @@ def handle_json(data, sourcename, reference, analyst, method,
         result['object'].save(username=analyst)
         result['object'].reload()
         run_triage(result['object'], analyst)
-    except Exception, e:
+    except Exception as e:
         result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
 
     result['status'] = True
@@ -676,7 +678,7 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
         converted = yaml.load(data)
         if isinstance(converted, dict) == False:
             raise
-    except Exception, e:
+    except Exception as e:
         result["reason"] = "Cannot convert data to YAML.\n<br /><pre>%s</pre>" % str(e)
         return result
 
@@ -725,7 +727,7 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
         old_email.source = saved_source
         try:
             old_email.save(username=analyst)
-        except Exception, e:
+        except Exception as e:
             result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
             return result
     else:
@@ -738,7 +740,7 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
             result['object'].save(username=analyst)
             result['object'].reload()
             run_triage(result['object'], analyst)
-        except Exception, e:
+        except Exception as e:
             result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
             return result
 
@@ -781,7 +783,7 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
     response = {'status': False}
 
     result = parse_ole_file(data)
-    if result.has_key('error'):
+    if 'error' in result:
         response['reason'] = result['error']
         return response
 
@@ -792,7 +794,7 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
     result['email']['bucket_list'] = bucket_list
     result['email']['ticket'] = ticket
 
-    if result['email'].has_key('date'):
+    if 'date' in result['email']:
         result['email']['isodate'] = date_parser(result['email']['date'],
                                                  fuzzy=True)
 
@@ -886,7 +888,7 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     emldata = []
     boundary = None
     isbody = False
-    if not isinstance(data, basestring):
+    if not isinstance(data, string_types):
         data = data.read()
     for line in data.split("\n"):
         # We match the regex for a boundary definition
@@ -1096,7 +1098,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
         result['object'].save(username=analyst)
         result['object'].reload()
         run_triage(result['object'], analyst)
-    except Exception, e:
+    except Exception as e:
         result['reason'] = "Failed1 to save email.\n<br /><pre>" + \
             str(e) + "</pre>"
         return result
@@ -1118,7 +1120,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
         # Save the email again since it now has a new relationship.
         try:
             result['object'].save(username=analyst)
-        except Exception, e:
+        except Exception as e:
             result['reason'] = "Failed to save email.\n<br /><pre>"
             + str(e) + "</pre>"
             return result
@@ -1188,10 +1190,10 @@ def dict_to_email(d, save_unsupported=True):
         else:
             d['isodate'] = date_parser(d['date'], fuzzy=True)
 
-    if 'to' in d and isinstance(d['to'], basestring) and len(d['to']) > 0:
+    if 'to' in d and isinstance(d['to'], string_types) and len(d['to']) > 0:
         d['to'] = [d['to']]
 
-    if 'cc' in d and isinstance(d['cc'], basestring) and len(d['cc']) > 0:
+    if 'cc' in d and isinstance(d['cc'], string_types) and len(d['cc']) > 0:
         d['cc'] = [d['cc']]
 
     if 'from' in d:
@@ -1263,7 +1265,7 @@ def update_email_header_value(email_id, type_, value, analyst):
             else:
                 result = {'success': True,
                           'message': "Successfully updated email"}
-        except Exception, e:
+        except Exception as e:
             result = {'success': False, 'message': e}
     else:
         result = {'success': False, 'message': "Could not find email"}
@@ -1430,7 +1432,7 @@ def create_email_attachment(email, cleaned_data, analyst, source, method="Upload
                                           ticket=ticket,
                                           inherited_source=inherited_source,
                                           is_return_only_md5=False)
-    except ZipFileError, zfe:
+    except ZipFileError as zfe:
         return {'success': False, 'message': zfe.value}
     else:
         if len(result) > 1:
@@ -1559,9 +1561,9 @@ def parse_ole_file(file):
 
     # Check for encrypted and signed messages. The body will be empty in this case
     # Message classes: http://msdn.microsoft.com/en-us/library/ee200767%28v=exchg.80%29.aspx
-    if message_class == 'ipm.note.smime' and not email.has_key('raw_body'):
+    if message_class == 'ipm.note.smime' and 'raw_body' not in email:
         email['raw_body'] = '<ENCRYPTED>'
-    if message_class == 'ipm.note.smime.multipartsigned' and not email.has_key('raw_body'):
+    if message_class == 'ipm.note.smime.multipartsigned' and 'raw_body' not in email:
         email['raw_body'] = '<DIGITALLY SIGNED: body in smime.p7m>'
 
     # Parse Received headers to get Helo and X-Originating-IP

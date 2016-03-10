@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import platform
 import subprocess
@@ -7,7 +8,7 @@ try:
     from django.core.management.base import BaseCommand, CommandError as CE
     from django.conf import settings
 except ImportError:
-    print "\tCould not import Django python module. Is it installed properly?"
+    print("\tCould not import Django python module. Is it installed properly?")
     sys.exit(1)
 
 class Command(BaseCommand):
@@ -48,7 +49,7 @@ class Command(BaseCommand):
             try:
                 __import__(i)
             except ImportError:
-                print CE('Could not import %s. Is it installed properly?' % i)
+                print(CE('Could not import %s. Is it installed properly?' % i))
                 # Required to continue script, so totally fail if these
                 # are missing.
                 if i in ('mongoengine', 'crits', 'pymongo'):
@@ -71,9 +72,9 @@ class Command(BaseCommand):
                 op = subprocess.Popen([cmd, i], stdout=subprocess.PIPE)
                 op.communicate()
                 if op.returncode:
-                    print CE('Could not find binary %s. Is it installed properly?' % i)
+                    print(CE('Could not find binary %s. Is it installed properly?' % i))
             except:
-                print CE('Could not find binary %s. Is it installed properly?' % i)
+                print(CE('Could not find binary %s. Is it installed properly?' % i))
                 # Required to continue script, so totally fail if these
                 # are missing.
                 if i in ('mongod', 'mongos'):
@@ -110,16 +111,16 @@ class Command(BaseCommand):
         config = crits.config.config.CRITsConfig.objects().first()
         ld = config.log_directory
         if not os.path.exists(ld) and len(ld) > 0:
-            print CE('Configured CRITs log directory does not exist: %s' % ld)
+            print(CE('Configured CRITs log directory does not exist: %s' % ld))
         td = config.temp_dir
         if not os.path.exists(td):
-            print CE('Configured CRITs temp directory does not exist: %s' % td)
+            print(CE('Configured CRITs temp directory does not exist: %s' % td))
         zp = config.zip7_path
         if not os.path.exists(zp):
-            print CE('Configured CRITs zip path does not exist: %s' % zp)
+            print(CE('Configured CRITs zip path does not exist: %s' % zp))
         for i in config.service_dirs:
             if not os.path.exists(i):
-                print CE('Configured CRITs service directory does not exist: %s' % i)
+                print(CE('Configured CRITs service directory does not exist: %s' % i))
 
         print ("Installation check completed. Please fix any above errors before"
                " attempting to use CRITs!")

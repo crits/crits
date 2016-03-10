@@ -1,3 +1,5 @@
+from six import string_types
+
 from mongoengine import Document, StringField, ListField
 from django.conf import settings
 
@@ -49,7 +51,7 @@ class Backdoor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         :type aliases: list
         """
 
-        if isinstance(aliases, basestring):
+        if isinstance(aliases, string_types):
             aliases = aliases.split(',')
         aliases = [a.strip() for a in aliases if a != '']
         existing_aliases = None

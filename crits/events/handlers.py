@@ -293,7 +293,7 @@ def add_new_event(title, description, event_type, source, method, reference,
                   'message': message,
                   'id': str(event.id),
                   'object': event}
-    except ValidationError, e:
+    except ValidationError as e:
         result = {'success': False,
                   'message': e}
     return result
@@ -337,7 +337,7 @@ def update_event_title(event_id, title, analyst):
     try:
         event.save(username=analyst)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def update_event_type(event_id, type_, analyst):
@@ -360,7 +360,7 @@ def update_event_type(event_id, type_, analyst):
     try:
         event.save(username=analyst)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def add_sample_for_event(event_id, data, analyst, filedata=None, filename=None,
@@ -450,7 +450,7 @@ def add_sample_for_event(event_id, data, analyst, filedata=None, filename=None,
                                           ticket=ticket,
                                           inherited_source=inherited_source,
                                           is_return_only_md5=False)
-    except ZipFileError, zfe:
+    except ZipFileError as zfe:
         return {'success': False, 'message': zfe.value}
     else:
         if len(result) > 1:

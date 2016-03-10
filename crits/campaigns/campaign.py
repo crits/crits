@@ -1,5 +1,7 @@
 import datetime
 
+from six import string_types
+
 from mongoengine import Document, EmbeddedDocument, StringField, IntField
 from mongoengine import EmbeddedDocumentField, DateTimeField, ListField
 from django.conf import settings
@@ -129,10 +131,10 @@ class Campaign(CritsBaseAttributes, CritsActionsDocument, Document):
 
         """
 
-        if isinstance(alias, basestring):
+        if isinstance(alias, string_types):
             alias = [alias]
         for a in alias:
-            if a not in self.aliases and isinstance(a, basestring):
+            if a not in self.aliases and isinstance(a, string_types):
                 self.aliases.append(a)
 
     def remove_alias(self, alias):

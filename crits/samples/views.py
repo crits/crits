@@ -247,7 +247,7 @@ def upload_file(request, related_md5=None):
                         backdoor_name=backdoor_name,
                         backdoor_version=backdoor_version)
 
-            except ZipFileError, zfe:
+            except ZipFileError as zfe:
                 return render_to_response('file_upload_response.html',
                                           {'response': json.dumps({'success': False,
                                                                    'message': zfe.value})},
@@ -461,7 +461,7 @@ def unzip_sample(request, md5):
             pwd = form.cleaned_data['password']
             try:
                 handle_unzip_file(md5, user=request.user.username, password=pwd)
-            except ZipFileError, zfe:
+            except ZipFileError as zfe:
                 return render_to_response('error.html',
                                           {'error' : zfe.value},
                                           RequestContext(request))

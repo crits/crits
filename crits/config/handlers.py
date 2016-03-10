@@ -39,5 +39,5 @@ def modify_configuration(forms, analyst):
     try:
         config.save(username=analyst)
         return {'message': "Success!"}
-    except Exception, e:
+    except Exception as e:
         return {'message': "Failure: %s" % e}

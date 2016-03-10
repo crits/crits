@@ -1,3 +1,4 @@
+from __future__ import print_function
 from django.core.management.base import BaseCommand
 from optparse import make_option
 
@@ -21,9 +22,9 @@ class Command(BaseCommand):
         """
         drop = options.get('drop')
         if drop:
-            print "Dropping enabled"
+            print("Dropping enabled")
         else:
-            print "Dropping protection enabled"
+            print("Dropping protection enabled")
         create_dashboard(drop)
 
 def create_dashboard(drop=False):
@@ -58,9 +59,9 @@ def create_dashboard(drop=False):
                 savedSearch.row = 31
                 
             savedSearch.save()
-        print "Default Dashboard Created."
+        print("Default Dashboard Created.")
     else:
-        print "Default Dashboard already exists."
+        print("Default Dashboard already exists.")
     
 def getColumnsForTable(title):
         if title == "Counts":

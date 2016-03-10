@@ -1,3 +1,4 @@
+from __future__ import print_function
 from optparse import OptionParser
 import pprint
 import pymongo
@@ -32,9 +33,9 @@ def main():
     active_ops = []
     for op in all_ops:
         if op['op'] == "query":
-            if op['query'].has_key('writebacklisten'):
+            if 'writebacklisten' in op['query']:
                 sync_ops.append(op)
-            elif op.has_key('secs_running'):
+            elif 'secs_running' in op:
                 if op['ns'] != "local.oplog.rs":
                     if int(op['secs_running']) >= int(seconds):
                         if opid is not None:
@@ -43,16 +44,16 @@ def main():
                         else:
                             active_ops.append(op)
     if verbose:
-        print "SyncOps found: %d" % len(sync_ops)
-        print "Operations found: %d" % len(active_ops)
+        print("SyncOps found: %d" % len(sync_ops))
+        print("Operations found: %d" % len(active_ops))
     for op in active_ops:
         if options.verbose:
             pprint.pprint(op)
         elif quiet:
-            print op['opid']
+            print(op['opid'])
         else:
-            print "ID: %s" % op['opid']
-            print "\tSeconds Running: %s" % op['secs_running']
+            print("ID: %s" % op['opid'])
+            print("\tSeconds Running: %s" % op['secs_running'])
 
 if __name__ == '__main__':
     main()

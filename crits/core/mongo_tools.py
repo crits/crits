@@ -264,7 +264,7 @@ def mongo_insert(collection, doc_or_docs, username=None, safe=True, *args,
     try:
         col.insert(doc_or_docs, safe=safe, check_keys=True, *args, **kwargs)
         return {'success':True, 'message':[], 'object':doc_or_docs}
-    except Exception, e:
+    except Exception as e:
         # OperationFailure gets raised only if safe=True and there is some error
         return {'success':False, 'message':[format_error(e)]}
 
@@ -297,7 +297,7 @@ def mongo_update(collection, query, alter, username=None,
         r = col.update(query, alter, multi=multi, upsert=upsert,
                        check_keys=True, safe=safe, *args, **kwargs)
         return {'success':True, 'message':[r]}
-    except Exception, e:
+    except Exception as e:
        return {'success':False, 'message':[format_error(e)]}
 
 # Wrapper for pymongo's save function
@@ -321,7 +321,7 @@ def mongo_save(collection, to_save, username=None, safe=True, *args, **kwargs):
         r = col.save(to_save, check_keys=True, manipulate=True, safe=safe,
                      *args, **kwargs)
         return {'success':True, 'message':[r]}
-    except Exception, e:
+    except Exception as e:
        return {'success':False, 'message':[format_error(e)]}
 
 # Wrapper for pymongo's find_and_modify function
@@ -359,11 +359,11 @@ def mongo_find_and_modify(collection, query, alter, fields=None, username=None,
         result = col.find_and_modify(query, update=alter, fields=fields,
                                      remove=remove, new=new, upsert=upsert,
                                      sort=sort, *args, **kwargs)
-    except Exception, e:
+    except Exception as e:
         return {'success':False, 'message':[format_error(e)]}
     try:
         return {'success':True, 'message':[], 'object': result}
-    except Exception, e:
+    except Exception as e:
         return {'success':True, 'message':[format_error(e)], 'object': result}
 
 # Wrapper for pymongo's remove function
@@ -396,7 +396,7 @@ def mongo_remove(collection, query=None, username=None, safe=True, verify=False,
                     return {'success':False,
                             'message':['Unknown error; unable to remove item']}
             return {'success':True, 'message':[]}
-        except Exception, e:
+        except Exception as e:
             return {'success':False, 'message':[format_error(e)]}
 
 def format_error(e):

@@ -2,7 +2,12 @@ import csv
 import datetime
 import json
 import logging
-import urlparse
+try:
+    import urlparse
+except ImportError:
+    from urllib.parse import urlparse
+
+from six import string_types
 
 from io import BytesIO
 from django.conf import settings
@@ -323,7 +328,7 @@ def get_verified_field(data, valid_values, field=None, default=None):
     else:
         value_list = [data]
     for i, item in enumerate(value_list):
-        if isinstance(item, basestring):
+        if isinstance(item, string_types):
             item = item.lower().strip().replace(' - ', '-')
             if item in valid_values:
                 value_list[i] = valid_values[item]
@@ -447,7 +452,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
             response = handle_indicator_insert(ind, source, reference,
                                                analyst=username, method=method,
                                                add_domain=add_domain)
-        except Exception, e:
+        except Exception as e:
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, str(e))
             continue
@@ -569,7 +574,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         try:
             return handle_indicator_insert(ind, source, reference, analyst,
                                            method, add_domain, add_relationship, cache=cache)
-        except Exception, e:
+        except Exception as e:
             return {'success': False, 'message': repr(e)}
 
     return result
@@ -669,7 +674,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             indicator.description += add_desc
 
     if 'campaign' in ind:
-        if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:
+        if isinstance(ind['campaign'], string_types) and len(ind['campaign']) > 0:
             confidence = ind.get('campaign_confidence', 'low')
             ind['campaign'] = EmbeddedCampaign(name=ind['campaign'],
                                                confidence=confidence,
@@ -708,7 +713,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             indicator.add_source(source_item=s, method=method, reference=reference)
     elif isinstance(source, EmbeddedSource):
         indicator.add_source(source_item=source, method=method, reference=reference)
-    elif isinstance(source, basestring):
+    elif isinstance(source, string_types):
         s = EmbeddedSource()
         s.name = source
         instance = EmbeddedSource.SourceInstance()
@@ -1019,7 +1024,7 @@ def activity_add(id_, activity, user, **kwargs):
         indicator.save(username=user)
         return {'success': True, 'object': activity,
                 'id': str(indicator.id)}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e,
                 'id': str(indicator.id)}
 
@@ -1055,7 +1060,7 @@ def activity_update(id_, activity, user=None, **kwargs):
                                 activity['date'])
         indicator.save(username=user)
         return {'success': True, 'object': activity}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def activity_remove(id_, date, user, **kwargs):
@@ -1081,7 +1086,7 @@ def activity_remove(id_, date, user, **kwargs):
         indicator.delete_activity(date)
         indicator.save(username=user)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def ci_update(id_, ci_type, value, user, **kwargs):
@@ -1111,7 +1116,7 @@ def ci_update(id_, ci_type, value, user, **kwargs):
                 indicator.set_impact(user, value)
             indicator.save(username=user)
             return {'success': True}
-        except ValidationError, e:
+        except ValidationError as e:
             return {'success': False, "message": e}
     else:
         return {'success': False, 'message': 'Invalid CI type'}
@@ -1187,7 +1192,7 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
                 return {'success': True, 'message': rels, 'value': obj_class.id}
             else:
                 return {'success': False, 'message': message['message']}
-        except Exception, e:
+        except Exception as e:
             return {'success': False, 'message': e}
     else:
         return {'success': False,

@@ -492,7 +492,7 @@ def update_config(service_name, config, analyst):
         #update_status(service_name)
         service.save(username=analyst)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def get_service_config(name):
@@ -612,7 +612,7 @@ def set_enabled(service_name, enabled=True, analyst=None):
         else:
             url = reverse('crits.services.views.enable', args=(service_name,))
         return {'success': True, 'url': url}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def set_triage(service_name, enabled=True, analyst=None):
@@ -635,7 +635,7 @@ def set_triage(service_name, enabled=True, analyst=None):
             url = reverse('crits.services.views.enable_triage',
                           args=(service_name,))
         return {'success': True, 'url': url}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False,
                 'message': e}
 
@@ -718,7 +718,7 @@ def update_analysis_results(task):
 
         #TODO: find a better way to do this.
         new_dict = {}
-        for k in tdict.iterkeys():
+        for k in tdict.keys():
             new_dict['set__%s' % k] = tdict[k]
         AnalysisResult.objects(id=ar.id).update_one(**new_dict)
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from bson import Code
 
 from django.core.management.base import BaseCommand
@@ -54,18 +55,18 @@ class Command(BaseCommand):
                 targ_dup_count = targets.count()
 
                 if targ_dup_count > 1:
-                    print str(result.key) + " [" + str(targ_dup_count) + "]"
+                    print(str(result.key) + " [" + str(targ_dup_count) + "]")
 
                     for target in targets:
-                        print target.to_json()
+                        print(target.to_json())
 
                     if self.is_delete:
                         delete_up_to = targets.count() - 1
                         for target in targets[:delete_up_to]:
-                            print "Deleting target: " + str(target.id)
+                            print("Deleting target: " + str(target.id))
                             target.delete()
 
-            except Exception, e:
-                print e
+            except Exception as e:
+                print(e)
                 pass
 

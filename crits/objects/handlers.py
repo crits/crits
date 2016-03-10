@@ -347,7 +347,7 @@ def add_object(type_, id_, object_type, source, method,
 
         results['id'] = str(obj.id)
         return results
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False,
                 'message': str(e)}
 
@@ -441,7 +441,7 @@ def delete_object(type_, oid, object_type, value, analyst, get_objects=True):
         if (get_objects):
             result['objects'] = obj.sort_objects()
         return result
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False,
                 'message': e}
 
@@ -475,7 +475,7 @@ def update_object_value(type_, oid, object_type, value, new_value,
                                 new_value)
         obj.save(username=analyst)
         return {'success': True, 'message': 'Object value updated successfully.'}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def update_object_source(type_, oid, object_type, value, new_source,
@@ -515,7 +515,7 @@ def update_object_source(type_, oid, object_type, value, new_source,
                                  analyst=analyst)
         obj.save(username=analyst)
         return {'success': True, 'message': 'Object value updated successfully.'}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def create_indicator_from_object(rel_type, rel_id, ind_type, value,

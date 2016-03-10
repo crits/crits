@@ -23,7 +23,7 @@ class DelayService(Service):
         return
 
     def run(self, obj, config):
-        for i in xrange(5):
+        for i in range(5):
             self._info(i)
             logger.info(i)
             self._info("sleeping")
