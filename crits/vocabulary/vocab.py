@@ -1,4 +1,4 @@
-from six import string_types
+from six import string_types, iteritems
 
 class vocab(object):
     """
@@ -16,7 +16,7 @@ class vocab(object):
         """
 
         l = []
-        for k,v in cls.__dict__.items():
+        for k,v in cls.__dict__.iteritems():
             if ('__' not in k and
                 isinstance(v, string_types) and
                 '__' not in v and
