@@ -3,7 +3,7 @@ import json, yaml
 import io
 import csv
 
-from six import string_types
+from six import string_types, iteritems
 
 from bson import json_util, ObjectId
 from dateutil.parser import parse
@@ -430,9 +430,9 @@ class CritsDocument(BaseDocument):
         #Make sure any fields that are unsupported but exist in the database
         #   get added to the document's unsupported_attributes field.
         #Get database names for all fields that *should* exist on the object.
-        db_fields = [val.db_field for key,val in cls._fields.items()]
+        db_fields = [val.db_field for key,val in cls._fields.iteritems()]
         #custom __setattr__ does logic of moving fields to unsupported_fields
-        [doc.__setattr__("%s"%key, val) for key,val in son.items()
+        [doc.__setattr__("%s"%key, val) for key,val in son.iteritems()
             if key not in db_fields]
 
         #After a document is retrieved from the database, and any unsupported
@@ -2500,7 +2500,7 @@ def merge(self, arg_dict=None, overwrite=False, **kwargs):
     if not arg_dict:
         arg_dict = kwargs
     if isinstance(arg_dict, dict):
-        iterator = arg_dict.items()
+        iterator = arg_dict.iteritems()
     else:
         iterator = arg_dict
 
