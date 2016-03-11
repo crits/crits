@@ -7,7 +7,7 @@ names cannot be changed.
 """
 from __future__ import print_function
 
-from six import string_types, iteritems
+from six import string_types
 
 from crits.dashboards.dashboard import SavedSearch, Dashboard
 from crits.core.crits_mongoengine import json_handler
@@ -144,7 +144,7 @@ def constructSavedTable(table, records):
     colNames = []
     for column in table.tableColumns:
         col = {}
-        for k,v in column.iteritems():
+        for k,v in column.items():
             if k == "sizeCalculated" or k == "sizeCorrected" or k == 'min':
                 continue
             elif k == "field":
@@ -259,7 +259,7 @@ def parseDocObjectsToStrings(records, obj_type):
                     doc[key] = ""
             doc[key] = html_escape(doc[key])
             value = doc[key].strip()
-            if isinstance(value, unicode) or isinstance(value, str):
+            if isinstance(value, string_types):
                 val = ' '.join(value.split())
                 val = val.replace('"',"'")
                 doc[key] = val

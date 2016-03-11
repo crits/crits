@@ -97,7 +97,7 @@ depend_crits()
          sudo env LDFLAGS=-L$(brew --prefix openssl)/lib \
          CFLAGS=-I$(brew --prefix openssl)/include \
          SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include" \
-         ${PIP} install -U -r requirements.txt
+         ${PIP} install -r requirements.txt
     else
          sudo ${PIP} install -r requirements.txt
     fi

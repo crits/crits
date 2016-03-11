@@ -62,7 +62,8 @@ def class_from_id(type_, _id):
 
     # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
     # the queries below will raise a ValidationError exception.
-    if not ObjectId.is_valid(_id.decode('utf8')):
+    #if not ObjectId.is_valid(_id.decode('utf8')):
+    if not ObjectId.is_valid(_id):
         return None
 
     if type_ == 'Actor':

@@ -59,7 +59,7 @@ def getHREFLink(object, object_type):
         key = "id"
     #adding the last part of the url 
     if key in object:
-        href += unicode(object[key]) + "/"
+        href += object[key] + "/"
     return href
 
 def get_obj_name_from_title(tableTitle):
