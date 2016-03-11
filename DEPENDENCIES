@@ -41,17 +41,17 @@ Provides: PIL
 PyYAML
 Provides: yaml
 
-django<1.7
+django<1.9
 Provides: django
 
 pymongo==2.7.2
 Provides: bson, gridfs, pymongo
 
-python-magic
+python-magic==0.4.6
 Provides: magic
 Note: Requires a compatible libmagic on your system to use
 
-pydeep
+pydeep==0.2
 Provides: pydeep
 Note: Requires libfuzzy and its development headers on your system to build
 
@@ -67,16 +67,16 @@ python-dateutil
 Requires: six
 Provides: dateutil
 
-mongoengine==0.8.7
+mongoengine==0.8.8
 Requires: pymongo>=2.5
 Provides: mongoengine
 
-django-tastypie==0.11.0
-Requires: python-mimeparse>=0.1.4, python-dateutil>=1.5,!=2.0
+django-tastypie==0.13.3
+Requires: python-mimeparse>=0.1.4, python-dateutil>=2.1
 Provides: tastypie
 
-django-tastypie-mongoengine==0.4.5
-Requires: Django>=1.4, django-tastypie>=0.9.12,<=0.10.0, mongoengine>=0.8.1,<0.8.2, python-dateutil>=2.1, lxml, PyYAML, defusedxml, biplist, python-mimeparse>=0.1.4
+django-tastypie-mongoengine==0.4.6
+Requires: Django>=1.5, django-tastypie>=0.9.12,<=0.10.0, mongoengine>=0.8.1,<0.8.2, python-dateutil>=2.1, lxml, PyYAML, defusedxml, biplist, python-mimeparse>=0.1.4
 Provides: tastypie_mongoengine
 Note: CRITs requires you to ignore/override the mongoengine and django-tastypie version restrictions on this library.
 
