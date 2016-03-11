@@ -4,6 +4,8 @@ import json
 import logging
 import copy
 
+from six import iterkeys
+
 from django.http import HttpResponse
 from multiprocessing import Process
 from threading import Thread, local
@@ -718,7 +720,7 @@ def update_analysis_results(task):
 
         #TODO: find a better way to do this.
         new_dict = {}
-        for k in tdict.keys():
+        for k in tdict.iterkeys():
             new_dict['set__%s' % k] = tdict[k]
         AnalysisResult.objects(id=ar.id).update_one(**new_dict)
 
