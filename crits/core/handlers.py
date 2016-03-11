@@ -13,7 +13,7 @@ try:
 except ImportError:
     from urllib.parse import urlparse
 
-from six import string_types
+from six import string_types, iteritems
 
 from bson.objectid import ObjectId
 from django.conf import settings
@@ -317,7 +317,7 @@ def get_favorites(analyst):
                   <tbody>
               '''
 
-    for type_, attr in field_dict.items():
+    for type_, attr in field_dict.iteritems():
         if type_ in favorites:
             ids = [ObjectId(s) for s in favorites[type_]]
             objs = class_from_type(type_).objects(id__in=ids).only(attr)
@@ -1905,7 +1905,7 @@ def check_query(qparams,user,obj):
         except:
             field = key
         # Check for mapping, reverse because we're going the other way
-        invmap = dict((v,k) for k, v in obj._db_field_map.items())
+        invmap = dict((v,k) for k, v in obj._db_field_map.iteritems())
         if field in invmap:
             field = invmap[field]
         # Only allow query keys that exist in the object
@@ -2063,7 +2063,7 @@ def parse_query_request(request,col_obj):
                 base = field
                 extra = ""
             # Check for mapping, reverse because we're going the other way
-            invmap = dict((v,k) for k, v in col_obj._db_field_map.items())
+            invmap = dict((v,k) for k, v in col_obj._db_field_map.iteritems())
             if base in invmap:
                 base = invmap[base]
             # Only allow query keys that exist in the object
@@ -4023,7 +4023,7 @@ def unflatten(dictionary):
     """
 
     resultDict = dict()
-    for key, value in dictionary.items():
+    for key, value in dictionary.iteritems():
         parts = key.split(".")
         d = resultDict
         for part in parts[:-1]:
