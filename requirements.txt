@@ -15,7 +15,7 @@ m2crypto
 --allow-external mongoengine
 mongoengine==0.9.0
 pydeep==0.2
-pymongo==2.8.3
+pymongo==2.7.2
 pyparsing
 python-dateutil
 python-ldap
