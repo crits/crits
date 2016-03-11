@@ -224,8 +224,6 @@ def handle_cert_file(filename, data, source_name, user=None,
     :type user: str
     :param description: Description of the Certificate.
     :type description: str
-    :param related_id: ObjectId of a top-level object related to this Certificate.
-    :type related_id: str
     :param related_md5: MD5 of a top-level object related to this Certificate.
     :type related_md5: str
     :param related_type: The CRITs type of the related top-level object.

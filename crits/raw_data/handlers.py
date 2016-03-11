@@ -330,7 +330,7 @@ def handle_raw_data_file(data, source_name, user=None,
     :param related_id: ID of object to create relationship with
     :type related_id: str
     :param related_type: Type of object to create relationship with
-    :type related_id: str
+    :type related_type: str
     :param relationship_type: Type of relationship to create.
     :type relationship_type: str
     :returns: dict with keys:

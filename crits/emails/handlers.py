@@ -935,6 +935,12 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
     :type bucket_list: str
     :param ticket: The ticket to assign to this data.
     :type ticket: str
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_id: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               "status" (boolean),
               "reason" (str),

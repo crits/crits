@@ -251,6 +251,18 @@ function populate_id(id, type) {
                               3000); });
         }
     });
+    // Add a related Indicator (Using the related dialog persona)
+    $( "#dialog-new-indicator-csv" ).on("dialogopen.add_related_indicator", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+                      function() {
+                          setTimeout(function() {
+                              document.location = document.location },
+                              3000); });
+        }
+    });
     // Add a related IP (Using the related dialog persona)
     $( "#dialog-new-ip" ).on("dialogopen.add_related_ip", function(e) {
         if ($(this).dialog("persona") == "related") {
@@ -1390,7 +1402,9 @@ var stdDialogs = {
       "new-raw-data-file": {title: "Raw Data File", personas: {related: newPersona("Upload Related Raw Data",
                                                                      {open: file_upload_dialog},
                                      defaultSubmit) } },
-      "new-indicator-csv": {title: "New Indicator CSV" },
+      "new-indicator-csv": {title: "New Indicator CSV", personas: {related: newPersona("Upload Related Indicators",
+                                                                     {open: file_upload_dialog},
+                                     defaultSubmit) } },
   };
 
   // Ok, now initialize all the dialogs, with the href they are lazy-loaded

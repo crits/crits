@@ -540,6 +540,12 @@ def upsert_domain(domain, source, username=None, campaign=None,
     :param cache: Cached data, typically for performance enhancements
                   during bulk uperations.
     :type cache: dict
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_id: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               "success" (boolean),
               "object" the domain that was added,

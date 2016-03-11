@@ -371,10 +371,13 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
     :type cache: dict
-    :param related_id: ObjectId of a top-level object related to this PCAP.
+    :param related_id: ID of object to create relationship with
     :type related_id: str
-    :param related_type: The CRITs type of the related top-level object.
-    :type related_type: str    :returns: dict with keys:
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
+    :returns: dict with keys:
               "success" (boolean),
               "message" (str),
               "object" (if successful) :class:`crits.ips.ip.IP`

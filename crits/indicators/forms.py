@@ -67,11 +67,19 @@ class UploadIndicatorCSVForm(forms.Form):
         widget=forms.TextInput(attrs={'size': '90'}),
         label=form_consts.Indicator.SOURCE_REFERENCE,
         required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
+
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorCSVForm, self).__init__(*args, **kwargs)
         self.fields['source'].choices = [
             (c.name, c.name) for c in get_source_names(True, True, username)]
         self.fields['source'].initial = get_user_organization(username)
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = "Related To"
 
 class UploadIndicatorTextForm(forms.Form):
     """

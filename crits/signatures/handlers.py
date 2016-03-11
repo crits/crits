@@ -305,6 +305,12 @@ def handle_signature_file(data, source_name, user=None,
     :type bucket_list: str(comma separated) or list.
     :param ticket: Ticket(s) to add to this Signature
     :type ticket: str(comma separated) or list.
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               'success' (boolean),
               'message' (str),

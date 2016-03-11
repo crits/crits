@@ -259,6 +259,12 @@ def add_new_event(title, description, event_type, source, method, reference,
     :type: str
     :param ticket: Ticket to associate with this event.
     :type ticket: str
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
