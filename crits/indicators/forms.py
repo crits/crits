@@ -103,6 +103,11 @@ class UploadIndicatorTextForm(forms.Form):
     data = forms.CharField(
         widget=forms.Textarea(attrs={'cols': '80', 'rows': '20'}),
         required=True)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorTextForm, self).__init__(*args, **kwargs)
         self.fields['source'].choices = [
@@ -110,6 +115,8 @@ class UploadIndicatorTextForm(forms.Form):
         self.fields['source'].initial = get_user_organization(username)
         dt = "Indicator, Type, Threat Type, Attack Type, Description, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action, Status\n"
         self.fields['data'].initial = dt
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = "Related To"
 
 class UploadIndicatorForm(forms.Form):
     """

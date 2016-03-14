@@ -163,7 +163,10 @@ def upload_indicator(request):
                                               request.POST['reference'],
                                               "ti",
                                               username,
-                                              add_domain=True)
+                                              add_domain=True,
+                                              related_id=request.POST['related_id'],
+                                              related_type=request.POST['related_type'],
+                                              relationship_type=request.POST['relationship_type'])
                 if result['success']:
                     message = {'message': ('<div>%s <a href="%s">Go to all'
                                            ' indicators</a></div>' %

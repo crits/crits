@@ -180,7 +180,10 @@ def email_fields_add(request):
 
     obj = handle_email_fields(fields_form.cleaned_data,
                               request.user.username,
-                              "Fields Upload")
+                              "Fields Upload",
+                              related_id = fields_form.cleaned_data['related_id'],
+                              related_type = fields_form.cleaned_data['related_type'],
+                              relationship_type = fields_form.cleaned_data['relationship_type'])
     if not obj['status']:
         if request.is_ajax():
             json_reply['message'] = obj['reason']
@@ -256,7 +259,10 @@ def email_yaml_add(request, email_id=None):
                       campaign=yaml_form.cleaned_data['campaign'],
                       confidence=yaml_form.cleaned_data['campaign_confidence'],
                       bucket_list=yaml_form.cleaned_data['bucket_list'],
-                      ticket=yaml_form.cleaned_data['ticket'])
+                      ticket=yaml_form.cleaned_data['ticket'],
+                      related_id=yaml_form.cleaned_data['related_id'],
+                      related_type=yaml_form.cleaned_data['related_type'],
+                      relationship_type=yaml_form.cleaned_data['relationship_type'])
     if not obj['status']:
         if request.is_ajax():
             json_reply['message'] = obj['reason']
@@ -320,7 +326,10 @@ def email_raw_add(request):
                     campaign=fields_form.cleaned_data['campaign'],
                     confidence=fields_form.cleaned_data['campaign_confidence'],
                     bucket_list=fields_form.cleaned_data['bucket_list'],
-                    ticket=fields_form.cleaned_data['ticket'])
+                    ticket=fields_form.cleaned_data['ticket'],
+                    related_id=fields_form.cleaned_data['related_id'],
+                    related_type=fields_form.cleaned_data['related_type'],
+                    relationship_type=fields_form.cleaned_data['relationship_type'])
     if not obj['status']:
         if request.is_ajax():
             json_reply['message'] = obj['reason']
@@ -434,6 +443,9 @@ def email_outlook_add(request):
     campaign_confidence = outlook_form.cleaned_data['campaign_confidence']
     bucket_list = outlook_form.cleaned_data['bucket_list']
     ticket = outlook_form.cleaned_data['ticket']
+    related_id = outlook_form.cleaned_data['related_id']
+    related_type = outlook_form.cleaned_data['related_type']
+    relationship_type = outlook_form.cleaned_data['relationship_type']
 
     result = handle_msg(request.FILES['msg_file'],
                         source,
@@ -444,7 +456,10 @@ def email_outlook_add(request):
                         campaign,
                         campaign_confidence,
                         bucket_list,
-                        ticket)
+                        ticket,
+                        related_id=related_id,
+                        related_type=related_type,
+                        relationship_type=relationship_type)
 
     json_reply['success'] = result['status']
     if not result['status']:

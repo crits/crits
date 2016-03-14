@@ -215,6 +215,60 @@ function populate_id(id, type) {
                               3000); });
         }
     });
+    // Add a related Email (Using the related dialog persona)
+    $( "#dialog-new-email-outlook" ).on("dialogopen.add_related_email", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        // $(this).find("form").removeAttr("target"); // Get rid of target to refresh page
+
+        // Unlike new-sample below, this does not redirect us nor refresh the
+        // Relationships list of the Sample, so delay for a few seconds then reload the
+        // page after uploaded.  Added a fileUploadComplete event to work around this.
+        $(this).find("form").bind("fileUploadComplete",
+                      function(e, response) {
+                          if (response.success)
+                          setTimeout(function() {
+                              document.location = document.location },
+                              3000); });
+        }
+    });
+    // Add a related Email (Using the related dialog persona)
+    $( "#dialog-new-email-raw" ).on("dialogopen.add_related_event", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+                      function() {
+                          setTimeout(function() {
+                              document.location = document.location },
+                              3000); });
+        }
+    });
+    // Add a related Email (Using the related dialog persona)
+    $( "#dialog-new-email-yaml" ).on("dialogopen.add_related_event", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+                      function() {
+                          setTimeout(function() {
+                              document.location = document.location },
+                              3000); });
+        }
+    });
+    // Add a related Email (Using the related dialog persona)
+    $( "#dialog-new-email-fields" ).on("dialogopen.add_related_event", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+                      function() {
+                          setTimeout(function() {
+                              document.location = document.location },
+                              3000); });
+        }
+    });
     // Add a related Event (Using the related dialog persona)
     $( "#dialog-new-event" ).on("dialogopen.add_related_event", function(e) {
         if ($(this).dialog("persona") == "related") {
@@ -259,6 +313,18 @@ function populate_id(id, type) {
         $(this).find("form").bind("fileUploadComplete",
                       function(e, response) {
                           if (response.success)
+                          setTimeout(function() {
+                              document.location = document.location },
+                              3000); });
+        }
+    });
+    // Add a related Indicator (Using the related dialog persona)
+    $( "#dialog-indicator-blob" ).on("dialogopen.add_related_indicator", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+                      function() {
                           setTimeout(function() {
                               document.location = document.location },
                               3000); });
@@ -1313,14 +1379,12 @@ var stdDialogs = {
       "new-actor": {title: "Actor", personas: {related: newPersona("Add Related Actor", {}, addEditSubmit) } },
       "new-actor-identifier": {title: "Actor Identifier"},
       "actor_identifier_type_add": {title: "Actor Identifier Type"},
-      "new-email-raw": {title: "Email (Raw)"},
-      "new-email-fields": {title: "Email"},
-      "new-email-yaml": {title: "Email (YAML)", open: new_email_yaml_dialog},
-
+      "new-email-raw": {title: "Email (Raw)", personas: {related: newPersona("Add Related Email (raw)", {}, addEditSubmit) } },
+      "new-email-fields": {title: "Email", personas: {related: newPersona("Add Related Email", {}, addEditSubmit) } },
+      "new-email-yaml": {title: "Email (YAML)", personas: {related: newPersona("Add Related Email (YAML)", {open: new_email_yaml_dialog}, addEditSubmit ) } },
       "new-campaign": {title: "Campaign", personas: {related: newPersona("Add Related Campaign", {}, addEditSubmit) } },
       "new-backdoor": {title: "Backdoor", personas: {related: newPersona("Add Related Backdoor", {}, addEditSubmit) } },
       "new-exploit": {title: "Exploit", personas: {related: newPersona("Add Related Exploit",{}, addEditSubmit) } },
-
       "new-domain": {title: "Domain", personas: {related: newPersona("Add Related Domain", {open: new_domain_dialog}, addEditSubmit ) }, open: new_domain_dialog },
       "new-indicator": {title: "Indicator",  personas: {related: newPersona("Add Related Indicator", {open: new_indicator_dialog}, addEditSubmit ) } },
       "action_add": {title: "Action"},
@@ -1342,7 +1406,7 @@ var stdDialogs = {
                     }
                }},
 		       update: { open: update_dialog} },
-      "indicator-blob": {title: "New Indicator Blob"},
+      "indicator-blob": {title: "New Indicator Blob", personas: {related: newPersona("Add Related Indicator Blob", {open: new_indicator_dialog}, addEditSubmit ) } },
 
       "new-event": {title: "Event", personas: {related: newPersona("Add Related Event", {open: new_event_dialog}, addEditSubmit ) } },
       "new-ip": {title: "IP Address", personas: {related: newPersona("Add Related IP", {open: new_ip_dialog}, addEditSubmit ) } },
@@ -1386,7 +1450,9 @@ var stdDialogs = {
 
   var fileDialogs = {
       // File Upload Dialogs
-      "new-email-outlook": {title: "Upload Outlook Email" },
+      "new-email-outlook": {title: "Upload Outlook Email", personas: {related: newPersona("Upload Related Email (Outlook)",
+                                                                 {open: file_upload_dialog},
+                                 defaultSubmit) } },
       "new-email-eml": {title: "Email", personas: {related: newPersona("Upload Related Email",
                                                                  {open: file_upload_dialog},
                                  defaultSubmit) } },
