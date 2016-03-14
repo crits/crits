@@ -886,7 +886,7 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     emldata = []
     boundary = None
     isbody = False
-    if not isinstance(data, str):
+    if not isinstance(data, basestring):
         data = data.read()
     for line in data.split("\n"):
         # We match the regex for a boundary definition
