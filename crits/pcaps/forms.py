@@ -37,7 +37,7 @@ class UploadPcapForm(forms.Form):
         self.fields['source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]
         self.fields['source'].initial = get_user_organization(username)
         self.fields['relationship_type'].choices = relationship_choices
-        self.fields['relationship_type'].initial = "Related To"
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

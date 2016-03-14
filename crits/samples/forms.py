@@ -121,7 +121,7 @@ class UploadFileForm(forms.Form):
         self.fields['backdoor'].choices = [('', '')]
 
         self.fields['relationship_type'].choices = relationship_choices
-        self.fields['relationship_type'].initial = "Related To"
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
         for (name, version) in get_backdoor_names(username):
             display = name

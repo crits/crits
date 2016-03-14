@@ -52,7 +52,7 @@ class UploadRawDataFileForm(forms.Form):
                                              ) for c in get_item_names(RawDataType,
                                                                        True)]
         self.fields['relationship_type'].choices = relationship_choices
-        self.fields['relationship_type'].initial = "Related To"
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
@@ -103,7 +103,7 @@ class UploadRawDataForm(forms.Form):
                                              ) for c in get_item_names(RawDataType,
                                                                        True)]
         self.fields['relationship_type'].choices = relationship_choices
-        self.fields['relationship_type'].initial = "Related To"
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
         
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

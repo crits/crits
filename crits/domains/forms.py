@@ -100,7 +100,7 @@ class AddDomainForm(forms.Form):
         self.fields['ip_type'].initial = "Address - ipv4-addr"
 
         self.fields['relationship_type'].choices = relationship_choices
-        self.fields['relationship_type'].initial = "Related To"
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

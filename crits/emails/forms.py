@@ -55,7 +55,7 @@ class EmailOutlookForm(forms.Form):
                                              ("high", "high")]
 
         self.fields['relationship_type'].choices = relationship_choices
-        self.fields['relationship_type'].initial = "Related To"
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
@@ -99,7 +99,7 @@ class EmailYAMLForm(forms.Form):
                                              ("medium", "medium"),
                                              ("high", "high")]
         self.fields['relationship_type'].choices = relationship_choices
-        self.fields['relationship_type'].initial = "Related To"
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
@@ -141,7 +141,7 @@ class EmailEMLForm(forms.Form):
                                              ("medium", "medium"),
                                              ("high", "high")]
         self.fields['relationship_type'].choices = relationship_choices
-        self.fields['relationship_type'].initial = "Related To"
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
         
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
@@ -185,7 +185,7 @@ class EmailRawUploadForm(forms.Form):
                                              ("high", "high")]
 
         self.fields['relationship_type'].choices = relationship_choices
-        self.fields['relationship_type'].initial = "Related To"
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
@@ -245,4 +245,4 @@ class EmailUploadForm(forms.Form):
                                              ("medium", "medium"),
                                              ("high", "high")]
         self.fields['relationship_type'].choices = relationship_choices
-        self.fields['relationship_type'].initial = "Related To"
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
