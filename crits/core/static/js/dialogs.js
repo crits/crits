@@ -256,8 +256,9 @@ function populate_id(id, type) {
         if ($(this).dialog("persona") == "related") {
         $(this).find("form #id_related_id").val(id);
         $(this).find("form #id_related_type").val(type);
-        $(this).find("form").bind("addEditSubmitComplete",
-                      function() {
+        $(this).find("form").bind("fileUploadComplete",
+                      function(e, response) {
+                          if (response.success)
                           setTimeout(function() {
                               document.location = document.location },
                               3000); });
