@@ -204,7 +204,7 @@ def upload_file(request, related_md5=None):
                 if form.cleaned_data['inherit_sources']:
                     inherited_source = related_sample.source
 
-            if related_id:
+            elif related_id:
                 related_obj = class_from_id(related_type, related_id)
                 if not related_obj:
                     response['success'] = False
