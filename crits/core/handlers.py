@@ -471,7 +471,7 @@ def add_releasability(type_, id_, name, user, **kwargs):
         return {'success': False,
                 'message': "Could not add releasability: %s" % e}
 
-def add_releasability_instance(type_, _id, name, analyst):
+def add_releasability_instance(type_, _id, name, analyst, note=None):
     """
     Add releasability instance to a top-level object.
 
@@ -483,6 +483,8 @@ def add_releasability_instance(type_, _id, name, analyst):
     :type name: str
     :param analyst: The user adding the releasability instance.
     :type analyst: str
+    :param note: Optional note about this instance.
+    :type note: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -492,7 +494,7 @@ def add_releasability_instance(type_, _id, name, analyst):
                 'message': "Could not find object."}
     try:
         date = datetime.datetime.now()
-        ri = Releasability.ReleaseInstance(analyst=analyst, date=date)
+        ri = Releasability.ReleaseInstance(analyst=analyst, date=date, note=note)
         obj.add_releasability_instance(name=name, instance=ri)
         obj.save(username=analyst)
         obj.reload()
