@@ -176,6 +176,7 @@ def upload_file(request, related_md5=None):
             method = form.cleaned_data['method']
             reference = form.cleaned_data['reference']
             analyst = request.user.username
+            description = form.cleaned_data['description']
 
             if related_md5:
                 reload_page = True

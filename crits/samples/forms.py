@@ -42,6 +42,7 @@ class UploadFileForm(forms.Form):
                                     label=form_consts.Sample.UPLOAD_TYPE)
     filedata = forms.FileField(required=False,
                                label=form_consts.Sample.FILE_DATA)
+    description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80', 'rows':'2'}), required=False)
     filedata.widget.attrs=({form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_SKIP + ' id_upload_type_0 required'})
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80', 'rows':'2'}), required=False)
     filename = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1 required'}),
