@@ -3375,7 +3375,7 @@ def user_login(request, user):
     SESSION_KEY = '_auth_user_id'
     BACKEND_SESSION_KEY = '_auth_user_backend'
     HASH_SESSION_KEY = '_auth_user_hash'
-    #REDIRECT_FIELD_NAME = 'next'
+    REDIRECT_FIELD_NAME = 'next'
     session_auth_hash = ''
     if user is None:
         user = request.user
@@ -3393,8 +3393,12 @@ def user_login(request, user):
             request.session.flush()
     else:
         request.session.cycle_key()
-    #request.session[SESSION_KEY] = user._meta.pk.value_to_string(user)
-    request.session[SESSION_KEY] = user.pk
+    try:
+        # try the new way
+        request.session[SESSION_KEY] = user._meta.pk.value_to_string(user)
+    except Exception:
+        #if it doesn't work, do what Django 1.7 does
+        request.session[SESSION_KEY] = user.pk
     request.session[BACKEND_SESSION_KEY] = user.backend
     request.session[HASH_SESSION_KEY] = session_auth_hash
     if hasattr(request, 'user'):

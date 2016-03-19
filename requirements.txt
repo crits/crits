@@ -13,9 +13,10 @@ kombu
 lxml
 m2crypto
 --allow-external mongoengine
-mongoengine==0.8.8
+mongoengine==0.10.6
+git+https://github.com/MongoEngine/django-mongoengine.git
 pydeep==0.2
-pymongo==2.7.2
+pymongo
 pyparsing
 python-dateutil
 python-ldap

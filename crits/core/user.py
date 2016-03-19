@@ -43,8 +43,6 @@ from mongoengine import StringField, DateTimeField, ListField
 from mongoengine import BooleanField, ObjectIdField, EmailField
 from mongoengine import EmbeddedDocumentField, IntField
 from mongoengine import DictField, DynamicEmbeddedDocument
-from mongoengine.django.utils import datetime_now
-#from mongoengine.django.auth import SiteProfileNotAvailable
 
 from django.conf import settings
 from django.contrib import auth
@@ -312,9 +310,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     is_superuser = BooleanField(default=False,
                                 verbose_name='superuser status',
                                 help_text="Designates that this user has all permissions without explicitly assigning them.")
-    last_login = DateTimeField(default=datetime_now,
+    last_login = DateTimeField(default=datetime.datetime.now,
                                verbose_name='last login')
-    date_joined = DateTimeField(default=datetime_now,
+    date_joined = DateTimeField(default=datetime.datetime.now,
                                 verbose_name='date joined')
 
     invalid_login_attempts = IntField(default=0)
@@ -665,7 +663,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         email address.
         """
 
-        now = datetime_now()
+        now = datetime.datetime.now()
 
         # Normalize the address by lowercasing the domain part of the email
         # address.
@@ -744,7 +742,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
 
     def get_username(self):
         return self.username
-    '''
+
     def get_profile(self):
         """
         Returns site-specific profile for this user. Raises
@@ -773,7 +771,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             except (ImportError, ImproperlyConfigured):
                 raise SiteProfileNotAvailable
         return self._profile_cache
-    '''
+
     def get_preference(self, section, setting, default=None):
         """
         Get a user preference setting out of the deep dynamic dictionary
@@ -889,6 +887,7 @@ class AuthenticationMiddleware(object):
     # This has been added to make theSessions work on Django 1.8+ and
     # mongoengine 0.8.8 see:
     # https://github.com/MongoEngine/mongoengine/issues/966
+    # For mongoengine 10.x you can comment out AuthenticationMiddleware from settings.py
 
     def _get_user_session_key(self, request):
         from bson.objectid import ObjectId
