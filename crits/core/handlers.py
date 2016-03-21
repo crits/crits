@@ -1975,8 +1975,13 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                                               order_by(*sort).skip(skip).\
                                               limit(limit).only(*projection)
             else:
-                docs = col_obj.objects(__raw__=query).order_by(*sort).\
+                if projection:
+                    docs = col_obj.objects(__raw__=query).order_by(*sort).\
                                     skip(skip).limit(limit).only(*projection)
+                else:
+                    # Hack to fix AuditLog
+                    docs = col_obj.objects(__raw__=query).order_by(*sort).\
+                                    skip(skip).limit(limit)
         # Else, all other objects that have sources associated with them
         # need to be filtered appropriately
         else:
@@ -1985,9 +1990,14 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
             if count:
                 results['result'] = "OK"
                 return results
-            docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
+            if projection:
+                docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
                                     order_by(*sort).skip(skip).limit(limit).\
                                     only(*projection)
+            else:
+                # Hack to fix Dashboard
+                docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
+                                    order_by(*sort).skip(skip).limit(limit)
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
                 doc.sanitize_sources(username="%s" % user, sources=sourcefilt)
