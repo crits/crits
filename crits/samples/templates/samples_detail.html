@@ -15,6 +15,8 @@
     var update_sample_filename = "{% url 'crits.samples.views.set_sample_filename' %}";
     var update_sample_filenames = "{% url 'crits.samples.views.set_sample_filenames' %}";
     var is_admin = "{{ admin }}";
+    var related_id = "{{sample.id|escapejs }}";
+    var related_type = "Sample"
 </script>
 
 {% if sample %}
@@ -29,8 +31,6 @@
     <span class="horizontal_menu">
     <ul class="hmenu">
         <li><a href="#" class="dialogClick" dialog="download-sample">Download Sample</a></li>
-        <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.samples.views.upload_file' sample.md5 %}">Upload Related Sample</a></li>
-        <li><a href="#" class="dialogClick" dialog="new-pcap" persona="related">Upload Related PCAP</a></li>
         <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=text">Text</a></li>
         <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=yaml">YAML</a></li>
         <li><a href="#" class="dialogClick" dialog="unzip-sample">Un7zip</a></li>
@@ -137,6 +137,8 @@
         {% with bucket_list=sample.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div class="content_box">
         {% with obj=sample obj_type="Sample" %}

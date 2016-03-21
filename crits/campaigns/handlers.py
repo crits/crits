@@ -35,6 +35,7 @@ from crits.samples.sample import Sample
 from crits.targets.handlers import get_campaign_targets
 from crits.targets.target import Target
 
+from crits.vocabulary.relationships import RelationshipTypes
 
 # Functions for top level Campaigns.
 def get_campaign_names_list(active):
@@ -285,8 +286,9 @@ def generate_campaign_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
 
-def add_campaign(name, description, aliases, analyst, bucket_list=None,
-                 ticket=None):
+def add_campaign(name, description, aliases, analyst, 
+                 bucket_list=None, ticket=None, related_id=None, 
+                 related_type=None, relationship_type=None):
     """
     Add a Campaign.
 
@@ -302,6 +304,12 @@ def add_campaign(name, description, aliases, analyst, bucket_list=None,
     :type bucket_list: str (comma separated) or list.
     :param ticket: Ticket(s) to add to this Campaign.
     :type ticket: str (comma separated) or list.
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_id: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with key 'success' (boolean) and 'message' (str).
     """
 
@@ -329,6 +337,25 @@ def add_campaign(name, description, aliases, analyst, bucket_list=None,
     else:
         final_aliases = []
     campaign.add_alias(final_aliases)
+
+    related_obj = None
+    if related_id and related_type:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+    campaign.save(username=analyst)
+
+    if related_obj and relationship_type and campaign:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        campaign.add_relationship(related_obj,
+                              relationship_type,
+                              analyst=analyst,
+                              get_rels=False)
+        campaign.save(username=analyst)
+        campaign.reload()
 
     try:
         campaign.save(username=analyst)

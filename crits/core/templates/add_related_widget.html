@@ -1,0 +1,49 @@
+{% load url from future %}
+<div class="content_box" id="add_related_box">
+    <div id="add_related" hidden></div>
+    <h3 class='titleheader'>
+        <span>Add Related</span>
+    </h3>
+    <div data-intro"Section for adding related Objects." data-position="bottom">
+        <form id="add_related_form" method="post"> {% csrf_token %}
+            <select id="add_related_options" onchange="populateList()">
+                <option>Choose TLO</option>
+                <option value='new-actor'>Actor</option>
+                <option value='new-backdoor'>Backdoor</option>
+                <option value='new-campaign'>Campaign</option>
+                <option value='new-certificate'>Certificate</option>
+                <option value='new-domain'>Domain</option>
+                <option value='new-email-fields'>Email</option>
+                <option value='new-email-eml'>Email (eml)</option>
+                <option value='new-email-raw'>Email (raw)</option>
+                <option value='new-email-yaml'>Email (YAML)</option>
+                <option value='new-email-outlook'>Email (Outlook)</option>
+                <option value='new-event'>Event</option>
+                <option value='new-exploit'>Exploit</option>
+                <option value='new-indicator'>Indicator</option>
+                <option value='new-indicator-csv'>Indicator (csv)</option>
+                <option value='indicator-blob'>Indicator (blob)</option>
+                <option value='new-ip'>IP</option>
+                <option value='new-pcap'>PCAP</option>
+                <option value='new-raw-data'>Raw Data</option>
+                <option value='new-raw-data-file'>Raw Data File</option>
+                <option value='new-sample'>Sample</option>
+                <option value='new-signature'>Signature</option>
+                <option value='new-target'>Target</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    function populateList() {
+        var selected_option = document.getElementById('add_related_options');
+        var add_related_div = document.getElementById('add_related');
+        add_related_div.setAttribute("dialog", selected_option.value);
+        add_related_div.setAttribute("persona", "related");
+        add_related_div.setAttribute("class", "dialogClick");
+        add_related_div.click();
+
+    }
+</script>

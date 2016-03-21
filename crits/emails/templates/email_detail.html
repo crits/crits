@@ -10,6 +10,7 @@
     var email_detail = "{% url 'crits.emails.views.email_detail' email.id %}";
     var update_header_value = "{% url 'crits.emails.views.update_header_value' email.id %}";
     var splunk_search_url = "{{ splunk_search_url }}";
+    var email_id = "{{ email.id | escapejs }}"
 </script>
 
 <div id="tabnav" class="tabnav" style="font-size:90%">
@@ -127,6 +128,8 @@
         {% with bucket_list=email.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div class="content_box">
         {% with obj=email obj_type="Email" %}

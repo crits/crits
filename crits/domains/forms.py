@@ -11,7 +11,12 @@ from crits.core.user_tools import get_user_organization
 
 from crits.vocabulary.ips import IPTypes
 
+from crits.vocabulary.relationships import RelationshipTypes
+
+
 ip_choices = [(c,c) for c in IPTypes.values(sort=True)]
+
+relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
 class TLDUpdateForm(forms.Form):
     """
@@ -74,6 +79,11 @@ class AddDomainForm(forms.Form):
     add_indicators = forms.BooleanField(required=False,
                                         widget=forms.CheckboxInput(attrs={'class':'bulkskip'}),
                                         label=form_consts.Domain.ADD_INDICATORS)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
         super(AddDomainForm, self).__init__(*args, **kwargs)
@@ -88,6 +98,9 @@ class AddDomainForm(forms.Form):
 
         self.fields['ip_type'].choices = ip_choices
         self.fields['ip_type'].initial = "Address - ipv4-addr"
+
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

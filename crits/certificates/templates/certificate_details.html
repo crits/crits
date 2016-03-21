@@ -7,6 +7,7 @@
 
 <script>
     var cert_md5 = "{{ cert.md5 }}";
+    var cert_id = "{{cert.id | escapejs}}"
 </script>
 
 {% if cert %}
@@ -92,6 +93,7 @@
         {% with bucket_list=cert.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
     </div>
     <div class="content_box">
         {% with obj=cert obj_type="Certificate" %}

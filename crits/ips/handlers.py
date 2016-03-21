@@ -9,6 +9,7 @@ from django.template import RequestContext
 from django.utils.ipv6 import clean_ipv6_address
 
 from crits.core import form_consts
+from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import create_embedded_source
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
@@ -28,6 +29,8 @@ from crits.vocabulary.indicators import (
     IndicatorAttackTypes,
     IndicatorThreatTypes
 )
+from crits.vocabulary.relationships import RelationshipTypes
+
 
 def generate_ip_csv(request):
     """
@@ -268,6 +271,9 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
     bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
     indicator_reference = data.get('indicator_reference')
+    related_id = data.get('related_id')
+    related_type = data.get('related_type')
+    relationship_type = data.get('relationship_type')
 
     retVal = ip_add_update(ip, ip_type,
             source=source,
@@ -281,7 +287,10 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
             bucket_list=bucket_list,
             ticket=ticket,
             is_validate_only=is_validate_only,
-            cache=cache)
+            cache=cache,
+            related_id=related_id,
+            related_type=related_type,
+            relationship_type=relationship_type)
 
     if not retVal['success']:
         errors.append(retVal.get('message'))
@@ -328,7 +337,8 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
 def ip_add_update(ip_address, ip_type, source=None, source_method='',
                   source_reference='', campaign=None, confidence='low',
                   analyst=None, is_add_indicator=False, indicator_reference='',
-                  bucket_list=None, ticket=None, is_validate_only=False, cache={}):
+                  bucket_list=None, ticket=None, is_validate_only=False, cache={}, 
+                  related_id=None, related_type=None, relationship_type=None):
     """
     Add/update an IP address.
 
@@ -361,6 +371,12 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
     :type cache: dict
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -420,6 +436,14 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
     if ticket:
         ip_object.add_ticket(ticket, analyst)
 
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
     resp_url = reverse('crits.ips.views.ip_detail', args=[ip_object.ip])
 
     if is_validate_only == False:
@@ -435,6 +459,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
             retVal['message'] = message
             retVal['status'] = form_consts.Status.DUPLICATE
             retVal['warning'] = message
+
     elif is_validate_only == True:
         if ip_object.id != None and is_item_new == False:
             message = ('Warning: IP already exists: '
@@ -458,6 +483,14 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
                              bucket_list=bucket_list,
                              ticket=ticket,
                              cache=cache)
+
+    if related_obj and ip_object and relationship_type:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        ip_object.add_relationship(related_obj,
+                              relationship_type,
+                              analyst=analyst,
+                              get_rels=False)
+        ip_object.save(username=analyst)
 
     # run ip triage
     if is_item_new and is_validate_only == False:

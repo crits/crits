@@ -7,6 +7,8 @@
     var update_event_title = "{% url 'crits.events.views.set_event_title' event.id %}";
     var update_event_type = "{% url 'crits.events.views.set_event_type' event.id %}";
     var get_event_types = "{% url 'crits.events.views.get_event_type_dropdown' %}";
+    var event_id = "{{ event.id | escapejs}}";
+
 </script>
 
 {% if event %}
@@ -93,6 +95,8 @@
         {% with bucket_list=event.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div class="content_box">
         {% with obj=event obj_type="Event" %}

@@ -7,6 +7,8 @@
 
 <script>
     var get_indicator_type_dropdown = "{% url 'crits.indicators.views.get_indicator_type_dropdown' %}";
+    var indicator_id = "{{ indicator.id | escapejs }}";
+
 </script>
 
 <div id="tabnav" class="tabnav" style="font-size:90%">
@@ -176,6 +178,8 @@
     {% with bucket_list=indicator.bucket_list %}
         {% include 'bucket_list_widget.html' %}
     {% endwith %}
+    {% include 'add_related_widget.html' %}
+
 </div>
 <div class="content_box">
     {% with obj=indicator obj_type="Indicator" %}

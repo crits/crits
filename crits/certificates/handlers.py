@@ -205,9 +205,10 @@ def generate_cert_jtable(request, option):
                                   RequestContext(request))
 
 def handle_cert_file(filename, data, source_name, user=None,
-                     description=None, related_id=None, related_md5=None,
-                     related_type=None, method='', reference='',
-                     relationship=None, bucket_list=None, ticket=None):
+                     description=None, related_md5=None, method='', 
+                     reference='', relationship=None, bucket_list=None, 
+                     ticket=None, related_id=None, related_type=None,
+                     relationship_type=None):
     """
     Add a Certificate.
 
@@ -223,8 +224,6 @@ def handle_cert_file(filename, data, source_name, user=None,
     :type user: str
     :param description: Description of the Certificate.
     :type description: str
-    :param related_id: ObjectId of a top-level object related to this Certificate.
-    :type related_id: str
     :param related_md5: MD5 of a top-level object related to this Certificate.
     :type related_md5: str
     :param related_type: The CRITs type of the related top-level object.
@@ -239,6 +238,12 @@ def handle_cert_file(filename, data, source_name, user=None,
     :type bucket_list: str(comma separated) or list.
     :param ticket: Ticket(s) to add to this Certificate
     :type ticket: str(comma separated) or list.
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_id: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               'success' (boolean),
               'message' (str),
@@ -326,8 +331,11 @@ def handle_cert_file(filename, data, source_name, user=None,
 
     # update relationship if a related top-level object is supplied
     if related_obj and cert:
+        if relationship_type:
+            relationship=RelationshipTypes.inverse(relationship=relationship_type)
         if not relationship:
             relationship = RelationshipTypes.RELATED_TO
+            
         cert.add_relationship(related_obj,
                               relationship,
                               analyst=user,
