@@ -149,6 +149,9 @@ def upload_signature(request, link_id=None):
             data_type = form.cleaned_data.get('data_type', None)
             data_type_min_version = form.cleaned_data.get('data_type_min_version', None)
             data_type_max_version = form.cleaned_data.get('data_type_max_version', None)
+            related_id=form.cleaned_data.get('related_id', '')
+            related_type = form.cleaned_data.get('related_type', '')
+            relationship_type = form.cleaned_data.get('relationship_type', '')
 
             ''' Parse out dependencies and add any new ones '''
             depend_string = form.cleaned_data.get('data_type_dependency', None)
@@ -177,7 +180,10 @@ def upload_signature(request, link_id=None):
                                           reference=reference,
                                           copy_rels=copy_rels,
                                           bucket_list=bucket_list,
-                                          ticket=ticket)
+                                          ticket=ticket,
+                                          related_id=related_id,
+                                          related_type=related_type,
+                                          relationship_type=relationship_type)
             if status['success']:
                 jdump = json.dumps({
                     'message': 'signature uploaded successfully! <a href="%s">View signature</a>'

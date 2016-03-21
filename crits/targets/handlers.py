@@ -10,6 +10,7 @@ except ImportError:
     from mongoengine.errors import ValidationError
 
 from crits.core import form_consts
+from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import json_handler, EmbeddedCampaign
 from crits.core.handlers import jtable_ajax_list, build_jtable, jtable_ajax_delete
 from crits.core.handlers import csv_export
@@ -21,6 +22,8 @@ from crits.stats.handlers import target_user_stats
 from crits.targets.division import Division
 from crits.targets.forms import TargetInfoForm
 from crits.targets.target import Target
+from crits.vocabulary.relationships import RelationshipTypes
+
 
 
 def generate_target_csv(request):
@@ -85,6 +88,13 @@ def upsert_target(data, analyst):
         bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     if 'ticket' in data:
         ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+    if 'related_id' in data:
+        related_id = data['related_id']
+    if 'related_type' in data:
+        related_type = data['related_type']
+    if 'relationship_type' in data:
+        relationship_type = data['relationship_type']
+
 
     if bucket_list:
         target.add_bucket_list(bucket_list, analyst)
@@ -92,9 +102,27 @@ def upsert_target(data, analyst):
     if ticket:
         target.add_ticket(ticket, analyst)
 
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
     try:
         target.save(username=analyst)
+
+        if related_obj and target:
+            relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+            target.add_relationship(related_obj,
+                                  relationship_type,
+                                  analyst=analyst,
+                                  get_rels=False)
+            target.save(username=analyst)
+
         target.reload()
+
         if is_new:
             run_triage(target, analyst)
         return {'success': True,

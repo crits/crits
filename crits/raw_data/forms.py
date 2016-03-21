@@ -5,6 +5,9 @@ from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
 from crits.raw_data.raw_data import RawDataType
+from crits.vocabulary.relationships import RelationshipTypes
+
+relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
 class UploadRawDataFileForm(forms.Form):
     """
@@ -30,6 +33,11 @@ class UploadRawDataFileForm(forms.Form):
     reference = forms.CharField(required=False,
                                 widget=forms.TextInput(attrs={'size': '90'}),
                                 label=form_consts.RawData.SOURCE_REFERENCE)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
         super(UploadRawDataFileForm, self).__init__(*args, **kwargs)
@@ -43,6 +51,8 @@ class UploadRawDataFileForm(forms.Form):
                                              c.name
                                              ) for c in get_item_names(RawDataType,
                                                                        True)]
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
@@ -74,6 +84,12 @@ class UploadRawDataForm(forms.Form):
                                                         'rows':'2'}),
                                                         required=True)
 
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
+
     def __init__(self, username, *args, **kwargs):
         super(UploadRawDataForm, self).__init__(*args, **kwargs)
         self.fields['source'].choices = [(c.name,
@@ -86,7 +102,9 @@ class UploadRawDataForm(forms.Form):
                                              c.name
                                              ) for c in get_item_names(RawDataType,
                                                                        True)]
-
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
+        
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 

@@ -1950,7 +1950,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     :returns: dict -- Keys are result, data, count, msg, crits_type.  'data'
         contains a :class:`crits.core.crits_mongoengine.CritsQuerySet` object.
     """
-
+    print("Entering data_query(%s):"%projection)
     results = {'result':'ERROR'}
     results['data'] = []
     results['count'] = 0
@@ -1998,6 +1998,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                 # Hack to fix Dashboard
                 docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
                                     order_by(*sort).skip(skip).limit(limit)
+        print("Data: %s"% repr(docs) )
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
                 doc.sanitize_sources(username="%s" % user, sources=sourcefilt)
