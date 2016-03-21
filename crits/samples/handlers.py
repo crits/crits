@@ -648,13 +648,13 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     return samples
 
 def handle_file(filename, data, source, method='Generic', reference='',
-                related_md5=None, related_id=None, related_type='Sample',
-                backdoor=None, user='', campaign=None, confidence='low',
-                md5_digest=None, sha1_digest=None, sha256_digest=None,
-                size=0, mimetype=None, bucket_list=None, ticket=None,
-                relationship=None, inherited_source=None, is_validate_only=False,
-                is_return_only_md5=True, cache={}, backdoor_name=None,
-                backdoor_version=None, description=''):
+                related_md5=None, related_id=None, related_type=None,
+                relationship_type=None, backdoor=None, user='', campaign=None, 
+                confidence='low', md5_digest=None, sha1_digest=None,
+                sha256_digest=None, size=0, mimetype=None, bucket_list=None, 
+                ticket=None, relationship=None, inherited_source=None, 
+                is_validate_only=False, is_return_only_md5=True, cache={},
+                backdoor_name=None, backdoor_version=None, description=''):
     """
     Handle adding a file.
 
@@ -780,14 +780,14 @@ def handle_file(filename, data, source, method='Generic', reference='',
         else:
             return retVal
 
-    if related_id or related_md5:
-        if  related_id:
+    if related_id or related_md5 and related_type:
+        if related_id:
             related_obj = class_from_id(related_type, related_id)
-        else:
+        elif related_md5:
             related_obj = class_from_value(related_type, related_md5)
         if not related_obj:
             retVal['message'] += (' Related %s not found. Sample not uploaded.'
-                                  % (related_type))
+                                  % (related_id))
             retVal['success'] = False
     else:
         related_obj = None
@@ -939,7 +939,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
                     if related_obj._meta['crits_type'] == 'Email':
                         relationship = RelationshipTypes.CONTAINED_WITHIN
                     else:
-                        relationship = RelationshipTypes.RELATED_TO
+                        relationship=RelationshipTypes.inverse(relationship=relationship_type)
                 sample.add_relationship(related_obj,
                                         relationship,
                                         analyst=user,
@@ -989,7 +989,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
 
 def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                          password=None, user=None, campaign=None, confidence='low',
-                         related_md5=None, related_id=None, related_type='Sample',
+                         related_md5=None, related_id=None, related_type=None,relationship_type=None,
                          filename=None, md5=None, sha1=None, sha256=None, size=None,
                          mimetype=None, bucket_list=None, ticket=None,
                          inherited_source=None, is_validate_only=False,
@@ -1092,6 +1092,7 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             related_md5=related_md5,
             related_id=related_id,
             related_type=related_type,
+            relationship_type=relationship_type,
             bucket_list=bucket_list,
             ticket=ticket,
             inherited_source=inherited_source,
@@ -1102,8 +1103,8 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
     else:
         new_sample = handle_file(filename, data, source, method, reference,
                                  related_md5=related_md5, related_id=related_id,
-                                 related_type=related_type, backdoor='',
-                                 user=user, campaign=campaign,
+                                 related_type=related_type, relationship_type=relationship_type,
+                                 backdoor='', user=user, campaign=campaign,
                                  confidence=confidence, md5_digest=md5,
                                  sha1_digest=sha1, sha256_digest=sha256,
                                  size=size, mimetype=mimetype,
@@ -1169,6 +1170,9 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
     description = data.get('description', '')
+    related_id=data.get('related_id')
+    related_type=data.get('related_type')
+    relationship_type=data.get('relationship_type')
 
     samples = handle_uploaded_file(files, source, method, reference,
                                    file_format=fileformat,

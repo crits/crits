@@ -82,6 +82,9 @@ def add_backdoor(request):
             user = request.user.username
             bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+            related_id = cleaned_data['related_id']
+            related_type = cleaned_data['related_type']
+            relationship_type = cleaned_data['relationship_type']
 
             result = add_new_backdoor(name,
                                       version=version,
@@ -94,7 +97,10 @@ def add_backdoor(request):
                                       confidence=confidence,
                                       user=user,
                                       bucket_list=bucket_list,
-                                      ticket=ticket)
+                                      ticket=ticket,
+                                      related_id=related_id,
+                                      related_type=related_type,
+                                      relationship_type=relationship_type)
             return HttpResponse(json.dumps(result, default=json_handler),
                                 content_type="application/json")
         return HttpResponse(json.dumps({'success': False,

@@ -10,6 +10,7 @@
     var update_campaign_aliases = "{% url 'crits.campaigns.views.campaign_aliases' %}";
     var campaign_name = "{{ campaign_detail.name|safe }}";
     var is_admin = "{{ admin }}";
+    var campaign_id = "{{campaign.id | escapejs}}"
 </script>
 
 <div id="tabnav" class="tabnav" style="font-size: 90%;">
@@ -87,6 +88,7 @@
         {% with bucket_list=campaign_detail.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
     </div>
     <div class="content_box">
         {% with obj=campaign_detail obj_type="Campaign" %}

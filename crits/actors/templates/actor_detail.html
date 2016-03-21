@@ -7,6 +7,7 @@
 <script>
     var edit_actor_name = "{% url 'crits.actors.views.edit_actor_name' actor.id|urlencode %}";
     var update_actor_aliases = "{% url 'crits.actors.views.edit_actor_aliases' %}";
+    var actor_id = "{{ actor.id | escapejs }}"
 </script>
 
 <div id="tabnav" class="tabnav" style="font-size:90%">
@@ -98,6 +99,7 @@
          {% with bucket_list=actor.bucket_list %}
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
+         {% include 'add_related_widget.html' %}
      </div>
     <div class="content_box">
         {% with obj=actor obj_type="Actor" %}

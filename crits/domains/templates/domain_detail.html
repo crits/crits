@@ -9,6 +9,10 @@
 
 {% block content %}
 
+<script>
+    var domain_id = "{{ domain.id | escapejs}}";
+</script>
+
 <div id="tabnav" class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
@@ -73,6 +77,8 @@
         {% with bucket_list=domain.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div class="content_box">
         {% with obj=domain obj_type="Domain" %}
