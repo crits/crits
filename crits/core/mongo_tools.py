@@ -26,7 +26,7 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     :type collection: str
     :param preference: PyMongo Read Preference for ReplicaSet/clustered DBs.
     :type preference: str.
-    :returns: :class:`pymongo.Connection`,
+    :returns: :class:`pymongo.MongoClient`,
               :class:`crits.core.mongo_tools.MongoError`
     """
 
