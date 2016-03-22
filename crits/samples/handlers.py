@@ -807,19 +807,17 @@ def handle_file(filename, data, source, method='Generic', reference='',
         sample.sha1 = sha1_digest
         sample.sha256 = sha256_digest
         sample.mimetype = mimetype
-        sample.description = description
     else:
         if filename not in sample.filenames and filename != sample.filename:
             sample.filenames.append(filename)
-
-        if not sample.description:
-            sample.description = description
-        elif sample.description != description:
-            sample.description += "\n" + description
-
         if cached_results != None:
             cached_results[md5_digest] = sample
-
+    
+    if not sample.description:
+        sample.description = description
+    elif sample.description != description:
+        sample.description += "\n" + description
+   
     # this will be overwritten if binary exists
     sample.size = size
 
