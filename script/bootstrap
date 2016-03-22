@@ -94,12 +94,12 @@ depend_crits()
     printf "${HEAD}Installing Python Dependencies${END}\n"
     if [ "$OS" = 'darwin' ]
     then
-         sudo env LDFLAGS=-L$(brew --prefix openssl)/lib \
+         sudo -E env LDFLAGS=-L$(brew --prefix openssl)/lib \
          CFLAGS=-I$(brew --prefix openssl)/include \
          SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include" \
          ${PIP} install -U -r requirements.txt
     else
-         sudo ${PIP} install -r requirements.txt
+         sudo -E ${PIP} install -U -r requirements.txt
     fi
     if [ $? -ne 0 ]
     then
@@ -108,7 +108,7 @@ depend_crits()
         OS-provided package with the package manager (apt-get/yum/brew)
         or try to adjust the CFLAGS, LDFLAGS, and SWIG_FEATURES
         with the right path to openssl headers and libs:
-        ${INFO}sudo env LDFLAGS=\"-L/opt/local/lib\" \
+        ${INFO}sudo -E env LDFLAGS=\"-L/opt/local/lib\" \
                     CFLAGS=\"-I/opt/local/include\" \
                     SWIG_FEATURES=\"-cpperraswarn -includeall -I/opt/local/include\" \
                     pip install M2Crypto ${END}\n"
@@ -255,22 +255,22 @@ exit_restart()
 ubuntu_install()
 {
     printf "${INFO}Installing dependencies with apt-get${END}\n"
-    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+    sudo -E apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
     echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
-    sudo add-apt-repository universe
-    sudo apt-get update
-    sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libjpeg-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+    sudo -E add-apt-repository universe
+    sudo -E apt-get update
+    sudo -E apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libjpeg-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
     sudo ldconfig
 }
 
 debian_install()
 {
     printf "${INFO}Installing dependencies with apt-get${END}\n"
-    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+    sudo -E apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
     echo 'deb http://downloads-distro.mongodb.org/repo/debian-sysvinit dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
-    sudo add-apt-repository universe
-    sudo apt-get update
-    sudo apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libjpeg-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
+    sudo -E add-apt-repository universe
+    sudo -E apt-get update
+    sudo -E apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libjpeg-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
     sudo ldconfig
 }
 
@@ -287,7 +287,7 @@ darwin_install()
 freebsd_install()
 {
     printf "${PASS}Installing ports${END}\n"
-    sudo pkg install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl swig py27-m2crypto py27-pydeep py27-ldap2 py27-mongoengine
+    sudo -E pkg install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl swig py27-m2crypto py27-pydeep py27-ldap2 py27-mongoengine
 }
 
 red_hat_install()
@@ -296,13 +296,13 @@ red_hat_install()
     if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
     then
         printf "${INFO}Installing RPMForge repo${END}\n"
-        sudo rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
-        sudo rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
+        sudo -E rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+        sudo -E rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
     fi
     if [ ! -f /etc/yum.repos.d/epel.repo ];
     then
         printf "${INFO}Installing EPEL repo${END}\n"
-        sudo yum -y install epel-release
+        sudo -E yum -y install epel-release
     fi
     if [ $REL -lt 7 ];
     then
@@ -310,17 +310,17 @@ red_hat_install()
         then
             printf "${INFO}Installing IUS repo${END}\n"
             # python27 comes from here
-            sudo rpm -i http://dl.iuscommunity.org/pub/ius/stable/RedHat/${REL}/x86_64/ius-release-1.0-14.ius.el${REL}.noarch.rpm
+            sudo -E rpm -i http://dl.iuscommunity.org/pub/ius/stable/RedHat/${REL}/x86_64/ius-release-1.0-14.ius.el${REL}.noarch.rpm
         fi
-        sudo yum -y install python27 python27-devel python27-pip
+        sudo -E yum -y install python27 python27-devel python27-pip
     fi
     
     printf "${INFO}Installing Packages${END}\n"
-    sudo yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel libjpeg-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
-    sudo yum -y install p7zip p7zip-plugins
-    sudo yum -y install libffi-devel
-    sudo yum -y install libyaml
-    sudo yum -y install upx
+    sudo -E yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel libjpeg-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
+    sudo -E yum -y install p7zip p7zip-plugins
+    sudo -E yum -y install libffi-devel
+    sudo -E yum -y install libyaml
+    sudo -E yum -y install upx
 
     printf "${INFO}Dependency Install Complete${END}\n"
 }
@@ -331,13 +331,13 @@ centos_install()
     if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
     then
         printf "${INFO}Installing RPMForge repo${END}\n"
-        sudo rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
-        sudo rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
+        sudo -E rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+        sudo -E rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
     fi
     if [ ! -f /etc/yum.repos.d/epel.repo ];
     then
         printf "${INFO}Installing EPEL repo${END}\n"
-        sudo yum -y install epel-release
+        sudo -E yum -y install epel-release
     fi
 
     if [ $REL -lt 7 ];
@@ -346,18 +346,18 @@ centos_install()
         then
             printf "${INFO}Installing IUS repo${END}\n"
             # python27 comes from here
-            sudo rpm -i http://dl.iuscommunity.org/pub/ius/stable/CentOS/${REL}/x86_64/ius-release-1.0-14.ius.centos${REL}.noarch.rpm
+            sudo -E rpm -i http://dl.iuscommunity.org/pub/ius/stable/CentOS/${REL}/x86_64/ius-release-1.0-14.ius.centos${REL}.noarch.rpm
             
         fi
-        sudo yum -y install python27 python27-devel python27-pip
+        sudo -E yum -y install python27 python27-devel python27-pip
     fi
 
     printf "${INFO}Installing Packages${END}\n"
-    sudo yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel libjpeg-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
-    sudo yum -y install p7zip p7zip-plugins
-    sudo yum -y install libffi-devel
-    sudo yum -y install libyaml
-    sudo yum -y install upx
+    sudo -E yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel libjpeg-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
+    sudo -E yum -y install p7zip p7zip-plugins
+    sudo -E yum -y install libffi-devel
+    sudo -E yum -y install libyaml
+    sudo -E yum -y install upx
 
     printf "${INFO}Dependency Install Complete${END}\n"
 }
