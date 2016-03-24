@@ -11,7 +11,13 @@ except ImportError:
 import json
 import logging
 import re
-#import ushlex as shlex
+try:
+    #Python 2.x
+    import ushlex as shlex
+exept ImportError:
+    #Python 3.x
+    import shlex
+
 import urllib
 
 try:
