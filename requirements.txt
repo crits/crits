@@ -8,7 +8,7 @@ celery
 defusedxml
 django-celery
 django-tastypie==0.13.3
-django-tastypie-mongoengine==0.4.6
+git+https://github.com/wishtack/django-tastypie-mongoengine.git
 kombu
 lxml
 m2crypto
