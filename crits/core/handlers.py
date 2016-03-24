@@ -1,7 +1,13 @@
 import cgi
 import os
 import datetime
-from html.parser import HTMLParser
+try:
+    #Python 2.x
+    import HTMLParser
+except ImportError:
+    #Python 3.x
+    from html.parser import HTMLParser
+
 import json
 import logging
 import re
@@ -9,8 +15,10 @@ import re
 import urllib
 
 try:
+    #Python 2.x
     import urlparse
 except ImportError:
+    #Python 3.x
     from urllib.parse import urlparse
 
 from six import string_types, iteritems
