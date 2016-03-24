@@ -19,6 +19,7 @@ $(document).ready(function() {
                                     // allFields.val( "" ).removeClass( "ui-state-error" );
                     },
     });
+    populate_id(cert_id,'Certificate');
     details_copy_id('Certificate');
     toggle_favorite('Certificate');
 }); //document.ready

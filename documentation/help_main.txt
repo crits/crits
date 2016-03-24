@@ -2026,10 +2026,20 @@ Here is a list of currently exposed handlers:
 Common PATCH actions for all TLOs
 ---------------------------------
 
+:action_add:
+:action_update:
+:action_remove:
 :add_object:
 :add_releasability:
+:description_update:
 :forge_relationship:
 :run_service:
+:source_add_update:
+:source_remove:
+:status_update:
+:ticket_add:
+:ticket_update:
+:ticket_remove:
 
 Actor PATCH actions
 -------------------
@@ -2041,11 +2051,21 @@ Actor PATCH actions
 :set_actor_name:
 :update_actor_aliases:
 
+Indicator PATCH actions
+-----------------------
+
+:activity_add:
+:activity_remove:
+:activity_update:
+:ci_update:
+:set_indicator_attack_type:
+:set_indicator_threat_type:
+
 Signature PATCH actions
 -----------------------
 :update_dependency:
 :update_max_version:
 :update_min_version:
-:update_signature_type:
 :update_signature_data:
+:update_signature_type:
 :update_title:

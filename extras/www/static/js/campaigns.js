@@ -166,6 +166,7 @@ $(document).ready(function() {
     $.each(localDialogs, function(id,opt) { 
 	    stdDialog(id,opt); 
 	});
+    populate_id(campaign_id,'Campaign');
     details_copy_id('Campaign');
     toggle_favorite('Campaign');
 }); // document.ready

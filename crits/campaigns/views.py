@@ -123,12 +123,19 @@ def add_campaign(request):
             campaign_description = data.get('description', None)
             bucket_list = data.get('bucket_list')
             ticket = data.get('ticket')
+            related_id = data['related_id']
+            related_type = data['related_type']
+            relationship_type = data['relationship_type']
+
             result = add_campaignh(campaign_name,
                                    campaign_description,
                                    campaign_aliases,
                                    request.user.username,
                                    bucket_list=bucket_list,
-                                   ticket=ticket)
+                                   ticket=ticket,
+                                   related_id=related_id,
+                                   related_type=related_type,
+                                   relationship_type=relationship_type)
             if result['success']:
                 message = {
                     'message': '<div>Campaign <a href="%s">%s</a> added successfully!</div>' % (reverse('crits.campaigns.views.campaign_details', args=[campaign_name]), campaign_name),

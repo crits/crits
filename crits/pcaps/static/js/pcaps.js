@@ -24,5 +24,6 @@ $(document).ready(function() {
     });
     details_copy_id('PCAP');
     toggle_favorite('PCAP');
+    populate_id(pcap_id, 'PCAP');
 }); //document.ready
 

@@ -430,6 +430,7 @@ AUTH_USER_MODEL = 'mongo_auth.MongoUser'
 MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
 
 SESSION_ENGINE = 'mongoengine.django.sessions'
+SESSION_SERIALIZER = 'mongoengine.django.sessions.BSONSerializer'
 
 AUTHENTICATION_BACKENDS = (
     'crits.core.user.CRITsAuthBackend',
@@ -439,9 +440,11 @@ if REMOTE_USER:
         'django.middleware.common.CommonMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.auth.middleware.RemoteUserMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'crits.core.user.AuthenticationMiddleware',
+        'django.contrib.auth.middleware.RemoteUserMiddleware',
     )
     AUTHENTICATION_BACKENDS = (
         'crits.core.user.CRITsRemoteUserBackend',

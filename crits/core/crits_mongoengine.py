@@ -417,7 +417,7 @@ class CritsDocument(BaseDocument):
             return False
 
     @classmethod
-    def _from_son(cls, son, _auto_dereference=True):
+    def _from_son(cls, son, _auto_dereference=True, only_fields=None, created=False):
         """
         Override the default _from_son(). Allows us to move attributes in the
         database to unsupported_attrs if needed, validate the schema_version,
@@ -1147,6 +1147,7 @@ class Releasability(EmbeddedDocument, CritsDocumentFormatter):
 
         analyst = StringField()
         date = DateTimeField()
+        note = StringField()
 
 
     name = StringField()

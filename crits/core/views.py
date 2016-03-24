@@ -527,6 +527,7 @@ def source_releasability(request):
         type_ = request.POST.get('type', None)
         id_ = request.POST.get('id', None)
         name = request.POST.get('name', None)
+        note = request.POST.get('note', None)
         action = request.POST.get('action', None)
         date = request.POST.get('date', datetime.datetime.now())
         if not isinstance(date, datetime.datetime):
@@ -540,7 +541,8 @@ def source_releasability(request):
         if action  == "add":
             result = add_releasability(type_, id_, name, user)
         elif action  == "add_instance":
-            result = add_releasability_instance(type_, id_, name, user)
+            result = add_releasability_instance(type_, id_, name, user,
+                                                note=note)
         elif action == "remove":
             result = remove_releasability(type_, id_, name, user)
         elif action == "remove_instance":
