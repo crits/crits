@@ -506,9 +506,9 @@ def handle_unzip_file(md5, user=None, password=None):
 def unzip_file(filename, user=None, password=None, data=None, source=None,
                method='Zip', reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
-               bucket_list=None, ticket=None, inherited_source=None,
-               is_return_only_md5=True, backdoor_name=None,
-               backdoor_version=None):
+               relationship_type=None, bucket_list=None, ticket=None,
+               inherited_source=None, is_return_only_md5=True,
+               backdoor_name=None, backdoor_version=None):
 
     """
     Unzip a file.
@@ -616,7 +616,9 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                                              source, method, reference,
                                              related_md5=related_md5,
                                              related_id=related_id,
-                                             related_type=related_type, backdoor='',
+                                             related_type=related_type,
+                                             relationship_type=relationship_type,
+                                             backdoor='',
                                              user=user, campaign=campaign,
                                              confidence=confidence,
                                              bucket_list=bucket_list,
