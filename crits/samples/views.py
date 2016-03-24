@@ -177,9 +177,9 @@ def upload_file(request, related_md5=None):
             method = form.cleaned_data['method']
             reference = form.cleaned_data['reference']
             analyst = request.user.username
-            related_id = form.cleaned_data['related_id']
-            related_type = form.cleaned_data['related_type']
-            relationship_type = form.cleaned_data['relationship_type']
+            related_id = form.cleaned_data.get('related_id', None)
+            related_type = form.cleaned_data.get('related_type', None)
+            relationship_type = form.cleaned_data.get('relationship_type', None)
 
 
             if related_md5:
