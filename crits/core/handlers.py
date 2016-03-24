@@ -2747,7 +2747,7 @@ def generate_users_jtable(request, option):
                             content_type="application/json")
     jtopts = {
         'title': "Users",
-        'default_sort': 'username ASC',
+        'default_sort': 'last_login DESC',
         'listurl': reverse('crits.core.views.users_listing', args=('jtlist',)),
         'deleteurl': None,
         'searchurl': None,
