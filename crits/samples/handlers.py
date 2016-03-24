@@ -33,7 +33,6 @@ from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
-from crits.core.mongo_tools import get_file
 from crits.core.source_access import SourceAccess
 from crits.core.user_tools import is_admin, user_sources, get_user_organization
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
@@ -172,19 +171,19 @@ def get_sample_details(sample_md5, analyst, format_=None):
 
         # analysis results
         service_results = sample.get_analysis_results()
-        
+
         # template
         from crits.services.core import ServiceManager
         service_manager     = ServiceManager()
         tmp_service_results = []
-        
+
         for result in service_results:
             if hasattr(service_manager.get_service_class(result.service_name), 'template'):
                 result.template = service_manager.get_service_class(result.service_name).template
             tmp_service_results.append(result)
-        
+
         service_results = tmp_service_results
-        
+
 
         args = {'objects': objects,
                 'relationships': relationships,
@@ -510,7 +509,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                bucket_list=None, ticket=None, inherited_source=None,
                is_return_only_md5=True, backdoor_name=None,
                backdoor_version=None):
-    
+
     """
     Unzip a file.
 
@@ -647,10 +646,10 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
 
 def handle_file(filename, data, source, method='Generic', reference='',
                 related_md5=None, related_id=None, related_type=None,
-                relationship_type=None, backdoor=None, user='', campaign=None, 
+                relationship_type=None, backdoor=None, user='', campaign=None,
                 confidence='low', md5_digest=None, sha1_digest=None,
-                sha256_digest=None, size=0, mimetype=None, bucket_list=None, 
-                ticket=None, relationship=None, inherited_source=None, 
+                sha256_digest=None, size=0, mimetype=None, bucket_list=None,
+                ticket=None, relationship=None, inherited_source=None,
                 is_validate_only=False, is_return_only_md5=True, cache={},
                 backdoor_name=None, backdoor_version=None, description=''):
     """
@@ -938,6 +937,8 @@ def handle_file(filename, data, source, method='Generic', reference='',
                         relationship = RelationshipTypes.CONTAINED_WITHIN
                     else:
                         relationship=RelationshipTypes.inverse(relationship=relationship_type)
+                        if relationship is None:
+                            relationship = RelationshipTypes.RELATED_TO
                 sample.add_relationship(related_obj,
                                         relationship,
                                         analyst=user,
@@ -1174,6 +1175,9 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
                                    campaign=campaign,
                                    confidence=confidence,
                                    related_md5=related_md5,
+                                   related_id=related_id,
+                                   related_type=related_type,
+                                   relationship_type=relationship_type,
                                    filename=filename,
                                    md5=md5,
                                    sha1=sha1,
