@@ -14,7 +14,7 @@ import re
 try:
     #Python 2.x
     import ushlex as shlex
-exept ImportError:
+except ImportError:
     #Python 3.x
     import shlex
 
