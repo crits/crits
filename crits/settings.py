@@ -10,6 +10,7 @@ import subprocess
 from pymongo import ReadPreference, MongoClient
 from mongoengine import connect
 from mongoengine import __version__ as mongoengine_version
+from pymongo import version as pymongo_version
 
 from distutils.version import StrictVersion
 
@@ -52,6 +53,9 @@ if StrictVersion(mongoengine_version) < StrictVersion('0.10.0'):
     old_mongoengine = True
 else:
     old_mongoengine = False
+
+if old_mongoengine and StrictVersion(pymongo_version) >= StrictVersion('2.8.0'):
+    raise Exception("For Mongoengine prior to 0.10 you need PyMongo < 2.8")
 
 # Set to DENY|SAMEORIGIN|ALLOW-FROM uri
 # Default: SAMEORIGIN
