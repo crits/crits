@@ -1950,7 +1950,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     :returns: dict -- Keys are result, data, count, msg, crits_type.  'data'
         contains a :class:`crits.core.crits_mongoengine.CritsQuerySet` object.
     """
-    
+
     results = {'result':'ERROR'}
     results['data'] = []
     results['count'] = 0
