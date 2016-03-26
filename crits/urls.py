@@ -40,7 +40,7 @@ handler400 = 'crits.core.errors.custom_400'
 
 # Enable the API if configured
 # django_tastypie_mongoengine is broken with more recent versions of mongoengine
-if False and settings.ENABLE_API:
+if settings.ENABLE_API:
     from tastypie.api import Api
     from crits.actors.api import ActorResource, ActorIdentifierResource
     from crits.backdoors.api import BackdoorResource
