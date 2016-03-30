@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 {% load filters %}
 
 {% block title %} Raw Data Details {% endblock %}
@@ -135,9 +135,16 @@
         {% with bucket_list=raw_data.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div>
         {% include 'raw_data_data.html' %}
+    </div>
+    <div class="content_box">
+        {% with obj=raw_data obj_type="RawData" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
     </div>
     <div>
       {% with obj=raw_data obj_type=subscription.type %}

@@ -237,11 +237,53 @@ function editUser(user) {
     $( "#add-new-user-form" ).dialog( "open" );
 }
 
-function editAction(action) {
+function editAction(action, object_types, preferred) {
     var me = $("#add-new-action-form input[name='action']");
+    var ots = $("#add-new-action-form select[name='object_types']");
+    var prefs = $("#add-new-action-form textarea[name='preferred']");
     me.val(action);
     me.change();
+	var ot_list = object_types.split(",");
+	ots.val(ot_list);
+	var prep = preferred.replace(/\|\|/g, "\n").replace(/\|/g, ", ");
+	prefs.val(prep);
     $("#add-new-action-form").dialog("open");
+}
+
+function deleteSignatureDependency(coll, oid)
+{
+   //get the attribute of the row tr element, if success, this will be removed
+   var rowString = "[data-record-key='" + oid + "']";
+   var rowSel = "tr" + rowString;
+
+   var answer = confirm("This will delete the Signature Dependency. Are you sure?" );
+   if(answer) {
+    var me = $("a#to_delete_"+oid);
+    $.ajax({
+        type: "POST",
+        url: delete_signature_dependency,
+        data: {
+            coll: coll,
+            oid: oid,
+        },
+        datatype: 'json',
+        success: function(data) {
+                //delete the row
+                if(data.success) {
+                //should be equal to 1 selecting on key
+                  if($(rowSel).length>0) {
+                   $(rowSel).get(0).remove();
+                  }
+
+                } else {
+                    //console.log("Failed to delete the signature, returned");
+                }
+        },
+        });
+    } else {
+        //console.log("Deletion cancelled by user");
+    }
+
 }
 
 function toggleItemActive(coll, oid) {
@@ -1530,4 +1572,21 @@ $(document).ready(function() {
         });
     });
 
+    // Handle preferred action clicks
+    $("#preferred_actions").click(function() {
+        $.ajax({
+            type: "POST",
+            async: false,
+            url: add_preferred_actions,
+            data: {'obj_type': subscription_type, 'obj_id': subscription_id},
+            success: function(data) {
+                if (data.success) {
+                    $("#action_listing_header").show();
+                    $("#action_listing > tbody:last-child").append(data.html);
+                } else {
+                    error_message_dialog('Action Error', data.message);
+                }
+            }
+        });
+    });
 }); //document.ready

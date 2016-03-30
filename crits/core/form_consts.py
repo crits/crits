@@ -1,3 +1,15 @@
+class Action():
+    ACTION_TYPE = "Action type"
+    BEGIN_DATE = "Begin date"
+    ANALYST = "Analyst"
+    END_DATE = "End date"
+    PERFORMED_DATE = "Performed date"
+    ACTIVE = "Active"
+    REASON = "Reason"
+    DATE = "Date"
+    OBJECT_TYPES = "TLOs"
+    PREFERRED = "Preferred TLOs"
+
 class Common():
     ADD_INDICATOR = "Add Indicator?"
     BUCKET_LIST = "Bucket List"
@@ -29,6 +41,7 @@ class Common():
     PCAP = "PCAP"
     RawData = "RawData"
     Sample = "Sample"
+    Signature = "Signature"
     Target = "Target"
 
     BUCKET_LIST_VARIABLE_NAME = "bucket_list"
@@ -274,6 +287,14 @@ class Sample():
         FILE_UPLOAD = "File Upload"
         METADATA_UPLOAD = "Metadata Upload"
 
+class Signature():
+    """
+    Constants for Signature. Dependencies as list? Similar to bucket list, but not in other classes
+    """
+
+    SOURCE = Common.SOURCE
+    SOURCE_METHOD = Common.SOURCE_METHOD
+    SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 class Target():
     """
@@ -305,6 +326,7 @@ def get_source_field_for_class(otype):
         Common.Object: Object.SOURCE,
         Common.PCAP: PCAP.SOURCE,
         Common.RawData: RawData.SOURCE,
-        Common.Sample: Sample.SOURCE
+        Common.Sample: Sample.SOURCE,
+        Common.Signature: Signature.SOURCE,
     }
     return class_to_source_field_map.get(otype)

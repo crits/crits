@@ -4,6 +4,10 @@
 
 {% block content %}
 
+<script>
+    var ip_id = "{{ ip.id | escapejs }}";
+</script>
+
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
@@ -72,7 +76,14 @@
          {% with bucket_list=ip.bucket_list %}
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
+         {% include 'add_related_widget.html' %}
+
      </div>
+    <div class="content_box">
+        {% with obj=ip obj_type="IP" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
      <div>
 	    {% with obj=ip obj_type=subscription.type %}
                 {% include 'tickets_listing_widget.html' %}

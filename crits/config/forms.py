@@ -40,10 +40,6 @@ class ConfigGeneralForm(forms.Form):
                    'performance but will consume more memory to do so!'),
         initial=False,
         required=False)
-    rar_path = forms.CharField(
-        widget=forms.TextInput,
-        help_text='*Requires a web server restart.',
-        required=True)
     rt_url = forms.CharField(
         widget=forms.TextInput,
         label='Ticketing URL',

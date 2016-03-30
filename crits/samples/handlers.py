@@ -14,7 +14,10 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from hashlib import md5
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.backdoors.backdoor import Backdoor
 from crits.campaigns.forms import CampaignForm
@@ -30,14 +33,13 @@ from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
-from crits.core.mongo_tools import get_file
 from crits.core.source_access import SourceAccess
 from crits.core.user_tools import is_admin, user_sources, get_user_organization
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
 from crits.objects.handlers import validate_and_add_new_handler_object
-from crits.samples.forms import XORSearchForm, UnrarSampleForm, UploadFileForm
+from crits.samples.forms import XORSearchForm, UnzipSampleForm, UploadFileForm
 from crits.samples.sample import Sample
 from crits.samples.yarahit import YaraHit
 from crits.services.analysis_result import AnalysisResult
@@ -116,7 +118,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
         #create forms
         xor_search_form = XORSearchForm()
         campaign_form = CampaignForm()
-        unrar_sample_form = UnrarSampleForm()
+        unzip_sample_form = UnzipSampleForm()
         download_form = DownloadFileForm(initial={"obj_type":'Sample',
                                                   "obj_id":sample.id,
                                                   "meta_format": "none"})
@@ -170,6 +172,19 @@ def get_sample_details(sample_md5, analyst, format_=None):
         # analysis results
         service_results = sample.get_analysis_results()
 
+        # template
+        from crits.services.core import ServiceManager
+        service_manager     = ServiceManager()
+        tmp_service_results = []
+
+        for result in service_results:
+            if hasattr(service_manager.get_service_class(result.service_name), 'template'):
+                result.template = service_manager.get_service_class(result.service_name).template
+            tmp_service_results.append(result)
+
+        service_results = tmp_service_results
+
+
         args = {'objects': objects,
                 'relationships': relationships,
                 'comments': comments,
@@ -179,7 +194,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'campaign_form': campaign_form,
                 'download_form': download_form,
                 'xor_search_form': xor_search_form,
-                'unrar_sample_form': unrar_sample_form,
+                'unzip_sample_form': unzip_sample_form,
                 'binary_exists': binary_exists,
                 'favorite': favorite,
                 'screenshots': screenshots,
@@ -464,30 +479,6 @@ def get_yara_hits(version=None):
         hits = YaraHit.objects().order_by('+result')
     return hits
 
-def handle_unrar_sample(md5, user=None, password=None):
-    """
-    Unrar a sample.
-
-    :param md5: The MD5 of the sample to unrar.
-    :type md5: str
-    :param user: The user unraring this sample.
-    :type user: str
-    :param password: Password to use to unrar the sample.
-    :type password: str
-    :returns: list
-    :raises: ZipFileError, Exception
-    """
-
-    sample = class_from_value('Sample', md5)
-    if not sample:
-        return None
-    data = sample.filedata.read()
-    source = sample.source[0].name
-    campaign = sample.campaign
-    reference = ''
-    return unrar_file(md5, user, password, data, source, method="Unrar Existing Sample",
-                      reference=reference, campaign=campaign, related_md5=md5)
-
 def handle_unzip_file(md5, user=None, password=None):
     """
     Unzip a sample.
@@ -515,9 +506,11 @@ def handle_unzip_file(md5, user=None, password=None):
 def unzip_file(filename, user=None, password=None, data=None, source=None,
                method='Zip', reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
-               bucket_list=None, ticket=None, filepath=None, inherit_filepath=None, inherited_source=None,
-               is_return_only_md5=True, backdoor_name=None,
-               backdoor_version=None):
+               relationship_type=None, bucket_list=None, ticket=None,
+               filepath=None, inherit_filepath=None,
+               inherited_source=None, is_return_only_md5=True,
+               backdoor_name=None, backdoor_version=None):
+
     """
     Unzip a file.
 
@@ -636,7 +629,9 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                                              source, method, reference,
                                              related_md5=related_md5,
                                              related_id=related_id,
-                                             related_type=related_type, backdoor='',
+                                             related_type=related_type,
+                                             relationship_type=relationship_type,
+                                             backdoor='',
                                              user=user, campaign=campaign,
                                              confidence=confidence,
                                              bucket_list=bucket_list,
@@ -665,140 +660,15 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
             shutil.rmtree(extractdir)
     return samples
 
-def unrar_file(filename, user=None, password=None, data=None, source=None,
-               method="Generic", reference='', campaign=None, confidence='low',
-               related_md5=None, related_id=None, related_type='Sample',
-               bucket_list=None, ticket=None, inherited_source=None,
-               is_return_only_md5=True,
-               backdoor_name=None, backdoor_version=None):
-    """
-    Unrar a file.
-
-    :param filename: The name of the file to unrar.
-    :type filename: str
-    :param user: The user unraring the file.
-    :type user: str
-    :param password: The password to use to unrar the file.
-    :type password: str
-    :param data: The filedata.
-    :type data: str
-    :param source: The name of the source that provided the data.
-    :type source: str
-    :param method: The source method to assign to the data.
-    :type method: str
-    :param reference: A reference to the data source.
-    :type reference: str
-    :param campaign: The campaign to attribute to the data.
-    :type campaign: str
-    :param confidence: The confidence level of the campaign attribution.
-    :type confidence: str ('low', 'medium', 'high')
-    :param related_md5: The MD5 of a related sample.
-    :type related_md5: str
-    :param related_id: The ObjectId of a related top-level object.
-    :type related_id: str
-    :param related_type: The type of the related top-level object.
-    :type related_type: str
-    :param bucket_list: The bucket(s) to assign to this data.
-    :type bucket_list: str
-    :param ticket: The ticket to assign to this data.
-    :type ticket: str
-    :param inherited_source: Source(s) to be inherited by the new Sample
-    :type inherited_source: list, :class:`crits.core.crits_mongoengine.EmbeddedSource`
-    :param is_return_only_md5: Only return the MD5s.
-    :type is_return_only_md5: bool
-    :returns: list
-    :raises: ZipFileError, Exception
-    """
-
-    crits_config = CRITsConfig.objects().first()
-    samples = []
-    try:
-        rar_md5 = md5(data).hexdigest()
-
-        # write the data to a file so we can read from it as a rar file
-        temproot = crits_config.temp_dir
-        rardir = tempfile.mkdtemp(dir=temproot)
-        # append '.rar' to help ensure rarfile doesn't have same
-        # name as an extracted file.
-        rarname = os.path.join(rardir, filename)+'.rar'
-        if data is None: #unraring an existing file
-            data = get_file(filename)
-        with open(rarname, "wb") as f:
-            f.write(data)
-
-        # change to temp directory since unrar allows extraction
-        # only to the current directory first save current directory
-        old_dir = os.getcwd()
-        os.chdir(rardir)
-        cmd = [crits_config.rar_path,'e'] #,'-inul'
-        if password:
-            cmd.append('-p'+password)
-        else:
-            cmd.append('-p-')
-        cmd.append('-y') #assume yes to all prompts
-        cmd.append(rarname)
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
-
-        waitSeconds = 30
-        while (proc.poll() is None and waitSeconds):
-            time.sleep(1)
-            waitSeconds -= 1
-
-        if proc.returncode:
-            errmsg = "Error while unraring archive\n" + proc.stdout.read()
-            raise ZipFileError, errmsg
-        elif not waitSeconds:
-            proc.terminate()
-            raise ZipFileError, "Unrar process failed to terminate"
-        else:
-            if related_md5 and related_md5 == rar_md5:
-                relationship = RelationshipTypes.COMPRESSED_INTO
-            else:
-                relationship = RelationshipTypes.RELATED_TO
-            for root, dirs, files in os.walk(rardir):
-                for filename in files:
-                    filepath = os.path.join(rardir, filename)
-                    if filepath != rarname:
-                        with open(filepath, 'rb') as filehandle:
-                            new_sample = handle_file(filename,
-                                                     filehandle.read(),
-                                                     source, method, reference,
-                                                     related_md5=related_md5,
-                                                     related_id=related_id,
-                                                     related_type=related_type,
-                                                     backdoor='', user=user,
-                                                     campaign=campaign,
-                                                     confidence=confidence,
-                                                     bucket_list=bucket_list,
-                                                     ticket=ticket,
-                                                     inherited_source=inherited_source,
-                                                     relationship=relationship,
-                                                     is_return_only_md5=is_return_only_md5,
-                                                     backdoor_name=backdoor_name,
-                                                     backdoor_version=backdoor_version)
-                            samples.append(new_sample)
-    except ZipFileError:
-        raise
-    except Exception:
-        raise
-        #raise ZipFileError, str(e)
-    finally:
-        #change back to original current directory
-        os.chdir(old_dir)
-        if os.path.isdir(rardir):
-            shutil.rmtree(rardir)
-
-    return samples
-
 def handle_file(filename, data, source, method='Generic', reference='',
-                related_md5=None, related_id=None, related_type='Sample',
-                backdoor=None, user='', campaign=None, confidence='low',
-                md5_digest=None, sha1_digest=None, sha256_digest=None,
-                size=None, mimetype=None, bucket_list=None, ticket=None,
-                relationship=None, inherited_source=None, is_validate_only=False,
-                is_return_only_md5=True, cache={}, backdoor_name=None,
-                backdoor_version=None, filepath=None):
+                related_md5=None, related_id=None, related_type=None,
+                relationship_type=None, backdoor=None, user='', campaign=None,
+                confidence='low', md5_digest=None, sha1_digest=None,
+                sha256_digest=None, size=0, mimetype=None, bucket_list=None,
+                ticket=None, relationship=None, inherited_source=None,
+                is_validate_only=False, is_return_only_md5=True, cache={},
+                backdoor_name=None, backdoor_version=None, filepath=None,
+                description=''):
     """
     Handle adding a file.
 
@@ -855,8 +725,13 @@ def handle_file(filename, data, source, method='Generic', reference='',
     :type backdoor_name: str
     :param backdoor_version: Version of the backdoor to relate the file to.
     :type backdoor_version: str
+<<<<<<< HEAD
     :param filepath: The filepath of the file.
     :type filepath: str
+=======
+    :param description: A description for this Sample
+    :type description: str
+>>>>>>> d32573111e62df48be3f4fcf3fbc3b70612a71b7
     :returns: str,
               dict with keys:
               "success" (boolean),
@@ -924,14 +799,14 @@ def handle_file(filename, data, source, method='Generic', reference='',
         else:
             return retVal
 
-    if related_id or related_md5:
-        if  related_id:
+    if related_id or related_md5 and related_type:
+        if related_id:
             related_obj = class_from_id(related_type, related_id)
-        else:
+        elif related_md5:
             related_obj = class_from_value(related_type, related_md5)
         if not related_obj:
             retVal['message'] += (' Related %s not found. Sample not uploaded.'
-                                  % (related_type))
+                                  % (related_id))
             retVal['success'] = False
     else:
         related_obj = None
@@ -953,8 +828,8 @@ def handle_file(filename, data, source, method='Generic', reference='',
         sample.md5 = md5_digest
         sample.sha1 = sha1_digest
         sample.sha256 = sha256_digest
-        sample.size = size
         sample.mimetype = mimetype
+        sample.description = description
     else:
         if filename not in sample.filenames and filename != sample.filename:
             sample.filenames.append(filename)
@@ -963,8 +838,16 @@ def handle_file(filename, data, source, method='Generic', reference='',
                 if filepath not in sample.filepaths:
                     sample.filepaths.append(filepath)
 
+        if not sample.description:
+            sample.description = description
+        elif sample.description != description:
+            sample.description += "\n" + description
+
         if cached_results != None:
             cached_results[md5_digest] = sample
+
+    # this will be overwritten if binary exists
+    sample.size = size
 
     # attempt to discover binary in GridFS before assuming we don't
     # have it
@@ -1082,7 +965,9 @@ def handle_file(filename, data, source, method='Generic', reference='',
                     if related_obj._meta['crits_type'] == 'Email':
                         relationship = RelationshipTypes.CONTAINED_WITHIN
                     else:
-                        relationship = RelationshipTypes.RELATED_TO
+                        relationship=RelationshipTypes.inverse(relationship=relationship_type)
+                        if relationship is None:
+                            relationship = RelationshipTypes.RELATED_TO
                 sample.add_relationship(related_obj,
                                         relationship,
                                         analyst=user,
@@ -1132,8 +1017,13 @@ def handle_file(filename, data, source, method='Generic', reference='',
 
 def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                          password=None, user=None, campaign=None, confidence='low',
+<<<<<<< HEAD
                          related_md5=None, related_id=None, related_type='Sample',
                          filename=None, filepath=None, inherit_filepath=None, md5=None, sha1=None, sha256=None, size=None,
+=======
+                         related_md5=None, related_id=None, related_type=None,relationship_type=None,
+                         filename=None, md5=None, sha1=None, sha256=None, size=None,
+>>>>>>> d32573111e62df48be3f4fcf3fbc3b70612a71b7
                          mimetype=None, bucket_list=None, ticket=None,
                          inherited_source=None, is_validate_only=False,
                          is_return_only_md5=True, cache={}, backdoor_name=None,
@@ -1237,6 +1127,7 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             related_md5=related_md5,
             related_id=related_id,
             related_type=related_type,
+<<<<<<< HEAD
             bucket_list=bucket_list,
             ticket=ticket,
             filepath=filepath,
@@ -1259,6 +1150,9 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             related_md5=related_md5,
             related_id=related_id,
             related_type=related_type,
+=======
+            relationship_type=relationship_type,
+>>>>>>> d32573111e62df48be3f4fcf3fbc3b70612a71b7
             bucket_list=bucket_list,
             ticket=ticket,
             inherited_source=inherited_source,
@@ -1268,8 +1162,8 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
     else:
         new_sample = handle_file(filename, data, source, method, reference,
                                  related_md5=related_md5, related_id=related_id,
-                                 related_type=related_type, backdoor='',
-                                 user=user, campaign=campaign,
+                                 related_type=related_type, relationship_type=relationship_type,
+                                 backdoor='', user=user, campaign=campaign,
                                  confidence=confidence, md5_digest=md5,
                                  sha1_digest=sha1, sha256_digest=sha256,
                                  size=size, mimetype=mimetype,
@@ -1335,6 +1229,9 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     reference = data.get('reference')
     bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+    related_id=data.get('related_id')
+    related_type=data.get('related_type')
+    relationship_type=data.get('relationship_type')
 
     samples = handle_uploaded_file(files, source, method, reference,
                                    file_format=fileformat,
@@ -1343,6 +1240,9 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
                                    campaign=campaign,
                                    confidence=confidence,
                                    related_md5=related_md5,
+                                   related_id=related_id,
+                                   related_type=related_type,
+                                   relationship_type=relationship_type,
                                    filename=filename,
                                    md5=md5,
                                    sha1=sha1,

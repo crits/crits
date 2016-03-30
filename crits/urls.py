@@ -28,6 +28,7 @@ urlpatterns = patterns('',
     (r'^samples/', include('crits.samples.urls')),             # Samples
     (r'^screenshots/', include('crits.screenshots.urls')),     # Screenshots
     (r'^services/', include('crits.services.urls')),           # Services
+    (r'^signatures/', include('crits.signatures.urls')),       # Signatures
     (r'^targets/', include('crits.targets.urls')),             # Targets
 )
 
@@ -56,6 +57,7 @@ if settings.ENABLE_API:
     from crits.samples.api import SampleResource
     from crits.screenshots.api import ScreenshotResource
     from crits.services.api import ServiceResource
+    from crits.signatures.api import SignatureResource
     from crits.targets.api import TargetResource
 
     v1_api = Api(api_name='v1')
@@ -77,6 +79,7 @@ if settings.ENABLE_API:
     v1_api.register(SampleResource())
     v1_api.register(ScreenshotResource())
     v1_api.register(ServiceResource())
+    v1_api.register(SignatureResource())
     v1_api.register(TargetResource())
 
     for service_directory in settings.SERVICE_DIRS:

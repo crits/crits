@@ -9,6 +9,7 @@ from django.conf import settings
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import CritsDateTimeField
 from crits.raw_data.migrate import migrate_raw_data
 
@@ -66,7 +67,8 @@ class EmbeddedTool(EmbeddedDocument, CritsDocumentFormatter):
     details = StringField()
 
 
-class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
+class RawData(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+              Document):
     """
     Raw Data class.
     """

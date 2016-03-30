@@ -41,7 +41,7 @@ def get_screenshots(request):
         buckets = request.POST.get('buckets', False)
         result = get_screenshots_for_id(type_, _id, analyst, buckets)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -67,7 +67,7 @@ def find_screenshot(request):
         tag = request.GET.get('tag', None)
         result = get_screenshot(_id, tag, analyst)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Could not get screenshot."
         return render_to_response("error.html",
@@ -88,7 +88,7 @@ def render_screenshot(request, _id, thumb=None):
     result = get_screenshot(_id=_id, analyst=analyst, thumb=thumb)
     if not result:
         return HttpResponse(json.dumps(''),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return result
 
@@ -117,7 +117,7 @@ def add_new_screenshot(request):
                             analyst, screenshot, screenshot_ids, oid, otype)
 
     return HttpResponse(json.dumps(result),
-                        mimetype="application/json")
+                        content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def remove_screenshot_from_object(request):
@@ -136,4 +136,4 @@ def remove_screenshot_from_object(request):
 
     result = delete_screenshot_from_object(obj, oid, sid, analyst)
     return HttpResponse(json.dumps(result),
-                        mimetype="application/json")
+                        content_type="application/json")

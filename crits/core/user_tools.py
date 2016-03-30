@@ -1,5 +1,8 @@
 from bson import ObjectId
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core.data_tools import generate_qrcode
 from crits.core.totp import gen_user_secret

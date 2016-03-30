@@ -23,7 +23,9 @@ from crits.campaigns.forms import AddCampaignForm, CampaignForm
 from crits.certificates.forms import UploadCertificateForm
 from crits.comments.forms import AddCommentForm, InlineCommentForm
 from crits.config.config import CRITsConfig
+from crits.core.crits_mongoengine import Action
 from crits.core.data_tools import json_handler
+from crits.core.forms import ActionsForm, NewActionForm
 from crits.core.forms import SourceAccessForm, AddSourceForm, AddUserRoleForm
 from crits.core.forms import SourceForm, DownloadFileForm, AddReleasabilityForm
 from crits.core.forms import TicketForm
@@ -48,8 +50,10 @@ from crits.core.handlers import details_from_id, status_update
 from crits.core.handlers import get_favorites, favorite_update
 from crits.core.handlers import generate_favorites_jtable
 from crits.core.handlers import ticket_add, ticket_update, ticket_remove
-from crits.core.handlers import description_update
+from crits.core.handlers import description_update, data_update
 from crits.core.handlers import do_add_preferred_actions, add_new_action
+from crits.core.handlers import action_add, action_remove, action_update
+from crits.core.handlers import get_action_types_for_tlo
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_role import UserRole
@@ -71,8 +75,7 @@ from crits.emails.forms import EmailUploadForm, EmailEMLForm, EmailYAMLForm, Ema
 from crits.events.forms import EventForm
 from crits.exploits.forms import AddExploitForm
 from crits.indicators.forms import UploadIndicatorCSVForm, UploadIndicatorTextForm
-from crits.indicators.forms import UploadIndicatorForm, NewIndicatorActionForm
-from crits.indicators.indicator import IndicatorAction
+from crits.indicators.forms import UploadIndicatorForm
 from crits.ips.forms import AddIPForm
 from crits.locations.forms import AddLocationForm
 from crits.notifications.handlers import get_user_notifications
@@ -86,6 +89,11 @@ from crits.raw_data.raw_data import RawDataType
 from crits.relationships.forms import ForgeRelationshipForm
 from crits.samples.forms import UploadFileForm
 from crits.screenshots.forms import AddScreenshotForm
+from crits.signatures.forms import UploadSignatureForm
+from crits.signatures.forms import NewSignatureTypeForm
+from crits.signatures.forms import NewSignatureDependencyForm
+from crits.signatures.signature import SignatureType
+from crits.signatures.signature import SignatureDependency
 from crits.targets.forms import TargetInfoForm
 
 from crits.vocabulary.sectors import Sectors
@@ -112,7 +120,31 @@ def update_object_description(request):
                                                           id_,
                                                           description,
                                                           analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
+    else:
+        return render_to_response("error.html",
+                                  {"error" : 'Expected AJAX POST.'},
+                                  RequestContext(request))
+@user_passes_test(user_can_view_data)
+def update_object_data(request):
+    """
+    Update the data in a data element
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        type_ = request.POST['type']
+        id_ = request.POST['id']
+        data = request.POST['data']
+        analyst = request.user.username
+        return HttpResponse(json.dumps(data_update(type_,
+                                                          id_,
+                                                          data,
+                                                          analyst)),
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -135,7 +167,7 @@ def toggle_favorite(request):
         return HttpResponse(json.dumps(favorite_update(type_,
                                                        id_,
                                                        analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -154,7 +186,7 @@ def favorites(request):
     if request.method == "POST" and request.is_ajax():
         analyst = request.user.username
         return HttpResponse(json.dumps(get_favorites(analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -211,7 +243,7 @@ def update_status(request, type_, id_):
                                                      id_,
                                                      value,
                                                      analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -314,7 +346,7 @@ def login(request):
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     remote_addr = request.META.get('REMOTE_ADDR', '')
     accept_language = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
-    next_url = request.REQUEST.get('next', None)
+    next_url = request.GET.get('next', request.POST.get('next', None))
 
     # Setup defaults
     username = None
@@ -374,7 +406,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
             response['success'] = False
             response['message'] = 'Unknown user or bad password.'
             return HttpResponse(json.dumps(response),
-                                mimetype="application/json")
+                                content_type="application/json")
 
         #This casues auth failures with LDAP and upper case name parts
         #username = username.lower()
@@ -388,7 +420,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
         resp = login_user(username, password, next_url, user_agent,
                           remote_addr, accept_language, request,
                           totp_pass=totp_pass)
-        return HttpResponse(json.dumps(resp), mimetype="application/json")
+        return HttpResponse(json.dumps(resp), content_type="application/json")
 
     # Display template for authentication
     return render_to_response('login.html',
@@ -495,6 +527,7 @@ def source_releasability(request):
         type_ = request.POST.get('type', None)
         id_ = request.POST.get('id', None)
         name = request.POST.get('name', None)
+        note = request.POST.get('note', None)
         action = request.POST.get('action', None)
         date = request.POST.get('date', datetime.datetime.now())
         if not isinstance(date, datetime.datetime):
@@ -508,7 +541,8 @@ def source_releasability(request):
         if action  == "add":
             result = add_releasability(type_, id_, name, user)
         elif action  == "add_instance":
-            result = add_releasability_instance(type_, id_, name, user)
+            result = add_releasability_instance(type_, id_, name, user,
+                                                note=note)
         elif action == "remove":
             result = remove_releasability(type_, id_, name, user)
         elif action == "remove_instance":
@@ -534,7 +568,7 @@ def source_releasability(request):
             response = {'success': result['success'],
                         'error': result['message']}
         return HttpResponse(json.dumps(response),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST!"
         return render_to_response("error.html",
@@ -565,10 +599,10 @@ def source_access(request):
                 message = '<div>User modified successfully!</div>'
                 result['message'] = message
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return HttpResponse(json.dumps({'form':form.as_table()}),
-                                mimetype="application/json")
+                                content_type="application/json")
     else:
         error = "Expected AJAX POST!"
         return render_to_response("error.html",
@@ -604,7 +638,7 @@ def source_add(request):
             message = {'success': False,
                        'form': source_form.as_table()}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response("error.html",
                               {"error" : 'Expected AJAX POST' },
                               RequestContext(request))
@@ -635,7 +669,7 @@ def user_role_add(request):
             message = {'success': False,
                        'form': role_form.as_table()}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response("error.html",
                               {"error" : 'Expected AJAX POST'},
                               RequestContext(request))
@@ -660,9 +694,9 @@ def add_update_source(request, method, obj_type, obj_id):
         form = SourceForm(request.user.username, request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            analyst = request.user.username
+            user = request.user.username
             # check to see that this user can already see the object
-            if (data['name'] in user_sources(analyst)):
+            if (data['name'] in user_sources(user)):
                 if method == "add":
                     date = datetime.datetime.now()
                 else:
@@ -675,7 +709,7 @@ def add_update_source(request, method, obj_type, obj_id):
                                            method=data['method'],
                                            reference=data['reference'],
                                            date=date,
-                                           analyst=analyst)
+                                           user=user)
                 if 'object' in result:
                     if method == "add":
                         result['header'] = result['object'].name
@@ -694,15 +728,15 @@ def add_update_source(request, method, obj_type, obj_id):
                                                           RequestContext(request))
                 return HttpResponse(json.dumps(result,
                                                default=json_handler),
-                                    mimetype='application/json')
+                                    content_type="application/json")
             else:
                 return HttpResponse(json.dumps({'success': False,
                                                 'form': form.as_table()}),
-                                    mimetype='application/json')
+                                    content_type="application/json")
         else:
             return HttpResponse(json.dumps({'success': False,
                                             'form':form.as_table()}),
-                                mimetype='application/json')
+                                content_type="application/json")
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -730,7 +764,7 @@ def remove_source(request, obj_type, obj_id):
                                    date,
                                    '%s' % request.user.username)
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             error = "You do not have permission to remove this item"
             return render_to_response("error.html",
@@ -760,7 +794,7 @@ def remove_all_source(request, obj_type, obj_id):
                                        name, '%s' % request.user.username)
             result['last'] = True
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             error = "You do not have permission to remove this item"
             return render_to_response("error.html",
@@ -796,7 +830,7 @@ def bucket_promote(request):
                                      related,
                                      description,
                                      analyst)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def bucket_modify(request):
@@ -967,7 +1001,7 @@ def timeline(request, data_type="dns"):
         timeglider.append(tline)
         return HttpResponse(json.dumps(timeglider,
                                        default=json_util.default),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response('timeline.html',
                                   {'data_type': data_type,
@@ -1044,7 +1078,7 @@ def base_context(request):
     if request.user.is_authenticated():
         user = request.user.username
         # Forms that don't require a user
-        base_context['add_new_action'] = NewIndicatorActionForm()
+        base_context['add_new_action'] = NewActionForm()
         base_context['add_target'] = TargetInfoForm()
         base_context['campaign_add'] = AddCampaignForm()
         base_context['comment_add'] = AddCommentForm()
@@ -1053,6 +1087,8 @@ def base_context(request):
         base_context['location_add'] = AddLocationForm()
         base_context['add_raw_data_type'] = NewRawDataTypeForm()
         base_context['relationship_form'] = ForgeRelationshipForm()
+        base_context['add_signature_type'] = NewSignatureTypeForm()
+        base_context['add_signature_dependency'] = NewSignatureDependencyForm()
         base_context['source_access'] = SourceAccessForm()
         base_context['upload_tlds'] = TLDUpdateForm()
         base_context['user_role_add'] = AddUserRoleForm()
@@ -1085,6 +1121,12 @@ def base_context(request):
             base_context['ip_form'] = AddIPForm(user, None)
         except Exception, e:
             logger.warning("Base Context AddIPForm Error: %s" % e)
+        try:
+            base_context['new_action'] = ActionsForm(initial={'analyst': user,
+                'active': "off",
+                'date': datetime.datetime.now()})
+        except Exception, e:
+            logger.warning("Base Context ActionsForm Error: %s" % e)
         try:
             base_context['source_add'] = SourceForm(user,
                                                     initial={'analyst': user})
@@ -1158,6 +1200,10 @@ def base_context(request):
             base_context['upload_raw_data_file'] = UploadRawDataFileForm(user)
         except Exception, e:
             logger.warning("Base Context UploadRawDataFileForm Error: %s" % e)
+        try:
+            base_context['upload_signature'] = UploadSignatureForm(user)
+        except Exception, e:
+            logger.warning("Base Context UploadSignatureForm Error: %s" % e)
 
         # Other info acquired from functions
         try:
@@ -1214,7 +1260,7 @@ def base_context(request):
                                         {'collection': settings.COL_EVENT_TYPES,
                                             'name': 'Event Types'},
                                         {'collection': settings.COL_IDB_ACTIONS,
-                                            'name': 'Indicator Actions'},
+                                            'name': 'Actions'},
                                         {'collection': settings.COL_INTERNAL_LOCATIONS,
                                             'name': 'Internal Locations'},
                                         {'collection': settings.COL_OBJECT_TYPES,
@@ -1225,13 +1271,16 @@ def base_context(request):
                                             'name': 'Relationship Types'},
                                         {'collection': settings.COL_SOURCE_ACCESS,
                                             'name': 'Sources'},
+                                        {'collection': settings.COL_SIGNATURE_TYPES,
+                                            'name': 'Signature Types'},
+                                        {'collection': settings.COL_SIGNATURE_DEPENDENCY,
+                                            'name': 'Signature Dependency'},
                                         {'collection': settings.COL_USER_ROLES,
                                             'name': 'User Roles'}
                                         ]
 
     return base_context
 
-@user_passes_test(user_can_view_data)
 def user_context(request):
     """
     Set of common content about the user to include in the Response so it is
@@ -1250,13 +1299,14 @@ def user_context(request):
         context['admin'] = False
     # Get user theme
     user = CRITsUser.objects(username=request.user.username).first()
-    context['theme'] = user.get_preference('ui', 'theme', 'default')
-    favorite_count = 0
-    favorites = user.favorites.to_dict()
-    for favorite in favorites.values():
-        favorite_count += len(favorite)
-    context['user_favorites'] = user.favorites.to_json()
-    context['favorite_count'] = favorite_count
+    if user:
+        context['theme'] = user.get_preference('ui', 'theme', 'default')
+        favorite_count = 0
+        favorites = user.favorites.to_dict()
+        for favorite in favorites.values():
+            favorite_count += len(favorite)
+        context['user_favorites'] = user.favorites.to_json()
+        context['favorite_count'] = favorite_count
     return context
 
 @user_passes_test(user_can_view_data)
@@ -1274,7 +1324,7 @@ def get_user_source_list(request):
         message = {'success': True,
                    'data': user_source_access}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1309,7 +1359,7 @@ def user_source_access(request, username=None):
         message = {'success': True,
                    'message': form.as_table()}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1353,7 +1403,7 @@ def user_preference_toggle(request, section, setting):
                 result["reload"] = pref['reload']
 
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1408,7 +1458,7 @@ def user_preference_update(request, section):
                                               RequestContext(request))
 
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1449,7 +1499,7 @@ def delete_user_notification(request, type_, oid):
         message = "<p style=\"text-align: center;\">You have no new notifications!</p>"
         result['message'] = message
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1485,7 +1535,7 @@ def change_subscription(request, stype, oid):
         result = {'success': True,
                   'message': message}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1520,7 +1570,7 @@ def source_subscription(request):
             message = "subscribed"
         result = {'success': True, 'message': message}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1548,6 +1598,7 @@ def collections(request):
     colls['COL_PCAPS'] = settings.COL_PCAPS
     colls['COL_RAW_DATA'] = settings.COL_RAW_DATA
     colls['COL_SAMPLES'] = settings.COL_SAMPLES
+    colls['COL_SIGNATURES'] = settings.COL_SIGNATURES
     colls['COL_TARGETS'] = settings.COL_TARGETS
     return colls
 
@@ -1571,7 +1622,7 @@ def change_password(request):
                                       new_p,
                                       new_p_c)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1604,7 +1655,7 @@ def change_totp_pin(request):
         else:
             result = {'message': "Please provide a pin"}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1658,7 +1709,7 @@ def toggle_user_active(request):
             toggle_active(user, analyst)
             result = {'success': True}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1678,8 +1729,10 @@ def item_editor(request):
     counts = {}
     obj_list = [ActorThreatIdentifier,
                 Campaign,
-                IndicatorAction,
+                Action,
                 RawDataType,
+                SignatureType,
+                SignatureDependency,
                 SourceAccess,
                 UserRole]
     for col_obj in obj_list:
@@ -1736,7 +1789,7 @@ def toggle_item_active(request):
             result = {'success': False}
         else:
             result = toggle_item_state(type_, oid, analyst)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1764,14 +1817,15 @@ def add_preferred_actions(request):
             if 'object' in result:
                 result['html'] = ''
                 for obj in result['object']:
-                    result['html'] += render_to_string('indicators_action_row_widget.html',
+                    result['html'] += render_to_string('action_row_widget.html',
                                                        {'action': obj,
                                                         'admin': is_admin(username),
-                                                        'indicator_id': obj_id})
+                                                        'obj_type':obj_type,
+                                                        'obj_id':obj_id})
     else:
         result = {'success': False, 'message': "Expected AJAX POST"}
     return HttpResponse(json.dumps(result, default=json_handler),
-                        mimetype='application/json')
+                        content_type="application/json")
 
 
 @user_passes_test(user_can_view_data)
@@ -1849,7 +1903,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
             date = date.replace(microsecond=date.microsecond/1000*1000)
             result = ticket_remove(type_, id_, date, analyst)
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             error = "You do not have permission to remove this item."
             return render_to_response("error.html",
@@ -1860,19 +1914,19 @@ def add_update_ticket(request, method, type_=None, id_=None):
         form = TicketForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            user = request.user.username
             add = {
                     'ticket_number': data['ticket_number'],
-                    'analyst': request.user.username
             }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                result = ticket_add(type_, id_, add)
+                result = ticket_add(type_, id_, add, user)
             else:
                 date = datetime.datetime.strptime(data['date'],
                                                          settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                result = ticket_update(type_, id_, add)
+                result = ticket_update(type_, id_, add, user)
 
             crits_config = CRITsConfig.objects().first()
             if 'object' in result:
@@ -1884,11 +1938,11 @@ def add_update_ticket(request, method, type_=None, id_=None):
                                                    'obj': class_from_id(type_, id_)})
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
-                                mimetype="application/json")
+                                content_type="application/json")
         else: #invalid form
             return HttpResponse(json.dumps({'success':False,
                                             'form': form.as_table()}),
-                                mimetype="application/json")
+                                content_type="application/json")
     #default. Should we do anything else here?
     return HttpResponse({})
 
@@ -1904,7 +1958,7 @@ def get_search_help(request):
 
     result = {'template': render_to_string('search_help.html', {})}
     return HttpResponse(json.dumps(result, default=json_handler),
-                        mimetype="application/json")
+                        content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def get_api_key(request):
@@ -1922,16 +1976,16 @@ def get_api_key(request):
         if not name:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = get_api_key_by_name(username, name)
         if result:
             return HttpResponse(json.dumps({'success': True,
                                             'message': result}),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'No key for that name.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1954,10 +2008,10 @@ def create_api_key(request):
         if not name:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = create_api_key_by_name(username, name)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1980,10 +2034,10 @@ def make_default_api_key(request):
         if not name:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = make_default_api_key_by_name(username, name)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -2006,10 +2060,10 @@ def revoke_api_key(request):
         if not name:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = revoke_api_key_by_name(username, name)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -2093,21 +2147,127 @@ def new_action(request):
     """
 
     if request.method == 'POST' and request.is_ajax():
-        form = NewIndicatorActionForm(request.POST)
+        form = NewActionForm(request.POST)
         analyst = request.user.username
         if form.is_valid():
             result = add_new_action(form.cleaned_data['action'],
+                                    form.cleaned_data['object_types'],
                                     form.cleaned_data['preferred'],
                                     analyst)
             if result:
-                message = {'message': '<div>Indicator Action added successfully!</div>',
+                message = {'message': '<div>Action added successfully!</div>',
                            'success': True}
             else:
-                message = {'message': '<div>Indicator Action addition failed!</div>',
+                message = {'message': '<div>Action addition failed!</div>',
                            'success': False}
         else:
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response('error.html',
                               {'error': 'Expected AJAX POST'})
+
+@user_passes_test(user_can_view_data)
+def add_update_action(request, method, obj_type, obj_id):
+    """
+    Add/update an object's action. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param method: Whether we are adding or updating.
+    :type method: str ("add", "update")
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the top level object to update.
+    :type obj_id: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        username = request.user.username
+        form = ActionsForm(request.POST)
+
+        action_types = get_action_types_for_tlo(obj_type)
+
+        form.fields['action_type'].choices = [
+            (c, c) for c in action_types
+        ]
+
+        if form.is_valid():
+            data = form.cleaned_data
+            add = {
+                    'action_type': data['action_type'],
+                    'begin_date': data.get('begin_date', ''),
+                    'end_date': data.get('end_date', ''),
+                    'performed_date': data.get('performed_date', ''),
+                    'active': data['active'],
+                    'reason': data['reason'],
+                    }
+            if method == "add":
+                add['date'] = datetime.datetime.now()
+                result = action_add(obj_type, obj_id, add, user=username)
+            else:
+                date = datetime.datetime.strptime(data['date'],
+                                                         settings.PY_DATETIME_FORMAT)
+                date = date.replace(microsecond=date.microsecond/1000*1000)
+                add['date'] = date
+                result = action_update(obj_type, obj_id, add, user=username)
+            if 'object' in result:
+                result['html'] = render_to_string('action_row_widget.html',
+                                                  {'action': result['object'],
+                                                   'admin': is_admin(username),
+                                                   'obj_type':obj_type,
+                                                   'obj_id':obj_id})
+            return HttpResponse(json.dumps(result,
+                                           default=json_handler),
+                                content_type="application/json")
+        else: #invalid form
+            return HttpResponse(json.dumps({'success':False,
+                                            'form':form.as_table()}),
+                                content_type="application/json")
+    return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def remove_action(request, obj_type, obj_id):
+    """
+    Remove a TLO's action. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :param obj_type: The class type of the top level object.
+    :type obj_id: str
+    :param obj_id: The ObjectId of the object to remove the action from.
+    :type obj_id: str
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        analyst = request.user.username
+        if is_admin(analyst):
+            date = datetime.datetime.strptime(request.POST['key'],
+                                              settings.PY_DATETIME_FORMAT)
+            date = date.replace(microsecond=date.microsecond/1000*1000)
+            result = action_remove(obj_type, obj_id, date, analyst)
+            return HttpResponse(json.dumps(result),
+                                content_type="application/json")
+        else:
+            error = "You do not have permission to remove this item."
+            return render_to_response("error.html",
+                                      {'error': error},
+                                      RequestContext(request))
+    return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def get_actions_for_tlo(request):
+    """
+    Get the actions for the specified TLO.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    type_ = request.GET.get('type', None)
+    final = get_action_types_for_tlo(type_)
+    return HttpResponse(json.dumps({'results': final}),
+                content_type="application/json")

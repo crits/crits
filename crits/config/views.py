@@ -117,7 +117,7 @@ def modify_config(request):
 
         message = {'message': message,
                    'errors': errors}
-        return HttpResponse(json.dumps(message), mimetype="application/json")
+        return HttpResponse(json.dumps(message), content_type="application/json")
     else:
         return render_to_response('error.html',
                                   {'error': 'Expected AJAX POST'},

@@ -1,4 +1,4 @@
-{% load url from future %}
+
     <div class="content_box relationship_box" id="relationship_box_container">
         <h3 class="titleheader">
                     {% if relationships %}
@@ -90,6 +90,11 @@
                     {% if relationships.Sample %}
                         {% with rel_list=relationships.Sample rel_type='Sample' %}
                             {% include 'samples_malware_mini_widget.html' %}
+                        {% endwith %}
+                    {% endif %}
+                    {% if relationships.Signature %}
+                        {% with rel_list=relationships.Signature rel_type='Signature' %}
+                            {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
                     {% if relationships.Other > 0 %}

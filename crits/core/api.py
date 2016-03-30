@@ -180,7 +180,7 @@ class CRITsSerializer(Serializer):
                 if len(files):
                     zipfile = create_zip(files)
                     response =  HttpResponse(zipfile,
-                                                mimetype='application/octet-stream; charset=utf-8')
+                                                content_type="application/octet-stream; charset=utf-8")
                     response['Content-Disposition'] = 'attachment; filename="results.zip"'
                 else:
                     response = BadRequest("No files found!")
@@ -319,7 +319,7 @@ class CRITsAPIResource(MongoEngineResource):
         """
 
         raise ImmediateHttpResponse(HttpResponse(json.dumps(content),
-                                                 mimetype="application/json",
+                                                 content_type="application/json",
                                                  status=status))
 
     def create_response(self, request, data, response_class=HttpResponse,
@@ -430,6 +430,7 @@ class CRITsAPIResource(MongoEngineResource):
             else:
                 querydict['_id'] = path[-1]
 
+        do_or = False
         for k,v in get_params.iteritems():
             v = v.strip()
             try:
@@ -507,6 +508,12 @@ class CRITsAPIResource(MongoEngineResource):
                     querydict[field] = generate_regex(v)
                 else:
                     querydict[field] = remove_quotes(v)
+            if k == 'or':
+                do_or = True
+        if do_or:
+            tmp = {}
+            tmp['$or'] = [{x:y} for x,y in querydict.iteritems()]
+            querydict = tmp
         if no_sources and sources:
             querydict['source.name'] = {'$in': source_list}
         if only or exclude:
@@ -567,6 +574,8 @@ class CRITsAPIResource(MongoEngineResource):
         import crits.objects.handlers as objh
         import crits.relationships.handlers as relh
         import crits.services.handlers as servh
+        import crits.signatures.handlers as sigh
+        import crits.indicators.handlers as indh
 
         actions = {
             'Common': {
@@ -574,6 +583,16 @@ class CRITsAPIResource(MongoEngineResource):
                 'add_releasability': coreh.add_releasability,
                 'forge_relationship': relh.forge_relationship,
                 'run_service': servh.run_service,
+                'status_update' : coreh.status_update,
+                'ticket_add' : coreh.ticket_add,
+                'ticket_update' : coreh.ticket_update,
+                'ticket_remove' : coreh.ticket_remove,
+                'source_add_update': coreh.source_add_update,
+                'source_remove': coreh.source_remove,
+                'action_add' : coreh.action_add,
+                'action_update' : coreh.action_update,
+                'action_remove' : coreh.action_remove,
+                'description_update' : coreh.description_update,
             },
             'Actor': {
                 'update_actor_tags': ah.update_actor_tags,
@@ -590,11 +609,26 @@ class CRITsAPIResource(MongoEngineResource):
             'Email': {},
             'Event': {},
             'Exploit': {},
-            'Indicator': {},
+            'Indicator': {
+                'set_indicator_attack_type' : indh.set_indicator_attack_type,
+                'set_indicator_threat_type' : indh.set_indicator_threat_type,
+                'activity_add' : indh.activity_add,
+                'activity_update' : indh.activity_update,
+                'activity_remove' : indh.activity_remove,
+                'ci_update' : indh.ci_update
+                          },
             'IP': {},
             'PCAP': {},
             'RawData': {},
             'Sample': {},
+            'Signature': {
+                'update_dependency': sigh.update_dependency,
+                'update_min_version': sigh.update_min_version,
+                'update_max_version': sigh.update_max_version,
+                'update_signature_data': sigh.update_signature_data,
+                'update_signature_type': sigh.update_signature_type,
+                'update_title': sigh.update_title
+            },
             'Target': {},
         }
 
@@ -605,7 +639,7 @@ class CRITsAPIResource(MongoEngineResource):
         view, args, kwargs = resolve(uri)
 
         type_ = kwargs['resource_name'].title()
-        if type_ == "Raw_data":
+        if type_ == "Raw_Data":
             type_ = "RawData"
         if type_[-1] == 's':
             type_ = type_[:-1]

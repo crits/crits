@@ -1,13 +1,15 @@
 import re
 
 from django import forms
-from django.forms.util import ErrorList
-from django.forms.widgets import HiddenInput, SelectMultiple
+from django.forms.utils import ErrorList
+from django.forms.widgets import HiddenInput, RadioSelect, SelectMultiple
 
 from crits.core import form_consts
+from crits.core.form_consts import Action as ActionConsts
 from crits.core.handlers import get_source_names, get_item_names, ui_themes
 from crits.core.user_role import UserRole
 from crits.core.user_tools import get_user_organization
+from crits.core.widgets import CalWidget
 from crits.config.config import CRITsConfig
 from crits import settings
 
@@ -40,6 +42,84 @@ def add_ticket_to_form(input_form):
                             required=False,
                             label=form_consts.Common.TICKET,
                             help_text="Use comma separated values.")
+
+class ActionsForm(forms.Form):
+    """
+    Django form for adding actions.
+    """
+
+    error_css_class = 'error'
+    required_css_class = 'required'
+    action_type = forms.ChoiceField(widget=forms.Select,
+        label=ActionConsts.ACTION_TYPE,
+        required=True)
+    begin_date = forms.DateTimeField(
+        widget=CalWidget(format='%Y-%m-%d %H:%M:%S',
+                         attrs={'class': 'datetimeclass',
+                                'size': '25',
+                                'id': 'id_action_begin_date'}),
+        input_formats=settings.PY_FORM_DATETIME_FORMATS,
+        label=ActionConsts.BEGIN_DATE,
+        required=False)
+    end_date = forms.DateTimeField(
+        widget=CalWidget(format='%Y-%m-%d %H:%M:%S',
+                         attrs={'class': 'datetimeclass',
+                                'size': '25',
+                                'id': 'id_action_end_date'}),
+        input_formats=settings.PY_FORM_DATETIME_FORMATS,
+        label=ActionConsts.END_DATE,
+        required=False)
+    performed_date = forms.DateTimeField(
+        widget=CalWidget(format='%Y-%m-%d %H:%M:%S',
+                         attrs={'class': 'datetimeclass',
+                                'size': '25',
+                                'id': 'id_action_performed_date'}),
+        input_formats=settings.PY_FORM_DATETIME_FORMATS,
+        label=ActionConsts.PERFORMED_DATE,
+        required=False)
+    active = forms.ChoiceField(
+        widget=RadioSelect,
+        choices=(('on', 'on'),
+                 ('off', 'off')),
+        label=ActionConsts.ACTIVE)
+    reason = forms.CharField(
+        widget=forms.TextInput(attrs={'size': '50'}),
+        required=False)
+    date = forms.CharField(
+        widget=forms.HiddenInput(attrs={'size': '50',
+                                        'readonly': 'readonly',
+                                        'id': 'id_action_date'}),
+        label=ActionConsts.DATE)
+
+    def __init__(self, *args, **kwargs):
+        super(ActionsForm, self).__init__(*args, **kwargs)
+
+class NewActionForm(forms.Form):
+    """
+    Django form for adding a new Action.
+    """
+
+    error_css_class = 'error'
+    required_css_class = 'required'
+    action = forms.CharField(widget=forms.TextInput, required=True)
+    object_types = forms.MultipleChoiceField(required=False,
+                                          label=ActionConsts.OBJECT_TYPES,
+                                          widget=forms.SelectMultiple,
+                                          help_text="Which TLOs this is for.")
+    preferred = forms.CharField(required=False,
+                                label=ActionConsts.PREFERRED,
+                                widget=forms.Textarea(
+                                    attrs={'cols': '50', 'rows': '5'}),
+                                help_text="CSV of TLO Type, Field, Value.")
+
+    def __init__(self, *args, **kwargs):
+        super(NewActionForm, self).__init__(*args, **kwargs)
+
+        # Sort the available TLOs.
+        tlos = [tlo for tlo in settings.CRITS_TYPES.keys()]
+        tlos.sort()
+        self.fields['object_types'].choices = [(tlo, tlo) for tlo in tlos]
+
 
 class AddSourceForm(forms.Form):
     """
@@ -266,7 +346,8 @@ class DownloadFileForm(forms.Form):
                                           ('Indicator', 'Indicators'),
                                           ('PCAP', 'PCAPs'),
                                           ('RawData', 'Raw Data'),
-                                          ('Sample', 'Samples')]
+                                          ('Sample', 'Samples'),
+                                          ('Signature', 'Signatures')]
         self.fields['total_limit'].initial = total_max
         self.fields['rel_limit'].initial = rel_max
         self.fields['depth_limit'].help_text = self.fields['depth_limit'].help_text % depth_max
