@@ -7,6 +7,7 @@ from crits.ips.ip import IP
 from crits.core.user import CRITsUser
 from crits.core.handlers import add_new_source
 from crits.core.source_access import SourceAccess
+from crits.vocabulary.ips import IPTypes
 
 TSRC = "TestSource"
 TUSER_NAME = "test_user"
@@ -18,7 +19,7 @@ IP_REF = ""
 IP_SRC = TSRC
 IP_METH = ""
 IPADDR = "127.0.0.1"
-IP_TYPE = "Address - ipv4-addr"
+IP_TYPE = IPTypes.IPV4_ADDRESS
 IP_LIST = ["test", "test two"]
 IP_BUCKET = ",".join(IP_LIST)
 IP_TICKET = IP_LIST
