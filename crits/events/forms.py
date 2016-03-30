@@ -24,11 +24,12 @@ class EventForm(forms.Form):
     description = forms.CharField(widget=forms.Textarea(attrs={'cols': '30',
                                                                'rows': '3'}),
                                   required=False)
-    occurrence_date = forms.DateTimeField(widget=CalWidget(format=settings.PY_DATETIME_FORMAT,
-                                                           attrs={'class':'datetimeclass',
-                                                                  'size':'25',
-                                                                  'id':'id_occurrence_ip_date'}),
-                                          input_formats=settings.PY_FORM_DATETIME_FORMATS)
+    occurrence_date = forms.DateTimeField(
+        widget=CalWidget(format=settings.PY_DATETIME_FORMAT,
+                         attrs={'class':'datetimeclass',
+                                'size':'25',
+                                'id':'id_occurrence_date'}),
+        input_formats=settings.PY_FORM_DATETIME_FORMATS)
     source = forms.ChoiceField(required=True,
                                widget=forms.Select(attrs={'class': 'no_clear'}),
                                label=form_consts.Event.SOURCE)
