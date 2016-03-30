@@ -5,6 +5,9 @@ from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
 from crits.signatures.signature import SignatureType, SignatureDependency
+from crits.vocabulary.relationships import RelationshipTypes
+
+relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
 
 class UploadSignatureForm(forms.Form):
@@ -33,6 +36,11 @@ class UploadSignatureForm(forms.Form):
     data = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                         'rows':'4'}),
                                                         required=True)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
         super(UploadSignatureForm, self).__init__(*args, **kwargs)
@@ -46,6 +54,8 @@ class UploadSignatureForm(forms.Form):
                                              c.name
                                              ) for c in get_item_names(SignatureType,
                                                                        True)]
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

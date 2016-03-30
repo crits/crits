@@ -6,6 +6,8 @@ var available_threat_types = [];
 
 $(document).ready(function() {
 
+    populate_id(id,'Actor');
+
     details_copy_id('Actor');
     toggle_favorite('Actor');
 

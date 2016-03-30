@@ -389,6 +389,8 @@ $(document).ready(function(){
     };
 
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt); });
+
+    populate_id(email_id, 'Email');
     details_copy_id('Email');
     toggle_favorite('Email');
 });

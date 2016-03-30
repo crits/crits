@@ -14,6 +14,7 @@ from crits.core.data_tools import make_unicode_strings, make_hex, xor_search
 from crits.core.data_tools import xor_string, make_stackstrings
 from crits.core.exceptions import ZipFileError
 from crits.core.handsontable_tools import form_to_dict
+from crits.core.class_mapper import class_from_id
 from crits.core.user_tools import user_can_view_data, user_is_admin
 from crits.core.user_tools import get_user_organization
 from crits.objects.forms import AddObjectForm
@@ -176,6 +177,10 @@ def upload_file(request, related_md5=None):
             method = form.cleaned_data['method']
             reference = form.cleaned_data['reference']
             analyst = request.user.username
+            related_id = form.cleaned_data.get('related_id', None)
+            related_type = form.cleaned_data.get('related_type', None)
+            relationship_type = form.cleaned_data.get('relationship_type', None)
+
 
             if related_md5:
                 reload_page = True
@@ -186,7 +191,7 @@ def upload_file(request, related_md5=None):
             if related_md5:
                 related_sample = Sample.objects(md5=related_md5).first()
                 if not related_sample:
-                    response['message'] = "Upload Failed. Unable to locate related sample."
+                    response['message'] = ("Upload Failed. Unable to locate related sample. %s" % related_md5)
                     return render_to_response("file_upload_response.html",
                                               {'response': json.dumps(response)},
                                               RequestContext(request))
@@ -198,6 +203,22 @@ def upload_file(request, related_md5=None):
                 # If selected, new sample inherits the sources of the related sample
                 if form.cleaned_data['inherit_sources']:
                     inherited_source = related_sample.source
+
+            elif related_id:
+                related_obj = class_from_id(related_type, related_id)
+                if not related_obj:
+                    response['success'] = False
+                    response['message'] = ("Upload Failed. Unable to locate related Item")
+                    return render_to_response("file_upload_response.html",{'response': json.dumps(response)}, RequestContext(request))
+
+                else:
+                    if form.cleaned_data['inherit_campaigns']:
+                        if  campaign:
+                            related_obj.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+                        campaign = related_obj.campaign
+
+                    if form.cleaned_data['inherit_sources']:
+                        inherited_source = related_obj.source
 
             backdoor_name = None
             backdoor_version = None
@@ -219,6 +240,9 @@ def upload_file(request, related_md5=None):
                         campaign=campaign,
                         confidence=confidence,
                         related_md5=related_md5,
+                        related_id=related_id,
+                        related_type=related_type,
+                        relationship_type=relationship_type,
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
                         inherited_source=inherited_source,
@@ -236,6 +260,9 @@ def upload_file(request, related_md5=None):
                         campaign=campaign,
                         confidence=confidence,
                         related_md5 = related_md5,
+                        related_id=related_id,
+                        related_type=related_type,
+                        relationship_type=relationship_type,
                         filename=request.POST['filename'].strip(),
                         md5=request.POST['md5'].strip().lower(),
                         sha1=request.POST['sha1'].strip().lower(),
