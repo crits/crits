@@ -97,7 +97,7 @@ class AddDomainForm(forms.Form):
                                              ('high', 'high')]
 
         self.fields['ip_type'].choices = ip_choices
-        self.fields['ip_type'].initial = "Address - ipv4-addr"
+        self.fields['ip_type'].initial = IPTypes.IPV4_ADDRESS
 
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
