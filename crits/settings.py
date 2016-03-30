@@ -489,7 +489,7 @@ else:
         'django_mongoengine',
         'django_mongoengine.mongo_auth',
         )
-  
+
     MIDDLEWARE_CLASSES = (
         'django.middleware.common.CommonMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
@@ -498,7 +498,6 @@ else:
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
     )
-    
     SESSION_ENGINE = 'django_mongoengine.sessions'
 
     SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
@@ -506,7 +505,7 @@ else:
     AUTHENTICATION_BACKENDS = (
         'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'crits.core.user.CRITsAuthBackend',
-    ) 
+    )
 
 if REMOTE_USER:
     AUTHENTICATION_BACKENDS = (
