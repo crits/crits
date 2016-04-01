@@ -24,7 +24,13 @@ import cgi
 import datetime
 from django.http import HttpRequest
 from crits.dashboards.utilities import getHREFLink, get_obj_name_from_title, get_obj_type_from_string
-from html.parser import HTMLParser
+
+try:
+    #Python 2.x
+    import HTMLParser
+except ImportError:
+    #Python 3.x
+    from html.parser import HTMLParser
 
 def get_dashboard(user,dashId=None):
     """

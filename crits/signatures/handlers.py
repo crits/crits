@@ -1,8 +1,12 @@
 import datetime
 import hashlib
 import json
-from html.parser import HTMLParser
-
+try:
+    #Python 2.x
+    import HTMLParser
+except ImportError:
+    #Python 3.x
+    from html.parser import HTMLParser
 from six import string_types
 
 from django.core.urlresolvers import reverse
