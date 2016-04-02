@@ -1,3 +1,4 @@
+from builtins import object
 from django import forms
 from django.forms.widgets import Select
 from django.forms.fields import ChoiceField
@@ -11,7 +12,7 @@ class CalWidget(forms.DateTimeInput):
     Calendar Widget.
     """
 
-    class Media:
+    class Media(object):
         css = {
             }
         js = (
@@ -44,7 +45,7 @@ class ExtendedSelect(Select):
             else:
                 selected_html = ''
             attrs_html = []
-            for k, v in attrs.items():
+            for k, v in list(attrs.items()):
                 if isinstance(v, list):
                     #emulate JavaScript behavior casting list to string
                     v = ','.join(v)

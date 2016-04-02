@@ -37,5 +37,5 @@ class Command(BaseCommand):
         # Drop all existing buckets
         Bucket.objects().delete()
 
-        for bucket in buckets.values():
+        for bucket in list(buckets.values()):
             bucket.save()

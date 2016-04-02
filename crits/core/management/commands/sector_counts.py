@@ -37,5 +37,5 @@ class Command(BaseCommand):
         # Drop all existing sectors
         Sector.objects().delete()
 
-        for sector in sectors.values():
+        for sector in list(sectors.values()):
             sector.save()

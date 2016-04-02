@@ -1,3 +1,4 @@
+from builtins import range
 import hmac, base64, struct, hashlib, time
 from django.utils.crypto import pbkdf2
 #from M2Crypto import EVP, Rand

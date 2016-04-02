@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import str
 import json
 
 from django.contrib.auth.decorators import user_passes_test

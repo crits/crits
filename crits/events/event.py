@@ -79,7 +79,7 @@ class Event(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         :type event_type: str
         """
 
-        if event_type in EventTypes.values():
+        if event_type in list(EventTypes.values()):
             self.event_type = event_type
 
     def migrate(self):

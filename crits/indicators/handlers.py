@@ -1,9 +1,12 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import csv
 import datetime
 import json
 import logging
 try:
-    import urlparse
+    import urllib.parse
 except ImportError:
     from urllib.parse import urlparse
 
@@ -412,14 +415,14 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
 
         if len(ind['threat_type']) < 1:
             ind['threat_type'] = IndicatorThreatTypes.UNKNOWN
-        if ind['threat_type'] not in IndicatorThreatTypes.values():
+        if ind['threat_type'] not in list(IndicatorThreatTypes.values()):
             result['success'] = False
             result_message += "Cannot process row %s: Invalid Threat Type<br />" % processed
             continue
 
         if len(ind['attack_type']) < 1:
             ind['attack_type'] = IndicatorAttackTypes.UNKNOWN
-        if ind['attack_type'] not in IndicatorAttackTypes.values():
+        if ind['attack_type'] not in list(IndicatorAttackTypes.values()):
             result['success'] = False
             result_message += "Cannot process row %s: Invalid Attack Type<br />" % processed
             continue
@@ -639,13 +642,13 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
               "is_new_indicator" (boolean) if successful.
     """
 
-    if ind['type'] not in IndicatorTypes.values():
+    if ind['type'] not in list(IndicatorTypes.values()):
         return {'success': False,
                 'message': "Not a valid Indicator Type: %s" % ind['type']}
-    if ind['threat_type'] not in IndicatorThreatTypes.values():
+    if ind['threat_type'] not in list(IndicatorThreatTypes.values()):
         return {'success': False,
                 'message': "Not a valid Indicator Threat Type: %s" % ind['threat_type']}
-    if ind['attack_type'] not in IndicatorAttackTypes.values():
+    if ind['attack_type'] not in list(IndicatorAttackTypes.values()):
         return {'success': False,
                 'message': "Not a valid Indicator Attack Type: " % ind['attack_type']}
 
@@ -754,7 +757,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         if ind_type in (IndicatorTypes.DOMAIN,
                         IndicatorTypes.URI):
             if ind_type == IndicatorTypes.URI:
-                domain_or_ip = urlparse.urlparse(ind_value).hostname
+                domain_or_ip = urllib.parse.urlparse(ind_value).hostname
                 try:
                     validate_ipv46_address(domain_or_ip)
                     url_contains_ip = True
@@ -779,7 +782,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                 else:
                     dmain = success['object']
 
-        if ind_type in IPTypes.values() or url_contains_ip:
+        if ind_type in list(IPTypes.values()) or url_contains_ip:
             if url_contains_ip:
                 ind_value = domain_or_ip
                 try:
@@ -970,7 +973,7 @@ def set_indicator_threat_type(id_, threat_type, user, **kwargs):
         # we found a dupe
         return {'success': False,
                 'message': "Duplicate would exist making this change."}
-    elif threat_type not in IndicatorThreatTypes.values():
+    elif threat_type not in list(IndicatorThreatTypes.values()):
         return {'success': False,
                 'message': "Not a valid Threat Type."}
     else:
@@ -1002,7 +1005,7 @@ def set_indicator_attack_type(id_, attack_type, user, **kwargs):
         # we found a dupe
         return {'success': False,
                 'message': "Duplicate would exist making this change."}
-    elif attack_type not in IndicatorAttackTypes.values():
+    elif attack_type not in list(IndicatorAttackTypes.values()):
         return {'success': False,
                 'message': "Not a valid Attack Type."}
     else:
@@ -1370,7 +1373,7 @@ def validate_indicator_value(value, ind_type):
         if "://" not in value.split('.')[0]:
             return ("", "URI must contain protocol "
                         "prefix (e.g. http://, https://, ftp://) ")
-        domain_or_ip = urlparse.urlparse(value).hostname
+        domain_or_ip = urllib.parse.urlparse(value).hostname
         try:
             validate_ipv46_address(domain_or_ip)
             return (value, "")
@@ -1395,7 +1398,7 @@ def validate_indicator_value(value, ind_type):
             domain = domain_or_ip
 
     # IPs
-    if ind_type in IPTypes.values():
+    if ind_type in list(IPTypes.values()):
         (ip_address, error) = validate_and_normalize_ip(value, ind_type)
         if error:
             return ("", error)

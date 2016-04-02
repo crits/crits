@@ -1,3 +1,4 @@
+from builtins import str
 import uuid
 
 from six import string_types

@@ -104,15 +104,15 @@ def modify_config(request):
             result = modify_configuration(forms, analyst)
             message = result['message']
         elif len(errorStringDict) == 2:
-            formsWithErrors = " and ".join(errorStringDict.values())
+            formsWithErrors = " and ".join(list(errorStringDict.values()))
             message = "Invalid Form: The " + formsWithErrors + " tabs have errors."
         elif len(errorStringDict) > 1:      #if there are multiple tabs with errors, pluralize the error message
-            formsWithErrors = ", ".join(errorStringDict.values())
+            formsWithErrors = ", ".join(list(errorStringDict.values()))
             lastWhiteSpace = formsWithErrors.rfind(" ")
             formsWithErrors = formsWithErrors[:lastWhiteSpace] + " and " + formsWithErrors[lastWhiteSpace:]
             message = "Invalid Form: The " + formsWithErrors + " tabs have errors."
         else:   #if there is only one tab with errors, make the error message singular
-            formsWithErrors = errorStringDict.values()[0]
+            formsWithErrors = list(errorStringDict.values())[0]
             message = "Invalid Form: The " + formsWithErrors + " tab has errors."
 
         message = {'message': message,

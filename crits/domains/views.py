@@ -1,4 +1,7 @@
-import urllib
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+import urllib.request, urllib.parse, urllib.error
 import json
 
 from django.http import HttpResponse, HttpResponseRedirect
@@ -182,7 +185,7 @@ def domain_search(request):
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
     #return render_to_response('error.html', {'error': query})
     return HttpResponseRedirect(reverse('crits.domains.views.domains_listing')
-                                + "?%s" % urllib.urlencode(query))
+                                + "?%s" % urllib.parse.urlencode(query))
 
 @user_passes_test(user_can_view_data)
 def tld_update(request):

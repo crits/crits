@@ -6,6 +6,9 @@ positioning, size, columns, and sort order but they are always there and their
 names cannot be changed.
 """
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 
 from six import string_types
 
@@ -27,7 +30,7 @@ from crits.dashboards.utilities import getHREFLink, get_obj_name_from_title, get
 
 try:
     #Python 2.x
-    import HTMLParser
+    import html.parser
 except ImportError:
     #Python 3.x
     from html.parser import HTMLParser
@@ -150,7 +153,7 @@ def constructSavedTable(table, records):
     colNames = []
     for column in table.tableColumns:
         col = {}
-        for k,v in column.items():
+        for k,v in list(column.items()):
             if k == "sizeCalculated" or k == "sizeCorrected" or k == 'min':
                 continue
             elif k == "field":
@@ -206,7 +209,7 @@ def parseDocObjectsToStrings(records, obj_type):
     entire object
     """
     for doc in records:
-        for key, value in doc.items():
+        for key, value in list(doc.items()):
             # all dates should look the same
             if isinstance(value, datetime.datetime):
                 doc[key] = datetime.datetime.strftime(value,
@@ -246,12 +249,12 @@ def parseDocObjectsToStrings(records, obj_type):
                     tickets.append(ticketdict['ticket_number'])
                 doc[key] = "|||".join(tickets)
             elif key == "datatype":
-                doc[key] = value.keys()[0]
+                doc[key] = list(value.keys())[0]
             elif key == "to":
                 doc[key] = len(value)
             elif key == "thumb":
                 doc['url'] = reverse("crits.screenshots.views.render_screenshot",
-                                      args=(unicode(doc["_id"]),))
+                                      args=(str(doc["_id"]),))
             elif key=="results" and obj_type == "AnalysisResult":
                 doc[key] = len(value)
             elif isinstance(value, list):
@@ -281,7 +284,7 @@ def save_data(userId, columns, tableName, searchTerm="", objType="", sortBy=None
     """
     try:
         if searchTerm:
-            searchTerm = HTMLParser.HTMLParser().unescape(searchTerm)
+            searchTerm = html.parser.HTMLParser().unescape(searchTerm)
         #if user is editing a table
         if tableId :
             newSavedSearch = SavedSearch.objects(id=tableId).first()

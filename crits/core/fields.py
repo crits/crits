@@ -1,3 +1,4 @@
+from builtins import object
 import datetime
 
 from six import string_types

@@ -1,3 +1,4 @@
+from builtins import str
 import re
 
 from hashlib import md5
@@ -75,7 +76,7 @@ def validate_and_add_new_handler_object(data, rowData, request, errors,
             formdict = form_to_dict(object_form)
             cache['object_formdict'] = formdict
 
-        for name, errorMessages in bound_form.errors.items():
+        for name, errorMessages in list(bound_form.errors.items()):
             entry = get_field_from_label(name, formdict)
             if entry == None:
                 continue

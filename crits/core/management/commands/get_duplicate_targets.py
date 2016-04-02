@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import str
 from bson import Code
 
 from django.core.management.base import BaseCommand

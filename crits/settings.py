@@ -496,7 +496,7 @@ LOGGING = {
 }
 
 # Handle creating log directories if they do not exist
-for handler in LOGGING['handlers'].values():
+for handler in list(LOGGING['handlers'].values()):
     log_file = handler.get('filename')
     if log_file:
         log_dir = os.path.dirname(log_file)

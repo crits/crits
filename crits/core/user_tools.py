@@ -1,3 +1,4 @@
+from builtins import str
 from bson import ObjectId
 try:
     from mongoengine.base import ValidationError

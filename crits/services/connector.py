@@ -1,3 +1,4 @@
+from builtins import object
 class UnknownConnector(Exception):
     """
     Exception for dealing with an unknown connector type.

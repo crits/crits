@@ -1,3 +1,4 @@
+from builtins import str
 import json
 
 from six import string_types

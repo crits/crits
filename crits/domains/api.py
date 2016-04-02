@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 
 from six import string_types
 
@@ -16,7 +18,7 @@ class DomainResource(CRITsAPIResource):
     Domain API Resource Class.
     """
 
-    class Meta:
+    class Meta(object):
         object_class = Domain
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "domains"

@@ -1,9 +1,13 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import str
 import cgi
 import os
 import datetime
 try:
     #Python 2.x
-    import HTMLParser
+    import html.parser
 except ImportError:
     #Python 3.x
     from html.parser import HTMLParser
@@ -18,11 +22,11 @@ except ImportError:
     #Python 3.x
     import shlex
 
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 try:
     #Python 2.x
-    import urlparse
+    import urllib.parse
 except ImportError:
     #Python 3.x
     from urllib.parse import urlparse
@@ -242,7 +246,7 @@ def description_update(type_, id_, description, user, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     description = h.unescape(description)
     try:
         obj.description = description
@@ -280,7 +284,7 @@ def data_update(type_, id_, data, analyst):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     data = h.unescape(data)
     try:
         obj.data = data
@@ -331,7 +335,7 @@ def get_favorites(analyst):
                   <tbody>
               '''
 
-    for type_, attr in field_dict.iteritems():
+    for type_, attr in field_dict.items():
         if type_ in favorites:
             ids = [ObjectId(s) for s in favorites[type_]]
             objs = class_from_type(type_).objects(id__in=ids).only(attr)
@@ -926,7 +930,7 @@ def promote_bucket_list(bucket, confidence, name, related, description, analyst)
     if not bucket:
         return {'success': False, 'message': 'Unable to find bucket.'}
 
-    for ctype in [k for k in Bucket._meta['schema_doc'].keys() if k != 'name' and k != 'Campaign']:
+    for ctype in [k for k in list(Bucket._meta['schema_doc'].keys()) if k != 'name' and k != 'Campaign']:
         # Don't bother if the count for this type is 0
         if getattr(bucket, ctype, 0) == 0:
             continue
@@ -961,7 +965,7 @@ def alter_bucket_list(obj, buckets, val):
     # I haven't found a way to get mongoengine to use the defaults
     # when doing update_one() on the queryset.
     from crits.core.bucket import Bucket
-    soi = { k: 0 for k in Bucket._meta['schema_doc'].keys() if k != 'name' and k != obj._meta['crits_type'] }
+    soi = { k: 0 for k in list(Bucket._meta['schema_doc'].keys()) if k != 'name' and k != obj._meta['crits_type'] }
     soi['schema_version'] = Bucket._meta['latest_schema_version']
 
     # We are using mongo_connector here because mongoengine does not have
@@ -1175,7 +1179,7 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
         # if result format calls for binary data to be zipped, loop over
         # collected objects and convert binary data to bin_fmt specified, then
         # add to the list of data to zip up
-        for (oid, (otype, obj)) in new_objects.items():
+        for (oid, (otype, obj)) in list(new_objects.items()):
             if ((otype == PCAP._meta['crits_type'] or
                  otype == Sample._meta['crits_type'] or
                  otype == Certificate._meta['crits_type']) and
@@ -1407,7 +1411,7 @@ def datetime_parser(value):
     elif isinstance(value,string_types) and value:
         return datetime.datetime.strptime(value, settings.PY_DATETIME_FORMAT)
     elif isinstance(value,dict):
-        for k,v in value.items():
+        for k,v in list(value.items()):
             # Make sure that date is in the key, value is a string, and val is not ''
             if "date" in k and isinstance(v,string_types) and v:
                 value[k] = datetime.datetime.strptime(v, settings.PY_DATETIME_FORMAT)
@@ -1424,7 +1428,7 @@ def format_error(e):
     :returns: str
     """
 
-    return e.__class__.__name__+": "+unicode(e)
+    return e.__class__.__name__+": "+str(e)
 
 def toggle_item_state(type_, oid, analyst):
     """
@@ -1584,7 +1588,7 @@ def parse_search_term(term, force_full=False):
 
     # decode the term so we aren't dealing with weird encoded characters
     if force_full == False:
-        term = urllib.unquote(term)
+        term = urllib.parse.unquote(term)
 
     search = {}
 
@@ -1910,7 +1914,7 @@ def check_query(qparams,user,obj):
     # Iterate over the supplied query keys and make sure they start
     # with a valid field from the document
     goodkeys = {}
-    for key,val in qparams.items():
+    for key,val in list(qparams.items()):
         # Skip anything with Mongo's special $
         if '$' in key:
             continue
@@ -1921,7 +1925,7 @@ def check_query(qparams,user,obj):
         except:
             field = key
         # Check for mapping, reverse because we're going the other way
-        invmap = dict((v,k) for k, v in obj._db_field_map.iteritems())
+        invmap = dict((v,k) for k, v in obj._db_field_map.items())
         if field in invmap:
             field = invmap[field]
         # Only allow query keys that exist in the object
@@ -2079,7 +2083,7 @@ def parse_query_request(request,col_obj):
                 base = field
                 extra = ""
             # Check for mapping, reverse because we're going the other way
-            invmap = dict((v,k) for k, v in col_obj._db_field_map.iteritems())
+            invmap = dict((v,k) for k, v in col_obj._db_field_map.items())
             if base in invmap:
                 base = invmap[base]
             # Only allow query keys that exist in the object
@@ -2152,9 +2156,9 @@ def get_query(col_obj,request):
     query = {}
     response = {}
     params_escaped = {}
-    for k,v in request.GET.items():
+    for k,v in list(request.GET.items()):
         params_escaped[k] = html_escape(v)
-    for k,v in request.POST.items():
+    for k,v in list(request.POST.items()):
         params_escaped[k] = html_escape(v)
     urlparams = "?%s" % urlencode(params_escaped)
     if "q" in request.GET:
@@ -2168,7 +2172,7 @@ def get_query(col_obj,request):
         otype = request.GET.get('otype', None)
         if otype:
             search_type = search_type + "_" + otype
-        term = HTMLParser.HTMLParser().unescape(term)
+        term = html.parser.HTMLParser().unescape(term)
         qdict = gen_global_query(col_obj,
                                  request.user.username,
                                  term,
@@ -2187,7 +2191,7 @@ def get_query(col_obj,request):
     qparams = request.GET.copy()
     qparams.update(request.POST.copy())
     qparams = check_query(qparams,request.user.username,col_obj)
-    for key,value in qparams.items():
+    for key,value in list(qparams.items()):
         if key in keymaps:
             key = keymaps[key]
 
@@ -2297,7 +2301,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         response['TotalRecordCount'] = response.pop('count')
         response['Result'] = response.pop('result')
         for doc in response['Records']:
-            for key, value in doc.items():
+            for key, value in list(doc.items()):
                 # all dates should look the same
                 if isinstance(value, datetime.datetime):
                     doc[key] = datetime.datetime.strftime(value,
@@ -2326,7 +2330,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     else:
                         doc[key] = "False"
                 elif key == "datatype":
-                    doc[key] = value.keys()[0]
+                    doc[key] = list(value.keys())[0]
                 elif key == "results":
                     doc[key] = len(doc[key])
                 elif key == "preferred":
@@ -2373,7 +2377,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
             elif not url:
                 doc['url'] = None
             else:
-                doc['url'] = reverse(url, args=(unicode(doc[urlfieldparam]),))
+                doc['url'] = reverse(url, args=(str(doc[urlfieldparam]),))
     return response
 
 def jtable_ajax_delete(obj,request):
@@ -2525,7 +2529,7 @@ def build_jtable(jtopts, request):
 
     jtable = {}
     # This allows overriding of default options if they are specified in jtopts
-    for defopt,defval in default_options.items():
+    for defopt,defval in list(default_options.items()):
         if defopt in jtopts:
             jtable[defopt] = jtopts[defopt]
         else:
@@ -3040,7 +3044,7 @@ def generate_user_profile(username, request):
         final_samples = []
         ids = [ObjectId(s['_id']) for s in subscriptions['Sample']]
         samples = Sample.objects(id__in=ids).only('md5', 'filename')
-        m = map(itemgetter('_id'), subscriptions['Sample'])
+        m = list(map(itemgetter('_id'), subscriptions['Sample']))
         for sample in samples:
             s = sample.to_dict()
             s['md5'] = sample['md5']
@@ -3054,7 +3058,7 @@ def generate_user_profile(username, request):
         final_pcaps = []
         ids = [ObjectId(p['_id']) for p in subscriptions['PCAP']]
         pcaps = PCAP.objects(id__in=ids).only('md5', 'filename')
-        m = map(itemgetter('_id'), subscriptions['PCAP'])
+        m = list(map(itemgetter('_id'), subscriptions['PCAP']))
         for pcap in pcaps:
             p = pcap.to_dict()
             p['id'] = pcap.id
@@ -3069,7 +3073,7 @@ def generate_user_profile(username, request):
         emails = Email.objects(id__in=ids).only('from_address',
                                                 'sender',
                                                 'subject')
-        m = map(itemgetter('_id'), subscriptions['Email'])
+        m = list(map(itemgetter('_id'), subscriptions['Email']))
         for email in emails:
             e = email.to_dict()
             e['id'] = email.id
@@ -3082,7 +3086,7 @@ def generate_user_profile(username, request):
         final_indicators = []
         ids = [ObjectId(i['_id']) for i in subscriptions['Indicator']]
         indicators = Indicator.objects(id__in=ids).only('value', 'ind_type')
-        m = map(itemgetter('_id'), subscriptions['Indicator'])
+        m = list(map(itemgetter('_id'), subscriptions['Indicator']))
         for indicator in indicators:
             i = indicator.to_dict()
             i['id'] = indicator.id
@@ -3095,7 +3099,7 @@ def generate_user_profile(username, request):
         final_events = []
         ids = [ObjectId(v['_id']) for v in subscriptions['Event']]
         events = Event.objects(id__in=ids).only('title', 'description')
-        m = map(itemgetter('_id'), subscriptions['Event'])
+        m = list(map(itemgetter('_id'), subscriptions['Event']))
         for event in events:
             e = event.to_dict()
             e['id'] = event.id
@@ -3108,7 +3112,7 @@ def generate_user_profile(username, request):
         final_domains = []
         ids = [ObjectId(d['_id']) for d in subscriptions['Domain']]
         domains = Domain.objects(id__in=ids).only('domain')
-        m = map(itemgetter('_id'), subscriptions['Domain'])
+        m = list(map(itemgetter('_id'), subscriptions['Domain']))
         for domain in domains:
             d = domain.to_dict()
             d['id'] = domain.id
@@ -3121,7 +3125,7 @@ def generate_user_profile(username, request):
         final_ips = []
         ids = [ObjectId(a['_id']) for a in subscriptions['IP']]
         ips = IP.objects(id__in=ids).only('ip')
-        m = map(itemgetter('_id'), subscriptions['IP'])
+        m = list(map(itemgetter('_id'), subscriptions['IP']))
         for ip in ips:
             i = ip.to_dict()
             i['id'] = ip.id
@@ -3134,7 +3138,7 @@ def generate_user_profile(username, request):
         final_campaigns = []
         ids = [ObjectId(c['_id']) for c in subscriptions['Campaign']]
         campaigns = Campaign.objects(id__in=ids).only('name')
-        m = map(itemgetter('_id'), subscriptions['Campaign'])
+        m = list(map(itemgetter('_id'), subscriptions['Campaign']))
         for campaign in campaigns:
             c = campaign.to_dict()
             c['id'] = campaign.id
@@ -3146,7 +3150,7 @@ def generate_user_profile(username, request):
     favorites = user_info.favorites.to_dict()
     collected_favorites = {}
     total_favorites = 0
-    for type_ in favorites.keys():
+    for type_ in list(favorites.keys()):
         ids = [ObjectId(f) for f in favorites[type_]]
         if ids:
             count = class_from_type(type_).objects(id__in=ids).count()
@@ -4039,7 +4043,7 @@ def unflatten(dictionary):
     """
 
     resultDict = dict()
-    for key, value in dictionary.iteritems():
+    for key, value in dictionary.items():
         parts = key.split(".")
         d = resultDict
         for part in parts[:-1]:
@@ -4067,7 +4071,7 @@ def alter_sector_list(obj, sectors, val):
     # This dictionary is used to set values on insert only.
     # I haven't found a way to get mongoengine to use the defaults
     # when doing update_one() on the queryset.
-    soi = { k: 0 for k in Sector._meta['schema_doc'].keys() if k != 'name' and k != obj._meta['crits_type'] }
+    soi = { k: 0 for k in list(Sector._meta['schema_doc'].keys()) if k != 'name' and k != obj._meta['crits_type'] }
     soi['schema_version'] = Sector._meta['latest_schema_version']
 
     # We are using mongo_connector here because mongoengine does not have

@@ -184,7 +184,7 @@ def generate_campaign_stats(source_name=None):
     campaign_stats = update_results(samples, m, r, stat_query,
                                     "sample_count", campaign_stats)
     # update all of the campaigns here
-    for campaign in campaign_stats.keys():
+    for campaign in list(campaign_stats.keys()):
         campaigns.update({"name": campaign},
                          {"$set": campaign_stats[campaign]}, upsert=True)
 

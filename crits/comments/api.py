@@ -1,3 +1,4 @@
+from builtins import object
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
 
@@ -12,7 +13,7 @@ class CommentResource(CRITsAPIResource):
     Comment API Resource Class.
     """
 
-    class Meta:
+    class Meta(object):
         object_class = Comment
         allowed_methods = ('post')
         resource_name = "comments"

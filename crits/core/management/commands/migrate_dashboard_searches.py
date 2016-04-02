@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 from django.core.management.base import BaseCommand
 from optparse import make_option
 from crits.dashboards.dashboard import SavedSearch
@@ -18,11 +20,11 @@ def migrate_all_searches():
     multiplier = 2
     for search in SavedSearch.objects():
         if "left" in search and search.left > 0:
-            search.col = search.left/multiplier
+            search.col = old_div(search.left,multiplier)
         elif search.isDefaultOnDashboard:
              convert_default_searches(search, "left")
         if "width" in search:
-            search.sizex = search.width/multiplier
+            search.sizex = old_div(search.width,multiplier)
         elif search.isDefaultOnDashboard:
              convert_default_searches(search, "width")
         if search.isDefaultOnDashboard:

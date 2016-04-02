@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import str
 
 from six import string_types
 
@@ -1018,15 +1019,15 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             mfpos = preheaders.find("MAIL FROM")
             if mfpos > -1:
                 try:
-                    mailfrom = unicode(preheaders[mfpos + 10:])
+                    mailfrom = str(preheaders[mfpos + 10:])
                 except UnicodeDecodeError:
-                    mailfrom = unicode(preheaders[mfpos + 10:], errors="replace")
+                    mailfrom = str(preheaders[mfpos + 10:], errors="replace")
             rcpos = preheaders.find("RCPT TO")
             if rcpos > -1:
                 try:
-                    rcptto = unicode(preheaders[rcpos + 9:])
+                    rcptto = str(preheaders[rcpos + 9:])
                 except UnicodeDecodeError:
-                    rcptto = unicode(preheaders[rcpos + 9:], errors="replace")
+                    rcptto = str(preheaders[rcpos + 9:], errors="replace")
         if mailfrom:
             msg_import['mailfrom'] = mailfrom
         if rcptto:
@@ -1053,14 +1054,14 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
     msg = eml.message_from_string(str(stripped_mail))
 
-    if not msg.items():
+    if not list(msg.items()):
         result['reason'] = """Could not parse email. Possibly the input does
                            not conform to a Internet Message style headers
                            and header continuation lines..."""
         return result
 
     # clean up headers
-    for d in msg.items():
+    for d in list(msg.items()):
         cleand = ''.join([x for x in d[1] if (ord(x) < 127 and ord(x) >= 32)])
         msg_import[d[0].replace(".",
                                 "").replace("$",
@@ -1085,9 +1086,9 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             content = part.get_payload(decode=True)
             if content:
                 try:
-                    message_part = unicode(content)
+                    message_part = str(content)
                 except UnicodeDecodeError:
-                    message_part = unicode(content, errors="replace")
+                    message_part = str(content, errors="replace")
 
                 msg_import["raw_body"] = msg_import["raw_body"] + \
                                          message_part + "\n"
@@ -1101,9 +1102,9 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
             if filename is not None:
                 try:
-                    filename = unicode(filename)
+                    filename = str(filename)
                 except UnicodeDecodeError:
-                    filename = unicode(filename, errors="replace")
+                    filename = str(filename, errors="replace")
             else:
                 filename = md5
 
@@ -1198,7 +1199,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             return result
 
 
-    for (md5_, attachment) in result['attachments'].items():
+    for (md5_, attachment) in list(result['attachments'].items()):
         if handle_file(attachment['filename'],
                        attachment['blob'],
                        sourcename,
@@ -1274,7 +1275,7 @@ def dict_to_email(d, save_unsupported=True):
         del d['from']
 
     if save_unsupported:
-        for (k, v) in d.get('unsupported_attrs', {}).items():
+        for (k, v) in list(d.get('unsupported_attrs', {}).items()):
             d[k] = v
 
     if 'unsupported_attrs' in d:
@@ -1713,7 +1714,7 @@ def parse_ole_file(file):
     if earliest_helo_date == current_datetime and email['date']:
         earliest_helo_date = datetime.datetime.fromtimestamp(mktime_tz(parsedate_tz(email['date'])))
 
-    return {'email': email, 'attachments': attachments.values(), 'received_date': earliest_helo_date}
+    return {'email': email, 'attachments': list(attachments.values()), 'received_date': earliest_helo_date}
 
 def _get_received_from(received_header):
     """

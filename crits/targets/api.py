@@ -1,3 +1,4 @@
+from builtins import object
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
@@ -15,7 +16,7 @@ class TargetResource(CRITsAPIResource):
     Currently supports GET and POST.
     """
 
-    class Meta:
+    class Meta(object):
         object_class = Target
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "targets"

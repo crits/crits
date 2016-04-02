@@ -1,3 +1,4 @@
+from builtins import str
 import datetime
 import json
 import logging
@@ -1303,7 +1304,7 @@ def user_context(request):
         context['theme'] = user.get_preference('ui', 'theme', 'default')
         favorite_count = 0
         favorites = user.favorites.to_dict()
-        for favorite in favorites.values():
+        for favorite in list(favorites.values()):
             favorite_count += len(favorite)
         context['user_favorites'] = user.favorites.to_json()
         context['favorite_count'] = favorite_count

@@ -1,3 +1,4 @@
+from builtins import object
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
@@ -15,7 +16,7 @@ class ScreenshotResource(CRITsAPIResource):
     Currently supports GET and POST.
     """
 
-    class Meta:
+    class Meta(object):
         object_class = Screenshot
         allowed_methods = ('get', 'post')
         resource_name = "screenshots"

@@ -1,4 +1,5 @@
-class CRITsBaseScript():
+from builtins import object
+class CRITsBaseScript(object):
     """
     Base class for all CRITs scripts to inherit.
     """

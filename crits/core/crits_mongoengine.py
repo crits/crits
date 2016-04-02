@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 import datetime
 import json, yaml
 import io
@@ -135,7 +137,7 @@ class CritsQuerySet(QS):
                        'schema_version',
                        ]
         if not fields:
-            fields = self[0]._data.keys()
+            fields = list(self[0]._data.keys())
         # Create a local copy
         fields = fields[:]
         for key in filter_keys:
@@ -430,9 +432,9 @@ class CritsDocument(BaseDocument):
         #Make sure any fields that are unsupported but exist in the database
         #   get added to the document's unsupported_attributes field.
         #Get database names for all fields that *should* exist on the object.
-        db_fields = [val.db_field for key,val in cls._fields.items()]
+        db_fields = [val.db_field for key,val in list(cls._fields.items())]
         #custom __setattr__ does logic of moving fields to unsupported_fields
-        [doc.__setattr__("%s"%key, val) for key,val in son.items()
+        [doc.__setattr__("%s"%key, val) for key,val in list(son.items())
             if key not in db_fields]
 
         #After a document is retrieved from the database, and any unsupported
@@ -499,7 +501,7 @@ class CritsDocument(BaseDocument):
         """
 
         if not fields:
-            fields = self._data.keys()
+            fields = list(self._data.keys())
         csv_string = io.BytesIO()
         csv_wr = csv.writer(csv_string)
         if headers:
@@ -521,7 +523,7 @@ class CritsDocument(BaseDocument):
                     data = self._data[field]
                     if not hasattr(data, 'encode'):
                         # Convert non-string data types
-                        data = unicode(data)
+                        data = str(data)
                 row.append(data.encode('utf-8'))
 
         csv_wr.writerow(row)
@@ -561,7 +563,7 @@ class CritsDocument(BaseDocument):
 
         if include:
             result = {}
-            for k, v in data.items():
+            for k, v in list(data.items()):
                 if k in newproj and k not in exclude:
                     if k == "_id":
                         k = "id"
@@ -569,7 +571,7 @@ class CritsDocument(BaseDocument):
             return result
         elif exclude:
             result = {}
-            for k, v in data.items():
+            for k, v in list(data.items()):
                 if k in exclude:
                     continue
                 if k == "_id":
@@ -1373,7 +1375,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         # or subtraction of a bucket_list.
         if isinstance(tags, list) and len(tags) == 1 and tags[0] == '':
             parsed_tags = []
-        elif isinstance(tags, (str, unicode)):
+        elif isinstance(tags, (str, str)):
             parsed_tags = tags.split(',')
         else:
             parsed_tags = tags
@@ -1425,7 +1427,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         # or subtraction of a sector.
         if isinstance(sectors, list) and len(sectors) == 1 and sectors[0] == '':
             parsed_sectors = []
-        elif isinstance(sectors, (str, unicode)):
+        elif isinstance(sectors, (str, str)):
             parsed_sectors = sectors.split(',')
         else:
             parsed_sectors = sectors
@@ -2473,7 +2475,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             details_url_key = mapper['details_url_key']
 
             try:
-                return reverse(details_url, args=(unicode(self[details_url_key]),))
+                return reverse(details_url, args=(str(self[details_url_key]),))
             except Exception:
                 return None
         else:
@@ -2501,7 +2503,7 @@ def merge(self, arg_dict=None, overwrite=False, **kwargs):
     if not arg_dict:
         arg_dict = kwargs
     if isinstance(arg_dict, dict):
-        iterator = list(arg_dict.iteritems())
+        iterator = list(arg_dict.items())
     else:
         iterator = arg_dict
 
