@@ -1192,7 +1192,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
         # Save the email again since it now has a new relationship.
         try:
             result['object'].save(username=analyst)
-        except Exception, e:
+        except Exception as e:
             result['reason'] = "Failed to save email.\n<br /><pre>"
             + str(e) + "</pre>"
             return result
