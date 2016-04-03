@@ -5,12 +5,7 @@ from builtins import str
 import cgi
 import os
 import datetime
-try:
-    #Python 2.x
-    import html.parser
-except ImportError:
-    #Python 3.x
-    from html.parser import HTMLParser
+import html.parser
 
 import json
 import logging
@@ -23,13 +18,6 @@ except ImportError:
     import shlex
 
 import urllib.request, urllib.parse, urllib.error
-
-try:
-    #Python 2.x
-    import urllib.parse
-except ImportError:
-    #Python 3.x
-    from urllib.parse import urlparse
 
 from six import string_types, iteritems
 

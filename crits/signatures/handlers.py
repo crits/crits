@@ -4,12 +4,7 @@ from builtins import str
 import datetime
 import hashlib
 import json
-try:
-    #Python 2.x
-    import html.parser
-except ImportError:
-    #Python 3.x
-    from html.parser import HTMLParser
+import html.parser
 from six import string_types
 
 from django.core.urlresolvers import reverse

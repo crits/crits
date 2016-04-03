@@ -28,12 +28,7 @@ import datetime
 from django.http import HttpRequest
 from crits.dashboards.utilities import getHREFLink, get_obj_name_from_title, get_obj_type_from_string
 
-try:
-    #Python 2.x
-    import html.parser
-except ImportError:
-    #Python 3.x
-    from html.parser import HTMLParser
+import html.parser
 
 def get_dashboard(user,dashId=None):
     """
