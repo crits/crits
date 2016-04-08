@@ -14,7 +14,7 @@ lxml
 m2crypto
 --allow-external mongoengine
 mongoengine==0.8.8
-pydeep==0.2
+git+https://github.com/kbandla/pydeep.git
 pymongo==2.7.2
 pyparsing
 python-dateutil
