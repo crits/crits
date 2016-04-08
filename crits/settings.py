@@ -433,6 +433,7 @@ AUTH_USER_MODEL = 'mongo_auth.MongoUser'
 MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
 
 SESSION_ENGINE = 'mongoengine.django.sessions'
+SESSION_SERIALIZER = 'mongoengine.django.sessions.BSONSerializer'
 
 AUTHENTICATION_BACKENDS = (
     'crits.core.user.CRITsAuthBackend',

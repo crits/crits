@@ -26,11 +26,10 @@ class EventForm(SourceInForm):
                                                                   'size':'25',
                                                                   'id':'id_occurrence_ip_date'}),
                                           input_formats=settings.PY_FORM_DATETIME_FORMATS)
-    
 
     def __init__(self, username, *args, **kwargs):
-        super(EventForm, self).__init__(*args, **kwargs)
-        
+        super(EventForm, self).__init__(username, *args, **kwargs)
+
         self.fields['event_type'].choices = [
             (c,c) for c in EventTypes.values(sort=True)
         ]

@@ -33,7 +33,6 @@ class AddDomainForm(SourceInForm):
     campaign = forms.ChoiceField(widget=forms.Select, required=False,
                                  label=form_consts.Domain.CAMPAIGN)
     confidence = forms.ChoiceField(required=False, label=form_consts.Domain.CAMPAIGN_CONFIDENCE)
-    
     add_ip = forms.BooleanField(required=False,
                                 widget=forms.CheckboxInput(attrs={'class':'bulkskip'}),
                                 label=form_consts.Domain.ADD_IP_ADDRESS)
