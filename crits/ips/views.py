@@ -139,8 +139,10 @@ def add_update_ip(request, method):
                 add_indicator = True
             indicator_reference = cleaned_data.get('indicator_reference')
             bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
-            ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)        
-
+            ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+            related_id = cleaned_data['related_id']
+            related_type = cleaned_data['related_type']
+            relationship_type = cleaned_data['relationship_type']
 
             result = ip_add_update(ip,
                                    ip_type,
@@ -154,8 +156,10 @@ def add_update_ip(request, method):
                                    bucket_list=bucket_list,
                                    ticket=ticket,
                                    is_add_indicator=add_indicator,
-                                   indicator_reference=indicator_reference)
-
+                                   indicator_reference=indicator_reference,
+                                   related_id=related_id,
+                                   related_type=related_type,
+                                   relationship_type=relationship_type)
             if 'message' in result:
                 if not isinstance(result['message'], list):
                     result['message'] = [result['message']]

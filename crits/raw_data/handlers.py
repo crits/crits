@@ -22,6 +22,8 @@ from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.raw_data.raw_data import RawData, RawDataType
 from crits.services.handlers import run_triage, get_supported_services
+from crits.vocabulary.relationships import RelationshipTypes
+
 
 
 def generate_raw_data_csv(request):
@@ -288,7 +290,8 @@ def handle_raw_data_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
                          link_id=None, method='', reference='',
-                         copy_rels=False, bucket_list=None, ticket=None):
+                         copy_rels=False, bucket_list=None, ticket=None,
+                         related_id=None, related_type=None, relationship_type=None):
     """
     Add RawData.
 
@@ -324,6 +327,12 @@ def handle_raw_data_file(data, source_name, user=None,
     :type bucket_list: str(comma separated) or list.
     :param ticket: Ticket(s) to add to this RawData
     :type ticket: str(comma separated) or list.
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               'success' (boolean),
               'message' (str),
@@ -418,6 +427,25 @@ def handle_raw_data_file(data, source_name, user=None,
 
     if ticket:
         raw_data.add_ticket(ticket, user);
+
+    related_obj = None
+    if related_id and related_type:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+    raw_data.save(username=user)
+
+    if related_obj and relationship_type and raw_data:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        raw_data.add_relationship(related_obj,
+                              relationship_type,
+                              analyst=user,
+                              get_rels=False)
+        raw_data.save(username=user)
+        raw_data.reload()
 
     # save raw_data
     raw_data.save(username=user)

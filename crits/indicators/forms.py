@@ -16,6 +16,10 @@ from crits.vocabulary.indicators import (
     IndicatorAttackTypes
 )
 
+from crits.vocabulary.relationships import RelationshipTypes
+
+relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
+
 class IndicatorActivityForm(forms.Form):
     """
     Django form for adding activity.
@@ -53,8 +57,16 @@ class UploadIndicatorCSVForm(SourceInForm):
     error_css_class = 'error'
     required_css_class = 'required'
     filedata = forms.FileField()
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
+
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorCSVForm, self).__init__(username, *args, **kwargs)
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
 class UploadIndicatorTextForm(SourceInForm):
     """
@@ -66,10 +78,17 @@ class UploadIndicatorTextForm(SourceInForm):
     data = forms.CharField(
         widget=forms.Textarea(attrs={'cols': '80', 'rows': '20'}),
         required=True)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorTextForm, self).__init__(username, *args, **kwargs)
         dt = "Indicator, Type, Threat Type, Attack Type, Description, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action, Status\n"
         self.fields['data'].initial = dt
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
 class UploadIndicatorForm(SourceInForm):
     """
@@ -91,6 +110,26 @@ class UploadIndicatorForm(SourceInForm):
     impact = forms.ChoiceField(widget=forms.Select, required=True)
     campaign = forms.ChoiceField(widget=forms.Select, required=False)
     campaign_confidence = forms.ChoiceField(widget=forms.Select, required=False)
+<<<<<<< HEAD
+=======
+    source = forms.ChoiceField(
+        widget=forms.Select(attrs={'class': 'no_clear'}),
+        label=form_consts.Indicator.SOURCE,
+        required=True)
+    method = forms.CharField(
+        widget=forms.TextInput,
+        label=form_consts.Indicator.SOURCE_METHOD,
+        required=False)
+    reference = forms.CharField(
+        widget=forms.TextInput(attrs={'size': '90'}),
+        label=form_consts.Indicator.SOURCE_REFERENCE,
+        required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
+>>>>>>> upstream/stable_4
 
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorForm, self).__init__(username, *args, **kwargs)
@@ -126,6 +165,9 @@ class UploadIndicatorForm(SourceInForm):
             ("low", "low"),
             ("medium", "medium"),
             ("high", "high")]
+            
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

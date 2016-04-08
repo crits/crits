@@ -8,8 +8,10 @@ from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceI
 from crits.core.widgets import CalWidget
 from crits.core.user_tools import get_user_organization
 from crits.core.handlers import get_source_names, get_item_names
-
 from datetime import datetime
+from crits.vocabulary.relationships import RelationshipTypes
+
+relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
 class EmailOutlookForm(SourceInForm):
     """
@@ -22,6 +24,12 @@ class EmailOutlookForm(SourceInForm):
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     password = forms.CharField(widget=forms.TextInput, required=False, label='Attachment Password')
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
+
     def __init__(self, username, *args, **kwargs):
         super(EmailOutlookForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
@@ -33,6 +41,10 @@ class EmailOutlookForm(SourceInForm):
                                              ("low", "low"),
                                              ("medium", "medium"),
                                              ("high", "high")]
+
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
+
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
@@ -47,6 +59,12 @@ class EmailYAMLForm(SourceInForm):
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     yaml_data = forms.CharField(required=True, widget=forms.Textarea(attrs={'cols':'80', 'rows':'20'}))
     save_unsupported = forms.BooleanField(required=False, initial=True, label="Preserve unsupported attributes")
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
+
     def __init__(self, username, *args, **kwargs):
         super(EmailYAMLForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
@@ -58,6 +76,8 @@ class EmailYAMLForm(SourceInForm):
                                              ("low", "low"),
                                              ("medium", "medium"),
                                              ("high", "high")]
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
@@ -71,6 +91,12 @@ class EmailEMLForm(SourceInForm):
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     filedata = forms.FileField(required=True)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
+
     def __init__(self, username, *args, **kwargs):
         super(EmailEMLForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
@@ -82,6 +108,9 @@ class EmailEMLForm(SourceInForm):
                                              ("low", "low"),
                                              ("medium", "medium"),
                                              ("high", "high")]
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
+        
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
@@ -95,6 +124,12 @@ class EmailRawUploadForm(SourceInForm):
     raw_email = forms.CharField(required=True, widget=forms.Textarea(attrs={'cols':'80', 'rows':'12'}), label="Raw Email")
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
+
     def __init__(self, username, *args, **kwargs):
         super(EmailRawUploadForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
@@ -106,6 +141,9 @@ class EmailRawUploadForm(SourceInForm):
                                              ("low", "low"),
                                              ("medium", "medium"),
                                              ("high", "high")]
+
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
@@ -134,6 +172,11 @@ class EmailUploadForm(SourceInForm):
     raw_body = forms.CharField(required=False, widget=forms.Textarea(attrs={'cols':'80', 'rows':'4'}), label="Raw Body")
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
         super(EmailUploadForm, self).__init__(username, *args, **kwargs)
@@ -148,3 +191,5 @@ class EmailUploadForm(SourceInForm):
                                              ("low", "low"),
                                              ("medium", "medium"),
                                              ("high", "high")]
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO

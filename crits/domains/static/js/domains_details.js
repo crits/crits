@@ -35,6 +35,7 @@
 //              $(this).before('<div></div>').append('foo');
 //          }
 //      });
+        populate_id(id,'Domain');
         details_copy_id('Domain');
         toggle_favorite('Domain');
     }); //$(document).ready

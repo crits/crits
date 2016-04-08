@@ -45,7 +45,11 @@ def list(request):
     List all services.
     """
 
-    all_services = CRITsService.objects().order_by('+name')
+    all_services = CRITsService.objects()
+
+    if all_services:
+        all_services = sorted(all_services, key=lambda item: item.name.lower())
+
     return render_to_response('services_list.html', {'services': all_services},
                               RequestContext(request))
 

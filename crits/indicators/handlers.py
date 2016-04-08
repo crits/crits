@@ -338,7 +338,7 @@ def get_verified_field(data, valid_values, field=None, default=None):
         return value_list[0]
 
 def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
-                         add_domain=False):
+                         add_domain=False, related_id=None, related_type=None, relationship_type=None):
     """
     Handle adding Indicators in CSV format (file or blob).
 
@@ -357,6 +357,12 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     :param add_domain: If the indicators being added are also other top-level
                        objects, add those too.
     :type add_domain: boolean
+    :param related_id: ID for object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create
+    :type relationship_type: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -446,7 +452,8 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         try:
             response = handle_indicator_insert(ind, source, reference,
                                                analyst=username, method=method,
-                                               add_domain=add_domain)
+                                               add_domain=add_domain, related_id=related_id,
+                                               related_type=related_type, relationship_type=relationship_type)
         except Exception, e:
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, str(e))
@@ -478,9 +485,10 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
 def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
                          analyst, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
-                         campaign_confidence=None, confidence=None,
+                         campaign_confidence=None, confidence=None, 
                          description=None, impact=None,
-                         bucket_list=None, ticket=None, cache={}):
+                         bucket_list=None, ticket=None, cache={}, 
+                         related_id=None, related_type=None, relationship_type=None):
     """
     Handle adding an individual indicator.
 
@@ -522,6 +530,12 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     :param cache: Cached data, typically for performance enhancements
                   during bulk uperations.
     :type cache: dict
+    :param related_id: ID for object to create relationship with
+    :type cache: str
+    :param related_type: Type of object to create relationship with
+    :type cache: str
+    :param relationship_type: Type of relationship to create
+    :type cache: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
@@ -568,14 +582,17 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
 
         try:
             return handle_indicator_insert(ind, source, reference, analyst,
-                                           method, add_domain, add_relationship, cache=cache)
+                                           method, add_domain, add_relationship, cache=cache,
+                                        related_id=related_id, related_type=related_type, 
+                                        relationship_type=relationship_type)
         except Exception, e:
             return {'success': False, 'message': repr(e)}
 
     return result
 
 def handle_indicator_insert(ind, source, reference='', analyst='', method='',
-                            add_domain=False, add_relationship=False, cache={}):
+                            add_domain=False, add_relationship=False, cache={}, 
+                            related_id=None, related_type=None, relationship_type=None):
     """
     Insert an individual indicator into the database.
 
@@ -604,6 +621,12 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     :param cache: Cached data, typically for performance enhancements
                   during bulk uperations.
     :type cache: dict
+    :param related_id: ID for object to create relationship with
+    :type cache: str
+    :param related_type: Type of object to create relationship with
+    :type cache: str
+    :param relationship_type: Type of relationship to create
+    :type cache: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed,
@@ -792,6 +815,26 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                             analyst="%s" % analyst,
                             get_rels=False)
         ip.save(username=analyst)
+
+
+    # Code for the "Add Related " Dropdown
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+    indicator.save(username=analyst)
+
+    if related_obj and indicator and relationship_type:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        indicator.add_relationship(related_obj,
+                              relationship_type,
+                              analyst=analyst,
+                              get_rels=False)
+        indicator.save(username=analyst)
 
     # run indicator triage
     if is_new_indicator:

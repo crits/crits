@@ -1173,6 +1173,7 @@ class Releasability(EmbeddedDocument, CritsDocumentFormatter):
 
         analyst = StringField()
         date = DateTimeField()
+        note = StringField()
 
 
     name = StringField()

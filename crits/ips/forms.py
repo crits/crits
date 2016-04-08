@@ -8,7 +8,9 @@ from crits.core.user_tools import get_user_organization
 from crits.core import form_consts
 
 from crits.vocabulary.ips import IPTypes
+from crits.vocabulary.relationships import RelationshipTypes
 
+relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 ip_choices = [(c,c) for c in IPTypes.values(sort=True)]
 
 class AddIPForm(SourceInForm):
@@ -26,6 +28,11 @@ class AddIPForm(SourceInForm):
     confidence = forms.ChoiceField(required=False, label=form_consts.IP.CAMPAIGN_CONFIDENCE)
     add_indicator = forms.BooleanField(widget=forms.CheckboxInput(attrs={'class':'bulkskip'}), required=False, label=form_consts.IP.ADD_INDICATOR)
     indicator_reference = forms.CharField(widget=forms.TextInput(attrs={'size':'90', 'class':'bulkskip'}), required=False, label=form_consts.IP.INDICATOR_REFERENCE)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    relationship_type = forms.ChoiceField(required=False,
+                                          label='Relationship Type',
+                                          widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, choices,  *args, **kwargs):
         super(AddIPForm, self).__init__(username, *args, **kwargs)
@@ -41,6 +48,10 @@ class AddIPForm(SourceInForm):
                                              ('low', 'low'),
                                              ('medium', 'medium'),
                                              ('high', 'high')]
+
+        self.fields['user'].initial = username
+        self.fields['relationship_type'].choices = relationship_choices
+        self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)

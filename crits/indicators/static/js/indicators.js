@@ -258,6 +258,7 @@ $(document).ready(function() {
         submit:'OK'
     });
 
+    populate_id(indicator_id, 'Indicator');
     details_copy_id('Indicator');
     toggle_favorite('Indicator');
 }); //document.ready

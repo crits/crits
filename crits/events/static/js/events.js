@@ -119,6 +119,7 @@ $(document).ready(function() {
     };
 
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt); });
+    populate_id(event_id, 'Event');
     details_copy_id('Event');
     toggle_favorite('Event');
 }); //document.ready
