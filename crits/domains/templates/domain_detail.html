@@ -51,6 +51,9 @@
                     <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{domain.status}}</span>
                 </td>
             </tr>
+            {% with tlp=domain.tlp %}
+                        {% include "tlp_widget.html" %}
+                    {% endwith %}
             {% with sectors=domain.sectors %}
                 {% include "sector_widget.html" %}
             {% endwith %}

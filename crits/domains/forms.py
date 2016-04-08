@@ -4,7 +4,7 @@ from django.forms.utils import ErrorList
 
 from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
-from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
+from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceInForm
 from crits.core.widgets import CalWidget
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
@@ -22,7 +22,7 @@ class TLDUpdateForm(forms.Form):
     required_css_class = 'required'
     filedata = forms.FileField()
 
-class AddDomainForm(forms.Form):
+class AddDomainForm(SourceInForm):
     """
     Django form for adding a domain.
     """
@@ -33,15 +33,7 @@ class AddDomainForm(forms.Form):
     campaign = forms.ChoiceField(widget=forms.Select, required=False,
                                  label=form_consts.Domain.CAMPAIGN)
     confidence = forms.ChoiceField(required=False, label=form_consts.Domain.CAMPAIGN_CONFIDENCE)
-    domain_source = forms.ChoiceField(required=True,
-                                      widget=forms.Select(attrs={'class': 'bulknoinitial'}),
-                                      label=form_consts.Domain.DOMAIN_SOURCE)
-    domain_method = forms.CharField(required=False,
-                                    widget=forms.TextInput,
-                                    label=form_consts.Domain.DOMAIN_METHOD)
-    domain_reference = forms.CharField(widget=forms.TextInput(attrs={'size':'90'}),
-                                       required=False,
-                                       label=form_consts.Domain.DOMAIN_REFERENCE)
+    
     add_ip = forms.BooleanField(required=False,
                                 widget=forms.CheckboxInput(attrs={'class':'bulkskip'}),
                                 label=form_consts.Domain.ADD_IP_ADDRESS)
@@ -76,9 +68,7 @@ class AddDomainForm(forms.Form):
                                         label=form_consts.Domain.ADD_INDICATORS)
 
     def __init__(self, username, *args, **kwargs):
-        super(AddDomainForm, self).__init__(*args, **kwargs)
-        self.fields['domain_source'].choices = self.fields['ip_source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['domain_source'].initial = get_user_organization(username)
+        super(AddDomainForm, self).__init__(username, *args, **kwargs)
         self.fields['ip_source'].initial = get_user_organization(username)
         self.fields['campaign'].choices = [('', '')] + [(c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['confidence'].choices = [('',''),

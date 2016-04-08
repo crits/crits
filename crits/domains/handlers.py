@@ -348,11 +348,12 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
 
     elif not errors:
         username = request.user.username
-        reference = data.get('domain_reference')
-        source_name = data.get('domain_source')
-        method = data.get('domain_method')
+        reference = data.get('source_reference')
+        source_name = data.get('source_name')
+        method = data.get('source_method')
+        tlp = data.get('source_tlp')
         source = [create_embedded_source(source_name, reference=reference,
-                                         method=method, analyst=username)]
+                                         method=method, tlp=tlp, analyst=username)]
         bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
         ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
 

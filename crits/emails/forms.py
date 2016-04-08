@@ -4,14 +4,14 @@ from django.forms.widgets import RadioSelect
 
 from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
-from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
+from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceInForm
 from crits.core.widgets import CalWidget
 from crits.core.user_tools import get_user_organization
 from crits.core.handlers import get_source_names, get_item_names
 
 from datetime import datetime
 
-class EmailOutlookForm(forms.Form):
+class EmailOutlookForm(SourceInForm):
     """
     Django form for uploading MSG files.
     """
@@ -19,21 +19,11 @@ class EmailOutlookForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     msg_file = forms.FileField(label='MSG File', required=True)
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'no_clear'}),
-                               label=form_consts.Email.SOURCE)
-    source_method = forms.CharField(required=False, widget=forms.TextInput,
-                                    label=form_consts.Email.SOURCE_METHOD)
-    source_reference = forms.CharField(required=False,
-                                       widget=forms.TextInput(attrs={'size': '90'}),
-                                       label=form_consts.Email.SOURCE_REFERENCE)
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     password = forms.CharField(widget=forms.TextInput, required=False, label='Attachment Password')
     def __init__(self, username, *args, **kwargs):
-        super(EmailOutlookForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(EmailOutlookForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
         self.fields['campaign'].choices += [(c.name,
                                              c.name
@@ -46,29 +36,19 @@ class EmailOutlookForm(forms.Form):
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
-class EmailYAMLForm(forms.Form):
+class EmailYAMLForm(SourceInForm):
     """
     Django form for uploading an email in YAML format.
     """
 
     error_css_class = 'error'
     required_css_class = 'required'
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'no_clear'}),
-                               label=form_consts.Email.SOURCE)
-    source_method = forms.CharField(required=False, widget=forms.TextInput,
-                                    label=form_consts.Email.SOURCE_METHOD)
-    source_reference = forms.CharField(required=False,
-                                       widget=forms.TextInput(attrs={'size': '90'}),
-                                       label=form_consts.Email.SOURCE_REFERENCE)
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     yaml_data = forms.CharField(required=True, widget=forms.Textarea(attrs={'cols':'80', 'rows':'20'}))
     save_unsupported = forms.BooleanField(required=False, initial=True, label="Preserve unsupported attributes")
     def __init__(self, username, *args, **kwargs):
-        super(EmailYAMLForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(EmailYAMLForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
         self.fields['campaign'].choices += [(c.name,
                                              c.name
@@ -81,28 +61,18 @@ class EmailYAMLForm(forms.Form):
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
-class EmailEMLForm(forms.Form):
+class EmailEMLForm(SourceInForm):
     """
     Django form for uploading an EML email.
     """
 
     error_css_class = 'error'
     required_css_class = 'required'
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'no_clear'}),
-                               label=form_consts.Email.SOURCE)
-    source_method = forms.CharField(required=False, widget=forms.TextInput,
-                                    label=form_consts.Email.SOURCE_METHOD)
-    source_reference = forms.CharField(required=False,
-                                       widget=forms.TextInput(attrs={'size': '90'}),
-                                       label=form_consts.Email.SOURCE_REFERENCE)
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     filedata = forms.FileField(required=True)
     def __init__(self, username, *args, **kwargs):
-        super(EmailEMLForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(EmailEMLForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
         self.fields['campaign'].choices += [(c.name,
                                              c.name
@@ -115,7 +85,7 @@ class EmailEMLForm(forms.Form):
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
-class EmailRawUploadForm(forms.Form):
+class EmailRawUploadForm(SourceInForm):
     """
     Django form for uploading a raw email.
     """
@@ -123,20 +93,10 @@ class EmailRawUploadForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     raw_email = forms.CharField(required=True, widget=forms.Textarea(attrs={'cols':'80', 'rows':'12'}), label="Raw Email")
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'no_clear'}),
-                               label=form_consts.Email.SOURCE)
-    source_method = forms.CharField(required=False, widget=forms.TextInput,
-                                    label=form_consts.Email.SOURCE_METHOD)
-    source_reference = forms.CharField(required=False,
-                                       widget=forms.TextInput(attrs={'size': '120'}),
-                                       label=form_consts.Email.SOURCE_REFERENCE)
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
     def __init__(self, username, *args, **kwargs):
-        super(EmailRawUploadForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(EmailRawUploadForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
         self.fields['campaign'].choices += [(c.name,
                                              c.name
@@ -149,7 +109,7 @@ class EmailRawUploadForm(forms.Form):
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
-class EmailUploadForm(forms.Form):
+class EmailUploadForm(SourceInForm):
     """
     Django form for uploading an email field-by-field.
     """
@@ -174,20 +134,9 @@ class EmailUploadForm(forms.Form):
     raw_body = forms.CharField(required=False, widget=forms.Textarea(attrs={'cols':'80', 'rows':'4'}), label="Raw Body")
     campaign = forms.ChoiceField(required=False, widget=forms.Select)
     campaign_confidence = forms.ChoiceField(required=False, widget=forms.Select)
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'no_clear'}),
-                               label=form_consts.Email.SOURCE)
-    source_method = forms.CharField(required=False, widget=forms.TextInput,
-                                    label=form_consts.Email.SOURCE_METHOD)
-    source_reference = forms.CharField(required=False,
-                                       widget=forms.TextInput(attrs={'size': '90'}),
-                                       label=form_consts.Email.SOURCE_REFERENCE)
 
     def __init__(self, username, *args, **kwargs):
-        super(EmailUploadForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [(c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
-
+        super(EmailUploadForm, self).__init__(username, *args, **kwargs)
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
         self.fields['campaign'].choices = [("","")]
