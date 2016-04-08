@@ -2,14 +2,17 @@ from django.conf import settings
 from django import forms
 
 from crits.core import form_consts
-from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
+from crits.core.forms import (
+    add_bucketlist_to_form,
+    add_ticket_to_form,
+    SourceInForm)
 from crits.core.widgets import CalWidget
 from crits.core.handlers import get_source_names
 from crits.core.user_tools import get_user_organization
 
 from crits.vocabulary.events import EventTypes
 
-class EventForm(forms.Form):
+class EventForm(SourceInForm):
     """
     Django form for creating a new Event.
     """
@@ -26,21 +29,10 @@ class EventForm(forms.Form):
                                                                   'size':'25',
                                                                   'id':'id_occurrence_ip_date'}),
                                           input_formats=settings.PY_FORM_DATETIME_FORMATS)
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'no_clear'}),
-                               label=form_consts.Event.SOURCE)
-    method = forms.CharField(required=False, widget=forms.TextInput,
-                             label=form_consts.Event.SOURCE_METHOD)
-    reference = forms.CharField(required=False, widget=forms.TextInput,
-                                label=form_consts.Event.SOURCE_REFERENCE)
 
     def __init__(self, username, *args, **kwargs):
-        super(EventForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [(c.name,
-                                          c.name) for c in get_source_names(True,
-                                                                               True,
-                                                                               username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(EventForm, self).__init__(username, *args, **kwargs)
+
         self.fields['event_type'].choices = [
             (c,c) for c in EventTypes.values(sort=True)
         ]
