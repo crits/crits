@@ -1,6 +1,5 @@
-from django.conf import settings
 from django import forms
-
+from django.conf import settings
 from crits.campaigns.campaign import Campaign
 from crits.core.forms import (
     add_bucketlist_to_form,
@@ -24,7 +23,6 @@ class IndicatorActivityForm(forms.Form):
     """
     Django form for adding activity.
     """
-
     error_css_class = 'error'
     required_css_class = 'required'
     description = forms.CharField(
@@ -110,26 +108,11 @@ class UploadIndicatorForm(SourceInForm):
     impact = forms.ChoiceField(widget=forms.Select, required=True)
     campaign = forms.ChoiceField(widget=forms.Select, required=False)
     campaign_confidence = forms.ChoiceField(widget=forms.Select, required=False)
-<<<<<<< HEAD
-=======
-    source = forms.ChoiceField(
-        widget=forms.Select(attrs={'class': 'no_clear'}),
-        label=form_consts.Indicator.SOURCE,
-        required=True)
-    method = forms.CharField(
-        widget=forms.TextInput,
-        label=form_consts.Indicator.SOURCE_METHOD,
-        required=False)
-    reference = forms.CharField(
-        widget=forms.TextInput(attrs={'size': '90'}),
-        label=form_consts.Indicator.SOURCE_REFERENCE,
-        required=False)
     related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
     related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
     relationship_type = forms.ChoiceField(required=False,
                                           label='Relationship Type',
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
->>>>>>> upstream/stable_4
 
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorForm, self).__init__(username, *args, **kwargs)

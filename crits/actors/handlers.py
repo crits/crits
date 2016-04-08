@@ -298,15 +298,10 @@ def get_actor_by_name(allowed_sources, actor):
     return actor
 
 def add_new_actor(name, aliases=None, description=None, source=None,
-<<<<<<< HEAD
                   source_method='', source_reference='', source_tlp=None,
-                  campaign=None, confidence=None, user=None,
-                  bucket_list=None, ticket=None):
-=======
-                  source_method='', source_reference='', campaign=None,
-                  confidence=None, analyst=None, bucket_list=None, ticket=None, 
-                  related_id=None, related_type=None, relationship_type=None):
->>>>>>> upstream/stable_4
+                  campaign=None, confidence=None, analyst=None, 
+                  bucket_list=None, ticket=None, related_id=None, 
+                  related_type=None, relationship_type=None):
     """
     Add an Actor to CRITs.
 
@@ -394,9 +389,6 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     if ticket:
         actor.add_ticket(ticket, username)
 
-<<<<<<< HEAD
-    actor.save(username=username)
-=======
     related_obj = None
     if related_id and related_type:
         related_obj = class_from_id(related_type, related_id)
@@ -405,8 +397,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
             retVal['message'] = 'Related Object not found.'
             return retVal
 
-    actor.save(username=analyst)
->>>>>>> upstream/stable_4
+    actor.save(username=username)
 
     if related_obj and actor:
             relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
