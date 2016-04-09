@@ -59,7 +59,7 @@ def class_from_id(type_, _id):
         return None
 
     # make sure it's a string
-    _id = str(_id)
+    #_id = str(_id)
 
     # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
     # the queries below will raise a ValidationError exception.
