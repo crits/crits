@@ -66,6 +66,7 @@ def upsert_target(data, analyst):
 
     bucket_list = False
     ticket = False
+    related_id = False
     if 'department' in data:
         target.department = data['department']
     if 'division' in data:
