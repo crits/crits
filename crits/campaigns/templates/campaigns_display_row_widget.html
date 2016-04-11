@@ -1,4 +1,4 @@
-{% load url from future %}
+
 {% if campaign.name %}
     <tr>
     <td data-field="name"><a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">{{campaign.name}}</a></td>

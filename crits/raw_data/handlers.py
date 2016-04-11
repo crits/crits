@@ -8,7 +8,10 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
@@ -19,6 +22,8 @@ from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.raw_data.raw_data import RawData, RawDataType
 from crits.services.handlers import run_triage, get_supported_services
+from crits.vocabulary.relationships import RelationshipTypes
+
 
 
 def generate_raw_data_csv(request):
@@ -285,7 +290,8 @@ def handle_raw_data_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
                          link_id=None, method='', reference='',
-                         copy_rels=False, bucket_list=None, ticket=None):
+                         copy_rels=False, bucket_list=None, ticket=None,
+                         related_id=None, related_type=None, relationship_type=None):
     """
     Add RawData.
 
@@ -321,6 +327,12 @@ def handle_raw_data_file(data, source_name, user=None,
     :type bucket_list: str(comma separated) or list.
     :param ticket: Ticket(s) to add to this RawData
     :type ticket: str(comma separated) or list.
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               'success' (boolean),
               'message' (str),
@@ -345,8 +357,6 @@ def handle_raw_data_file(data, source_name, user=None,
         }
         return status
 
-    data = data.encode('utf-8')
-
     if len(data) <= 0:
         status = {
             'success':   False,
@@ -355,9 +365,9 @@ def handle_raw_data_file(data, source_name, user=None,
         return status
 
     # generate md5 and timestamp
-    md5 = hashlib.md5(data).hexdigest()
+    md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
     timestamp = datetime.datetime.now()
-    
+
     # generate raw_data
     is_rawdata_new = False
     raw_data = RawData.objects(md5=md5).first()
@@ -374,7 +384,7 @@ def handle_raw_data_file(data, source_name, user=None,
                           version=tool_version,
                           details=tool_details)
         is_rawdata_new = True
-    
+
     # generate new source information and add to sample
     if isinstance(source_name, basestring) and len(source_name) > 0:
         source = create_embedded_source(source_name,
@@ -390,7 +400,7 @@ def handle_raw_data_file(data, source_name, user=None,
         for s in source_name:
             if isinstance(s, EmbeddedSource):
                 raw_data.add_source(s, method=method, reference=reference)
-    
+
     #XXX: need to validate this is a UUID
     if link_id:
         raw_data.link_id = link_id
@@ -402,7 +412,7 @@ def handle_raw_data_file(data, source_name, user=None,
                     raw_data.reload()
                     for rel in rd2.relationships:
                         # Get object to relate to.
-                        rel_item = class_from_id(rel.rel_type, rel.rel_object_id)
+                        rel_item = class_from_id(rel.rel_type, rel.object_id)
                         if rel_item:
                             raw_data.add_relationship(rel_item,
                                                       rel.relationship,
@@ -417,6 +427,25 @@ def handle_raw_data_file(data, source_name, user=None,
 
     if ticket:
         raw_data.add_ticket(ticket, user);
+
+    related_obj = None
+    if related_id and related_type:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+    raw_data.save(username=user)
+
+    if related_obj and relationship_type and raw_data:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        raw_data.add_relationship(related_obj,
+                              relationship_type,
+                              analyst=user,
+                              get_rels=False)
+        raw_data.save(username=user)
+        raw_data.reload()
 
     # save raw_data
     raw_data.save(username=user)

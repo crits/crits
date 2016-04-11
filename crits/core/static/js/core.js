@@ -237,6 +237,55 @@ function editUser(user) {
     $( "#add-new-user-form" ).dialog( "open" );
 }
 
+function editAction(action, object_types, preferred) {
+    var me = $("#add-new-action-form input[name='action']");
+    var ots = $("#add-new-action-form select[name='object_types']");
+    var prefs = $("#add-new-action-form textarea[name='preferred']");
+    me.val(action);
+    me.change();
+	var ot_list = object_types.split(",");
+	ots.val(ot_list);
+	var prep = preferred.replace(/\|\|/g, "\n").replace(/\|/g, ", ");
+	prefs.val(prep);
+    $("#add-new-action-form").dialog("open");
+}
+
+function deleteSignatureDependency(coll, oid)
+{
+   //get the attribute of the row tr element, if success, this will be removed
+   var rowString = "[data-record-key='" + oid + "']";
+   var rowSel = "tr" + rowString;
+
+   var answer = confirm("This will delete the Signature Dependency. Are you sure?" );
+   if(answer) {
+    var me = $("a#to_delete_"+oid);
+    $.ajax({
+        type: "POST",
+        url: delete_signature_dependency,
+        data: {
+            coll: coll,
+            oid: oid,
+        },
+        datatype: 'json',
+        success: function(data) {
+                //delete the row
+                if(data.success) {
+                //should be equal to 1 selecting on key
+                  if($(rowSel).length>0) {
+                   $(rowSel).get(0).remove();
+                  }
+
+                } else {
+                    //console.log("Failed to delete the signature, returned");
+                }
+        },
+        });
+    } else {
+        //console.log("Deletion cancelled by user");
+    }
+
+}
+
 function toggleItemActive(coll, oid) {
     var me = $( "a#is_active_" + oid);
     $.ajax({
@@ -332,6 +381,23 @@ function delete_notification_click(e) {
         success: function(data) {
             if (data.success) {
                 elem.parent().parent().remove();
+            }
+        }
+    });
+}
+
+function toggle_preferred_action_from_jtable(e) {
+    e.preventDefault();
+    var me = $(e.currentTarget);
+    var obj_id = me.attr('data-id');
+    var obj_type = me.attr('data-type');
+    $.ajax({
+        type: "POST",
+        data: {'obj_type': obj_type, 'obj_id': obj_id},
+        url: add_preferred_actions,
+        success: function(data) {
+            if (data.success == false) {
+                error_message_dialog("Error", data.message);
             }
         }
     });
@@ -554,6 +620,9 @@ function jtRecordsLoaded(event,data, button) {
 
     // Also add an attribute for the data type.
     $(jtable).find('.favorites_icon_jtable').attr('data-type', data.serverResponse.crits_type);
+
+    // Also add an attribute for the data type to the actions button
+    $(jtable).find('.preferred_actions_jtable').attr('data-type', data.serverResponse.crits_type);
 }
 
 function link_jtable_column (data, column, baseurl, campbase) {
@@ -751,6 +820,11 @@ $(document).ready(function() {
     //bind remove_favorite click
     $(document).on('click', '.remove_favorite', function(e) {
         remove_favorite(e);
+    });
+
+    // bind the preferred actions from jtable.
+    $(document).on('click', '.preferred_actions_jtable', function(e) {
+        toggle_preferred_action_from_jtable(e);
     });
     //setup source "accordion" effect
     //  toggle on arrow icon
@@ -1072,6 +1146,46 @@ $(document).ready(function() {
         },
         close: function() {
                         $(":input", "#form-add-new-user").each(function() {
+                                $(this).val('');
+                        });
+        },
+    });
+
+    $("#form-add-new-action").off().submit(function(e) {
+        e.preventDefault();
+        var result = $(this).serialize();
+        $.ajax({
+            type: "POST",
+            url: new_action,
+            data: result,
+            datatype: 'json',
+            success: function(data) {
+                $("#form-add-new-action-results").show().css('display', 'table');
+                $("#form-add-new-action-results").html(data.message);
+                if (data.form) {
+                   $('#form-add-new-action').children('table').contents().replaceWith($(data.form));
+                }
+            }
+        });
+    });
+    $( "#add-new-action-form" ).dialog({
+        autoOpen: false,
+        modal: true,
+        width: "auto",
+        height: "auto",
+        buttons: {
+            "Add/Edit Action": function(e) {
+                $("#form-add-new-action").submit();
+            },
+            "Cancel": function() {
+                $(":input", "#form-add-new-action").each(function() {
+                    $(this).val('');
+                });
+                $( this ).dialog( "close" );
+            },
+        },
+        close: function() {
+                        $(":input", "#form-add-new-action").each(function() {
                                 $(this).val('');
                         });
         },
@@ -1458,4 +1572,21 @@ $(document).ready(function() {
         });
     });
 
+    // Handle preferred action clicks
+    $("#preferred_actions").click(function() {
+        $.ajax({
+            type: "POST",
+            async: false,
+            url: add_preferred_actions,
+            data: {'obj_type': subscription_type, 'obj_id': subscription_id},
+            success: function(data) {
+                if (data.success) {
+                    $("#action_listing_header").show();
+                    $("#action_listing > tbody:last-child").append(data.html);
+                } else {
+                    error_message_dialog('Action Error', data.message);
+                }
+            }
+        });
+    });
 }); //document.ready

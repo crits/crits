@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 
 {% block title %}Domain Details{% endblock %}
 
@@ -8,6 +8,10 @@
 {% endblock %}
 
 {% block content %}
+
+<script>
+    var domain_id = "{{ domain.id | escapejs}}";
+</script>
 
 <div id="tabnav" class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
@@ -72,6 +76,13 @@
         {% include 'details_options_widget.html' %}
         {% with bucket_list=domain.bucket_list %}
             {% include 'bucket_list_widget.html' %}
+        {% endwith %}
+        {% include 'add_related_widget.html' %}
+
+    </div>
+    <div class="content_box">
+        {% with obj=domain obj_type="Domain" %}
+            {% include 'action_listing_widget.html' %}
         {% endwith %}
     </div>
     <div>

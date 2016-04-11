@@ -45,7 +45,11 @@ def list(request):
     List all services.
     """
 
-    all_services = CRITsService.objects().order_by('+name')
+    all_services = CRITsService.objects()
+
+    if all_services:
+        all_services = sorted(all_services, key=lambda item: item.name.lower())
+
     return render_to_response('services_list.html', {'services': all_services},
                               RequestContext(request))
 
@@ -97,7 +101,7 @@ def enable(request, name):
     """
 
     result = set_enabled(name, True, request.user.username)
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 
 @user_passes_test(user_is_admin)
@@ -107,7 +111,7 @@ def disable(request, name):
     """
 
     result = set_enabled(name, False, request.user.username)
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 
 @user_passes_test(user_is_admin)
@@ -117,7 +121,7 @@ def enable_triage(request, name):
     """
 
     result = set_triage(name, True, request.user.username)
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 
 @user_passes_test(user_is_admin)
@@ -127,7 +131,7 @@ def disable_triage(request, name):
     """
 
     result = set_triage(name, False, request.user.username)
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 
 @user_passes_test(user_is_admin)
@@ -141,7 +145,7 @@ def edit_config(request, name):
         results = do_edit_config(name, analyst, post_data=request.POST)
         if 'service' in results:
             del results['service']
-        return HttpResponse(json.dumps(results), mimetype="application/json")
+        return HttpResponse(json.dumps(results), content_type="application/json")
     elif request.method == "POST" and not request.is_ajax():
         error = results['config_error']
         return render_to_response('error.html',
@@ -174,7 +178,7 @@ def get_form(request, name, crits_type, identifier):
     if not service:
         msg = 'Service "%s" is unavailable. Please review error logs.' % name
         response['error'] = msg
-        return HttpResponse(json.dumps(response), mimetype="application/json")
+        return HttpResponse(json.dumps(response), content_type="application/json")
 
     # Get the class that implements this service.
     service_class = crits.services.manager.get_service_class(name)
@@ -190,7 +194,7 @@ def get_form(request, name, crits_type, identifier):
     else:
         response['form'] = form_html
 
-    return HttpResponse(json.dumps(response), mimetype="application/json")
+    return HttpResponse(json.dumps(response), content_type="application/json")
 
 
 @user_passes_test(user_can_view_data)
@@ -208,7 +212,7 @@ def refresh_services(request, crits_type, identifier):
         msg = 'Could not find object to refresh!'
         response['success'] = False
         response['html'] = msg
-        return HttpResponse(json.dumps(response), mimetype="application/json")
+        return HttpResponse(json.dumps(response), content_type="application/json")
     if hasattr(klass, 'source'):
         obj = klass.objects(id=identifier,source__name__in=sources).first()
     else:
@@ -217,7 +221,7 @@ def refresh_services(request, crits_type, identifier):
         msg = 'Could not find object to refresh!'
         response['success'] = False
         response['html'] = msg
-        return HttpResponse(json.dumps(response), mimetype="application/json")
+        return HttpResponse(json.dumps(response), content_type="application/json")
 
     # Get analysis results.
     results = AnalysisResult.objects(object_type=crits_type,
@@ -241,7 +245,7 @@ def refresh_services(request, crits_type, identifier):
                                          'service_list': service_list},
                                         RequestContext(request))
 
-    return HttpResponse(json.dumps(response), mimetype="application/json")
+    return HttpResponse(json.dumps(response), content_type="application/json")
 
 
 @user_passes_test(user_can_view_data)
@@ -267,7 +271,7 @@ def service_run(request, name, crits_type, identifier):
     if result['success'] == True:
         return refresh_services(request, crits_type, identifier)
     else:
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
 
 
 @user_passes_test(user_is_admin)

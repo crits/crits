@@ -86,45 +86,13 @@ function changeRelationshipReason(event, element) {
 
 
 
-
 $(document).ready(function() {
-    function more_relationship_types(e, widget) {
-        $.ajax({
-            type: "POST",
-            url: get_relationship_type_dropdown,
-            data: {'all': true},
-            datatype: 'json',
-            id: 'button-relationships-more',
-            success: function(data) {
-                if (data.types) {
-                    var sel = $(widget);
-                    sel.empty();
-                    var sorted = [];
-                    $.each(data.types, function(key, value) {
-                        sorted.push(key);
-                    });
-                    sorted.sort();
-                    $.each(sorted, function(key, value) {
-                        sel.append('<option value="' + value + '">' + value + '</option>');
-                    });
-                }
-            }
-        });
-    }
     function forge_relationship_dialog(e) {
         var dialog = $(this);
         var form = dialog.find("form");
         var widget = dialog.dialog("activatedBy");  // dialog-persona saves the element that opened the dialog
         get_stored_item_data(get_item_data_url);
         if (!form.attr("_dialog_once")) {
-            var ind_types = form.find(".relationship-types");
-            if (ind_types.length) {
-            $('<button>More</button>').click(function(e) {
-                e.preventDefault();
-                more_relationship_types(e, "select#id_forward_relationship");
-                })
-                .insertAfter(ind_types);
-            }
             $('<button>Get Clipboard</button>').click(function(e) {
                 e.preventDefault();
                 get_stored_item_data(get_item_data_url);

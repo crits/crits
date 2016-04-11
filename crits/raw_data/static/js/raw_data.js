@@ -116,6 +116,7 @@ function upload_new_version_dialog_submit(e) {
 }
 
 $(document).ready(function() {
+    populate_id(raw_data_id, 'RawData');
     $('#raw_data_tool_details').editable(function(value, settings) {
         return function(value, settings, elem) {
             var data = {

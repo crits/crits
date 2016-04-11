@@ -181,6 +181,10 @@ in the system.
   Samples are binaries which you want to perform some level of analysis on due
   to their potential for being malicious.
 
+**Signature**
+  Signatures are top-level objects used for identifying and storing signature definitions.
+  They can have relationships to samples and also be used in a future services
+
 **Source**
    Source is the term used to refer, very simply, to the intelligence
    source from which an object was imported. Alternatively, they
@@ -807,6 +811,7 @@ information, as follows:
 
 :Indicator Type: Choose the type of indicator from the drop-down.
 :Value: Define the value for the indicator
+:Description: Enter a brief description for the indicator
 :Confidence: Select the confidence level for the indicator
 :Impact: Select the level of impact for the indicator
 :Campaign: (Optional) Select a campaign with which to associate the
@@ -1087,6 +1092,71 @@ will change to an \'X\', indicating that you are now subscribed. To
 unsubscribe, click the \'X\' and it will turn back to a check mark to
 confirm.
 
+Signature Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the Signatures to which you have
+access. The table on this page shows, by default, the first 25
+Signatures sorted by date added. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New Signature
+-------------------------------------------
+There are two common ways to add a new Signature to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"Signatures\".
+        2. From the `Signature Page`_, click the \"Add Signature\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new Signature entry. A Signature consists of eight pieces of
+information, as follows:
+
+:Title: The title of the signature to record
+:Data Type: Choose the data type of record
+:Description: Full description of the signature record
+:Data: Actual signature
+:Source: From the drop-down, select the source of the Signature
+:Source Method: (Optional) Record how the Signature was sourced
+:Source Reference: (Optional) Reference for the Signature source
+:Bucket List: This is a list of buckets you want to associate with this Signature.
+:Ticket: Associated Ticket.
+
+Once these fields are filled out, press \"Add Signature\". You should
+see a message that the Signature was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the Signature, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new Signature in the table.
+
+Viewing\/Editing an Existing Signature
+-------------------------------------------
+
+Opening an Signature via the `Signature Page`_ or `Advanced Search`_ will bring
+up the Signature information page.
+
+From here, you can view all of the fields that are associated with
+the Signature object. The tabs at the top of the screen move you
+between the various child objects of the indicator. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.
+
+For more information on controls, pleas see the `Terms
+and Concepts`_ section.
+
+Subscribing to an Signature
+-------------------------------------------
+
+When `Viewing\/Editing an Existing Signature`_, you have the option
+to subscribe to it so that it will show up on your `User Profile
+Page`_ under the \"Subscriptions\" tab. Simply select the blue
+checkmark next to your `Assigned Role`_. When you do, the check mark
+will change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
 Target Page
 ===========================================
 
@@ -1266,11 +1336,18 @@ you use search operators in the global search box. Here's an example:
 
 You'll notice a couple things here. The first is that there is a "c-" in front
 of the field name. This tells the API that this parameter should be used as a
-field to search against to limit your results. Second is that there is no
-operators for defining AND or OR. Currently this only supports AND operations.
-In our example, only samples with a Campaign Name of "Bad Guys" AND a filename
-of "foo.txt" will be returned to us. Finally, in this format the fields are both
-full matches.
+field to search against to limit your results. In our example, only samples with
+a Campaign Name of "Bad Guys" AND a filename of "foo.txt" will be returned to
+us. Finally, in this format the fields are both full matches.
+
+The above assumes the parameters are to be used in an AND query. If you wish to
+instead use your parameters in an OR query, you can add "or=1" to your parameter
+list:
+
+        /api/v1/samples/?or=1&c-campaign.name=Bad Guys&c-filename=foo.txt
+
+This will return samples with a Campaign Name of "Bad Guys" OR a filename of
+"foo.txt".
 
 As long as you have a "c-" in front of the parameter, you can search against any
 field in the database, whether it is a CRITs supported field or not!
@@ -1581,7 +1658,7 @@ Unique POST Parameters:
 :add_ip: Tell the API that you are also adding an IP related to this domain.
 :domain: The domain name.
 :ip: The IP you want to relate to this domain.
-:ip_type: The type of the IP ('Address - ipv4-addr' is most common).
+:ip_type: The type of the IP ('IPv4 Address' is most common).
 :ip_source: The source of the IP.
 :ip_method: The method in which you acquired this IP from the source.
 :ip_reference: The reference about this IP source.
@@ -1694,6 +1771,7 @@ Unique POST Parameters:
 :threat_type: The threat type of the Indicator.
 :attack_type: The attack type of the Indicator.
 :value: Indicator value.
+:description: A description of the Indicator.
 
 Indicator Activity API
 -------------------------------------------
@@ -1798,6 +1876,10 @@ Unique POST Parameters:
 :upload_type: One of "metadata" or "file".
 :filename: The name of the file if this is a "metadata" upload.
 :md5: The MD5 of the file if this is a "metadata" upload.
+:sha1: The SHA1 of the file if this is a "metadata" upload.
+:sha256: The SHA256 of the file if this is a "metadata" upload.
+:size: The size of the file if this is a "metadata" upload.
+:mimetype: The mimetype of the file if this is a "metadata" upload.
 :filedata: The sample if the upload type is "file".
 :password: The password to unzip the file if it is zipped and the upload type is "file".
 :file_format: The format of the file if the upload type is "file".
@@ -1846,6 +1928,7 @@ Unique POST Parameters:
 :result: The 'result' contents of your analysis result.
 :result_type: The 'Type' of your result.
 :result_subtype: The 'subtype' of your result.
+:result_is_batch: Set to "1" if you are pushing multiple results.
 :log_message: The contents of the log message.
 :log_level: The level of the log (defaults to 'info').
 :status: The status to set the task to when it is finished.
@@ -1857,6 +1940,36 @@ Unique POST Parameters:
 If you include the "result" field, you will be required to also provide the
 "result_type" and "result_subtype". Also, if you include the "log_message"
 field, "log_level" will be set to "info" if it is not provided.
+
+If you want to submit multiple results at once you have to set "result_is_batch"
+to "1" and supply result, result_type, and result_subtype as JSON list. Make sure
+that all three lists have the same length so there is a type and subtype for each
+result.
+
+Signature API
+-------------------------------------------
+
+GET:
+
+        /api/v1/signatures/
+
+        /api/v1/signatures/<object_id>/
+
+POST:
+
+        /api/v1/signatures/
+
+Unique POST Parameters:
+
+:copy_relationships: Copy the relationships of the linked signature version.
+
+- Requires a link_id
+
+:data: The signature that will be added.
+:description: Description of the signature.
+:data_type: The type of signature. Must match choices in the database.
+:link_id: The Link ID of an existing version of this signature.
+:title: Title for the signature.
 
 Target API
 -------------------------------------------
@@ -1913,10 +2026,20 @@ Here is a list of currently exposed handlers:
 Common PATCH actions for all TLOs
 ---------------------------------
 
+:action_add:
+:action_update:
+:action_remove:
 :add_object:
 :add_releasability:
+:description_update:
 :forge_relationship:
 :run_service:
+:source_add_update:
+:source_remove:
+:status_update:
+:ticket_add:
+:ticket_update:
+:ticket_remove:
 
 Actor PATCH actions
 -------------------
@@ -1927,3 +2050,22 @@ Actor PATCH actions
 :remove_attribution:
 :set_actor_name:
 :update_actor_aliases:
+
+Indicator PATCH actions
+-----------------------
+
+:activity_add:
+:activity_remove:
+:activity_update:
+:ci_update:
+:set_indicator_attack_type:
+:set_indicator_threat_type:
+
+Signature PATCH actions
+-----------------------
+:update_dependency:
+:update_max_version:
+:update_min_version:
+:update_signature_data:
+:update_signature_type:
+:update_title:

@@ -8,6 +8,7 @@
    var edit_backdoor_name = "{% url 'crits.backdoors.views.edit_backdoor_name' backdoor.id|urlencode %}";
    var edit_backdoor_version = "{% url 'crits.backdoors.views.edit_backdoor_version' backdoor.id|urlencode %}";
    var update_backdoor_aliases = "{% url 'crits.backdoors.views.edit_backdoor_aliases' %}";
+   var backdoor_id = "{{backdoor.id | escapejs}}"
 </script>
 
 <div id="tabnav" class="tabnav" style="font-size:90%">
@@ -103,7 +104,13 @@
          {% with bucket_list=backdoor.bucket_list %}
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
+         {% include 'add_related_widget.html' %}
      </div>
+    <div class="content_box">
+        {% with obj=backdoor obj_type="Backdoor" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
      <div>
 	    {% with obj=backdoor obj_type=subscription.type %}
                 {% include 'tickets_listing_widget.html' %}

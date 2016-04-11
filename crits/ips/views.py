@@ -98,7 +98,7 @@ def bulk_add_ip(request):
 
         return HttpResponse(json.dumps(response,
                             default=json_handler),
-                            mimetype='application/json')
+                            content_type="application/json")
     else:
         return render_to_response('bulk_add_default.html', {'formdict': formdict,
                                                             'title': "Bulk Add IPs",
@@ -137,6 +137,9 @@ def add_update_ip(request, method):
             indicator_reference = cleaned_data.get('indicator_reference')
             bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+            related_id = cleaned_data['related_id']
+            related_type = cleaned_data['related_type']
+            relationship_type = cleaned_data['relationship_type']
 
             result = ip_add_update(ip,
                                    ip_type,
@@ -149,7 +152,10 @@ def add_update_ip(request, method):
                                    bucket_list=bucket_list,
                                    ticket=ticket,
                                    is_add_indicator=add_indicator,
-                                   indicator_reference=indicator_reference)
+                                   indicator_reference=indicator_reference,
+                                   related_id=related_id,
+                                   related_type=related_type,
+                                   relationship_type=relationship_type)
             if 'message' in result:
                 if not isinstance(result['message'], list):
                     result['message'] = [result['message']]
@@ -163,11 +169,11 @@ def add_update_ip(request, method):
                 result['message'].insert(0, message)
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
-                                mimetype='application/json')
+                                content_type="application/json")
 
         return HttpResponse(json.dumps({'success': False,
                                         'form':form.as_table()}),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response("error.html",
                               {'error': 'Expected AJAX/POST'},
                               RequestContext(request))
@@ -187,7 +193,7 @@ def remove_ip(request):
             result = ip_remove(request.POST['key'],
                                request.user.username)
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         error = 'You do not have permission to remove this item.'
         return render_to_response("error.html",
                                   {'error': error},

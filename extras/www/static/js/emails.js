@@ -67,7 +67,8 @@ $(document).ready(function(){
     $(".create-indicator").off().click(function(event) {
         var me = $(this);
         data = {
-            'type': $(this).attr('type'),
+            'type': $(this).attr('data-type'),
+            'field': $(this).attr('data-field'),
         };
 
         // Might be nicer if this was a spinning icon, but working with what we have handy
@@ -388,6 +389,8 @@ $(document).ready(function(){
     };
 
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt); });
+
+    populate_id(email_id, 'Email');
     details_copy_id('Email');
     toggle_favorite('Email');
 });

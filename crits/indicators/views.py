@@ -13,18 +13,13 @@ from django.template.loader import render_to_string
 from crits.core.crits_mongoengine import json_handler
 from crits.core.user_tools import user_can_view_data, is_admin
 from crits.core import form_consts
-from crits.indicators.forms import NewIndicatorActionForm, UploadIndicatorCSVForm
+from crits.indicators.forms import UploadIndicatorCSVForm
 from crits.indicators.forms import UploadIndicatorForm, UploadIndicatorTextForm
-from crits.indicators.forms import IndicatorActionsForm
 from crits.indicators.forms import IndicatorActivityForm
 from crits.indicators.handlers import (
-    add_new_indicator_action,
     indicator_remove,
     handle_indicator_csv,
     handle_indicator_ind,
-    action_add,
-    action_update,
-    action_remove,
     activity_add,
     activity_update,
     activity_remove,
@@ -82,35 +77,6 @@ def indicators_listing(request, option=None):
     if option == "csv":
         return generate_indicator_csv(request)
     return generate_indicator_jtable(request, option)
-
-@user_passes_test(user_can_view_data)
-def new_indicator_action(request):
-    """
-    Add a new Indicator action. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST' and request.is_ajax():
-        form = NewIndicatorActionForm(request.POST)
-        analyst = request.user.username
-        if form.is_valid():
-            result = add_new_indicator_action(form.cleaned_data['action'],
-                                              analyst)
-            if result:
-                message = {'message': '<div>Indicator Action added successfully!</div>',
-                           'success': True}
-            else:
-                message = {'message': '<div>Indicator Action addition failed!</div>',
-                           'success': False}
-        else:
-            message = {'form': form.as_table()}
-        return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
-    return render_to_response('error.html',
-                              {'error': 'Expected AJAX POST'})
 
 @user_passes_test(user_can_view_data)
 def remove_indicator(request, _id):
@@ -176,7 +142,10 @@ def upload_indicator(request):
                                               request.POST['method'],
                                               request.POST['reference'],
                                               "file",
-                                              username, add_domain=True)
+                                              username, add_domain=True,
+                                              related_id=request.POST['related_id'],
+                                              related_type=request.POST['related_type'],
+                                              relationship_type=request.POST['relationship_type'])
                 if result['success']:
                     message = {'message': ('<div>%s <a href="%s">Go to all'
                                            ' indicators</a></div>' %
@@ -194,7 +163,10 @@ def upload_indicator(request):
                                               request.POST['reference'],
                                               "ti",
                                               username,
-                                              add_domain=True)
+                                              add_domain=True,
+                                              related_id=request.POST['related_id'],
+                                              related_type=request.POST['related_type'],
+                                              relationship_type=request.POST['relationship_type'])
                 if result['success']:
                     message = {'message': ('<div>%s <a href="%s">Go to all'
                                            ' indicators</a></div>' %
@@ -217,12 +189,16 @@ def upload_indicator(request):
                     request.POST['method'],
                     request.POST['reference'],
                     add_domain=True,
+                    description=request.POST['description'],
                     campaign=request.POST['campaign'],
                     campaign_confidence=request.POST['campaign_confidence'],
                     confidence=request.POST['confidence'],
                     impact=request.POST['impact'],
                     bucket_list=request.POST[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
-                    ticket=request.POST[form_consts.Common.TICKET_VARIABLE_NAME])
+                    ticket=request.POST[form_consts.Common.TICKET_VARIABLE_NAME],
+                    related_id=request.POST['related_id'],
+                    related_type=request.POST['related_type'],
+                    relationship_type=request.POST['relationship_type'])
                 if result['success']:
                     indicator_link = ((' - <a href=\"%s\">Go to this '
                                        'indicator</a> or <a href="%s">all '
@@ -249,90 +225,11 @@ def upload_indicator(request):
 
         if request.is_ajax():
             return HttpResponse(json.dumps(message),
-                                mimetype="application/json")
+                                content_type="application/json")
         else: #file upload
             return render_to_response('file_upload_response.html',
                                       {'response': json.dumps(message)},
                                       RequestContext(request))
-
-@user_passes_test(user_can_view_data)
-def add_update_action(request, method, indicator_id):
-    """
-    Add/update an indicator's action. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param method: Whether we are adding or updating.
-    :type method: str ("add", "update")
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        username = request.user.username
-        form = IndicatorActionsForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            add = {
-                'action_type': data['action_type'],
-                'begin_date': data['begin_date'] if data['begin_date'] else '',
-                'end_date': data['end_date'] if data['end_date'] else '',
-                'performed_date': data['performed_date'] if data['performed_date'] else '',
-                'active': data['active'],
-                'reason': data['reason'],
-                'analyst': username,
-            }
-            if method == "add":
-                add['date'] = datetime.datetime.now()
-                result = action_add(indicator_id, add)
-            else:
-                date = datetime.datetime.strptime(data['date'],
-                                                  settings.PY_DATETIME_FORMAT)
-                date = date.replace(microsecond=date.microsecond/1000*1000)
-                add['date'] = date
-                result = action_update(indicator_id, add)
-            if 'object' in result:
-                result['html'] = render_to_string('indicators_action_row_widget.html',
-                                                  {'action': result['object'],
-                                                   'admin': is_admin(username),
-                                                   'indicator_id': indicator_id})
-            return HttpResponse(json.dumps(result,
-                                           default=json_handler),
-                                mimetype='application/json')
-        else: #invalid form
-            return HttpResponse(json.dumps({'success': False,
-                                            'form': form.as_table()}),
-                                mimetype='application/json')
-    return HttpResponse({})
-
-@user_passes_test(user_can_view_data)
-def remove_action(request, indicator_id):
-    """
-    Remove an indicator's action. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param indicator_id: The ObjectId of the indicator to update.
-    :type indicator_id: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == "POST" and request.is_ajax():
-        analyst = request.user.username
-        if is_admin(analyst):
-            date = datetime.datetime.strptime(request.POST['key'],
-                                              settings.PY_DATETIME_FORMAT)
-            date = date.replace(microsecond=date.microsecond/1000*1000)
-            result = action_remove(indicator_id, date, analyst)
-            return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
-        else:
-            error = "You do not have permission to remove this item."
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
-    return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
 def add_update_activity(request, method, indicator_id):
@@ -357,28 +254,27 @@ def add_update_activity(request, method, indicator_id):
                 'start_date': data['start_date'] if data['start_date'] else '',
                 'end_date': data['end_date'] if data['end_date'] else '',
                 'description': data['description'],
-                'analyst': username,
             }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                result = activity_add(indicator_id, add)
+                result = activity_add(indicator_id, add, username)
             else:
                 date = datetime.datetime.strptime(data['date'],
                                                   settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                result = activity_update(indicator_id, add)
+                result = activity_update(indicator_id, add, username)
             if 'object' in result:
                 result['html'] = render_to_string('indicators_activity_row_widget.html',
                                                   {'activity': result['object'],
                                                    'admin': is_admin(username),
                                                    'indicator_id': indicator_id})
             return HttpResponse(json.dumps(result, default=json_handler),
-                                mimetype='application/json')
+                                content_type="application/json")
         else: #invalid form
             return HttpResponse(json.dumps({'success': False,
                                             'form': form.as_table()}),
-                                mimetype='application/json')
+                                content_type="application/json")
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -401,7 +297,7 @@ def remove_activity(request, indicator_id):
             date = date.replace(microsecond=date.microsecond/1000*1000)
             result = activity_remove(indicator_id, date, analyst)
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             error = "You do not have permission to remove this item."
             return render_to_response("error.html",
@@ -429,7 +325,7 @@ def update_ci(request, indicator_id, ci_type):
                                                  ci_type,
                                                  value,
                                                  analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def indicator_and_ip(request):
@@ -477,7 +373,7 @@ def indicator_and_ip(request):
             'success': False,
             'message': "Expected AJAX POST",
         }
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def indicator_from_tlo(request):
@@ -525,7 +421,7 @@ def indicator_from_tlo(request):
             'success':  False,
             'message':  "Expected AJAX POST"
         }
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def get_indicator_type_dropdown(request):
@@ -552,7 +448,7 @@ def get_indicator_type_dropdown(request):
             for type_ in type_list:
                 dd_final[type_] = type_
             result = {'types': dd_final}
-            return HttpResponse(json.dumps(result), mimetype="application/json")
+            return HttpResponse(json.dumps(result), content_type="application/json")
         else:
             error = "Expected AJAX"
             return render_to_response("error.html",
@@ -588,7 +484,7 @@ def update_indicator_type(request, indicator_id):
         else:
             message = {'success': False}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -619,7 +515,7 @@ def update_indicator_threat_type(request, indicator_id):
         else:
             message = {'success': False}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -650,7 +546,7 @@ def update_indicator_attack_type(request, indicator_id):
         else:
             message = {'success': False}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",

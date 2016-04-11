@@ -5,7 +5,7 @@
 <!--[if !(IE 8)]><!-->
 <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-US">
 <!--<![endif]-->
-{% load url from future %}
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -100,6 +100,8 @@
     var login_user = "{% url 'crits.core.views.login' %}";
     var get_item_data_url = "{% url 'crits.core.views.get_item_data' %}";
     var get_dialog_url = "{% url 'crits.core.views.get_dialog' %}";
+    var get_actions_for_tlo = "{% url 'crits.core.views.get_actions_for_tlo' %}";
+    var add_preferred_actions = "{% url 'crits.core.views.add_preferred_actions' %}";
     //only activates the qtip if in production
     {% if not hide_git_hash%}
         $(document).ready(function(){
@@ -335,6 +337,18 @@
         <input class="inputbutton" type="submit" name="search" value="Search" />
       </form>
     </li>
+     <li>
+      <b>Signatures</b>
+      <form method="get" id="signature_search" action="{% url 'crits.signatures.views.signatures_listing' %}">
+        <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
+        <select name="search_type" class='selectbox'>
+          <option value="data" selected="selected">Data</option>
+          <option value="data_type">Data Type</option>
+          <option value="title">Title</option>
+        </select>
+        <input class="inputbutton" type="submit" name="search" value="Search" />
+      </form>
+    </li>
     <li>
       <b>Comments</b>
       <form method="get" id="comment_search" action="{% url 'crits.comments.views.activity' %}">
@@ -526,6 +540,11 @@
         {% endfor %}
       </ul>
     </li>
+     <li class='nav_objects mmenu_item'>
+      <a href="{% url 'crits.signatures.views.signatures_listing' %}">Signatures</a>
+      <a href id="new-signature" class="ui-icon ui-icon-plusthick add
+          dialogClick" dialog="new-signature" persona="new" title="New Signature"></a>
+    </li>
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.targets.views.targets_listing' %}">Targets</a>
       <a href id="new-target" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-target" persona="new" title="New Target"></a>
@@ -555,12 +574,18 @@
           <a href class="dialogClick" persona="new" dialog="actor_identifier_type_add" id="actor_identifier_type_add">Actor Identifier Type</a>
         </li>
         <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="indicator_action_add" id="indicator_action_add">Indicator Action</a>
+          <a href class="dialogClick" persona="new" dialog="action_add" id="action_add">Action</a>
         </li>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="raw_data_type_add" id="raw_data_type_add">Raw Data Type</a>
         </li>
         {% if user_role == 'Administrator' %}
+        <li class='mmenu_item'>
+          <a href class="dialogClick" persona="new" dialog="signature_type_add" id="signature_type_add">Signature Type</a>
+        </li>
+        <li class='mmenu_item'>
+          <a href class="dialogClick" persona="new" dialog="signature_dependency_add" id="signature_dependency_add">Signature Dependency</a>
+        </li>
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="source_create" id="source_create">Source</a>
         </li>
@@ -614,7 +639,7 @@
                             <a class='controlPanelNav' sub_node='campaign_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#campaign_button">Campaigns</a>
                         </li>
                         <li class='mmenu_item'>
-                            <a class='controlPanelNav' sub_node='indicatoraction_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#indicatoraction_button">Indicator Actions</a>
+                            <a class='controlPanelNav' sub_node='action_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#action_button">Actions</a>
                         </li>
                         <li class='mmenu_item'>
                             <a class='controlPanelNav' sub_node='objecttype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#objecttype_button">Object Types</a>
@@ -678,7 +703,6 @@
 <script type="text/javascript" src="{{ STATIC_URL }}js/collapsible.js"></script>
 
 <script type="text/javascript" src="{{ STATIC_URL }}js/objects.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/emails.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/relationships.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/screenshots.js"></script>
 

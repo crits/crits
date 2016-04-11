@@ -6,9 +6,8 @@ from mongoengine import EmbeddedDocumentField
 
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
-from crits.core.crits_mongoengine import CritsSourceDocument
+from crits.core.crits_mongoengine import CritsSourceDocument, CritsActionsDocument
 from crits.core.fields import CritsDateTimeField
 from crits.indicators.migrate import migrate_indicator
 
@@ -17,38 +16,6 @@ from crits.vocabulary.indicators import (
     IndicatorThreatTypes
 )
 
-
-class IndicatorAction(CritsDocument, CritsSchemaDocument, Document):
-    """
-    Indicator Action type class.
-    """
-
-    meta = {
-        "collection": settings.COL_IDB_ACTIONS,
-        "crits_type": 'IndicatorAction',
-        "latest_schema_version": 1,
-        "schema_doc": {
-            'name': 'The name of this Action',
-            'active': 'Enabled in the UI (on/off)'
-        },
-    }
-
-    name = StringField()
-    active = StringField(default="on")
-
-class EmbeddedAction(EmbeddedDocument, CritsDocumentFormatter):
-    """
-    Indicator action class.
-    """
-
-    action_type = StringField()
-    active = StringField()
-    analyst = StringField()
-    begin_date = CritsDateTimeField(default=datetime.datetime.now)
-    date = CritsDateTimeField(default=datetime.datetime.now)
-    end_date = CritsDateTimeField(default=datetime.datetime.now)
-    performed_date = CritsDateTimeField(default=datetime.datetime.now)
-    reason = StringField()
 
 class EmbeddedActivity(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -78,7 +45,7 @@ class EmbeddedImpact(EmbeddedDocument, CritsDocumentFormatter):
     rating = StringField(default="unknown")
 
 
-class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
+class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, Document):
     """
     Indicator class.
     """
@@ -86,12 +53,14 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_INDICATORS,
         "crits_type": 'Indicator',
-        "latest_schema_version": 3,
+        "latest_schema_version": 4,
         "schema_doc": {
             'type': 'The type of this indicator.',
             'threat_type': 'The threat type of this indicator.',
             'attack_type': 'The attack type of this indicator.',
             'value': 'The value of this indicator',
+            'lower': 'The lowered value of this indicator',
+            'description': 'The description for this indicator',
             'created': 'The ISODate when this indicator was entered',
             'modified': 'The ISODate when this indicator was last modified',
             'actions': 'List [] of actions taken for this indicator',
@@ -119,7 +88,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
             'jtopts_fields': ["details", "splunk", "value", "type",
                               "threat_type", "attack_type", "created",
                               "modified", "source", "campaign", "status",
-                              "favorite", "id"],
+                              "favorite", "actions", "id"],
             'hidden_fields': ["threat_type", "attack_type"],
             'linked_fields': ["value", "source", "campaign", "type", "status"],
             'details_link': 'details',
@@ -127,7 +96,6 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         }
     }
 
-    actions = ListField(EmbeddedDocumentField(EmbeddedAction))
     activity = ListField(EmbeddedDocumentField(EmbeddedActivity))
     confidence = EmbeddedDocumentField(EmbeddedConfidence,
                                        default=EmbeddedConfidence())
@@ -137,6 +105,7 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
     threat_type = StringField(default=IndicatorThreatTypes.UNKNOWN)
     attack_type = StringField(default=IndicatorAttackTypes.UNKNOWN)
     value = StringField()
+    lower = StringField()
 
     def migrate(self):
         """
@@ -194,96 +163,6 @@ class Indicator(CritsBaseAttributes, CritsSourceDocument, Document):
         ei.analyst = analyst
         ei.rating = rating
         self.impact = ei
-
-    def add_action(self, type_, active, analyst, begin_date,
-                   end_date, performed_date, reason, date=None):
-        """
-        Add an action to an Indicator.
-
-        :param type_: The type of action.
-        :type type_: str
-        :param active: Whether this action is active or not.
-        :param active: str ("on", "off")
-        :param analyst: The user adding this action.
-        :type analyst: str
-        :param begin_date: The date this action begins.
-        :type begin_date: datetime.datetime
-        :param end_date: The date this action ends.
-        :type end_date: datetime.datetime
-        :param performed_date: The date this action was performed.
-        :type performed_date: datetime.datetime
-        :param reason: The reason for this action.
-        :type reason: str
-        :param date: The date this action was added to CRITs.
-        :type date: datetime.datetime
-        """
-
-        ea = EmbeddedAction()
-        ea.action_type = type_
-        ea.active = active
-        ea.analyst = analyst
-        ea.begin_date = begin_date
-        ea.end_date = end_date
-        ea.performed_date = performed_date
-        ea.reason = reason
-        if date:
-            ea.date = date
-        self.actions.append(ea)
-
-    def edit_action(self, type_, active, analyst, begin_date,
-                    end_date, performed_date, reason, date=None):
-        """
-        Edit an action for an Indicator.
-
-        :param type_: The type of action.
-        :type type_: str
-        :param active: Whether this action is active or not.
-        :param active: str ("on", "off")
-        :param analyst: The user editing this action.
-        :type analyst: str
-        :param begin_date: The date this action begins.
-        :type begin_date: datetime.datetime
-        :param end_date: The date this action ends.
-        :type end_date: datetime.datetime
-        :param performed_date: The date this action was performed.
-        :type performed_date: datetime.datetime
-        :param reason: The reason for this action.
-        :type reason: str
-        :param date: The date this action was added to CRITs.
-        :type date: datetime.datetime
-        """
-
-        if not date:
-            return
-        for t in self.actions:
-            if t.date == date:
-                self.actions.remove(t)
-                ea = EmbeddedAction()
-                ea.action_type = type_
-                ea.active = active
-                ea.analyst = analyst
-                ea.begin_date = begin_date
-                ea.end_date = end_date
-                ea.performed_date = performed_date
-                ea.reason = reason
-                ea.date = date
-                self.actions.append(ea)
-                break
-
-    def delete_action(self, date=None):
-        """
-        Delete an action.
-
-        :param date: The date of the action to delete.
-        :type date: datetime.datetime
-        """
-
-        if not date:
-            return
-        for t in self.actions:
-            if t.date == date:
-                self.actions.remove(t)
-                break
 
     def add_activity(self, analyst, start_date, end_date,
                      description, date=None):

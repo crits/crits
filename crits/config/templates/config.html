@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 {% block title %}CRITs Configuration{% endblock %}
 
 {% block javascript_includes %}
@@ -12,14 +12,21 @@
     <script type="text/javascript">
         //used in item_editor
         var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
+
+        //Added to support deleting dependencies...
+        var delete_signature_dependency = "{% url 'crits.signatures.views.remove_signature_dependency' %}";
+
         //used in user_editor
         var user_source_access = "{% url 'crits.core.views.user_source_access' %}";
         var toggle_user_active = "{% url 'crits.core.views.toggle_user_active' %}";
-        //below hash variables are used in selecting the correct tab on load    
+        var new_action = "{% url 'crits.core.views.new_action' %}"
+        //below hash variables are used in selecting the correct tab on load
         var itemHashTabs = ["#actor_threat_identifiers_button",
                             "#campaign_button",
-                            "#indicatoraction_button",
+                            "#action_button",
                             "#rawdatatype_button",
+                            "#signaturetype_button",
+                            "#signaturedependency_button",
                             "#sourceaccess_button"
                             ]
         var usersHash = "#users";
@@ -85,7 +92,7 @@
             element.show();
         }
         function removeForcedInvisible(element) {
-             if(element.hasClass("forceInvisible")) 
+             if(element.hasClass("forceInvisible"))
                     element.removeClass("forceInvisible");
         }
         //adds light blue highlight to selected node in sidebar
@@ -99,7 +106,7 @@
             $(function () {                   //start of init sidebar
                 $('#sidebar').w2sidebar({
                     name: 'sidebar',
-                    nodes: [ 
+                    nodes: [
                         { id: 'system', class:'dontChange', text: 'System', expanded: true, group: true,
                             nodes: [ { id: 'generalTab', text: 'General'},
                                      { id: 'CRITsTab', text: 'CRITs'},
@@ -142,7 +149,7 @@
                     if(event.type == 'click') {
                         var target = "#"+event.target;
                         var targetElem = $(target);
-                        if((target != currentTab && targetElem != null) 
+                        if((target != currentTab && targetElem != null)
                                 || $("#systemContainer").is(':hidden')) {
                             $(currentTab).hide();
                             toggleRightContent(targetElem, true);
@@ -185,13 +192,13 @@
                 if(node == 'node_system'){
                     //corresponding subnode under system
                     var sub_node = $(this).attr("sub_node");
-                    //toggles the highlighting 
+                    //toggles the highlighting
                     if(sub_node != currentTab) {
                         $("#node_"+currentTab.substring(1)).removeClass("w2ui-selected");
                         $("#node_"+sub_node).addClass("w2ui-selected");
                     }
                     var event = jQuery.Event( "click" );
-                    event.target = sub_node; 
+                    event.target = sub_node;
                     //fires off the click event implemented above
                     w2ui.sidebar.trigger(event);
                 }//if its part of the items jtable
@@ -224,7 +231,7 @@
             <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
                 <div id='CRITsTab' class='box forceInvisible'>
                     <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
-                </div>  
+                </div>
                 <div id='generalTab' class='box forceInvisible'>
                     <table class="systemTable">{{ config_general_form.as_table }}</table>
                 </div>
@@ -247,9 +254,16 @@
                     <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
                     <input id="reset_button" type="button" value="Reset"></input>
                 </div>
-            </form>   
-        </div> 
-        <div id="itemsContainer" class='rightContent forceInvisible'></div>
+            </form>
+        </div>
+        <div id="itemsContainer" class='rightContent forceInvisible'>
+            <div id="add-new-action-form" title="Add/Edit Action">
+                <form id="form-add-new-action" action='{% url "crits.core.views.new_action" %}' method='POST' enctype="multipart/form-data">
+                    <table class="form">{{ add_new_action.as_table }}</table>
+                    <div id="form-add-new-action-results" class="form_results"></div>
+                </form>
+            </div>
+        </div>
         <div id="usersContainer" class="rightContent forceInvisible">
             <div id="add-new-user-form" title="Add/Edit User">
                 <select class="selectbox" name="user" onchange="getUserSources(this);">

@@ -9,25 +9,6 @@ $(document).ready(function(){
         $( "#tool_forms" ).toggle( "fast" );
     });
 
-    // Upload a related pcap (Using the related dialog persona)
-    $( "#dialog-new-pcap" ).on("dialogopen.add_related_pcap", function(e) {
-        if ($(this).dialog("persona") == "related") {
-        $(this).find("form #id_related_id").val(sample_id_escaped);
-        $(this).find("form #id_related_type").val("Sample");
-        // $(this).find("form").removeAttr("target"); // Get rid of target to refresh page
-
-        // Unlike new-sample below, this does not redirect us nor refresh the
-        // Relationships list of the Sample, so delay for a few seconds then reload the
-        // page after uploaded.  Added a fileUploadComplete event to work around this.
-        $(this).find("form").bind("fileUploadComplete",
-                      function(e, response) {
-                          if (response.success)
-                          setTimeout(function() {
-                              document.location = document.location },
-                              3000); });
-        }
-    });
-
     $("#strings_button").click(function() {
         $.ajax({
             type: "GET",
@@ -107,7 +88,6 @@ $(document).ready(function(){
     "add-exploit": {title: "Add Exploit", submit: defaultSubmit, href:"" },
     "add-child": {title: "Add Child Sample", submit: defaultSubmit, href:"" },
     "unzip-sample": {title: "Unzip Sample", submit: defaultSubmit, href:"" },
-    "unrar-sample": {title: "Unrar Sample", submit: defaultSubmit, href:"" },
     "delete-sample": {title: "Delete Sample", submit: defaultSubmit, href:"" },
     "download-sample": {title: "Download Sample", submit: defaultSubmit, href:"" },
     };
@@ -124,7 +104,6 @@ $(document).ready(function(){
         $.proxy(file_upload_dialog, $('#form-add-object-static').parent())();
         add_object_submit(e);
     })
-    add_more_object_types_button($('#form-add-object-static'));
 
     // For samples_tools_widgets
     var comment_form = $('#form-comments');
@@ -207,5 +186,6 @@ $(document).ready(function(){
 
     details_copy_id('Sample');
     toggle_favorite('Sample');
+    populate_id(sample_id_escaped, 'Sample');
 
 });

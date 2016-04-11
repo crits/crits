@@ -33,7 +33,8 @@ class Sector(CritsDocument, CritsSchemaDocument, Document):
             'Indicator': 'Integer',
             'PCAP': 'Integer',
             'RawData': 'Integer',
-            'Sample': 'Integer'
+            'Sample': 'Integer',
+            'Signature': 'Integer'
         },
     }
 
@@ -51,6 +52,7 @@ class Sector(CritsDocument, CritsSchemaDocument, Document):
     PCAP = IntField(default=0)
     RawData = IntField(default=0)
     Sample = IntField(default=0)
+    Signature = IntField(default=0)
     Target = IntField(default=0)
 
     def migrate(self):

@@ -589,7 +589,7 @@ def generate_qrcode(data, size):
     """
     Generate a QR Code Image from a string.
 
-    Will attempt to import qrcode (which also requires Pillow) and StringIO. If
+    Will attempt to import qrcode (which also requires Pillow) and io. If
     this fails we will return None.
 
     :param data: data to be converted into a QR Code
@@ -600,10 +600,10 @@ def generate_qrcode(data, size):
     """
 
     try:
-        import qrcode, StringIO
+        import qrcode, io
     except:
         return None
-    a = StringIO.StringIO()
+    a = io.BytesIO()
     qr = qrcode.QRCode()
     qr.add_data(data)
     img = qr.make_image().resize(size)
@@ -624,6 +624,36 @@ def validate_md5_checksum(md5_checksum):
 
     if re.match("^[a-fA-F0-9]{32}$", md5_checksum) == None:
         retVal['message'] += "The MD5 digest needs to be 32 hex characters."
+        retVal['success'] = False
+
+    return retVal
+
+def validate_sha1_checksum(sha1_checksum):
+    """
+    Validates that string is truly a SHA1.
+    :param sha1_checksum: str
+    :return: dict with keys "success" (boolean) and "message" (str)
+    """
+    retVal = {'success': True, 'message': ''}
+
+    if re.match("^[a-fA-F0-9]{40}$", sha1_checksum) == None:
+        retVal['message'] += "The SHA1 digest needs to be 40 hex characters."
+        retVal['success'] = False
+
+    return retVal
+
+def validate_sha256_checksum(sha256_checksum):
+    """
+    Validates that string is truly a SHA256.
+
+    :param sha256_checksum: The string to validate.
+    :type sha256_checksum: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+    retVal = {'success': True, 'message': ''}
+
+    if re.match("^[a-fA-F0-9]{64}$", sha256_checksum) == None:
+        retVal['message'] += "The SHA256 digest needs to be 64 hex characters."
         retVal['success'] = False
 
     return retVal

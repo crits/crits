@@ -7,8 +7,6 @@ from django.core.management.base import BaseCommand
 from crits.config.config import CRITsConfig
 from crits.core.mongo_tools import mongo_update, mongo_remove, mongo_connector
 
-from create_sectors import add_sector_objects
-
 
 
 logger = logging.getLogger(__name__)
@@ -118,6 +116,13 @@ def prep_relationships():
 
     pass
 
+def prep_signature():
+    """
+    Migrate signatures.
+    """
+
+    pass
+
 def prep_sources():
     """
     Migrate sources.
@@ -151,10 +156,6 @@ def prep_notifications():
     query = {"type": "notification"}
     mongo_remove(settings.COL_COMMENTS, query)
 
-def prep_sectors():
-
-    add_sector_objects()
-
 def prep_indexes():
     """
     Update indexing.
@@ -176,7 +177,6 @@ def prep_database():
     """
 
     prep_notifications()
-    prep_sectors()
     prep_indexes()
     update_database_version()
     return

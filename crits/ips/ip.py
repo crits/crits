@@ -1,11 +1,13 @@
 from mongoengine import Document, StringField
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.vocabulary.ips import IPTypes
+
+from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument
 from crits.ips.migrate import migrate_ip
 
 
-class IP(CritsBaseAttributes, CritsSourceDocument, Document):
+class IP(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, Document):
     """
     IP class.
     """
@@ -45,7 +47,7 @@ class IP(CritsBaseAttributes, CritsSourceDocument, Document):
     }
 
     ip = StringField(required=True)
-    ip_type = StringField(default="Address - ipv4-addr", db_field="type")
+    ip_type = StringField(default=IPTypes.IPV4_ADDRESS, db_field="type")
 
     def migrate(self):
         migrate_ip(self)

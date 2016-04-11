@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 {% load filters %}
 
 {% block title %} Email Detail {% endblock %}
@@ -10,6 +10,7 @@
     var email_detail = "{% url 'crits.emails.views.email_detail' email.id %}";
     var update_header_value = "{% url 'crits.emails.views.update_header_value' email.id %}";
     var splunk_search_url = "{{ splunk_search_url }}";
+    var email_id = "{{ email.id | escapejs }}"
 </script>
 
 <div id="tabnav" class="tabnav" style="font-size:90%">
@@ -58,16 +59,16 @@
         </tr>
 
         {% for email_field in email_fields %}
-        <tr data-type='{{ email_field.field_type }}'>
+        <tr>
             <td class='key'>{{ email_field.field_displayed_text}}
                 {% if email_field.is_allow_create_indicator %}
                     {% if email_field|does_field_have_indicator:relationships %}
-                        <span type='{{ email_field.field_name }}' title="Create Indicator: Warning: Indicator might already exist" style="float: right;" class="ui-icon ui-icon-circle-plus create-indicator"></span>
+                        <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator: Warning: Indicator might already exist" style="float: right;" class="ui-icon ui-icon-circle-plus create-indicator"></span>
                     {% else %}
                         {% if not email_field.field_value or email_field.field_value.strip == "" %}
-                            <span type='{{ email_field.field_name }}' title="Create Indicator: Warning: A value should be supplied first" style="float: right;" class="ui-icon ui-icon-alert create-indicator"></span> 
+                            <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator: Warning: A value should be supplied first" style="float: right;" class="ui-icon ui-icon-alert create-indicator"></span> 
                         {% elif email_field.field_value %}
-                            <span type='{{ email_field.field_name }}' title="Create Indicator" style="float: right;" class="ui-icon ui-icon-plusthick create-indicator">"{{email_field.field_value}}"</span>
+                            <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator" style="float: right;" class="ui-icon ui-icon-plusthick create-indicator">"{{email_field.field_value}}"</span>
                         {% endif %}
                     {% endif %}
                 {% endif %}
@@ -126,6 +127,13 @@
         {% include 'details_options_widget.html' %}
         {% with bucket_list=email.bucket_list %}
             {% include 'bucket_list_widget.html' %}
+        {% endwith %}
+        {% include 'add_related_widget.html' %}
+
+    </div>
+    <div class="content_box">
+        {% with obj=email obj_type="Email" %}
+            {% include 'action_listing_widget.html' %}
         {% endwith %}
     </div>
     <div>

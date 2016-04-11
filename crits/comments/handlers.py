@@ -7,7 +7,10 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.comments.comment import Comment
 from crits.comments.forms import JumpToDateForm
@@ -247,7 +250,7 @@ def comment_add(cleaned_data, obj_type, obj_id, method, subscr, analyst):
         result = {'success': False, 'message': e}
     return HttpResponse(json.dumps(result,
                         default=json_handler),
-                        mimetype="application/json")
+                        content_type="application/json")
 
 def comment_update(cleaned_data, obj_type, obj_id, subscr, analyst):
     """
@@ -292,7 +295,7 @@ def comment_update(cleaned_data, obj_type, obj_id, subscr, analyst):
             result = {'success': False, 'message': e}
     return HttpResponse(json.dumps(result,
                                    default=json_handler),
-                        mimetype="application/json")
+                        content_type="application/json")
 
 def comment_remove(obj_id, analyst, date):
     """
@@ -366,7 +369,7 @@ def get_activity(atype, value, date, analyst, ajax):
                                           context)
         return HttpResponse(json.dumps(result,
                                        default=json_handler),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         #TODO: bysubscription ?
         if atype not in ('byuser', 'bytag', 'bycomment'):

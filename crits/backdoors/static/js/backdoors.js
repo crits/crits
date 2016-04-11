@@ -2,6 +2,8 @@ var backdoor_tags = true;
 
 $(document).ready(function() {
 
+    populate_id(backdoor_id,'Backdoor');
+
     details_copy_id('Backdoor');
     toggle_favorite('Backdoor');
 

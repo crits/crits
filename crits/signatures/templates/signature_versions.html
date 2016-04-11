@@ -1,0 +1,34 @@
+{% block css_includes %}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/diffview.css"/>
+{% endblock %}
+
+<div id="versions_section">
+    <table>
+        <tbody>
+            <tr>
+                <td><b>View Version:</b></td>
+                <td>
+                    <select id="signature_versions">
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><b>View Diff:</b></td>
+                <td>
+                    <form id="signature_versions_diff">
+                        <select id="signature_diff_selector" multiple>
+                        </select>
+                        <input type="submit" name="Diff" value="Diff" />
+                    </form>
+                </td>
+        </tbody>
+    </table>
+    <div class="content_box">
+        <h3 class="titleheader">
+        <span id="signature_version_info"><span>
+        </h3>
+        <div id="versions_container">
+            <div id="diff_results" style="display: none;"></div>
+        </div>
+    </div>
+</div>

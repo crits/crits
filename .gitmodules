@@ -1,3 +1,0 @@
-[submodule "salt/roots/salt/formulas/mongodb-formula"]
-	path = salt/roots/salt/formulas/mongodb-formula
-	url = https://github.com/saltstack-formulas/mongodb-formula.git
