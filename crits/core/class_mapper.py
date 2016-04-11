@@ -60,11 +60,14 @@ def class_from_id(type_, _id):
 
     # make sure it's a string
     #_id = str(_id)
-
+    if not isinstance(_id, str):
+        print('Converting ObjectId into a string!')
+        _id = str(_id)
     # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
     # the queries below will raise a ValidationError exception.
     #if not ObjectId.is_valid(_id.decode('utf8')):
     if not ObjectId.is_valid(_id):
+        print("ObjectId is not valid!")
         return None
 
     if type_ == 'Actor':
