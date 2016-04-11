@@ -5,7 +5,6 @@ import datetime
 import hashlib
 import json
 import html.parser
-from six import string_types
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -373,7 +372,7 @@ def handle_signature_file(data, source_name, user=None,
         data_type_dependency = []
 
     # generate new source information and add to sample
-    if isinstance(source_name, string_types) and len(source_name) > 0:
+    if isinstance(source_name, str) and len(source_name) > 0:
         source = create_embedded_source(source_name,
                                    date=timestamp,
                                    method=method,

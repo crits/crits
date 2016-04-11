@@ -45,8 +45,8 @@ class ExtendedSelect(Select):
             else:
                 selected_html = ''
             attrs_html = []
-            for k, v in list(attrs.items()):
-                if isinstance(v, list):
+            for k, v in attrs.items():
+                if isinstance(v, list) or isinstance(v, view):
                     #emulate JavaScript behavior casting list to string
                     v = ','.join(v)
                 attrs_html.append('%s="%s"' % (k, escape(v)))

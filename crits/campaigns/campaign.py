@@ -1,6 +1,6 @@
 import datetime
 
-from six import string_types
+from builtins import str
 
 from mongoengine import Document, EmbeddedDocument, StringField, IntField
 from mongoengine import EmbeddedDocumentField, DateTimeField, ListField
@@ -131,10 +131,10 @@ class Campaign(CritsBaseAttributes, CritsActionsDocument, Document):
 
         """
 
-        if isinstance(alias, string_types):
+        if isinstance(alias, str):
             alias = [alias]
         for a in alias:
-            if a not in self.aliases and isinstance(a, string_types):
+            if a not in self.aliases and isinstance(a, str):
                 self.aliases.append(a)
 
     def remove_alias(self, alias):

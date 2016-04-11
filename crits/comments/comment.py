@@ -1,7 +1,7 @@
 import datetime
 import re
 
-from six import string_types
+from builtins import str
 
 from bson.objectid import ObjectId
 from mongoengine import Document, EmbeddedDocument
@@ -165,7 +165,7 @@ class Comment(CritsDocument, CritsSchemaDocument, CritsSourceDocument, Document)
         :type url_key: str
         """
 
-        if isinstance(url_key, string_types):
+        if isinstance(url_key, str):
                 self.url_key = url_key
 
 def parse_comment(comment):

@@ -1,8 +1,6 @@
 from builtins import str
 from builtins import object
 
-from six import string_types
-
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
@@ -102,7 +100,7 @@ class DomainResource(CRITsAPIResource):
                                                    [])
         if not 'message' in retVal:
             retVal['message'] = ""
-        elif not isinstance(retVal['message'], string_types):
+        elif not isinstance(retVal['message'], str):
             retVal['message'] = str(retVal['message'])
         if errors:
             for e in errors:

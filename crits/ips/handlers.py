@@ -1,6 +1,6 @@
 import json
 
-from six import string_types
+from builtins import str
 
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
@@ -412,13 +412,13 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
         if cached_results != None:
             cached_results[ip_address] = ip_object
 
-    if isinstance(source, string_types):
+    if isinstance(source, str):
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
                                          analyst=analyst)]
 
-    if isinstance(campaign, string_types):
+    if isinstance(campaign, str):
         c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst)
         campaign = [c]
 

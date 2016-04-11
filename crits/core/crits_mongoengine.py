@@ -5,8 +5,6 @@ import json, yaml
 import io
 import csv
 
-from six import string_types, iteritems
-
 from bson import json_util, ObjectId
 from dateutil.parser import parse
 from django.conf import settings
@@ -432,9 +430,9 @@ class CritsDocument(BaseDocument):
         #Make sure any fields that are unsupported but exist in the database
         #   get added to the document's unsupported_attributes field.
         #Get database names for all fields that *should* exist on the object.
-        db_fields = [val.db_field for key,val in list(cls._fields.items())]
+        db_fields = [val.db_field for key,val in cls._fields.items()]
         #custom __setattr__ does logic of moving fields to unsupported_fields
-        [doc.__setattr__("%s"%key, val) for key,val in list(son.items())
+        [doc.__setattr__("%s"%key, val) for key,val in son.items()
             if key not in db_fields]
 
         #After a document is retrieved from the database, and any unsupported
@@ -501,6 +499,7 @@ class CritsDocument(BaseDocument):
         """
 
         if not fields:
+            print('to_csv not fields: %s'%type(self._data.keys()))
             fields = list(self._data.keys())
         csv_string = io.BytesIO()
         csv_wr = csv.writer(csv_string)
@@ -563,7 +562,7 @@ class CritsDocument(BaseDocument):
 
         if include:
             result = {}
-            for k, v in list(data.items()):
+            for k, v in data.items():
                 if k in newproj and k not in exclude:
                     if k == "_id":
                         k = "id"
@@ -571,7 +570,7 @@ class CritsDocument(BaseDocument):
             return result
         elif exclude:
             result = {}
-            for k, v in list(data.items()):
+            for k, v in data.items():
                 if k in exclude:
                     continue
                 if k == "_id":
@@ -1046,7 +1045,7 @@ class EmbeddedTickets(BaseDocument):
         :type date: datetime.datetime.
         """
 
-        if isinstance(tickets, string_types):
+        if isinstance(tickets, str):
             tickets = tickets.split(',')
         elif not isinstance(tickets, list):
             tickets = [tickets]
@@ -1055,7 +1054,7 @@ class EmbeddedTickets(BaseDocument):
             if isinstance(ticket, EmbeddedTicket):
                 if not self.is_ticket_exist(ticket.ticket_number): # stop dups
                     self.tickets.append(ticket)
-            elif isinstance(ticket, string_types):
+            elif isinstance(ticket, str):
                 if ticket and not self.is_ticket_exist(ticket):  # stop dups
                     et = EmbeddedTicket()
                     et.analyst = analyst
@@ -1322,7 +1321,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type longitude: str
         """
 
-        if isinstance(date, string_types):
+        if isinstance(date, str):
             date = parse(date, fuzzy=True)
         for location in self.locations:
             if (location.location == location_name and
@@ -1348,7 +1347,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type date: str
         """
 
-        if isinstance(date, string_types):
+        if isinstance(date, str):
             date = parse(date, fuzzy=True)
         for location in self.locations:
             if (location.location == location_name and
@@ -1914,12 +1913,12 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         got_rel = True
         if not rel_item:
             got_rel = False
-            if isinstance(rel_id, string_types) and isinstance(type_, string_types):
+            if isinstance(rel_id, str) and isinstance(type_, str):
                 rel_item = class_from_id(type_, rel_id)
             else:
                 return {'success': False,
                         'message': 'Could not find object'}
-        if isinstance(new_date, string_types):
+        if isinstance(new_date, str):
             new_date = parse(new_date, fuzzy=True)
         if rel_item and rel_type and modification:
             # get reverse relationship
@@ -2348,7 +2347,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type name: str
         """
 
-        if isinstance(name, string_types):
+        if isinstance(name, str):
             for r in self.releasability:
                 if r.name == name and len(r.instances) == 0:
                     self.releasability.remove(r)
@@ -2503,7 +2502,7 @@ def merge(self, arg_dict=None, overwrite=False, **kwargs):
     if not arg_dict:
         arg_dict = kwargs
     if isinstance(arg_dict, dict):
-        iterator = list(arg_dict.items())
+        iterator = arg_dict.items()
     else:
         iterator = arg_dict
 
@@ -2556,7 +2555,7 @@ def create_embedded_source(name, source_instance=None, date=None,
     :returns: None, :class:`crits.core.crits_mongoengine.EmbeddedSource`
     """
 
-    if isinstance(name, string_types):
+    if isinstance(name, str):
         s = EmbeddedSource()
         s.name = name
         if isinstance(source_instance, EmbeddedSource.SourceInstance):

@@ -1,8 +1,6 @@
 from builtins import str
 import json
 
-from six import string_types
-
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -351,13 +349,13 @@ def add_new_actor(name, aliases=None, description=None, source=None,
             actor.description = description.strip()
         is_item_new = True
 
-    if isinstance(source, string_types):
+    if isinstance(source, str):
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
                                          analyst=analyst)]
 
-    if isinstance(campaign, string_types):
+    if isinstance(campaign, str):
         c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst)
         campaign = [c]
 
@@ -544,7 +542,7 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
                     'message': "Missing Identifier"}
         actor_identifier.name = identifier.strip()
 
-    if isinstance(source, string_types):
+    if isinstance(source, str):
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,

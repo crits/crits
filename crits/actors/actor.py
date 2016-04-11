@@ -1,8 +1,6 @@
 from builtins import str
 import datetime
 
-from six import string_types
-
 from mongoengine import Document, EmbeddedDocument, StringField, ListField
 from mongoengine import EmbeddedDocumentField
 from django.conf import settings
@@ -198,7 +196,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         :type aliases: list
         """
 
-        if isinstance(aliases, string_types):
+        if isinstance(aliases, str):
             aliases = aliases.split(',')
         aliases = [a.strip() for a in aliases if a != '']
         existing_aliases = None
@@ -221,7 +219,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         :type tags: list
         """
 
-        if isinstance(tags, string_types):
+        if isinstance(tags, str):
             tags = tags.split(',')
         tags = [t.strip() for t in tags if t != '']
         existing_tags = None

@@ -10,8 +10,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import str
 
-from six import string_types
-
 from crits.dashboards.dashboard import SavedSearch, Dashboard
 from crits.core.crits_mongoengine import json_handler
 from mongoengine import Q
@@ -152,7 +150,7 @@ def constructSavedTable(table, records):
     colNames = []
     for column in table.tableColumns:
         col = {}
-        for k,v in list(column.items()):
+        for k,v in column.items():
             if k == "sizeCalculated" or k == "sizeCorrected" or k == 'min':
                 continue
             elif k == "field":
@@ -208,7 +206,7 @@ def parseDocObjectsToStrings(records, obj_type):
     entire object
     """
     for doc in records:
-        for key, value in list(doc.items()):
+        for key, value in doc.items():
             # all dates should look the same
             if isinstance(value, datetime.datetime):
                 doc[key] = datetime.datetime.strftime(value,
@@ -259,7 +257,7 @@ def parseDocObjectsToStrings(records, obj_type):
             elif isinstance(value, list):
                 if value:
                     for item in value:
-                        if not isinstance(item, string_types):
+                        if not isinstance(item, str):
                             break
                     else:
                         doc[key] = ",".join(value)
@@ -267,7 +265,7 @@ def parseDocObjectsToStrings(records, obj_type):
                     doc[key] = ""
             doc[key] = html_escape(doc[key])
             value = doc[key].strip()
-            if isinstance(value, string_types):
+            if isinstance(value, str):
                 val = ' '.join(value.split())
                 val = val.replace('"',"'")
                 doc[key] = val

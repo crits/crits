@@ -1,8 +1,6 @@
 from builtins import str
 import json
 
-from six import string_types
-
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -226,7 +224,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
 
     retVal = {'success': False, 'message': ''}
 
-    if isinstance(source, string_types):
+    if isinstance(source, str):
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
@@ -281,7 +279,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         if description and backdoor.description == '':
             backdoor.description = description.strip()
 
-        if isinstance(campaign, string_types):
+        if isinstance(campaign, str):
             c = EmbeddedCampaign(name=campaign,
                                  confidence=confidence,
                                  analyst=user)
@@ -292,7 +290,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
                 backdoor.add_campaign(camp)
 
         if aliases:
-            if isinstance(aliases, string_types):
+            if isinstance(aliases, str):
                 aliases = aliases.split(',')
             for alias in aliases:
                 alias = alias.strip()

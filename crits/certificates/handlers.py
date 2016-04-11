@@ -3,8 +3,6 @@ import datetime
 import hashlib
 import json
 
-from six import string_types
-
 from bson.objectid import ObjectId
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -301,7 +299,7 @@ def handle_cert_file(filename, data, source_name, user=None,
         cert.md5 = md5
 
     # generate source information and add to certificate
-    if isinstance(source_name, string_types) and len(source_name) > 0:
+    if isinstance(source_name, str) and len(source_name) > 0:
         s = create_embedded_source(source_name,
                                    method=method,
                                    reference=reference,

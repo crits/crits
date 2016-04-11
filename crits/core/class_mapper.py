@@ -61,7 +61,8 @@ def class_from_id(type_, _id):
     # make sure it's a string
     #_id = str(_id)
     if not isinstance(_id, str):
-        print('Converting ObjectId into a string!')
+        print('Converting type: %s ObjectId:%s %s into a string!' %(type_, type(_id), _id))
+        #raise('boo!')
         _id = str(_id)
     # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
     # the queries below will raise a ValidationError exception.

@@ -1,7 +1,7 @@
 from future import standard_library
 standard_library.install_aliases()
-from builtins import map
-from builtins import str
+from builtins import str, map
+
 import cgi
 import os
 import datetime
@@ -18,8 +18,6 @@ except ImportError:
     import shlex
 
 import urllib.request, urllib.parse, urllib.error
-
-from six import string_types, iteritems
 
 from bson.objectid import ObjectId
 from django.conf import settings
@@ -1167,7 +1165,7 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
         # if result format calls for binary data to be zipped, loop over
         # collected objects and convert binary data to bin_fmt specified, then
         # add to the list of data to zip up
-        for (oid, (otype, obj)) in list(new_objects.items()):
+        for (oid, (otype, obj)) in new_objects.items():
             if ((otype == PCAP._meta['crits_type'] or
                  otype == Sample._meta['crits_type'] or
                  otype == Certificate._meta['crits_type']) and
@@ -1396,12 +1394,12 @@ def datetime_parser(value):
     """
     if isinstance(value,datetime.datetime):
         return value
-    elif isinstance(value,string_types) and value:
+    elif isinstance(value,str) and value:
         return datetime.datetime.strptime(value, settings.PY_DATETIME_FORMAT)
     elif isinstance(value,dict):
-        for k,v in list(value.items()):
+        for k,v in value.items():
             # Make sure that date is in the key, value is a string, and val is not ''
-            if "date" in k and isinstance(v,string_types) and v:
+            if "date" in k and isinstance(v,str) and v:
                 value[k] = datetime.datetime.strptime(v, settings.PY_DATETIME_FORMAT)
         return value
     else:
@@ -1902,7 +1900,7 @@ def check_query(qparams,user,obj):
     # Iterate over the supplied query keys and make sure they start
     # with a valid field from the document
     goodkeys = {}
-    for key,val in list(qparams.items()):
+    for key,val in qparams.items():
         # Skip anything with Mongo's special $
         if '$' in key:
             continue
@@ -1969,9 +1967,9 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     results['msg'] = ""
     results['crits_type'] = col_obj._meta['crits_type']
     sourcefilt = user_sources(user)
-    if isinstance(sort,string_types):
+    if isinstance(sort,str):
         sort = sort.split(',')
-    if isinstance(projection,string_types):
+    if isinstance(projection,str):
         projection = projection.split(',')
     docs = None
     try:
@@ -2111,7 +2109,7 @@ def csv_export(request, col_obj, query={}):
     result = csv_query(col_obj, request.user.username, fields=opts['fields'],
                         sort=opts['sort'], query=query, limit=opts['limit'],
                         skip=opts['skip'])
-    if isinstance(result, string_types):
+    if isinstance(result, str):
         response = HttpResponse(result, content_type="text/csv")
         response['Content-Disposition'] = "attachment;filename=crits-%s-export.csv" % col_obj._meta['crits_type']
     else:
@@ -2144,9 +2142,9 @@ def get_query(col_obj,request):
     query = {}
     response = {}
     params_escaped = {}
-    for k,v in list(request.GET.items()):
+    for k,v in request.GET.items():
         params_escaped[k] = html_escape(v)
-    for k,v in list(request.POST.items()):
+    for k,v in request.POST.items():
         params_escaped[k] = html_escape(v)
     urlparams = "?%s" % urlencode(params_escaped)
     if "q" in request.GET:
@@ -2179,7 +2177,7 @@ def get_query(col_obj,request):
     qparams = request.GET.copy()
     qparams.update(request.POST.copy())
     qparams = check_query(qparams,request.user.username,col_obj)
-    for key,value in list(qparams.items()):
+    for key,value in qparams.items():
         if key in keymaps:
             key = keymaps[key]
 
@@ -2289,7 +2287,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         response['TotalRecordCount'] = response.pop('count')
         response['Result'] = response.pop('result')
         for doc in response['Records']:
-            for key, value in list(doc.items()):
+            for key, value in doc.items():
                 # all dates should look the same
                 if isinstance(value, datetime.datetime):
                     doc[key] = datetime.datetime.strftime(value,
@@ -2334,7 +2332,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 elif isinstance(value, list):
                     if value:
                         for item in value:
-                            if not isinstance(item, string_types):
+                            if not isinstance(item, str):
                                 break
                         else:
                             doc[key] = ",".join(value)
@@ -2517,7 +2515,7 @@ def build_jtable(jtopts, request):
 
     jtable = {}
     # This allows overriding of default options if they are specified in jtopts
-    for defopt,defval in list(default_options.items()):
+    for defopt,defval in default_options.items():
         if defopt in jtopts:
             jtable[defopt] = jtopts[defopt]
         else:

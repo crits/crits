@@ -1,7 +1,7 @@
 from builtins import object
 import datetime
 
-from six import string_types
+from builtins import str
 
 from dateutil.parser import parse
 from mongoengine import DateTimeField, FileField
@@ -27,7 +27,7 @@ class CritsDateTimeField(DateTimeField):
         return super(CritsDateTimeField, self).__set__(instance, value)
 
     def transform(self, value):
-        if value and isinstance(value, string_types):
+        if value and isinstance(value, str):
             return parse(value, fuzzy=True)
         elif not value:
             return datetime.datetime.now()

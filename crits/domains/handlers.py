@@ -3,8 +3,6 @@ import json
 import re
 import datetime
 
-from six import string_types
-
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -566,12 +564,12 @@ def upsert_domain(domain, source, username=None, campaign=None,
     if not campaign:
         campaign = []
     # assume it's a list, but check if it's a string
-    elif isinstance(campaign, string_types):
+    elif isinstance(campaign, str):
         c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=username)
         campaign = [c]
 
     # assume it's a list, but check if it's a string
-    if isinstance(source, string_types):
+    if isinstance(source, str):
         s = EmbeddedSource()
         s.name = source
         instance = EmbeddedSource.SourceInstance()

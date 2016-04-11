@@ -1,8 +1,6 @@
 from builtins import str
 import json
 
-from six import string_types
-
 from django.conf import settings
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -332,7 +330,7 @@ def add_campaign(name, description, aliases, analyst,
         campaign.add_ticket(ticket, analyst)
 
     # Adjust aliases.
-    if isinstance(aliases, string_types):
+    if isinstance(aliases, str):
         alias_list = aliases.split(',')
         final_aliases = [a.strip() for a in alias_list]
     elif isinstance(aliases, list):

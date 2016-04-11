@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 from builtins import str
 
-from six import string_types
-
 import datetime
 import email as eml
 from email.parser import Parser
@@ -507,7 +505,7 @@ def handle_email_fields(data, analyst, method, related_id=None, related_type=Non
     try:
         for x in ('cc', 'to'):
             y = data.get(x, None)
-            if isinstance(y, string_types):
+            if isinstance(y, str):
                 if len(y) > 0:
                     tmp_y = y.split(',')
                     y_final = [ty.strip() for ty in tmp_y if len(ty.strip()) > 0]
@@ -929,7 +927,7 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     emldata = []
     boundary = None
     isbody = False
-    if not isinstance(data, string_types):
+    if not isinstance(data, str):
         data = data.read()
     for line in data.split("\n"):
         # We match the regex for a boundary definition
@@ -1054,14 +1052,14 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
     msg = eml.message_from_string(str(stripped_mail))
 
-    if not list(msg.items()):
+    if not msg.items():
         result['reason'] = """Could not parse email. Possibly the input does
                            not conform to a Internet Message style headers
                            and header continuation lines..."""
         return result
 
     # clean up headers
-    for d in list(msg.items()):
+    for d in msg.items():
         cleand = ''.join([x for x in d[1] if (ord(x) < 127 and ord(x) >= 32)])
         msg_import[d[0].replace(".",
                                 "").replace("$",
@@ -1199,7 +1197,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             return result
 
 
-    for (md5_, attachment) in list(result['attachments'].items()):
+    for (md5_, attachment) in result['attachments'].items():
         if handle_file(attachment['filename'],
                        attachment['blob'],
                        sourcename,
@@ -1264,10 +1262,10 @@ def dict_to_email(d, save_unsupported=True):
         else:
             d['isodate'] = date_parser(d['date'], fuzzy=True)
 
-    if 'to' in d and isinstance(d['to'], string_types) and len(d['to']) > 0:
+    if 'to' in d and isinstance(d['to'], str) and len(d['to']) > 0:
         d['to'] = [d['to']]
 
-    if 'cc' in d and isinstance(d['cc'], string_types) and len(d['cc']) > 0:
+    if 'cc' in d and isinstance(d['cc'], str) and len(d['cc']) > 0:
         d['cc'] = [d['cc']]
 
     if 'from' in d:
@@ -1275,7 +1273,7 @@ def dict_to_email(d, save_unsupported=True):
         del d['from']
 
     if save_unsupported:
-        for (k, v) in list(d.get('unsupported_attrs', {}).items()):
+        for (k, v) in d.get('unsupported_attrs', {}).items():
             d[k] = v
 
     if 'unsupported_attrs' in d:

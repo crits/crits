@@ -1,5 +1,5 @@
 from builtins import object
-from six import string_types
+from builtins import str
 
 class vocab(object):
     """
@@ -17,9 +17,9 @@ class vocab(object):
         """
 
         l = []
-        for k,v in list(cls.__dict__.items()):
+        for k,v in cls.__dict__.items():
             if ('__' not in k and
-                isinstance(v, string_types) and
+                isinstance(v, str) and
                 '__' not in v and
                 'vocabulary' not in v):
                 l.append(v)

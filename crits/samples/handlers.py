@@ -8,8 +8,6 @@ import subprocess
 import tempfile, shutil
 import time
 
-from six import string_types
-
 from bson.objectid import ObjectId
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
@@ -865,7 +863,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
                 sample.add_source(copy.copy(s))
 
     # generate new source information and add to sample
-    if isinstance(source, string_types) and len(source) > 0:
+    if isinstance(source, str) and len(source) > 0:
         s = create_embedded_source(source,
                                    method=method,
                                    reference=reference,
@@ -895,7 +893,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
         if campaign != None:
             campaign_array = campaign
 
-            if isinstance(campaign, string_types):
+            if isinstance(campaign, str):
                 campaign_array = [EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user)]
 
             for campaign_item in campaign_array:

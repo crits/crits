@@ -10,8 +10,6 @@ try:
 except ImportError:
     from urllib.parse import urlparse
 
-from six import string_types
-
 from io import BytesIO
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -331,7 +329,7 @@ def get_verified_field(data, valid_values, field=None, default=None):
     else:
         value_list = [data]
     for i, item in enumerate(value_list):
-        if isinstance(item, string_types):
+        if isinstance(item, str):
             item = item.lower().strip().replace(' - ', '-')
             if item in valid_values:
                 value_list[i] = valid_values[item]
@@ -700,7 +698,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             indicator.description += add_desc
 
     if 'campaign' in ind:
-        if isinstance(ind['campaign'], string_types) and len(ind['campaign']) > 0:
+        if isinstance(ind['campaign'], str) and len(ind['campaign']) > 0:
             confidence = ind.get('campaign_confidence', 'low')
             ind['campaign'] = EmbeddedCampaign(name=ind['campaign'],
                                                confidence=confidence,
@@ -739,7 +737,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             indicator.add_source(source_item=s, method=method, reference=reference)
     elif isinstance(source, EmbeddedSource):
         indicator.add_source(source_item=source, method=method, reference=reference)
-    elif isinstance(source, string_types):
+    elif isinstance(source, str):
         s = EmbeddedSource()
         s.name = source
         instance = EmbeddedSource.SourceInstance()
