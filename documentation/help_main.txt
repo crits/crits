@@ -1658,7 +1658,7 @@ Unique POST Parameters:
 :add_ip: Tell the API that you are also adding an IP related to this domain.
 :domain: The domain name.
 :ip: The IP you want to relate to this domain.
-:ip_type: The type of the IP ('Address - ipv4-addr' is most common).
+:ip_type: The type of the IP ('IPv4 Address' is most common).
 :ip_source: The source of the IP.
 :ip_method: The method in which you acquired this IP from the source.
 :ip_reference: The reference about this IP source.
