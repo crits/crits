@@ -5,8 +5,6 @@ import json
 import logging
 import copy
 
-from six import iterkeys
-
 from django.http import HttpResponse
 from multiprocessing import Process
 from threading import Thread, local

@@ -3,8 +3,6 @@ from builtins import object
 import json
 import yaml
 
-from six import iteritems
-
 from bson.objectid import ObjectId
 from dateutil.parser import parse
 from django.http import HttpResponse
