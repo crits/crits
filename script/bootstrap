@@ -32,7 +32,7 @@ verify()
     # Using lsb-release because os-release not available on Ubuntu 10.04
     if [ -f /etc/redhat-release ];
     then
-        OS=$(cat /etc/redhat-release | sed 's/ [Enterprise|release|linux release].*//')
+        OS=$(cat /etc/redhat-release | sed 's/ [Enterprise|release|Linux release].*//')
         VER=$(cat /etc/redhat-release | sed 's/.*release //;s/ .*$//')
         #Redhat/CentOS release version
         REL=$(echo $VER | sed 's/.[0-9].[0-9]*//;s/.[0-9]$//')
