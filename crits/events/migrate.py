@@ -1,4 +1,4 @@
-from builtins import str
+
 import uuid
 
 def migrate_event(self):

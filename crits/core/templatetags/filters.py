@@ -1,4 +1,4 @@
-from builtins import str
+
 import cgi
 import re
 import string

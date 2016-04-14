@@ -1,5 +1,5 @@
-from builtins import str
-from builtins import object
+
+#from builtins import object
 import datetime
 import json, yaml
 import io
@@ -356,7 +356,7 @@ class CritsDocument(BaseDocument):
                                          write_concern=write_concern,
                                          cascade=cascade,
                                          cascade_kwargs=cascade_kwargs,
-                                         _refs=_refs)
+                                         _refs=_refs, **kwargs)
         if do_audit:
             audit_entry(self, username, "save", new_doc=True)
         return

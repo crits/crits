@@ -130,7 +130,7 @@ class EmailHandlerTests(SimpleTestCase):
         self.assertEqual(result['status'], True)
         self.assertEqual(result['data']['x_mailer'],"YahooMailWebService/0.8.121.416")
         newdata = ""
-        for line in EML_DATA.split('\n'):
+        for line in EML_DATA.decode('utf-8').split('\n'):
             newdata += line.lstrip() + "\n"
         result = handlers.handle_pasted_eml(newdata, TSRC, None, self.user.username, "Test")
         self.assertEqual(result['status'], True)
@@ -138,6 +138,7 @@ class EmailHandlerTests(SimpleTestCase):
 
     def testEmailAdd(self):
         result = handlers.handle_eml(EML_DATA, TSRC, None, self.user.username, "Test")
+        #print("result:%s" %result)
         self.assertEqual(result['status'], True)
         self.assertEqual(result['data']['x_mailer'],"YahooMailWebService/0.8.121.416")
 

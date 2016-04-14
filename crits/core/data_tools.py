@@ -1,6 +1,6 @@
-from builtins import chr
-from builtins import str
-from builtins import range
+#from builtins import chr
+import sys
+#from builtins import range
 import tempfile, shutil
 import os
 import re
@@ -349,6 +349,8 @@ def make_ascii_strings(md5=None, data=None):
 
     if md5:
         data = get_file(md5)
+    if not isinstance(data, str):
+        data = data.decode('ISO-8859-1')
     strings_data = 'ASCII Strings\n'
     strings_data += "-" * 30
     strings_data += "\n"
@@ -370,6 +372,8 @@ def make_unicode_strings(md5=None, data=None):
 
     if md5:
         data = get_file(md5)
+    if not isinstance(data, str):
+        data = data.decode('ISO-8859-1')
     strings_data = 'Unicode Strings\n'
     strings_data += "-" * 30
     strings_data += "\n"
@@ -391,6 +395,8 @@ def make_stackstrings(md5=None, data=None):
 
     if md5:
         data = get_file(md5)
+    if not isinstance(data, str):
+        data = data.decode('ISO-8859-1')
     x = 0
     prev = 0
     strings = ''
@@ -429,6 +435,8 @@ def make_hex(md5=None, data=None):
 
     if md5:
         data = get_file(md5)
+    if not isinstance(data, str):
+        data = data.decode('ISO-8859-1')
     length = 16
     hex_data = ''
     digits = 4 if isinstance(data, str) else 2
@@ -456,6 +464,8 @@ def xor_string(md5=None, data=None, key=0, null=0):
 
     if md5:
         data = get_file(md5)
+    if not isinstance(data, str):
+        data = data.decode('ISO-8859-1')
     out = ''
     for c in data:
         if ord(c) == 0 and null == 1:
@@ -485,6 +495,18 @@ def xor_search(md5=None, data=None, string=None, skip_nulls=0):
 
     if md5:
         data = get_file(md5)
+    print("xor_search: %s, string: %s" %(type(data), type(string)))
+    if isinstance(data, str):
+        print('str type: %s' % type(data))
+    else:
+        data = data.decode('ISO-8859-1')
+        print('casted type: %s' % type(data))
+    # if isinstance(string, str):
+    #     print('string type: %s' % type(string))
+    #     #data = data.decode('utf-8')
+    # else:
+    #     string = string.decode('ISO-8859-1')
+    #     print('string type1: %s' % type(string))
     if string is None or string == '':
         plaintext_list = [
                         'This program',
@@ -510,6 +532,7 @@ def xor_search(md5=None, data=None, string=None, skip_nulls=0):
             if xord_string in data:
                 if i not in results:
                     results.append(i)
+    print("sorting")
     results.sort()
     return results
 

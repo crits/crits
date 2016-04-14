@@ -1,4 +1,3 @@
-from builtins import str
 from bson.objectid import ObjectId
 
 
@@ -64,6 +63,7 @@ def class_from_id(type_, _id):
         print('Converting type: %s ObjectId:%s %s into a string!' %(type_, type(_id), _id))
         #raise('boo!')
         _id = str(_id)
+        #print('Converting2 type: %s ObjectId:%s %s into a string!' %(type_, type(_id), _id))
     # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
     # the queries below will raise a ValidationError exception.
     #if not ObjectId.is_valid(_id.decode('utf8')):

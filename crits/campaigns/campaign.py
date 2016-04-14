@@ -1,6 +1,6 @@
 import datetime
 
-from builtins import str
+
 
 from mongoengine import Document, EmbeddedDocument, StringField, IntField
 from mongoengine import EmbeddedDocumentField, DateTimeField, ListField

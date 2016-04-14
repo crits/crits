@@ -439,6 +439,7 @@ def get_indicator_type_dropdown(request):
         if request.is_ajax():
             dd_final = {}
             list_type = request.POST.get('type', None)
+            print('list_type: %s, request: %s' %(list_type, request))
             if list_type == 'indicator_type':
                 type_list = IndicatorTypes.values(sort=True)
             elif list_type == 'threat_type':

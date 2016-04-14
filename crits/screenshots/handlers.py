@@ -1,4 +1,4 @@
-from builtins import str
+
 import hashlib
 import json
 

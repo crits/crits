@@ -1,6 +1,6 @@
 import json
 
-from builtins import str
+
 
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse

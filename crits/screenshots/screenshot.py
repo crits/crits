@@ -1,6 +1,6 @@
 import io
 
-from builtins import str
+
 
 from mongoengine import Document, StringField, ListField, IntField
 from django.conf import settings

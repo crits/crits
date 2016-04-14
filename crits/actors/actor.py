@@ -1,4 +1,4 @@
-from builtins import str
+
 import datetime
 
 from mongoengine import Document, EmbeddedDocument, StringField, ListField

@@ -1,5 +1,4 @@
 from builtins import object
-from builtins import str
 
 class vocab(object):
     """

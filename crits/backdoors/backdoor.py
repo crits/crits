@@ -1,4 +1,4 @@
-from builtins import str
+
 
 from mongoengine import Document, StringField, ListField
 from django.conf import settings

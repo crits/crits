@@ -1,6 +1,6 @@
 import json
 
-from builtins import str
+
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse

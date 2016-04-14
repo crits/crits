@@ -1,4 +1,4 @@
-from builtins import str
+
 from builtins import object
 from datetime import datetime
 from distutils.version import StrictVersion

@@ -1,4 +1,4 @@
-from builtins import str
+
 from builtins import object
 
 from django.core.urlresolvers import reverse

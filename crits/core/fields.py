@@ -1,7 +1,7 @@
 from builtins import object
 import datetime
 
-from builtins import str
+
 
 from dateutil.parser import parse
 from mongoengine import DateTimeField, FileField

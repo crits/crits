@@ -385,9 +385,9 @@ class DashboardViewTests(SimpleTestCase):
         response = views.dashboard(self.req)
         self.assertTrue(">{0} {1}</a>".format(self.user.first_name,
                                               self.user.last_name)
-                        in response.content)
+                        in str(response.content))
         self.assertTrue("&nbsp;({0})".format(self.user.role)
-                        in response.content)
+                        in str(response.content))
 
     def testUserInactiveRedirect(self):
         self.req.user.mark_inactive()

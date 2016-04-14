@@ -8,7 +8,7 @@ names cannot be changed.
 from __future__ import print_function
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
+
 
 from crits.dashboards.dashboard import SavedSearch, Dashboard
 from crits.core.crits_mongoengine import json_handler

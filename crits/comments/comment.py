@@ -1,7 +1,7 @@
 import datetime
 import re
 
-from builtins import str
+
 
 from bson.objectid import ObjectId
 from mongoengine import Document, EmbeddedDocument
