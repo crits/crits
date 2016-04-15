@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 
 {% block title %} PCAP Detail {% endblock %}
 
@@ -7,14 +7,14 @@
 
 <script>
     var pcap_md5 = "{{ pcap.md5 }}";
-    var update_pcap_description = "{% url 'crits.pcaps.views.set_pcap_description' pcap.md5 %}";
+    var pcap_id = "{{ pcap.id | escapejs }}"
 </script>
 
 {% if pcap %}
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ pcap.analysis|length }})</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
 </ul>
 
@@ -56,16 +56,9 @@
             <td>{{ pcap.md5 }}</td>
             </tr>
             <tr>
-            <td class='key'>Description</td>
-            {% if pcap.description %}
-                <td>
-                    <span class="edit_underline" id="pcap_description">{{pcap.description}}</span>
-                </td>
-            {% else %}
-                <td>
-                    <span class="edit_underline" id="pcap_description">None</span>
-                </td>
-            {% endif %}
+                {% with description=pcap.description %}
+                    {% include 'description_widget.html' %}
+                {% endwith %}
             <tr>
                 <td class="key">Status
                     <span style="float: right;" class="object_status_response"></span>
@@ -95,6 +88,13 @@
         {% with bucket_list=pcap.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
+    </div>
+    <div class="content_box">
+        {% with obj=pcap obj_type="PCAP" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
     </div>
     <div>
       {% with obj=pcap obj_type=subscription.type %}
@@ -104,6 +104,11 @@
     <div>
         {% with hit=pcap col=COL_PCAPS %}
             {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=pcap col=COL_PCAPS %}
+            {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
     <div>

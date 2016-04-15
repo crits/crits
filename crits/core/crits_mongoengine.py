@@ -1,32 +1,29 @@
 import datetime
 import json, yaml
-import uuid
-import StringIO
+import io
 import csv
 
 from bson import json_util, ObjectId
 from dateutil.parser import parse
 from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
 from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
-from mongoengine import IntField, UUIDField, DateTimeField, ObjectIdField
-from mongoengine import DynamicField, DictField
+from mongoengine import IntField, DateTimeField, ObjectIdField
 from mongoengine.base import BaseDocument, ValidationError
-from mongoengine.queryset import Q
 
 # Determine if we should be caching queries or not.
-if settings.QUERY_CACHING:
-    from mongoengine import QuerySet as QS
-else:
-    from mongoengine import QuerySetNoCache as QS
+from mongoengine import QuerySet as QS
 
 from pprint import pformat
 
 from crits.core.user_tools import user_sources, is_admin
 from crits.core.fields import CritsDateTimeField
 from crits.core.class_mapper import class_from_id, class_from_type
+from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.objects import ObjectTypes
 
 # Hack to fix an issue with non-cached querysets and django-tastypie-mongoengine
 # The issue is in django-tastypie-mongoengine in resources.py from what I can
@@ -68,10 +65,9 @@ class CritsQuerySet(QS):
 
         if self._len is not None:
             return self._len
-        if settings.QUERY_CACHING:
-            if self._has_more:
-                # populate the cache
-                list(self._iter_results())
+        if self._has_more:
+            # populate the cache
+            list(self._iter_results())
             self._len = len(self._result_cache)
         else:
             self._len = self.count()
@@ -219,7 +215,7 @@ class CritsDocumentFormatter(object):
         Return the object as a dict.
         """
 
-        return self.to_mongo()
+        return self.to_mongo().to_dict()
 
     def __str__(self):
         """
@@ -259,10 +255,8 @@ class CritsStatusDocument(BaseDocument):
         if status in ('New', 'In Progress', 'Analyzed', 'Deprecated'):
             self.status = status
             if status == 'Deprecated' and 'actions' in self:
-                i = 0
-                while i < len(self.actions):
-                    self.actions[i].active = "off"
-                    i += 1
+                for action in self.actions:
+                    action.active = "off"
 
 class CritsBaseDocument(BaseDocument):
     """
@@ -378,6 +372,8 @@ class CritsDocument(BaseDocument):
             self.delete_all_relationships(username=username)
         if self._has_method("delete_all_comments"):
             self.delete_all_comments()
+        if self._has_method("delete_all_analysis_results"):
+            self.delete_all_analysis_results()
         if self._has_method("delete_all_objects"):
             self.delete_all_objects()
         if self._has_method("delete_all_favorites"):
@@ -421,7 +417,7 @@ class CritsDocument(BaseDocument):
             return False
 
     @classmethod
-    def _from_son(cls, son, _auto_dereference=True):
+    def _from_son(cls, son, _auto_dereference=True, only_fields=None, created=False):
         """
         Override the default _from_son(). Allows us to move attributes in the
         database to unsupported_attrs if needed, validate the schema_version,
@@ -502,7 +498,7 @@ class CritsDocument(BaseDocument):
 
         if not fields:
             fields = self._data.keys()
-        csv_string = StringIO.StringIO()
+        csv_string = io.BytesIO()
         csv_wr = csv.writer(csv_string)
         if headers:
             csv_wr.writerow([f.encode('utf-8') for f in fields])
@@ -649,122 +645,151 @@ class CritsDocument(BaseDocument):
 
         return pformat(self.to_dict())
 
-    def to_stix(self, items_to_convert=[], loaded=False, bin_fmt="raw"):
+
+class EmbeddedPreferredAction(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Preferred Action
+    """
+
+    object_type = StringField()
+    object_field = StringField()
+    object_value = StringField()
+
+
+class Action(CritsDocument, CritsSchemaDocument, Document):
+    """
+    Action type class.
+    """
+
+    meta = {
+        "collection": settings.COL_IDB_ACTIONS,
+        "crits_type": 'Action',
+        "latest_schema_version": 1,
+        "schema_doc": {
+            'name': 'The name of this Action',
+            'active': 'Enabled in the UI (on/off)',
+            'object_types': 'List of TLOs this is for',
+            'preferred': 'List of dictionaries defining where this is preferred'
+        },
+    }
+
+    name = StringField()
+    active = StringField(default="on")
+    object_types = ListField(StringField())
+    preferred = ListField(EmbeddedDocumentField(EmbeddedPreferredAction))
+
+class EmbeddedAction(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded action class.
+    """
+
+    action_type = StringField()
+    active = StringField()
+    analyst = StringField()
+    begin_date = CritsDateTimeField(default=datetime.datetime.now)
+    date = CritsDateTimeField(default=datetime.datetime.now)
+    end_date = CritsDateTimeField()
+    performed_date = CritsDateTimeField(default=datetime.datetime.now)
+    reason = StringField()
+
+class CritsActionsDocument(BaseDocument):
+    """
+    Inherit if you want to track actions information on a top-level object.
+    """
+
+    actions = ListField(EmbeddedDocumentField(EmbeddedAction))
+
+    def add_action(self, type_, active, analyst, begin_date,
+                   end_date, performed_date, reason, date=None):
         """
-        Converts a CRITs object to a STIX document.
+        Add an action to an Indicator.
 
-        The resulting document includes standardized representations
-        of all related objects noted within items_to_convert.
-
-        :param items_to_convert: The list of items to convert to STIX/CybOX
-        :type items_to_convert: Either a list of CRITs objects OR
-                                a list of {'_type': CRITS_TYPE, '_id': CRITS_ID} dicts
-        :param loaded: Set to True if you've passed a list of CRITs objects as
-                       the value for items_to_convert, else leave False.
-        :type loaded: bool
-        :param bin_fmt: Specifies the format for Sample data encoding.
-                        Options: None (don't include binary data in STIX output),
-                                 "raw" (include binary data as is),
-                                 "base64" (base64 encode binary data)
-
-        :returns: A dict indicating which items mapped to STIX indicators, ['stix_indicators']
-                  which items mapped to STIX observables, ['stix_observables']
-                  which items are included in the resulting STIX doc, ['final_objects']
-                  and the STIX doc itself ['stix_obj'].
+        :param type_: The type of action.
+        :type type_: str
+        :param active: Whether this action is active or not.
+        :param active: str ("on", "off")
+        :param analyst: The user adding this action.
+        :type analyst: str
+        :param begin_date: The date this action begins.
+        :type begin_date: datetime.datetime
+        :param end_date: The date this action ends.
+        :type end_date: datetime.datetime
+        :param performed_date: The date this action was performed.
+        :type performed_date: datetime.datetime
+        :param reason: The reason for this action.
+        :type reason: str
+        :param date: The date this action was added to CRITs.
+        :type date: datetime.datetime
         """
 
-        from cybox.common import Time, ToolInformationList, ToolInformation
-        from cybox.core import Observables
-        from stix.common import StructuredText, InformationSource
-        from stix.core import STIXPackage, STIXHeader
-        from stix.common.identity import Identity
+        ea = EmbeddedAction()
+        ea.action_type = type_
+        ea.active = active
+        ea.analyst = analyst
+        ea.begin_date = begin_date
+        ea.end_date = end_date
+        ea.performed_date = performed_date
+        ea.reason = reason
+        if date:
+            ea.date = date
+        self.actions.append(ea)
 
-        # These two lists are used to determine which CRITs objects
-        # go in which part of the STIX document.
-        ind_list = []
-        obs_list = []
+    def delete_action(self, date=None):
+        """
+        Delete an action.
 
-        # determine which CRITs types support standardization
-        for ctype in settings.CRITS_TYPES:
-            cls = class_from_type(ctype)
-            if hasattr(cls, "to_stix_indicator"):
-                ind_list.append(ctype)
-            elif hasattr(cls, "to_cybox_observable"):
-                obs_list.append(ctype)
+        :param date: The date of the action to delete.
+        :type date: datetime.datetime
+        """
 
+        if not date:
+            return
+        for t in self.actions:
+            if t.date == date:
+                self.actions.remove(t)
+                break
 
-        # Store message
-        stix_msg = {
-                       'stix_indicators': [],
-                       'stix_observables': [],
-                       'final_objects': []
-                   }
+    def edit_action(self, type_, active, analyst, begin_date,
+                    end_date, performed_date, reason, date=None):
+        """
+        Edit an action for an Indicator.
 
-        if not loaded: # if we have a list of object metadata, load it before processing
-            items_to_convert = [class_from_id(item['_type'], item['_id'])
-                                    for item in items_to_convert]
+        :param type_: The type of action.
+        :type type_: str
+        :param active: Whether this action is active or not.
+        :param active: str ("on", "off")
+        :param analyst: The user editing this action.
+        :type analyst: str
+        :param begin_date: The date this action begins.
+        :type begin_date: datetime.datetime
+        :param end_date: The date this action ends.
+        :type end_date: datetime.datetime
+        :param performed_date: The date this action was performed.
+        :type performed_date: datetime.datetime
+        :param reason: The reason for this action.
+        :type reason: str
+        :param date: The date this action was added to CRITs.
+        :type date: datetime.datetime
+        """
 
-        # add self to the list of items to STIXify
-        if self not in items_to_convert:
-            items_to_convert.append(self);
-
-        for obj in items_to_convert:
-            obj_type = obj._meta['crits_type']
-            if obj_type == class_from_type('Event')._meta['crits_type']:
-                # occurs if the 'parent' object is an Event. We don't need to convert
-                # but we do need to add to 'final_objects' for tracking purposes
-                stix_msg['final_objects'].append(self)
-
-            if obj_type in ind_list: # convert to STIX indicators
-                ind, releas = obj.to_stix_indicator()
-                stix_msg['stix_indicators'].append(ind)
-                stix_msg['final_objects'].append(obj)
-            elif obj_type in obs_list: # convert to CybOX observable
-                if obj_type == class_from_type('Sample')._meta['crits_type']:
-                    ind, releas = obj.to_cybox_observable(bin_fmt=bin_fmt)
-                else:
-                    ind, releas = obj.to_cybox_observable()
-                stix_msg['stix_observables'].extend(ind)
-                stix_msg['final_objects'].append(obj)
-
-        tool_list = ToolInformationList()
-        tool = ToolInformation("CRITs", "MITRE")
-        tool.version = settings.CRITS_VERSION
-        tool_list.append(tool)
-        i_s = InformationSource(
-            time=Time(produced_time= datetime.datetime.now()),
-            identity=Identity(name=settings.COMPANY_NAME),
-            tools=tool_list)
-
-        if self._meta['crits_type'] == "Event":
-            stix_desc = self.stix_description()
-            stix_int = self.stix_intent()
-            stix_title = self.stix_title()
-        else:
-            stix_desc = "STIX from %s" % settings.COMPANY_NAME
-            stix_int = "Collective Threat Intelligence"
-            stix_title = "Threat Intelligence Sharing"
-        header = STIXHeader(information_source=i_s,
-                            description=StructuredText(value=stix_desc),
-                            package_intents=[stix_int],
-                            title=stix_title)
-
-        stix_msg['stix_obj'] = STIXPackage(indicators=stix_msg['stix_indicators'],
-                        observables=Observables(stix_msg['stix_observables']),
-                        stix_header=header,
-                        id_=uuid.uuid4())
-
-        return stix_msg
+        if not date:
+            return
+        for t in self.actions:
+            if t.date == date:
+                self.actions.remove(t)
+                ea = EmbeddedAction()
+                ea.action_type = type_
+                ea.active = active
+                ea.analyst = analyst
+                ea.begin_date = begin_date
+                ea.end_date = end_date
+                ea.performed_date = performed_date
+                ea.reason = reason
+                ea.date = date
+                self.actions.append(ea)
+                break
 
 # Embedded Documents common to most classes
-
-class AnalysisConfig(DynamicEmbeddedDocument, CritsDocumentFormatter):
-    """
-    Embedded Analysis Configuration dictionary.
-    """
-
-    meta = {}
-
 class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
     """
     Embedded Source.
@@ -780,6 +805,20 @@ class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
         method = StringField()
         reference = StringField()
 
+        def __eq__(self, other):
+            """
+            Two source instances are equal if their data attributes are equal
+            """
+
+            if isinstance(other, type(self)):
+                if (self.analyst == other.analyst and
+                    self.date == other.date and
+                    self.method == other.method and
+                    self.reference == other.reference):
+                    # all data attributes are equal, so sourceinstances are equal
+                    return True
+            return False
+
     instances = ListField(EmbeddedDocumentField(SourceInstance))
     name = StringField()
 
@@ -790,8 +829,8 @@ class CritsSourceDocument(BaseDocument):
 
     source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
 
-    def add_source(self, source_item=None, source=None, method=None,
-                   reference=None, date=None, analyst=None):
+    def add_source(self, source_item=None, source=None, method='',
+                   reference='', date=None, analyst=None):
         """
         Add a source instance to this top-level object.
 
@@ -826,17 +865,27 @@ class CritsSourceDocument(BaseDocument):
 
         if isinstance(source_item, EmbeddedSource):
             match = None
+            if method or reference: # if method or reference is given, use it
+                for instance in source_item.instances:
+                    instance.method = method or instance.method
+                    instance.reference = reference or instance.reference
             for c, s in enumerate(self.source):
                 if s.name == source_item.name: # find index of matching source
                     match = c
                     break
-            if match is not None: # if source exists, add instances to that source
-                self.source[match].instances.extend(source_item.instances)
+            if match is not None: # if source exists, add instances to it
+                # Don't add exact duplicates
+                for new_inst in source_item.instances:
+                    for exist_inst in self.source[match].instances:
+                        if new_inst == exist_inst:
+                            break
+                    else:
+                        self.source[match].instances.append(new_inst)
             else: # else, add as new source
                 self.source.append(source_item)
 
-    def edit_source(self, source=None, date=None, method=None,
-                    reference=None, analyst=None):
+    def edit_source(self, source=None, date=None, method='',
+                    reference='', analyst=None):
         """
         Edit a source instance from this top-level object.
 
@@ -878,40 +927,38 @@ class CritsSourceDocument(BaseDocument):
                    'message': "Must leave at least one source for access controls.  "
                    "If you wish to change the source, please assign a new source and then remove the old."}
 
-        if source:
-            if date or remove_all:
-                for c, s in enumerate(self.source):
-                    if s.name == source:
-                        if remove_all:
-                            if len(self.source) > 1:
-                                del self.source[c]
-                                message = "Deleted source %s" % source
+        if not source:
+            return {'success': False,
+                    'message': 'No source to locate'}
+        if not remove_all and not date:
+            return {'success': False,
+                    'message': 'Not removing all and no date to find.'}
+        for s in self.source:
+            if s.name == source:
+                if remove_all:
+                    if len(self.source) > 1:
+                        self.source.remove(s)
+                        message = "Deleted source %s" % source
+                        return {'success': True,
+                                'message': message}
+                    else:
+                        return keepone
+                else:
+                    for si in s.instances:
+                        if si.date == date:
+                            if len(s.instances) > 1:
+                                s.instances.remove(si)
+                                message = "Deleted instance of  %s" % source
                                 return {'success': True,
                                         'message': message}
                             else:
-                                return keepone
-                        else:
-                            for i, si in enumerate(s.instances):
-                                if si.date == date:
-                                    if len(s.instances) > 1:
-                                        del self.source[c].instances[i]
-                                        message = "Deleted instance of  %s" % source
-                                        return {'success': True,
-                                                'message': message}
-                                    else:
-                                        if len(self.source) > 1:
-                                            del self.source[c]
-                                            message = "Deleted source %s" % source
-                                            return {'success': True,
-                                                    'message': message}
-                                        else:
-                                            return keepone
-            else:
-                return {'success': False,
-                        'message': 'Not removing all and no date to find.'}
-        else:
-            return {'success': False,
-                    'message': 'No source to locate'}
+                                if len(self.source) > 1:
+                                    self.source.remove(s)
+                                    message = "Deleted source %s" % source
+                                    return {'success': True,
+                                            'message': message}
+                                else:
+                                    return keepone
 
     def sanitize_sources(self, username=None, sources=None):
         """
@@ -982,39 +1029,36 @@ class EmbeddedTickets(BaseDocument):
 
         return False;
 
-    def add_ticket(self, ticket, analyst, date=None):
+    def add_ticket(self, tickets, analyst=None, date=None):
         """
         Add a ticket to this top-level object.
 
-        :param ticket: The ticket to add.
-        :type ticket: str
+        :param tickets: The ticket(s) to add.
+        :type tickets: str, list, or
+                       :class:`crits.core.crits_mongoengine.EmbeddedTicket`
         :param analyst: The user adding this ticket.
         :type analyst: str
         :param date: The date for the ticket.
         :type date: datetime.datetime.
         """
 
-        # Track the addition or subtraction of tags.
-        # Get the bucket_list for the object, find out if this is an addition
-        # or subtraction of a bucket_list.
-        if isinstance(ticket, list) and len(ticket) == 1 and ticket[0] == '':
-            parsed_tickets = []
-        elif isinstance(ticket, (str, unicode)):
-            parsed_tickets = ticket.split(',')
-        else:
-            parsed_tickets = ticket
+        if isinstance(tickets, basestring):
+            tickets = tickets.split(',')
+        elif not isinstance(tickets, list):
+            tickets = [tickets]
 
-        parsed_tickets = [ticket_number.strip() for ticket_number in parsed_tickets]
-
-        for ticket_number in parsed_tickets:
-            # prevent duplicates
-            if self.is_ticket_exist(ticket_number) == False:
-                et = EmbeddedTicket()
-                et.analyst = analyst
-                et.ticket_number = ticket_number
-                if date:
-                    et.date = date
-                self.tickets.append(et)
+        for ticket in tickets:
+            if isinstance(ticket, EmbeddedTicket):
+                if not self.is_ticket_exist(ticket.ticket_number): # stop dups
+                    self.tickets.append(ticket)
+            elif isinstance(ticket, basestring):
+                if ticket and not self.is_ticket_exist(ticket):  # stop dups
+                    et = EmbeddedTicket()
+                    et.analyst = analyst
+                    et.ticket_number = ticket
+                    if date:
+                        et.date = date
+                    self.tickets.append(et)
 
     def edit_ticket(self, analyst, ticket_number, date=None):
         """
@@ -1030,19 +1074,15 @@ class EmbeddedTickets(BaseDocument):
 
         if not date:
             return
-        found = False
-        c = 0
         for t in self.tickets:
             if t.date == date:
-                found = True
-                del self.tickets[c]
-            c += 1
-        if found:
-            et = EmbeddedTicket()
-            et.analyst = analyst
-            et.ticket_number = ticket_number
-            et.date = date
-            self.tickets.append(et)
+                self.tickets.remove(t)
+                et = EmbeddedTicket()
+                et.analyst = analyst
+                et.ticket_number = ticket_number
+                et.date = date
+                self.tickets.append(et)
+                break
 
     def delete_ticket(self, date=None):
         """
@@ -1054,11 +1094,10 @@ class EmbeddedTickets(BaseDocument):
 
         if not date:
             return
-        c = 0
         for t in self.tickets:
             if t.date == date:
-                del self.tickets[c]
-            c += 1
+                self.tickets.remove(t)
+                break
 
     def get_tickets(self):
         """
@@ -1076,10 +1115,25 @@ class EmbeddedCampaign(EmbeddedDocument, CritsDocumentFormatter):
     """
 
     analyst = StringField()
-    confidence = StringField(default='low')
+    confidence = StringField(default='low', choices=('low', 'medium', 'high'))
     date = CritsDateTimeField(default=datetime.datetime.now)
     description = StringField()
     name = StringField(required=True)
+
+
+class EmbeddedLocation(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Location object
+    """
+
+    location_type = StringField(required=True)
+    location = StringField(required=True)
+    description = StringField(required=False)
+    latitude = StringField(required=False)
+    longitude = StringField(required=False)
+    analyst = StringField(required=True)
+    date = DateTimeField(default=datetime.datetime.now)
+
 
 class Releasability(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -1093,6 +1147,7 @@ class Releasability(EmbeddedDocument, CritsDocumentFormatter):
 
         analyst = StringField()
         date = DateTimeField()
+        note = StringField()
 
 
     name = StringField()
@@ -1113,47 +1168,13 @@ class UnrecognizedSchemaError(ValidationError):
             field_name='schema_version', **kwargs)
 
 
-class EmbeddedAnalysisResult(EmbeddedDocument, CritsDocumentFormatter):
-    """
-    Embedded Analysis Result from running an analytic service.
-    """
-
-    class EmbeddedAnalysisResultLog(EmbeddedDocument, CritsDocumentFormatter):
-        """
-        Log entry for a service run.
-        """
-
-        message = StringField()
-        #TODO: this should be a datetime object
-        datetime = StringField()
-        level = StringField()
-
-
-    #TODO: these should be datetime objects, not strings
-    analyst = StringField()
-    analysis_id = UUIDField(db_field="id", binary=False)
-    analysis_type = StringField(db_field="type")
-    config = EmbeddedDocumentField(AnalysisConfig)
-    finish_date = StringField()
-    log = ListField(EmbeddedDocumentField(EmbeddedAnalysisResultLog))
-    results = ListField(DynamicField(DictField))
-    service_name = StringField()
-    source = StringField()
-    start_date = StringField()
-    status = StringField()
-    template = StringField()
-    version = StringField()
-
-
 class EmbeddedObject(EmbeddedDocument, CritsDocumentFormatter):
     """
     Embedded Object Class.
     """
 
     analyst = StringField()
-    datatype = StringField(required=True)
     date = CritsDateTimeField(default=datetime.datetime.now)
-    name = StringField(required=True)
     source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
     object_type = StringField(required=True, db_field="type")
     value = StringField(required=True)
@@ -1170,7 +1191,8 @@ class EmbeddedRelationship(EmbeddedDocument, CritsDocumentFormatter):
     date = CritsDateTimeField(default=datetime.datetime.now)
     rel_type = StringField(db_field="type", required=True)
     analyst = StringField()
-
+    rel_reason = StringField()
+    rel_confidence = StringField(default='unknown', required=True)
 
 class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                           CritsSchemaDocument, CritsStatusDocument, EmbeddedTickets):
@@ -1180,35 +1202,47 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     features.
     """
 
-    analysis = ListField(EmbeddedDocumentField(EmbeddedAnalysisResult))
     analyst = StringField()
     bucket_list = ListField(StringField())
     campaign = ListField(EmbeddedDocumentField(EmbeddedCampaign))
+    locations = ListField(EmbeddedDocumentField(EmbeddedLocation))
+    description = StringField()
     obj = ListField(EmbeddedDocumentField(EmbeddedObject), db_field="objects")
     relationships = ListField(EmbeddedDocumentField(EmbeddedRelationship))
     releasability = ListField(EmbeddedDocumentField(Releasability))
     screenshots = ListField(StringField())
     sectors = ListField(StringField())
 
-    def add_campaign(self, campaign_item=None):
+    def add_campaign(self, campaign_item=None, update=True):
         """
         Add a campaign to this top-level object.
 
         :param campaign_item: The campaign to add.
         :type campaign_item: :class:`crits.core.crits_mongoengine.EmbeddedCampaign`
+        :param update: If True, allow merge with pre-existing campaigns
+        :              If False, do not change any pre-existing campaigns
+        :type update:  boolean
+        :returns: dict with keys "success" (boolean) and "message" (str)
         """
 
         if isinstance(campaign_item, EmbeddedCampaign):
             if campaign_item.name != None and campaign_item.name.strip() != '':
+                campaign_item.confidence = campaign_item.confidence.strip().lower()
+                if campaign_item.confidence == '':
+                    campaign_item.confidence = 'low'
                 for c, campaign in enumerate(self.campaign):
                     if campaign.name == campaign_item.name:
+                        if not update:
+                            return {'success': False, 'message': 'This Campaign is already assigned.'}
                         con = {'low': 1, 'medium': 2, 'high': 3}
-                        if con[campaign.confidence] < con[campaign_item.confidence]:
+                        if con.get(campaign.confidence, 0) < con.get(campaign_item.confidence):
                             self.campaign[c].confidence = campaign_item.confidence
                             self.campaign[c].analyst = campaign_item.analyst
                         break
                 else:
                     self.campaign.append(campaign_item)
+                return {'success': True, 'message': 'Campaign assigned successfully!'}
+        return {'success': False, 'message': 'Campaign is invalid'}
 
     def remove_campaign(self, campaign_name=None, campaign_date=None):
         """
@@ -1220,9 +1254,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type campaign_date: datetime.datetime.
         """
 
-        for c, campaign in enumerate(self.campaign):
+        for campaign in self.campaign:
             if campaign.name == campaign_name or campaign.date == campaign_date:
-                del self.campaign[c]
+                self.campaign.remove(campaign)
+                break
 
     def edit_campaign(self, campaign_name=None, campaign_item=None):
         """
@@ -1236,9 +1271,87 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         if isinstance(campaign_item, EmbeddedCampaign):
-            self.remove_campaign(campaign_name=campaign_name,
-                                 campaign_date=campaign_item.date)
+            self.remove_campaign(campaign_name=campaign_item.name)
             self.add_campaign(campaign_item=campaign_item)
+
+    def add_location(self, location_item=None):
+        """
+        Add a location to this top-level object.
+
+        :param location_item: The location to add.
+        :type location_item: :class:`crits.core.crits_mongoengine.EmbeddedLocation`
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+
+        if isinstance(location_item, EmbeddedLocation):
+            if (location_item.location != None and
+                location_item.location.strip() != ''):
+                for l, location in enumerate(self.locations):
+                    if (location.location == location_item.location and
+                        location.location_type == location_item.location_type and
+                        location.date == location_item.date):
+                        return {'success': False,
+                                'message': 'This location is already assigned.'}
+                else:
+                    self.locations.append(location_item)
+                return {'success': True,
+                        'message': 'Location assigned successfully!'}
+        return {'success': False,
+                'message': 'Location is invalid'}
+
+    def edit_location(self, location_name=None, location_type=None, date=None,
+                      description=None, latitude=None, longitude=None):
+        """
+        Edit a location.
+
+        :param location_name: The location_name to edit.
+        :type location_name: str
+        :param location_type: The location_type to edit.
+        :type location_type: str
+        :param date: The location date to edit.
+        :type date: str
+        :param description: The new description.
+        :type description: str
+        :param latitude: The new latitude.
+        :type latitude: str
+        :param longitude: The new longitude.
+        :type longitude: str
+        """
+
+        if isinstance(date, basestring):
+            date = parse(date, fuzzy=True)
+        for location in self.locations:
+            if (location.location == location_name and
+                location.location_type == location_type and
+                location.date == date):
+                if description:
+                    location.description = description
+                if latitude:
+                    location.latitude = latitude
+                if longitude:
+                    location.longitude = longitude
+                break
+
+    def remove_location(self, location_name=None, location_type=None, date=None):
+        """
+        Remove a location from this top-level object.
+
+        :param location_name: The location to remove.
+        :type location_name: str
+        :param location_type: The location type.
+        :type location_type: str
+        :param date: The location date.
+        :type date: str
+        """
+
+        if isinstance(date, basestring):
+            date = parse(date, fuzzy=True)
+        for location in self.locations:
+            if (location.location == location_name and
+                location.location_type == location_type and
+                location.date == date):
+                self.locations.remove(location)
+                break
 
     def add_bucket_list(self, tags, analyst, append=True):
         """
@@ -1278,7 +1391,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         if append:
             for t in parsed_tags:
-                if t not in self.bucket_list:
+                if t and t not in self.bucket_list:
                     self.bucket_list.append(t)
         else:
             self.bucket_list = parsed_tags
@@ -1381,15 +1494,13 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         else:
             return []
 
-    def add_object(self, object_type, name, value, source, method, reference,
+    def add_object(self, object_type, value, source, method, reference,
                    analyst, object_item=None):
         """
         Add an object to this top-level object.
 
         :param object_type: The Object Type being added.
         :type object_type: str
-        :param name: The name of the object being added.
-        :type name: str
         :param value: The value of the object being added.
         :type value: str
         :param source: The name of the source adding this object.
@@ -1405,12 +1516,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         if not isinstance(object_item, EmbeddedObject):
-            from crits.objects.handlers import get_objects_datatype
             object_item = EmbeddedObject()
             object_item.analyst = analyst
-            object_item.datatype = get_objects_datatype(name,
-                                                        object_type)
-            object_item.name = name
             object_item.source = [create_embedded_source(source,
                                                          method=method,
                                                          reference=reference,
@@ -1418,30 +1525,38 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             object_item.object_type = object_type
             object_item.value = value
         for o in self.obj:
-            if o.name == name and o.value == value:
+            if o.object_type == object_type and o.value == value:
                 break
         else:
             self.obj.append(object_item)
 
-    def remove_object(self, object_type, name, value):
+    def remove_object(self, object_type, value):
         """
         Remove an object from this top-level object.
 
         :param object_type: The type of the object being removed.
         :type object_type: str
-        :param name: The name of the object being removed.
-        :type name: str
         :param value: The value of the object being removed.
         :type value: str
         """
 
-        for c, o in enumerate(self.obj):
-            if (o.name == name and
-                o.object_type == object_type and
+        for o in self.obj:
+            if (o.object_type == object_type and
                 o.value == value):
                 from crits.objects.handlers import delete_object_file
-                del self.obj[c]
+                self.obj.remove(o)
                 delete_object_file(value)
+                break
+
+    def delete_all_analysis_results(self):
+        """
+        Delete all analysis results for this top-level object.
+        """
+
+        from crits.services.analysis_result import AnalysisResult
+        results = AnalysisResult.objects(object_id=str(self.id))
+        for result in results:
+            result.delete()
 
     def delete_all_objects(self):
         """
@@ -1450,7 +1565,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
         from crits.objects.handlers import delete_object_file
         for o in self.obj:
-            delete_object_file(o.value)
+            if o.object_type == ObjectTypes.FILE_UPLOAD:
+                delete_object_file(o.value)
         self.obj = []
 
     def delete_all_favorites(self):
@@ -1466,14 +1582,12 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 user.favorites[type_].remove(str(self.id))
                 user.save()
 
-    def update_object_value(self, object_type, name, value, new_value):
+    def update_object_value(self, object_type, value, new_value):
         """
         Update the value for an object on this top-level object.
 
         :param object_type: The type of the object being updated.
         :type object_type: str
-        :param name: The name of the object being updated.
-        :type name: str
         :param value: The value of the object being updated.
         :type value: str
         :param new_value: The new value of the object being updated.
@@ -1481,22 +1595,19 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         for c, o in enumerate(self.obj):
-            if (o.name == name and
-                o.object_type == object_type and
+            if (o.object_type == object_type and
                 o.value == value):
                 self.obj[c].value = new_value
                 break
 
-    def update_object_source(self, object_type, name, value,
-                             new_source=None, new_method=None,
-                             new_reference=None, analyst=None):
+    def update_object_source(self, object_type, value,
+                             new_source=None, new_method='',
+                             new_reference='', analyst=None):
         """
         Update the source for an object on this top-level object.
 
         :param object_type: The type of the object being updated.
         :type object_type: str
-        :param name: The name of the object being updated.
-        :type name: str
         :param value: The value of the object being updated.
         :type value: str
         :param new_source: The name of the new source.
@@ -1510,8 +1621,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         for c, o in enumerate(self.obj):
-            if (o.name == name and
-                o.object_type == object_type and
+            if (o.object_type == object_type and
                 o.value == value):
                 if not analyst:
                     analyst = self.obj[c].source[0].intances[0].analyst
@@ -1541,6 +1651,25 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                                  'relationship': {'type': self._meta['crits_type']}})
         return html
 
+    def format_location(self, location, analyst):
+        """
+        Render a location to HTML to prepare for inclusion in a template.
+
+        :param location: The location to templetize.
+        :type location: :class:`crits.core.crits_mongoengine.EmbeddedLocation`
+        :param analyst: The user requesting the Campaign.
+        :type analyst: str
+        :returns: str
+        """
+
+        html = render_to_string('locations_display_row_widget.html',
+                                {'location': location,
+                                 'hit': self,
+                                 'obj': None,
+                                 'admin': is_admin(analyst),
+                                 'relationship': {'type': self._meta['crits_type']}})
+        return html
+
     def sort_objects(self):
         """
         Sort the objects for this top-level object.
@@ -1555,117 +1684,199 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             o_dict[o.object_type].append(o.to_dict())
         return o_dict
 
-    def add_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                         rel_date=None, analyst=None, get_rels=False):
+    def add_relationship(self, rel_item, rel_type, rel_date=None,
+                         analyst=None, rel_confidence='unknown',
+                         rel_reason='N/A', get_rels=False):
         """
-        Add a relationship to this top-level object. If rel_item is provided it
-        will be used, otherwise rel_id and type_ must be provided.
+        Add a relationship to this top-level object. The rel_item will be
+        saved. It is up to the caller to save "self".
 
         :param rel_item: The top-level object to relate to.
         :type rel_item: class which inherits from
                         :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-        :param rel_id: The ObjectId of the top-level object to relate to.
-        :type rel_id: str
-        :param type_: The type of top-level object to relate to.
-        :type type_: str
         :param rel_type: The type of relationship.
         :type rel_type: str
         :param rel_date: The date this relationship applies.
         :type rel_date: datetime.datetime
         :param analyst: The user forging this relationship.
         :type analyst: str
+        :param rel_confidence: The confidence of the relationship.
+        :type rel_confidence: str
+        :param rel_reason: The reason for the relationship.
+        :type rel_reason: str
         :param get_rels: Return the relationships after forging.
         :type get_rels: boolean
         :returns: dict with keys "success" (boolean) and "message" (str if
                   failed, dict if successful)
         """
 
-        got_rel = True
-        if not rel_item:
-            got_rel = False
-            if isinstance(rel_id, basestring) and isinstance(type_, basestring):
-                rel_item = class_from_id(type_, rel_id)
-            elif isinstance(rel_id, ObjectId) and isinstance(type_, basestring):
-                rel_item = class_from_id(type_, str(rel_id))
-            else:
-                return {'success': False,
-                        'message': 'Could not find object'}
-        if rel_item and rel_type:
-            # get reverse relationship
-            r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
-            if len(r) == 0:
-                return {'success': False,
-                        'message': 'Could not find relationship type'}
-            else:
-                r = r.first()
-            rev_type = r.reverse if rel_type == r.forward else r.forward
-            date = datetime.datetime.now()
-
-            # setup the relationship for me
-            my_rel = EmbeddedRelationship()
-            my_rel.relationship = rel_type
-            my_rel.rel_type = rel_item._meta['crits_type']
-            my_rel.analyst = analyst
-            my_rel.date = date
-            my_rel.relationship_date = rel_date
-            my_rel.object_id = rel_item.id
-
-            # setup the relationship for them
-            their_rel = EmbeddedRelationship()
-            their_rel.relationship = rev_type
-            their_rel.rel_type = self._meta['crits_type']
-            their_rel.analyst = analyst
-            their_rel.date = date
-            their_rel.relationship_date = rel_date
-            their_rel.object_id = self.id
-
-            # check for existing relationship before
-            # blindly adding them
-            for r in self.relationships:
-                if rel_date:
-                    if (r.object_id == my_rel.object_id
-                        and r.relationship == my_rel.relationship
-                        and r.relationship_date == my_rel.relationship_date
-                        and r.rel_type == my_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Left relationship already exists'}
-                else:
-                    if (r.object_id == my_rel.object_id
-                        and r.relationship == my_rel.relationship
-                        and r.rel_type == my_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Left relationship already exists'}
-            self.relationships.append(my_rel)
-            for r in rel_item.relationships:
-                if rel_date:
-                    if (r.object_id == their_rel.object_id
-                        and r.relationship == their_rel.relationship
-                        and r.relationship_date == their_rel.relationship_date
-                        and r.rel_type == their_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Right relationship already exists'}
-                else:
-                    if (r.object_id == their_rel.object_id
-                        and r.relationship == their_rel.relationship
-                        and r.rel_type == their_rel.rel_type):
-                        return {'success': False,
-                                'message': 'Right relationship already exists'}
-            rel_item.relationships.append(their_rel)
-            if not got_rel:
-                rel_item.save(username=analyst)
-            if get_rels:
-                return {'success': True,
-                        'message': self.sort_relationships(analyst, meta=True)}
-            else:
-                return {'success': True,
-                        'message': 'Relationship forged'}
-        else:
+        # get reverse relationship
+        rev_type = RelationshipTypes.inverse(rel_type)
+        if rev_type is None:
             return {'success': False,
-                    'message': 'Need valid object and relationship type'}
+                    'message': 'Could not find relationship type'}
+        date = datetime.datetime.now()
 
-    def _modify_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                             rel_date=None, new_type=None, new_date=None,
-                             modification=None, analyst=None):
+        # setup the relationship for me
+        my_rel = EmbeddedRelationship()
+        my_rel.relationship = rel_type
+        my_rel.rel_type = rel_item._meta['crits_type']
+        my_rel.analyst = analyst
+        my_rel.date = date
+        my_rel.relationship_date = rel_date
+        my_rel.object_id = rel_item.id
+        my_rel.rel_confidence = rel_confidence
+        my_rel.rel_reason = rel_reason
+
+        # setup the relationship for them
+        their_rel = EmbeddedRelationship()
+        their_rel.relationship = rev_type
+        their_rel.rel_type = self._meta['crits_type']
+        their_rel.analyst = analyst
+        their_rel.date = date
+        their_rel.relationship_date = rel_date
+        their_rel.object_id = self.id
+        their_rel.rel_confidence = rel_confidence
+        their_rel.rel_reason = rel_reason
+
+        # variables for detecting if an existing relationship exists
+        is_left_rel_exist = False
+        is_right_rel_exist = False
+        left_found_rel = None
+        right_found_rel = None
+
+        # check for existing relationship before
+        # blindly adding them
+        for r in self.relationships:
+            if rel_date:
+                if (r.object_id == my_rel.object_id
+                    and r.relationship == my_rel.relationship
+                    and r.relationship_date == my_rel.relationship_date
+                    and r.rel_type == my_rel.rel_type):
+                    is_left_rel_exist = True
+                    left_found_rel = r
+            else:
+                if (r.object_id == my_rel.object_id
+                    and r.relationship == my_rel.relationship
+                    and r.rel_type == my_rel.rel_type):
+                    is_left_rel_exist = True
+                    left_found_rel = r
+
+            # If the relationship already exists then we we're done looping
+            if is_left_rel_exist:
+                break
+
+        for r in rel_item.relationships:
+            if rel_date:
+                if (r.object_id == their_rel.object_id
+                    and r.relationship == their_rel.relationship
+                    and r.relationship_date == their_rel.relationship_date
+                    and r.rel_type == their_rel.rel_type):
+                    is_right_rel_exist = True
+                    right_found_rel = r
+            else:
+                if (r.object_id == their_rel.object_id
+                    and r.relationship == their_rel.relationship
+                    and r.rel_type == their_rel.rel_type):
+                    is_right_rel_exist = True
+                    right_found_rel = r
+
+            # If the relationship already exists then we we're done looping
+            if is_right_rel_exist:
+                break
+
+        # If the relationship already exists on both sides then do nothing
+        if is_left_rel_exist and is_right_rel_exist:
+            return {'success': False,
+                    'message': 'Relationship already exists'}
+
+        # If the relationship does not exist on the left side then add it.
+        if is_left_rel_exist is False:
+            # If the right relationship exists then use the right relationship's data
+            if is_right_rel_exist:
+                my_rel.relationship = right_found_rel.relationship
+                my_rel.analyst = right_found_rel.analyst
+                my_rel.date = right_found_rel.date
+                my_rel.relationship_date = right_found_rel.relationship_date
+                my_rel.rel_confidence = right_found_rel.rel_confidence
+                my_rel.rel_reason = right_found_rel.rel_reason
+                self.relationships.append(my_rel)
+            # otherwise just normally add the new relationship
+            else:
+                self.relationships.append(my_rel)
+
+        # If the relationship does not exist on the right side then add it.
+        if is_right_rel_exist is False:
+            # If the left relationship exists then use the left relationship's data
+            if is_left_rel_exist:
+                their_rel.relationship = left_found_rel.relationship
+                their_rel.analyst = left_found_rel.analyst
+                their_rel.date = left_found_rel.date
+                their_rel.relationship_date = left_found_rel.relationship_date
+                their_rel.rel_confidence = left_found_rel.rel_confidence
+                their_rel.rel_reason = left_found_rel.rel_reason
+                rel_item.relationships.append(their_rel)
+            else:
+                rel_item.relationships.append(their_rel)
+
+            rel_item.save(username=analyst)
+
+        if get_rels:
+            results = {'success': True,
+                       'message': self.sort_relationships(analyst, meta=True)}
+        else:
+            results = {'success': True,
+                       'message': 'Relationship forged'}
+
+        # In case of relating to a versioned backdoor we also want to relate to
+        # the family backdoor.
+        self_type = self._meta['crits_type']
+        rel_item_type = rel_item._meta['crits_type']
+
+        # If both are not backdoors, just return
+        if self_type != 'Backdoor' and rel_item_type != 'Backdoor':
+            return results
+
+        # If either object is a family backdoor, don't go further.
+        if ((self_type == 'Backdoor' and self.version == '') or
+            (rel_item_type == 'Backdoor' and rel_item.version == '')):
+            return results
+
+        # If one is a versioned backdoor and the other is a family backdoor,
+        # don't go further.
+        if ((self_type == 'Backdoor' and self.version != '' and
+             rel_item_type == 'Backdoor' and rel_item.version == '') or
+            (rel_item_type == 'Backdoor' and rel_item.version != '' and
+             self_type == 'Backdoor' and self.version == '')):
+           return results
+
+        # Figure out which is the backdoor object.
+        if self_type == 'Backdoor':
+            bd = self
+            other = rel_item
+        else:
+            bd = rel_item
+            other = self
+
+        # Find corresponding family backdoor object.
+        klass = class_from_type('Backdoor')
+        family = klass.objects(name=bd.name, version='').first()
+        if family:
+            other.add_relationship(family,
+                                   rel_type,
+                                   rel_date=rel_date,
+                                   analyst=analyst,
+                                   rel_confidence=rel_confidence,
+                                   rel_reason=rel_reason,
+                                   get_rels=get_rels)
+            other.save(user=analyst)
+
+        return results
+
+    def _modify_relationship(self, rel_item=None, rel_id=None, type_=None,
+                             rel_type=None, rel_date=None, new_type=None,
+                             new_date=None, new_confidence='unknown',
+                             new_reason="N/A", modification=None, analyst=None):
         """
         Modify a relationship to this top-level object. If rel_item is provided it
         will be used, otherwise rel_id and type_ must be provided.
@@ -1685,14 +1896,17 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type new_type: str
         :param new_date: The new relationship date.
         :type new_date: datetime.datetime
+        :param new_confidence: The new confidence.
+        :type new_confidence: str
+        :param new_reason: The new reason.
+        :type new_reason: str
         :param modification: What type of modification this is ("type",
-                             "delete", "date").
+                             "delete", "date", "confidence").
         :type modification: str
         :param analyst: The user forging this relationship.
         :type analyst: str
         :returns: dict with keys "success" (boolean) and "message" (str)
         """
-
         got_rel = True
         if not rel_item:
             got_rel = False
@@ -1705,22 +1919,16 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             new_date = parse(new_date, fuzzy=True)
         if rel_item and rel_type and modification:
             # get reverse relationship
-            r = RelationshipType.objects(Q(forward=rel_type) | Q(reverse=rel_type))
-            if len(r) == 0:
+            rev_type = RelationshipTypes.inverse(rel_type)
+            if rev_type is None:
                 return {'success': False,
                         'message': 'Could not find relationship type'}
-            else:
-                r = r.first()
-            rev_type = r.reverse if rel_type == r.forward else r.forward
             if modification == "type":
                 # get new reverse relationship
-                r = RelationshipType.objects(Q(forward=new_type) | Q(reverse=new_type))
-                if len(r) == 0:
+                new_rev_type = RelationshipTypes.inverse(new_type)
+                if new_rev_type is None:
                     return {'success': False,
                             'message': 'Could not find reverse relationship type'}
-                else:
-                    r = r.first()
-                new_rev_type = r.reverse if new_type == r.forward else r.forward
             for c, r in enumerate(self.relationships):
                 if rel_date:
                     if (r.object_id == rel_item.id
@@ -1731,6 +1939,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             self.relationships[c].relationship = new_type
                         elif modification == "date":
                             self.relationships[c].relationship_date = new_date
+                        elif modification == "confidence":
+                            self.relationships[c].rel_confidence = new_confidence
+                        elif modification == "reason":
+                            self.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
                             del self.relationships[c]
                 else:
@@ -1741,6 +1953,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             self.relationships[c].relationship = new_type
                         elif modification == "date":
                             self.relationships[c].relationship_date = new_date
+                        elif modification == "confidence":
+                            self.relationships[c].rel_confidence = new_confidence
+                        elif modification == "reason":
+                            self.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
                             del self.relationships[c]
             for c, r in enumerate(rel_item.relationships):
@@ -1753,6 +1969,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             rel_item.relationships[c].relationship = new_rev_type
                         elif modification == "date":
                             rel_item.relationships[c].relationship_date = new_date
+                        elif modification == "confidence":
+                            rel_item.relationships[c].rel_confidence = new_confidence
+                        elif modification == "reason":
+                            rel_item.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
                             del rel_item.relationships[c]
                 else:
@@ -1763,6 +1983,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             rel_item.relationships[c].relationship = new_rev_type
                         elif modification == "date":
                             rel_item.relationships[c].relationship_date = new_date
+                        elif modification == "confidence":
+                            rel_item.relationships[c].rel_confidence = new_confidence
+                        elif modification == "reason":
+                            rel_item.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
                             del rel_item.relationships[c]
             if not got_rel:
@@ -1837,6 +2061,66 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                              rel_date=rel_date, new_type=new_type,
                              modification="type", analyst=analyst)
 
+    def edit_relationship_confidence(self, rel_item=None, rel_id=None,
+                                     type_=None, rel_type=None, rel_date=None,
+                                     new_confidence='unknown', analyst=None):
+        """
+        Modify a relationship type for a relationship to this top-level object.
+        If rel_item is provided it will be used, otherwise rel_id and type_ must
+        be provided.
+
+        :param rel_item: The top-level object to relate to.
+        :type rel_item: class which inherits from
+                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        :param rel_id: The ObjectId of the top-level object to relate to.
+        :type rel_id: str
+        :param type_: The type of top-level object to relate to.
+        :type type_: str
+        :param rel_type: The type of relationship.
+        :type rel_type: str
+        :param rel_date: The date this relationship applies.
+        :type rel_date: datetime.datetime
+        :param new_confidence: The new confidence of the relationship.
+        :type new_confidence: str
+        :param analyst: The user editing this relationship.
+        :type analyst: str
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
+                             type_=type_, rel_type=rel_type,
+                             rel_date=rel_date, new_confidence=new_confidence,
+                             modification="confidence", analyst=analyst)
+
+    def edit_relationship_reason(self, rel_item=None, rel_id=None, type_=None,
+                                 rel_type=None, rel_date=None, new_reason="N/A",
+                                 analyst=None):
+        """
+        Modify a relationship type for a relationship to this top-level object.
+        If rel_item is provided it will be used, otherwise rel_id and type_ must
+        be provided.
+
+        :param rel_item: The top-level object to relate to.
+        :type rel_item: class which inherits from
+                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+        :param rel_id: The ObjectId of the top-level object to relate to.
+        :type rel_id: str
+        :param type_: The type of top-level object to relate to.
+        :type type_: str
+        :param rel_type: The type of relationship.
+        :type rel_type: str
+        :param rel_date: The date this relationship applies.
+        :type rel_date: datetime.datetime
+        :param new_confidence: The new confidence of the relationship.
+        :type new_confidence: int
+        :param analyst: The user editing this relationship.
+        :type analyst: str
+        :returns: dict with keys "success" (boolean) and "message" (str)
+        """
+        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
+                             type_=type_, rel_type=rel_type,
+                             rel_date=rel_date, new_reason=new_reason,
+                             modification="reason", analyst=analyst)
+
     def delete_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
                             rel_date=None, analyst=None, *args, **kwargs):
         """
@@ -1873,7 +2157,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type username: str
         """
 
-        for r in self.relationships:
+        for r in self.relationships[:]:
             if r.relationship_date:
                 self.delete_relationship(rel_id=str(r.object_id),
                                          type_=r.rel_type,
@@ -1901,11 +2185,14 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             return {}
         rel_dict = dict((r.rel_type,[]) for r in self.relationships)
         query_dict = {
+            'Actor': ('id', 'name', 'campaign'),
+            'Backdoor': ('id', 'name', 'version', 'campaign'),
             'Campaign': ('id', 'name'),
             'Certificate': ('id', 'md5', 'filename', 'description', 'campaign'),
             'Domain': ('id', 'domain'),
             'Email': ('id', 'from_address', 'sender', 'subject', 'campaign'),
             'Event': ('id', 'title', 'event_type', 'description', 'campaign'),
+            'Exploit': ('id', 'name', 'cve', 'campaign'),
             'Indicator': ('id', 'ind_type', 'value', 'campaign'),
             'IP': ('id', 'ip', 'campaign'),
             'PCAP': ('id', 'md5', 'filename', 'description', 'campaign'),
@@ -1916,9 +2203,9 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                        'filename',
                        'mimetype',
                        'size',
-                       'backdoor',
-                       'exploit',
                        'campaign'),
+            'Signature': ('id', 'title', 'data_type', 'description',
+                        'version', 'campaign'),
             'Target': ('id', 'firstname', 'lastname', 'email_address', 'email_count'),
         }
         rel_dict['Other'] = 0
@@ -1933,8 +2220,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             for r in self.relationships:
                 rd = r.to_dict()
                 obj_class = class_from_type(rd['type'])
-                # TODO: these should be limited to the fields above, or at least exclude larger
-                # fields that we don't need.
+                # TODO: these should be limited to the fields above, or at
+                # least exclude larger fields that we don't need.
                 fields = query_dict.get(rd['type'])
                 if r.rel_type not in ["Campaign", "Target"]:
                     obj = obj_class.objects(id=rd['value'],
@@ -2045,11 +2332,9 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         if isinstance(instance, Releasability.ReleaseInstance):
-            rels = self.releasability
-            for c, r in enumerate(rels):
+            for r in self.releasability:
                 if r.name == name:
-                    rels[c].instances.append(instance)
-            self.releasability = rels
+                    r.instances.append(instance)
 
     def remove_releasability(self, name=None, *args, **kwargs):
         """
@@ -2060,11 +2345,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         """
 
         if isinstance(name, basestring):
-            rels = self.releasability
-            for c, r in enumerate(rels):
+            for r in self.releasability:
                 if r.name == name and len(r.instances) == 0:
-                    del rels[c]
-            self.releasability = rels
+                    self.releasability.remove(r)
+                    break
 
     def remove_releasability_instance(self, name=None, date=None, *args, **kwargs):
         """
@@ -2076,15 +2360,13 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type date: datetime.datetime
         """
 
-        rels = self.releasability
-        for c, r in enumerate(rels):
+        if not isinstance(date, datetime.datetime):
+            date = parse(date, fuzzy=True)
+        for r in self.releasability:
             if r.name == name:
-                for cc, i in enumerate(r.instances):
-                    if not isinstance(date, datetime.datetime):
-                        date = parse(date, fuzzy=True)
-                    if i.date == date:
-                        del rels[c].instances[cc]
-        self.releasability = rels
+                for ri in r.instances:
+                    if ri.date == date:
+                        r.instances.remove(ri)
 
     def sanitize_relationships(self, username=None, sources=None):
         """
@@ -2166,37 +2448,35 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         return [obj['name'] for obj in self._data['campaign']]
 
 
-# Needs to be here to prevent circular imports with CritsBaseAttributes
-class RelationshipType(CritsDocument, CritsSchemaDocument, Document):
-    """
-    Relationship Type Class.
-    """
+    def get_analysis_results(self):
+        """
+        Get analysis results for this TLO.
 
-    meta = {
-        "collection": settings.COL_RELATIONSHIP_TYPES,
-        "crits_type": 'RelationshipType',
-        "latest_schema_version": 1,
-        "minify_defaults": [
-            'forward',
-            'reverse',
-            'active',
-            'description',
-        ],
-        "schema_doc": {
-            'forward': 'The forward (left) side of the relationship pair',
-            'reverse': 'The reverse (right) side of the relationship pair',
-            'description': 'The description of the relationship pair',
-            'active': 'Enabled in the UI (on/off)'
-        },
-    }
+        :returns: list
+        """
 
-    forward = StringField(required=True)
-    reverse = StringField(required=True)
-    active = StringField(required=True)
-    description = StringField()
+        from crits.services.analysis_result import AnalysisResult
 
-    def migrate(self):
-        pass
+        return AnalysisResult.objects(object_id=str(self.id))
+
+    def get_details_url(self):
+        """
+        Generic function that generates a details url for a
+        :class:`crits.core.crits_mongoengine.CritsBaseAttributes` object.
+        """
+
+        mapper = self._meta.get('jtable_opts')
+        if mapper is not None:
+            details_url = mapper['details_url']
+            details_url_key = mapper['details_url_key']
+
+            try:
+                return reverse(details_url, args=(unicode(self[details_url_key]),))
+            except Exception:
+                return None
+        else:
+            return None
+
 
 def merge(self, arg_dict=None, overwrite=False, **kwargs):
     """
@@ -2251,7 +2531,7 @@ def json_handler(obj):
         return str(obj)
 
 def create_embedded_source(name, source_instance=None, date=None,
-                           reference=None, method=None, analyst=None):
+                           reference='', method='', analyst=None):
     """
     Create an EmbeddedSource object. If source_instance is provided it will be
     used, otherwise date, reference, and method will be used.

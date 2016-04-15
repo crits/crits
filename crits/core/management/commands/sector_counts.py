@@ -15,8 +15,8 @@ class Command(BaseCommand):
 
         sectors = {}
 
-        types = ['Campaign', 'Certificate', 'Domain', 'Email', 'Event',
-                 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Target']
+        types = ['Actor', 'Campaign', 'Certificate', 'Domain', 'Email', 'Event',
+                 'Indicator', 'IP', 'PCAP', 'RawData', 'Sample', 'Signature', 'Target']
 
         for otype in types:
             klass = class_from_type(otype)

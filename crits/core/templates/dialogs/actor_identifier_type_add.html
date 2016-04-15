@@ -1,0 +1,9 @@
+
+
+<div id="dialog-{{ request.GET.dialog }}" title="Add New Actor Identifier Type">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "crits.actors.views.new_actor_identifier_type" %}' 
+	  method='POST' enctype="multipart/form-data" item-type="actor-identifier-type">
+    <table class="form">{{ add_actor_identifier_type.as_table }}</table>
+    </form>
+</div>

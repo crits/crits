@@ -1,18 +1,17 @@
-{% load url from future %}
+
 
 <div id="dialog-{{ request.GET.dialog }}" title="Upload Indicator CSV">
     <p><b>CSV must have the following column names to be processed properly:<br/>
-        Indicator, Type, Campaign, Campaign Confidence, Confidence, Impact, Bucket List</b><br/><br/>
-        In the raw CSV, separate multiple bucket list values with commas and surrounded <br/>
-        by quotes (e.g. "value1,value2,value3"). <br/><br/>
-        Note some programs/libraries (e.g. Excel) will automatically <br/>
-        put in quotes for you when you use commas or other special <br/>
-        characters, and so you should not add quotes yourself. <br/>
-        If you are unsure then inspect the raw CSV file before uploading <br/>
-        otherwise you may end up with unanticipated quote characters in your results.</p>
-    <form id="form-{{ request.GET.dialog }}" 
-	  action='{% url "crits.indicators.views.upload_indicator" %}' 
-	  method='POST' enctype="multipart/form-data" target="csv-iframe" 
+        Indicator, Type, Threat Type, Attack Type, Description, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action</b><br/><br/>
+        In the raw CSV, separate multiple Tickets, Actions, and/or Bucket List values with commas, and<br/>
+        surround with quotes (e.g. "value1,value2,value3").<br/><br/>
+        Note: Some programs/libraries (e.g. Excel) will automatically insert quotes for you when<br/>
+        you use commas or other special characters, and so you should not add quotes yourself.<br/>
+        If you are unsure, then inspect the raw CSV file before uploading, otherwise you may<br/>
+        end up with unanticipated quote characters in your results.</p>
+    <form id="form-{{ request.GET.dialog }}"
+	  action='{% url "crits.indicators.views.upload_indicator" %}'
+	  method='POST' enctype="multipart/form-data" target="csv-iframe"
 	  item-type="indicator" input_clear_filter="[type!='hidden']">
     <table class="form">{{ upload_csv.as_table }}</table>
     <input type="hidden" name="svalue" value="Upload CSV">

@@ -1,25 +1,21 @@
-{% load url from future %}
+
 <div class="content_box" style="width: 75%;">
     <h3 class="titleheader">
         <span>Configuration</span>
     </h3>
-    {% if config_list %}
+    {% if config %}
     <div style="margin-top: -10px;">
     <br />
         {% if admin %}
         <span class="horizontal_menu">
             <ul class="hmenu">
                 <li><a href="{% url 'crits.services.views.edit_config' service.name %}" style="display: inline">Edit</a></li>
-                <li><a href="{% url 'crits.services.views.export_config' service.name %}" style="display: inline">Export</a></li>
-                <li><a href="{% url 'crits.services.views.import_config' service.name %}" style="display: inline">Import</a></li>
-                <li class="right"><a href="{% url 'crits.services.views.reset_config' service.name %}" style="display: inline">Reset</a></li>
             </ul>
         </span>
         {% endif %}
         <table class='vertical' width="100%">
             <tbody>
-            {# config_list is a list of (name, value) tuples #}
-            {% for key, value in config_list %}
+            {% for key, value in config.items %}
                 <tr>
                     <td class="key">{{ key }}</td>
                     <td>{{ value|linebreaksbr }}</td>

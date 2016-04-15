@@ -1,6 +1,6 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.ips.ip import IP
 from crits.ips.handlers import ip_add_update
@@ -17,7 +17,7 @@ class IPResource(CRITsAPIResource):
 
     class Meta:
         object_class = IP
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "ips"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
@@ -43,23 +43,29 @@ class IPResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the IP.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
-        :raises BadRequest: If creation fails.
+        :returns: HttpResponse.
         """
 
         analyst = bundle.request.user.username
         data = bundle.data
-        ip = data['ip']
-        name = data['source']
-        reference = data['reference']
-        method = data['method']
-        campaign = data['campaign']
-        confidence = data['confidence']
-        ip_type = data['ip_type']
+        ip = data.get('ip', None)
+        name = data.get('source', None)
+        reference = data.get('reference', None)
+        method = data.get('method', None)
+        campaign = data.get('campaign', None)
+        confidence = data.get('confidence', None)
+        ip_type = data.get('ip_type', None)
         add_indicator = data.get('add_indicator', False)
-        indicator_reference = data.get('indicator_reference')
+        indicator_reference = data.get('indicator_reference', None)
         bucket_list = data.get('bucket_list', None)
         ticket = data.get('ticket', None)
+
+        content = {'return_code': 1,
+                   'type': 'IP'}
+
+        if not ip or not name or not ip_type:
+            content['message'] = "Must provide an IP, IP Type, and Source."
+            self.crits_response(content)
 
         result = ip_add_update(ip,
                                ip_type,
@@ -73,7 +79,17 @@ class IPResource(CRITsAPIResource):
                                ticket=ticket,
                                is_add_indicator=add_indicator,
                                indicator_reference=indicator_reference)
-        if 'message' in result:
-            raise BadRequest(result['message'])
-        else:
-            return bundle
+
+        if result.get('message'):
+            content['message'] = result.get('message')
+        if result.get('object'):
+            content['id'] = str(result.get('object').id)
+        if content.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'ips',
+                                  'api_name': 'v1',
+                                  'pk': content.get('id')})
+            content['url'] = url
+        if result['success']:
+            content['return_code'] = 0
+        self.crits_response(content)

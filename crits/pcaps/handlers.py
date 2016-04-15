@@ -1,4 +1,3 @@
-import crits.service_env
 import datetime
 import hashlib
 import json
@@ -8,7 +7,6 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from mongoengine.base import ValidationError
 
 from crits.core.class_mapper import class_from_id, class_from_value
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
@@ -19,7 +17,9 @@ from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.pcaps.pcap import PCAP
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
+
+from crits.vocabulary.relationships import RelationshipTypes
 
 
 def generate_pcap_csv(request):
@@ -89,9 +89,11 @@ def get_pcap_details(md5, analyst):
         favorite = is_user_favorite("%s" % analyst, 'PCAP', pcap.id)
 
         # services
-        manager = crits.service_env.manager
         # Assume all PCAPs have the data available
-        service_list = manager.get_supported_services('PCAP', True)
+        service_list = get_supported_services('PCAP')
+
+        # analysis results
+        service_results = pcap.get_analysis_results()
 
         args = {'service_list': service_list,
                 'objects': objects,
@@ -101,6 +103,7 @@ def get_pcap_details(md5, analyst):
                 'relationship': relationship,
                 "subscription": subscription,
                 "screenshots": screenshots,
+                "service_results": service_results,
                 "pcap": pcap}
 
     return template, args
@@ -206,9 +209,9 @@ def generate_pcap_jtable(request, option):
                                   RequestContext(request))
 
 def handle_pcap_file(filename, data, source_name, user=None,
-                     description=None, parent_id=None, parent_md5=None,
-                     parent_type=None, method=None, relationship=None,
-                     bucket_list=None, ticket=None):
+                     description=None, related_id=None, related_md5=None,
+                     related_type=None, method='', reference='',
+                     relationship=None, bucket_list=None, ticket=None):
     """
     Add a PCAP.
 
@@ -224,20 +227,28 @@ def handle_pcap_file(filename, data, source_name, user=None,
     :type user: str
     :param description: Description of the PCAP.
     :type description: str
-    :param parent_id: ObjectId of the top-level object where this PCAP came from.
-    :type parent_id: str
-    :param parent_md5: MD5 of the top-level object where this PCAP came from.
-    :type parent_md5: str
-    :param parent_type: The CRITs type of the parent.
-    :type parent_type: str
+    :param related_id: ObjectId of a top-level object related to this PCAP.
+    :type related_id: str
+    :param related_md5: MD5 of a top-level object related to this PCAP.
+    :type related_md5: str
+    :param related_type: The CRITs type of the related top-level object.
+    :type related_type: str
     :param method: The method of acquiring this PCAP.
     :type method: str
+    :param reference: A reference to the source of this PCAP.
+    :type reference: str
     :param relationship: The relationship between the parent and the PCAP.
     :type relationship: str
     :param bucket_list: Bucket(s) to add to this PCAP.
     :type bucket_list: str(comma separated) or list.
     :param ticket: Ticket(s) to add to this PCAP.
     :type ticket: str(comma separated) or list.
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               'success' (boolean),
               'message' (str),
@@ -256,6 +267,30 @@ def handle_pcap_file(filename, data, source_name, user=None,
             'message':  'Data length <= 0'
         }
         return status
+    if ((related_type and not (related_id or related_md5)) or
+        (not related_type and (related_id or related_md5))):
+        status = {
+            'success':   False,
+            'message':  'Must specify both related_type and related_id or related_md5.'
+        }
+        return status
+
+    if not source_name:
+        return {"success" : False, "message" : "Missing source information."}
+
+    related_obj = None
+    if related_id or related_md5:
+        if related_id:
+            related_obj = class_from_id(related_type, related_id)
+        else:
+            related_obj = class_from_value(related_type, related_md5)
+        if not related_obj:
+            status = {
+                'success': False,
+                'message': 'Related object not found.'
+            }
+            return status
+
 
     # generate md5 and timestamp
     md5 = hashlib.md5(data).hexdigest()
@@ -277,15 +312,15 @@ def handle_pcap_file(filename, data, source_name, user=None,
     if isinstance(source_name, basestring) and len(source_name) > 0:
         s = create_embedded_source(source_name,
                                    method=method,
-                                   reference='',
+                                   reference=reference,
                                    analyst=user)
         pcap.add_source(s)
     elif isinstance(source_name, EmbeddedSource):
-        pcap.add_source(source_name)
+        pcap.add_source(source_name, method=method, reference=reference)
     elif isinstance(source_name, list) and len(source_name) > 0:
         for s in source_name:
             if isinstance(s, EmbeddedSource):
-                pcap.add_source(s)
+                pcap.add_source(s, method=method, reference=reference)
 
     # add file to GridFS
     if not isinstance(pcap.filedata.grid_id, ObjectId):
@@ -300,55 +335,32 @@ def handle_pcap_file(filename, data, source_name, user=None,
     # save pcap
     pcap.save(username=user)
 
-    # update parent relationship if a parent is supplied
-    if parent_id or parent_md5:
-        if not relationship:
-            relationship = "Related_To"
-        if  parent_id:
-            parent_obj = class_from_id(parent_type, parent_id)
+    # update relationship if a related top-level object is supplied
+    if related_obj and pcap:
+        if relationship:
+            relationship=RelationshipTypes.inverse(relationship=relationship)
         else:
-            parent_obj = class_from_value(parent_type, parent_md5)
-        if parent_obj and pcap:
-            pcap.add_relationship(rel_item=parent_obj,
-                                  rel_type=relationship,
-                                  analyst=user,
-                                  get_rels=False)
-            parent_obj.save(username=user)
-            pcap.save(username=user)
+            relationship = RelationshipTypes.RELATED_TO
+        pcap.add_relationship(related_obj,
+                              relationship,
+                              analyst=user,
+                              get_rels=False)
+        pcap.save(username=user)
 
     # run pcap triage
     if is_pcap_new and data:
         pcap.reload()
-        run_triage(data, pcap, user)
+        run_triage(pcap, user)
 
     status = {
         'success':      True,
         'message':      'Uploaded pcap',
         'md5':          md5,
+        'id':           str(pcap.id),
+        'object':       pcap
     }
 
     return status
-
-def update_pcap_description(md5, description, analyst):
-    """
-    Update a PCAP description.
-
-    :param md5: The MD5 of the PCAP to update.
-    :type md5: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user updating the description.
-    :type analyst: str
-    :returns: None, ValidationError
-    """
-
-    pcap = PCAP.objects(md5=md5).first()
-    pcap.description = description
-    try:
-        pcap.save(username=analyst)
-        return None
-    except ValidationError, e:
-        return e
 
 def delete_pcap(pcap_md5, username=None):
     """
@@ -356,7 +368,7 @@ def delete_pcap(pcap_md5, username=None):
 
     :param pcap_md5: The MD5 of the PCAP to delete.
     :type pcap_md5: str
-    :param username: The user deleting the certificate.
+    :param username: The user deleting the pcap.
     :type username: str
     :returns: True, False
     """

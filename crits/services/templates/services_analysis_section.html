@@ -1,10 +1,14 @@
-{% load url from future %}
+
 
 <div id="analysis_section">
     {% include 'services_analysis_listing.html' %}
 </div>
 <div class="service_run_form">
 </div>
+
+{% block css_includes %}
+<link rel="stylesheet" media="screen" href="{{ STATIC_URL }}css/services.css">
+{% endblock %}
 
 {% block javascript_includes %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/services.js"></script>

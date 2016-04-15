@@ -7,6 +7,7 @@ from mongoengine import ObjectIdField, StringField, ListField, EmbeddedDocumentF
 from django.conf import settings
 from django.core.urlresolvers import reverse
 
+from crits.core.user import CRITsUser
 from crits.core.fields import CritsDateTimeField
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, CritsSourceDocument
@@ -45,7 +46,22 @@ class Comment(CritsDocument, CritsSchemaDocument, CritsSourceDocument, Document)
             },
             'source': ('List [] of source information about who provided this'
                        ' comment')
+        },
+        "jtable_opts": {
+            'details_url': '',
+            'details_url_key': 'id',
+            'default_sort': 'date DESC',
+            'search_url': '',
+            'fields': ["obj_type", "comment", "url_key", "created",
+                       "analyst", "source", "id"],
+            'jtopts_fields': ["details", "obj_type", "comment", "date",
+                              "analyst", "source", "id"],
+            'hidden_fields': ["id", ],
+            'linked_fields': ["analyst", "source"],
+            'details_link': 'details',
+            'no_sort': ['details', ],
         }
+
     }
     # This is not a date field!
     # It exists to provide default values for created and edit_date
@@ -180,7 +196,7 @@ def parse_comment(comment):
     # get users
     for i in re_user.finditer(comment):
         user = i.group(0).replace('@','').strip()
-        if len(user):
+        if len(user) and CRITsUser.objects(username=user).count() == 1:
             users.append(user)
     # dedupe
     users = list(set(users))

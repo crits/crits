@@ -1,14 +1,19 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 
 {% block title %}Target Details{% endblock %}
 
 {% block content %}
 
+<script>
+    var target_id = "{{ target_detail.id | escapejs}}";
+</script>
+
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
     <li><a href="#emails_section" id="emails_button"><span>Emails ({{email_list.count}})</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     </ul>
 <div id="details_section">
@@ -32,6 +37,11 @@
                     </font>
                 {% endif %}
             </td>
+        </tr>
+        <tr>
+            {% with description=target_detail.description %}
+                {% include 'description_widget.html' %}
+            {% endwith %}
         </tr>
         <tr>
             <td class="key">Name</td>
@@ -89,20 +99,28 @@
         {% with bucket_list=target_detail.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
     </div>
-
+    <div class="content_box">
+        {% with obj=target_detail obj_type="Target" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
     <div>
       {% with obj=target_detail obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
     </div>
-
     <div>
       {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
          {% include "campaigns_display_widget.html" %}
       {% endwith %}
     </div>
-
+    <div>
+      {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
+         {% include "locations_display_widget.html" %}
+      {% endwith %}
+    </div>
     <div>
         {% include 'relationships_listing_widget.html' %}
     </div>
@@ -124,6 +142,10 @@
     </div>
 </div>
 
+{% with item=target_detail %}
+    {% include "services_analysis_section.html" with crits_type="Target" identifier=target_detail.id %}
+{% endwith %}
+
 {% if target_detail.id %}
     {% include 'services_tab_tabs_widget.html' %}
     </div>
@@ -131,7 +153,7 @@
 
 <div style="display: none;">
     <div id="edit-details-form" title="Edit Details" style="display: table;">
-        <form id="form-edit-details" action='{% url 'crits.targets.views.add_update_target' %}' method='POST' style="display: inline;">
+        <form id="form-edit-details" action='{% url 'crits.targets.views.add_update_target' %}' method='POST' style="display: inline;">{% csrf_token %}
         <table class='form'> {{ form.as_table }}</table>
         </form>
     </div>

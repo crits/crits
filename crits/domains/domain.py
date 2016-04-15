@@ -1,16 +1,10 @@
-import datetime
-
-from mongoengine import Document, StringField, ListField, EmbeddedDocumentField
+from mongoengine import Document, StringField
 from mongoengine import BooleanField, DynamicEmbeddedDocument
-from difflib import unified_diff
 from django.conf import settings
-from whois_parser import WhoisEntry
-
-from cybox.objects.domain_name_object import DomainName
-from cybox.core import Observable
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, CritsSourceDocument
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.domains.migrate import migrate_domain
 
 class TLD(CritsDocument, Document):
@@ -38,7 +32,8 @@ class EmbeddedWhoIs(DynamicEmbeddedDocument, CritsDocumentFormatter):
         'allow_inheritance': False
     }
 
-class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
+class Domain(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+             Document):
     """
     Domain Class.
     """
@@ -46,13 +41,12 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_DOMAINS,
         "crits_type": 'Domain',
-        "latest_schema_version": 1,
+        "latest_schema_version": 3,
         "schema_doc": {
             'analyst': 'Analyst who added/modified this domain',
             'domain': 'The domain name of this domain',
             'type': 'Record type of this domain',
             'watchlistEnabled': 'Boolean - whether this is a domain to watch',
-            'whois': 'List [] of dictionaries of whois data on given dates',
         },
         "jtable_opts": {
                          'details_url': 'crits.domains.views.domain_detail',
@@ -80,7 +74,6 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
     domain = StringField(required=True)
     record_type = StringField(default="A", db_field="type")
     watchlistEnabled = BooleanField(default=False)
-    whois = ListField(EmbeddedDocumentField(EmbeddedWhoIs))
     analyst = StringField()
 
     def migrate(self):
@@ -101,129 +94,3 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, Document):
         # - would require adding relationships between the two as well
         return super(self.__class__, self)._custom_save(force_insert, validate,
             clean, write_concern, cascade, cascade_kwargs, _refs, username)
-
-    def add_whois(self, data, analyst, date=None, editable=True):
-        """
-        Add whois information to the domain.
-
-        :param data: The contents of the whois.
-        :type data: str
-        :param analyst: The user adding the whois.
-        :type analyst: str
-        :param date: The date for this whois entry.
-        :type date: datetime.datetime
-        :param editable: If this entry can be modified.
-        :type editable: boolean
-        :returns: :class:`crits.core.domains.domain.WhoisEntry`
-        """
-
-        if not date:
-            date = datetime.datetime.now()
-        whois_entry = WhoisEntry(data).to_dict()
-
-        e = EmbeddedWhoIs()
-        e.date = date
-        e.analyst = analyst
-        e.editable = editable
-        e.text = data
-        e.data = whois_entry
-        self.whois.append(e)
-        return whois_entry
-
-    def edit_whois(self, data, date=None):
-        """
-        Edit whois information for the domain.
-
-        :param data: The contents of the whois.
-        :type data: str
-        :param date: The date for this whois entry.
-        :type date: datetime.datetime
-        """
-
-        if not date:
-            return
-
-        c = 0
-        for w in self.whois:
-            if w.date == date:
-                whois_entry = WhoisEntry(data).to_dict()
-                self.whois[c].data = whois_entry
-                self.whois[c].text = data
-            c += 1
-
-    def delete_whois(self, date):
-        """
-        Remove whois information from the domain.
-
-        :param date: The date for this whois entry.
-        :type date: datetime.datetime
-        """
-
-        if not date:
-            return
-
-        c = 0
-        for w in self.whois:
-            if w.date == date:
-                del self.whois[c]
-            c += 1
-
-    def whois_diff(self, from_date, to_date):
-        """
-        Generate a diff between two whois entries.
-
-        :param from_date: The date for the first whois entry.
-        :type date: datetime.datetime
-        :param to_date: The date for the second whois entry.
-        :type date: datetime.datetime
-        :returns: str, None
-        """
-
-        from_whois = None
-        to_whois = None
-        for w in self.whois:
-            if w.date == from_date:
-                from_whois = str(WhoisEntry.from_dict(w.data)).splitlines(True)
-            if w.date == to_date:
-                to_whois = str(WhoisEntry.from_dict(w.data)).splitlines(True)
-        if not from_whois or not to_whois:
-            return None
-        return unified_diff(from_whois,
-                            to_whois,
-                            fromfile=from_date,
-                            tofile=to_date)
-
-    def to_cybox_observable(self):
-        """
-            Convert a Domain to a CybOX Observables.
-            Returns a tuple of (CybOX object, releasability list).
-
-            To get the cybox object as xml or json, call to_xml() or
-            to_json(), respectively, on the resulting CybOX object.
-        """
-        obj = DomainName()
-        obj.value = self.domain
-        obj.type_ = self.record_type
-        return ([Observable(obj)], self.releasability)
-
-    @classmethod
-    def from_cybox(cls, cybox_obs, source):
-        """
-        Convert a Cybox DefinedObject to a MongoEngine Indicator object.
-
-        :param cybox_obs: The cybox observable to create the indicator from.
-        :type cybox_obs: :class:`cybox.core.Observable``
-        :param source: The source list for the Indicator.
-        :type source: list
-        :returns: :class:`crits.indicators.indicator.Indicator`
-        """
-        cybox_object = cybox_obs.object_.properties
-        db_obj = Domain.objects(domain=str(cybox_object.value)).first()
-        if db_obj:
-            return db_obj
-        else:
-            domain = cls(source=source)
-            domain.domain = str(cybox_object.value)
-            domain.record_type = str(cybox_object.type_)
-            return domain
-

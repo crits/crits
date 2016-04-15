@@ -237,6 +237,55 @@ function editUser(user) {
     $( "#add-new-user-form" ).dialog( "open" );
 }
 
+function editAction(action, object_types, preferred) {
+    var me = $("#add-new-action-form input[name='action']");
+    var ots = $("#add-new-action-form select[name='object_types']");
+    var prefs = $("#add-new-action-form textarea[name='preferred']");
+    me.val(action);
+    me.change();
+	var ot_list = object_types.split(",");
+	ots.val(ot_list);
+	var prep = preferred.replace(/\|\|/g, "\n").replace(/\|/g, ", ");
+	prefs.val(prep);
+    $("#add-new-action-form").dialog("open");
+}
+
+function deleteSignatureDependency(coll, oid)
+{
+   //get the attribute of the row tr element, if success, this will be removed
+   var rowString = "[data-record-key='" + oid + "']";
+   var rowSel = "tr" + rowString;
+
+   var answer = confirm("This will delete the Signature Dependency. Are you sure?" );
+   if(answer) {
+    var me = $("a#to_delete_"+oid);
+    $.ajax({
+        type: "POST",
+        url: delete_signature_dependency,
+        data: {
+            coll: coll,
+            oid: oid,
+        },
+        datatype: 'json',
+        success: function(data) {
+                //delete the row
+                if(data.success) {
+                //should be equal to 1 selecting on key
+                  if($(rowSel).length>0) {
+                   $(rowSel).get(0).remove();
+                  }
+
+                } else {
+                    //console.log("Failed to delete the signature, returned");
+                }
+        },
+        });
+    } else {
+        //console.log("Deletion cancelled by user");
+    }
+
+}
+
 function toggleItemActive(coll, oid) {
     var me = $( "a#is_active_" + oid);
     $.ajax({
@@ -332,6 +381,23 @@ function delete_notification_click(e) {
         success: function(data) {
             if (data.success) {
                 elem.parent().parent().remove();
+            }
+        }
+    });
+}
+
+function toggle_preferred_action_from_jtable(e) {
+    e.preventDefault();
+    var me = $(e.currentTarget);
+    var obj_id = me.attr('data-id');
+    var obj_type = me.attr('data-type');
+    $.ajax({
+        type: "POST",
+        data: {'obj_type': obj_type, 'obj_id': obj_id},
+        url: add_preferred_actions,
+        success: function(data) {
+            if (data.success == false) {
+                error_message_dialog("Error", data.message);
             }
         }
     });
@@ -554,6 +620,37 @@ function jtRecordsLoaded(event,data, button) {
 
     // Also add an attribute for the data type.
     $(jtable).find('.favorites_icon_jtable').attr('data-type', data.serverResponse.crits_type);
+
+    // Also add an attribute for the data type to the actions button
+    $(jtable).find('.preferred_actions_jtable').attr('data-type', data.serverResponse.crits_type);
+}
+
+function link_jtable_column (data, column, baseurl, campbase) {
+    var coltext = "";
+    if (typeof data.record[column] == "string") {
+        var items = data.record[column].split('|||');
+        for (var i = 0; i < items.length; i++) {
+            if (column == "campaign" && items[i]) {
+                var campurl = campbase.replace("__CAMPAIGN__", items[i]);
+                /*jshint multistr: true */
+                coltext += '<span style="float: left;"> \
+                               <a href="'+baseurl+'?'+column+'='+encodeURIComponent(items[i])+'">'+items[i]+'</a> \
+                            </span> \
+                            <span style="float: top;"> \
+                                <a href="'+campurl+'" class="ui-icon ui-icon-triangle-1-e"></a> \
+                            </span>';
+            } else {
+                var decoded = $('<div/>').html(items[i]).text();
+                coltext += '<a href="'+baseurl+'?'+column+'='+encodeURIComponent(decoded)+'&force_full=1">'+items[i]+'</a>';
+                if (i !== (items.length - 1)) {
+                    coltext += ', ';
+                }
+            }
+        }
+    } else {
+        coltext = '<a href="'+baseurl+'?'+column+'='+encodeURIComponent(data.record[column])+'">'+data.record[column]+'</a>';
+    }
+    return coltext;
 }
 
 // Prevent fatal runtime errors for IE if the DevTools (F12) is not active
@@ -582,7 +679,106 @@ var objlog = function(obj, indent) {
       });
 };
 
+
+function initTabNav() {
+    $(".tabnav").tabs({
+        activate: function(event, ui) {
+            var tabid = ui.newPanel.attr('id');
+            var id = $('.tabnav').find('[aria-controls="'+ tabid + '"]').find('a').attr('id');
+            window.location.hash = id;
+        },
+        create: function(event, ui) {
+            var id = event.target.id;
+            // activate the first tab that has results, unless another tab other than the first tab is active
+            if ($('#'+id+' li').not('.empty_tab_results').length > 0 && $('#'+id).tabs("option", "active") == 0) {
+                $('#'+id).tabs('option', 'active', $('#'+id+' li').not('.empty_tab_results').first().index());
+            }
+            // disable the tabs that don't have results
+            $('#'+id+' li.empty_tab_results a').removeAttr('href');
+            $('#'+id+' li.empty_tab_results a').css('color', 'grey');
+            $('#'+id+' li.empty_tab_results').each( function() { $('#'+id).tabs("disable", $(this).index() )});
+            $('#'+id).show();
+            if (window.location.hash !== "") {
+                $('#'+id).tabs('option', 'active',
+                $('#'+id+' a' + window.location.hash).parent().index());
+            }
+        },
+        beforeLoad: function( event, ui ) {
+            if ( ui.tab.data( "loaded" ) ) {
+                event.preventDefault();
+                return;
+            }
+            ui.jqXHR.success(function() {
+                ui.tab.data( "loaded", true );
+            });
+        }
+    });
+}
+
+var csrftoken = readCookie('csrftoken');
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+$.ajaxSetup({
+    // Set request header for ajax POST
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+var selected_text = null;
+
+function getSelected() {
+    if (window.getSelection) {
+        return window.getSelection();
+    } else if (document.getSelection) {
+        return document.getSelection();
+    } else {
+        var selection = document.selection && document.selection.createRange();
+        if (selection.text) {
+            return selection.text;
+        }
+        return false;
+    }
+    return false;
+}
+
 $(document).ready(function() {
+
+    $(document).mouseup(function(e) {
+        var selected = getSelected();
+        if (selected.toString().length > 0) {
+            selected_text = selected.toString()
+            var span = $('<span>')
+            .attr('id', 'tmpSelectedNode');
+            var range = selected.getRangeAt(0);
+            range.insertNode($(span).get(0));
+            var position = $('#tmpSelectedNode').position();
+            var fspan = $('#selectedNodeMenu')
+            .css('top', position.top)
+            .css('left', position.left)
+            .attr('data-selected', selected_text)
+            .show();
+            $('#tmpSelectedNode').remove();
+        } else {
+            $('#selectedNodeMenu').hide();
+        }
+    });
+
+    $(document).on('click', '.selected_text_button', function(e) {
+        var selected = $(this).parent().attr('data-selected');
+        if ($(this).attr('id') == 'selected_to_indicator') {
+            $('#new-indicator').click();
+        } else if ($(this).attr('id') == 'selected_to_domain') {
+            $('#new-domain').click();
+        } else if ($(this).attr('id') == 'selected_to_ip') {
+            $('#new-ip').click();
+        }
+    });
+
     var src_filter = '[name!="analyst"]';
 
     // Enable Preference Toggle buttons
@@ -624,6 +820,11 @@ $(document).ready(function() {
     //bind remove_favorite click
     $(document).on('click', '.remove_favorite', function(e) {
         remove_favorite(e);
+    });
+
+    // bind the preferred actions from jtable.
+    $(document).on('click', '.preferred_actions_jtable', function(e) {
+        toggle_preferred_action_from_jtable(e);
     });
     //setup source "accordion" effect
     //  toggle on arrow icon
@@ -722,7 +923,7 @@ $(document).ready(function() {
       //collect object types for search
       // Let's just call this when needed, until search is converted to a dynamic dialog
       if ($('select#object_s').find("option").length === 0)
-      getAllObjectTypes($('select#object_s'));
+          getAllObjectTypes($('select#object_s'));
     });
     $('.notify_enable').click(function(e) {
       e.stopPropagation();
@@ -950,6 +1151,46 @@ $(document).ready(function() {
         },
     });
 
+    $("#form-add-new-action").off().submit(function(e) {
+        e.preventDefault();
+        var result = $(this).serialize();
+        $.ajax({
+            type: "POST",
+            url: new_action,
+            data: result,
+            datatype: 'json',
+            success: function(data) {
+                $("#form-add-new-action-results").show().css('display', 'table');
+                $("#form-add-new-action-results").html(data.message);
+                if (data.form) {
+                   $('#form-add-new-action').children('table').contents().replaceWith($(data.form));
+                }
+            }
+        });
+    });
+    $( "#add-new-action-form" ).dialog({
+        autoOpen: false,
+        modal: true,
+        width: "auto",
+        height: "auto",
+        buttons: {
+            "Add/Edit Action": function(e) {
+                $("#form-add-new-action").submit();
+            },
+            "Cancel": function() {
+                $(":input", "#form-add-new-action").each(function() {
+                    $(this).val('');
+                });
+                $( this ).dialog( "close" );
+            },
+        },
+        close: function() {
+                        $(":input", "#form-add-new-action").each(function() {
+                                $(this).val('');
+                        });
+        },
+    });
+
 
 
     $(".source_subscription").click(function(e) {
@@ -1152,38 +1393,7 @@ $(document).ready(function() {
         }
     });
 
-    $(".tabnav").tabs({
-        activate: function(event, ui) {
-            var tabid = ui.newPanel.attr('id');
-            var id = $('.tabnav').find('[aria-controls="'+ tabid + '"]').find('a').attr('id');
-            window.location.hash = id;
-        },
-        create: function(event, ui) {
-            var id = event.target.id;
-            // activate the first tab that has results, unless another tab other than the first tab is active
-            if ($('#'+id+' li').not('.empty_tab_results').length > 0 && $('#'+id).tabs("option", "active") == 0) {
-                $('#'+id).tabs('option', 'active', $('#'+id+' li').not('.empty_tab_results').first().index());
-            }
-            // disable the tabs that don't have results
-            $('#'+id+' li.empty_tab_results a').removeAttr('href');
-            $('#'+id+' li.empty_tab_results a').css('color', 'grey');
-            $('#'+id+' li.empty_tab_results').each( function() { $('#'+id).tabs("disable", $(this).index() )});
-            $('#'+id).show();
-            if (window.location.hash !== "") {
-                $('#'+id).tabs('option', 'active',
-                $('#'+id+' a' + window.location.hash).parent().index());
-            }
-        },
-        beforeLoad: function( event, ui ) {
-            if ( ui.tab.data( "loaded" ) ) {
-                event.preventDefault();
-                return;
-            }
-            ui.jqXHR.success(function() {
-                ui.tab.data( "loaded", true );
-            });
-        }
-    });
+    initTabNav();
 
     //edit status in place
     $('#object_status.edit').editable(function(value, settings) {
@@ -1246,7 +1456,7 @@ $(document).ready(function() {
             url: get_search_help_url,
             success: function(data) {
                 if (data.template) {
-                    var rdiv = $("<div id='global_search_help' />");
+                    var rdiv = $("<div id='global_search_help' class='z-11' />");
                     $('body').append(rdiv);
                     $('#global_search_help')
                     .css('position', 'absolute')
@@ -1267,6 +1477,25 @@ $(document).ready(function() {
     })
     .focusout(function(e) {
         $('#global_search_help').remove();
+    });
+
+    $(document).on('click', '.make_default_api_key', function(e) {
+        var me = $(this)
+        $.ajax({
+            type: 'POST',
+            url: make_default_api_key,
+            data: {name: me.attr('data-name')},
+            success: function(data) {
+                if (data.success) {
+                    $('span#default_api_key').remove();
+                    var defapi = '<span id="default_api_key">(default)</span>';
+                    me.closest('tr').find('td:first').append(defapi);
+                    me.closest('tbody').find('button:hidden').show();
+                    me.closest('tr').find('td:nth-child(5)').find('button').hide();
+                    me.closest('tr').find('td:nth-child(4)').find('button').hide();
+                }
+            }
+        });
     });
 
     $(document).on('click', '.revoke_api_key', function(e) {
@@ -1309,7 +1538,7 @@ $(document).ready(function() {
         var tbl = $('#api_key_table > tbody:last');
         var ib = "<form id='new_api_form'><input type='text' size=30 id='new_api_name' /></form>";
         var cancel = "<button id='cancel_api_add'>Cancel</button>";
-        var new_row = "<tr><td>" + ib + cancel + "</td><td></td><td></td><td></td></tr>";
+        var new_row = "<tr><td>" + ib + cancel + "</td><td></td><td></td><td></td><td></td></tr>";
         tbl.append(new_row);
         $('#new_api_name').focus();
     });
@@ -1330,12 +1559,32 @@ $(document).ready(function() {
             success: function(data) {
                 if (data.success) {
                     var parent = me.closest('tr');
+                    defkey = '<button class="make_default_api_key" data-name="' + data.message.name + '">Make Default</button>';
                     revoke = '<button class="revoke_api_key" data-name="' + data.message.name + '">Revoke Key</button>';
                     view = '<button class="view_api_key" data-name="' + data.message.name + '">Hide Key</button>';
                     parent.find('td:nth-child(1)').html('').text(data.message.name);
                     parent.find('td:nth-child(2)').text(data.message.date);
                     parent.find('td:nth-child(3)').html(view + '<br />' + data.message.key);
-                    parent.find('td:nth-child(4)').html(revoke);
+                    parent.find('td:nth-child(4)').html(defkey);
+                    parent.find('td:nth-child(5)').html(revoke);
+                }
+            }
+        });
+    });
+
+    // Handle preferred action clicks
+    $("#preferred_actions").click(function() {
+        $.ajax({
+            type: "POST",
+            async: false,
+            url: add_preferred_actions,
+            data: {'obj_type': subscription_type, 'obj_id': subscription_id},
+            success: function(data) {
+                if (data.success) {
+                    $("#action_listing_header").show();
+                    $("#action_listing > tbody:last-child").append(data.html);
+                } else {
+                    error_message_dialog('Action Error', data.message);
                 }
             }
         });

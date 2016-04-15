@@ -1,4 +1,3 @@
-import crits.service_env
 import datetime
 import hashlib
 import json
@@ -9,16 +8,22 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
-from crits.core.crits_mongoengine import create_embedded_source, json_handler
+from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
+from crits.core.class_mapper import class_from_id
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.raw_data.raw_data import RawData, RawDataType
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
+from crits.vocabulary.relationships import RelationshipTypes
+
 
 
 def generate_raw_data_csv(request):
@@ -110,8 +115,10 @@ def get_raw_data_details(_id, analyst):
         favorite = is_user_favorite("%s" % analyst, 'RawData', raw_data.id)
 
         # services
-        manager = crits.service_env.manager
-        service_list = manager.get_supported_services('RawData', True)
+        service_list = get_supported_services('RawData')
+
+        # analysis results
+        service_results = raw_data.get_analysis_results()
 
         args = {'service_list': service_list,
                 'objects': objects,
@@ -122,6 +129,7 @@ def get_raw_data_details(_id, analyst):
                 "subscription": subscription,
                 "screenshots": screenshots,
                 "versions": versions,
+                "service_results": service_results,
                 "raw_data": raw_data}
 
     return template, args
@@ -281,8 +289,9 @@ def generate_raw_data_jtable(request, option):
 def handle_raw_data_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
-                         link_id=None, method=None, copy_rels=False,
-                         bucket_list=None, ticket=None):
+                         link_id=None, method='', reference='',
+                         copy_rels=False, bucket_list=None, ticket=None,
+                         related_id=None, related_type=None, relationship_type=None):
     """
     Add RawData.
 
@@ -310,24 +319,35 @@ def handle_raw_data_file(data, source_name, user=None,
     :type link_id: str
     :param method: The method of acquiring this RawData.
     :type method: str
+    :param reference: A reference to the source of this RawData.
+    :type reference: str
     :param copy_rels: Copy relationships from the previous version to this one.
     :type copy_rels: bool
     :param bucket_list: Bucket(s) to add to this RawData
     :type bucket_list: str(comma separated) or list.
     :param ticket: Ticket(s) to add to this RawData
     :type ticket: str(comma separated) or list.
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               'success' (boolean),
               'message' (str),
-              'md5' (str) if successful.
+              '_id' (str) if successful.
     """
 
-    if not data and not title and not data_type:
+    if not data or not title or not data_type:
         status = {
             'success':   False,
             'message':  'No data object, title, or data type passed in'
         }
         return status
+
+    if not source_name:
+        return {"success" : False, "message" : "Missing source information."}
 
     rdt = RawDataType.objects(name=data_type).first()
     if not rdt:
@@ -337,8 +357,6 @@ def handle_raw_data_file(data, source_name, user=None,
         }
         return status
 
-    data = data.encode('utf-8')
-
     if len(data) <= 0:
         status = {
             'success':   False,
@@ -347,27 +365,18 @@ def handle_raw_data_file(data, source_name, user=None,
         return status
 
     # generate md5 and timestamp
-    md5 = hashlib.md5(data).hexdigest()
+    md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
     timestamp = datetime.datetime.now()
-
-    # create source
-    source = create_embedded_source(source_name,
-                                    date=timestamp,
-                                    reference='',
-                                    method=method,
-                                    analyst=user)
 
     # generate raw_data
     is_rawdata_new = False
     raw_data = RawData.objects(md5=md5).first()
-    if raw_data:
-        raw_data.add_source(source)
-    else:
+    if not raw_data:
         raw_data = RawData()
         raw_data.created = timestamp
         raw_data.description = description
         raw_data.md5 = md5
-        raw_data.source = [source]
+        #raw_data.source = [source]
         raw_data.data = data
         raw_data.title = title
         raw_data.data_type = data_type
@@ -375,6 +384,23 @@ def handle_raw_data_file(data, source_name, user=None,
                           version=tool_version,
                           details=tool_details)
         is_rawdata_new = True
+
+    # generate new source information and add to sample
+    if isinstance(source_name, basestring) and len(source_name) > 0:
+        source = create_embedded_source(source_name,
+                                   date=timestamp,
+                                   method=method,
+                                   reference=reference,
+                                   analyst=user)
+        # this will handle adding a new source, or an instance automatically
+        raw_data.add_source(source)
+    elif isinstance(source_name, EmbeddedSource):
+        raw_data.add_source(source_name, method=method, reference=reference)
+    elif isinstance(source_name, list) and len(source_name) > 0:
+        for s in source_name:
+            if isinstance(s, EmbeddedSource):
+                raw_data.add_source(s, method=method, reference=reference)
+
     #XXX: need to validate this is a UUID
     if link_id:
         raw_data.link_id = link_id
@@ -385,11 +411,13 @@ def handle_raw_data_file(data, source_name, user=None,
                     raw_data.save(username=user)
                     raw_data.reload()
                     for rel in rd2.relationships:
-                        raw_data.add_relationship(rel_id=rel.object_id,
-                                                  type_=rel.rel_type,
-                                                  rel_type=rel.relationship,
-                                                  rel_date=rel.relationship_date,
-                                                  analyst=user)
+                        # Get object to relate to.
+                        rel_item = class_from_id(rel.rel_type, rel.object_id)
+                        if rel_item:
+                            raw_data.add_relationship(rel_item,
+                                                      rel.relationship,
+                                                      rel_date=rel.relationship_date,
+                                                      analyst=user)
 
 
     raw_data.version = len(RawData.objects(link_id=link_id)) + 1
@@ -400,43 +428,41 @@ def handle_raw_data_file(data, source_name, user=None,
     if ticket:
         raw_data.add_ticket(ticket, user);
 
+    related_obj = None
+    if related_id and related_type:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
+    raw_data.save(username=user)
+
+    if related_obj and relationship_type and raw_data:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        raw_data.add_relationship(related_obj,
+                              relationship_type,
+                              analyst=user,
+                              get_rels=False)
+        raw_data.save(username=user)
+        raw_data.reload()
+
     # save raw_data
     raw_data.save(username=user)
 
     # run raw_data triage
     if is_rawdata_new:
         raw_data.reload()
-        run_triage(None, raw_data, user)
+        run_triage(raw_data, user)
 
     status = {
         'success':      True,
         'message':      'Uploaded raw_data',
         '_id':          raw_data.id,
+        'object':       raw_data
     }
 
     return status
-
-def update_raw_data_description(_id, description, analyst):
-    """
-    Update the RawData description.
-
-    :param _id: ObjectId of the RawData to update.
-    :type _id: str
-    :param description: The description to set.
-    :type description: str
-    :param analyst: The user updating the description.
-    :type analyst: str
-    :returns: None
-    :raises: ValidationError
-    """
-
-    raw_data = RawData.objects(id=_id).first()
-    raw_data.description = description
-    try:
-        raw_data.save(username=analyst)
-        return None
-    except ValidationError, e:
-        return e
 
 def update_raw_data_tool_details(_id, details, analyst):
     """
@@ -526,16 +552,14 @@ def update_raw_data_highlight_comment(_id, comment, line, analyst):
     if not raw_data:
         return None
     else:
-        i = 0
         for highlight in raw_data.highlights:
             if highlight.line == int(line):
-                raw_data.highlights[i].comment = comment
+                highlight.comment = comment
                 try:
                     raw_data.save(username=analyst)
                     return {'success': True}
                 except ValidationError, e:
                     return {'success': False, 'message': str(e)}
-            i += 1
         return {'success': False, 'message': 'Could not find highlight.'}
 
 def update_raw_data_highlight_date(_id, date, line, analyst):
@@ -557,16 +581,14 @@ def update_raw_data_highlight_date(_id, date, line, analyst):
     if not raw_data:
         return None
     else:
-        i = 0
         for highlight in raw_data.highlights:
             if highlight.line == int(line):
-                raw_data.highlights[i].line_date = parse(date, fuzzy=True)
+                highlight.line_date = parse(date, fuzzy=True)
                 try:
                     raw_data.save(username=analyst)
                     return {'success': True}
                 except ValidationError, e:
                     return {'success': False, 'message': str(e)}
-            i += 1
         return {'success': False, 'message': 'Could not find highlight.'}
 
 def new_inline_comment(_id, comment, line_num, analyst):

@@ -10,7 +10,7 @@ from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
 from crits.core.user_tools import user_is_admin
 from crits.pcaps.forms import UploadPcapForm
-from crits.pcaps.handlers import update_pcap_description, handle_pcap_file
+from crits.pcaps.handlers import handle_pcap_file
 from crits.pcaps.handlers import delete_pcap, get_pcap_details
 from crits.pcaps.handlers import generate_pcap_jtable, generate_pcap_csv
 
@@ -29,31 +29,6 @@ def pcaps_listing(request,option=None):
     if option == "csv":
         return generate_pcap_csv(request)
     return generate_pcap_jtable(request, option)
-
-@user_passes_test(user_can_view_data)
-def set_pcap_description(request, md5):
-    """
-    Set the PCAP description. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param md5: The MD5 of the PCAP.
-    :type md5: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        description = request.POST['description']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_pcap_description(md5,
-                                                               description,
-                                                               analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def pcap_details(request, md5):
@@ -96,15 +71,18 @@ def upload_pcap(request):
             source = cleaned_data.get('source')
             user = request.user.username
             description = cleaned_data.get('description', '')
-            parent = cleaned_data.get('parent_id', '')
-            parent_type = cleaned_data.get('parent_type', '')
-            method = 'Upload'
+            related = cleaned_data.get('related_id', '')
+            related_type = cleaned_data.get('related_type', '')
+            relationship_type = cleaned_data.get('relationship_type', '')
+            method = cleaned_data.get('method', '') or 'Upload'
+            reference = cleaned_data.get('reference', '')
             bucket_list=cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket=cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
             status = handle_pcap_file(filename, data, source, user, description,
-                                      parent_id=parent, parent_type=parent_type,
-                                      method=method, bucket_list=bucket_list,
-                                      ticket=ticket)
+                                      related_id=related, related_type=related_type,
+                                      relationship=relationship_type,
+                                      method=method, reference=reference,
+                                      bucket_list=bucket_list, ticket=ticket)
             if status['success']:
                 return render_to_response('file_upload_response.html',
                                           {'response': json.dumps({

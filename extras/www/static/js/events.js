@@ -1,34 +1,4 @@
 $(document).ready(function() {
-    $('#event_description').editable(function(value, settings) {
-        var revert = this.revert;
-        return function(value, settings, elem) {
-            var data = {
-                description: value,
-            };
-            $.ajax({
-                type: "POST",
-                async: false,
-                url: update_event_description,
-                data: data,
-                success: function(data) {
-                    if (!data.success) {
-                        value = revert;
-                        $('#event_description_error').text(data.message);
-                    }
-                }
-            });
-            return value;
-        }(value, settings, this);
-        },
-        {
-            type: 'textarea',
-            height: "50px",
-            width: "400px",
-            tooltip: "",
-            cancel: "Cancel",
-            submit: "Ok",
-            onblur: 'ignore',
-    });
     $('#event_title').editable(function(value, settings) {
         var revert = this.revert;
         return function(value, settings, elem) {
@@ -85,10 +55,9 @@ $(document).ready(function() {
                 var etypes = {};
                 var sorted = [];
                 $.ajax({
-                    type: "POST",
+                    type: "GET",
                     async: false,
                     url: get_event_types,
-                    data: {'all': false},
                     success: function(data) {
                         data.types.sort();
                         len = data.types.length;
@@ -150,6 +119,7 @@ $(document).ready(function() {
     };
 
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt); });
+    populate_id(event_id, 'Event');
     details_copy_id('Event');
     toggle_favorite('Event');
 }); //document.ready

@@ -1,6 +1,5 @@
-{% load url from future %}
 
-<script src="/js/tag-it.js" type="text/javascript" charset="utf-8"></script>
+
 <script type="text/javascript">
     var loading = true;
     $(document).ready(function() {
@@ -17,7 +16,7 @@
                 update_buckets(my_tags);
             },
             onTagClicked: function(event, ui) {
-                var url = "{% url 'crits.core.views.global_search_listing' %}?search_type=bucket_list&force_full=1&search=Search&q=" + ui.tagLabel
+                var url = "{% url 'crits.core.views.global_search_listing' %}?search_type=bucket_list&force_full=1&search=Search&q=" + encodeURIComponent(ui.tagLabel);
                 window.location.href = url;
             },
             autocomplete: {

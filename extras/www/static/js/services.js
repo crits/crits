@@ -13,6 +13,9 @@ $(document).ready(function() {
         var msg = $(this).attr('msg');
         e.preventDefault();
         $('<div title="Delete Analysis" id="tmp_delete">' + msg + '</div>').dialog({
+            close: function() {
+                    $(this).dialog("destroy");
+                },
             buttons: {
                 "Delete": function() {
                     $.ajax({
@@ -32,7 +35,7 @@ $(document).ready(function() {
                     });
                 },
                 "Cancel": function() {
-                    $(this).dialog("close");
+                    $(this).dialog("destroy");
                 }
             }
         });
@@ -90,41 +93,87 @@ $(document).ready(function() {
                 if (data.success) {
                     $('#analysis_section').html(data.html);
                 } else {
-                    $('.service_run_form').html(data.form);
-                    $('#run-service-form').dialog({
-                        autoOpen: true,
-                        modal: true,
-                        width: "auto",
-                        height: "auto",
-                        buttons: {
-                            "Run Service": function(e) {
-                                $('#form-run-service').submit();
+                    if (data.form) {
+                        $('.service_run_form').html(data.form);
+                        $('#run-service-form').dialog({
+                            autoOpen: true,
+                            modal: true,
+                            width: "auto",
+                            height: "auto",
+                            close: function() {
+                                    $(this).html('');
+                                    $(this).dialog("destroy");
+                                },
+                            buttons: {
+                                "Run Service": function(e) {
+                                    $('#form-run-service').submit();
+                                },
+                                "Cancel": function() {
+                                    $('#run-service-form').html('');
+                                    $('#run-service-form').dialog("destroy");
+                                },
                             },
-                            "Cancel": function() {
-                                $(this).dialog( "close" );
+                        });
+                    }
+                    if (data.html) {
+                        $('.service_run_form').html("Failed: " + data.html);
+                        $('.service_run_form').dialog({
+                            autoOpen: true,
+                            modal: true,
+                            width: "auto",
+                            height: "auto",
+                            title: "Failure",
+                            close: function() {
+                                    $(this).html('');
+                                    $(this).dialog("destroy");
+                                },
+                            buttons: {
+                                "OK": function() {
+                                    $(this).html('');
+                                    $(this).dialog("destroy");
+                                },
                             },
-                        },
-                    });
+                        });
+                    }
                 }
             }
         });
     });
-    $('span.enabled').off().click(function(e) {
-        var me = $(this);
-        var url = me.attr('data-url');
+    $(document).on("click", "span.enabled", function(e) {
+         var me = $(this);
+         var url = me.attr('data-url');
+         $.ajax({
+             type: 'POST',
+             url: url,
+             data: {},
+             datatype: 'json',
+             success: function(data) {
+                 if (data.success) {
+                     if (me.text() == "Yes") {
+                         me.text("No");
+                     } else {
+                         me.text("Yes")
+                     }
+                     me.attr('data-url', data.url);
+                 }
+             }
+         });
+    });
+    $(document).on('submit', '#form-config-service', function(e) {
+        e.preventDefault();
+        var data = $(this).serialize();
+        var url = $(this).attr('action')
         $.ajax({
-            type: 'POST',
+            async: false,
+            type: "POST",
             url: url,
-            data: {},
+            data: data,
             datatype: 'json',
             success: function(data) {
                 if (data.success) {
-                    if (me.text() == "Yes") {
-                        me.text("No");
-                    } else {
-                        me.text("Yes")
-                    }
-                    me.attr('data-url', data.url);
+                    $('#service_edit_results').text("Success!");
+                } else {
+                    $('#service_edit_results').text(data.config_error);
                 }
             }
         });

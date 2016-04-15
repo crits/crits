@@ -3,12 +3,9 @@ import datetime
 from dateutil.parser import parse as date_parser
 from mongoengine import Document, StringField, ListField
 from django.conf import settings
-from cybox.common import String, DateTime
-from cybox.core import Observable
-from cybox.objects.address_object import Address, EmailAddress
-from cybox.objects.email_message_object import EmailHeader, EmailMessage
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import CritsDateTimeField
 from crits.emails.migrate import migrate_email
 
@@ -36,7 +33,8 @@ class RawHeadersField(StringField):
         return value
 
 
-class Email(CritsBaseAttributes, CritsSourceDocument, Document):
+class Email(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+            Document):
     """
     Email Class.
     """
@@ -50,7 +48,7 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
         # (See http://mongoengine-odm.readthedocs.org/en/latest/guide/defining-documents.html#working-with-existing-data)
         "collection": settings.COL_EMAIL,
         "crits_type": 'Email',
-        "latest_schema_version": 1,
+        "latest_schema_version": 2,
         "schema_doc": {
             'boundary': 'Email boundary',
             'campaign': 'List [] of campaigns attributed to this email',
@@ -152,91 +150,3 @@ class Email(CritsBaseAttributes, CritsSourceDocument, Document):
 
         return super(self.__class__, self)._custom_save(force_insert, validate,
             clean, write_concern, cascade, cascade_kwargs, _refs, username)
-
-    def to_cybox_observable(self, exclude=None):
-        """
-        Convert an email to a CybOX Observables.
-
-        Pass parameter exclude to specify fields that should not be
-        included in the returned object.
-
-        Returns a tuple of (CybOX object, releasability list).
-
-        To get the cybox object as xml or json, call to_xml() or
-        to_json(), respectively, on the resulting CybOX object.
-        """
-
-        if exclude == None:
-            exclude = []
-
-        observables = []
-
-        obj = EmailMessage()
-        # Assume there is going to be at least one header
-        obj.header = EmailHeader()
-
-        if 'message_id' not in exclude:
-            obj.header.message_id = String(self.message_id)
-
-        if 'subject' not in exclude:
-            obj.header.subject = String(self.subject)
-
-        if 'sender' not in exclude:
-            obj.header.sender = Address(self.sender, Address.CAT_EMAIL)
-
-        if 'reply_to' not in exclude:
-            obj.header.reply_to = Address(self.reply_to, Address.CAT_EMAIL)
-
-        if 'x_originating_ip' not in exclude:
-            obj.header.x_originating_ip = Address(self.x_originating_ip,
-                                                  Address.CAT_IPV4)
-
-        if 'x_mailer' not in exclude:
-            obj.header.x_mailer = String(self.x_mailer)
-
-        if 'boundary' not in exclude:
-            obj.header.boundary = String(self.boundary)
-
-        if 'raw_body' not in exclude:
-            obj.raw_body = self.raw_body
-
-        if 'raw_header' not in exclude:
-            obj.raw_header = self.raw_header
-
-        #copy fields where the names differ between objects
-        if 'helo' not in exclude and 'email_server' not in exclude:
-            obj.email_server = String(self.helo)
-        if ('from_' not in exclude and 'from' not in exclude and
-            'from_address' not in exclude):
-            obj.header.from_ = EmailAddress(self.from_address)
-        if 'date' not in exclude and 'isodate' not in exclude:
-            obj.header.date = DateTime(self.isodate)
-
-        observables.append(Observable(obj))
-        return (observables, self.releasability)
-
-    @classmethod
-    def from_cybox(cls, cybox_obs, source):
-        """
-        Convert a Cybox DefinedObject to a MongoEngine Email object.
-        """
-
-        cybox_obj = cybox_obs.object_.properties
-        email = cls(source=source)
-
-        if cybox_obj.header:
-            email.from_address = str(cybox_obj.header.from_)
-            if cybox_obj.header.to:
-                email.to = [str(recpt) for recpt in cybox_obj.header.to.to_list()]
-            for field in ['message_id', 'sender', 'reply_to', 'x_originating_ip',
-                          'subject', 'date', 'x_mailer', 'boundary']:
-                setattr(email, field, str(getattr(cybox_obj.header, field)))
-
-        email.helo = str(cybox_obj.email_server)
-        if cybox_obj.raw_body:
-            email.raw_body = str(cybox_obj.raw_body)
-        if cybox_obj.raw_header:
-            email.raw_header = str(cybox_obj.raw_header)
-
-        return email
-

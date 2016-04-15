@@ -1,11 +1,10 @@
-{% load url from future %}
+
 
 <link rel="stylesheet" href="/css/blueimp-gallery.min.css">
 <link rel="stylesheet" href="{{ STATIC_URL }}css/screenshots.css">
 
 <script>
     var remove_screenshot_url = "{% url 'crits.screenshots.views.remove_screenshot_from_object' %}";
-    var update_ss_description = "{% url 'crits.screenshots.views.update_ss_description' %}";
 </script>
 
 <div class="content_box screenshots" id="screenshots_container">

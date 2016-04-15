@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 {% block title %}Targets{% endblock %}
 
 {% block content %}
@@ -9,8 +9,4 @@
     <li><a href="{% url 'crits.targets.views.divisions_listing' 'inline' %}" id="division_button"><span>Division</span></a></li>
     </ul>
 
-{% endblock %}
-
-{% block javascript_includes %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/targets.js"></script>
 {% endblock %}

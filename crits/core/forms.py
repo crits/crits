@@ -1,13 +1,15 @@
 import re
 
 from django import forms
-from django.forms.util import ErrorList
-from django.forms.widgets import HiddenInput, SelectMultiple
+from django.forms.utils import ErrorList
+from django.forms.widgets import HiddenInput, RadioSelect, SelectMultiple
 
 from crits.core import form_consts
+from crits.core.form_consts import Action as ActionConsts
 from crits.core.handlers import get_source_names, get_item_names, ui_themes
 from crits.core.user_role import UserRole
 from crits.core.user_tools import get_user_organization
+from crits.core.widgets import CalWidget
 from crits.config.config import CRITsConfig
 from crits import settings
 
@@ -40,6 +42,84 @@ def add_ticket_to_form(input_form):
                             required=False,
                             label=form_consts.Common.TICKET,
                             help_text="Use comma separated values.")
+
+class ActionsForm(forms.Form):
+    """
+    Django form for adding actions.
+    """
+
+    error_css_class = 'error'
+    required_css_class = 'required'
+    action_type = forms.ChoiceField(widget=forms.Select,
+        label=ActionConsts.ACTION_TYPE,
+        required=True)
+    begin_date = forms.DateTimeField(
+        widget=CalWidget(format='%Y-%m-%d %H:%M:%S',
+                         attrs={'class': 'datetimeclass',
+                                'size': '25',
+                                'id': 'id_action_begin_date'}),
+        input_formats=settings.PY_FORM_DATETIME_FORMATS,
+        label=ActionConsts.BEGIN_DATE,
+        required=False)
+    end_date = forms.DateTimeField(
+        widget=CalWidget(format='%Y-%m-%d %H:%M:%S',
+                         attrs={'class': 'datetimeclass',
+                                'size': '25',
+                                'id': 'id_action_end_date'}),
+        input_formats=settings.PY_FORM_DATETIME_FORMATS,
+        label=ActionConsts.END_DATE,
+        required=False)
+    performed_date = forms.DateTimeField(
+        widget=CalWidget(format='%Y-%m-%d %H:%M:%S',
+                         attrs={'class': 'datetimeclass',
+                                'size': '25',
+                                'id': 'id_action_performed_date'}),
+        input_formats=settings.PY_FORM_DATETIME_FORMATS,
+        label=ActionConsts.PERFORMED_DATE,
+        required=False)
+    active = forms.ChoiceField(
+        widget=RadioSelect,
+        choices=(('on', 'on'),
+                 ('off', 'off')),
+        label=ActionConsts.ACTIVE)
+    reason = forms.CharField(
+        widget=forms.TextInput(attrs={'size': '50'}),
+        required=False)
+    date = forms.CharField(
+        widget=forms.HiddenInput(attrs={'size': '50',
+                                        'readonly': 'readonly',
+                                        'id': 'id_action_date'}),
+        label=ActionConsts.DATE)
+
+    def __init__(self, *args, **kwargs):
+        super(ActionsForm, self).__init__(*args, **kwargs)
+
+class NewActionForm(forms.Form):
+    """
+    Django form for adding a new Action.
+    """
+
+    error_css_class = 'error'
+    required_css_class = 'required'
+    action = forms.CharField(widget=forms.TextInput, required=True)
+    object_types = forms.MultipleChoiceField(required=False,
+                                          label=ActionConsts.OBJECT_TYPES,
+                                          widget=forms.SelectMultiple,
+                                          help_text="Which TLOs this is for.")
+    preferred = forms.CharField(required=False,
+                                label=ActionConsts.PREFERRED,
+                                widget=forms.Textarea(
+                                    attrs={'cols': '50', 'rows': '5'}),
+                                help_text="CSV of TLO Type, Field, Value.")
+
+    def __init__(self, *args, **kwargs):
+        super(NewActionForm, self).__init__(*args, **kwargs)
+
+        # Sort the available TLOs.
+        tlos = [tlo for tlo in settings.CRITS_TYPES.keys()]
+        tlos.sort()
+        self.fields['object_types'].choices = [(tlo, tlo) for tlo in tlos]
+
 
 class AddSourceForm(forms.Form):
     """
@@ -147,6 +227,64 @@ class PrefUIForm(forms.Form):
         self.fields['theme'].choices = [(t,
                                           t) for t in ui_themes()]
 
+class ToastNotificationConfigForm(forms.Form):
+    """
+    Django form for the user toast notifications.
+    """
+
+    error_css_class = 'error'
+    required_css_class = 'required'
+    enabled = forms.BooleanField(initial=True, required=False)
+    max_visible_notifications = forms.IntegerField(min_value = 1,
+                                                   max_value = 10,
+                                                   initial=5,
+                                                   required=False,
+                                                   label="Max Visible Notifications")
+    acknowledgement_type = forms.ChoiceField(widget=forms.Select,
+                                             initial="sticky",
+                                             required=False,
+                                             label="Acknowledgement Type")
+    notification_anchor_location = forms.ChoiceField(widget=forms.Select,
+                                                     initial="bottom_right",
+                                                     required=False,
+                                                     label="Anchor Location")
+    newer_notifications_location = forms.ChoiceField(widget=forms.Select,
+                                                     initial="top",
+                                                     required=False,
+                                                     label="Newer Notifications Located")
+    initial_notifications_display = forms.ChoiceField(widget=forms.Select,
+                                                      initial="show",
+                                                      required=False,
+                                                      label="On New Notifications")
+    timeout = forms.IntegerField(min_value = 5,
+                                 max_value = 3600,
+                                 initial=30,
+                                 required=False,
+                                 label="Timeout (in seconds)",
+                                 help_text="Used only if Acknowledgement Type is set to 'timeout'")
+
+    def __init__(self, request, *args, **kwargs):
+        super(ToastNotificationConfigForm, self).__init__(*args, **kwargs)
+
+        prefs = request.user.prefs
+
+        if hasattr(prefs, 'toast_notifications'):
+            for k in prefs.toast_notifications:
+                if k in self.fields:
+                    self.fields[k].initial = prefs.toast_notifications[k]
+
+        self.fields['acknowledgement_type'].choices = [("sticky", "sticky"),
+                                                       ("timeout", "timeout")]
+
+        self.fields['notification_anchor_location'].choices = [("top_right", "top_right"),
+                                                               ("bottom_right", "bottom_right")]
+
+        self.fields['newer_notifications_location'].choices = [("top", "top"),
+                                                               ("bottom", "bottom")]
+
+        self.fields['initial_notifications_display'].choices = [("show", "show"),
+                                                                ("hide", "hide")]
+
 class AddUserRoleForm(forms.Form):
     """
     Django form for adding a new user role.
@@ -186,8 +324,8 @@ class DownloadFileForm(forms.Form):
                                           "than this, ignore it. Max: %i")
 
     rst_fmt = forms.ChoiceField(choices=[("zip", "zip"),
-                                         ("stix", "STIX"),
-                                         ("stix_no_bin", "STIX (no binaries)")],
+                                         ("json", "JSON"),
+                                         ("json_no_bin", "JSON (no binaries)")],
                                          label="Result format")
 
     bin_fmt = forms.ChoiceField(choices=[("raw", "raw"),
@@ -201,13 +339,15 @@ class DownloadFileForm(forms.Form):
         total_max = getattr(crits_config, 'total_max', settings.TOTAL_MAX)
         rel_max = getattr(crits_config, 'rel_max', settings.REL_MAX)
         super(DownloadFileForm, self).__init__(*args, **kwargs)
-        self.fields['objects'].choices = [('Certificate', 'Certificates'),
+        self.fields['objects'].choices = [('Actor', 'Actors'),
+                                          ('Certificate', 'Certificates'),
                                           ('Domain', 'Domains'),
                                           ('Email', 'Emails'),
                                           ('Indicator', 'Indicators'),
                                           ('PCAP', 'PCAPs'),
                                           ('RawData', 'Raw Data'),
-                                          ('Sample', 'Samples')]
+                                          ('Sample', 'Samples'),
+                                          ('Signature', 'Signatures')]
         self.fields['total_limit'].initial = total_max
         self.fields['rel_limit'].initial = rel_max
         self.fields['depth_limit'].help_text = self.fields['depth_limit'].help_text % depth_max

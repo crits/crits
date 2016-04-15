@@ -9,25 +9,6 @@ $(document).ready(function(){
         $( "#tool_forms" ).toggle( "fast" );
     });
 
-    // Upload a related pcap (Using the related dialog persona)
-    $( "#dialog-new-pcap" ).on("dialogopen.add_related_pcap", function(e) {
-        if ($(this).dialog("persona") == "related") {
-        $(this).find("form #id_parent_id").val(sample_id_escaped);
-        $(this).find("form #id_parent_type").val("Sample");
-        // $(this).find("form").removeAttr("target"); // Get rid of target to refresh page
-
-        // Unlike new-sample below, this does not redirect us nor refresh the
-        // Relationships list of the Sample, so delay for a few seconds then reload the
-        // page after uploaded.  Added a fileUploadComplete event to work around this.
-        $(this).find("form").bind("fileUploadComplete",
-                      function(e, response) {
-                          if (response.success)
-                          setTimeout(function() {
-                              document.location = document.location },
-                              3000); });
-        }
-    });
-
     $("#strings_button").click(function() {
         $.ajax({
             type: "GET",
@@ -107,7 +88,6 @@ $(document).ready(function(){
     "add-exploit": {title: "Add Exploit", submit: defaultSubmit, href:"" },
     "add-child": {title: "Add Child Sample", submit: defaultSubmit, href:"" },
     "unzip-sample": {title: "Unzip Sample", submit: defaultSubmit, href:"" },
-    "unrar-sample": {title: "Unrar Sample", submit: defaultSubmit, href:"" },
     "delete-sample": {title: "Delete Sample", submit: defaultSubmit, href:"" },
     "download-sample": {title: "Download Sample", submit: defaultSubmit, href:"" },
     };
@@ -124,7 +104,6 @@ $(document).ready(function(){
         $.proxy(file_upload_dialog, $('#form-add-object-static').parent())();
         add_object_submit(e);
     })
-    add_more_object_types_button($('#form-add-object-static'));
 
     // For samples_tools_widgets
     var comment_form = $('#form-comments');
@@ -134,6 +113,79 @@ $(document).ready(function(){
     $('#form-add-comment-static').submit(function(e) {
         addEditSubmit(e);
     });
+
+    $('#sample_filename').editable(function(value, settings) {
+        var revert = this.revert;
+        return function(value, settings, elem) {
+            var data = {
+                'filename': value,
+                'id': sample_id_escaped,
+            };
+            $.ajax({
+                type: "POST",
+                async: false,
+                url: update_sample_filename,
+                data: data,
+                success: function(data) {
+                    if (!data.success) {
+                        value = revert;
+                        $('#sample_filename_error').text(data.message);
+                    }
+                }
+            });
+            return value;
+        }(value, settings, this);
+        },
+        {
+            type: 'textarea',
+            width: "400px",
+            tooltip: "",
+            cancel: "Cancel",
+            submit: "Ok",
+            onblur: 'ignore',
+    });
+    $("#sample_filenames").tagit({
+        allowSpaces: true,
+        removeConfirmation: false,
+        afterTagAdded: function(event, ui) {
+            var my_tags = $("#sample_filenames").tagit("assignedTags");
+            update_filenames(my_tags);
+        },
+        beforeTagRemoved: function(event, ui) {
+            if (is_admin != "True") {
+                return false;
+            }
+        },
+        afterTagRemoved: function(event, ui) {
+            var my_tags = $("#sample_filenames").tagit("assignedTags");
+            update_filenames(my_tags);
+        },
+    });
+
+    function update_filenames(my_tags) {
+        if (window.add_filenames) {
+            var data = {
+                        'id': sample_id_escaped,
+                        'tags': my_tags.toString(),
+            };
+            $.ajax({
+                type: "POST",
+                url: update_sample_filenames,
+                data: data,
+                datatype: 'json',
+                success: function(data) {
+                    if (!data.success) {
+                        alert("Failed to update filenames!");
+                    }
+                }
+            });
+        }
+    }
+
+    $(document).trigger('enable_filenames');
+
     details_copy_id('Sample');
     toggle_favorite('Sample');
+    populate_id(sample_id_escaped, 'Sample');
+
 });

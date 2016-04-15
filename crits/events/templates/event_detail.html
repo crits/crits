@@ -1,20 +1,21 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 
 {% block title %} Event Detail {% endblock %}
 {% block content %}
 <script>
-    var update_event_description = "{% url 'crits.events.views.set_event_description' event.id %}";
     var update_event_title = "{% url 'crits.events.views.set_event_title' event.id %}";
     var update_event_type = "{% url 'crits.events.views.set_event_type' event.id %}";
     var get_event_types = "{% url 'crits.events.views.get_event_type_dropdown' %}";
+    var event_id = "{{ event.id | escapejs}}";
+
 </script>
 
 {% if event %}
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Services ({{ event.analysis|length }})</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
 </ul>
 
@@ -60,10 +61,9 @@
                         <td>{{ event.created }}</td>
                     </tr>
                     <tr>
-                        <td class='key'>Description</td>
-                        <td class="longtext">
-                            <span class="edit_underline" id="event_description">{{ event.description }}</span><span id="event_description_error"></span>
-                        </td>
+                        {% with description=event.description %}
+                            {% include 'description_widget.html' %}
+                        {% endwith %}
                     </tr>
                     <tr>
                         <td class="key">Status
@@ -95,6 +95,13 @@
         {% with bucket_list=event.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
+    </div>
+    <div class="content_box">
+        {% with obj=event obj_type="Event" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
     </div>
     <div>
 	{% with obj=event obj_type=subscription.type %}
@@ -105,6 +112,12 @@
         {% with hit=event col=COL_EVENTS %}
              {% include 'campaigns_display_widget.html' %}
         {% endwith %}
+    </div>
+    <div>
+        {% with hit=event col=COL_EVENTS %}
+             {% include 'locations_display_widget.html' %}
+        {% endwith %}
+    </div>
     <div>
         {% include 'relationships_listing_widget.html' %}
     </div>
@@ -117,7 +130,6 @@
     <div>
         {% include "comments_listing_widget.html" %}
     </div>
-</div>
 </div>
 {% with item=event %}
     {% include "services_analysis_section.html" with crits_type="Event" identifier=event.id %}

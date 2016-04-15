@@ -1,6 +1,6 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.emails.email import Email
 from crits.emails.handlers import handle_pasted_eml, handle_yaml, handle_eml
@@ -18,7 +18,7 @@ class EmailResource(CRITsAPIResource):
 
     class Meta:
         object_class = Email
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "emails"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
@@ -43,16 +43,22 @@ class EmailResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Campaign.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
-        :raises BadRequest: If a type_ is not provided or creation fails.
+        :returns: HttpResponse.
         """
 
         analyst = bundle.request.user.username
         type_ = bundle.data.get('upload_type', None)
+
+        content = {'return_code': 1,
+                   'type': 'Email',
+                   'message': ''}
+
         if not type_:
-            raise BadRequest('You must specify the upload type.')
+            content['message'] = 'You must specify the upload type.'
+            self.crits_response(content)
         elif type_ not in ('eml', 'msg', 'raw', 'yaml', 'fields'):
-            raise BadRequest('Unknown or unsupported upload type.')
+            content['message'] = 'Unknown or unsupported upload type.'
+            self.crits_response(content)
 
         # Remove this so it doesn't get included with the fields upload
         del bundle.data['upload_type']
@@ -60,18 +66,25 @@ class EmailResource(CRITsAPIResource):
 
         # Extract common information
         source = bundle.data.get('source', None)
+        method = bundle.data.get('method', '')
         reference = bundle.data.get('reference', None)
         campaign = bundle.data.get('campaign', None)
         confidence = bundle.data.get('confidence', None)
+        bucket_list = bundle.data.get('bucket_list', None)
+        ticket = bundle.data.get('ticket', None)
+
+        if method:
+            method = " - " + method
 
         if type_ == 'eml':
             file_ = bundle.data.get('filedata', None)
             if not file_:
-                raise BadRequest('No file uploaded.')
+                content['message'] = 'No file uploaded.'
+                self.crits_response(content)
             filedata = file_.read()
             result = handle_eml(filedata, source, reference,
-                                analyst, 'Upload', campaign,
-                                confidence)
+                                analyst, 'EML Upload' + method, campaign,
+                                confidence, bucket_list=bucket_list, ticket=ticket)
         if type_ == 'msg':
             raw_email = bundle.data.get('filedata', None)
             password = bundle.data.get('password', None)
@@ -79,19 +92,23 @@ class EmailResource(CRITsAPIResource):
                                 source,
                                 reference,
                                 analyst,
-                                'Upload',
+                                'Outlook MSG Upload' + method,
                                 password,
                                 campaign,
-                                confidence)
+                                confidence,
+                                bucket_list=bucket_list,
+                                ticket=ticket)
         if type_ == 'raw':
             raw_email = bundle.data.get('filedata', None)
             result = handle_pasted_eml(raw_email,
                                        source,
                                        reference,
                                        analyst,
-                                       'Upload',
+                                       'Raw Upload' + method,
                                        campaign,
-                                       confidence)
+                                       confidence,
+                                       bucket_list=bucket_list,
+                                       ticket=ticket)
         if type_ == 'yaml':
             yaml_data = bundle.data.get('filedata', None)
             email_id = bundle.data.get('email_id', None)
@@ -100,19 +117,36 @@ class EmailResource(CRITsAPIResource):
                                  source,
                                  reference,
                                  analyst,
-                                 'Upload',
+                                 'YAML Upload' + method,
                                  email_id,
                                  save_unsupported,
                                  campaign,
-                                 confidence)
+                                 confidence,
+                                 bucket_list=bucket_list,
+                                 ticket=ticket)
         if type_ == 'fields':
             fields = bundle.data
+            # Strip these so they don't get put in unsupported_attrs.
+            del fields['username']
+            del fields['api_key']
             result = handle_email_fields(fields,
                                          analyst,
-                                         'Upload')
-        if not result:
-            raise BadRequest('No upload type found.')
-        if not result['status']:
-            raise BadRequest(result['reason'])
-        else:
-            return bundle
+                                         'Fields Upload')
+
+        if result.get('message'):
+            content['message'] = result.get('message')
+        if result.get('reason'):
+            content['message'] += result.get('reason')
+        if result.get('obj_id'):
+            content['id'] = str(result.get('obj_id', ''))
+        elif result.get('object'):
+            content['id'] = str(result.get('object').id)
+        if content.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'emails',
+                                  'api_name': 'v1',
+                                  'pk': content.get('id')})
+            content['url'] = url
+        if result['status']:
+            content['return_code'] = 0
+        self.crits_response(content)

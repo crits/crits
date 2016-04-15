@@ -1,0 +1,649 @@
+{% extends "base.html" %}
+{% block title %} Save Searches {% endblock %}
+{% block css_includes %}
+    <link rel='stylesheet' media='screen' href='{{ STATIC_URL }}css/saved_searches_list.css'/>
+{% endblock %}
+{% block javascript_includes %}
+    <script>
+        //Used by all ajax calls.
+        function throwUnexpectedError() {
+        	showResults("An unexpected error occured. Please try again later.", true);
+        }
+        //the id the settings dropdown is currently attached too
+        var currentDropdown = null;
+        //simulates the 're-search' of a tables search term
+        $(document).on('click', '.table-re-search', function() {
+            var st = unescape($(this).attr('searchTerm'));
+            $('#global_search_box').val(st);
+            $('#global_search_box').closest('form').submit();
+        });
+        //event that fires the ajax call to toggle dashboards visibility
+        $(document).on('click', '.visibilityIcon', function() {
+            toggleTablesVisibility($(this));
+        });
+        //event that fires off the ajax call to remove search from dashboard
+        $(document).on('click', '.removeFromDashboard', function(e) {
+            e.preventDefault();
+            if($(this).hasClass('default')) 
+                $('#extraNote').show();
+            $("#removeFromDashboardDialog").data('element',$(this)).dialog("open");
+        });
+        //event that opens the dashboard settings dialog
+        $(document).on('click', '.dashboard-settings', function() {
+        	var dashId = $(this).attr('dash');
+        	if(currentDropdown && currentDropdown == dashId) {
+        		toggleSettingsDialog();
+        		currentDropdown = null;
+        	}
+        	else if(currentDropdown) {
+        		toggleSettingsDialog(true, $(this), false);
+        		currentDropdown = dashId;
+        	}
+        	else {
+        		toggleSettingsDialog(true, $(this), true);
+                currentDropdown = dashId;
+        	}
+        });
+        //closes the settings dialog if it is open
+        $(document).click(function(e) {
+        	if($(e.target).hasClass('dashboard-settings'))
+        		return true;
+        	if (currentDropdown) {
+        		toggleSettingsDialog();
+                currentDropdown = null;
+        	}
+        });
+        //remove error class
+        $(document).on("keyup", ".error", function(){
+            $(this).removeClass("error"); 
+        });
+        //ajax call to make a dashbaord the user's default dashboard
+        $('.makeDefault').click(function(e) {
+        	var id = $('#dashboard-settings-dropdown').attr('dash');
+        	$.ajax({
+                type:"GET",
+                url: "{% url 'crits.dashboards.views.set_default_dashboard'%}",
+                data: {
+                    id:id
+                },
+                success: function(data) {
+                    showResults(data.message, !data.success);
+                },
+                error: function(data) {
+                	throwUnexpectedError();
+                }
+            });
+        });
+        //toggle the dashboards visibility to other users, Only an admin has this option
+        $('.toggleIsPublic').click(function(e) {
+        	if($(this).text().indexOf('Public') > -1) {
+        		var successString = 'Make Private';
+        		var makePublic = true;
+        	}
+        	else {
+        		var successString = 'Make Public';
+        		var makePublic = false;
+        	}
+        	var id = $('#dashboard-settings-dropdown').attr('dash');
+        	var $this = $(this);
+            $.ajax({
+                type:"GET",
+                url: "{% url 'crits.dashboards.views.set_dashboard_public'%}",
+                data: {
+                    id:id,
+                    makePublic: makePublic
+                },
+                success: function(data) {
+                    showResults(data.message, !data.success);
+                    if(data.success) {
+                    	$('#'+id).attr('isPublicText', successString);
+                    	$this.text(successString);
+                    }
+                },
+                error: function(data) {
+                	throwUnexpectedError();
+                }
+            });
+        });
+        //changes the text of the delete dashboard dialog depending on if its a cloned 
+        //copy of a public dashboard or not
+        $('.deleteDashboard').click(function() {
+       		if($('#'+$('#dashboard-settings-dropdown').attr('dash')).closest('.dashboard').attr('isModified'))
+       			$('#delete-dashboard-dialog').text('This is a modified version of a public dashboard. '+
+     				'If you delete it you will be removing your own customization and be reverting back to the public version.'+
+     				' Are you sure you wish to continue?');
+       		else
+       			$('#delete-dashboard-dialog').text('Are you sure you want to delete your dashboard? '+
+       					'If you choose to continue you will lose all saved searches affiliated with it as well.');
+       		$('#delete-dashboard-dialog').dialog('open');
+        });
+        //opens the changeName dialog
+        $('.changeName').click(function() {
+            $('#change-name-dialog').data('dashboard',currentDropdown).dialog('open');
+        });
+        //opens the change theme dialog
+        //$('.changeTheme').click(function() {
+        //	$('#change-theme-dialog').data('dashboard',currentDropdown).dialog('open');
+        //});
+        //Applys theme to the currently select dashboard so the user can see a preview
+        $('.theme-picker').click(function(){
+        	var newTheme = $(this).attr('theme');
+        	var id = $('#dashboard-settings-dropdown').attr('dash');
+            var oldTheme = $('#'+id).attr('tempTheme');
+            if (newTheme != oldTheme) {
+	            $('#'+id).addClass(newTheme+'-theme');
+	            $('#'+id).removeClass(oldTheme+'-theme');
+	            $('#'+id).attr('tempTheme', newTheme);
+	            $('.selectedTheme').removeClass('selectedTheme');
+	        	$(this).addClass('selectedTheme');
+            }
+        });
+        //sets the position and opens the settings dialog
+        function toggleSettingsDialog(show, element, delayed) {
+        	if (show) {
+        		var position = $(element).offset();
+                $('#dashboard-settings-dropdown').css('left', position.left+5);
+                $('#dashboard-settings-dropdown').css('top', position.top-15);
+                var dashboard = $(element).closest('.dashboard');
+                $('#dashboard-settings-dropdown').attr('dash',$(dashboard).attr('id'));
+                {% if user.role == 'Administrator' %}
+                    $('.toggleIsPublic').html($(dashboard).attr('isPublicText'));
+                {% endif %}
+                $('#dashboard-settings-dropdown').slideDown('fast', function() {});
+        	}
+        	else
+        		$('#dashboard-settings-dropdown').slideUp('fast', function() {
+        			if(delayed)
+        				toggleSettingsDialog(true, element, false);
+        		});
+        }
+        //ajax call to change a tables visibilty to hidden or pinned
+        function toggleTablesVisibility(element) {
+            var parent = $(element).closest('.editWrapper');
+            var id = $(parent).attr('tableId');
+            var isVisible = $(parent).attr('isVisible')
+            $.ajax({
+                type:'GET',
+                url: '{% url "crits.dashboards.views.toggle_table_visibility" %}',
+                data: {
+                    tableId: id,
+                    isVisible:  isVisible
+                },
+                datatype: 'json',
+                success: function(data) {
+                    showResults(data.message, !data.success);
+                    if (data.success) {
+                        if(isVisible == 'True') {
+                            var oldClass = 'fa-desktop';
+                            var newClass = 'fa-ban';
+                            var newVisibility = 'False';
+                            var newTitle = 'Hidden';
+                        }
+                        else {
+                            var oldClass = 'fa-ban';
+                            var newClass = 'fa-desktop';
+                            var newVisibility = 'True';
+                            var newTitle = 'Shown on Dashboard';
+                        }
+                        $(parent).find('.visibilityIcon').removeClass(oldClass).addClass(newClass);
+                        $(parent).find('.visibilityIcon').attr('title', newTitle);
+                        $(parent).attr('isVisible', newVisibility);
+                        var dashName = $(parent).closest('.w2ui-grid').attr('name');
+                        //this resets the javascript object values stored in w2ui
+                        w2ui[dashName].get(id).edit = $(parent).parent().html();
+                    }
+                },
+                error: function(data) {
+                	throwUnexpectedError();
+                }
+            });
+        }
+        //show results message
+        function showResults(msg, isError) {
+        	var color = 'green';
+        	if (isError)
+        		color = 'red';
+        	$('#resultsDiv').css('color', color);
+        	$('#resultsDiv').html(msg);
+        }
+        //dialog to delete a saved search
+        $( "#removeFromDashboardDialog" ).dialog({
+            modal: true,
+            autoOpen: false,
+            buttons: {
+                Yes: function() {
+                    var id = $(this).data('element').closest('.editWrapper').attr('tableId');
+                    $.ajax({
+                        type:"GET",
+                        url: "{% url 'crits.dashboards.views.delete_save_search'%}",
+                        data: {
+                        	id:id
+                        },
+                        success: function(data) {
+                            showResults(data.message, !data.success);
+                            var element = $( "#removeFromDashboardDialog" ).data('element');
+                            if(!data.wasDeleted) {
+                            	var parent = $(element).closest('.editWrapper');
+                            	$(parent).find('.visibilityIcon').remove();
+                            	$(parent).prepend('<i title="Hidden" class="fa fa-ban visibilityIcon"></i>');
+                            	$(parent).attr('isVisible', 'False');
+                            	w2ui[$(element).closest('.dashboard').attr('id')].get(id).edit = $(parent).parent().html();
+                            }
+                            else {
+                                var recid = $(element).closest('tr').attr('recid');
+                                w2ui[$(element).closest('.dashboard').attr('id')].remove(recid);
+                            }
+                        },
+                        error: function(data) {
+                        	throwUnexpectedError();
+                        }
+                    });
+                    $(this).dialog("close");
+                },
+                No: function() {
+                    $(this).dialog("close");
+                }
+            },
+            close: function() {
+            	$('#extraNote').hide();
+            }
+        });
+        //change name dialog
+        $( "#change-name-dialog" ).dialog({
+            modal: true,
+            autoOpen: false,
+            buttons: {
+                Change: function() {
+                	var dashboard = $(this).data('dashboard');
+                	var newName = $('#newName').val();
+                	if (newName == '') {
+                		$('#newName').addClass('error');
+                		return false;
+                	}
+                    $.ajax({
+                        type:"GET",
+                        url: "{% url 'crits.dashboards.views.rename_dashboard'%}",
+                        data: {
+                        	id:dashboard,
+                            newName:newName
+                        },
+                        success: function(data) {
+                            showResults(data.message, !data.success);
+                            $('#'+dashboard+'Title').text(newName);
+                            $('.dashboard-nav-submenu').find('a[href*="'+dashboard+'"]').text(newName);
+                        },
+                        error: function(data) {
+                        	throwUnexpectedError();
+                        }
+                    });
+                    $( "#change-name-dialog" ).dialog("close");
+                },
+                Cancel: function() {
+                    $(this).dialog("close");
+                }
+            },
+            close: function() {
+                $('#newName').val('');
+            }
+        });
+        //change theme dialog
+        /*
+        $( "#change-theme-dialog" ).dialog({
+            modal: true,
+            autoOpen: false,
+            buttons: {
+                Change: function() {
+                    var dashboard = $(this).data('dashboard');
+                    var newTheme = $('.selectedTheme').attr('theme');
+                    $.ajax({
+                        type:"GET",
+                        url: "{% url 'crits.dashboards.views.change_theme'%}",
+                        data: {
+                            id:dashboard,
+                            newTheme:newTheme
+                        },
+                        success: function(data) {
+                            showResults(data.message, !data.success);
+                            $('#'+dashboard).attr('theme', newTheme);
+                            $( "#change-theme-dialog" ).dialog("close");
+                            
+                        },
+                        error: function(data) {
+                            throwUnexpectedError();
+                            $( "#change-theme-dialog" ).dialog("close");
+                        }
+                    });
+                },
+                Cancel: function() {
+                    $(this).dialog("close");
+                }
+            },
+            close: function() {
+            	var id = $(this).data('dashboard');
+                var oldTheme = $('#'+id).attr('tempTheme');
+                var newTheme = $('#'+id).attr('theme');
+                if (newTheme != oldTheme) {
+                    $('#'+id).addClass(newTheme+'-theme');
+                    $('#'+id).removeClass(oldTheme+'-theme');
+                    $('#'+id).attr('tempTheme', newTheme);
+                }
+                $('.selectedTheme').removeClass('selectedTheme');
+            }
+        });*/
+        //delete dashboard dialog
+        $( "#delete-dashboard-dialog" ).dialog({
+            modal: true,
+            autoOpen: false,
+            buttons: {
+                Delete: function() {
+                	var id = $('#dashboard-settings-dropdown').attr('dash');
+                    $.ajax({
+                        type:"GET",
+                        url: "{% url 'crits.dashboards.views.delete_dashboard'%}",
+                        data: {
+                            id:id,
+                        },
+                        success: function(data) {
+                            showResults(data.message, !data.success);
+                            if(data.success) {
+                                $('#'+id).remove();
+                                $('.dashboard-nav-submenu').find('a[href*="'+id+'"]').remove();
+                            }
+                        },
+                        error: function(data) {
+                            throwUnexpectedError();
+                        }
+                    });
+                    $( "#delete-dashboard-dialog" ).dialog('close');
+                },
+                Cancel: function() {
+                    $(this).dialog("close");
+                }
+            },
+            close: function() {
+            }
+        });
+        
+        $('#create-blank-dashboard-dialog').dialog({
+            modal: true,
+            autoOpen: false,
+            width:400,
+            height:175,
+            buttons: [{
+            	id:'continue-create',
+            	text:'Continue',
+            	click: function() {
+            		if($('#continue-create').text() == 'Continue') {
+            			$('#continue-create').find('.ui-button-text').text('Create');
+                        $('#create-blank-part1').hide();
+                        $('#create-blank-part2').show();
+                    }
+                    else {
+                    	var blankDashName = $('#blank-dashboard-name').val();
+                    	if(blankDashName == '') {
+                    		$('#blank-dashboard-name').addClass('error');
+                    	}
+                    	else {
+                    		$.ajax({
+                                type:"GET",
+                                url: "{% url 'crits.dashboards.views.create_blank_dashboard'%}",
+                                data: {
+                                    name:blankDashName,
+                                },
+                                success: function(data) {
+                                    showResults(data.message, !data.success);
+                                    if(data.success)
+                                        location.reload();
+                                },
+                                error: function(data) {
+                                    throwUnexpectedError();
+                                }
+                            });
+                    	    $(this).dialog("close");	
+                    	}
+                    }
+            	}
+            }, 
+            {
+            	text:'Cancel',
+            	click: function() {
+            		$(this).dialog("close");
+            	}
+            }],
+            close: function() {
+            	$('#create-blank-part2').hide();
+                $('#create-blank-part1').show();
+                $('#continue-create').find('.ui-button-text').text('Continue');
+                $('#blank-dashboard-name').removeClass('error');
+                $('#blank-dashboard-name').val('');
+            }
+        });
+        $('.go-to-search').click(function() {
+        	$( "#create-blank-dashboard-dialog" ).dialog('close');
+        	$('#global_search_box').focus();
+        });
+        $('#create-blank-dashboard').click(function() {
+        	$( "#create-blank-dashboard-dialog" ).dialog('open');
+        });
+        //columns used for every dashboard
+        var columns = [{ field: 'name', caption: 'Name', size: '30%', resizable: false},
+                       { field: 'search_term', caption: 'Search Term', size: '25%', resizable: false},
+                       { field: 'obj_type', caption: 'Object Type', size: '15%', resizable: false},
+                       { field: 'sort', caption: 'Sort', size: '10%', resizable: false},
+                       { field: 'max_rows', caption: 'Max Rows', size: '10%', resizable: false},
+                       { field: 'edit', caption: 'Edit', size: '10%', resizable: false}];
+        $(document).ready(function() {      //document.ready
+        	//constructs the variables need for each dashboard table
+        	{% for dash in dashboards %}
+	            var name = ''+
+	            '<a id="{{dash.id}}Title" href=\'{% url "crits.dashboards.views.dashboard" dash.id %}\'>'+
+	                 '{{dash.name}}'+
+	            '</a>' +
+	            '<i dash="{{dash.id}}" class="fa fa-caret-square-o-down dashboard-settings"></i>';
+	            var id = '{{dash.id}}';
+	            var records = [];
+	            {% for table in dash.tables %}
+	                var editString = ''+
+	                    '<div class="editWrapper" tableId="{{table.id}}" isVisible="{{table.isPinned}}" name="{{table.name}}">'+
+	                    {% if table.isPinned %}
+                            '<i title="Shown on Dashboard" class="fa fa-desktop visibilityIcon"></i>'+
+                        {% else %}
+                            '<i title="Hidden" class="fa fa-ban visibilityIcon"></i>' +
+                        {% endif %}
+	                    '<a class="black" href=\'{% url "crits.dashboards.views.edit_save_search" table.id %}\'>' +
+	                        '<i title="Edit" class="fa fa-cog"></i>'+
+	                    '</a>'+
+	                    '<i title="Delete" class="fa fa-trash removeFromDashboard {%if table.isDefaultOnDashboard %}default{% endif %}"></i>' +
+	                    '</div>';
+                    {%if table.isDefaultOnDashboard %}
+                        var recordSearch = '';
+                    {% else %}
+                        var recordSearch = '<a searchTerm="{{table.searchTerm}}" class="table-re-search">{{table.searchTerm}}</a>';
+                    {% endif %}
+                    var record = {
+                        recid:'{{table.id}}',
+                        name: '{{table.name}}',
+                        search_term:recordSearch,
+                        obj_type: '{{table.objType}}',
+                        sort: '{{table.getSortByText}}',
+                        max_rows: '{{table.maxRows}}',
+                        edit: editString
+                    }
+                    records.push(record);
+                {% endfor %}
+                if(records.length == 0)
+                    records.push({
+                        recid:0,
+                        name: 'You have no searches saved to this dashboard',
+                    });
+                setUpW2ui(id, name, columns, records);
+            {% endfor %}
+            for (var i in w2ui) {
+                var eventsToPrevent = [ 'click', 'dblClick', 'select', 'unselect'];
+                if (w2ui[i].records) {
+                    w2ui[i].on('*', function (event) {
+                        if (eventsToPrevent.indexOf(event.type) >= 0)
+                            event.preventDefault();
+                    });
+                    //bindDraggable(w2ui[i].name);
+               }
+            }
+            $('.dashboard').droppable({
+                drop: function(e, ui) {
+                    var oldDash = ui.helper.attr('dashId');
+                    var newDash = $(this).closest('.dashboard').attr('id');
+                    if(oldDash != newDash) {
+                        var search = ui.helper.attr('recid');
+                        $.ajax({
+                            type:'GET',
+                            url: '{% url "crits.dashboards.views.switch_dashboard" %}',
+                            data: {
+                                id: search,
+                                dashboard: newDash
+                            },
+                            datatype: 'json',
+                            success: function(data) {
+                                showResults(data.message, !data.success);
+                                if (data.success) {
+                                    var newRecord = w2ui[oldDash].get(search);
+                                    w2ui[newDash].add(newRecord);
+                                    w2ui[oldDash].remove(search);
+                                    //removes the empty row if it exists
+                                    w2ui[newDash].remove(0);
+                                }
+                            },
+                            error: function(data) {
+                                throwUnexpectedError();
+                            }
+                        });
+                    }
+               }
+            })
+        });
+        //funcion set up w2ui grid
+        function setUpW2ui(id, name, columns, records) {
+        	$('#'+id).w2grid({ 
+                name: id, 
+                reorderColumns: false,
+                fixedBody : false,
+                columns: columns,
+                columnGroups:[{
+                        caption: name,
+                        span: columns.length
+                   }
+                ],
+                records: records,
+                onRefresh: function(e) {
+                    window.setTimeout(function() {
+                        bindDraggable(e.target);
+                    }, 0);
+                }
+            });
+        }
+        //binds draggable to the tr of the w2ui. This is necessary because everytime the 
+        //grid is refreshed, it loses all manually added classes
+        function bindDraggable(w2ui) {
+            $('#grid_'+w2ui+'_records tr').draggable({
+                cursor:'move',
+                delay: '200',
+                helper: function() {
+                    var clone = $('#clones-search-row-wrapper').children().clone();
+                    var columns = ['name', 'term', 'type', 'sort', 'mRows', 'edit'];
+                    $(clone).attr('recid',$(this).attr('recid'));
+                    $(clone).attr('dashId',$(this).closest('.dashboard').attr('id'));
+                    for(var i in columns)
+                        $(clone).find('.clone-'+columns[i]).html($(this).find('td[col='+i+']').html());
+                    return clone;
+                },
+                appendTo: '#wrapper',
+            });
+        }
+        $('#need-help').click(function() {
+        	$('#the-help').slideToggle('fast');
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <div id='wrapper'>
+	    <div class='center' id='resultsDiv'></div>
+	    {% if dashboards %}
+		    <div id='help-box'>
+		        <span id='need-help'>Need help?</span>
+		        <div class='hidden' id='the-help'>
+		            Some things to Keep in Mind:
+		            <ol>
+		                <li>Public dashboards are not shown here unless you are the creator.</li>
+		                <li>To revert back to a public dashboard, delete your modified copy and it will automatically become visible again.</li>
+		                <li>Click the <i class="fa fa-caret-square-o-down"></i> for the dashboard options.</li>
+		                <li>Try dragging a row to move a search onto a different dashboard.</li>
+		           </ol>
+		        </div>
+		    </div>
+		    <div class='clear'></div>
+		{% endif %}
+	    {% for dash in dashboards %}
+	       <div class='margBottom'>
+	           <div class='dashboard {{dash.theme}}-theme' {%if dash.isModified%}isModified='true'{% endif %} theme='{{dash.theme}}' tempTheme='{{dash.theme}}' isPublicText='Make {%if dash.isPublic%}Private{%else%}Public{%endif%}' id='{{dash.id}}'></div>
+	       </div>
+	    {% empty %}
+	        <div class='center margBottom'>You currently have no dashboards saved. To begin, modify & save a public dashboard or 
+	            enter a search phrase <span class='go-to-search'>here</span> and click "Configure for Dashboard" on the results page.</div>
+	    {% endfor %}
+	    <div class='center'>
+	        <button id='create-blank-dashboard'>Create Blank Dashboard</button>
+	    </div>
+	    <div id="create-blank-dashboard-dialog" title="Create Blank Dashboard" class='center'>
+	        <div id='create-blank-part1'>
+	            Please note, creating a blank dashboard will have no data to show. It would be better to modify & save a public dashboard or 
+	            enter a search phrase <span class='go-to-search'>here</span> and click "Configure for Dashboard" on the results page.
+	        </div>
+	        <div class='hidden' id='create-blank-part2'>
+	            <label>Dashboard Name:</label>
+	            <input type='text' id='blank-dashboard-name'/>
+	        </div>
+	    </div>
+	    <div id="removeFromDashboardDialog" title="Delete Saved Search" class='center'>
+	        <div class='red' id='extraNote'>
+	            Please note: This is a default table and you cannot re-create it.
+	            If this is your <b>only</b> copy it will be set to hidden instead
+	            of being deleted in order to prevent total loss of data.
+	        </div>
+	        <div>Are you sure you want to delete this search?</div>
+	    </div>
+	    <div id='dashboard-settings-dropdown' class='dropdown-gray'>
+		    <div class='dashboard-settings-option dropdown-gray-option makeDefault'>Make Default</div>
+		    {% if user.role == 'Administrator' %}<div class='dashboard-settings-option dropdown-gray-option toggleIsPublic'></div>{% endif %}
+		    <div class='dashboard-settings-option dropdown-gray-option changeName'>Change Name</div>
+		    <!-- 
+		    <div class='dashboard-settings-option changeTheme'>Change Theme</div>
+		     -->
+		    <div class='dashboard-settings-option dropdown-gray-option deleteDashboard'>Delete</div>
+	    </div>
+	    <div id='change-name-dialog' title='Rename Dashboard' class='center'>
+	        <label>Name: </label>
+	        <input type='text' name='newName' id='newName'/>
+	    </div>
+	    <div id='delete-dashboard-dialog' title='Delete Dashboard' class='center'></div>
+	    <!-- 
+	    <div id='change-theme-dialog' title='Change Theme' class='hidden center'>
+	        <div>
+	            <button theme='default' class='theme-picker theme-picker-default'>A</button> 
+	            <button theme='valentine' class='theme-picker theme-picker-valentine' >B</button>
+	            <button theme='forest' class='theme-picker theme-picker-forest' >C</button>
+	            <button theme='ocean' class='theme-picker theme-picker-ocean' >D</button>
+	            <button theme='sunny' class='theme-picker theme-picker-sunny' >E</button>
+	        </div>
+	    </div>
+	     -->
+	    <div id='clones-search-row-wrapper' class='hidden'>
+		    <div class='cloned-search-row'>
+		        <div class='clone-field clone-name'>Counts</div>
+		        <div class='clone-field clone-term'></div>
+		        <div class='clone-field clone-type'></div>
+		        <div class='clone-field clone-sort'>None</div>
+		        <div class='clone-field clone-mRows'>None</div>
+		        <div class='clone-field clone-edit'></div>
+		    </div>
+		</div>
+    </div>
+{% endblock %}

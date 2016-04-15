@@ -3,16 +3,408 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
-Author: ssnow
-Date: 2014-06-23
+Author: frbapolkosnik
+Date:   2016-02-03
 
-    Updating CRITs to expand the TAXII service. Within this repository, this
-    involves creating a to_stix method for crits objects within
-    crits_mongoengine.py. This method will need to be updated as more crits
-    objects can be converted into the STIX standard and potentially shared
-    via TAXII.
+    You can run your CRITs-master on Django 1.7 with the latest commit!
+    In order to run on 1.7 you'll have to add an one-liner to forms.py in your
+    custom-made services.
+    You'll need to add the following line:
+        kwargs.setdefault('label_suffix', ':')
+    before every occurrence of the following:
+        super(YourCustomServiceConfigForm, self).__init__(*args, **kwargs)
+    in forms.py inside your custom-made services.
+    
+    For CRITs to run on Django 1.7 you also need to update the following:
+    django-tastypie==0.12.2
+    django-tastypie-mongoengine==0.4.6
 
-    Related: updating STIX to v1.1.1.0 and CybOX to 2.1.0.5.
+Author: mgoffin
+Date: 2015-11-19
+
+    Actions have several changes.
+
+    1) Actions are now a feature of all TLOs, not just indicators.
+    2) Actions can be modified to specify a set of TLOs they apply to.
+
+        NOTE: Without setting this for existing Actions, none of them will show
+        up in the dropdown menu when adding an Action.
+
+    3) Actions can now set up preferred criteria. This allows you to specify the
+    conditions which make this Action preferred for a given TLO.
+        When editing an Action you will see a "Preferred" section. This section
+        is a comma-separated list of TLO Type, Field Name, and Value. Newlines
+        will separate different conditions. Conditions are an "OR".
+        For example: Indicator, ind_type, Domain
+            This will be a preferred action for any Indicator with a type of
+            Domain.
+
+Author: dreardon
+Date: 2015-11-18
+    The new Signature TLO has two backend reference lists which can be managed
+    by an Administrator in the Control Panel.
+        - The Data Type drop-down values that are available can be added to and disabled
+        just like other reference values (Raw Data Types, etc.) in the Control Panel
+        under "Signature Types"
+        - The Signature Type Dependency list featured in the type-ahead component
+        can also be added to and managed in the Control Panel under "Signature Dependency".
+        Unlike most other Control Panel lists, this list allows entries to be deleted so
+        that this list doesn't become cumbersome over time.
+
+Author: frbapolkosnik
+Date: 2015-08-31
+
+    Unzip functionality was set up to use the 7za rather than 7z. 7z suports
+    much wider variety of formats. The defaults are changed for new installs,
+    for existing installs just change the filename from  7za to 7z in 
+    CRITs Control Panel -> SYSTEM -> General -> "Zip7 path:".
+    7z comes with p7zip-plugins on RHEL/Centos, on Ubuntu it's in p7zip-full.
+
+Author: mgoffin
+Date: 2015-06-30
+
+    CybOX and STIX have been completely removed from core. There was too much
+    arguing and back-and-forth between the pro-standards and anti-standards
+    community members for it to stay as it is. Half of the people didn't want to
+    be forced to use them at all while the other half was not satisfied at the
+    level of feature parity and compatibility CRITs had with the standards.
+
+    The compromise that we came up with is to move any and all features that
+    involved CybOX/STIX over to the TAXII Service. That way if you use core you
+    are not required to interact or use the standards, but if you do want them
+    you can leverage the import/export capabilities via an optional service.
+
+    The following changes have taken place:
+
+        - CRITs has its own set of vocabularies for things like Event Type,
+          Relationships, Objects, Indicators, Actors, etc. Some of the values
+          might be the same, similar, or different than what was there before
+          depending on if those values made sense.
+            - We are not migrating old values and leaving the mapping of old
+              values to new ones up to organizations to handle. Due to the
+              confusion of what some of the old CybOX/STIX values meant, some
+              people used them in different ways and we didn't want to make
+              assumptions.
+        - STIX Import is gone and now a part of the TAXII Service. If you use
+          the TAXII service it can be found in the Nav Menu under "Services".
+        - Exporting a TLO in STIX format requires the TAXII Service's "Preview"
+          feature.
+        - The "Standards" API is gone but will work again if you include the
+          TAXII Service which extends the API.
+        - The TAXII Service has a new set of mappings to go from
+          CRITs->Standards->CRITs for the new vocabularies. It is less robust
+          than before but we are leaving it this way so people can submit PRs
+          for expanded support.
+        - Downloading a TLO no longer provides a STIX option. It is now
+          JSON-based.
+        - If you wish to upload a file as an Object, use the "File Upload"
+          Object Type.
+        - Indicators now have a "Threat Type" and "Attack Type" to provide more
+          context into what the Indicator means.
+        - The UI will now prevent you from trying to create an Indicator out of
+          an existing Object if there is no matching Indicator Type.
+        - If you had custom vocabulary additions before, we no longer use the
+          database to query for vocabulary values. They are now located in the
+          "vocabulary" directory of the project. You can add your vocabulary
+          items there as necessary and handle merge conflicts if needed.
+
+    This separation should put CRITs in the right position. We want to keep
+    CRITs as a collaborative analyst environment, not a sharing platform. If you
+    want to share by extending it with services that's excellent! CybOX and STIX
+    support can be expanded upon and rev'd more frequently in the TAXII Service
+    so people don't have to wait for new CRITs releases to get access to newer
+    versions of the standards. The core developers don't use the standards so
+    they are looking to the community to contribute enhancements to CybOX/STIX
+    support in the TAXII Service if it is something they need/want.
+
+    Here an examples of a query you can perform to update the values in
+    your database to align with the new vocabulary:
+
+    db.indicators.update({'type': 'Address - ipv4-addr'}, {$set: {'type': 'IPv4
+    Address'}}, {'multi': 1})
+
+
+Author: brlogan
+Date: 2015-05-07
+
+    Added support for sharing String Indicators via STIX. Because there is no
+    generic String type in CybOX, the CybOX Custom object must be used. This
+    requries updating python-stix and python-cybox.
+
+    Updated versions are:
+        cybox-2.1.0.11
+        stix-1.1.1.5
+
+Author: wxs
+Date:   2015-05-06
+
+    The add_relationship() function has been changed. If you have any place
+    using it with the rel_id and type_ arguments you need to change to pass
+    in rel_item. For more details please see this commit:
+
+    e9f0a6e545ec18e8f951b4709aab8fd06b973537
+
+Author: wxs
+Date:   2015-05-06
+
+    Backdoor and Exploit TLOs have been added to CRITs. This provides for
+    better tracking of TTPs over time. The old "exploits" collection will need
+    to be removed first by running the following from a mongo shell:
+
+    db.exploits.drop()
+
+    If you have existing samples with backdoor or exploit information you can
+    migrate these to new objects in the new collections using:
+
+    python manage.py upgrade -S
+
+    The above will create new objects in the collections for each exploit and
+    backdoor attribute of a Sample, and relate the Sample to them. It will also
+    create indexes for the new "backdoors" and "exploits" collection.
+
+    Finally, you can drop the backdoor_details and exploit_details collections
+    by running the following from a mongo shell:
+
+    db.backdoor_details.drop()
+    db.exploit_details.drop()
+
+Author: mgoffin
+Date:   2015-04-28
+
+    Locations has been added to CRITs. This is a new feature for each TLO.
+    Locations allows you to track where a TLO has been seen originating from as
+    well as destined to. Uniqueness of a location entry is based on a
+    combination of its type, location, and date of entry. This allows you to
+    have multiple instances of originating from the same place. Each location
+    comes with an optional description as well as optional lat/long.
+
+    In order for this to work you will need to populate your system with
+    locations to choose. Locations are based on country/territory. You can add
+    them by running the following:
+
+        python manage.py create_locations
+
+Author: frbapolkosnik
+Date:   2015-04-17
+
+    Bundled version of OleFileIO_PL has been removed and replaced with
+    system-installed olefile >= 0.40. In order to get it working one needs to
+    install olefile module by either building it and installing from
+    source (https://pypi.python.org/pypi/olefile) download the zip, unzip, cd
+    to the extracted folder and run:
+
+        python setup build & sudo python setup.py install
+
+    or through pip:
+
+        pip install olefile
+
+Author: wxs
+Date:   2015-01-17
+
+    Notifications had an incorrect index set on them, causing them not to
+    expire after 30 days. This can be fixed by executing the following command
+    from a mongo shell:
+
+    db.notifications.ensureIndex({"date": 1}, {expireAfterSeconds: 2592000, background: true})
+
+Author: wxs
+Date:   2014-12-30
+
+    Domains got an overhaul to split the WHOIS feature out to a service. You
+    will need to migrate all your domains. This can be done with:
+
+    python manage.py upgrade -D
+
+    If you do not have any WHOIS information for existing domains in your
+    database you can ignore this update. If you do have WHOIS information a
+    script has been provided which will run the WHOIS service with default
+    configuration against all domains which have WHOIS information already. It
+    is recommended that you use this script to create service analysis results
+    for these domains.
+
+    The WHOIS service supports three different query modes: live, pydat and
+    domaintools. If you wish to use the domaintools or pydat modes you must
+    configure the service first and then specify your runtime options to the
+    migrate script using the -c option.
+
+    If you only want to do live queries then run this:
+
+    python manage.py runscript whois_service migrate -- -v
+
+    If you want to do a pydat lookup then run this:
+
+    python manage.py runscript whois_service migrate -- -v -c "{'pydat_query': True}"
+
+    If you want to do a domaintools lookup then run this:
+
+    python manage.py runscript whois_service migrate -- -v -c "{'dt_query': True}"
+    The config options can be combined too. So all three modes would be:
+
+    "{'dt_query': True, 'pydat_query': True, 'live_query': True}"
+
+    Please use the -h argument to the script to get extra help.
+
+Author: dsnellgrove
+Date:   2014-10-30
+
+    The python library "ushlex" has been added as a dependency and will need to
+    be installed.
+
+Author: dbuchta
+Date:   2014-10-14
+
+    Dashboards are now saved objects in the db containing a list of tables 
+    affiliated with it. They also have a name and have the option to be 
+    public. These can all by changed on the Dashboard Configurations page
+    although only an admin can make a dashboard public. When a user other
+    then the original creator saves a public dashboard, it creates a clone
+    with their own customization applied and the public one is removed
+    from the user's list of dashboards. In order to revert the clone back to 
+    the public, simply delete it and public one will show again. Users also 
+    have the choice of picking their default dashboard from the Dashboard 
+    Configurations page.
+    
+    A key feature to these new dashboards are users having the ability to save
+    their favorite searches. This can be done by entering your search criteria 
+    in the Global Quick Search and clicking the "Configure for Dashboard" button
+    on the search results page. Once clicked, you will be redirected to another
+    page where you can customize the table to your liking, name it, and choose 
+    which dashboard to pin it to, or to  create a new one.
+    
+    In order for the dashboard to work correctly, the initial default dashboard
+    must be created in the database. This can be done with the following 
+    management command:
+    
+        python manage.py create_default_dashboard
+        
+Author: mgoffin
+Date:   2014-10-04
+
+    We have removed the requirement to use /crits/ when using Apache. It will
+    now function with a similar URL as runserver. This removes backwards
+    compatibility with old links, but if you wish to make them work, you can use
+    your own custom Apache config to redirect /crits/ to /.
+
+    Please reference the example Apache config files in the extras folder for
+    how to configure Apache to work with CRITs.
+
+Author: mgoffin
+Date:   2014-09-25
+
+    There is a drastic change to Analysis Results. Historically, analysis
+    results were stored within the document of the TLO they were derived from.
+    This was fine but as time went on more services were developed which had
+    more robust output. Each TLO is bound by MongoDBs 16MB max document size. As
+    services are being executed they are consuming part of that 16MB for the
+    TLO. This results in contention for space and has sometimes led to documents
+    which can no longer be modified due to hitting the cap.
+
+    The change that has been implemented is to move all Analysis Results to
+    their own collection. This gives service developers almost 16MB of space
+    dedicated to the results their service output. There is no more contention
+    with other service output to deal with. Each execution of a service will
+    have its own document in the collection making it easier to work with.
+
+    With this change you will need to run some commands:
+
+    In mongo shell:
+        use crits
+        db.analysis_results.ensureIndex({'service_name': 1}, {'background': true})
+        db.analysis_results.ensureIndex({'object_type': 1}, {'background': true})
+        db.analysis_results.ensureIndex({'object_id': 1}, {'background': true})
+
+    If you run a clustered database you'll also need to run:
+        use admin
+        db.runCommand({shardcollection:"crits.analysis_results",key:{"object_id":1}})
+
+    Once the indexes (and sharding if applicable) are set, you can then begin
+    migrating your Analysis Results to the new collection. This can be skipped
+    if you wish to have them migrated as you view content through the interface
+    but keep in mind search results will not be accurate until all of them are
+    moved.
+
+    To migrate the Analysis Results, you can run the following management
+    command:
+
+        python manage.py upgrade -as
+
+    You can use -h to get more information, but this tells the command to skip
+    preparation (there is no need to do this at this time) and to upgrade all
+    documents in all collections. You can use the individual options to migrate
+    a collection at a time (this is useful if you have bad data in your database
+    that you need to hunt down as the migration happens).
+
+    After everything is migrated and verified, if you want to ensure all of the
+    old analysis results were cleaned up, you can run the following in mongo
+    shell for each TLO collection (replace "collection" with the collection you
+    wish to update):
+
+    db.collection.update({}, {$unset: {'unsupported_attrs.analysis': 1}}, {'multi': true})
+
+    There is a new Nav Menu option under Services called "Analysis Results" to
+    get to the jTable listing of the results.
+
+Author: wxs
+Date:   2014-08-13
+
+    Services are getting an overhaul. They no longer use the Context concept.
+    Contexts existed from a time before we had real objects to pass around.
+    Now that we have real objects Contexts are no longer needed and are a
+    layer of indirection we can do without.
+
+    If you are a service author you need to update your code to work on an
+    object.
+
+    Services have also received a major rewrite in how they are configured
+    and run. The wiki page will be updated accordingly.
+
+Author: mgoffin
+Date:   2014-09-03
+
+    The way we handle URLs is changing drastically. Now, each TLO and major
+    section of CRITs is going to handle its own urls.py file. They are imported
+    in the normal `crits/urls.py` file. If you've made any changes to your
+    urls.py file, you will need to determine the correct new location and adjust
+    accordingly.
+
+    This change was made because we exceeded the 255 argument limit when trying
+    to jam them all into one file.
+
+Author: mgoffin
+Date:   2014-09-02
+
+    Actors are a new TLO that come with a lot of attribution content. In order
+    to get Actors working, you will need to populate your database with several
+    things:
+
+        python manage.py create_actors_content
+
+    That will populate the available Threat Types, Motivations, Sophistications,
+    and Intended Effects from STIX into your database to make available.
+
+    You will also need to add some Actor Identifier Types to your system. You
+    can do this via the Control Panel or under "Add New Item". Once you have one
+    or more of these set, you can add Actor Identifiers. More information on
+    Actors, Actor Identifiers, etc. can be found on the wiki.
+
+Author: mgoffin
+Date:   2014-08-13
+
+    The Sample API has been updated. The Method will default to an empty string
+    now to stay in-line with the behavior of the backend handler function. Also,
+    parent_md5 is now related_md5 as that option was renamed in the same
+    function. Expanded to include related_id and related_type so you can relate
+    the Sample to more than just another Sample (common case an Email). Be aware
+    if you use this feature to make the appropriate changes.
+
+Author: mgoffin
+Date:   2014-08-12
+
+    Updated DEPENDENCIES. We are now supporting Django 1.6.5 (in preparation for
+    their 1.7 release), MongoDB 2.6.4, and PyMongo 2.7.2. I also bumped dateutil
+    and Yara to 2.1.0 so people using the service push to upgrade and stay on
+    the latest code base (new features which will help us enhance the service).
 
 Author: mgoffin
 Date:   2014-07-16
@@ -41,6 +433,17 @@ Date: 2014-06-26
 
         python manage.py sector_counts
 
+Author: ssnow
+Date: 2014-06-23
+
+    Updating CRITs to expand the TAXII service. Within this repository, this
+    involves creating a to_stix method for crits objects within
+    crits_mongoengine.py. This method will need to be updated as more crits
+    objects can be converted into the STIX standard and potentially shared
+    via TAXII.
+
+    Related: updating STIX to v1.1.1.0 and CybOX to 2.1.0.5.
+
 Author: mgoffin
 Date: 2014-06-06
 
@@ -55,7 +458,7 @@ Date: 2014-06-06
     feature matures.
 
 Author: mgoffin
-Date:  2014-05.15
+Date:  2014-05-15
 
     Notifications are getting an overhaul. They are now stored in their own
     separate collection instead of being mixed in with comment and embedded in a

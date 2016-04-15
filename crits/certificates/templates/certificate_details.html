@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 
 {% block title %} Certificate Details {% endblock %}
 
@@ -7,14 +7,14 @@
 
 <script>
     var cert_md5 = "{{ cert.md5 }}";
-    var update_cert_description = "{% url 'crits.certificates.views.set_certificate_description' cert.md5 %}";
+    var cert_id = "{{cert.id | escapejs}}"
 </script>
 
 {% if cert %}
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ cert.analysis|length }})</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
 </ul>
 
@@ -60,16 +60,9 @@
             <td>{{ cert.md5 }}</td>
             </tr>
             <tr>
-            <td class='key'>Description</td>
-            {% if cert.description %}
-                <td>
-                    <span class="edit_underline" id="cert_description">{{cert.description}}</span>
-                </td>
-            {% else %}
-                <td>
-                    <span class="edit_underline" id="cert_description">None</span>
-                </td>
-            {% endif %}
+                {% with description=cert.description %}
+                    {% include 'description_widget.html' %}
+                {% endwith %}
             </tr>
             <tr>
                 <td class="key">Status
@@ -100,6 +93,12 @@
         {% with bucket_list=cert.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+    </div>
+    <div class="content_box">
+        {% with obj=cert obj_type="Certificate" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
     </div>
     <div>
       {% with obj=cert obj_type=subscription.type %}
@@ -109,6 +108,11 @@
     <div>
         {% with hit=cert col=COL_CERTIFICATES %}
             {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=cert col=COL_CERTIFICATES %}
+            {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
     <div>

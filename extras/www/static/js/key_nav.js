@@ -18,6 +18,8 @@ $(document).ready(function() {
                 $( "#new-domain" ).click();
             } else if (e.keyCode==80) {
                 $( "#new-pcap" ).click();
+           } else if (e.keyCode==83 && e.shiftKey) {
+                $( "#new-signature" ).click();
             } else if (e.keyCode==83) {
                 $( "#new-sample" ).click();
             } else if (e.keyCode==27) {

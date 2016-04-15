@@ -1,9 +1,3 @@
-{% extends "containment.html" %}
-{% load url from future %}
-
-{% block title %} Services {% endblock %}
-
-{% block content %}
 <div class="content_box">
     <h3 class="titleheader">
         <span>Services ({{ services.count }})</span>
@@ -16,7 +10,6 @@
                 <col width="150px">
                 <col width="50px">
                 <col width="100px">
-                <!--<col width="75px">-->
                 <col width="75px">
                 <col width="75px">
                 <col width="75px">
@@ -26,7 +19,6 @@
                 <th>Name</th>
                 <th>Version</th>
                 <th>Type</th>
-                <!--<th>Purpose</th>-->
                 <th>Supported Types</th>
                 <th>Enabled?</th>
                 <th>Run on triage?</th>
@@ -107,10 +99,3 @@
         interface.
     </li>
 </ul>
-
-{% endblock %}
-
-{% block javascript_includes %}
- <script type="text/javascript" src="{{ STATIC_URL }}js/services.js"></script>
-{% endblock %}
-

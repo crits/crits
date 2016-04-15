@@ -1,0 +1,599 @@
+{% extends "base.html" %}
+{% load is_object_id_equal from filters %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block javascript_includes %}
+    <script>
+        var buttonBarOffset;
+        //used to display the save
+        var showSaveButton = true;
+        //Dialog box opened when attemped to destroy dashboard
+        $('#reset-dashboard-dialog').dialog({
+            modal: true,
+            autoOpen: false,
+            buttons: {
+                Reset: function() {
+                    $.ajax({
+                        type:'GET',
+                        url: '{% url "crits.dashboards.views.destroy_dashboard" %}',
+                        data: {dashId: '{{ currentDash }}'},
+                        datatype: 'json',
+                        success: function(data) {
+                            showResults(data.message, !data.success);
+                            if(data.success)
+                                location.reload();
+                        },
+                        error: function(data) {
+                            showResults('An unexpected error occurred while destroying dashboard.'+
+                            		'Please refresh and try again.', true);
+                        }
+                    });
+                    $(this).dialog('close');
+                },
+                Cancel: function() {
+                    $(this).dialog('close');
+                }
+            }
+        });
+        //dialog to notify user that the parent dashboard has been changed
+        {% if parentHasChanged %}
+	        $('#parent-has-changed-dialog').dialog({
+	            modal: true,
+	            autoOpen: false,
+	            width:500,
+	            buttons: {
+	            	{% if parent %}
+		                Update: function() {  //if the parent still exists, give the option to update
+		                	$.ajax({
+		                        type:"GET",
+		                        url: "{% url 'crits.dashboards.views.delete_dashboard'%}",
+		                        data: {
+		                            id:'{{currentDash}}',
+		                        },
+		                        success: function(data) {
+		                            showResults(data.message, !data.success);
+		                            if (data.success) 
+		                            	window.location = '{% url "crits.dashboards.views.dashboard" parent %}';
+		                        },
+		                        error: function(data) {
+		                            throwUnexpectedError();
+		                        }
+		                    });
+		                    $(this).dialog('close');
+		                },
+		                'Ignore Changes': 
+	                {% else %}
+		                Okay: //if the parent does not exist anymore, dismiss notification
+	                {% endif %} 
+	                    function() {
+	                	//if do not show again is checked then send ajax call to ignore parent
+	                	if($('#do-not-show-again').is(':checked'))
+		                	$.ajax({
+		                        type:'GET',
+		                        url: '{% url "crits.dashboards.views.ignore_parent" currentDash %}',
+		                        datatype: 'json',
+		                        success: function(data) {
+		                        },
+		                        error: function(data) {
+		                            showResults('An error occurred while updating dashboard.', true);
+		                        }
+		                    });
+	                    $(this).dialog('close');
+	                }
+	            }
+	        });
+        {% endif %}
+        ////shows message in the results div
+        function showResults(message, isError) {
+            var color = 'green';
+            if (isError)
+                color = 'red';
+            $('#resultsDiv').css('color', color);
+            $('#resultsDiv').text(message);
+        }
+        //simulates the 're-search' of a tables search term
+        $(document).on('click', '.table-re-search', function() {
+            var st = unescape($(this).attr('searchTerm'));
+            $('#global_search_box').val(st);
+            $('#global_search_box').closest('form').submit();
+        });
+        //shows the table options when hovering of ther table
+        //(settings and re-search icons)
+        $(document).on('mouseleave', '.w2ui-col-group', function() {
+        	$(this).find('.tableOptions').hide();
+        });
+        //hides the table options when hovering of ther table
+        //(settings and re-search icons)
+        $(document).on('mouseenter', '.w2ui-col-group', function() {
+            $(this).find('.tableOptions').show();
+        });
+        //jquery animation to slide button bar on/off screen
+        $('#toggleButtonBar').click(function() {
+        	var delay = 0;
+        	if($('#other-searches-dropdown').is(':visible')) 
+        		delay = 200;
+        	window.setTimeout(function() {
+        		slideButtonBar()
+       		}, delay);
+        });
+        function slideButtonBar() {
+        	showResults('');
+            var slideVal = buttonBarOffset;
+            if ($('#buttonBar').css('right') == slideVal)
+                slideVal = '0px';
+            $('#buttonBar').animate({
+                right: slideVal
+            }, 250);
+        }
+        $('#addSearchButton').click(function() {
+            $('#other-searches-dropdown').slideToggle('fast');
+        });
+        $('.other-search').click(function() {
+            var searchId = $(this).attr('search-id');
+            if (searchId) {
+                $.ajax({
+                    type:'GET',
+                    url: '{% url "crits.dashboards.views.add_search" %}',
+                    data: {
+                        id:searchId,
+                        dashboard:'{{currentDash}}'
+                    },
+                    datatype: 'json',
+                    success: function(data) {
+                        showResults(data.message, !data.success);
+                        if(data.success) {
+                            var search = data.newSearch;
+                            var isDefault = search.isHereByDefault;
+                            var searchTerm = search.searchTerm;
+                            var sortField = null;
+                            var sortDirection = null;
+                            if (search.sortBy.field && search.sortBy.direction) {
+                                var sortField = search.sortBy.field;
+                                var sortDirection = search.sortBy.direction;
+                            }
+                            var id = search.id;
+                            var title = search.title;
+                            var editUrl = '/dashboards/edit_saved_search/'+id+'/';
+                            var records =  search.records;
+                            var columns =  search.columns;
+                            for (var i in columns) {
+                                columns[i].sortable = false;
+                                columns[i].resizable = (i != (columns.length-1))
+                            }
+                            $gridster.add_widget('<li><div class="draggable" isHereByDefault="'+isDefault+'" tableId="'+id+'">'+
+                                        '<div id="'+id+'"></div></div></li>', search.sizex, search.sizey, search.col, search.row );
+                            constructW2ui(title, editUrl, isDefault, searchTerm,
+                                    records, columns, id, sortField, sortDirection);
+                            resizeGridster();
+                        }
+                    },
+                    error: function(data) {
+                         showResults('An unexpected error occurred while adding search.'+
+                                 ' Please refresh and try again.', true);
+                    }
+                });
+                $(this).remove();
+                if($('.other-search').length == 0)
+                    $('#other-searches-dropdown').append('<div class="other-search">All of your searches are shown</div>');
+            }
+        });
+        $(document).click(function(e) {
+            if($(e.target).hasClass('dont-toggle'))
+                return true;
+            if($('#other-searches-dropdown').is(':visible')) 
+                $('#other-searches-dropdown').slideToggle('fast');
+        });
+        //action of the reset dashboard button
+        $('#resetPositionsButton').click(function() {
+            showResults('');
+            $('#reset-dashboard-dialog').dialog('open');
+        });
+        $('#myDashboardsButton').click(function() {
+        	window.location = $(this).attr('href');
+        });
+        //action of the save position button. Ajax call
+        $('#savePositionsButton').click(function() {
+            showResults('');
+            toggleOptions(false);
+            if(! $gridster.drag_api['disabled'] == true)
+                removeDraggable();
+            var data = [];
+            var dashboardWidth = $('#dashboardWrapper').width();
+            $('.draggable').each(function() {
+                    var gridId = $(this).children().first('div').attr('id');
+                    var name = $(this).find('.w2ui-col-group').text().trim();
+                    var $guardian = $(this).closest('li');
+                    var tempDict = {
+                        tableName: name,
+                        columns: w2ui[gridId].columns,
+                        isDefault: $(this).attr('isHereByDefault'),
+                        sortDirection: $(this).attr('sortDirection'),
+                        sortField: $(this).attr('sortField'),
+                        id:$(this).attr('tableId'),
+                        sizex:$guardian.attr('data-sizex'),
+                        sizey:$guardian.attr('data-sizey'),
+                        row:$guardian.attr('data-row'),
+                        col:$guardian.attr('data-col'),
+                        id:$(this).attr('tableId')
+                    };
+                    data.push(tempDict);
+            });
+            $.ajax({
+                type:'POST',
+                url: '{% url "crits.dashboards.views.save_new_dashboard" %}',
+                data: {
+                    data: JSON.stringify(data),
+                    userId: '{{ user.id }}',
+                    dashboardWidth: dashboardWidth,
+                    dashId: '{{currentDash}}'
+                },
+                datatype: 'json',
+                success: function(data) {
+                    showResults(data.message, !data.success);
+                    if (data.clone)
+                        window.location = '/dashboards/id/'+data.dashId+'/';
+                    else
+                        showSaveButton = true;
+                },
+                error: function(data) {
+                     showResults('An unexpected error occurred while saving dashboard.'+
+                             ' Please refresh and try again.', true);
+                }
+            });
+        });
+        //Toggles the draggable/resizeable abilities of the tables
+        $('#toggleGridsterButton').click(function() {
+            showResults('');
+            if($gridster.drag_api['disabled'] == true) {
+            	$gridster.enable();
+                $('.content ').css('background-color','rgba(238,238,238,.9)');
+                $('.content ').css('box-shadow','1px 1px 2px 2px #eeeeee');
+            }
+            else 
+                removeDraggable();
+        });
+        //removes the draggable/resizeable abilities of the table
+        function removeDraggable() {
+        	$gridster.disable();
+            $('.content ').css('background-color','white');
+            $('.content ').css('box-shadow','0px 0px 0px 0px #eeeeee');
+        }
+        //Logic to show the save
+        function toggleOptions(show) {
+        	//if caller wants to show the options and they are not already showing
+            if(show && showSaveButton) {
+                $('#savePositionsButton').removeAttr('disabled');
+                showSaveButton = false;
+            }
+        	//if the caller wants to hide the options and they are not already hidden
+            else if (!show && !showSaveButton) {
+                $('#savePositionsButton').attr('disabled', 'true');
+                showSaveButton = true;
+            }
+        }
+        //gets new data for the passed in table, called when the table is sorted
+        function getNewData(ajaxData, url, table) {
+        	$.ajax({
+                type:'GET',
+                url: url,
+                data: ajaxData,
+                datatype: 'json',
+                success: function(data) {
+               		var records = data['Records'];
+                	if(records.length>0) {
+	                	w2ui[table].records = records;
+	                	w2ui[table].refresh();
+                	}
+                },
+                error: function(data) {
+                }
+            });
+        }
+        function reSizeLastColumn(tempCols, tableWidth) {
+            var lastColWidth = tableWidth;
+            for (i in tempCols)
+                if (lastColWidth < 1)
+                    return false;
+                else if (i == tempCols.length-1)
+                    tempCols[tempCols.length-1]['size'] = lastColWidth+"px";
+                else
+                    lastColWidth-=parseInt(tempCols[i]['size']);
+            return true;
+        }
+        function create_pivot_links(data) {
+            var campBase = "/campaigns/details/__CAMPAIGN__/";
+            var items = data.split('|||');
+            var links = [];
+            for (var i = 0; i < items.length; i++)
+                if (items[i]) {
+                    var campUrl = '<a href="'+campBase.replace("__CAMPAIGN__", items[i])+'">'+items[i]+'</a>';
+                    if (links.indexOf(campUrl) >= 0)
+                    	continue;
+                    links.push(campUrl);
+                }
+            return links;
+        }
+        $(document).ready(function() {          //doc.ready
+            {% for table in tables %}
+                var isDefault = false;
+                var sortField = null;
+                var sortDirection = null;
+                var searchTerm = '{{table.searchTerm}}';
+                var id = '{{table.id}}';
+	            var title = '{{table.title}}';
+	            var editUrl = '{% url "crits.dashboards.views.edit_save_search" table.id %}';
+	            {% if table.sortBy %}
+	                var sortField = '{{table.sortBy.field}}';
+	                var sortDirection = '{{table.sortBy.field}}';
+	            {% endif %}
+	            {% if table.isHereByDefault %}
+	                isDefault = true;
+	            {% endif %}
+	            var records =  [
+	                {% for record in table.records %}
+	                    {
+	                        {% for k,v in record.items  %}
+	                            {% if k in table.colNames or k = 'recid' %}
+	                                {{k}}:"{{v|safe}}",
+	                            {% endif %}
+	                        {% endfor %}
+	                    },
+	                {% endfor %}
+	            ];
+	            var columns = [];
+	            {% for col in table.columns %}
+	                var col = {{ col | safe }};
+	                col['sortable'] = false;
+	                col['resizable'] = true;
+	                columns.push(col);
+	            {% endfor %}
+	            constructW2ui(title, editUrl, isDefault, searchTerm,
+	                    records, columns, id, sortField, sortDirection)
+            {% endfor %}
+            $('#savePositionsButton').attr('disabled', 'true');
+            //open dialog on load if the parent of the dashboard has been changed
+            {% if parentHasChanged %}
+                $('#parent-has-changed-dialog').dialog('open');
+            {% endif %}
+            $('.top.responsive').mouseenter(function() {
+                $('#dashId:focus').blur();
+            });
+        });             //end doc.ready
+        function constructW2ui(title, editUrl, isDefault, searchTerm,
+                     records, columns, id, sortField, sortDirection) {
+            var tableHeader = title+
+            '<span class="tableOptions" style="display:none;position:absolute;left:5px;top:7px;">'+
+                 '<a href="'+editUrl+'">'+
+                     '<i style="margin-left:5px;" class="fa fa-cog"></i>'+
+                 '</a>';
+             if (!isDefault) {
+                    tableHeader+='<a class="table-re-search" searchTerm="'+searchTerm+'">'+
+                        '<i style="display:inline;margin-left:5px;" class="fa fa-search-plus"></i></a>';
+             }
+             tableHeader+='</span>';
+            //converts necessary strings to ints
+            for(i in records) {
+                var record = records[i];
+                for (k in record)
+                    if(k.indexOf('count') >= 0 || k == 'to' || k == 'length'
+                            || k == 'size' || k == 'version')
+                        record[k] = parseInt(record[k]);
+                    else if(k == 'campaign')
+                        record[k] = create_pivot_links(record[k]);
+            }
+            //Turns off sorting of the last column
+            columns[columns.length-1].resizable=false;
+            //sets up the w2ui grid
+            $('#'+id).w2grid({
+                name: id,
+                reorderColumns: false,
+                fixedBody : false,
+                columns: columns,
+                columnGroups:[{
+                        caption: tableHeader,
+                        span: columns.length
+                   }
+                ],
+                records: records,
+                onColumnResize: function(e) {
+                    e.onComplete = function() {
+                        var name = $(this).attr('name');
+                        var tableWidth = $('#'+name).width();
+                        var tempCols = w2ui[name].columns;
+                        if(!reSizeLastColumn(tempCols, tableWidth)) {
+                            var changingColumn = w2ui[name].getColumn(e.field);
+                            var prevWidth = parseInt(changingColumn.size) - e.resizeBy;
+                            changingColumn.size = prevWidth + 'px';
+                            reSizeLastColumn(tempCols, tableWidth);
+                        }
+                        else
+                            toggleOptions(true);
+                        w2ui[name].refresh();
+                        for (i in tempCols) {
+                            var col = tempCols[i];
+                            if (col.sizeType != '%')
+                                col.size = parseInt(col.size)/tableWidth*100+'%';
+                        }
+                    };
+                },
+            });
+            if (sortDirection && sortField)
+                w2ui[id].sort(sortField, sortDirection);
+        }
+        var $gridster;
+        $(window).load(function() {
+            /*
+            The following is necessary because the buttons are displayed differently
+            in each browser and the therefore the buttonBarOffset needs to be different.
+            */
+            buttonBarOffset = $('#buttons').width();
+            $('#other-searches-dropdown').width(buttonBarOffset);
+            //calculates what the offset should be for the button bar
+            buttonBarOffset = '-'+parseInt(buttonBarOffset+4)+'px';
+            //sets the absolue postioning of the other searches dropdown
+            $('#other-searches-dropdown').css('top',parseInt($('#buttonBar').height()+12)+'px');
+            //sets the button bars position
+            $('#buttonBar').css('right',buttonBarOffset);
+            dashWidth = $('#dashboardWrapper').width()*.99;
+            dashHeight = $('#dashboardWrapper').height();
+            $gridster = $('#dashboardWrapper ul').gridster({
+                widget_margins: [3, 3],
+                widget_base_dimensions: [(dashWidth-294)/50, (dashHeight-294)/50],
+                min_cols: 50,
+                min_rows: 50,
+                resize: {
+                    enabled: true,
+                    axes: ['x'],
+                    stop: function(e, ui, $widget) {
+                        w2ui[$widget.find('.w2ui-grid').attr('name')].refresh();
+                        toggleOptions(true);
+                    }
+                },
+                draggable: {
+                    stop: function(event, ui) {
+                        toggleOptions(true);
+                    }
+                }
+            }).data('gridster');
+            $gridster.disable();
+            window.setTimeout(function() {
+                $('.w2ui-grid').each(function() {
+                    w2ui[$(this).attr('name')].refresh();
+                });
+                correctGridsterSizeY();
+            }, 500);
+            //this fixed bug in chrome that causes the tables to appear whited out on load
+            window.setTimeout(function() {
+                $('#toggleGridsterButton').click();
+                $('#toggleGridsterButton').click();
+            }, 10);
+        });
+        $(window).resize(function() {
+            resizeGridster()
+        });
+        var delay = (function(){
+            var timer = 0;
+            return function(callback, ms){
+                clearTimeout (timer);
+                timer = setTimeout(callback, ms);
+            };
+        })();
+        function resizeGridster() {
+            delay(function(){
+                dashWidth = $('#dashboardWrapper').width()*.99;
+                dashHeight = $('#dashboardWrapper').height();
+                $gridster.resize_widget_dimensions({
+                    widget_base_dimensions: [(dashWidth-294)/50, (dashHeight-294)/50]
+                });
+                $gridster.drag_api.set_limits(dashWidth);
+                window.setTimeout(function() {
+                    $('.w2ui-grid').each(function() {
+                        w2ui[$(this).attr('name')].refresh();
+                    });
+                    correctGridsterSizeY();
+                }, 250);
+            }, 500);
+        }
+        //on change of the dashboards dropdown, change page
+        $('#dashId').change(function() {
+            if($(this).val().indexOf('{{currentDash}}') <= 0)
+                window.location = $(this).val();
+        });
+        function correctGridsterSizeY() {
+            var baseY = $gridster.options.widget_base_dimensions[1];
+            var margY = $gridster.options.widget_margins[1];
+            var constant = 26;
+            $('.gridster li').each(function() {
+                var maxNeededHeight = $(this).find('.draggable').height();
+                var currentSizeY = $(this).attr('data-sizey');
+                for (var i = 1; i < 100; i++) {
+                    if (gridster_getTestHeight(i) > (maxNeededHeight-constant)) {
+                        if (i != currentSizeY)
+                            $gridster.resize_widget($(this), null, i);
+                        break;
+                    }
+                }
+            });
+            function gridster_getTestHeight(x) {
+                return (x*baseY) + ((x-1) * margY)*2;
+            }
+        }
+    </script>
+{% endblock %}
+{% block content %}
+    <div class='{{dashTheme}}-theme'>
+        <div style='position:relative;height:40px;overflow-x:hidden'>
+            <div class='floatleft'>
+                <select id='dashId'>
+                    {% for dash in dashboards %}
+                        <option {% if dash|is_object_id_equal:currentDash %}selected{% endif %} value='{% url "crits.dashboards.views.dashboard" dash.id %}'>
+                            {{dash.name}}{% if dash.isPublic %} (Public){% elif dash.parent %} (Modified){% endif %}
+                        </option>
+                    {% endfor %}	                   
+                </select>
+            </div>
+            <div id='buttonBar' style='position:absolute;right:-300px;'>
+                <div style='float:left;margin-top:6px;margin-right:2px;'>
+                    <i id='toggleButtonBar' class='fa fa-chevron-left fa-2x'></i>
+                </div>
+                <div class='shadowed' id='buttons' style='float:right;border:1px solid #adadad;background-color:#eaeaea;'>
+                    <button class='edit-button dont-toggle' id='toggleGridsterButton' title='Toggle Edit Mode'>
+                       <i class='fa fa-arrows dont-toggle'></i>
+                    </button>
+                    <button class='edit-button dont-toggle' id='savePositionsButton' title='Save' disabled>
+                        <i class='fa fa-check dont-toggle'></i>
+                    </button>
+                    <button class='edit-button dont-toggle' id='addSearchButton' title='Add Search' {% ifnotequal userId user.id %} disabled {% endifnotequal %} >
+                        <i class='fa fa-search-plus dont-toggle'></i>
+                    </button>
+                    <button class='edit-button dont-toggle' id='resetPositionsButton' title='Reset'>
+                        <i class='fa fa-trash-o dont-toggle'></i>
+                    </button>
+                    <div class='divider'>
+                        <button class='edit-button dont-toggle' href='{% url "crits.dashboards.views.saved_searches_list" %}' id='myDashboardsButton' title='Config'>
+                            <i class="fa fa-list dont-toggle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class='center' style='height:15px;' id='resultsDiv'></div>
+        <div style='height:100%;width:100%;' id='dashboardWrapper'>
+            <ul class='gridster'>
+                {% for table in tables %}
+                    <li name='{{table.title}}' data-sizex='{{table.sizex}}' data-sizey='{{table.sizey}}' data-row='{{table.row}}' data-col='{{table.col}}'>
+                        <div {{table.attrs|safe}}  class='draggable' isHereByDefault='{{table.isHereByDefault}}' tableId='{{table.id}}'>
+                            <div id='{{table.id}}'></div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class='center' id='reset-dashboard-dialog' style='display:none;'  title='Reset Dashboard'>
+            Are you sure you want to reset your dashboard? Your tables will
+            not be removed but all their positions and sizes will be reset.
+        </div>
+        {% if parentHasChanged %}
+            <div class='center' id='parent-has-changed-dialog' style='display:none;'  title='Update Dashboard'>
+                {% if parent %}
+                    The original version of this dashboard has been changed. Would you like to update yours to
+                    display these changes? Please note if you update, all of your changes will be overwritten.
+                {% else %}
+                    Please note the original version of this dashboard has either been deleted or made private
+                    and you will no longer receive updates about it.
+                {% endif %}
+                <div></div>
+                <label for='do-not-show-again'>Do not show again</label>
+                <input type="checkbox" id='do-not-show-again' name='do-not-show-again'/>
+            </div>
+        {% endif %}
+    </div>
+    <div id='other-searches-dropdown' class='dropdown-gray'>
+          {% for search in otherSearches %}
+              <div class='other-search dropdown-gray-option' search-id='{{search.id}}' title='{{search.name}} ({{search.dash}})'>{{search.name}} ({{search.dash}})</div>
+          {% empty %}
+              <div class='other-search dropdown-gray-option'>All of your searches are shown</div>
+          {% endfor %}
+      </div>
+{% endblock %}

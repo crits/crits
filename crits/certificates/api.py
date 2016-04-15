@@ -1,6 +1,6 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.certificates.certificate import Certificate
 from crits.certificates.handlers import handle_cert_file
@@ -17,7 +17,7 @@ class CertificateResource(CRITsAPIResource):
 
     class Meta:
         object_class = Certificate
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "certificates"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
@@ -44,25 +44,29 @@ class CertificateResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Certificate.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
-        :raises BadRequest: If filedata is not provided or creation fails.
+        :returns: HttpResponse.
 
         """
 
+        content = {'return_code': 1,
+                   'type': 'Certificate'}
         analyst = bundle.request.user.username
         file_ = bundle.data.get('filedata', None)
         if not file_:
-            raise BadRequest("Upload type of 'file' but no file uploaded.")
+            content['message'] = "Upload type of 'file' but no file uploaded."
+            self.crits_response(content)
+
         filedata = file_.read()
         filename = str(file_)
 
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', None)
+        reference = bundle.data.get('reference', None)
         description = bundle.data.get('reference', None)
         relationship = bundle.data.get('relationship', None)
-        parent_id = bundle.data.get('related_id', None)
-        parent_md5 = bundle.data.get('related_md5', None)
-        parent_type = bundle.data.get('related_type', None)
+        related_id = bundle.data.get('related_id', None)
+        related_md5 = bundle.data.get('related_md5', None)
+        related_type = bundle.data.get('related_type', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
@@ -71,15 +75,25 @@ class CertificateResource(CRITsAPIResource):
                                   source,
                                   analyst,
                                   description,
-                                  parent_id=parent_id,
-                                  parent_md5=parent_md5,
-                                  parent_type = parent_type,
+                                  related_id=related_id,
+                                  related_md5=related_md5,
+                                  related_type = related_type,
                                   method=method,
+                                  reference=reference,
                                   relationship=relationship,
                                   bucket_list=bucket_list,
                                   ticket=ticket)
 
+        if result.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'certificates',
+                                  'api_name': 'v1',
+                                  'pk': result.get('id')})
+            content['url'] = url
+            content['id'] = result.get('id')
+
         if result['success']:
-            return bundle
-        else:
-            raise BadRequest(result['message'])
+            content['return_code'] = 0
+
+        content['message'] = result['message']
+        self.crits_response(content)
