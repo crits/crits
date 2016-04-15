@@ -920,6 +920,7 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
               "attachments" (dict).
     """
 
+    #print('handle_pasted_eml: %s' %type(data))
     # Try to fix headers where we lost whitespace indents
     # Split by newline, parse/fix headers, join by newline
     hfieldre = re.compile('^\S+:\s')
@@ -929,6 +930,8 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     isbody = False
     if not isinstance(data, str):
         data = data.read()
+    #if not isinstance(data, str):
+    #   data = data.decode('ISO-8859-1')
     for line in data.split("\n"):
         # We match the regex for a boundary definition
         m = boundaryre.search(line)
@@ -991,6 +994,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
               "attachments" (dict).
     """
 
+    #print('handle_eml: %s %s' %(data, type(data)))
     result = {
             'status': False,
             'reason': "",
@@ -1712,7 +1716,7 @@ def parse_ole_file(file):
     if earliest_helo_date == current_datetime and email['date']:
         earliest_helo_date = datetime.datetime.fromtimestamp(mktime_tz(parsedate_tz(email['date'])))
 
-    return {'email': email, 'attachments': list(attachments.values()), 'received_date': earliest_helo_date}
+    return {'email': email, 'attachments': attachments.values(), 'received_date': earliest_helo_date}
 
 def _get_received_from(received_header):
     """

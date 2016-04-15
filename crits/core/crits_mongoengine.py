@@ -1,5 +1,5 @@
-
-#from builtins import object
+import sys
+from builtins import object
 import datetime
 import json, yaml
 import io
@@ -499,9 +499,12 @@ class CritsDocument(BaseDocument):
         """
 
         if not fields:
-            print('to_csv not fields: %s'%type(self._data.keys()))
+            #print('to_csv not fields: %s'%type(self._data.keys()))
             fields = list(self._data.keys())
-        csv_string = io.BytesIO()
+        if sys.version_info >= (3,0,0):
+            csv_string = io.StringIO()
+        else:
+            csv_string = io.BytesIO()
         csv_wr = csv.writer(csv_string)
         if headers:
             csv_wr.writerow([f.encode('utf-8') for f in fields])
@@ -511,21 +514,30 @@ class CritsDocument(BaseDocument):
             if field in self._data:
                 data = ""
                 if field == "aliases" and self._has_method("get_aliases"):
+                    #print('aliases: %s' %self.get_aliases())
                     data = ";".join(self.get_aliases())
                 elif field == "campaign" and self._has_method("get_campaign_names"):
+                    #print('campaign: %s' %self.get_campaign_names())
                     data = ';'.join(self.get_campaign_names())
                 elif field == "source" and self._has_method("get_source_names"):
+                    #print('sources: %s' %self.get_source_names())
                     data = ';'.join(self.get_source_names())
                 elif field == "tickets":
+                    #print('tickets: %s' %self.get_tickets())
                     data = ';'.join(self.get_tickets())
                 else:
+                    #print('other: %s' %self._data[field])
                     data = self._data[field]
                     if not hasattr(data, 'encode'):
                         # Convert non-string data types
                         data = str(data)
-                row.append(data.encode('utf-8'))
-
+                #if not isinstance(data, str) and sys.version_info >= (3,0,0):
+                #    row.append(data.decode('ISO-8859-1'))
+                #else:
+                row.append(data)
+        #print('row: %s %s' %(type(row), row))
         csv_wr.writerow(row)
+        #print('ret: %s %s' %(type(csv_string.getvalue()), csv_string.getvalue()))
         return csv_string.getvalue()
 
 
@@ -1367,28 +1379,29 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :param append: Whether or not to replace or append these buckets.
         :type append: boolean
         """
-
+        #print('tags: %s %s' %(type(tags), tags))
         from crits.core.handlers import alter_bucket_list
         # Track the addition or subtraction of tags.
         # Get the bucket_list for the object, find out if this is an addition
         # or subtraction of a bucket_list.
         if isinstance(tags, list) and len(tags) == 1 and tags[0] == '':
             parsed_tags = []
-        elif isinstance(tags, (str, str)):
+        elif isinstance(tags, str):
             parsed_tags = tags.split(',')
         else:
             parsed_tags = tags
-
+        #print('parsed_tags1: %s %s' %(type(parsed_tags), parsed_tags))
         parsed_tags = [t.strip() for t in parsed_tags]
-
+        #print('parsed_tags2: %s %s' %(type(parsed_tags), parsed_tags))
         names = None
+        #print('self.bucket_list0: %s %s' %(type(self.bucket_list), self.bucket_list))
         if len(self.bucket_list) >= len(parsed_tags):
             names = [x for x in self.bucket_list if x not in parsed_tags and x != '']
             val = -1
         else:
             names = [x for x in parsed_tags if x not in self.bucket_list and x != '']
             val = 1
-
+        #print('names: %s %s' %(type(names), names))
         if names:
             alter_bucket_list(self, names, val)
 
@@ -1396,9 +1409,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             for t in parsed_tags:
                 if t and t not in self.bucket_list:
                     self.bucket_list.append(t)
+            #print('self.bucket_list1: %s %s' %(type(self.bucket_list), self.bucket_list))
         else:
             self.bucket_list = parsed_tags
-
+            #print('self.bucket_list2: %s %s' %(type(self.bucket_list), self.bucket_list))
     def get_bucket_list_string(self):
         """
         Collapse the list of buckets into a single comma-separated string.
@@ -1426,7 +1440,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         # or subtraction of a sector.
         if isinstance(sectors, list) and len(sectors) == 1 and sectors[0] == '':
             parsed_sectors = []
-        elif isinstance(sectors, (str, str)):
+        elif isinstance(sectors, str):
             parsed_sectors = sectors.split(',')
         else:
             parsed_sectors = sectors

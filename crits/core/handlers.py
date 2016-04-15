@@ -916,7 +916,7 @@ def promote_bucket_list(bucket, confidence, name, related, description, analyst)
     if not bucket:
         return {'success': False, 'message': 'Unable to find bucket.'}
 
-    for ctype in [k for k in list(Bucket._meta['schema_doc'].keys()) if k != 'name' and k != 'Campaign']:
+    for ctype in [k for k in Bucket._meta['schema_doc'].keys() if k != 'name' and k != 'Campaign']:
         # Don't bother if the count for this type is 0
         if getattr(bucket, ctype, 0) == 0:
             continue
@@ -951,7 +951,7 @@ def alter_bucket_list(obj, buckets, val):
     # I haven't found a way to get mongoengine to use the defaults
     # when doing update_one() on the queryset.
     from crits.core.bucket import Bucket
-    soi = { k: 0 for k in list(Bucket._meta['schema_doc'].keys()) if k != 'name' and k != obj._meta['crits_type'] }
+    soi = { k: 0 for k in Bucket._meta['schema_doc'].keys() if k != 'name' and k != obj._meta['crits_type'] }
     soi['schema_version'] = Bucket._meta['latest_schema_version']
 
     # We are using mongo_connector here because mongoengine does not have

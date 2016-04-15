@@ -60,7 +60,7 @@ def class_from_id(type_, _id):
     # make sure it's a string
     #_id = str(_id)
     if not isinstance(_id, str):
-        print('Converting type: %s ObjectId:%s %s into a string!' %(type_, type(_id), _id))
+        #print('Converting type: %s ObjectId:%s %s into a string!' %(type_, type(_id), _id))
         #raise('boo!')
         _id = str(_id)
         #print('Converting2 type: %s ObjectId:%s %s into a string!' %(type_, type(_id), _id))

@@ -126,11 +126,13 @@ class EmailHandlerTests(SimpleTestCase):
         clean_db()
 
     def testEmailRawAdd(self):
+        #print('EML_DATA: %s' %type(EML_DATA))
         result = handlers.handle_pasted_eml(EML_DATA, TSRC, None, self.user.username, "Test")
+        #print("result:%s" %result)
         self.assertEqual(result['status'], True)
         self.assertEqual(result['data']['x_mailer'],"YahooMailWebService/0.8.121.416")
         newdata = ""
-        for line in EML_DATA.decode('utf-8').split('\n'):
+        for line in EML_DATA.split('\n'):
             newdata += line.lstrip() + "\n"
         result = handlers.handle_pasted_eml(newdata, TSRC, None, self.user.username, "Test")
         self.assertEqual(result['status'], True)
@@ -165,7 +167,7 @@ class EmailViewTests(SimpleTestCase):
         self.req.user = self.user
         response = views.emails_listing(self.req)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue("#email_listing" in response.content)
+        self.assertTrue("#email_listing" in str(response.content))
 
     def testEmailsjtList(self):
         self.req = self.factory.post('/emails/list/jtlist/',
