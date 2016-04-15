@@ -262,10 +262,6 @@ def add_new_event(title, description, event_type, source, method, reference,
     :type: str
     :param ticket: Ticket to associate with this event.
     :type ticket: str
-    :param campaign: Campaign to associate with this Event
-    :type campaign: str
-    :param campaign_confidence: Confidence to associate with the Campaign
-    :type campaign_confidence: str
     :param related_id: ID of object to create relationship with
     :type related_id: str
     :param related_type: Type of object to create relationship with
@@ -273,9 +269,9 @@ def add_new_event(title, description, event_type, source, method, reference,
     :param relationship_type: Type of relationship to create.
     :type relationship_type: str
     :returns: dict with keys "success" (boolean) and "message" (str)
-    :param campaign: Campaign to attribute to this event.
+    :param campaign: Campaign to associate with this Event
     :type campaign: str
-    :param campaign_confidence: Confidence of this campaign.
+    :param campaign_confidence: Confidence to associate with the Campaign
     :type campaign_confidence: str
     """
 
