@@ -485,9 +485,9 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
 def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
                          analyst, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
-                         campaign_confidence=None, confidence=None, 
+                         campaign_confidence=None, confidence=None,
                          description=None, impact=None,
-                         bucket_list=None, ticket=None, cache={}, 
+                         bucket_list=None, ticket=None, cache={},
                          related_id=None, related_type=None, relationship_type=None):
     """
     Handle adding an individual indicator.
@@ -583,7 +583,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         try:
             return handle_indicator_insert(ind, source, reference, analyst,
                                            method, add_domain, add_relationship, cache=cache,
-                                        related_id=related_id, related_type=related_type, 
+                                        related_id=related_id, related_type=related_type,
                                         relationship_type=relationship_type)
         except Exception, e:
             return {'success': False, 'message': repr(e)}
@@ -591,7 +591,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     return result
 
 def handle_indicator_insert(ind, source, reference='', analyst='', method='',
-                            add_domain=False, add_relationship=False, cache={}, 
+                            add_domain=False, add_relationship=False, cache={},
                             related_id=None, related_type=None, relationship_type=None):
     """
     Insert an individual indicator into the database.
@@ -822,9 +822,8 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     if related_id:
         related_obj = class_from_id(related_type, related_id)
         if not related_obj:
-            retVal['success'] = False
-            retVal['message'] = 'Related Object not found.'
-            return retVal
+            return {'success': False,
+                    'message': 'Related Object not found.'}
 
     indicator.save(username=analyst)
 
