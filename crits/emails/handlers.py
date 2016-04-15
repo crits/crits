@@ -994,7 +994,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
               "attachments" (dict).
     """
 
-    #print('handle_eml: %s %s' %(data, type(data)))
+    print('handle_eml: %s' %(type(data)))
     result = {
             'status': False,
             'reason': "",
@@ -1134,6 +1134,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
         new_email.add_campaign(ec)
 
     result['object'] = new_email
+    print('sourcename: %s %s' %(type(sourcename), sourcename))
 
     result['object'].source = [create_embedded_source(sourcename,
                                                       reference=reference,

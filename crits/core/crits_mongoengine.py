@@ -1,3 +1,4 @@
+#from __future__ import unicode_literals
 import sys
 from builtins import object
 import datetime
@@ -2569,7 +2570,10 @@ def create_embedded_source(name, source_instance=None, date=None,
     :returns: None, :class:`crits.core.crits_mongoengine.EmbeddedSource`
     """
 
-    if isinstance(name, str):
+    if isinstance(name, str) or hasattr(name, 'encode'):
+        if sys.version_info < (3,0,0):
+            if isinstance(name, basestring):
+                name = str(name)
         s = EmbeddedSource()
         s.name = name
         if isinstance(source_instance, EmbeddedSource.SourceInstance):
@@ -2585,4 +2589,5 @@ def create_embedded_source(name, source_instance=None, date=None,
             s.instances = [i]
         return s
     else:
+        print('create_embedded_source: %s instead of string' %(type(name)))
         return None
