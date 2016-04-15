@@ -1,10 +1,11 @@
 from django.conf import settings
 from django import forms
 
+from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.widgets import CalWidget
-from crits.core.handlers import get_source_names
+from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
 
 from crits.vocabulary.events import EventTypes
@@ -30,6 +31,8 @@ class EventForm(forms.Form):
                                 'size':'25',
                                 'id':'id_occurrence_date'}),
         input_formats=settings.PY_FORM_DATETIME_FORMATS)
+    campaign = forms.ChoiceField(widget=forms.Select, required=False)
+    campaign_confidence = forms.ChoiceField(widget=forms.Select, required=False)
     source = forms.ChoiceField(required=True,
                                widget=forms.Select(attrs={'class': 'no_clear'}),
                                label=form_consts.Event.SOURCE)
@@ -56,6 +59,14 @@ class EventForm(forms.Form):
         ]
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
+        self.fields['campaign'].choices = [("", "")]
+        self.fields['campaign'].choices += [
+            (c.name, c.name) for c in get_item_names(Campaign, True)]
+        self.fields['campaign_confidence'].choices = [
+            ("", ""),
+            ("low", "low"),
+            ("medium", "medium"),
+            ("high", "high")]
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
