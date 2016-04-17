@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from past.builtins import basestring
 import json
 
 from django.core.exceptions import ValidationError

@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 #-------------
 # Some sections of the code below have been copied from
 # MongoEngine.
@@ -857,11 +860,11 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             un = "%s%s" % (self.username, config.ldap_userdn)
         else:
             un = self.username
-	try:
+        try:
             # Try auth bind first
             l.simple_bind_s(un, password)
             logger.info("Bound to LDAP for: %s" % self.username)
-        except Exception, e:
+        except Exception as e:
             logger.error("Error binding to LDAP for: %s" % self.username)
             logger.error("ERR: %s" % e)
         try:
@@ -875,7 +878,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             resp['email'] = uatr['mail'][0]
             resp['result'] = "OK"
             logger.info("Retrieved LDAP info for: %s" % self.username)
-        except Exception, e:
+        except Exception as e:
             logger.error("Error retrieving LDAP info for: %s" % self.username)
             logger.error("ERR: %s" % e)
         l.unbind()
@@ -1014,7 +1017,7 @@ class CRITsAuthBackend(object):
                 except ldap.INVALID_CREDENTIALS:
                     l.unbind()
                     logger.info("Invalid LDAP credentials for: %s" % un)
-                except Exception, err:
+                except Exception as err:
                     logger.info("LDAP Auth error: %s" % err)
             # If LDAP auth fails, attempt normal CRITs auth.
             # This will help with being able to use local admin accounts when
@@ -1048,7 +1051,7 @@ Please contact a site administrator to resolve.
 """
                 try:
                     user.email_user(subject, body)
-                except Exception, err:
+                except Exception as err:
                     logger.warning("Error sending email: %s" % str(err))
             self.track_login_attempt(user, e)
             user.reload()

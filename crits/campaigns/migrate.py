@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 def migrate_campaign(self):
     """
     Latest migration.

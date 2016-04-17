@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # This is an example file. You should copy this to "database.py" and
 # make your changes there.
 # Modifying this example file will not change the settings that CRITs uses.

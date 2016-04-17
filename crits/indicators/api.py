@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import object
 import datetime
 
 from django.core.urlresolvers import reverse
@@ -17,7 +19,7 @@ class IndicatorResource(CRITsAPIResource):
     Currently supports GET and POST.
     """
 
-    class Meta:
+    class Meta(object):
         object_class = Indicator
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "indicators"
@@ -107,7 +109,7 @@ class IndicatorActivityResource(CRITsAPIResource):
     Currently supports POST.
     """
 
-    class Meta:
+    class Meta(object):
         object_class = Indicator
         allowed_methods = ('post',)
         resource_name = "indicator_activity"

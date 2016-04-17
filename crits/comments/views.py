@@ -1,6 +1,11 @@
+from __future__ import unicode_literals
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from past.utils import old_div
 import datetime
 import json
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
@@ -32,7 +37,7 @@ def comment_search(request):
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
     #return render_to_response('error.html', {'error': query})
     return HttpResponseRedirect(reverse('crits.comments.views.comments_listing')+
-                                "?%s" % urllib.urlencode(query))
+                                "?%s" % urllib.parse.urlencode(query))
 
 
 @user_passes_test(user_can_view_data)
@@ -122,7 +127,7 @@ def get_new_comments(request):
         if 'value' in request.POST:
             value = request.POST['value']
         if request.POST['convert'] == "true":
-            date = datetime.datetime.fromtimestamp(int(request.POST['date'])/1000)
+            date = datetime.datetime.fromtimestamp(old_div(int(request.POST['date']),1000))
         else:
             date = datetime.datetime.strptime(request.POST['date'],
                                               settings.PY_DATETIME_FORMAT)

@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from past.builtins import basestring
+from builtins import object
 class vocab(object):
     """
     Base CRITs vocabulary object. Does nothing right now.
@@ -14,7 +17,7 @@ class vocab(object):
         """
 
         l = []
-        for k,v in cls.__dict__.iteritems():
+        for k,v in cls.__dict__.items():
             if ('__' not in k and
                 isinstance(v, basestring) and
                 '__' not in v and

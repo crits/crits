@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 from datetime import datetime
 from distutils.version import StrictVersion
 
@@ -451,7 +454,7 @@ class Service(object):
             error = "Service not yet implemented"
             logger.error(error)
             self._error(error)
-        except Exception, e:
+        except Exception as e:
             logger.exception("Error running service %s" % self.name)
             error = "Error running service: %s" % e
             self._error(error)

@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
 import copy
 import os
 
@@ -131,10 +134,10 @@ class Command(BaseCommand):
 
             # Save the config to the database
             if reinsert_config_option == True:
-                print "Performing a reinsert of the CRITs configuration."
+                print("Performing a reinsert of the CRITs configuration.")
                 reinsert_config(crits_config)
             else:
-                print "Saving CRITs configuration."
+                print("Saving CRITs configuration.")
                 crits_config.save()
 
         elif reset_config_option == False and create_config_option == False and reinsert_config_option == False:
@@ -153,11 +156,11 @@ def create_config_if_not_exist():
 
     crits_config = CRITsConfig.objects().first()
     if not crits_config:
-        print "Creating a new CRITs configuration."
+        print("Creating a new CRITs configuration.")
         crits_config = CRITsConfig()
         crits_config.save()
     else:
-        print "A CRITs configuration already exists. Skipping default creation."
+        print("A CRITs configuration already exists. Skipping default creation.")
 
     return crits_config
 
@@ -187,7 +190,7 @@ def force_reset_config():
     database collection and then saving a new default CRITsConfig.
     """
 
-    print "Resetting CRITs configuration settings."
+    print("Resetting CRITs configuration settings.")
     CRITsConfig.drop_collection();
 
     crits_config = CRITsConfig();
@@ -248,7 +251,7 @@ def set_config_attribute(crits_config, attr, value):
             if value not in ('Optional', 'Disabled', 'Required'):
                 raise CE('totp_web/cli must be Optional, Required, or Disabled')
 
-        print "Setting [" + str(attr) + "] to a value of [" + str(value) + "]"
+        print("Setting [" + str(attr) + "] to a value of [" + str(value) + "]")
         setattr(crits_config, attr, value)
 
         is_successful = True

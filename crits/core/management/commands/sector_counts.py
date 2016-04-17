@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.core.management.base import BaseCommand
 
 from crits.core.sector import Sector
@@ -37,5 +38,5 @@ class Command(BaseCommand):
         # Drop all existing sectors
         Sector.objects().delete()
 
-        for sector in sectors.values():
+        for sector in list(sectors.values()):
             sector.save()

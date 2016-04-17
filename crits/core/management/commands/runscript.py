@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 import getpass
 import os
 import socket
@@ -46,7 +48,7 @@ class Command(BaseCommand):
                               ['class_name'],
                               -1)
             script_class = getattr(tmp_, class_name)
-        except Exception, e:
+        except Exception as e:
             raise CommandError('%s' % e)
 
         arg_list = []
@@ -124,7 +126,7 @@ def try_login(username, password, user_agent, remote_addr, accept_language,
             try_login(username, password, user_agent, remote_addr,
                         accept_language, totp_pass)
         if result['type'] == "secret_generated":
-            print "Use %s to setup your authenticator.\n" % result['secret']
+            print("Use %s to setup your authenticator.\n" % result['secret'])
             totp_pass = getpass.getpass("TOTP: ")
             try_login(username, password, user_agent, remote_addr,
                         accept_language, totp_pass)

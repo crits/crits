@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 import json
 import os
 
@@ -37,7 +39,7 @@ def add_location_objects(drop=False):
     data = json.loads(cdata)
 
     if not drop:
-        print "Drop protection does not apply to location objects"
+        print("Drop protection does not apply to location objects")
     Location.drop_collection()
 
     count = 0
@@ -55,7 +57,7 @@ def add_location_objects(drop=False):
         l.longitude = get_long(location['latlng'])
         l.save()
         count += 1
-    print "Added %s Location Objects." % count
+    print("Added %s Location Objects." % count)
 
 def get_value(value):
     v = None

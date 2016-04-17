@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from past.builtins import basestring
 import datetime
 
 from dateutil.parser import parse
@@ -107,7 +109,7 @@ def forge_relationship(type_=None, id_=None,
             else:
                 return {'success': False,
                         'message': "Need a valid right type and id"}
-    except Exception, e:
+    except Exception as e:
         return {'success': False, 'message': e}
 
     if results['success']:

@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from past.builtins import basestring
 import copy
 import json
 import logging
@@ -572,7 +575,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
         args = [crits_config.zip7_path]
         if not os.access(crits_config.zip7_path, os.X_OK):
             errmsg = "7z is not executable at path specified in the config setting: %s\n" % crits_config.zip7_path
-            raise ZipFileError, errmsg
+            raise ZipFileError(errmsg)
         args.append("e")
         extractdir = tempfile.mkdtemp(dir=temproot)
         args.append("-o" + extractdir)  # Set output directory
@@ -599,10 +602,10 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
 
         if proc.returncode:     # 7z spit out an error
             errmsg = "Error while extracting archive\n" + proc.stdout.read()
-            raise ZipFileError, errmsg
+            raise ZipFileError(errmsg)
         elif not waitSeconds:   # Process timed out
             proc.terminate()
-            raise ZipFileError, "Unzip process failed to terminate"
+            raise ZipFileError("Unzip process failed to terminate")
         else:
             if related_md5 and related_md5 == zip_md5:
                 relationship = RelationshipTypes.COMPRESSED_INTO
@@ -633,11 +636,11 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                     filehandle.close()
     except ZipFileError:  # Pass this error up the chain
         raise
-    except Exception, ex:
+    except Exception as ex:
         errmsg = ''
         for err in ex.args:
             errmsg = errmsg + " " + str(err)
-        raise ZipFileError, errmsg
+        raise ZipFileError(errmsg)
 
     finally:
         if os.path.isdir(zipdir):
@@ -1410,7 +1413,7 @@ def update_sample_filename(id_, filename, analyst):
     try:
         sample.save(username=analyst)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def modify_sample_filenames(id_, tags, analyst):
@@ -1432,7 +1435,7 @@ def modify_sample_filenames(id_, tags, analyst):
         try:
             sample.save(username=analyst)
             return {'success': True}
-        except ValidationError, e:
+        except ValidationError as e:
             return {'success': False, 'message': "Invalid value: %s" % e}
     else:
         return {'success': False}

@@ -1,8 +1,11 @@
+from __future__ import unicode_literals
+from builtins import object
 from django import forms
 from django.forms.widgets import Select
 from django.forms.fields import ChoiceField
 from itertools import chain
-from django.utils.encoding import force_unicode, smart_unicode
+from django.utils.encoding import force_text as force_unicode
+from django.utils.encoding import smart_text as smart_unicode
 from django.utils.html import escape, conditional_escape
 
 class CalWidget(forms.DateTimeInput):
@@ -10,7 +13,7 @@ class CalWidget(forms.DateTimeInput):
     Calendar Widget.
     """
 
-    class Media:
+    class Media(object):
         css = {
             }
         js = (
@@ -43,7 +46,7 @@ class ExtendedSelect(Select):
             else:
                 selected_html = ''
             attrs_html = []
-            for k, v in attrs.items():
+            for k, v in list(attrs.items()):
                 if isinstance(v, list):
                     #emulate JavaScript behavior casting list to string
                     v = ','.join(v)

@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import str
 from bson import ObjectId
 try:
     from mongoengine.base import ValidationError
@@ -332,7 +334,7 @@ def subscribe_user(username, stype, oid):
     try:
         user.save()
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False,
                 'message': e}
 
@@ -359,7 +361,7 @@ def unsubscribe_user(username, stype, oid):
     try:
         user.save()
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False,
                 'message': e}
 
@@ -384,7 +386,7 @@ def subscribe_to_source(username, source):
     try:
         user.save()
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False,
                 'message': e}
 
@@ -409,7 +411,7 @@ def unsubscribe_from_source(username, source):
     try:
         user.save()
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False,
                 'message': e}
 
@@ -440,7 +442,7 @@ def update_user_preference(username, section, values):
         try:
             user.save()
             return {'success': True }
-        except ValidationError, e:
+        except ValidationError as e:
             return {'success': False,
                     'message': e}
     return {'success': False,
@@ -517,7 +519,7 @@ def toggle_user_preference(username, section, setting, is_enabled=False):
             user.save()
             return {'success': True,
                     'state': opt[param] }
-        except ValidationError, e:
+        except ValidationError as e:
             return {'success': False,
                     'message': e}
     return {'success': False,

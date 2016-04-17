@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import sys
 
 from django.core.management.base import BaseCommand
@@ -21,7 +24,7 @@ from crits.signatures.signature import Signature
 from crits.samples.sample import Sample
 from crits.targets.target import Target
 
-from prep import prep_database
+from .prep import prep_database
 
 class Command(BaseCommand):
     """
@@ -138,7 +141,7 @@ class Command(BaseCommand):
             not samples and
             not signatures and
             not targets):
-            print "You must select something to upgrade. See '-h' for options."
+            print("You must select something to upgrade. See '-h' for options.")
             sys.exit(1)
         else:
             upgrade(lv, options)
@@ -167,24 +170,24 @@ def migrate_collection(class_obj, sort_ids):
         )
     else:
         docs = class_obj.objects(schema_version__lt=version).timeout(False)
-    print "Migrating %ss...%d" % (class_obj._meta['crits_type'], len(docs))
+    print("Migrating %ss...%d" % (class_obj._meta['crits_type'], len(docs)))
     count = 0
     doc = None
     try:
         for doc in docs:
-            print >> sys.stdout, "\r\t%d" % (count + 1),
+            print("\r\t%d" % (count + 1), end=' ', file=sys.stdout)
             sys.stdout.flush()
             if 'migrated' in doc._meta and doc._meta['migrated']:
                 count += 1
-    except Exception, e:
+    except Exception as e:
         # Provide some basic info so admin can query their db and figure out
         # what bad data is blowing up the migration.
-        print "\n\tMigrated: %d" % count
-        print "\tError: %s" % e
+        print("\n\tMigrated: %d" % count)
+        print("\tError: %s" % e)
         if doc:
-            print "\tLast ID: %s" % doc.id
+            print("\tLast ID: %s" % doc.id)
         sys.exit(1)
-    print "\n\t%d %ss migrated!" % (count, class_obj._meta['crits_type'])
+    print("\n\t%d %ss migrated!" % (count, class_obj._meta['crits_type']))
 
 def upgrade(lv, options):
     """
@@ -258,7 +261,7 @@ def upgrade(lv, options):
     # Always bump the version to the latest in settings.py
     config = CRITsConfig.objects()
     if len(config) > 1:
-        print "You have more than one config object. This is really bad."
+        print("You have more than one config object. This is really bad.")
     else:
         config = config[0]
         config.crits_version = settings.CRITS_VERSION

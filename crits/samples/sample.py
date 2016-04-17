@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from mongoengine import Document
 from mongoengine import StringField, ListField
 from mongoengine import IntField

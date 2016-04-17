@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
@@ -15,7 +18,7 @@ class PCAPResource(CRITsAPIResource):
     Currently supports GET and POST.
     """
 
-    class Meta:
+    class Meta(object):
         object_class = PCAP
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "pcaps"

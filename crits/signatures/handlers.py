@@ -1,7 +1,12 @@
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from past.builtins import basestring
 import datetime
 import hashlib
 import json
-import HTMLParser
+import html.parser
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -358,7 +363,7 @@ def handle_signature_file(data, source_name, user=None,
     signature.data_type_max_version = data_type_max_version
 
     if data_type_dependency:
-        if type(data_type_dependency) == unicode:
+        if type(data_type_dependency) == str:
             data_type_dependency = data_type_dependency.split(",")
 
         for item in data_type_dependency:
@@ -480,7 +485,7 @@ def update_signature_type(type_, id_, data_type, user, **kwargs):
         try:
             signature.save(username=user)
             return {'success': True}
-        except ValidationError, e:
+        except ValidationError as e:
             return {'success': False, 'message': str(e)}
 
 
@@ -610,7 +615,7 @@ def update_dependency(type_, id_, dep, user, append=False, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     data_type_dependency = h.unescape(dep)
     try:
         deps = data_type_dependency.split(',')
@@ -625,7 +630,7 @@ def update_dependency(type_, id_, dep, user, append=False, **kwargs):
 
         obj.save(username=user)
         return {'success': True, 'message': "Data type dependency set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 
@@ -659,13 +664,13 @@ def update_min_version(type_, id_, data_type_min_version, user, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     data_type_min_version = h.unescape(data_type_min_version)
     try:
         obj.data_type_min_version = data_type_min_version
         obj.save(username=user)
         return {'success': True, 'message': "Data type min version set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 
@@ -698,13 +703,13 @@ def update_max_version(type_, id_, data_type_max_version, user, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     data_type_max_version = h.unescape(data_type_max_version)
     try:
         obj.data_type_max_version = data_type_max_version
         obj.save(username=user)
         return {'success': True, 'message': "Data type max version set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 
@@ -750,13 +755,13 @@ def update_signature_data(type_, id_, data, user, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     data = h.unescape(data)
     try:
         obj.data = data
         obj.save(username=user)
         return {'success': True, 'message': "Signature value updated."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def update_title(type_, id_, title, user, **kwargs):
@@ -788,11 +793,11 @@ def update_title(type_, id_, title, user, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     data = h.unescape(title)
     try:
         obj.title = data
         obj.save(username=title)
         return {'success': True, 'message': "Signature title updated."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}

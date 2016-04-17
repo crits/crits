@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import range
 import hmac, base64, struct, hashlib, time
 from django.utils.crypto import pbkdf2
 from M2Crypto import EVP, Rand

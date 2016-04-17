@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import re
 
 from django import forms
@@ -116,7 +117,7 @@ class NewActionForm(forms.Form):
         super(NewActionForm, self).__init__(*args, **kwargs)
 
         # Sort the available TLOs.
-        tlos = [tlo for tlo in settings.CRITS_TYPES.keys()]
+        tlos = [tlo for tlo in list(settings.CRITS_TYPES.keys())]
         tlos.sort()
         self.fields['object_types'].choices = [(tlo, tlo) for tlo in tlos]
 

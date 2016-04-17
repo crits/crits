@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 try:
     from mongoengine.base import ValidationError
 except ImportError:
@@ -68,7 +69,7 @@ def location_add(id_, type_, location_type, location_name, user,
             return {'success': True,
                     'html': html,
                     'message': result['message']}
-        except ValidationError, e:
+        except ValidationError as e:
             return {'success': False,
                     'message': "Invalid value: %s" % e}
     return {'success': False,
@@ -103,7 +104,7 @@ def location_remove(id_, type_, location_name, location_type, date, user):
     try:
         crits_object.save(username=user)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': "Invalid value: %s" % e}
 
 def location_edit(type_, id_, location_name, location_type, date, user,
@@ -145,5 +146,5 @@ def location_edit(type_, id_, location_name, location_type, date, user,
     try:
         crits_object.save(username=user)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': "Invalid value: %s" % e}

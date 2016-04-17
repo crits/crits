@@ -1,4 +1,6 @@
-class Action():
+from __future__ import unicode_literals
+from builtins import object
+class Action(object):
     ACTION_TYPE = "Action type"
     BEGIN_DATE = "Begin date"
     ANALYST = "Analyst"
@@ -10,7 +12,7 @@ class Action():
     OBJECT_TYPES = "TLOs"
     PREFERRED = "Preferred TLOs"
 
-class Common():
+class Common(object):
     ADD_INDICATOR = "Add Indicator?"
     BUCKET_LIST = "Bucket List"
     CAMPAIGN = "Campaign"
@@ -47,7 +49,7 @@ class Common():
     BUCKET_LIST_VARIABLE_NAME = "bucket_list"
     TICKET_VARIABLE_NAME = "ticket"
 
-class Status():
+class Status(object):
     """
     Status fields/enumerations used in bulk upload.
     """
@@ -58,7 +60,7 @@ class Status():
     DUPLICATE = 2;
 
 
-class Actor():
+class Actor(object):
     """
     Constants for Actors.
     """
@@ -73,7 +75,7 @@ class Actor():
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
-class Backdoor():
+class Backdoor(object):
     """
     Constants for Backdoors.
     """
@@ -89,7 +91,7 @@ class Backdoor():
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
-class Exploit():
+class Exploit(object):
     """
     Constants for Exploits.
     """
@@ -105,7 +107,7 @@ class Exploit():
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
-class Campaign():
+class Campaign(object):
     """
     Constants for Campaigns.
     """
@@ -113,7 +115,7 @@ class Campaign():
     NAME = "Name"
 
 
-class Certificate():
+class Certificate(object):
     """
     Constants for Certificates.
     """
@@ -123,7 +125,7 @@ class Certificate():
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
-class IP():
+class IP(object):
     """
     Constants for IPs.
     """
@@ -146,7 +148,7 @@ class IP():
     CACHED_RESULTS = "ip_cached_results"
 
 
-class Domain():
+class Domain(object):
     """
     Constants for Domains.
     """
@@ -169,7 +171,7 @@ class Domain():
 
     CACHED_RESULTS = "domain_cached_results"
 
-class Email():
+class Email(object):
     """
     Constants for Emails.
     """
@@ -179,7 +181,7 @@ class Email():
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
-class Event():
+class Event(object):
     """
     Constants for Events.
     """
@@ -190,7 +192,7 @@ class Event():
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
-class Indicator():
+class Indicator(object):
     """
     Constants for Indicators.
     """
@@ -200,7 +202,7 @@ class Indicator():
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
-class NotificationType():
+class NotificationType(object):
     ALERT = 'alert'
     ERROR = 'error'
     INFORMATION = 'information'
@@ -211,7 +213,7 @@ class NotificationType():
     ALL = [ALERT, ERROR, INFORMATION, NOTIFICATION, SUCCESS, WARNING]
 
 
-class Object():
+class Object(object):
     """
     Constants for Objects.
     """
@@ -233,7 +235,7 @@ class Object():
     ADD_INDICATOR = Common.ADD_INDICATOR
 
 
-class PCAP():
+class PCAP(object):
     """
     Constants for PCAPs.
     """
@@ -243,7 +245,7 @@ class PCAP():
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
-class RawData():
+class RawData(object):
     """
     Constants for RawData.
     """
@@ -253,7 +255,7 @@ class RawData():
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
 
-class Sample():
+class Sample(object):
     """
     Constants for Samples.
     """
@@ -281,11 +283,11 @@ class Sample():
 
     CACHED_RESULTS = "sample_cached_results"
 
-    class UploadType():
+    class UploadType(object):
         FILE_UPLOAD = "File Upload"
         METADATA_UPLOAD = "Metadata Upload"
 
-class Signature():
+class Signature(object):
     """
     Constants for Signature. Dependencies as list? Similar to bucket list, but not in other classes
     """
@@ -294,7 +296,7 @@ class Signature():
     SOURCE_METHOD = Common.SOURCE_METHOD
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
 
-class Target():
+class Target(object):
     """
     Constants for Targets.
     """

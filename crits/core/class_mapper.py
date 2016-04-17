@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+#from builtins import str
 from bson.objectid import ObjectId
 
 
@@ -57,12 +59,15 @@ def class_from_id(type_, _id):
     if not _id:
         return None
 
+    if isinstance(_id, bytes):
+        _id = str(bytes(_id))
     # make sure it's a string
-    _id = str(_id)
+    if not isinstance(_id, str):
+        _id = str(_id)
 
     # Use bson.ObjectId to make sure this is a valid ObjectId, otherwise
     # the queries below will raise a ValidationError exception.
-    if not ObjectId.is_valid(_id.decode('utf8')):
+    if not ObjectId.is_valid(_id):
         return None
 
     if type_ == 'Actor':
