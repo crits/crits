@@ -145,6 +145,7 @@ class IP():
     IP_SOURCE = "IP Source"
     IP_METHOD = "IP Source Method"
     IP_REFERENCE = "IP Source Reference"
+    IP_TLP = "IP Source TLP"
     CACHED_RESULTS = "ip_cached_results"
 
 
@@ -167,6 +168,7 @@ class Domain():
     IP_SOURCE = IP.IP_SOURCE
     IP_METHOD = IP.IP_METHOD
     IP_REFERENCE = IP.IP_REFERENCE
+    IP_TLP = IP.IP_TLP
     ADD_INDICATORS = "Add Indicator(s)?"
 
     CACHED_RESULTS = "domain_cached_results"

@@ -337,10 +337,10 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
     return result, errors, retVal
 
 def ip_add_update(ip_address, ip_type, source=None, source_method='',
-                  source_reference='', source_tlp=None, campaign=None, 
-                  confidence='low', user=None, is_add_indicator=False, 
-                  indicator_reference='', bucket_list=None, ticket=None, 
-                  is_validate_only=False, cache={}, related_id=None, 
+                  source_reference='', source_tlp=None, campaign=None,
+                  confidence='low', user=None, is_add_indicator=False,
+                  indicator_reference='', bucket_list=None, ticket=None,
+                  is_validate_only=False, cache={}, related_id=None,
                   related_type=None, relationship_type=None):
     """
     Add/update an IP address.
@@ -493,9 +493,9 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         ip_object.add_relationship(related_obj,
                               relationship_type,
-                              analyst=analyst,
+                              analyst=user.username,
                               get_rels=False)
-        ip_object.save(username=analyst)
+        ip_object.save(username=user.username)
 
     # run ip triage
     if is_item_new and is_validate_only == False:

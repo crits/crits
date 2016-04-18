@@ -49,7 +49,6 @@ class AddIPForm(SourceInForm):
                                              ('medium', 'medium'),
                                              ('high', 'high')]
 
-        self.fields['user'].initial = username
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
