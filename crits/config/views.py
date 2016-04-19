@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import json
 import re
 from django.contrib.auth.decorators import user_passes_test

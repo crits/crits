@@ -1,4 +1,5 @@
-
+from __future__ import unicode_literals
+from builtins import str
 import datetime
 import json
 import logging
@@ -1066,9 +1067,9 @@ def base_context(request):
     base_context['crits_version'] = crits_version
     base_context['enable_toasts'] = enable_toasts
     if git_repo_url:
-        base_context['git_repo_link'] = "<a href='"+str(git_repo_url)+"/commit/"+str(git_hash_long)+"'>"+str(git_branch)+':'+str(git_hash)+"</a>"
+        base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long.decode('iso-8859-1')+"'>"+git_branch.decode('iso-8859-1')+':'+git_hash.decode('iso-8859-1')+"</a>"
     else:
-        base_context['git_repo_link'] = "%s:%s" % (git_branch, git_hash)
+        base_context['git_repo_link'] = "%s:%s" % (git_branch.decode('iso-8859-1'), git_hash.decode('iso-8859-1'))
     base_context['hide_git_hash'] = hide_git_hash
     base_context['splunk_search_url'] = splunk_url
     base_context['mongo_database'] = mongo_database

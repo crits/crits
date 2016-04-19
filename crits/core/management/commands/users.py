@@ -1,5 +1,6 @@
 from __future__ import print_function
-
+from __future__ import unicode_literals
+from builtins import str
 from builtins import range
 import string
 import re
@@ -218,10 +219,7 @@ Thank you!
         else:
             pw_regex = settings.PASSWORD_COMPLEXITY_REGEX
         rex = re.compile(pw_regex)
-        try:
-            chars = string.letters + string.digits + string.punctuation
-        except AttributeError:
-            chars = string.ascii_letters + string.digits + string.punctuation
+        chars = string.letters + string.digits + string.punctuation
         for i in range(20):
             passwd = ''
             while len(passwd) < 50:

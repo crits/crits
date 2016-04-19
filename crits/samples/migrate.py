@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 from crits.vocabulary.relationships import RelationshipTypes
 
 def migrate_backdoors(self):

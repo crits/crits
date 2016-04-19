@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from builtins import object
 class Action(object):
     ACTION_TYPE = "Action type"

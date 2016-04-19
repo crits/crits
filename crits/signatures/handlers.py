@@ -1,6 +1,8 @@
-#from future import standard_library
-#standard_library.install_aliases()
-
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from past.builtins import basestring
 import datetime
 import hashlib
 import json
@@ -351,6 +353,7 @@ def handle_signature_file(data, source_name, user=None,
         data = data.decode('ISO-8859-1')
     else:
         md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
+    
     # generate signature
     signature = Signature()
     signature.created = timestamp

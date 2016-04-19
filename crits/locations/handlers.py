@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 try:
     from mongoengine.base import ValidationError
 except ImportError:

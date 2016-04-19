@@ -6,10 +6,11 @@ positioning, size, columns, and sort order but they are always there and their
 names cannot be changed.
 """
 from __future__ import print_function
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-
-
+from builtins import str
+from past.builtins import basestring
 from crits.dashboards.dashboard import SavedSearch, Dashboard
 from crits.core.crits_mongoengine import json_handler
 from mongoengine import Q
@@ -25,7 +26,6 @@ import cgi
 import datetime
 from django.http import HttpRequest
 from crits.dashboards.utilities import getHREFLink, get_obj_name_from_title, get_obj_type_from_string
-
 import html.parser
 
 def get_dashboard(user,dashId=None):
@@ -206,7 +206,7 @@ def parseDocObjectsToStrings(records, obj_type):
     entire object
     """
     for doc in records:
-        for key, value in doc.items():
+        for key, value in list(doc.items()):
             # all dates should look the same
             if isinstance(value, datetime.datetime):
                 doc[key] = datetime.datetime.strftime(value,

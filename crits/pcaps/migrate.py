@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 def migrate_pcap(self):
     """
     Migrate to latest schema version.

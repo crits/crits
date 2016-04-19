@@ -1,4 +1,5 @@
-
+from __future__ import unicode_literals
+from builtins import str
 import json
 
 from django import forms
@@ -38,7 +39,7 @@ def convert_handsontable_to_rows(request):
 
         # If the row data is null that means we should skip processing for this row
         if rowData != None:
-            for columnKey, columnValue in rowData.items():
+            for columnKey, columnValue in list(rowData.items()):
                 cleanedRowData[remove_html_tags(columnKey)] = columnValue
 
             cleanedRowsData.append(cleanedRowData)

@@ -1,4 +1,5 @@
-
+from __future__ import unicode_literals
+from builtins import str
 # In the event of a migration that applies to multiple TLOs, you can put
 # functions here so you don't have to duplicate code across several migration
 # files.

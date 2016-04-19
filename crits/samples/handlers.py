@@ -1,4 +1,6 @@
-
+from __future__ import unicode_literals
+from builtins import str
+from past.builtins import basestring
 import copy
 import json
 import logging
@@ -720,7 +722,6 @@ def handle_file(filename, data, source, method='Generic', reference='',
               "object" (the sample),
     """
 
-    print('handle_file: %s' %type(data))
     if isinstance(data, str):
         data = data.encode('utf-8')
     retVal = {}
@@ -796,7 +797,6 @@ def handle_file(filename, data, source, method='Generic', reference='',
         related_obj = None
 
     cached_results = cache.get(form_consts.Sample.CACHED_RESULTS)
-    print('md5_digest: %s' %(type(md5_digest)))
     if cached_results != None:
         sample = cached_results.get(md5_digest)
     else:

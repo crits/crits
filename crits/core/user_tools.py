@@ -1,4 +1,5 @@
-
+from __future__ import unicode_literals
+from builtins import str
 from bson import ObjectId
 try:
     from mongoengine.base import ValidationError

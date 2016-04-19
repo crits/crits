@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from mongoengine import Document
 from mongoengine import StringField, ListField
 from mongoengine import IntField
@@ -92,6 +93,8 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         from hashlib import md5, sha1, sha256
         try:
             self.filetype = magic.from_buffer(data)
+            if not isinstance(self.filetype, str):
+                self.filetype = self.filetype.decode('ISO-8859-1')
         except:
             self.filetype = "Unavailable"
         try:

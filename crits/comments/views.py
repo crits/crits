@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from __future__ import division
 from future import standard_library
 standard_library.install_aliases()

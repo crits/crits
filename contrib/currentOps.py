@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 from optparse import OptionParser
 import pprint
 import pymongo

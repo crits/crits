@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from __future__ import division
 from past.utils import old_div
 from django.core.management.base import BaseCommand

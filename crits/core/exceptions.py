@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 class ZipFileError(Exception):
     """
     Exception class for dealing with errors that arise when uploading

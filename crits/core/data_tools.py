@@ -1,6 +1,7 @@
-#from builtins import chr
-import sys
-#from builtins import range
+from __future__ import unicode_literals
+from builtins import chr
+from builtins import str
+from builtins import range
 import tempfile, shutil
 import os
 import re
@@ -208,7 +209,7 @@ def convert_datetimes_to_string(obj):
     if isinstance(obj, datetime.datetime):
         return datetime.datetime.strftime(obj, settings.PY_DATETIME_FORMAT)
     elif isinstance(obj, list) or isinstance(obj, dict):
-        for idx in (list(range(len(obj))) if isinstance(obj, list) else list(obj.keys())):
+        for idx in (range(len(obj)) if isinstance(obj, list) else list(obj.keys())):
             obj[idx] = convert_datetimes_to_string(obj[idx])
 
     return obj
@@ -495,18 +496,8 @@ def xor_search(md5=None, data=None, string=None, skip_nulls=0):
 
     if md5:
         data = get_file(md5)
-    print("xor_search: %s, string: %s" %(type(data), type(string)))
-    if isinstance(data, str):
-        print('str type: %s' % type(data))
-    else:
+    if not isinstance(data, str):
         data = data.decode('ISO-8859-1')
-        print('casted type: %s' % type(data))
-    # if isinstance(string, str):
-    #     print('string type: %s' % type(string))
-    #     #data = data.decode('utf-8')
-    # else:
-    #     string = string.decode('ISO-8859-1')
-    #     print('string type1: %s' % type(string))
     if string is None or string == '':
         plaintext_list = [
                         'This program',

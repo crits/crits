@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 from builtins import zip
 from django.core.management.base import BaseCommand
 from optparse import make_option

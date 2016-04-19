@@ -1,4 +1,5 @@
-
+from __future__ import unicode_literals
+from builtins import str
 from crits.actors.actor import Actor
 from crits.services.analysis_result import AnalysisResult
 from crits.campaigns.campaign import Campaign

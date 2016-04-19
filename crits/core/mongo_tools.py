@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.conf import settings
 if settings.FILE_DB == settings.S3:
     from crits.core.s3_tools import get_file_s3

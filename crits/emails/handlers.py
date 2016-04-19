@@ -1,4 +1,7 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
+from builtins import str
+from past.builtins import basestring
 
 
 import datetime
@@ -920,7 +923,6 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
               "attachments" (dict).
     """
 
-    #print('handle_pasted_eml: %s' %type(data))
     # Try to fix headers where we lost whitespace indents
     # Split by newline, parse/fix headers, join by newline
     hfieldre = re.compile('^\S+:\s')
@@ -928,7 +930,9 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     emldata = []
     boundary = None
     isbody = False
-    if not isinstance(data, str):
+    if isinstance(data, bytes):
+        data = data.decode('ISO-8859-1')
+    if not isinstance(data, basestring):
         data = data.read()
     #if not isinstance(data, str):
     #   data = data.decode('ISO-8859-1')
@@ -994,7 +998,6 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
               "attachments" (dict).
     """
 
-    print('handle_eml: %s' %(type(data)))
     result = {
             'status': False,
             'reason': "",
@@ -1008,7 +1011,9 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
     msg_import = {'raw_header': ''}
     reImap = re.compile(r"(\*\s\d+\sFETCH\s.+?\r\n)(.+)\).*?OK\s(UID\sFETCH\scompleted|Success)", re.M | re.S)
-
+ 
+    if not isinstance(data, str):
+        data = data.decode('ISO-8859-1')
     # search for SMTP dialog
     start = data.find("DATA")
     end = data.find("\x0d\x0a\x2e\x0d\x0a")
@@ -1056,14 +1061,14 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
     msg = eml.message_from_string(str(stripped_mail))
 
-    if not msg.items():
+    if not list(msg.items()):
         result['reason'] = """Could not parse email. Possibly the input does
                            not conform to a Internet Message style headers
                            and header continuation lines..."""
         return result
 
     # clean up headers
-    for d in msg.items():
+    for d in list(msg.items()):
         cleand = ''.join([x for x in d[1] if (ord(x) < 127 and ord(x) >= 32)])
         msg_import[d[0].replace(".",
                                 "").replace("$",
@@ -1090,7 +1095,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
                 try:
                     message_part = str(content)
                 except UnicodeDecodeError:
-                    message_part = str(content, errors="replace")
+                    message_part = str(content, encoding='iso-8859-1', errors="replace")
 
                 msg_import["raw_body"] = msg_import["raw_body"] + \
                                          message_part + "\n"
@@ -1134,7 +1139,6 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
         new_email.add_campaign(ec)
 
     result['object'] = new_email
-    print('sourcename: %s %s' %(type(sourcename), sourcename))
 
     result['object'].source = [create_embedded_source(sourcename,
                                                       reference=reference,
@@ -1202,7 +1206,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             return result
 
 
-    for (md5_, attachment) in result['attachments'].items():
+    for (md5_, attachment) in list(result['attachments'].items()):
         if handle_file(attachment['filename'],
                        attachment['blob'],
                        sourcename,
@@ -1278,7 +1282,7 @@ def dict_to_email(d, save_unsupported=True):
         del d['from']
 
     if save_unsupported:
-        for (k, v) in d.get('unsupported_attrs', {}).items():
+        for (k, v) in list(d.get('unsupported_attrs', {}).items()):
             d[k] = v
 
     if 'unsupported_attrs' in d:
@@ -1717,7 +1721,7 @@ def parse_ole_file(file):
     if earliest_helo_date == current_datetime and email['date']:
         earliest_helo_date = datetime.datetime.fromtimestamp(mktime_tz(parsedate_tz(email['date'])))
 
-    return {'email': email, 'attachments': attachments.values(), 'received_date': earliest_helo_date}
+    return {'email': email, 'attachments': list(attachments.values()), 'received_date': earliest_helo_date}
 
 def _get_received_from(received_header):
     """

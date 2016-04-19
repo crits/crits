@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from bson import Code
 import datetime
 

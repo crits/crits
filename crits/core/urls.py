@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.conf.urls import patterns
 from django.contrib.auth.views import logout_then_login
 

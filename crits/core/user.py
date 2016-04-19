@@ -1,4 +1,5 @@
-
+from __future__ import unicode_literals
+from builtins import str
 from builtins import object
 #-------------
 # Some sections of the code below have been copied from

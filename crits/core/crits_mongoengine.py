@@ -1,8 +1,10 @@
-#from __future__ import unicode_literals
-import sys
+from __future__ import unicode_literals
+from builtins import str
+from past.builtins import basestring
 from builtins import object
 import datetime
 import json, yaml
+import sys
 import io
 import csv
 
@@ -500,7 +502,6 @@ class CritsDocument(BaseDocument):
         """
 
         if not fields:
-            #print('to_csv not fields: %s'%type(self._data.keys()))
             fields = list(self._data.keys())
         if sys.version_info >= (3,0,0):
             csv_string = io.StringIO()
@@ -532,11 +533,7 @@ class CritsDocument(BaseDocument):
                     if not hasattr(data, 'encode'):
                         # Convert non-string data types
                         data = str(data)
-                #if not isinstance(data, str) and sys.version_info >= (3,0,0):
-                #    row.append(data.decode('ISO-8859-1'))
-                #else:
                 row.append(data)
-        #print('row: %s %s' %(type(row), row))
         csv_wr.writerow(row)
         #print('ret: %s %s' %(type(csv_string.getvalue()), csv_string.getvalue()))
         return csv_string.getvalue()
@@ -575,7 +572,7 @@ class CritsDocument(BaseDocument):
 
         if include:
             result = {}
-            for k, v in data.items():
+            for k, v in list(data.items()):
                 if k in newproj and k not in exclude:
                     if k == "_id":
                         k = "id"
@@ -583,7 +580,7 @@ class CritsDocument(BaseDocument):
             return result
         elif exclude:
             result = {}
-            for k, v in data.items():
+            for k, v in list(data.items()):
                 if k in exclude:
                     continue
                 if k == "_id":
@@ -1387,7 +1384,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         # or subtraction of a bucket_list.
         if isinstance(tags, list) and len(tags) == 1 and tags[0] == '':
             parsed_tags = []
-        elif isinstance(tags, str):
+        elif isinstance(tags, basestring):
             parsed_tags = tags.split(',')
         else:
             parsed_tags = tags
@@ -1441,7 +1438,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         # or subtraction of a sector.
         if isinstance(sectors, list) and len(sectors) == 1 and sectors[0] == '':
             parsed_sectors = []
-        elif isinstance(sectors, str):
+        elif isinstance(sectors, basestring):
             parsed_sectors = sectors.split(',')
         else:
             parsed_sectors = sectors
@@ -2517,7 +2514,7 @@ def merge(self, arg_dict=None, overwrite=False, **kwargs):
     if not arg_dict:
         arg_dict = kwargs
     if isinstance(arg_dict, dict):
-        iterator = arg_dict.items()
+        iterator = iter(arg_dict.items())
     else:
         iterator = arg_dict
 

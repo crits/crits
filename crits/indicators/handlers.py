@@ -1,14 +1,13 @@
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-
+from builtins import str
+from past.builtins import basestring
 import csv
 import datetime
 import json
 import logging
-try:
-    import urllib.parse
-except ImportError:
-    from urllib.parse import urlparse
+import urllib.parse
 
 from io import BytesIO
 from django.conf import settings

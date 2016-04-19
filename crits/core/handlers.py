@@ -1,24 +1,20 @@
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-#from builtins import map
-
+from builtins import map
+from builtins import str
+from past.builtins import basestring
 import cgi
 import os
 import datetime
 import html.parser
-
 import json
 import logging
 import re
-try:
-    #Python 2.x
-    import ushlex as shlex
-except ImportError:
-    #Python 3.x
-    import shlex
-
+import shlex
 import urllib.request, urllib.parse, urllib.error
 
+from urllib.parse import urlparse
 from bson.objectid import ObjectId
 from django.conf import settings
 
@@ -916,7 +912,7 @@ def promote_bucket_list(bucket, confidence, name, related, description, analyst)
     if not bucket:
         return {'success': False, 'message': 'Unable to find bucket.'}
 
-    for ctype in [k for k in Bucket._meta['schema_doc'].keys() if k != 'name' and k != 'Campaign']:
+    for ctype in [k for k in list(Bucket._meta['schema_doc'].keys()) if k != 'name' and k != 'Campaign']:
         # Don't bother if the count for this type is 0
         if getattr(bucket, ctype, 0) == 0:
             continue
@@ -951,7 +947,7 @@ def alter_bucket_list(obj, buckets, val):
     # I haven't found a way to get mongoengine to use the defaults
     # when doing update_one() on the queryset.
     from crits.core.bucket import Bucket
-    soi = { k: 0 for k in Bucket._meta['schema_doc'].keys() if k != 'name' and k != obj._meta['crits_type'] }
+    soi = { k: 0 for k in list(Bucket._meta['schema_doc'].keys()) if k != 'name' and k != obj._meta['crits_type'] }
     soi['schema_version'] = Bucket._meta['latest_schema_version']
 
     # We are using mongo_connector here because mongoengine does not have
@@ -1165,7 +1161,7 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
         # if result format calls for binary data to be zipped, loop over
         # collected objects and convert binary data to bin_fmt specified, then
         # add to the list of data to zip up
-        for (oid, (otype, obj)) in new_objects.items():
+        for (oid, (otype, obj)) in list(new_objects.items()):
             if ((otype == PCAP._meta['crits_type'] or
                  otype == Sample._meta['crits_type'] or
                  otype == Certificate._meta['crits_type']) and
@@ -1397,7 +1393,7 @@ def datetime_parser(value):
     elif isinstance(value,str) and value:
         return datetime.datetime.strptime(value, settings.PY_DATETIME_FORMAT)
     elif isinstance(value,dict):
-        for k,v in value.items():
+        for k,v in list(value.items()):
             # Make sure that date is in the key, value is a string, and val is not ''
             if "date" in k and isinstance(v,str) and v:
                 value[k] = datetime.datetime.strptime(v, settings.PY_DATETIME_FORMAT)
@@ -1900,7 +1896,7 @@ def check_query(qparams,user,obj):
     # Iterate over the supplied query keys and make sure they start
     # with a valid field from the document
     goodkeys = {}
-    for key,val in qparams.items():
+    for key,val in list(qparams.items()):
         # Skip anything with Mongo's special $
         if '$' in key:
             continue
@@ -2142,9 +2138,9 @@ def get_query(col_obj,request):
     query = {}
     response = {}
     params_escaped = {}
-    for k,v in request.GET.items():
+    for k,v in list(request.GET.items()):
         params_escaped[k] = html_escape(v)
-    for k,v in request.POST.items():
+    for k,v in list(request.POST.items()):
         params_escaped[k] = html_escape(v)
     urlparams = "?%s" % urlencode(params_escaped)
     if "q" in request.GET:
@@ -2177,7 +2173,7 @@ def get_query(col_obj,request):
     qparams = request.GET.copy()
     qparams.update(request.POST.copy())
     qparams = check_query(qparams,request.user.username,col_obj)
-    for key,value in qparams.items():
+    for key,value in list(qparams.items()):
         if key in keymaps:
             key = keymaps[key]
 
@@ -2287,7 +2283,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         response['TotalRecordCount'] = response.pop('count')
         response['Result'] = response.pop('result')
         for doc in response['Records']:
-            for key, value in doc.items():
+            for key, value in list(doc.items()):
                 # all dates should look the same
                 if isinstance(value, datetime.datetime):
                     doc[key] = datetime.datetime.strftime(value,
@@ -2515,7 +2511,7 @@ def build_jtable(jtopts, request):
 
     jtable = {}
     # This allows overriding of default options if they are specified in jtopts
-    for defopt,defval in default_options.items():
+    for defopt,defval in list(default_options.items()):
         if defopt in jtopts:
             jtable[defopt] = jtopts[defopt]
         else:

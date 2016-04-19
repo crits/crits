@@ -1,4 +1,6 @@
-
+from __future__ import unicode_literals
+from builtins import str
+from past.builtins import basestring
 import uuid
 
 def migrate_event(self):

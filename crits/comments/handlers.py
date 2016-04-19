@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import datetime
 import json
 
@@ -115,7 +116,7 @@ def get_user_allowed_comments(comments, sources):
             docs[c.obj_type][c.obj_id] = [c]
 
     final_comments = []
-    for key, val in docs.items():
+    for key, val in list(docs.items()):
         cls = class_from_type(key)
         obj_ids = [v for v in val] #get keys
         query = {'_id': {'$in':obj_ids},

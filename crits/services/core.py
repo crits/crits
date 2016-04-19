@@ -1,4 +1,5 @@
-
+from __future__ import unicode_literals
+from builtins import str
 from builtins import object
 from datetime import datetime
 from distutils.version import StrictVersion
