@@ -929,6 +929,8 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     emldata = []
     boundary = None
     isbody = False
+    if isinstance(data, 'bytes'):
+        data = data.decode('ISO-8859-1')
     if not isinstance(data, basestring):
         data = data.read()
     for line in data.split("\n"):
@@ -1006,7 +1008,9 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
     msg_import = {'raw_header': ''}
     reImap = re.compile(r"(\*\s\d+\sFETCH\s.+?\r\n)(.+)\).*?OK\s(UID\sFETCH\scompleted|Success)", re.M | re.S)
-
+ 
+    if not isinstance(data, str):
+        data = data.decode('ISO-8859-1')
     # search for SMTP dialog
     start = data.find("DATA")
     end = data.find("\x0d\x0a\x2e\x0d\x0a")

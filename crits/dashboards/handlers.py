@@ -128,7 +128,7 @@ def getRecordsForDefaultDashboardTable(username, tableName):
         response = data_query(Campaign, username, query={}, limit=5)
     elif tableName == "Counts":
         response = generate_counts_jtable(None, "jtlist")
-        records = json.loads(response.content)["Records"]
+        records = json.loads(response.content.decode('utf-8'))["Records"]
         for record in records:
             record["recid"] = record.pop("id")
         return records
