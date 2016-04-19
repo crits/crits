@@ -93,6 +93,8 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         from hashlib import md5, sha1, sha256
         try:
             self.filetype = magic.from_buffer(data)
+            if not isinstance(self.filetype, str):
+                self.filetype = self.filetype.decode('ISO-8859-1')
         except:
             self.filetype = "Unavailable"
         try:
@@ -113,6 +115,8 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         self.sha256 = sha256(data).hexdigest()
         try:
             self.ssdeep = pydeep.hash_bytes(data)
+            if not isinstance(self.ssdeep, str):
+                self.ssdeep = self.ssdeep.decode('ISO-8859-1')
         except:
             self.ssdeep = None
 

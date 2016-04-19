@@ -348,8 +348,12 @@ def handle_signature_file(data, source_name, user=None,
         return status
 
     # generate md5 and timestamp
-    md5 = hashlib.md5(data).hexdigest()
     timestamp = datetime.datetime.now()
+    if not isinstance(data, str):
+        md5 = hashlib.md5(data.hexdigest())
+        data = data.decode('ISO-8859-1')
+    else:
+        md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
     
     # generate signature
     signature = Signature()

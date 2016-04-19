@@ -141,7 +141,7 @@ class IPViewTests(SimpleTestCase):
         self.req.user = self.user
         response = views.ips_listing(self.req)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue("#ip_listing" in response.content)
+        self.assertTrue("#ip_listing" in str(response.content))
 
     def testIPsjtList(self):
         self.req = self.factory.post('/ips/list/jtlist/',

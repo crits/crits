@@ -4,7 +4,7 @@ from past.builtins import basestring
 from builtins import object
 import datetime
 import json, yaml
-import io
+import sys, io
 import csv
 
 from bson import json_util, ObjectId
@@ -502,7 +502,10 @@ class CritsDocument(BaseDocument):
 
         if not fields:
             fields = list(self._data.keys())
-        csv_string = io.BytesIO()
+        if sys.version_info >= (3,0,0):
+            csv_string = io.StringIO()
+        else:
+            csv_string = io.BytesIO()
         csv_wr = csv.writer(csv_string)
         if headers:
             csv_wr.writerow([f.encode('utf-8') for f in fields])
@@ -524,7 +527,7 @@ class CritsDocument(BaseDocument):
                     if not hasattr(data, 'encode'):
                         # Convert non-string data types
                         data = str(data)
-                row.append(data.encode('utf-8'))
+                row.append(data)
 
         csv_wr.writerow(row)
         return csv_string.getvalue()

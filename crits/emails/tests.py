@@ -165,7 +165,7 @@ class EmailViewTests(SimpleTestCase):
         self.req.user = self.user
         response = views.emails_listing(self.req)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue("#email_listing" in response.content)
+        self.assertTrue("#email_listing" in str(response.content))
 
     def testEmailsjtList(self):
         self.req = self.factory.post('/emails/list/jtlist/',
