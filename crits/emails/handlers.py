@@ -929,7 +929,7 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     emldata = []
     boundary = None
     isbody = False
-    if isinstance(data, 'bytes'):
+    if isinstance(data, bytes):
         data = data.decode('ISO-8859-1')
     if not isinstance(data, basestring):
         data = data.read()

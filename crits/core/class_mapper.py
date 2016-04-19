@@ -59,8 +59,8 @@ def class_from_id(type_, _id):
     if not _id:
         return None
 
-    if isinstance(_id, bytes):
-        _id = str(bytes(_id))
+    #if isinstance(_id, bytes):
+    #    _id = str(bytes(_id))
     # make sure it's a string
     if not isinstance(_id, str):
         _id = str(_id)
