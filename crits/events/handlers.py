@@ -1,3 +1,4 @@
+import datetime
 import json
 import uuid
 
@@ -5,9 +6,14 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core import form_consts
+from crits.core.class_mapper import class_from_id
+from crits.campaigns.campaign import Campaign
 from crits.campaigns.forms import CampaignForm
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
 from crits.core.crits_mongoengine import EmbeddedCampaign
@@ -22,6 +28,9 @@ from crits.events.event import Event
 from crits.notifications.handlers import remove_user_from_notification
 from crits.samples.handlers import handle_uploaded_file, mail_sample
 from crits.services.handlers import run_triage, get_supported_services
+
+from crits.vocabulary.relationships import RelationshipTypes
+
 
 
 def generate_event_csv(request):
@@ -227,7 +236,9 @@ def generate_event_id(event):
     return uuid.uuid4()
 
 def add_new_event(title, description, event_type, source, method, reference,
-                  date, analyst, bucket_list=None, ticket=None):
+                  date, analyst, bucket_list=None, ticket=None,
+                  campaign=None, campaign_confidence=None, related_id=None,
+                  related_type=None, relationship_type=None):
     """
     Add a new Event to CRITs.
 
@@ -251,9 +262,20 @@ def add_new_event(title, description, event_type, source, method, reference,
     :type: str
     :param ticket: Ticket to associate with this event.
     :type ticket: str
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys "success" (boolean) and "message" (str)
+    :param campaign: Campaign to associate with this Event
+    :type campaign: str
+    :param campaign_confidence: Confidence to associate with the Campaign
+    :type campaign_confidence: str
     """
 
+    result = dict()
     if not source:
         return {'success': False, 'message': "Missing source information."}
 
@@ -269,14 +291,51 @@ def add_new_event(title, description, event_type, source, method, reference,
                                date=date)
     event.add_source(s)
 
+    valid_campaign_confidence = {
+        'low': 'low',
+        'medium': 'medium',
+        'high': 'high'}
+    valid_campaigns = {}
+    for c in Campaign.objects(active='on'):
+        valid_campaigns[c['name'].lower()] = c['name']
+
+    if campaign:
+        if isinstance(campaign, basestring) and len(campaign) > 0:
+            if campaign.lower() not in valid_campaigns:
+                result = {'success':False, 'message':'{} is not a valid campaign.'.format(campaign)}
+            else:
+                confidence = valid_campaign_confidence.get(campaign_confidence, 'low')
+                campaign = EmbeddedCampaign(name=campaign,
+                                                   confidence=confidence,
+                                                   description="",
+                                                   analyst=analyst,
+                                                   date=datetime.datetime.now())
+                event.add_campaign(campaign)
+
     if bucket_list:
         event.add_bucket_list(bucket_list, analyst)
 
     if ticket:
         event.add_ticket(ticket, analyst)
 
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
     try:
         event.save(username=analyst)
+
+        if related_obj and event and relationship_type:
+            relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+            event.add_relationship(related_obj,
+                                  relationship_type,
+                                  analyst=analyst,
+                                  get_rels=False)
+            event.save(username=analyst)
 
         # run event triage
         event.reload()
@@ -290,6 +349,7 @@ def add_new_event(title, description, event_type, source, method, reference,
                   'message': message,
                   'id': str(event.id),
                   'object': event}
+
     except ValidationError, e:
         result = {'success': False,
                   'message': e}

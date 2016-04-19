@@ -15,10 +15,7 @@ from mongoengine import IntField, DateTimeField, ObjectIdField
 from mongoengine.base import BaseDocument, ValidationError
 
 # Determine if we should be caching queries or not.
-if settings.QUERY_CACHING:
-    from mongoengine import QuerySet as QS
-else:
-    from mongoengine import QuerySetNoCache as QS
+from mongoengine import QuerySet as QS
 
 from pprint import pformat
 
@@ -68,10 +65,9 @@ class CritsQuerySet(QS):
 
         if self._len is not None:
             return self._len
-        if settings.QUERY_CACHING:
-            if self._has_more:
-                # populate the cache
-                list(self._iter_results())
+        if self._has_more:
+            # populate the cache
+            list(self._iter_results())
             self._len = len(self._result_cache)
         else:
             self._len = self.count()
@@ -421,7 +417,7 @@ class CritsDocument(BaseDocument):
             return False
 
     @classmethod
-    def _from_son(cls, son, _auto_dereference=True):
+    def _from_son(cls, son, _auto_dereference=True, only_fields=None, created=False):
         """
         Override the default _from_son(). Allows us to move attributes in the
         database to unsupported_attrs if needed, validate the schema_version,
@@ -1151,6 +1147,7 @@ class Releasability(EmbeddedDocument, CritsDocumentFormatter):
 
         analyst = StringField()
         date = DateTimeField()
+        note = StringField()
 
 
     name = StringField()

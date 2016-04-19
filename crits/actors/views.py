@@ -120,6 +120,9 @@ def add_actor(request):
             analyst = request.user.username
             bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+            related_id = cleaned_data['related_id']
+            related_type = cleaned_data['related_type']
+            relationship_type = cleaned_data['relationship_type']
 
             result = add_new_actor(name,
                                    aliases=aliases,
@@ -131,13 +134,16 @@ def add_actor(request):
                                    confidence=confidence,
                                    analyst=analyst,
                                    bucket_list=bucket_list,
-                                   ticket=ticket)
+                                   ticket=ticket,
+                                   related_id=related_id,
+                                   related_type=related_type,
+                                   relationship_type=relationship_type)
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
-                                mimetype='application/json')
+                                content_type="application/json")
         return HttpResponse(json.dumps({'success': False,
                                         'form':form.as_table()}),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response("error.html",
                               {'error': 'Expected AJAX/POST'},
                               RequestContext(request))
@@ -179,7 +185,7 @@ def get_actor_identifier_types(request):
     if request.method == "POST" and request.is_ajax():
         result = actor_identifier_types(True)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -201,7 +207,7 @@ def get_actor_identifier_type_values(request):
         username = request.user.username
         result = actor_identifier_type_values(type_, username)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -224,10 +230,10 @@ def new_actor_identifier_type(request):
         if not identifier_type:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = create_actor_identifier_type(username, identifier_type)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -252,10 +258,10 @@ def actor_tags_modify(request):
         if not tag_type:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a tag type.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = update_actor_tags(id_, tag_type, tags, user)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -277,10 +283,10 @@ def get_actor_tags(request):
         if not tag_type:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a tag type.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = get_actor_tags_by_type(tag_type)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -309,7 +315,7 @@ def add_identifier(request):
             if not identifier_type or not identifier:
                 return HttpResponse(json.dumps({'success': False,
                                                 'message': 'Need a name.'}),
-                                    mimetype="application/json")
+                                    content_type="application/json")
             result = add_new_actor_identifier(identifier_type,
                                               identifier,
                                               source,
@@ -317,11 +323,11 @@ def add_identifier(request):
                                               reference,
                                               username)
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
         else:
             return HttpResponse(json.dumps({'success': False,
                                             'form':form.as_table()}),
-                                mimetype="application/json")
+                                content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -347,14 +353,14 @@ def attribute_identifier(request):
         if not identifier_type or not identifier:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = attribute_actor_identifier(id_,
                                             identifier_type,
                                             identifier,
                                             confidence,
                                             user)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -379,13 +385,13 @@ def edit_attributed_identifier(request):
         if not identifier:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = set_identifier_confidence(id_,
                                            identifier,
                                            confidence,
                                            user)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -409,12 +415,12 @@ def remove_attributed_identifier(request):
         if not identifier:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = remove_attribution(id_,
                                     identifier,
                                     user)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -439,12 +445,12 @@ def edit_actor_name(request, id_):
         if not name:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
-                                mimetype="application/json")
+                                content_type="application/json")
         result = set_actor_name(id_,
                                 name,
                                 user)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -467,7 +473,7 @@ def edit_actor_aliases(request):
         user = request.user.username
         result = update_actor_aliases(id_, aliases, user)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",

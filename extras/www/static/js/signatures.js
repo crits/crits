@@ -282,6 +282,7 @@ $(document).ready(function() {
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt) });
     details_copy_id('Signature');
     toggle_favorite('Signature');
+    populate_id(signature_id,'Signature');
 
     $('#data_type_min_version').editable(function(value, settings) {
     var revert = this.revert;

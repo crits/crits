@@ -6,9 +6,13 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core import form_consts
+from crits.core.class_mapper import class_from_id, class_from_value
 from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
 from crits.core.crits_mongoengine import json_handler, create_embedded_source
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
@@ -352,6 +356,9 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                                          method=method, analyst=username)]
         bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
         ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+        related_id = data.get('related_id')
+        related_type = data.get('related_type')
+        relationship_type = data.get('relationship_type')
 
         if data.get('campaign') and data.get('confidence'):
             campaign = [EmbeddedCampaign(name=data.get('campaign'),
@@ -361,7 +368,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
             campaign = []
 
         retVal = upsert_domain(domain, source, username, campaign,
-                               bucket_list=bucket_list, ticket=ticket, cache=cache)
+                               bucket_list=bucket_list, ticket=ticket, cache=cache, related_id=related_id, related_type=related_type, relationship_type=relationship_type)
 
         if not retVal['success']:
             errors.append(retVal.get('message'))
@@ -511,7 +518,7 @@ def edit_domain_name(domain, new_domain, analyst):
         return False
 
 def upsert_domain(domain, source, username=None, campaign=None,
-                  confidence=None, bucket_list=None, ticket=None, cache={}):
+                  confidence=None, bucket_list=None, ticket=None, cache={}, related_id=None, related_type=None, relationship_type=None):
     """
     Add or update a domain/FQDN. Campaign is assumed to be a list of campaign
     dictionary objects.
@@ -533,6 +540,12 @@ def upsert_domain(domain, source, username=None, campaign=None,
     :param cache: Cached data, typically for performance enhancements
                   during bulk uperations.
     :type cache: dict
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_id: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys:
               "success" (boolean),
               "object" the domain that was added,
@@ -634,6 +647,14 @@ def upsert_domain(domain, source, username=None, campaign=None,
         if fqdn_domain:
             fqdn_domain.add_ticket(ticket, username)
 
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
     # save
     try:
         if root_domain:
@@ -652,6 +673,22 @@ def upsert_domain(domain, source, username=None, campaign=None,
         root_domain.save(username=username)
         fqdn_domain.save(username=username)
 
+    #Add relationships from object domain is being added from
+    if related_obj and relationship_type:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        if fqdn_domain and (related_obj != fqdn_domain):
+            fqdn_domain.add_relationship(related_obj,
+                                         relationship_type,
+                                         analyst=username,
+                                         get_rels=False)
+            fqdn_domain.save(username=username)
+        if root_domain and (related_obj != root_domain):
+            root_domain.add_relationship(related_obj,
+                                         relationship_type,
+                                         analyst=username,
+                                         get_rels=False)
+            root_domain.save(username=username)
+    
     # run domain triage
     if is_fqdn_domain_new:
         fqdn_domain.reload()

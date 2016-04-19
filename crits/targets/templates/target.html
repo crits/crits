@@ -1,9 +1,13 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 
 {% block title %}Target Details{% endblock %}
 
 {% block content %}
+
+<script>
+    var target_id = "{{ target_detail.id | escapejs}}";
+</script>
 
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
@@ -95,6 +99,7 @@
         {% with bucket_list=target_detail.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
     </div>
     <div class="content_box">
         {% with obj=target_detail obj_type="Target" %}

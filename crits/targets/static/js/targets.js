@@ -18,6 +18,7 @@ $(document).ready(function(){
             },
         },
     });
+    populate_id(target_id, 'Target');
     details_copy_id('Target');
     toggle_favorite('Target');
 });

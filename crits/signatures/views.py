@@ -61,7 +61,7 @@ def set_signature_type(request, id_):
                                                              id_,
                                                             data_type,
                                                             analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -82,7 +82,7 @@ def get_signature_versions(request, _id):
 
     if request.method == 'POST':
         return HttpResponse(json.dumps(generate_signature_versions(_id)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -149,6 +149,9 @@ def upload_signature(request, link_id=None):
             data_type = form.cleaned_data.get('data_type', None)
             data_type_min_version = form.cleaned_data.get('data_type_min_version', None)
             data_type_max_version = form.cleaned_data.get('data_type_max_version', None)
+            related_id=form.cleaned_data.get('related_id', '')
+            related_type = form.cleaned_data.get('related_type', '')
+            relationship_type = form.cleaned_data.get('relationship_type', '')
 
             ''' Parse out dependencies and add any new ones '''
             depend_string = form.cleaned_data.get('data_type_dependency', None)
@@ -177,23 +180,26 @@ def upload_signature(request, link_id=None):
                                           reference=reference,
                                           copy_rels=copy_rels,
                                           bucket_list=bucket_list,
-                                          ticket=ticket)
+                                          ticket=ticket,
+                                          related_id=related_id,
+                                          related_type=related_type,
+                                          relationship_type=relationship_type)
             if status['success']:
                 jdump = json.dumps({
                     'message': 'signature uploaded successfully! <a href="%s">View signature</a>'
                     % reverse('crits.signatures.views.signature_detail',
                               args=[status['_id']]), 'success': True})
-                return HttpResponse(jdump, mimetype="application/json")
+                return HttpResponse(jdump, content_type="application/json")
 
             else:
                 jdump = json.dumps({'success': False,
                                     'message': status['message']})
-                return HttpResponse(jdump, mimetype="application/json")
+                return HttpResponse(jdump, content_type="application/json")
 
         else:
             jdump = json.dumps({'success': False,
                                 'form': form.as_table()})
-            return HttpResponse(jdump, mimetype="application/json")
+            return HttpResponse(jdump, content_type="application/json")
 
     else:
         return render_to_response('error.html',
@@ -220,7 +226,7 @@ def update_data_type_dependency(request):
                                                           id_,
                                                           data_deps,
                                                           analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -245,7 +251,7 @@ def update_data_type_min_version(request):
                                                           id_,
                                                           data_type_min_version,
                                                           analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -270,7 +276,7 @@ def update_data_type_max_version(request):
                                                           id_,
                                                           data_type_max_version,
                                                           analyst)),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -296,7 +302,7 @@ def remove_signature_dependency(request):
             result = {'success': False}
         else:
             result = delete_signature_dependency(oid, '%s' % request.user.username)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -351,7 +357,7 @@ def new_signature_dependency(request):
         else:
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return render_to_response('error.html',
                               {'error':'Expected AJAX POST'})
@@ -382,7 +388,7 @@ def new_signature_type(request):
         else:
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),
-                            mimetype="application/json")
+                            content_type="application/json")
     return render_to_response('error.html',
                               {'error':'Expected AJAX POST'})
 
@@ -404,7 +410,7 @@ def get_signature_dependency_dropdown(request):
         for dt in dt_deps:
             dt_final.append(dt.name)
             result = {'data': dt_final}
-            return HttpResponse(json.dumps(result), mimetype="application/json")
+            return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -429,7 +435,7 @@ def get_signature_type_dropdown(request):
             dt_final.append(dt.name)
             result = {'data': dt_final}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",

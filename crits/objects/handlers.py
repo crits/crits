@@ -5,7 +5,10 @@ from hashlib import md5
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.template import RequestContext
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id, class_from_type
@@ -166,7 +169,7 @@ def add_new_handler_object(data, rowData, request, is_validate_only=False,
     object_result = add_object(
         otype, oid, object_type, source, method, reference, analyst,
         value=value, file_=None, add_indicator=add_indicator, get_objects=False,
-        obj=obj, is_validate_only=is_validate_only,
+        tlo=obj, is_validate_only=is_validate_only,
         is_sort_relationships=is_sort_relationships,
         is_validate_locally=is_validate_locally, cache=cache
     )
@@ -190,7 +193,7 @@ def add_new_handler_object(data, rowData, request, is_validate_only=False,
 def add_object(type_, id_, object_type, source, method,
                reference, user, value=None, file_=None,
                add_indicator=False, get_objects=True,
-               obj=None, is_sort_relationships=False,
+               tlo=None, is_sort_relationships=False,
                is_validate_only=False, is_validate_locally=False, cache={},
                **kwargs):
     """
@@ -218,11 +221,11 @@ def add_object(type_, id_, object_type, source, method,
     :type add_indicator: bool
     :param get_objects: Return the formatted list of objects when completed.
     :type get_object: bool
-    :param obj: The CRITs top-level object we are adding objects to.
+    :param tlo: The CRITs top-level object we are adding objects to.
                 This is an optional parameter used mainly for performance
                 reasons (by not querying mongo if we already have the
                 top level-object).
-    :type obj: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :type tlo: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     :param is_validate_only: Validate, but do not add to TLO.
     :type is_validate_only: bool
     :param is_validate_locally: Validate, but do not add b/c there is no TLO.
@@ -238,7 +241,7 @@ def add_object(type_, id_, object_type, source, method,
     """
 
     results = {}
-
+    obj = tlo
     if id_ == None:
         id_ = ""
 

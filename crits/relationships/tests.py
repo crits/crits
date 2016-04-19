@@ -3,6 +3,7 @@ from django.test import SimpleTestCase
 from crits.relationships.handlers import forge_relationship, update_relationship_reasons, update_relationship_confidences
 from crits.core.user import CRITsUser
 from crits.campaigns.campaign import Campaign
+from crits.vocabulary.relationships import RelationshipTypes
 
 TUSER_NAME = "test_user"
 TUSER_PASS = "!@#j54kfeimn?>S<D"
@@ -12,7 +13,7 @@ TUSER2_PASS = "!@#saasdfasfwefwe?>S<Dd"
 TUSER2_EMAIL = "asdfsaser@example.com"
 TCAMPAIGN1 = "Test_Campain1"
 TCAMPAIGN2 = "Test_Campain2"
-TRELATIONSHIP_TYPE = "Allocated"
+TRELATIONSHIP_TYPE = RelationshipTypes.RELATED_TO
 TRELATIONSHIP_CONFIDENCE = 'high'
 TRELATIONSHIP_NEW_CONFIDENCE = 'medium'
 TRELATIONSHIP_NEW_REASON = "Because I Said So"

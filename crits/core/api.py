@@ -180,7 +180,7 @@ class CRITsSerializer(Serializer):
                 if len(files):
                     zipfile = create_zip(files)
                     response =  HttpResponse(zipfile,
-                                                mimetype='application/octet-stream; charset=utf-8')
+                                                content_type="application/octet-stream; charset=utf-8")
                     response['Content-Disposition'] = 'attachment; filename="results.zip"'
                 else:
                     response = BadRequest("No files found!")
@@ -319,7 +319,7 @@ class CRITsAPIResource(MongoEngineResource):
         """
 
         raise ImmediateHttpResponse(HttpResponse(json.dumps(content),
-                                                 mimetype="application/json",
+                                                 content_type="application/json",
                                                  status=status))
 
     def create_response(self, request, data, response_class=HttpResponse,
@@ -430,6 +430,7 @@ class CRITsAPIResource(MongoEngineResource):
             else:
                 querydict['_id'] = path[-1]
 
+        do_or = False
         for k,v in get_params.iteritems():
             v = v.strip()
             try:
@@ -507,6 +508,12 @@ class CRITsAPIResource(MongoEngineResource):
                     querydict[field] = generate_regex(v)
                 else:
                     querydict[field] = remove_quotes(v)
+            if k == 'or':
+                do_or = True
+        if do_or:
+            tmp = {}
+            tmp['$or'] = [{x:y} for x,y in querydict.iteritems()]
+            querydict = tmp
         if no_sources and sources:
             querydict['source.name'] = {'$in': source_list}
         if only or exclude:

@@ -1336,11 +1336,18 @@ you use search operators in the global search box. Here's an example:
 
 You'll notice a couple things here. The first is that there is a "c-" in front
 of the field name. This tells the API that this parameter should be used as a
-field to search against to limit your results. Second is that there is no
-operators for defining AND or OR. Currently this only supports AND operations.
-In our example, only samples with a Campaign Name of "Bad Guys" AND a filename
-of "foo.txt" will be returned to us. Finally, in this format the fields are both
-full matches.
+field to search against to limit your results. In our example, only samples with
+a Campaign Name of "Bad Guys" AND a filename of "foo.txt" will be returned to
+us. Finally, in this format the fields are both full matches.
+
+The above assumes the parameters are to be used in an AND query. If you wish to
+instead use your parameters in an OR query, you can add "or=1" to your parameter
+list:
+
+        /api/v1/samples/?or=1&c-campaign.name=Bad Guys&c-filename=foo.txt
+
+This will return samples with a Campaign Name of "Bad Guys" OR a filename of
+"foo.txt".
 
 As long as you have a "c-" in front of the parameter, you can search against any
 field in the database, whether it is a CRITs supported field or not!
@@ -1651,7 +1658,7 @@ Unique POST Parameters:
 :add_ip: Tell the API that you are also adding an IP related to this domain.
 :domain: The domain name.
 :ip: The IP you want to relate to this domain.
-:ip_type: The type of the IP ('Address - ipv4-addr' is most common).
+:ip_type: The type of the IP ('IPv4 Address' is most common).
 :ip_source: The source of the IP.
 :ip_method: The method in which you acquired this IP from the source.
 :ip_reference: The reference about this IP source.
@@ -2019,10 +2026,20 @@ Here is a list of currently exposed handlers:
 Common PATCH actions for all TLOs
 ---------------------------------
 
+:action_add:
+:action_update:
+:action_remove:
 :add_object:
 :add_releasability:
+:description_update:
 :forge_relationship:
 :run_service:
+:source_add_update:
+:source_remove:
+:status_update:
+:ticket_add:
+:ticket_update:
+:ticket_remove:
 
 Actor PATCH actions
 -------------------
@@ -2034,11 +2051,21 @@ Actor PATCH actions
 :set_actor_name:
 :update_actor_aliases:
 
+Indicator PATCH actions
+-----------------------
+
+:activity_add:
+:activity_remove:
+:activity_update:
+:ci_update:
+:set_indicator_attack_type:
+:set_indicator_threat_type:
+
 Signature PATCH actions
 -----------------------
 :update_dependency:
 :update_max_version:
 :update_min_version:
-:update_signature_type:
 :update_signature_data:
+:update_signature_type:
 :update_title:
