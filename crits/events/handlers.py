@@ -233,8 +233,9 @@ def generate_event_id(event):
 
     return uuid.uuid4()
 
-def add_new_event(title, description, event_type, source, method, reference,
-                  date, analyst, bucket_list=None, ticket=None, related_id=None, 
+def add_new_event(title, description, event_type, source_name, source_method,
+                  source_reference, source_tlp, date, user,
+                  bucket_list=None, ticket=None, related_id=None,
                   related_type=None, relationship_type=None):
     """
     Add a new Event to CRITs.
@@ -268,7 +269,7 @@ def add_new_event(title, description, event_type, source, method, reference,
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    if not source:
+    if not source_name:
         return {'success': False, 'message': "Missing source information."}
 
     event = Event()
@@ -276,18 +277,19 @@ def add_new_event(title, description, event_type, source, method, reference,
     event.description = description
     event.set_event_type(event_type)
 
-    s = create_embedded_source(name=source,
-                               reference=reference,
-                               method=method,
-                               analyst=analyst,
+    s = create_embedded_source(source_name,
+                               reference=source_reference,
+                               method=source_method,
+                               tlp=source_tlp,
+                               analyst=user.username,
                                date=date)
     event.add_source(s)
 
     if bucket_list:
-        event.add_bucket_list(bucket_list, analyst)
+        event.add_bucket_list(bucket_list, user.username)
 
     if ticket:
-        event.add_ticket(ticket, analyst)
+        event.add_ticket(ticket, user.username)
 
     related_obj = None
     if related_id:
@@ -298,19 +300,19 @@ def add_new_event(title, description, event_type, source, method, reference,
             return retVal
 
     try:
-        event.save(username=analyst)
+        event.save(username=user.username)
 
         if related_obj and event and relationship_type:
             relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
             event.add_relationship(related_obj,
                                   relationship_type,
-                                  analyst=analyst,
+                                  analyst=user.username,
                                   get_rels=False)
-            event.save(username=analyst)
+            event.save(username=user.username)
 
         # run event triage
         event.reload()
-        run_triage(event, analyst)
+        run_triage(event, user.username)
 
         message = ('<div>Success! Click here to view the new event: <a href='
                    '"%s">%s</a></div>' % (reverse('crits.events.views.view_event',

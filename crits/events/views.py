@@ -52,16 +52,18 @@ def add_event(request):
         event_form = EventForm(request.user, request.POST)
         if event_form.is_valid():
             data = event_form.cleaned_data
+            logger.error(data['source_name'] + data['source_tlp'] + data['source_method'])
             result = add_new_event(title=data['title'],
                                    description=data['description'],
                                    event_type=data['event_type'],
-                                   source=data['source'],
-                                   method=data['method'],
-                                   reference=data['reference'],
+                                   source_name=data['source_name'],
+                                   source_method=data['source_method'],
+                                   source_reference=data['source_reference'],
+                                   source_tlp=data['source_tlp'],
                                    date=data['occurrence_date'],
                                    bucket_list=data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                                    ticket=data[form_consts.Common.TICKET_VARIABLE_NAME],
-                                   analyst=request.user.username,
+                                   user=request.user,
                                    related_id=data['related_id'],
                                    related_type=data['related_type'],
                                    relationship_type=data['relationship_type'])

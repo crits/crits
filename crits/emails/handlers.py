@@ -441,7 +441,7 @@ def generate_email_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
 
-def handle_email_fields(data, analyst, method, related_id=None, related_type=None, relationship_type=None):
+def handle_email_fields(data, user, method, related_id=None, related_type=None, relationship_type=None):
     """
     Take email fields and convert them into an email object.
 
@@ -524,20 +524,20 @@ def handle_email_fields(data, analyst, method, related_id=None, related_type=Non
     new_email.source = [create_embedded_source(sourcename,
                                                reference=reference,
                                                method=method,
-                                               analyst=analyst)]
+                                               analyst=user)]
 
     if campaign:
         ec = EmbeddedCampaign(name=campaign,
                               confidence=confidence,
                               description="",
-                              analyst=analyst,
+                              analyst=user,
                               date=datetime.datetime.now())
         new_email.add_campaign(ec)
 
 
-    new_email.save(username=analyst)
+    new_email.save(username=user)
 
-    # Relate the email to any other object 
+    # Relate the email to any other object
     related_obj = None
     if related_id and related_type and relationship_type:
         related_obj = class_from_id(related_type, related_id)
@@ -550,13 +550,13 @@ def handle_email_fields(data, analyst, method, related_id=None, related_type=Non
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         new_email.add_relationship(related_obj,
                                           relationship_type,
-                                          analyst=analyst,
+                                          analyst=user,
                                           get_rels=False)
 
     try:
-        new_email.save(username=analyst)
+        new_email.save(username=user)
         new_email.reload()
-        run_triage(new_email, analyst)
+        run_triage(new_email, user)
         result['object'] = new_email
         result['status'] = True
     except Exception, e:
@@ -567,7 +567,7 @@ def handle_email_fields(data, analyst, method, related_id=None, related_type=Non
 def handle_json(data, sourcename, reference, analyst, method,
                 save_unsupported=True, campaign=None, confidence=None,
                 bucket_list=None, ticket=None):
-    
+
     """
     Take email in JSON and convert them into an email object.
 
@@ -650,7 +650,7 @@ def handle_json(data, sourcename, reference, analyst, method,
 # if email_id is provided it is the existing email id to modify.
 def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
                 save_unsupported=True, campaign=None, confidence=None,
-                bucket_list=None, ticket=None, related_id=None, 
+                bucket_list=None, ticket=None, related_id=None,
                 related_type=None, relationship_type=None):
     """
     Take email in YAML and convert them into an email object.
@@ -755,7 +755,7 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
 
         result['object'].save(username=analyst)
 
-        # Relate the email to any other object 
+        # Relate the email to any other object
         related_obj = None
         if related_id and related_type and relationship_type:
             related_obj = class_from_id(related_type, related_id)
@@ -833,7 +833,7 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
         result['email']['isodate'] = date_parser(result['email']['date'],
                                                  fuzzy=True)
 
-    obj = handle_email_fields(result['email'], analyst, method, 
+    obj = handle_email_fields(result['email'], analyst, method,
                               related_id=related_id, related_type=related_type, relationship_type=relationship_type)
 
     if not obj["status"]:
@@ -943,7 +943,7 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
         emldata.append(line)
     emldata = "\n".join(emldata)
     return handle_eml(emldata, sourcename, reference, analyst, method, parent_type,
-                      parent_id, campaign, confidence, bucket_list, ticket, 
+                      parent_id, campaign, confidence, bucket_list, ticket,
                       related_id=related_id, related_type=related_type, relationship_type=relationship_type)
 
 
@@ -1169,7 +1169,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             + str(e) + "</pre>"
             return result
 
-    # Relate the email to any other object 
+    # Relate the email to any other object
     related_obj = None
     if related_id and related_type and relationship_type:
         related_obj = class_from_id(related_type, related_id)

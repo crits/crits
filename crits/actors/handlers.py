@@ -299,8 +299,8 @@ def get_actor_by_name(allowed_sources, actor):
 
 def add_new_actor(name, aliases=None, description=None, source=None,
                   source_method='', source_reference='', source_tlp=None,
-                  campaign=None, confidence=None, analyst=None, 
-                  bucket_list=None, ticket=None, related_id=None, 
+                  campaign=None, confidence=None, user=None,
+                  bucket_list=None, ticket=None, related_id=None,
                   related_type=None, relationship_type=None):
     """
     Add an Actor to CRITs.
