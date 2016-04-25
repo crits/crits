@@ -268,7 +268,6 @@ def add_new_event(title, description, event_type, source_name, source_method,
     :type relationship_type: str
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
-
     if not source_name:
         return {'success': False, 'message': "Missing source information."}
 

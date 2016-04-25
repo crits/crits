@@ -175,19 +175,19 @@ def generate_indicator_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
 
-def get_indicator_details(indicator_id, analyst):
+def get_indicator_details(indicator_id, user):
     """
     Generate the data to render the Indicator details template.
 
     :param indicator_id: The ObjectId of the Indicator to get details for.
     :type indicator_id: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: str
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    users_sources = user_sources(analyst)
+    users_sources = user_sources(user)
     indicator = Indicator.objects(id=indicator_id,
                                   source__name__in=users_sources).first()
     if not indicator:
@@ -197,23 +197,23 @@ def get_indicator_details(indicator_id, analyst):
         args = {'error': error}
         return template, args
     forms = {}
-    forms['new_activity'] = IndicatorActivityForm(initial={'analyst': analyst,
+    forms['new_activity'] = IndicatorActivityForm(initial={'analyst': user,
                                                            'date': datetime.datetime.now()})
     forms['new_campaign'] = CampaignForm()#'date': datetime.datetime.now(),
-    forms['new_source'] = SourceForm(analyst, initial={'date': datetime.datetime.now()})
+    forms['new_source'] = SourceForm(user, initial={'date': datetime.datetime.now()})
     forms['download_form'] = DownloadFileForm(initial={"obj_type": 'Indicator',
                                                        "obj_id": indicator_id})
 
-    indicator.sanitize("%s" % analyst)
+    indicator.sanitize("%s" % user)
 
     # remove pending notifications for user
-    remove_user_from_notification("%s" % analyst, indicator_id, 'Indicator')
+    remove_user_from_notification("%s" % user, indicator_id, 'Indicator')
 
     # subscription
     subscription = {
         'type': 'Indicator',
         'id': indicator_id,
-        'subscribed': is_user_subscribed("%s" % analyst,
+        'subscribed': is_user_subscribed("%s" % user,
                                          'Indicator',
                                          indicator_id),
     }
@@ -228,17 +228,17 @@ def get_indicator_details(indicator_id, analyst):
     objects = indicator.sort_objects()
 
     #relationships
-    relationships = indicator.sort_relationships("%s" % analyst, meta=True)
+    relationships = indicator.sort_relationships("%s" % user, meta=True)
 
     #comments
     comments = {'comments': indicator.get_comments(),
                 'url_key': indicator_id}
 
     #screenshots
-    screenshots = indicator.get_screenshots(analyst)
+    screenshots = indicator.get_screenshots(user)
 
     # favorites
-    favorite = is_user_favorite("%s" % analyst, 'Indicator', indicator.id)
+    favorite = is_user_favorite("%s" % user, 'Indicator', indicator.id)
 
     # services
     service_list = get_supported_services('Indicator')
@@ -337,8 +337,10 @@ def get_verified_field(data, valid_values, field=None, default=None):
     else:
         return value_list[0]
 
-def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
-                         add_domain=False, related_id=None, related_type=None, relationship_type=None):
+def handle_indicator_csv(csv_data, ctype, user, source, source_method=None,
+                         source_reference=None, source_tlp=None,
+                         add_domain=False, related_id=None,
+                         related_type=None, relationship_type=None):
     """
     Handle adding Indicators in CSV format (file or blob).
 
@@ -352,8 +354,8 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     :type reference: str
     :param ctype: The CSV type.
     :type ctype: str ("file" or "blob")
-    :param username: The user adding these indicators.
-    :type username: str
+    :param user: The user adding these indicators.
+    :type user: str
     :param add_domain: If the indicators being added are also other top-level
                        objects, add those too.
     :type add_domain: boolean
@@ -450,10 +452,15 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind[form_consts.Common.BUCKET_LIST_VARIABLE_NAME] = d.get(form_consts.Common.BUCKET_LIST, '')
         ind[form_consts.Common.TICKET_VARIABLE_NAME] = d.get(form_consts.Common.TICKET, '')
         try:
-            response = handle_indicator_insert(ind, source, reference,
-                                               analyst=username, method=method,
-                                               add_domain=add_domain, related_id=related_id,
-                                               related_type=related_type, relationship_type=relationship_type)
+            response = handle_indicator_insert(ind, source,
+                                               source_reference=source_reference,
+                                               source_method=source_method,
+                                               source_tlp=source_tlp,
+                                               user=user,
+                                               add_domain=add_domain,
+                                               related_id=related_id,
+                                               related_type=related_type,
+                                               relationship_type=relationship_type)
         except Exception, e:
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, str(e))
@@ -461,7 +468,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         if response['success']:
             if actions:
                 action = {'active': 'on',
-                          'analyst': username,
+                          'analyst': user,
                           'begin_date': '',
                           'end_date': '',
                           'performed_date': '',
@@ -470,7 +477,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                 for action_type in actions:
                     action['action_type'] = action_type
                     action_add('Indicator', response.get('objectid'), action,
-                               user=username)
+                               user=user)
         else:
             result['success'] = False
             result_message += "Failure processing row %s: %s<br />" % (processed, response['message'])
@@ -483,11 +490,11 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     return result
 
 def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
-                         analyst, method='', reference='',
-                         add_domain=False, add_relationship=False, campaign=None,
-                         campaign_confidence=None, confidence=None, 
+                         user, source_method=None, source_reference=None,
+                         source_tlp=None, add_domain=False, add_relationship=False, campaign=None,
+                         campaign_confidence=None, confidence=None,
                          description=None, impact=None,
-                         bucket_list=None, ticket=None, cache={}, 
+                         bucket_list=None, ticket=None, cache={},
                          related_id=None, related_type=None, relationship_type=None):
     """
     Handle adding an individual indicator.
@@ -502,8 +509,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     :type threat_type: str
     :param attack_type: The indicator attack type.
     :type attack_type: str
-    :param analyst: The user adding this indicator.
-    :type analyst: str
+    :param user: The user adding this indicator.
+    :type user: str
     :param method: The method of acquisition of this indicator.
     :type method: str
     :param reference: The reference to this data.
@@ -581,18 +588,21 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
             ind[form_consts.Common.TICKET_VARIABLE_NAME] = ticket
 
         try:
-            return handle_indicator_insert(ind, source, reference, analyst,
-                                           method, add_domain, add_relationship, cache=cache,
-                                        related_id=related_id, related_type=related_type, 
-                                        relationship_type=relationship_type)
+            return handle_indicator_insert(ind, source, source_reference=source_reference,
+                                           source_method=source_method, source_tlp=source_tlp,
+                                           user=user, add_domain=add_domain,
+                                           add_relationship=add_relationship, cache=cache,
+                                           related_id=related_id, related_type=related_type,
+                                           relationship_type=relationship_type)
         except Exception, e:
             return {'success': False, 'message': repr(e)}
 
     return result
 
-def handle_indicator_insert(ind, source, reference='', analyst='', method='',
-                            add_domain=False, add_relationship=False, cache={}, 
-                            related_id=None, related_type=None, relationship_type=None):
+def handle_indicator_insert(ind, source, source_reference=None, source_method=None,
+                            source_tlp=None, user='', add_domain=False,
+                            add_relationship=False, cache={}, related_id=None,
+                            related_type=None, relationship_type=None):
     """
     Insert an individual indicator into the database.
 
@@ -609,8 +619,8 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     :type source: list, str, :class:`crits.core.crits_mongoengine.EmbeddedSource`
     :param reference: The reference to the data.
     :type reference: str
-    :param analyst: The user adding this indicator.
-    :type analyst: str
+    :param user: The user adding this indicator.
+    :type user: str
     :param method: Method of acquiring this indicator.
     :type method: str
     :param add_domain: If this indicator is also a top-level object, try to add
@@ -633,6 +643,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
               "objectid" (str) if successful,
               "is_new_indicator" (boolean) if successful.
     """
+
 
     if ind['type'] not in IndicatorTypes.values():
         return {'success': False,
@@ -675,8 +686,8 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         indicator.lower = ind.get('lower')
         indicator.description = ind.get('description', '')
         indicator.created = datetime.datetime.now()
-        indicator.confidence = EmbeddedConfidence(analyst=analyst)
-        indicator.impact = EmbeddedImpact(analyst=analyst)
+        indicator.confidence = EmbeddedConfidence(analyst=user)
+        indicator.impact = EmbeddedImpact(analyst=user)
         indicator.status = ind.get('status')
         is_new_indicator = True
     else:
@@ -697,7 +708,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             ind['campaign'] = EmbeddedCampaign(name=ind['campaign'],
                                                confidence=confidence,
                                                description="",
-                                               analyst=analyst,
+                                               analyst=user,
                                                date=datetime.datetime.now())
         if isinstance(ind['campaign'], EmbeddedCampaign):
             indicator.add_campaign(ind['campaign'])
@@ -708,36 +719,37 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
 
     if 'confidence' in ind and rank.get(ind['confidence'], 0) > rank.get(indicator.confidence.rating, 0):
         indicator.confidence.rating = ind['confidence']
-        indicator.confidence.analyst = analyst
+        indicator.confidence.analyst = user
 
     if 'impact' in ind and rank.get(ind['impact'], 0) > rank.get(indicator.impact.rating, 0):
         indicator.impact.rating = ind['impact']
-        indicator.impact.analyst = analyst
+        indicator.impact.analyst = user
 
     bucket_list = None
     if form_consts.Common.BUCKET_LIST_VARIABLE_NAME in ind:
         bucket_list = ind[form_consts.Common.BUCKET_LIST_VARIABLE_NAME]
         if bucket_list:
-            indicator.add_bucket_list(bucket_list, analyst)
+            indicator.add_bucket_list(bucket_list, user)
 
     ticket = None
     if form_consts.Common.TICKET_VARIABLE_NAME in ind:
         ticket = ind[form_consts.Common.TICKET_VARIABLE_NAME]
         if ticket:
-            indicator.add_ticket(ticket, analyst)
+            indicator.add_ticket(ticket, user)
 
     if isinstance(source, list):
         for s in source:
-            indicator.add_source(source_item=s, method=method, reference=reference)
+            indicator.add_source(source_item=s, method=source_method, reference=source_reference, tlp=source_tlp)
     elif isinstance(source, EmbeddedSource):
-        indicator.add_source(source_item=source, method=method, reference=reference)
+        indicator.add_source(source_item=source, method=source_method, reference=source_reference, tlp=source_tlp)
     elif isinstance(source, basestring):
         s = EmbeddedSource()
         s.name = source
         instance = EmbeddedSource.SourceInstance()
-        instance.reference = reference
-        instance.method = method
-        instance.analyst = analyst
+        instance.reference = source_reference
+        instance.method = source_method
+        instance.tlp = source_tlp
+        instance.analyst = user
         instance.date = datetime.datetime.now()
         s.instances = [instance]
         indicator.add_source(s)
@@ -762,7 +774,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                 if add_domain:
                     success = upsert_domain(domain_or_ip,
                                             indicator.source,
-                                            username='%s' % analyst,
+                                            username='%s' % user,
                                             campaign=indicator.campaign,
                                             bucket_list=bucket_list,
                                             cache=cache)
@@ -788,10 +800,10 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                         ind_type,
                                         source=indicator.source,
                                         campaign=indicator.campaign,
-                                        analyst=analyst,
+                                        user=user,
                                         bucket_list=bucket_list,
                                         ticket=ticket,
-                                        indicator_reference=reference,
+                                        indicator_reference=source_reference,
                                         cache=cache)
                 if not success['success']:
                     return {'success': False, 'message': success['message']}
@@ -801,20 +813,20 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             else:
                 ip = success['object']
 
-    indicator.save(username=analyst)
+    indicator.save(username=user)
 
     if dmain:
         dmain.add_relationship(indicator,
                                RelationshipTypes.RELATED_TO,
-                               analyst="%s" % analyst,
+                               analyst="%s" % user,
                                get_rels=False)
-        dmain.save(username=analyst)
+        dmain.save(username=user)
     if ip:
         ip.add_relationship(indicator,
                             RelationshipTypes.RELATED_TO,
-                            analyst="%s" % analyst,
+                            analyst="%s" % user,
                             get_rels=False)
-        ip.save(username=analyst)
+        ip.save(username=user)
 
 
     # Code for the "Add Related " Dropdown
@@ -826,20 +838,20 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             retVal['message'] = 'Related Object not found.'
             return retVal
 
-    indicator.save(username=analyst)
+    indicator.save(username=user)
 
     if related_obj and indicator and relationship_type:
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         indicator.add_relationship(related_obj,
                               relationship_type,
-                              analyst=analyst,
+                              analyst=user,
                               get_rels=False)
-        indicator.save(username=analyst)
+        indicator.save(username=user)
 
     # run indicator triage
     if is_new_indicator:
         indicator.reload()
-        run_triage(indicator, analyst)
+        run_triage(indicator, user)
 
     return {'success': True, 'objectid': str(indicator.id),
             'is_new_indicator': is_new_indicator, 'object': indicator}
@@ -916,7 +928,7 @@ def ci_search(itype, confidence, impact, actions):
     results = Indicator.objects(__raw__=query).only(*result_filter)
     return results
 
-def set_indicator_type(indicator_id, itype, username):
+def set_indicator_type(indicator_id, itype, user):
     """
     Set the Indicator type.
 
@@ -924,8 +936,8 @@ def set_indicator_type(indicator_id, itype, username):
     :type indicator_id: str
     :param itype: The new indicator type.
     :type itype: str
-    :param username: The user updating the indicator.
-    :type username: str
+    :param user: The user updating the indicator.
+    :type user: str
     :returns: dict with key "success" (boolean)
     """
 
@@ -939,7 +951,7 @@ def set_indicator_type(indicator_id, itype, username):
     else:
         try:
             indicator.ind_type = itype
-            indicator.save(username=username)
+            indicator.save(username=user)
             return {'success': True}
         except ValidationError:
             return {'success': False}
@@ -1135,7 +1147,7 @@ def ci_update(id_, ci_type, value, user, **kwargs):
     :param value: The value to set.
     :type value: str ("unknown", "benign", "low", "medium", "high")
     :param user: The user updating this indicator.
-    :type analyst: str
+    :type user: str
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
@@ -1156,7 +1168,7 @@ def ci_update(id_, ci_type, value, user, **kwargs):
     else:
         return {'success': False, 'message': 'Invalid CI type'}
 
-def create_indicator_and_ip(type_, id_, ip, analyst):
+def create_indicator_and_ip(type_, id_, ip, user):
     """
     Add indicators for an IP address.
 
@@ -1167,8 +1179,8 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
     :type id_: str
     :param ip: The IP address to generate an indicator out of.
     :type ip: str
-    :param analyst: The user adding this indicator.
-    :type analyst: str
+    :param user: The user adding this indicator.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -1185,45 +1197,45 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
         if ip_class:
             ip_class.add_relationship(obj_class,
                                       RelationshipTypes.RELATED_TO,
-                                      analyst=analyst)
+                                      analyst=user)
         else:
             ip_class = IP()
             ip_class.ip = ip
             ip_class.source = obj_class.source
-            ip_class.save(username=analyst)
+            ip_class.save(username=user)
             ip_class.add_relationship(obj_class,
                                       RelationshipTypes.RELATED_TO,
-                                      analyst=analyst)
+                                      analyst=user)
 
         # setup Indicator
         message = ""
         if ind_class:
             message = ind_class.add_relationship(obj_class,
                                                  RelationshipTypes.RELATED_TO,
-                                                 analyst=analyst)
+                                                 analyst=user)
             ind_class.add_relationship(ip_class,
                                        RelationshipTypes.RELATED_TO,
-                                       analyst=analyst)
+                                       analyst=user)
         else:
             ind_class = Indicator()
             ind_class.source = obj_class.source
             ind_class.ind_type = ind_type
             ind_class.value = ip
-            ind_class.save(username=analyst)
+            ind_class.save(username=user)
             message = ind_class.add_relationship(obj_class,
                                                  RelationshipTypes.RELATED_TO,
-                                                 analyst=analyst)
+                                                 analyst=user)
             ind_class.add_relationship(ip_class,
                                        RelationshipTypes.RELATED_TO,
-                                       analyst=analyst)
+                                       analyst=user)
 
         # save
         try:
-            obj_class.save(username=analyst)
-            ip_class.save(username=analyst)
-            ind_class.save(username=analyst)
+            obj_class.save(username=user)
+            ip_class.save(username=user)
+            ind_class.save(username=user)
             if message['success']:
-                rels = obj_class.sort_relationships("%s" % analyst, meta=True)
+                rels = obj_class.sort_relationships("%s" % user, meta=True)
                 return {'success': True, 'message': rels, 'value': obj_class.id}
             else:
                 return {'success': False, 'message': message['message']}
@@ -1233,7 +1245,7 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
         return {'success': False,
                 'message': "Could not find %s to add relationships" % type_}
 
-def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
+def create_indicator_from_tlo(tlo_type, tlo, user, source_name=None,
                               tlo_id=None, ind_type=None, value=None,
                               update_existing=True, add_domain=True):
     """
@@ -1243,8 +1255,8 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
     :type tlo_type: str
     :param tlo: A CRITs parent TLO class object
     :type tlo: class - some CRITs TLO
-    :param analyst: The user creating this indicator.
-    :type analyst: str
+    :param user: The user creating this indicator.
+    :type user: str
     :param source_name: The source name for the new source instance that
     records this indicator being added.
     :type source_name: str
@@ -1302,7 +1314,7 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
                                   ctype=ind_type,
                                   threat_type=IndicatorThreatTypes.UNKNOWN,
                                   attack_type=IndicatorAttackTypes.UNKNOWN,
-                                  analyst=analyst,
+                                  user=user,
                                   add_domain=add_domain,
                                   add_relationship=True,
                                   campaign=campaign,
@@ -1319,12 +1331,13 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
                                method= 'Indicator created/updated ' \
                                        'from %s with ID %s' % (tlo_type, tlo.id),
                                date=datetime.datetime.now(),
-                               analyst = analyst)
+                               tlo=source_tlo,
+                               analyst = user)
 
             tlo.add_relationship(ind,
                                  RelationshipTypes.RELATED_TO,
-                                 analyst=analyst)
-            tlo.save(username=analyst)
+                                 analyst=user)
+            tlo.save(username=user)
             for rel in tlo.relationships:
                 if rel.rel_type == "Event":
                     # Get event object to pass in.
@@ -1332,10 +1345,10 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
                     if rel_item:
                         ind.add_relationship(rel_item,
                                              RelationshipTypes.RELATED_TO,
-                                             analyst=analyst)
-            ind.save(username=analyst)
+                                             analyst=user)
+            ind.save(username=user)
             tlo.reload()
-            rels = tlo.sort_relationships("%s" % analyst, meta=True)
+            rels = tlo.sort_relationships("%s" % user, meta=True)
             return {'success': True, 'message': rels,
                     'value': tlo.id, 'indicator': ind}
         else:

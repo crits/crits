@@ -152,7 +152,7 @@ def add_update_ip(request, method):
                                    source_tlp=source_tlp,
                                    campaign=campaign,
                                    confidence=confidence,
-                                   user=request.user,
+                                   user=request.user.username,
                                    bucket_list=bucket_list,
                                    ticket=ticket,
                                    is_add_indicator=add_indicator,
@@ -197,7 +197,7 @@ def remove_ip(request):
                             request.user.username)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
-        
+
     return render_to_response('error.html',
                               {'error':'Expected AJAX/POST'},
                               RequestContext(request))

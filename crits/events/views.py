@@ -52,7 +52,6 @@ def add_event(request):
         event_form = EventForm(request.user, request.POST)
         if event_form.is_valid():
             data = event_form.cleaned_data
-            logger.error(data['source_name'] + data['source_tlp'] + data['source_method'])
             result = add_new_event(title=data['title'],
                                    description=data['description'],
                                    event_type=data['event_type'],

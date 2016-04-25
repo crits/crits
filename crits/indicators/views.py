@@ -52,10 +52,10 @@ def indicator(request, indicator_id):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
+    user = request.user.username
     template = "indicator_detail.html"
     (new_template, args) = get_indicator_details(indicator_id,
-                                                 analyst)
+                                                 user)
     if new_template:
         template = new_template
     return render_to_response(template,
@@ -127,22 +127,24 @@ def upload_indicator(request):
     """
 
     if request.method == "POST":
-        username = request.user.username
+        user = request.user.username
         failed_msg = ''
         result = None
 
         if request.POST['svalue'] == "Upload CSV":
             form = UploadIndicatorCSVForm(
-                username,
+                user,
                 request.POST,
                 request.FILES)
             if form.is_valid():
                 result = handle_indicator_csv(request.FILES['filedata'],
-                                              request.POST['source'],
-                                              request.POST['method'],
-                                              request.POST['reference'],
-                                              "file",
-                                              username, add_domain=True,
+                                              request.POST['source_name'],
+                                              source_method=request.POST['source_method'],
+                                              source_reference=request.POST['source_reference'],
+                                              source_tlp=request.POST['source_tlp'],
+                                              ctype="file",
+                                              user=user,
+                                              add_domain=True,
                                               related_id=request.POST['related_id'],
                                               related_type=request.POST['related_type'],
                                               relationship_type=request.POST['relationship_type'])
@@ -155,14 +157,15 @@ def upload_indicator(request):
                     failed_msg = '<div>%s</div>' % result['message']
 
         if request.POST['svalue'] == "Upload Text":
-            form = UploadIndicatorTextForm(username, request.POST)
+            form = UploadIndicatorTextForm(user, request.POST)
             if form.is_valid():
                 result = handle_indicator_csv(request.POST['data'],
-                                              request.POST['source'],
-                                              request.POST['method'],
-                                              request.POST['reference'],
-                                              "ti",
-                                              username,
+                                              request.POST['source_name'],
+                                              source_method=request.POST['source_method'],
+                                              source_reference=request.POST['source_reference'],
+                                              source_tlp=request.POST['source_tlp'],
+                                              ctype="ti",
+                                              user=user,
                                               add_domain=True,
                                               related_id=request.POST['related_id'],
                                               related_type=request.POST['related_type'],
@@ -176,18 +179,19 @@ def upload_indicator(request):
                     failed_msg = '<div>%s</div>' % result['message']
 
         if request.POST['svalue'] == "Upload Indicator":
-            form = UploadIndicatorForm(username,
+            form = UploadIndicatorForm(user,
                                        request.POST)
             if form.is_valid():
                 result = handle_indicator_ind(
-                    request.POST['value'],
-                    request.POST['source'],
-                    request.POST['indicator_type'],
-                    request.POST['threat_type'],
-                    request.POST['attack_type'],
-                    username,
-                    request.POST['method'],
-                    request.POST['reference'],
+                    value=request.POST['value'],
+                    source=request.POST['source_name'],
+                    ctype=request.POST['indicator_type'],
+                    threat_type=request.POST['threat_type'],
+                    attack_type=request.POST['attack_type'],
+                    user=user,
+                    source_method=request.POST['source_method'],
+                    source_reference=request.POST['source_reference'],
+                    source_tlp=request.POST['source_tlp'],
                     add_domain=True,
                     description=request.POST['description'],
                     campaign=request.POST['campaign'],
@@ -246,7 +250,7 @@ def add_update_activity(request, method, indicator_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        username = request.user.username
+        user = request.user.username
         form = IndicatorActivityForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
@@ -257,13 +261,13 @@ def add_update_activity(request, method, indicator_id):
             }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                result = activity_add(indicator_id, add, username)
+                result = activity_add(indicator_id, add, user)
             else:
                 date = datetime.datetime.strptime(data['date'],
                                                   settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                result = activity_update(indicator_id, add, username)
+                result = activity_update(indicator_id, add, user)
             if 'object' in result:
                 result['html'] = render_to_string('indicators_activity_row_widget.html',
                                                   {'activity': result['object'],
@@ -289,11 +293,11 @@ def remove_activity(request, indicator_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        analyst = request.user.username
+        user = request.user.username
         date = datetime.datetime.strptime(request.POST['key'],
                                             settings.PY_DATETIME_FORMAT)
         date = date.replace(microsecond=date.microsecond/1000*1000)
-        result = activity_remove(indicator_id, date, analyst)
+        result = activity_remove(indicator_id, date, user)
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
     return HttpResponse({})
@@ -314,11 +318,11 @@ def update_ci(request, indicator_id, ci_type):
 
     if request.method == "POST" and request.is_ajax():
         value = request.POST['value']
-        analyst = request.user.username
+        user = request.user.username
         return HttpResponse(json.dumps(ci_update(indicator_id,
                                                  ci_type,
                                                  value,
-                                                 analyst)),
+                                                 user)),
                             content_type="application/json")
 
 @user_passes_test(user_can_view_data)
@@ -330,7 +334,6 @@ def indicator_and_ip(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
     if request.method == "POST" and request.is_ajax():
         type_ = None
         id_ = None

@@ -418,10 +418,10 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
                                          reference=source_reference,
                                          method=source_method,
                                          tlp=source_tlp,
-                                         analyst=user.username)]
+                                         analyst=user)]
 
     if isinstance(campaign, basestring):
-        c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user.username)
+        c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user)
         campaign = [c]
 
     if campaign:
@@ -452,7 +452,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
 
 
     if is_validate_only == False:
-        ip_object.save(analyst=user.username)
+        ip_object.save(analyst=user)
 
         #set the URL for viewing the new data
         if is_item_new == True:
@@ -493,9 +493,9 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         ip_object.add_relationship(related_obj,
                               relationship_type,
-                              analyst=user.username,
+                              analyst=user,
                               get_rels=False)
-        ip_object.save(username=user.username)
+        ip_object.save(username=user)
 
     # run ip triage
     if is_item_new and is_validate_only == False:
