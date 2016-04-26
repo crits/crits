@@ -24,11 +24,11 @@
 {% if raw_data %}
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
-    <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#highlights_section" id="highlights_button"><span>Highlights</span></a></li>
-    <li><a href="#raw_section" id="raw_button"><span>Raw Data</span></a></li>
-    <li><a href="#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+    <li><a href="{{request.path}}#details_section" id="details_button"><span>Details</span></a></li>
+    <li><a href="{{request.path}}#highlights_section" id="highlights_button"><span>Highlights</span></a></li>
+    <li><a href="{{request.path}}#raw_section" id="raw_button"><span>Raw Data</span></a></li>
+    <li><a href="{{request.path}}#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
+    <li><a href="{{request.path}}#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
 </ul>
 

@@ -2,6 +2,6 @@
 
     {% for tab_template in service_tab_templates %}
         {% if tab_template.0 == relationship.type|lower or tab_template.0 == 'all' %}
-        <li><a href="#{{ tab_template.1 }}" id="{{ tab_template.1 }}_button"><span>{{ tab_template.1|nicify }}</span></a></li>
+        <li><a href="{{request.path}}#{{ tab_template.1 }}" id="{{ tab_template.1 }}_button"><span>{{ tab_template.1|nicify }}</span></a></li>
         {% endif %}
     {% endfor %}

@@ -25,7 +25,7 @@ function highlight_line(line) {
         var me = line_el.find('td.add_highlight');
         me
         .css({
-            'background-image': "url('/css/images/ui-icons_70b2e1_256x240.png')"})
+            'background-image': "url('css/images/ui-icons_70b2e1_256x240.png')"})
         .attr('data-highlighted', 1)
         .attr('title', "Highlighted by " + line[1]);
     }
@@ -403,12 +403,12 @@ $(document).ready(function() {
                 if (data.success) {
                     if (action == "add") {
                         me.css({
-                            'background-image': "url('/css/images/ui-icons_70b2e1_256x240.png')"})
+                            'background-image': "url('css/images/ui-icons_70b2e1_256x240.png')"})
                         .attr('data-highlighted', 1)
                         .attr('title', "You've highlighted this!");
                     } else {
                         me.css({
-                            'background-image': "url('/css/images/ui-icons_222222_256x240.png')"})
+                            'background-image': "url('css/images/ui-icons_222222_256x240.png')"})
                         .attr('title', '')
                         .attr('data-highlighted', 0);
                     }

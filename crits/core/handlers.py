@@ -1026,7 +1026,7 @@ def generate_bucket_jtable(request, option):
               'Sample', 'Signature', 'Target', 'Promote']
     jtopts = {'title': 'Buckets',
               'fields': fields,
-              'listurl': 'jtlist',
+              'listurl': reverse('crits.core.views.bucket_list', args=('jtlist',)),
               'searchurl': reverse('crits.core.views.global_search_listing'),
               'default_sort': 'name ASC',
               'no_sort': ['Promote'],
@@ -3533,7 +3533,7 @@ def login_user(username, password, next_url=None, user_agent=None,
                         raise Exception
                     resolve(urlparse(next_url).path)
                     response['success'] = True
-                    response['message'] = next_url
+                    response['message'] = prefix.rstrip('/') + '/' + next_url.lstrip('/')
                 except Exception:
                     response['success'] = False
                     response['message'] = 'ALERT - attempted open URL redirect attack to %s. Please report this to your system administrator.' % next_url
@@ -4130,7 +4130,7 @@ def generate_sector_jtable(request, option):
               'Sample', 'Signature', 'Target']
     jtopts = {'title': 'Sectors',
               'fields': fields,
-              'listurl': 'jtlist',
+              'listurl': reverse('crits.core.views.sector_list', args=('jtlist',)),
               'searchurl': reverse('crits.core.views.global_search_listing'),
               'default_sort': 'name ASC',
               'no_sort': [],

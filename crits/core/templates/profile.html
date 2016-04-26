@@ -43,15 +43,15 @@
 
 <div class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
-      <li><a href="#user_info_section" id="user_info_button"><span>User Info</span></a></li>
-      <li><a href="#user_preferences_section" id="user_preferences_button"><span>Preferences</span></a></li>
-      <li><a href="#user_logins_section" id="user_logins_button"><span>Login Attempts</span></a></li>
-      <li><a href="#recent_activity_section" id="recent_activity_button"><span>Recent Activity</span></a></li>
-    <li><a href="#subscriptions_section" id="subscriptions_button"><span>Subscriptions ({{ subscription_count }})</span></a></li>
-    <li><a href="#sources_section" id="sources_button"><span>My Sources</span></a></li>
-    <li><a href="#api_section" id="api_button"><span>My API Keys ({{ user_info.api_keys|length }})</span></a></li>
-    <li><a href="#notifications_section" id="notifications_button"><span>Notifications ({{ notifications|length }})</span></a></li>
-    <li><a href="#favorites_section" id="favorites_button"><span>Favorites ({{ total_favorites}})</span></a></li>
+      <li><a href="{{request.path}}#user_info_section" id="user_info_button"><span>User Info</span></a></li>
+      <li><a href="{{request.path}}#user_preferences_section" id="user_preferences_button"><span>Preferences</span></a></li>
+      <li><a href="{{request.path}}#user_logins_section" id="user_logins_button"><span>Login Attempts</span></a></li>
+      <li><a href="{{request.path}}#recent_activity_section" id="recent_activity_button"><span>Recent Activity</span></a></li>
+      <li><a href="{{request.path}}#subscriptions_section" id="subscriptions_button"><span>Subscriptions ({{ subscription_count }})</span></a></li>
+      <li><a href="{{request.path}}#sources_section" id="sources_button"><span>My Sources</span></a></li>
+      <li><a href="{{request.path}}#api_section" id="api_button"><span>My API Keys ({{ user_info.api_keys|length }})</span></a></li>
+      <li><a href="{{request.path}}#notifications_section" id="notifications_button"><span>Notifications ({{ notifications|length }})</span></a></li>
+      <li><a href="{{request.path}}#favorites_section" id="favorites_button"><span>Favorites ({{ total_favorites}})</span></a></li>
     </ul>
 <div id="user_info_section">
     <table class="vertical" width="100%">
@@ -277,28 +277,28 @@
     <div class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
         {% if subscriptions.Sample %}
-        <li><a href="#sample_subscriptions" id="samples_button"><span>Samples ({{ subscriptions.Sample|length }})</span></a></li>
+        <li><a href="{{request.path}}#sample_subscriptions" id="samples_button"><span>Samples ({{ subscriptions.Sample|length }})</span></a></li>
         {% endif %}
         {% if subscriptions.PCAP %}
-        <li><a href="#pcap_subscriptions" id="pcaps_button"><span>PCAPs ({{ subscriptions.PCAP|length }})</span></a></li>
+        <li><a href="{{request.path}}#pcap_subscriptions" id="pcaps_button"><span>PCAPs ({{ subscriptions.PCAP|length }})</span></a></li>
         {% endif %}
         {% if subscriptions.Email %}
-        <li><a href="#email_subscriptions" id="emails_button"><span>Emails ({{ subscriptions.Email|length }})</span></a></li>
+        <li><a href="{{request.path}}#email_subscriptions" id="emails_button"><span>Emails ({{ subscriptions.Email|length }})</span></a></li>
         {% endif %}
         {% if subscriptions.Indicator %}
-        <li><a href="#indicator_subscriptions" id="indicators_button"><span>Indicators ({{ subscriptions.Indicator|length }})</span></a></li>
+        <li><a href="{{request.path}}#indicator_subscriptions" id="indicators_button"><span>Indicators ({{ subscriptions.Indicator|length }})</span></a></li>
         {% endif %}
         {% if subscriptions.Event %}
-        <li><a href="#event_subscriptions" id="events_button"><span>Events ({{ subscriptions.Event|length }})</span></a></li>
+        <li><a href="{{request.path}}#event_subscriptions" id="events_button"><span>Events ({{ subscriptions.Event|length }})</span></a></li>
         {% endif %}
         {% if subscriptions.Domain %}
-        <li><a href="#domain_subscriptions" id="domains_button"><span>Domains ({{ subscriptions.Domain|length }})</span></a></li>
+        <li><a href="{{request.path}}#domain_subscriptions" id="domains_button"><span>Domains ({{ subscriptions.Domain|length }})</span></a></li>
         {% endif %}
         {% if subscriptions.IP %}
-        <li><a href="#ip_subscriptions" id="ips_button"><span>IPs ({{ subscriptions.IP|length }})</span></a></li>
+        <li><a href="{{request.path}}#ip_subscriptions" id="ips_button"><span>IPs ({{ subscriptions.IP|length }})</span></a></li>
         {% endif %}
         {% if subscriptions.Campaign %}
-        <li><a href="#campaign_subscriptions" id="campaigns_button"><span>Campaigns ({{ subscriptions.Campaign|length }})</span></a></li>
+        <li><a href="{{request.path}}#campaign_subscriptions" id="campaigns_button"><span>Campaigns ({{ subscriptions.Campaign|length }})</span></a></li>
         {% endif %}
     </ul>
     {% if subscriptions.Sample %}

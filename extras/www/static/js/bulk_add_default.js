@@ -88,7 +88,7 @@ function clearTableFormatting(table, progress, errors, totalRows) {
     resetLinkColumn(table);
 
     progress.find('#status').attr('data-processed', 0);
-    progress.find('#initial').html("Processing a total of " + totalRows + " rows. <img style='width: 20px', src=\"/images/waiting.gif\"/>");
+    progress.find('#initial').html("Processing a total of " + totalRows + " rows. <img style='width: 20px', src=\"images/waiting.gif\"/>");
 
     var rows = table.handsontable('countRows');
     var cols = table.handsontable('countCols');

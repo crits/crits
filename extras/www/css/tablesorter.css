@@ -15,7 +15,7 @@ table.tablesorter thead tr th, table.tablesorter tfoot tr th {
 */
 table.tablesorter thead tr .header {
 	padding-right: 20px;
-	background-image: url("/images/bg.gif");
+	background-image: url('../images/bg.gif');
 	background-repeat: no-repeat;
 	background-position: center right;
 	cursor: pointer;
@@ -32,10 +32,10 @@ table.tablesorter tbody tr.odd td {
 }
 */
 table.tablesorter thead tr .headerSortUp {
-	background-image: url("/images/asc.gif");
+	background-image: url('../images/asc.gif');
 }
 table.tablesorter thead tr .headerSortDown {
-	background-image: url("/images/desc.gif");
+	background-image: url('../images/desc.gif');
 }
 /*
 table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {

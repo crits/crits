@@ -15,7 +15,7 @@
 
 <div id="tabnav" class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
-    <li><a href="#details_section" id="details_tab"><span>Details</span></a></li>
+    <li><a href="{{request.path}}#details_section" id="details_tab"><span>Details</span></a></li>
     <li><a href="{% url 'crits.actors.views.actors_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="actors_tab"><span>Actors ({{ counts.Actor }})</span></a></li>
     <li><a href="{% url 'crits.backdoors.views.backdoors_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="backdoors_tab"><span>Backdoors ({{ counts.Backdoor }})</span></a></li>
     <li><a href="{% url 'crits.domains.views.domains_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="domains_tab"><span>Domains ({{ counts.Domain }})</span></a></li>

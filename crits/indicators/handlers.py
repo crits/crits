@@ -160,7 +160,7 @@ def generate_indicator_jtable(request, option):
         for field in jtable['fields']:
             if field['fieldname'].startswith("'splunk"):
                 field['display'] = """ function (data) {
-                return '<a href="%s' + data.record.value + '"><img src="/new_images/splunk.png" /></a>';
+                return '<a href="%s' + data.record.value + '"><img src="new_images/splunk.png" /></a>';
                 }
                 """ % config.splunk_search_url
     if option == "inline":

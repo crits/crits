@@ -25,7 +25,7 @@
             dialogLoaded: "",
             loadingTitle: "",
             loadingDialog: '<div style="text-align:center;"><strong>Fetching widgets ...</strong><br>' +
-	                   '<br><img src="/images/chasingloader.gif"></div>',
+	                   '<br><img src="images/chasingloader.gif"></div>',
         },
         _init: function() {
             //      if (this.options.href !== "") {

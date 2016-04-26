@@ -15,11 +15,11 @@
 
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
-    <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#raw_section" id="raw_button"><span>Raw Email</span></a></li>
-    <li><a href="#json_section" id="json_button"><span>JSON View</span></a></li>
-    <li><a href="#yaml_section" id="yaml_button"><span>YAML View</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+    <li><a href="{{request.path}}#details_section" id="details_button"><span>Details</span></a></li>
+    <li><a href="{{request.path}}#raw_section" id="raw_button"><span>Raw Email</span></a></li>
+    <li><a href="{{request.path}}#json_section" id="json_button"><span>JSON View</span></a></li>
+    <li><a href="{{request.path}}#yaml_section" id="yaml_button"><span>YAML View</span></a></li>
+    <li><a href="{{request.path}}#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     </ul>
 <div id="details_section">
@@ -93,7 +93,7 @@
                 {% endif %}
                 {% if splunk_search_url %}
                     <span style="float: right;">
-                        <a class="splunk_link" href="{{ splunk_search_url }}{{ email_field.field_value }}"><img src="/new_images/splunk.png" border="0px"/></a>
+                        <a class="splunk_link" href="{{ splunk_search_url }}{{ email_field.field_value }}"><img src="new_images/splunk.png" border="0px"/></a>
                     </span>
                 {% endif %}
             </td>
