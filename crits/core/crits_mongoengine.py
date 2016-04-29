@@ -454,7 +454,11 @@ class CritsDocument(BaseDocument):
         if hasattr(doc, '_meta'):
             doc._meta['migrated'] = False
             if doc._meta.get('needs_migration', False):
-                doc.migrate()
+                try:
+                    doc.migrate()
+                except Exception as e:
+                    e.tlo = doc.id
+                    raise e
                 doc._meta['migrated'] = True
             if ('schema_version' in doc and
                 'latest_schema_version' in doc._meta and
