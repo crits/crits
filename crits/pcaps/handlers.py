@@ -210,7 +210,7 @@ def generate_pcap_jtable(request, option):
 
 def handle_pcap_file(filename, data, source_name, user=None,
                      description=None, related_id=None, related_md5=None,
-                     related_type=None, method='', reference='',
+                     related_type=None, method='', reference='', tlp='',
                      relationship=None, bucket_list=None, ticket=None):
     """
     Add a PCAP.
@@ -313,6 +313,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
         s = create_embedded_source(source_name,
                                    method=method,
                                    reference=reference,
+                                   tlp=tlp,
                                    analyst=user)
         pcap.add_source(s)
     elif isinstance(source_name, EmbeddedSource):

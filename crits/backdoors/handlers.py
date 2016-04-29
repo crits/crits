@@ -178,8 +178,8 @@ def get_backdoor_details(id_, user):
 
 def add_new_backdoor(name, version=None, aliases=None, description=None,
                      source=None, source_method=None, source_reference=None,
-                     source_tlp=None, campaign=None, confidence=None, 
-                     user=None, bucket_list=None, ticket=None, 
+                     source_tlp=None, campaign=None, confidence=None,
+                     user=None, bucket_list=None, ticket=None,
                      related_id=None,related_type=None, relationship_type=None):
     """
     Add an Backdoor to CRITs.
@@ -283,7 +283,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         if isinstance(campaign, basestring):
             c = EmbeddedCampaign(name=campaign,
                                  confidence=confidence,
-                                 analyst=user)
+                                 analyst=username)
             campaign = [c]
 
         if campaign:
@@ -299,10 +299,10 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
                     backdoor.aliases.append(alias)
 
         if bucket_list:
-            backdoor.add_bucket_list(bucket_list, user)
+            backdoor.add_bucket_list(bucket_list, username)
 
         if ticket:
-            backdoor.add_ticket(ticket, user)
+            backdoor.add_ticket(ticket, username)
 
         backdoor.save(username=username)
 
@@ -320,7 +320,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         retVal['object'] = backdoor
         retVal['id'] = str(backdoor.id)
 
-    # Only relate to the most specific object created. 
+    # Only relate to the most specific object created.
     related_obj = None
     if related_id and related_type:
         related_obj = class_from_id(related_type, related_id)
@@ -333,11 +333,11 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         backdoor.add_relationship(related_obj,
                                   relationship_type,
-                                  analyst=user,
+                                  analyst=username,
                                   get_rels=False)
-        backdoor.save(username=user)
+        backdoor.save(username=username)
         backdoor.reload()
-            
+
     # If we have a family and specific object, attempt to relate the two.
     if len(objs) == 2:
         objs[0].add_relationship(objs[1], RelationshipTypes.RELATED_TO)
@@ -470,4 +470,3 @@ def get_backdoor_names(user, **kwargs):
         if (b.name, b.version) not in names:
             names.append((b.name, b.version))
     return names
-

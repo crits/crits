@@ -162,7 +162,6 @@ def upload_file(request, related_md5=None):
     :type related_md5: str
     :returns: :class:`django.http.HttpResponse`
     """
-
     if request.method == 'POST':
         form = UploadFileForm(request.user, request.POST, request.FILES)
         email_errmsg = None
@@ -173,14 +172,14 @@ def upload_file(request, related_md5=None):
             backdoor = form.cleaned_data['backdoor']
             campaign = form.cleaned_data['campaign']
             confidence = form.cleaned_data['confidence']
-            source = form.cleaned_data['source']
-            method = form.cleaned_data['method']
-            reference = form.cleaned_data['reference']
-            analyst = request.user.username
+            source = form.cleaned_data['source_name']
+            source_method = form.cleaned_data['source_method']
+            source_reference = form.cleaned_data['source_reference']
+            source_tlp = form.cleaned_data['source_tlp']
+            user = request.user.username
             related_id = form.cleaned_data.get('related_id', None)
             related_type = form.cleaned_data.get('related_type', None)
             relationship_type = form.cleaned_data.get('relationship_type', None)
-
 
             if related_md5:
                 reload_page = True
@@ -198,7 +197,7 @@ def upload_file(request, related_md5=None):
                 # If selected, new sample inherits the campaigns of the related sample.
                 if form.cleaned_data['inherit_campaigns']:
                     if campaign:
-                        related_sample.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+                        related_sample.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user))
                     campaign = related_sample.campaign
                 # If selected, new sample inherits the sources of the related sample
                 if form.cleaned_data['inherit_sources']:
@@ -214,7 +213,7 @@ def upload_file(request, related_md5=None):
                 else:
                     if form.cleaned_data['inherit_campaigns']:
                         if  campaign:
-                            related_obj.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+                            related_obj.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user))
                         campaign = related_obj.campaign
 
                     if form.cleaned_data['inherit_sources']:
@@ -232,11 +231,12 @@ def upload_file(request, related_md5=None):
                     result = handle_uploaded_file(
                         request.FILES['filedata'],
                         source,
-                        method=method,
-                        reference=reference,
+                        source_method=source_method,
+                        source_reference=source_reference,
+                        source_tlp=source_tlp,
                         file_format=form.cleaned_data['file_format'],
                         password=form.cleaned_data['password'],
-                        user=analyst,
+                        user=user,
                         campaign=campaign,
                         confidence=confidence,
                         related_md5=related_md5,
@@ -252,11 +252,12 @@ def upload_file(request, related_md5=None):
                     result = handle_uploaded_file(
                         None,
                         source,
-                        method=method,
-                        reference=reference,
+                        source_method=source_method,
+                        source_reference=source_reference,
+                        source_tlp=source_tlp,
                         file_format=form.cleaned_data['file_format'],
                         password=None,
-                        user=analyst,
+                        user=user,
                         campaign=campaign,
                         confidence=confidence,
                         related_md5 = related_md5,

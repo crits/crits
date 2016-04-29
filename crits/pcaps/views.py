@@ -67,20 +67,21 @@ def upload_pcap(request):
             filedata = request.FILES['filedata']
             filename = filedata.name
             data = filedata.read() # XXX: Should be using chunks here.
-            source = cleaned_data.get('source')
+            source = cleaned_data.get('source_name')
+            tlp = cleaned_data.get('source_tlp')
             user = request.user.username
             description = cleaned_data.get('description', '')
             related = cleaned_data.get('related_id', '')
             related_type = cleaned_data.get('related_type', '')
             relationship_type = cleaned_data.get('relationship_type', '')
-            method = cleaned_data.get('method', '') or 'Upload'
-            reference = cleaned_data.get('reference', '')
+            method = cleaned_data.get('source_method', '') or 'Upload'
+            reference = cleaned_data.get('source_reference', '')
             bucket_list=cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket=cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
             status = handle_pcap_file(filename, data, source, user, description,
                                       related_id=related, related_type=related_type,
                                       relationship=relationship_type,
-                                      method=method, reference=reference,
+                                      method=method, reference=reference, tlp=tlp,
                                       bucket_list=bucket_list, ticket=ticket)
             if status['success']:
                 return render_to_response('file_upload_response.html',
