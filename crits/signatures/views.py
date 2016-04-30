@@ -141,7 +141,7 @@ def upload_signature(request, link_id=None):
         if form.is_valid():
             analyst = request.user.username
             data = request.POST.get('data', None)
-            source = form.cleaned_data.get('source')
+            source = form.cleaned_data.get('source_name')
             user = request.user.username
             description = form.cleaned_data.get('description', '')
             title = form.cleaned_data.get('title', None)
@@ -168,15 +168,18 @@ def upload_signature(request, link_id=None):
             link_id = link_id
             bucket_list = form.cleaned_data.get('bucket_list')
             ticket = form.cleaned_data.get('ticket')
-            method = form.cleaned_data.get('method', '') or 'Upload'
-            reference = form.cleaned_data.get('reference', '')
+            source_method = form.cleaned_data.get('source_method', '') or 'Upload'
+            source_reference = form.cleaned_data.get('source_reference', '')
+            source_tlp = form.cleaned_data.get('source_tlp', '')
+
             status = handle_signature_file(data, source, user,
                                           description, title, data_type,
                                           data_type_min_version,
                                           data_type_max_version,
                                           data_type_dependency, link_id,
-                                          method=method,
-                                          reference=reference,
+                                          source_method=source_method,
+                                          source_reference=source_reference,
+                                          source_tlp=source_tlp,
                                           copy_rels=copy_rels,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
@@ -455,4 +458,3 @@ def dependency_autocomplete(request):
         if term:
             return get_dependency_autocomplete(term)
     return HttpResponse({})
-

@@ -250,10 +250,11 @@ def email_yaml_add(request, email_id=None):
         method = method + " - " + yaml_form.cleaned_data['source_method']
 
     obj = handle_yaml(yaml_form.cleaned_data['yaml_data'],
-                      yaml_form.cleaned_data['source'],
-                      yaml_form.cleaned_data['source_reference'],
-                      request.user.username,
-                      method,
+                      yaml_form.cleaned_data['source_name'],
+                      source_reference=yaml_form.cleaned_data['source_reference'],
+                      source_method=method,
+                      source_tlp=yaml_form.cleaned_data['source_tlp'],
+                      user=request.user.username,
                       email_id=email_id,
                       save_unsupported=yaml_form.cleaned_data['save_unsupported'],
                       campaign=yaml_form.cleaned_data['campaign'],
@@ -319,10 +320,11 @@ def email_raw_add(request):
         method = method + " - " + fields_form.cleaned_data['source_method']
 
     obj = handle_pasted_eml(fields_form.cleaned_data['raw_email'],
-                    fields_form.cleaned_data['source'],
-                    fields_form.cleaned_data['source_reference'],
-                    request.user.username,
-                    method,
+                    fields_form.cleaned_data['source_name'],
+                    source_reference=fields_form.cleaned_data['source_reference'],
+                    source_method=method,
+                    source_tlp=fields_form.cleaned_data['source_tlp'],
+                    user=request.user.username,
                     campaign=fields_form.cleaned_data['campaign'],
                     confidence=fields_form.cleaned_data['campaign_confidence'],
                     bucket_list=fields_form.cleaned_data['bucket_list'],
@@ -382,10 +384,10 @@ def email_eml_add(request):
     if eml_form.cleaned_data['source_method']:
         method = method + " - " + eml_form.cleaned_data['source_method']
 
-    obj = handle_eml(data, eml_form.cleaned_data['source'],
-                     eml_form.cleaned_data['source_reference'],
-                     request.user.username,
-                     method,
+    obj = handle_eml(data, eml_form.cleaned_data['source_name'],
+                     source_reference=eml_form.cleaned_data['source_reference'],
+                     source_method=method,
+                     source_tlp=eml_form.cleaned_data['source_tlp'],
                      campaign=eml_form.cleaned_data['campaign'],
                      confidence=eml_form.cleaned_data['campaign_confidence'],
                      bucket_list=eml_form.cleaned_data['bucket_list'],
@@ -432,12 +434,13 @@ def email_outlook_add(request):
         json_reply['message'] = "Form is invalid."
         return render(request, 'file_upload_response.html', {'response': json.dumps(json_reply)})
 
-    analyst = request.user.username
+    user = request.user.username
     method = "Outlook MSG Upload"
     if outlook_form.cleaned_data['source_method']:
         method = method + " - " + outlook_form.cleaned_data['source_method']
-    source = outlook_form.cleaned_data['source']
+    source = outlook_form.cleaned_data['source_name']
     source_reference = outlook_form.cleaned_data['source_reference']
+    source_tlp = outlook_form.cleaned_data['source_tlp']
     password = outlook_form.cleaned_data['password']
     campaign = outlook_form.cleaned_data['campaign']
     campaign_confidence = outlook_form.cleaned_data['campaign_confidence']
@@ -449,14 +452,15 @@ def email_outlook_add(request):
 
     result = handle_msg(request.FILES['msg_file'],
                         source,
-                        source_reference,
-                        analyst,
-                        method,
-                        password,
-                        campaign,
-                        campaign_confidence,
-                        bucket_list,
-                        ticket,
+                        source_reference=source_reference,
+                        source_method=method,
+                        source_tlp=source_tlp,
+                        user=user,
+                        password=password,
+                        campaign=campaign,
+                        confidence=campaign_confidence,
+                        bucket_list=bucket_list,
+                        ticket=ticket,
                         related_id=related_id,
                         related_type=related_type,
                         relationship_type=relationship_type)

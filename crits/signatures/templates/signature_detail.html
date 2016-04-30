@@ -102,6 +102,9 @@
                     <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{signature.status}}</span>
                 </td>
             </tr>
+            {% with tlp=signature.tlp %}
+                {% include "tlp_widget.html" %}
+            {% endwith %}
             {% with sectors=signature.sectors %}
                 {% include "sector_widget.html" %}
             {% endwith %}
@@ -184,4 +187,3 @@
 <script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/diffview.js"></script><script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/jsdiff.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/difflib.js"></script>
 {% endblock %}
-

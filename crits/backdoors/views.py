@@ -64,15 +64,11 @@ def add_backdoor(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-    import logging
-    logger = logging.getLogger("crits")
-    logger.error("in views")
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
         data = request.POST
         form = AddBackdoorForm(request.user, data)
-        logger.error(request.user)
         if form.is_valid():
             cleaned_data = form.cleaned_data
             name = cleaned_data['name']
@@ -91,7 +87,6 @@ def add_backdoor(request):
             related_id = cleaned_data['related_id']
             related_type = cleaned_data['related_type']
             relationship_type = cleaned_data['relationship_type']
-            logger.error('gonna call')
             result = add_new_backdoor(name,
                                       version=version,
                                       aliases=aliases,

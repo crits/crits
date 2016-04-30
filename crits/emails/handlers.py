@@ -441,7 +441,7 @@ def generate_email_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
 
-def handle_email_fields(data, user, method, related_id=None, related_type=None, relationship_type=None):
+def handle_email_fields(data, user, source_method, related_id=None, related_type=None, relationship_type=None):
     """
     Take email fields and convert them into an email object.
 
@@ -449,8 +449,8 @@ def handle_email_fields(data, user, method, related_id=None, related_type=None, 
     :type data: dict
     :param analyst: The user creating this email object.
     :type analyst: str
-    :param method: The method of acquiring this email.
-    :type method: str
+    :param source_method: The method of acquiring this email.
+    :type source_method: str
     :returns: dict with keys:
               "status" (boolean),
               "object" The email object if successful,
@@ -466,17 +466,22 @@ def handle_email_fields(data, user, method, related_id=None, related_type=None, 
     # Date and source are the only required ones.
     # If there is no campaign confidence, default it to low.
     # Remove these items from data so they are not added when merged.
-    sourcename = data.get('source', None)
-    del data['source']
+    sourcename = data.get('source_name', None)
+    del data['source_name']
     if data.get('source_method', None):
-        method = method + " - " + data.get('source_method', None)
+        source_method = source_method + " - " + data.get('source_method', None)
     try:
         del data['source_method']
     except:
         pass
-    reference = data.get('source_reference', None)
+    source_reference = data.get('source_reference', None)
     try:
         del data['source_reference']
+    except:
+        pass
+    source_tlp = data.get('source_tlp', None)
+    try:
+        del data['source_tlp']
     except:
         pass
     bucket_list = data.get('bucket_list', None)
@@ -522,8 +527,9 @@ def handle_email_fields(data, user, method, related_id=None, related_type=None, 
     if ticket:
         new_email.add_ticket(ticket, analyst)
     new_email.source = [create_embedded_source(sourcename,
-                                               reference=reference,
-                                               method=method,
+                                               reference=source_reference,
+                                               method=source_method,
+                                               tlp=source_tlp,
                                                analyst=user)]
 
     if campaign:
@@ -564,8 +570,8 @@ def handle_email_fields(data, user, method, related_id=None, related_type=None, 
 
     return result
 
-def handle_json(data, sourcename, reference, analyst, method,
-                save_unsupported=True, campaign=None, confidence=None,
+def handle_json(data, sourcename, source_reference, source_method, source_tlp,
+                user=None, save_unsupported=True, campaign=None, confidence=None,
                 bucket_list=None, ticket=None):
 
     """
@@ -575,12 +581,14 @@ def handle_json(data, sourcename, reference, analyst, method,
     :type data: dict
     :param sourcename: The name of the source providing this email.
     :type sourcename: str
-    :param reference: The reference to the data from the source.
-    :type reference: str
-    :param analyst: The user creating this email object.
-    :type analyst: str
-    :param method: The method of acquiring this email.
-    :type method: str
+    :param source_reference: The reference to the data from the source.
+    :type source_reference: str
+    :param source_method: The method of acquiring this email.
+    :type source_method: str
+    :param source_tlp: The TLP of the source of this email.
+    :type source_tlp: str
+    :param user: The user creating this email object.
+    :type user: str
     :param save_unsupported: Save any unsupported fields instead of ignoring.
     :type save_unsupported: boolean
     :param campaign: The campaign to attribute to this email.
@@ -617,30 +625,31 @@ def handle_json(data, sourcename, reference, analyst, method,
 
     new_email = dict_to_email(result['data'], save_unsupported=save_unsupported)
     if bucket_list:
-        new_email.add_bucket_list(bucket_list, analyst)
+        new_email.add_bucket_list(bucket_list, user)
     if ticket:
-        new_email.add_ticket(ticket, analyst)
+        new_email.add_ticket(ticket, user)
     if campaign:
         if not confidence:
             confidence = "low"
         ec = EmbeddedCampaign(name=campaign,
                               confidence=confidence,
                               description="",
-                              analyst=analyst,
+                              analyst=user,
                               date=datetime.datetime.now())
         new_email.add_campaign(ec)
 
     result['object'] = new_email
 
     result['object'].source = [create_embedded_source(sourcename,
-                                                    reference=reference,
-                                                    method=method,
-                                                    analyst=analyst)]
+                                                    reference=source_reference,
+                                                    method=source_method,
+                                                    tlp=source_tlp,
+                                                    analyst=user)]
 
     try:
-        result['object'].save(username=analyst)
+        result['object'].save(username=user)
         result['object'].reload()
-        run_triage(result['object'], analyst)
+        run_triage(result['object'], user)
     except Exception, e:
         result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
 
@@ -648,8 +657,8 @@ def handle_json(data, sourcename, reference, analyst, method,
     return result
 
 # if email_id is provided it is the existing email id to modify.
-def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
-                save_unsupported=True, campaign=None, confidence=None,
+def handle_yaml(data, sourcename, source_reference='', source_method='', source_tlp='',
+                user=None, email_id=None, save_unsupported=True, campaign=None, confidence=None,
                 bucket_list=None, ticket=None, related_id=None,
                 related_type=None, relationship_type=None):
     """
@@ -659,12 +668,14 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
     :type data: dict
     :param sourcename: The name of the source providing this email.
     :type sourcename: str
-    :param reference: The reference to the data from the source.
-    :type reference: str
-    :param analyst: The user creating this email object.
-    :type analyst: str
-    :param method: The method of acquiring this email.
-    :type method: str
+    :param source_reference: The reference to the data from the source.
+    :type source_reference: str
+    :param source_method: The method of acquiring this email.
+    :type source_method: str
+    :param source_tlp: The TLP of the source of this email.
+    :type source_tlp: str
+    :param user: The user creating this email object.
+    :type user: str
     :param email_id: The ObjectId of the existing email to update.
     :type email_id: str
     :param save_unsupported: Save any unsupported fields instead of ignoring.
@@ -703,16 +714,16 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
 
     new_email = dict_to_email(result['data'], save_unsupported=save_unsupported)
     if bucket_list:
-        new_email.add_bucket_list(bucket_list, analyst)
+        new_email.add_bucket_list(bucket_list, user)
     if ticket:
-        new_email.add_ticket(ticket, analyst)
+        new_email.add_ticket(ticket, user)
     if campaign:
         if not confidence:
             confidence = "low"
         ec = EmbeddedCampaign(name=campaign,
                               confidence=confidence,
                               description="",
-                              analyst=analyst,
+                              analyst=user,
                               date=datetime.datetime.now())
         new_email.add_campaign(ec)
 
@@ -743,17 +754,18 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
         old_email.merge(tmp, True)
         old_email.source = saved_source
         try:
-            old_email.save(username=analyst)
+            old_email.save(username=user)
         except Exception, e:
             result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
             return result
     else:
         result['object'].source = [create_embedded_source(sourcename,
-                                                        reference=reference,
-                                                        method=method,
-                                                        analyst=analyst)]
+                                                        reference=source_reference,
+                                                        method=source_method,
+                                                        tlp=source_tlp,
+                                                        analyst=user)]
 
-        result['object'].save(username=analyst)
+        result['object'].save(username=user)
 
         # Relate the email to any other object
         related_obj = None
@@ -768,12 +780,12 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
             relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
             result['object'].add_relationship(related_obj,
                                               relationship_type,
-                                              analyst=analyst,
+                                              analyst=user,
                                               get_rels=False)
         try:
-            result['object'].save(username=analyst)
+            result['object'].save(username=user)
             result['object'].reload()
-            run_triage(result['object'], analyst)
+            run_triage(result['object'], user)
         except Exception, e:
             result['reason'] = "Failed to save object.\n<br /><pre>%s</pre>" % str(e)
             return result
@@ -782,8 +794,8 @@ def handle_yaml(data, sourcename, reference, analyst, method, email_id=None,
     return result
 
 
-def handle_msg(data, sourcename, reference, analyst, method, password='',
-               campaign=None, confidence=None, bucket_list=None, ticket=None,
+def handle_msg(data, sourcename, source_reference='', source_method='', source_tlp='',
+               user='', password='', campaign=None, confidence=None, bucket_list=None, ticket=None,
                related_id=None, related_type=None, relationship_type=None):
     """
     Take email in MSG and convert them into an email object.
@@ -792,12 +804,14 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
     :type data: dict
     :param sourcename: The name of the source providing this email.
     :type sourcename: str
-    :param reference: The reference to the data from the source.
-    :type reference: str
-    :param analyst: The user creating this email object.
-    :type analyst: str
-    :param method: The method of acquiring this email.
-    :type method: str
+    :param source_reference: The reference to the data from the source.
+    :type source_reference: str
+    :param source_method: The method of acquiring this email.
+    :type source_method: str
+    :param source_tlp: The TLP of the source of this email.
+    :type source_tlp: str
+    :param user: The user creating this email object.
+    :type user: str
     :param password: The password for the attachment.
     :type password: str
     :param campaign: The campaign to attribute to this email.
@@ -814,6 +828,10 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
               "message" (str)
               "reason" (str).
     """
+    import logging
+    logger = logging.getLogger("crits")
+
+    logger.error("MSG File")
     response = {'status': False}
 
     result = parse_ole_file(data)
@@ -822,8 +840,9 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
         response['reason'] = result['error']
         return response
 
-    result['email']['source'] = sourcename
-    result['email']['source_reference'] = reference
+    result['email']['source_name'] = sourcename
+    result['email']['source_reference'] = source_reference
+    result['email']['source_tlp'] = source_tlp
     result['email']['campaign'] = campaign
     result['email']['campaign_confidence'] = confidence
     result['email']['bucket_list'] = bucket_list
@@ -833,7 +852,7 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
         result['email']['isodate'] = date_parser(result['email']['date'],
                                                  fuzzy=True)
 
-    obj = handle_email_fields(result['email'], analyst, method,
+    obj = handle_email_fields(result['email'], source_method=source_method, user=user,
                               related_id=related_id, related_type=related_type, relationship_type=relationship_type)
 
     if not obj["status"]:
@@ -859,8 +878,8 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
             try:
                 cleaned_data = {'file_format': file_format,
                                 'password': password}
-                r = create_email_attachment(email, cleaned_data, analyst, sourcename,
-                                        method, reference, campaign, confidence,
+                r = create_email_attachment(email, cleaned_data, user, sourcename,
+                                        source_method, source_reference, source_tlp, campaign, confidence,
                                         "", "", file.get('data', ''), file.get('name', ''))
                 if 'success' in r:
                     if not r['success']:
@@ -881,8 +900,8 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
     response['obj_id'] = obj['object'].id
     return response
 
-def handle_pasted_eml(data, sourcename, reference, analyst, method,
-                      parent_type=None, parent_id=None, campaign=None,
+def handle_pasted_eml(data, sourcename, source_reference='', source_method='', source_tlp='',
+                      user=None, parent_type=None, parent_id=None, campaign=None,
                       confidence=None, bucket_list=None, ticket=None,
                       related_id=None, related_type=None, relationship_type=None):
     """
@@ -892,12 +911,14 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
     :type data: dict
     :param sourcename: The name of the source providing this email.
     :type sourcename: str
-    :param reference: The reference to the data from the source.
-    :type reference: str
-    :param analyst: The user creating this email object.
-    :type analyst: str
-    :param method: The method of acquiring this email.
-    :type method: str
+    :param source_reference: The reference to the data from the source.
+    :type source_reference: str
+    :param source_method: The method of acquiring this email.
+    :type source_method: str
+    :param source_tlp: The TLP of the source of this email.
+    :type source_tlp: str
+    :param user: The user creating this email object.
+    :type user: str
     :param parent_type: The top-level object type of the parent.
     :type parent_type: str
     :param parent_id: The ObjectId of the parent.
@@ -942,13 +963,24 @@ def handle_pasted_eml(data, sourcename, reference, analyst, method,
             line = " %s" % line
         emldata.append(line)
     emldata = "\n".join(emldata)
-    return handle_eml(emldata, sourcename, reference, analyst, method, parent_type,
-                      parent_id, campaign, confidence, bucket_list, ticket,
-                      related_id=related_id, related_type=related_type, relationship_type=relationship_type)
+    return handle_eml(emldata, sourcename,
+                      source_reference=source_reference,
+                      source_method=source_method,
+                      source_tlp=source_tlp,
+                      user=user,
+                      parent_type=parent_type,
+                      parent_id=parent_id,
+                      campaign=campaign,
+                      confidence=confidence,
+                      bucket_list=bucket_list,
+                      ticket=ticket,
+                      related_id=related_id,
+                      related_type=related_type,
+                      relationship_type=relationship_type)
 
 
-def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
-               parent_id=None, campaign=None, confidence=None, bucket_list=None,
+def handle_eml(data, sourcename, source_reference=None, source_method=None, source_tlp=None,
+               user=None, parent_type=None, parent_id=None, campaign=None, confidence=None, bucket_list=None,
                ticket=None, related_id=None, related_type=None, relationship_type=None):
     """
     Take email in EML and convert them into an email object.
@@ -957,12 +989,14 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
     :type data: dict
     :param sourcename: The name of the source providing this email.
     :type sourcename: str
-    :param reference: The reference to the data from the source.
-    :type reference: str
-    :param analyst: The user creating this email object.
-    :type analyst: str
-    :param method: The method of acquiring this email.
-    :type method: str
+    :param source_reference: The reference to the data from the source.
+    :type source_reference: str
+    :param source_method: The method of acquiring this email.
+    :type source_method: str
+    :param source_tlp: The TLP of the source of this email.
+    :type source_tlp: str
+    :param user: The user creating this email object.
+    :type user: struser
     :param parent_type: The top-level object type of the parent.
     :type parent_type: str
     :param parent_id: The ObjectId of the parent.
@@ -1114,34 +1148,35 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
     new_email = dict_to_email(result['data'])
     if bucket_list:
-        new_email.add_bucket_list(bucket_list, analyst)
+        new_email.add_bucket_list(bucket_list, user)
     if ticket:
-        new_email.add_ticket(ticket, analyst)
+        new_email.add_ticket(ticket, user)
     if campaign:
         if not confidence:
             confidence = "low"
         ec = EmbeddedCampaign(name=campaign,
                               confidence=confidence,
                               description="",
-                              analyst=analyst,
+                              analyst=user,
                               date=datetime.datetime.now())
         new_email.add_campaign(ec)
 
     result['object'] = new_email
 
     result['object'].source = [create_embedded_source(sourcename,
-                                                      reference=reference,
-                                                      method=method,
-                                                      analyst=analyst)]
+                                                      reference=source_reference,
+                                                      method=source_method,
+                                                      tlp=source_tlp,
+                                                      analyst=user)]
 
     # Save the Email first, so we can have the id to use to create
     # relationships.
     if not result['object'].date:
         result['object'].date = None
     try:
-        result['object'].save(username=analyst)
+        result['object'].save(username=user)
         result['object'].reload()
-        run_triage(result['object'], analyst)
+        run_triage(result['object'], user)
     except Exception, e:
         result['reason'] = "Failed1 to save email.\n<br /><pre>" + \
             str(e) + "</pre>"
@@ -1154,7 +1189,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
             rel_type = RelationshipTypes.CONTAINED_WITHIN
             ret = result['object'].add_relationship(rel_item,
                                                     rel_type,
-                                                    analyst=analyst,
+                                                    analyst=user,
                                                     get_rels=False)
             if not ret['success']:
                 result['reason'] = "Failed to create relationship.\n<br /><pre>"
@@ -1163,7 +1198,7 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
 
         # Save the email again since it now has a new relationship.
         try:
-            result['object'].save(username=analyst)
+            result['object'].save(username=user)
         except Exception, e:
             result['reason'] = "Failed to save email.\n<br /><pre>"
             + str(e) + "</pre>"
@@ -1182,13 +1217,13 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         result['object'].add_relationship(related_obj,
                                           relationship_type,
-                                          analyst=analyst,
+                                          analyst=user,
                                           get_rels=False)
         #result['object'].save(username=analyst)
 
         # Save the email again since it now has a new relationship.
         try:
-            result['object'].save(username=analyst)
+            result['object'].save(username=user)
         except Exception, e:
             result['reason'] = "Failed to save email.\n<br /><pre>"
             + str(e) + "</pre>"
@@ -1199,10 +1234,10 @@ def handle_eml(data, sourcename, reference, analyst, method, parent_type=None,
         if handle_file(attachment['filename'],
                        attachment['blob'],
                        sourcename,
-                       method='eml_processor',
-                       reference=reference,
+                       source_method='eml_processor',
+                       source_reference=source_reference,
                        related_id=result['object'].id,
-                       user=analyst,
+                       user=user,
                        md5_digest=md5_,
                        related_type='Email',
                        campaign=campaign,
@@ -1281,7 +1316,7 @@ def dict_to_email(d, save_unsupported=True):
     crits_email.merge(d)
     return crits_email
 
-def update_email_header_value(email_id, type_, value, analyst):
+def update_email_header_value(email_id, type_, value, user):
     """
     Update a header value for an email.
 
@@ -1291,8 +1326,8 @@ def update_email_header_value(email_id, type_, value, analyst):
     :type type_: str
     :param value: The header value.
     :type value: str
-    :param analyst: The user updating the header field.
-    :type analyst: str
+    :param user: The user updating the header field.
+    :type user: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -1317,7 +1352,7 @@ def update_email_header_value(email_id, type_, value, analyst):
             if type_ == 'date':
                 isodate = date_parser(value, fuzzy=True)
                 email.isodate = isodate
-            email.save(username=analyst)
+            email.save(username=user)
             if type_ == 'date':
                 result = {'success': True,
                           'message': "Successfully updated email",
@@ -1342,7 +1377,7 @@ def update_email_header_value(email_id, type_, value, analyst):
     return result
 
 def create_indicator_from_header_field(email, header_field, ind_type,
-                                       analyst, request):
+                                       user, request):
     """
     Create an indicator out of the header field.
 
@@ -1352,8 +1387,8 @@ def create_indicator_from_header_field(email, header_field, ind_type,
     :type header_field: str
     :param ind_type: The Indicator type to use.
     :type ind_type: str
-    :param analyst: The user updating the header field.
-    :type analyst: str
+    :param user: The user updating the header field.
+    :type user: str
     :param request: The Django request.
     :type request: :class:`django.http.HttpRequest`
     :returns: dict with keys:
@@ -1384,15 +1419,15 @@ def create_indicator_from_header_field(email, header_field, ind_type,
                                         ind_type,
                                         threat_type=IndicatorThreatTypes.UNKNOWN,
                                         attack_type=IndicatorAttackTypes.UNKNOWN,
-                                        analyst=analyst)
+                                        analyst=user)
     if newindicator.get('objectid'):
         indicator = Indicator.objects(id=newindicator['objectid']).first()
         results = email.add_relationship(indicator,
                                          RelationshipTypes.RELATED_TO,
-                                         analyst=analyst,
+                                         analyst=user,
                                          get_rels=True)
         if results['success']:
-            email.save(username=analyst)
+            email.save(username=user)
             relationship = {'type': 'Email', 'value': email.id}
             message = render_to_string('relationships_listing_widget.html',
                                         {'relationship': relationship,
@@ -1412,8 +1447,8 @@ def create_indicator_from_header_field(email, header_field, ind_type,
 
     return result
 
-def create_email_attachment(email, cleaned_data, analyst, source, method="Upload",
-                            reference="", campaign=None, confidence='low',
+def create_email_attachment(email, cleaned_data, user, source, source_method="Upload",
+                            source_reference="", source_tlp="", campaign=None, confidence='low',
                             bucket_list=None, ticket=None, filedata=None,
                             filename=None, md5=None, email_addr=None, inherit_sources=False):
     """
@@ -1427,10 +1462,12 @@ def create_email_attachment(email, cleaned_data, analyst, source, method="Upload
     :type analyst: str
     :param source: The name of the source.
     :type source: str
-    :param method: The method for this file upload.
-    :type method: str
-    :param reference: The source reference.
-    :type reference: str
+    :param source_method: The method for this file upload.
+    :type source_method: str
+    :param source_reference: The source reference.
+    :type source_reference: str
+    :param source_tlp: The source TLP.
+    :type source_tlp: str
     :param campaign: The campaign to attribute to this attachment.
     :type campaign: str
     :param confidence: The campaign confidence.
@@ -1460,7 +1497,7 @@ def create_email_attachment(email, cleaned_data, analyst, source, method="Upload
     # If selected, new sample inherits the campaigns of the related email.
     if cleaned_data.get('inherit_campaigns'):
         if campaign:
-            email.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+            email.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user))
         campaign = email.campaign
 
     inherited_source = email.source if inherit_sources else None
@@ -1469,13 +1506,14 @@ def create_email_attachment(email, cleaned_data, analyst, source, method="Upload
         if filedata:
             result = handle_uploaded_file(filedata,
                                           source,
-                                          method,
-                                          reference,
-                                          cleaned_data['file_format'],
-                                          cleaned_data['password'],
-                                          analyst,
-                                          campaign,
-                                          confidence,
+                                          source_method=source_method,
+                                          source_reference=source_reference,
+                                          source_tlp=source_tlp,
+                                          file_format=cleaned_data['file_format'],
+                                          password=cleaned_data['password'],
+                                          user=user,
+                                          campaign=campaign,
+                                          confidence=confidence,
                                           related_id=email.id,
                                           related_type='Email',
                                           filename=filename,
@@ -1487,13 +1525,13 @@ def create_email_attachment(email, cleaned_data, analyst, source, method="Upload
                 md5 = md5.strip().lower()
             result = handle_uploaded_file(None,
                                           source,
-                                          method,
-                                          reference,
-                                          cleaned_data['file_format'],
-                                          None,
-                                          analyst,
-                                          campaign,
-                                          confidence,
+                                          source_method=source_method,
+                                          source_reference=source_reference,
+                                          source_tlp=source_tlp,
+                                          file_format=cleaned_data['file_format'],
+                                          user=user,
+                                          campaign=campaign,
+                                          confidence=confidence,
                                           related_id=email.id,
                                           related_type='Email',
                                           filename=filename,

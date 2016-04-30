@@ -266,7 +266,8 @@ def generate_signature_jtable(request, option):
 def handle_signature_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          data_type_min_version=None, data_type_max_version=None,
-                         data_type_dependency=None, link_id=None, method='', reference='',
+                         data_type_dependency=None, link_id=None,
+                         source_method='', source_reference='', source_tlp='',
                          copy_rels=False, bucket_list=None, ticket=None,
                          related_id=None, related_type=None, relationship_type=None):
     """
@@ -345,7 +346,7 @@ def handle_signature_file(data, source_name, user=None,
     # generate md5 and timestamp
     md5 = hashlib.md5(data).hexdigest()
     timestamp = datetime.datetime.now()
-    
+
     # generate signature
     signature = Signature()
     signature.created = timestamp
@@ -372,17 +373,18 @@ def handle_signature_file(data, source_name, user=None,
     if isinstance(source_name, basestring) and len(source_name) > 0:
         source = create_embedded_source(source_name,
                                    date=timestamp,
-                                   method=method,
-                                   reference=reference,
+                                   method=source_method,
+                                   reference=source_reference,
+                                   tlp=source_tlp,
                                    analyst=user)
         # this will handle adding a new source, or an instance automatically
         signature.add_source(source)
     elif isinstance(source_name, EmbeddedSource):
-        signature.add_source(source_name, method=method, reference=reference)
+        signature.add_source(source_name, method=source_method, reference=source_reference, tlp=source_tlp)
     elif isinstance(source_name, list) and len(source_name) > 0:
         for s in source_name:
             if isinstance(s, EmbeddedSource):
-                signature.add_source(s, method=method, reference=reference)
+                signature.add_source(s, method=source_method, reference=source_reference, source_tlp=source_tlp)
 
     signature.version = len(Signature.objects(link_id=link_id)) + 1
 

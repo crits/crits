@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-
-
 {% block title %} Campaign Detail {% endblock %}
 
 {% block content %}
@@ -10,6 +8,7 @@
     var update_campaign_aliases = "{% url 'crits.campaigns.views.campaign_aliases' %}";
     var campaign_name = "{{ campaign_detail.name|safe }}";
     var campaign_id = "{{campaign.id | escapejs}}"
+</script>
 
 <div id="tabnav" class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
@@ -154,4 +153,3 @@
 {% block javascript_includes %}
  <script type="text/javascript" src="{{ STATIC_URL }}js/campaigns.js"></script>
 {% endblock %}
-
