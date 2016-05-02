@@ -1246,7 +1246,7 @@ def create_indicator_and_ip(type_, id_, ip, user):
                 'message': "Could not find %s to add relationships" % type_}
 
 def create_indicator_from_tlo(tlo_type, tlo, user, source_name=None,
-                              tlo_id=None, ind_type=None, value=None,
+                              source_tlp=None, tlo_id=None, ind_type=None, value=None,
                               update_existing=True, add_domain=True):
     """
     Create an indicator from a Top-Level Object (TLO).
@@ -1309,8 +1309,8 @@ def create_indicator_from_tlo(tlo_type, tlo, user, source_name=None,
     if Indicator.objects(ind_type=ind_type,
                          value=value).first() and not update_existing:
         return {'success': False, 'message': "Indicator already exists"}
-
-    result = handle_indicator_ind(value, source,
+    result = handle_indicator_ind(value,
+                                  source=source,
                                   ctype=ind_type,
                                   threat_type=IndicatorThreatTypes.UNKNOWN,
                                   attack_type=IndicatorAttackTypes.UNKNOWN,
@@ -1331,7 +1331,7 @@ def create_indicator_from_tlo(tlo_type, tlo, user, source_name=None,
                                method= 'Indicator created/updated ' \
                                        'from %s with ID %s' % (tlo_type, tlo.id),
                                date=datetime.datetime.now(),
-                               tlo=source_tlo,
+                               tlp=source_tlp,
                                analyst = user)
 
             tlo.add_relationship(ind,

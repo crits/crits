@@ -397,7 +397,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                                           source_reference=ip_reference,
                                           source_tlp=ip_tlp,
                                           campaign=campaign,
-                                          user=user,
+                                          user=user.username,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
                                           cache=cache)
@@ -435,6 +435,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                                                        ip,
                                                        user.username,
                                                        ip_source,
+                                                       source_tlp=ip_tlp,
                                                        add_domain=False)
                     ip_ind = result.get('indicator')
                     if not result['success']:
@@ -445,6 +446,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                                                    new_domain,
                                                    user.username,
                                                    source_name,
+                                                   source_tlp=tlp,
                                                    add_domain=False)
 
                 if not result['success']:
