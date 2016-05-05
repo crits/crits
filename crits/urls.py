@@ -102,5 +102,5 @@ if settings.DEVEL_INSTANCE:
     if _media_url.startswith('/'):
         _media_url = _media_url[1:]
         urlpatterns.append(
-            url(r'^%s(?P<path>.*)$' % _media_url, serve, {'document_root': settings.MEDIA_ROOT})))
+            url(r'^%s(?P<path>.*)$' % _media_url, serve, {'document_root': settings.MEDIA_ROOT}))
     del(_media_url, serve)
