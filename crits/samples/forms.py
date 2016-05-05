@@ -99,10 +99,10 @@ class UploadFileForm(forms.Form):
                                label=form_consts.Sample.EMAIL_RESULTS)
     backdoor = forms.ChoiceField(widget=forms.Select, required=False,
                                  label=form_consts.Backdoor.NAME)
-    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
-                                          label='Relationship Type',
+                                          label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
