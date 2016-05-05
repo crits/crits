@@ -1,6 +1,6 @@
-from django.conf.urls import patterns
+from django.conf.urls import url
 
-urlpatterns = patterns('crits.notifications.views',
-    (r'^poll/$', 'poll'),
-    (r'^ack/$', 'acknowledge'),
-)
+urlpatterns = [
+    url(r'^poll/$', 'poll', prefix='crits.notifications.views'),
+    url(r'^ack/$', 'acknowledge', prefix='crits.notifications.views'),
+]
