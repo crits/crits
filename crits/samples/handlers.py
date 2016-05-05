@@ -1306,6 +1306,9 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
     reference = rowData.get(form_consts.Sample.SOURCE_REFERENCE, "")
     bucket_list = rowData.get(form_consts.Sample.BUCKET_LIST, "")
     ticket = rowData.get(form_consts.Common.TICKET, "")
+    related_id = rowData.get(form_consts.Common.RELATED_ID, "")
+    related_type = rowData.get(form_consts.Common.RELATED_TYPE, "")
+    relationship_type = rowData.get(form_consts.Common.RELATIONSHIP_TYPE, "")
 
     data = {
         'upload_type': upload_type,
@@ -1326,7 +1329,10 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         'method': method,
         'reference': reference,
         'bucket_list': bucket_list,
-        'ticket': ticket
+        'ticket': ticket,
+        'related_id': related_id,
+        'related_type': related_type,
+        'relationship_type': relationship_type
     }
 
     bound_md5_sample_form = cache.get('sample_form')
