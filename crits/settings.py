@@ -19,7 +19,7 @@ SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 # Version
-CRITS_VERSION = '4-stable'
+CRITS_VERSION = '4-master'
 
 #the following gets the current git hash to be displayed in the footer and
 #hides it if it is not a git repo
@@ -585,14 +585,14 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         #'APP_DIRS': False,'
         'DIRS': _TEMPLATE_DIRS,
- 
+
         'OPTIONS': {
 
             #'dirs' : #_TEMPLATE_DIRS,
             'context_processors' : _TEMPLATE_CONTEXT_PROCESSORS,
             'debug' : _TEMPLATE_DEBUG,
             'loaders' : _TEMPLATE_LOADERS,
-            
+
         },
     },
 ]
