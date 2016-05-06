@@ -133,7 +133,7 @@ def class_from_value(type_, value):
     """
 
     #Quick fail
-    if not type or not value:
+    if not type_ or not value:
         return None
 
     # doing this to avoid circular imports
