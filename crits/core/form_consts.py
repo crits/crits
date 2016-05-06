@@ -46,6 +46,10 @@ class Common(object):
     Signature = "Signature"
     Target = "Target"
 
+    RELATED_ID = "Related ID"
+    RELATED_TYPE = "Related Type"
+    RELATIONSHIP_TYPE = "Relationship Type"
+
     BUCKET_LIST_VARIABLE_NAME = "bucket_list"
     TICKET_VARIABLE_NAME = "ticket"
 
