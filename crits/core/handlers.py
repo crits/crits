@@ -1463,12 +1463,12 @@ def do_add_preferred_actions(obj_type, obj_id, username):
         return {'success': False, 'message': 'Could not find object'}
 
     actions = []
-    now = datetime.datetime.now()
     # Get preferred actions and add them.
     for a in preferred_actions:
         for p in a.preferred:
             if (p.object_type == obj_type and
                 obj.__getattribute__(p.object_field) == p.object_value):
+                now = datetime.datetime.now()
                 action = {'action_type': a.name,
                         'active': 'on',
                         'analyst': username,

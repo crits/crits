@@ -4,6 +4,8 @@ from django.forms.widgets import HiddenInput
 from crits.campaigns.campaign import Campaign
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_item_names
+from crits.core import form_consts
+
 
 from crits.vocabulary.relationships import RelationshipTypes
 
@@ -19,10 +21,10 @@ class AddCampaignForm(forms.Form):
     campaign = forms.CharField(widget=forms.TextInput, required=True)
     aliases = forms.CharField(widget=forms.TextInput, required=False)
     description = forms.CharField(widget=forms.TextInput, required=False)
-    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
-                                          label='Relationship Type',
+                                          label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, *args, **kwargs):
