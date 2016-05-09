@@ -20,6 +20,7 @@ from crits.pcaps.pcap import PCAPAccess
 from crits.raw_data.raw_data import RawDataAccess
 from crits.samples.sample import SampleAccess
 from crits.targets.target import TargetAccess
+from crits.signatures.signature import SignatureAccess
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.source_access import SourceAccess
@@ -104,6 +105,8 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
                                    default=SampleAccess())
     Target = EmbeddedDocumentField(TargetAccess, required=True,
                                    default=TargetAccess())
+    Signature = EmbeddedDocumentField(SignatureAccess, required=True,
+                                      default=SignatureAccess())
 
     # Interfacing
     api_interface = BooleanField(default=False)

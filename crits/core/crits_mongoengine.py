@@ -20,7 +20,7 @@ from mongoengine import QuerySet as QS
 
 from pprint import pformat
 
-from crits.core.user_tools import user_sources
+from crits.core.user_tools import user_sources, get_user_info, get_user_role
 from crits.core.fields import CritsDateTimeField
 from crits.core.class_mapper import class_from_id, class_from_type
 from crits.vocabulary.relationships import RelationshipTypes
@@ -2480,6 +2480,80 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             # the source already will reflect the changes as well
             self.releasability[:] = [r for r in self.releasability if r.name in sources]
 
+    def sanitize_tlo(self, username=None):
+        role = get_user_role(username)[0]
+        permissions = role[self._meta['crits_type']]
+        if not permissions['bucketlist_read']:
+            self.bucket_list = None
+        if not permissions['sectors_read']:
+            self.sectors = None
+        if not permissions['campaigns_read']:
+            self.campaign = None
+        if not permissions['comments_read']:
+            self.comments = None
+        if not permissions['locations_read']:
+            self.locations = None
+        if not permissions['objects_read']:
+            self.objects = None
+        if not permissions['relationships_read']:
+            self.relationships = None
+        if not permissions['releasability_read']:
+            self.releasability = None
+        if not permissions['screenshots_read']:
+            self.screenshots = None
+        if not permissions['services_read']:
+            self.services = None
+        if not permissions['sources_read']:
+            self.sources = None
+        if not permissions['status_read']:
+            self.status = None
+        if not permissions['tickets_read']:
+            self.tickets = None
+
+    def sanitize_actor(self, username=None):
+        role = get_user_role(username)[0]
+        actor_permissions = role['Actor']
+        if not actor_permissions['bucketlist_read']:
+            self.bucket_list = None
+        if not actor_permissions['sectors_read']:
+            self.sectors = None
+        if not actor_permissions['campaigns_read']:
+            self.campaign = None
+        if not actor_permissions['comments_read']:
+            self.comments = None
+        if not actor_permissions['locations_read']:
+            self.locations = None
+        if not actor_permissions['objects_read']:
+            self.objects = None
+        if not actor_permissions['relationships_read']:
+            self.relationships = None
+        if not actor_permissions['releasability_read']:
+            self.releasability = None
+        if not actor_permissions['screenshots_read']:
+            self.screenshots = None
+        if not actor_permissions['services_read']:
+            self.services = None
+        if not actor_permissions['sources_read']:
+            self.sources = None
+        if not actor_permissions['status_read']:
+            self.status = None
+        if not actor_permissions['tickets_read']:
+            self.tickets = None
+        if not actor_permissions['aliases_read']:
+            self.alias = None
+        if not actor_permissions['intended_effects_read']:
+            self.intended_effects = None
+        if not actor_permissions['motivations_read']:
+            self.motivations = None
+        if not actor_permissions['sophistications_read']:
+            self.sophistications = None
+        if not actor_permissions['threat_types_read']:
+            self.threat_types = None
+        if not actor_permissions['actor_identifiers_read']:
+            self.actor_identifiers = None
+
+
+
     def sanitize(self, username=None, sources=None, rels=True):
         """
         Sanitize this top-level object down to only what the user can see based
@@ -2503,6 +2577,11 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             if rels:
                 if hasattr(self, 'relationships'):
                     self.sanitize_relationships(username, sources)
+            self.sanitize_tlo(username)
+            if self._meta['crits_type'] == 'Actor':
+                self.sanitize_actor(username)
+            elif self._meta['crits_type'] == 'Backdoor':
+                self.sanitize_tlo(username)
 
     def get_campaign_names(self):
         """

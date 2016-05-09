@@ -1,12 +1,13 @@
 import uuid
 
-from mongoengine import Document, StringField, IntField, ListField
+from mongoengine import Document, EmbeddedDocument, StringField, IntField, ListField
 from mongoengine import UUIDField
+from mongoengine import IntField, BooleanField
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
-from crits.core.crits_mongoengine import CritsActionsDocument
+from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
+from crits.core.crits_mongoengine import CritsSourceDocument, CritsDocument, CritsSchemaDocument
+from crits.core.crits_mongoengine import CommonAccess, CritsActionsDocument
 
 
 class SignatureDependency(CritsDocument, CritsSchemaDocument, Document):
@@ -98,3 +99,20 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     md5 = StringField()
     title = StringField()
     version = IntField()
+
+class SignatureAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Samples.
+    """
+
+    upload_related_sample = BooleanField(default=False)
+    upload_related_pcap = BooleanField(default=False)
+
+    text_view = BooleanField(default=False)
+    yaml_view = BooleanField(default=False)
+    unrar_sample = BooleanField(default=False)
+    unzip_sample = BooleanField(default=False)
+
+    filename_edit = BooleanField(default=False)
+    filenames_add = BooleanField(default=False)
+    filenames_remove = BooleanField(default=False)

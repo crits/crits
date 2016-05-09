@@ -33,7 +33,6 @@ def is_user_favorite(analyst, type_, id_):
                 return True
     return False
 
-
 def user_sources(username):
     """
     Get the sources for a user.
@@ -56,6 +55,12 @@ def user_sources(username):
             return []
     else:
         return []
+
+def get_user_role(username):
+    from crits.core.role import Role
+    user = get_user_info(username)
+    roles = Role.objects(name=user.roles[0])
+    return roles
 
 def sanitize_sources(username, items):
     """
@@ -102,7 +107,6 @@ def user_can_view_data(user):
     :type user: str
     :returns: True, False
     """
-
     if user.is_active:
         return user.is_authenticated()
     else:
