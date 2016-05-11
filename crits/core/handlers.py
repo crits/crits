@@ -3517,27 +3517,7 @@ def login_user(username, password, next_url=None, user_agent=None,
             response['type'] = "login_successful"
             # Redirect to next or default dashboard
             if next_url is not None and next_url != '' and next_url != 'None':
-                try:
-                    # test that we can go from URL to view to URL
-                    # to validate the URL is something we know about.
-                    # We use get_script_prefix() here to tell us what
-                    # the script prefix is configured in Apache.
-                    # We strip it out so resolve can work properly, and then
-                    # redirect to the full url.
-                    prefix = get_script_prefix()
-                    tmp_url = next_url
-                    if next_url.startswith(prefix):
-                        tmp_url = tmp_url.replace(prefix, '/', 1)
-                    next_url = urlunquote(tmp_url)
-                    if not is_safe_url(next_url):
-                        raise Exception
-                    resolve(urlparse(next_url).path)
-                    response['success'] = True
-                    response['message'] = next_url
-                except Exception:
-                    response['success'] = False
-                    response['message'] = 'ALERT - attempted open URL redirect attack to %s. Please report this to your system administrator.' % next_url
-                    logger.info('ALERT: redirect attack: %s' % next_url)
+                response.update(validate_next(next_url))
                 return response
             response['success'] = True
             if 'message' not in response:
@@ -3550,6 +3530,41 @@ def login_user(username, password, next_url=None, user_agent=None,
     response['success'] = False
     response['type'] = "login_failed"
     response['message'] = error
+    return response
+
+def validate_next(next_url=None):
+    """
+    Validate that the next_url is valid and redirect, or invalid and proceed to
+    the error page.
+
+    :param next_url: The next url to go to.
+    :type next_url: str
+    :returns: dict
+    """
+
+    response = {}
+    try:
+        # test that we can go from URL to view to URL
+        # to validate the URL is something we know about.
+        # We use get_script_prefix() here to tell us what
+        # the script prefix is configured in Apache.
+        # We strip it out so resolve can work properly, and then
+        # redirect to the full url.
+        prefix = get_script_prefix()
+        tmp_url = next_url
+        if next_url.startswith(prefix):
+            tmp_url = tmp_url.replace(prefix, '/', 1)
+        next_url = urlunquote(tmp_url)
+        if not is_safe_url(next_url):
+            raise Exception
+        resolve(urlparse(next_url).path)
+        response['success'] = True
+        response['type'] = "already_authenticated"
+        response['message'] = next_url
+    except Exception:
+        response['success'] = False
+        response['message'] = 'ALERT - attempted open URL redirect attack to %s. Please report this to your system administrator.' % next_url
+        logger.info('ALERT: redirect attack: %s' % next_url)
     return response
 
 def generate_global_search(request):
