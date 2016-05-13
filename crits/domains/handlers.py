@@ -83,7 +83,7 @@ def get_domain_details(domain, analyst):
         args = {'error': error}
         return template, args
 
-    dmain.sanitize_sources(username="%s" % analyst,
+    dmain.sanitize(username="%s" % analyst,
                            sources=allowed_sources)
 
     # remove pending notifications for user

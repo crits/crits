@@ -61,6 +61,8 @@ def get_campaign_details(campaign_name, analyst):
         args = {"error": 'No data exists for this campaign.'}
         return template, args
 
+    campaign_detail.sanitize(username=analyst)
+
     ttp_form = TTPForm()
 
     # remove pending notifications for user
@@ -286,8 +288,8 @@ def generate_campaign_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
 
-def add_campaign(name, description, aliases, analyst, 
-                 bucket_list=None, ticket=None, related_id=None, 
+def add_campaign(name, description, aliases, analyst,
+                 bucket_list=None, ticket=None, related_id=None,
                  related_type=None, relationship_type=None):
     """
     Add a Campaign.
