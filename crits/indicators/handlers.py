@@ -281,16 +281,8 @@ def get_indicator_type_value_pair(field):
     """
 
     # this is an object
-    if field.get("name") != None and field.get("type") != None and field.get("value") != None:
-        name = field.get("name")
-        type = field.get("type")
-        value = field.get("value").lower().strip()
-        full_type = type
-
-        if type != name:
-            full_type = type + " - " + name
-
-        return (full_type, value)
+    if field.get("type") != None and field.get("value") != None:
+        return (field.get("type"), field.get("value").lower().strip())
 
     # this is an email field
     if field.get("field_type") != None and field.get("field_value") != None:
