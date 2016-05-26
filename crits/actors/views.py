@@ -22,7 +22,7 @@ from crits.actors.handlers import set_actor_name
 from crits.actors.handlers import update_actor_aliases
 from crits.core import form_consts
 from crits.core.data_tools import json_handler
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_user_permissions
 
 
 @user_passes_test(user_can_view_data)
@@ -474,9 +474,15 @@ def edit_actor_aliases(request):
         request.user._setup()
         aliases = request.POST.get('aliases', None)
         id_ = request.POST.get('oid', None)
-        result = update_actor_aliases(id_, aliases, request.user)
-        return HttpResponse(json.dumps(result),
-                            content_type="application/json")
+        permissions = get_user_permissions(request.user.username, 'Actor')
+        if permissions['aliases_add']:
+            result = update_actor_aliases(id_, aliases, request.user)
+            return HttpResponse(json.dumps(result),
+                                content_type="application/json")
+        else:
+            return render_to_response("error.html",
+                                      {"error" : 'User does not have permission to edit alias.'},
+                                      RequestContext(request))
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",

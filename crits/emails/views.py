@@ -323,7 +323,6 @@ def email_raw_add(request):
                     fields_form.cleaned_data['source_name'],
                     source_reference=fields_form.cleaned_data['source_reference'],
                     source_method=method,
-                    source_tlp=fields_form.cleaned_data['source_tlp'],
                     user=request.user.username,
                     campaign=fields_form.cleaned_data['campaign'],
                     confidence=fields_form.cleaned_data['campaign_confidence'],

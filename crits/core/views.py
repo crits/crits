@@ -61,6 +61,7 @@ from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, user_sources
 from crits.core.user_tools import get_user_list, get_nav_template
+from crits.core.user_tools import get_user_permissions
 from crits.core.user_tools import get_user_email_notification
 from crits.core.user_tools import get_user_info, get_user_organization
 from crits.core.user_tools import is_user_subscribed, unsubscribe_user
@@ -118,11 +119,17 @@ def update_object_description(request):
         id_ = request.POST['id']
         description = request.POST['description']
         analyst = request.user.username
-        return HttpResponse(json.dumps(description_update(type_,
+        permissions = get_user_permissions(analyst, type_)
+        if permissions['description_edit']:
+            return HttpResponse(json.dumps(description_update(type_,
                                                           id_,
                                                           description,
                                                           analyst)),
                             content_type="application/json")
+        else:
+            return render_to_response("error.html",
+                                      {"error" : 'User does not have permission to edit description.'},
+                                      RequestContext(request))
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -218,6 +225,10 @@ def get_dialog(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
+    import logging
+    logger = logging.getLogger("crits")
+    logger.error(request.GET.get('dialog',''))
+
     dialog = request.GET.get('dialog', '')
     # Regex in urls.py doesn't seem to be working, should sanity check dialog
     return render_to_response(dialog + ".html",
@@ -241,11 +252,18 @@ def update_status(request, type_, id_):
     if request.method == "POST" and request.is_ajax():
         value = request.POST['value']
         analyst = request.user.username
-        return HttpResponse(json.dumps(status_update(type_,
+
+        permissions = get_user_permissions(analyst, type_)
+        if permissions['status_edit']:
+            return HttpResponse(json.dumps(status_update(type_,
                                                      id_,
                                                      value,
                                                      analyst)),
                             content_type="application/json")
+        else:
+            return render_to_response("error.html",
+                                      {"error" : 'User does not have permission to edit status.'},
+                                      RequestContext(request))
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -535,20 +553,37 @@ def source_releasability(request):
         if not isinstance(date, datetime.datetime):
             date = parse(date, fuzzy=True)
         user = str(request.user.username)
+
         if not type_ or not id_ or not name or not action:
             error = "Modifying releasability requires a type, id, source, and action"
             return render_to_response("error.html",
                                       {"error" : error },
                                       RequestContext(request))
         if action  == "add":
-            result = add_releasability(type_, id_, name, user)
+            if get_user_permissions(user, type_)['releasability_add']:
+                result = add_releasability(type_, id_, name, user)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to add releasability.'}
         elif action  == "add_instance":
-            result = add_releasability_instance(type_, id_, name, user,
-                                                note=note)
+            if get_user_permissions(user, type_)['releasability_add']:
+                result = add_releasability_instance(type_, id_, name, user,
+                                                    note=note)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to add releasability.'}
         elif action == "remove":
-            result = remove_releasability(type_, id_, name, user)
+            if get_user_permissions(user, type_)['releasability_delete']:
+                result = remove_releasability(type_, id_, name, user)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to add releasability.'}
         elif action == "remove_instance":
-            result = remove_releasability_instance(type_, id_, name, date, user)
+            if get_user_permissions(user, type_)['releasability_delete']:
+                result = remove_releasability_instance(type_, id_, name, date, user)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to add releasability.'}
         else:
             error = "Unknown releasability action: %s" % action
             return render_to_response("error.html",
@@ -871,7 +906,8 @@ def bucket_modify(request):
         tags = request.POST['tags'].split(",")
         oid = request.POST['oid']
         itype = request.POST['itype']
-        modify_bucket_list(itype, oid, tags, request.user.username)
+        if get_user_permissions(request.user.username,itype)['bucketlist_add']:
+            modify_bucket_list(itype, oid, tags, request.user.username)
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -2044,7 +2080,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
     :returns: :class:`django.http.HttpResponseRedirect`
     """
 
-    if method == "remove" and request.method == "POST" and request.is_ajax():
+    if get_user_permissions(request.user.username, type_)['tickets_delete'] and method == "remove" and request.method == "POST" and request.is_ajax():
         analyst = request.user.username
         date = datetime.datetime.strptime(request.POST['key'],
                                             settings.PY_DATETIME_FORMAT)
@@ -2053,7 +2089,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
 
-    if request.method == "POST" and request.is_ajax():
+    if get_user_permissions(request.user.username, type_)['tickets_add'] and request.method == "POST" and request.is_ajax():
         form = TicketForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
@@ -2223,10 +2259,13 @@ def sector_modify(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        sectors = request.POST['sectors'].split(",")
-        oid = request.POST['oid']
-        itype = request.POST['itype']
-        modify_sector_list(itype, oid, sectors, request.user.username)
+        permissions = get_user_permissions(request.user.username, request.POST['itype'])
+        if permissions['sectors_add']:
+            sectors = request.POST['sectors'].split(",")
+            oid = request.POST['oid']
+            itype = request.POST['itype']
+            modify_sector_list(itype, oid, sectors, request.user.username)
+
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)

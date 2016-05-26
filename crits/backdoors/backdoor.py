@@ -74,5 +74,6 @@ class BackdoorAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
     """
     ACL for Backdoors.
     """
-
+    aliases_edit = BooleanField(default=False)
     description_edit = BooleanField(default=False)
+    version_edit = BooleanField(default=False)

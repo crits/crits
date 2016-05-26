@@ -15,7 +15,7 @@ from crits.backdoors.handlers import generate_backdoor_csv
 from crits.backdoors.handlers import generate_backdoor_jtable
 from crits.core import form_consts
 from crits.core.data_tools import json_handler
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_user_permissions
 
 
 @user_passes_test(user_can_view_data)
@@ -175,7 +175,12 @@ def edit_backdoor_aliases(request):
         aliases = request.POST.get('aliases', None)
         id_ = request.POST.get('oid', None)
         user = request.user.username
-        result = update_backdoor_aliases(id_, aliases, user)
+        if get_user_permissions(user, 'Backdoor')['aliases_edit']:
+            result = update_backdoor_aliases(id_, aliases, user)
+        else:
+            result = {'success':False,
+                      'message':'User does not have permission to modify aliases.'}
+
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
@@ -203,8 +208,15 @@ def edit_backdoor_version(request, id_):
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
                                 content_type="application/json")
-        result = set_backdoor_version(id_, version, user)
-        return HttpResponse(json.dumps(result), content_type="application/json")
+                                
+        if get_user_permissions(user, 'Backdoor')['version_edit']:
+            result = set_backdoor_version(id_, version, user)
+            return HttpResponse(json.dumps(result), content_type="application/json")
+
+        else:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': 'Not all info provided.'}),
+                                content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
