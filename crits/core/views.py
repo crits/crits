@@ -2080,16 +2080,21 @@ def add_update_ticket(request, method, type_=None, id_=None):
     :returns: :class:`django.http.HttpResponseRedirect`
     """
 
-    if get_user_permissions(request.user.username, type_)['tickets_delete'] and method == "remove" and request.method == "POST" and request.is_ajax():
+
+    if method =="remove" and request.method == "POST" and request.is_ajax():
         analyst = request.user.username
         date = datetime.datetime.strptime(request.POST['key'],
                                             settings.PY_DATETIME_FORMAT)
         date = date.replace(microsecond=date.microsecond/1000*1000)
-        result = ticket_remove(type_, id_, date, analyst)
+        if get_user_permissions(analyst, type_)['tickets_delete']:
+            result = ticket_remove(type_, id_, date, analyst)
+        else:
+            result = {"success":False,
+                      "message":"User does not have permission to delete tickets."}
         return HttpResponse(json.dumps(result),
                             mimetype="application/json")
 
-    if get_user_permissions(request.user.username, type_)['tickets_add'] and request.method == "POST" and request.is_ajax():
+    if request.method == "POST" and request.is_ajax():
         form = TicketForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
@@ -2099,13 +2104,21 @@ def add_update_ticket(request, method, type_=None, id_=None):
             }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                result = ticket_add(type_, id_, add, user)
+                if get_user_permissions(request.user.username, type_)['tickets_add']:
+                    result = ticket_add(type_, id_, add, user)
+                else:
+                    result = {"success":False,
+                              "message":"User does not have permission to add tickets."}
             else:
                 date = datetime.datetime.strptime(data['date'],
                                                          settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                result = ticket_update(type_, id_, add, user)
+                if get_user_permissions(request.user.username, type_)['tickets_edit']:
+                    result = ticket_update(type_, id_, add, user)
+                else:
+                    result = {"success":False,
+                              "message":"User does not have permission to modify tickets."}
 
             crits_config = CRITsConfig.objects().first()
             if 'object' in result:
@@ -2121,6 +2134,12 @@ def add_update_ticket(request, method, type_=None, id_=None):
             return HttpResponse(json.dumps({'success':False,
                                             'form': form.as_table()}),
                                 content_type="application/json")
+    else:
+        result = {"success":False,
+                  "message":"User does not have permission to delete tickets."}
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+
     #default. Should we do anything else here?
     return HttpResponse({})
 

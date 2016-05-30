@@ -250,17 +250,36 @@ def actor_tags_modify(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponseRedirect`
     """
+    import logging
+    logger = logging.getLogger('crits')
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
         tag_type = request.POST.get('tag_type', None)
         id_ = request.POST.get('oid', None)
         tags = request.POST.get('tags', None)
+        logger.error(tag_type)
         if not tag_type:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a tag type.'}),
                                 mimetype="application/json")
-        result = update_actor_tags(id_, tag_type, tags, request.user)
+
+        # Get the appropriate permission to look up
+        if tag_type=='ActorMotivation':
+            perm_needed='motivations_edit'
+        elif tag_type=='ActorIntendedEffect':
+            perm_needed='intended_effects_edit'
+        elif tag_type=='ActorSophistication':
+            perm_needed='sophistications_edit'
+        elif tag_type=='ActorThreatType':
+            perm_needed='threat_types'
+
+        if get_user_permissions(request.user.username, 'Actor')[perm_needed]:
+            result = update_actor_tags(id_, tag_type, tags, request.user)
+        else:
+            result = {'success':False,
+                      'message':'User does not have permssion to modify tag.'}
+        logger.error(json.dumps(result))
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
@@ -318,13 +337,17 @@ def add_identifier(request):
                 return HttpResponse(json.dumps({'success': False,
                                                 'message': 'Need a name.'}),
                                     content_type="application/json")
-            result = add_new_actor_identifier(identifier_type,
-                                              identifier,
-                                              source,
-                                              method,
-                                              reference,
-                                              tlp,
-                                              request.user)
+            if get_user_permissions(request.user.username,'Actor')['actor_identifiers_add']:
+                result = add_new_actor_identifier(identifier_type,
+                                                  identifier,
+                                                  source,
+                                                  method,
+                                                  reference,
+                                                  tlp,
+                                                  request.user)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to add actor identifier.'}
             return HttpResponse(json.dumps(result),
                                 content_type="application/json")
         else:
@@ -389,10 +412,14 @@ def edit_attributed_identifier(request):
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
                                 content_type="application/json")
-        result = set_identifier_confidence(id_,
-                                           identifier,
-                                           confidence,
-                                           request.user)
+        if get_user_permissions(request.user.username,'Actor')['actor_identifiers_edit']:
+            result = set_identifier_confidence(id_,
+                                               identifier,
+                                               confidence,
+                                               request.user)
+        else:
+            result = {"success":False,
+                      "message":"User does not have permission to edit identifiers."}
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
@@ -419,9 +446,13 @@ def remove_attributed_identifier(request):
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
                                 content_type="application/json")
-        result = remove_attribution(id_,
-                                    identifier,
-                                    request.user)
+        if get_user_permissions(request.user.username, 'Actor')['actor_identifiers_delete']:
+            result = remove_attribution(id_,
+                                        identifier,
+                                        request.user)
+        else:
+            result = {"success":False,
+                      "message":"User does not have permission to remove attributed identifer."}
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:

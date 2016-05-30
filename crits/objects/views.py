@@ -15,7 +15,7 @@ from crits.objects.handlers import create_indicator_from_object
 from crits.objects.handlers import parse_row_to_bound_object_form, add_new_handler_object_via_bulk
 from crits.objects.forms import AddObjectForm
 from crits.core.handsontable_tools import form_to_dict, parse_bulk_upload, get_field_from_label
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_user_permissions
 
 from crits.vocabulary.objects import ObjectTypes
 
@@ -34,45 +34,50 @@ def add_new_object(request):
         result = ""
         message = ""
         my_type = request.POST['otype']
-        form = AddObjectForm(analyst,
-                             request.POST,
-                             request.FILES)
-        if not form.is_valid() and 'value' not in request.FILES:
-            message = "Invalid Form: %s" % form.errors
-            form = form.as_table()
-            response = json.dumps({'message': message,
-                                   'form': form,
-                                   'success': False})
-            if request.is_ajax():
-                return HttpResponse(response, content_type="application/json")
-            else:
-                return render_to_response("file_upload_response.html",
-                                          {'response':response},
-                                          RequestContext(request))
-        source = request.POST['source']
-        oid = request.POST['oid']
-        object_type = request.POST['object_type']
-        method = request.POST['method']
-        reference = request.POST['reference']
-        add_indicator = request.POST.get('add_indicator', None)
-        data = None
-        # if it was a file upload, handle the file appropriately
-        if 'value' in request.FILES:
-            data = request.FILES['value']
-        value = request.POST.get('value', None)
-        if isinstance(value, basestring):
-            value = value.strip()
-        results = add_object(my_type,
-                             oid,
-                             object_type,
-                             source,
-                             method,
-                             reference,
-                             analyst,
-                             value=value,
-                             file_=data,
-                             add_indicator=add_indicator,
-                             is_sort_relationships=True)
+        if get_user_permissions(analyst, my_type)['objects_add']:
+            form = AddObjectForm(analyst,
+                                 request.POST,
+                                 request.FILES)
+            if not form.is_valid() and 'value' not in request.FILES:
+                message = "Invalid Form: %s" % form.errors
+                form = form.as_table()
+                response = json.dumps({'message': message,
+                                       'form': form,
+                                       'success': False})
+                if request.is_ajax():
+                    return HttpResponse(response, content_type="application/json")
+                else:
+                    return render_to_response("file_upload_response.html",
+                                              {'response':response},
+                                              RequestContext(request))
+            source = request.POST['source']
+            oid = request.POST['oid']
+            object_type = request.POST['object_type']
+            method = request.POST['method']
+            reference = request.POST['reference']
+            add_indicator = request.POST.get('add_indicator', None)
+            data = None
+            # if it was a file upload, handle the file appropriately
+            if 'value' in request.FILES:
+                data = request.FILES['value']
+            value = request.POST.get('value', None)
+            if isinstance(value, basestring):
+                value = value.strip()
+            results = add_object(my_type,
+                                 oid,
+                                 object_type,
+                                 source,
+                                 method,
+                                 reference,
+                                 analyst,
+                                 value=value,
+                                 file_=data,
+                                 add_indicator=add_indicator,
+                                 is_sort_relationships=True)
+
+        else:
+            results = {'success':False,
+                       'message':'User does not have permission to add object'}
         if results['success']:
             subscription = {
                 'type': my_type,
@@ -137,11 +142,15 @@ def bulk_add_object(request):
     formdict = form_to_dict(AddObjectForm(request.user))
 
     if request.method == "POST" and request.is_ajax():
-        response = parse_bulk_upload(
-            request,
-            parse_row_to_bound_object_form,
-            add_new_handler_object_via_bulk,
-            formdict)
+        if get_user_permissions(request.user.username, request.POST['otype'])['objects_add']:
+            response = parse_bulk_upload(
+                request,
+                parse_row_to_bound_object_form,
+                add_new_handler_object_via_bulk,
+                formdict)
+        else:
+            response = {'success':False,
+                        'message':'User does not have permission to add objects'}
 
         return HttpResponse(json.dumps(response,
                             default=json_handler),
@@ -166,44 +175,45 @@ def bulk_add_object_inline(request):
     formdict = form_to_dict(AddObjectForm(request.user))
 
     if request.method == "POST" and request.is_ajax():
-        response = parse_bulk_upload(
-            request,
-            parse_row_to_bound_object_form,
-            add_new_handler_object_via_bulk,
-            formdict)
+        if get_user_permissions(request.user.username, request.POST['otype'])['objects_add']:
+            response = parse_bulk_upload(
+                request,
+                parse_row_to_bound_object_form,
+                add_new_handler_object_via_bulk,
+                formdict)
 
-        secondary_data_array = response.get('secondary')
-        if secondary_data_array:
-            latest_secondary_data = secondary_data_array[-1]
-            class_type = class_from_id(
-                latest_secondary_data['type'],
-                latest_secondary_data['id'])
+            secondary_data_array = response.get('secondary')
+            if secondary_data_array:
+                latest_secondary_data = secondary_data_array[-1]
+                class_type = class_from_id(
+                    latest_secondary_data['type'],
+                    latest_secondary_data['id'])
 
-            subscription = {'type': latest_secondary_data['type'],
-                            'id': latest_secondary_data['id'],
-                            'value': latest_secondary_data['id']}
+                subscription = {'type': latest_secondary_data['type'],
+                                'id': latest_secondary_data['id'],
+                                'value': latest_secondary_data['id']}
 
-            object_listing_html = render_to_string('objects_listing_widget.html',
-                                                   {'objects': class_type.sort_objects(),
-                                                    'subscription': subscription},
-                                                   RequestContext(request))
+                object_listing_html = render_to_string('objects_listing_widget.html',
+                                                       {'objects': class_type.sort_objects(),
+                                                        'subscription': subscription},
+                                                       RequestContext(request))
 
-            response['html'] = object_listing_html
+                response['html'] = object_listing_html
 
-            is_relationship_made = False
-            for secondary_data in secondary_data_array:
-                if secondary_data.get('relationships'):
-                    is_relationship_made = True
-                    break
+                is_relationship_made = False
+                for secondary_data in secondary_data_array:
+                    if secondary_data.get('relationships'):
+                        is_relationship_made = True
+                        break
 
-            if is_relationship_made == True:
-                rel_html = render_to_string('relationships_listing_widget.html',
-                                            {'relationship': subscription,
-                                             'relationships': class_type.sort_relationships(request.user, meta=True)},
-                                            RequestContext(request))
+                if is_relationship_made == True:
+                    rel_html = render_to_string('relationships_listing_widget.html',
+                                                {'relationship': subscription,
+                                                 'relationships': class_type.sort_relationships(request.user, meta=True)},
+                                                RequestContext(request))
 
-                response['rel_msg'] = rel_html
-                response['rel_made'] = True
+                    response['rel_msg'] = rel_html
+                    response['rel_made'] = True
 
         return HttpResponse(json.dumps(response,
                             default=json_handler),
@@ -264,12 +274,16 @@ def update_objects_value(request):
         value = request.POST['value']
         new_value = request.POST['new_value']
         analyst = "%s" % request.user.username
-        results = update_object_value(type_,
-                                      oid,
-                                      object_type,
-                                      value,
-                                      new_value,
-                                      analyst)
+        if get_user_permissions(analyst, object_type)['objects_edit']:
+            results = update_object_value(type_,
+                                          oid,
+                                          object_type,
+                                          value,
+                                          new_value,
+                                          analyst)
+        else:
+            results = {'success':False,
+                       'message':'User does not have permission to modify object.'}
         if results['success']:
             message = "Successfully updated object value: %s" % results['message']
             result = {'success': True, 'message': message}
@@ -368,11 +382,15 @@ def delete_this_object(request):
             message = ""
             object_type = request.POST.get('object_type')
             value = request.POST['value']
-            results = delete_object(type_,
-                                    oid,
-                                    object_type,
-                                    value,
-                                    analyst)
+            if get_user_permissions(analyst,type_)['objects_delete']:
+                results = delete_object(type_,
+                                        oid,
+                                        object_type,
+                                        value,
+                                        analyst)
+            else:
+                results = {'success': False,
+                           'message':'User does not have permission to delete objects.'}
             if results['success']:
                 message = results['message']
                 result = {'success': True, 'message': message}
