@@ -1513,22 +1513,30 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type analyst: str
         :param object_item: An entire object ready to be added.
         :type object_item: :class:`crits.core.crits_mongoengine.EmbeddedObject`
+        :returns: dict with keys:
+                  "success" (boolean)
+                  "message" (str)
+                  "object"  (EmbeddedObject)
         """
 
         if not isinstance(object_item, EmbeddedObject):
             object_item = EmbeddedObject()
             object_item.analyst = analyst
-            object_item.source = [create_embedded_source(source,
-                                                         method=method,
-                                                         reference=reference,
-                                                         analyst=analyst)]
+            src = create_embedded_source(source, method=method,
+                                         reference=reference, analyst=analyst)
+            if not src:
+                return {'success': False, 'message': 'Invalid Source'}
+            object_item.source = [src]
             object_item.object_type = object_type
             object_item.value = value
         for o in self.obj:
-            if o.object_type == object_type and o.value == value:
-                break
-        else:
-            self.obj.append(object_item)
+            if (o.object_type == object_item.object_type
+                and o.value == object_item.value):
+                return {'success': False, 'object': o,
+                        'message': 'Object already exists'}
+
+        self.obj.append(object_item)
+        return {'success': True, 'object': object_item}
 
     def remove_object(self, object_type, value):
         """
