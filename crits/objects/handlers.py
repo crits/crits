@@ -176,6 +176,8 @@ def add_new_handler_object(data, rowData, request, is_validate_only=False,
 
     if object_result['success']:
         result = True
+        if 'message' in object_result:
+            retVal['message'] = object_result['message']
         if is_validate_only == False:
             if obj == None:
                 obj = class_from_id(otype, oid)
