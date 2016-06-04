@@ -258,7 +258,7 @@
 <div style="display: none;">
 
 <div id="dialog-download-indicator" title="Download Indicator">
-    <form id="form-download-indicator" action='{% url "crits.core.views.download_object" %}' method="POST" enctype="multipart/form-data">
+    <form id="form-download-indicator" action='{% url "crits.core.views.download_object" %}' method="POST" enctype="multipart/form-data">{% csrf_token %}
     <table class="form">{{forms.download_form.as_table}}</table>
     </form>
 </div>
