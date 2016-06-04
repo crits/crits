@@ -1134,15 +1134,13 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
         "mimetype" (str)
     """
 
-    result = {'success': False}
-
     json_docs = []
     to_zip = []
     need_filedata = rst_fmt != 'json_no_bin'
     if not need_filedata:
         bin_fmt = None
 
-    # If bin_fmt is not zlib or base64, force it to base64.
+    # If rst_fmt is json & bin_fmt is not zlib or base64, force it to base64.
     if rst_fmt == 'json' and bin_fmt not in ['zlib', 'base64']:
         bin_fmt = 'base64'
 
@@ -1170,26 +1168,29 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
                     obj.filedata.seek(0)
             else:
                 try:
-                    json_docs.append(obj.to_json())
+                    exclude = [] if need_filedata else ['filedata']
+                    json_docs.append((oid, otype, obj.to_json(exclude)))
                 except:
                     pass
 
-    zip_count = len(to_zip)
-    if zip_count <= 0:
-        result['success'] = True
-        result['data'] = json_docs
-        result['filename'] = "crits.json"
-        result['mimetype'] = 'text/json'
+    stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    if len(objs) == 1:
+        fname = "CRITs_%s_%s_%s" % (obj_type, obj_id, stamp)
     else:
-        zip_data = to_zip
+        fname = "CRITs_%s" % stamp
+    if rst_fmt != 'zip': # JSON File
+        return {'success': True,
+                'data': "[%s]" % ",".join(doc[2] for doc in json_docs),
+                'filename': "%s.json" % fname,
+                'mimetype': 'text/json'}
+    else: # ZIP File
         for doc in json_docs:
-            inner_filename = "%s.xml" % doc['id']
-            zip_data.append((inner_filename, doc))
-        result['success'] = True
-        result['data'] = create_zip(zip_data, True)
-        result['filename'] = "CRITS_%s.zip" % datetime.datetime.today().strftime("%Y-%m-%d")
-        result['mimetype'] = 'application/zip'
-    return result
+            inner_filename = "%s-%s.json" % (doc[1], doc[0])
+            to_zip.append((inner_filename, doc[2]))
+        return {'success': True,
+                'data': create_zip(to_zip, True),
+                'filename': "%s.zip" % fname,
+                'mimetype': 'application/zip'}
 
 def collect_objects(obj_type, obj_id, depth_limit, total_limit, rel_limit,
                     object_types, sources, need_filedata=True, depth=0):
