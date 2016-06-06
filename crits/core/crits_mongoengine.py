@@ -452,21 +452,24 @@ class CritsDocument(BaseDocument):
 
         # perform migration, if needed
         if hasattr(doc, '_meta'):
-            doc._meta['migrated'] = False
-            if doc._meta.get('needs_migration', False):
-                try:
-                    doc.migrate()
-                except Exception as e:
-                    e.tlo = doc.id
-                    raise e
-                doc._meta['migrated'] = True
+            if not doc._meta.get('migrated',False):
+                doc._meta['migrated'] = False
             if ('schema_version' in doc and
                 'latest_schema_version' in doc._meta and
                 doc.schema_version < doc._meta['latest_schema_version']):
                 # mark for migration
                 doc._meta['needs_migration'] = True
                 # reload doc to get full document from database
+            if (doc._meta.get('needs_migration', False) and
+                not doc._meta.get('migrated', False)):
+                doc._meta['migrated'] = True
                 doc.reload()
+                try:
+                    doc.migrate()
+                except Exception as e:
+                    e.tlo = doc.id
+                    raise e
+
 
         return doc
 
