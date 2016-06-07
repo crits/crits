@@ -33,7 +33,6 @@ from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
-from crits.core.mongo_tools import get_file
 from crits.core.source_access import SourceAccess
 from crits.core.user_tools import is_admin, user_sources, get_user_organization
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
@@ -172,19 +171,19 @@ def get_sample_details(sample_md5, analyst, format_=None):
 
         # analysis results
         service_results = sample.get_analysis_results()
-        
+
         # template
         from crits.services.core import ServiceManager
         service_manager     = ServiceManager()
         tmp_service_results = []
-        
+
         for result in service_results:
             if hasattr(service_manager.get_service_class(result.service_name), 'template'):
                 result.template = service_manager.get_service_class(result.service_name).template
             tmp_service_results.append(result)
-        
+
         service_results = tmp_service_results
-        
+
 
         args = {'objects': objects,
                 'relationships': relationships,
@@ -507,9 +506,10 @@ def handle_unzip_file(md5, user=None, password=None):
 def unzip_file(filename, user=None, password=None, data=None, source=None,
                method='Zip', reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
-               bucket_list=None, ticket=None, inherited_source=None,
-               is_return_only_md5=True, backdoor_name=None,
-               backdoor_version=None, description=''):
+               relationship_type=None, bucket_list=None, ticket=None,
+               inherited_source=None, is_return_only_md5=True,
+               backdoor_name=None, backdoor_version=None, description=''):
+
     """
     Unzip a file.
 
@@ -618,7 +618,9 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                                              source, method, reference,
                                              related_md5=related_md5,
                                              related_id=related_id,
-                                             related_type=related_type, backdoor='',
+                                             related_type=related_type,
+                                             relationship_type=relationship_type,
+                                             backdoor='',
                                              user=user, campaign=campaign,
                                              confidence=confidence,
                                              bucket_list=bucket_list,
@@ -649,10 +651,10 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
 
 def handle_file(filename, data, source, method='Generic', reference='',
                 related_md5=None, related_id=None, related_type=None,
-                relationship_type=None, backdoor=None, user='', campaign=None, 
+                relationship_type=None, backdoor=None, user='', campaign=None,
                 confidence='low', md5_digest=None, sha1_digest=None,
-                sha256_digest=None, size=0, mimetype=None, bucket_list=None, 
-                ticket=None, relationship=None, inherited_source=None, 
+                sha256_digest=None, size=0, mimetype=None, bucket_list=None,
+                ticket=None, relationship=None, inherited_source=None,
                 is_validate_only=False, is_return_only_md5=True, cache={},
                 backdoor_name=None, backdoor_version=None, description=''):
     """
@@ -927,7 +929,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
         sample.reload()
 
         # run sample triage:
-        if len(AnalysisResult.objects(object_id=str(sample.id))) < 1 and data:
+        if len(AnalysisResult.objects(object_id=str(sample.id))) < 1:
             run_triage(sample, user)
 
         # update relationship if a related top-level object is supplied
@@ -938,6 +940,8 @@ def handle_file(filename, data, source, method='Generic', reference='',
                         relationship = RelationshipTypes.CONTAINED_WITHIN
                     else:
                         relationship=RelationshipTypes.inverse(relationship=relationship_type)
+                        if relationship is None:
+                            relationship = RelationshipTypes.RELATED_TO
                 sample.add_relationship(related_obj,
                                         relationship,
                                         analyst=user,
@@ -1179,6 +1183,9 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
                                    campaign=campaign,
                                    confidence=confidence,
                                    related_md5=related_md5,
+                                   related_id=related_id,
+                                   related_type=related_type,
+                                   relationship_type=relationship_type,
                                    filename=filename,
                                    md5=md5,
                                    sha1=sha1,
@@ -1307,6 +1314,9 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
     bucket_list = rowData.get(form_consts.Sample.BUCKET_LIST, "")
     ticket = rowData.get(form_consts.Common.TICKET, "")
     description = rowData.get(form_consts.Sample.DESCRIPTION, "")
+    related_id = rowData.get(form_consts.Common.RELATED_ID, "")
+    related_type = rowData.get(form_consts.Common.RELATED_TYPE, "")
+    relationship_type = rowData.get(form_consts.Common.RELATIONSHIP_TYPE, "")
 
     data = {
         'upload_type': upload_type,
@@ -1329,6 +1339,9 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         'bucket_list': bucket_list,
         'ticket': ticket,
         'description': description
+        'related_id': related_id,
+        'related_type': related_type,
+        'relationship_type': relationship_type
     }
 
     bound_md5_sample_form = cache.get('sample_form')

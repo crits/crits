@@ -79,10 +79,10 @@ class AddDomainForm(forms.Form):
     add_indicators = forms.BooleanField(required=False,
                                         widget=forms.CheckboxInput(attrs={'class':'bulkskip'}),
                                         label=form_consts.Domain.ADD_INDICATORS)
-    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
-                                          label='Relationship Type',
+                                          label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
@@ -97,7 +97,7 @@ class AddDomainForm(forms.Form):
                                              ('high', 'high')]
 
         self.fields['ip_type'].choices = ip_choices
-        self.fields['ip_type'].initial = "Address - ipv4-addr"
+        self.fields['ip_type'].initial = IPTypes.IPV4_ADDRESS
 
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
