@@ -585,14 +585,14 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         #'APP_DIRS': False,'
         'DIRS': _TEMPLATE_DIRS,
- 
+
         'OPTIONS': {
 
             #'dirs' : #_TEMPLATE_DIRS,
             'context_processors' : _TEMPLATE_CONTEXT_PROCESSORS,
             'debug' : _TEMPLATE_DEBUG,
             'loaders' : _TEMPLATE_LOADERS,
-            
+
         },
     },
 ]

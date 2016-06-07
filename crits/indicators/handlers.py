@@ -281,16 +281,8 @@ def get_indicator_type_value_pair(field):
     """
 
     # this is an object
-    if field.get("name") != None and field.get("type") != None and field.get("value") != None:
-        name = field.get("name")
-        type = field.get("type")
-        value = field.get("value").lower().strip()
-        full_type = type
-
-        if type != name:
-            full_type = type + " - " + name
-
-        return (full_type, value)
+    if field.get("type") != None and field.get("value") != None:
+        return (field.get("type"), field.get("value").lower().strip())
 
     # this is an email field
     if field.get("field_type") != None and field.get("field_value") != None:
@@ -485,9 +477,9 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
 def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
                          analyst, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
-                         campaign_confidence=None, confidence=None, 
+                         campaign_confidence=None, confidence=None,
                          description=None, impact=None,
-                         bucket_list=None, ticket=None, cache={}, 
+                         bucket_list=None, ticket=None, cache={},
                          related_id=None, related_type=None, relationship_type=None):
     """
     Handle adding an individual indicator.
@@ -583,7 +575,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         try:
             return handle_indicator_insert(ind, source, reference, analyst,
                                            method, add_domain, add_relationship, cache=cache,
-                                        related_id=related_id, related_type=related_type, 
+                                        related_id=related_id, related_type=related_type,
                                         relationship_type=relationship_type)
         except Exception, e:
             return {'success': False, 'message': repr(e)}
@@ -591,7 +583,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     return result
 
 def handle_indicator_insert(ind, source, reference='', analyst='', method='',
-                            add_domain=False, add_relationship=False, cache={}, 
+                            add_domain=False, add_relationship=False, cache={},
                             related_id=None, related_type=None, relationship_type=None):
     """
     Insert an individual indicator into the database.
@@ -822,9 +814,8 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     if related_id:
         related_obj = class_from_id(related_type, related_id)
         if not related_obj:
-            retVal['success'] = False
-            retVal['message'] = 'Related Object not found.'
-            return retVal
+            return {'success': False,
+                    'message': 'Related Object not found.'}
 
     indicator.save(username=analyst)
 

@@ -44,9 +44,13 @@ def get_dashboard(user,dashId=None):
             user.save()
     if not dashboard:
         dashboard = Dashboard.objects(name="Default", analystId__not__exists=1, isPublic=True).first()
-        cloneOfDefault = Dashboard.objects(parent=dashboard.id, analystId=user.id).first()
-        if cloneOfDefault:
-            dashboard = cloneOfDefault
+        if dashboard:
+            cloneOfDefault = Dashboard.objects(parent=dashboard.id, analystId=user.id).first()
+            if cloneOfDefault:
+                dashboard = cloneOfDefault
+        else:
+            return {'success': False,
+                'message': "No Default Dashboard. Run 'manage.py create_default_dashboard' to create."}
     dashId = dashboard.id
     tables = []
     savedTables = SavedSearch.objects(dashboard=dashId, isPinned=True)

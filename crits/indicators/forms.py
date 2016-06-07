@@ -67,10 +67,10 @@ class UploadIndicatorCSVForm(forms.Form):
         widget=forms.TextInput(attrs={'size': '90'}),
         label=form_consts.Indicator.SOURCE_REFERENCE,
         required=False)
-    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
-                                          label='Relationship Type',
+                                          label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
@@ -103,11 +103,12 @@ class UploadIndicatorTextForm(forms.Form):
     data = forms.CharField(
         widget=forms.Textarea(attrs={'cols': '80', 'rows': '20'}),
         required=True)
-    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
-                                          label='Relationship Type',
+                                          label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
+
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorTextForm, self).__init__(*args, **kwargs)
         self.fields['source'].choices = [
@@ -150,10 +151,10 @@ class UploadIndicatorForm(forms.Form):
         widget=forms.TextInput(attrs={'size': '90'}),
         label=form_consts.Indicator.SOURCE_REFERENCE,
         required=False)
-    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
-                                          label='Relationship Type',
+                                          label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
@@ -193,7 +194,7 @@ class UploadIndicatorForm(forms.Form):
             ("low", "low"),
             ("medium", "medium"),
             ("high", "high")]
-            
+
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
