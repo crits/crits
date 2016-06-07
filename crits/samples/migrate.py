@@ -11,8 +11,6 @@ def migrate_backdoors(self):
     if 'backdoor' not in self.unsupported_attrs:
         return
 
-    print "Migrating backdoor for %s" % self.id
-
     from crits.backdoors.handlers import add_new_backdoor
     backdoor = self.unsupported_attrs['backdoor']
     name = backdoor.get('name', '')
@@ -34,7 +32,7 @@ def migrate_backdoors(self):
         # Save the object after relationship was created.
         self.save()
     else:
-        print "Error migrating %s: %s" % (self.id, result['message'])
+        print "\n\tError migrating %s: %s" % (self.id, result['message'])
 
 def migrate_exploits(self):
     """
@@ -50,7 +48,6 @@ def migrate_exploits(self):
     from crits.exploits.handlers import add_new_exploit
     exploits = self.unsupported_attrs['exploit']
     for exp in exploits:
-        print "Migrating exploit for %s" % self.id
 
         # Create a new exploit object. Use the source and campaign from the
         # current sample. The "old" exploit format was a list of dictionaries
@@ -66,7 +63,7 @@ def migrate_exploits(self):
             # Save the object after relationship was created.
             self.save()
         else:
-            print "Error migrating %s: %s" % (self.id, result['message'])
+            print "\n\tError migrating %s: %s" % (self.id, result['message'])
 
 
 

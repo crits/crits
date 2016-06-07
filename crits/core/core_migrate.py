@@ -18,7 +18,8 @@ def migrate_analysis_results(self):
                 del result['id']
             config = result.get('config', {})
             ar.config = AnalysisConfig(**config)
-            del result['config']
+            if 'config' in result:
+                del result['config']
             logs = result.get('log', None)
             if logs:
                 for l in logs:
