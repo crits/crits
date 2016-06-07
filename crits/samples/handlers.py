@@ -1338,7 +1338,7 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         'reference': reference,
         'bucket_list': bucket_list,
         'ticket': ticket,
-        'description': description
+        'description': description,
         'related_id': related_id,
         'related_type': related_type,
         'relationship_type': relationship_type
