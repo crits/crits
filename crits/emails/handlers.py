@@ -73,7 +73,7 @@ def create_email_field_dict(field_name,
 
     return {"field_name": field_name,
             "field_type": field_type,
-            "field_value": field_value,
+            "field_value": field_value or "",
             "field_displayed_text": field_displayed_text,
             "is_allow_create_indicator": is_allow_create_indicator,
             "is_href": is_href,

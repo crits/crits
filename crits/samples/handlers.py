@@ -932,7 +932,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
         sample.reload()
 
         # run sample triage:
-        if len(AnalysisResult.objects(object_id=str(sample.id))) < 1 and data:
+        if len(AnalysisResult.objects(object_id=str(sample.id))) < 1:
             run_triage(sample, user)
 
         # update relationship if a related top-level object is supplied
