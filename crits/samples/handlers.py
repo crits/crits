@@ -508,7 +508,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                related_md5=None, related_id=None, related_type='Sample',
                relationship_type=None, bucket_list=None, ticket=None,
                inherited_source=None, is_return_only_md5=True,
-               backdoor_name=None, backdoor_version=None):
+               backdoor_name=None, backdoor_version=None, description=''):
 
     """
     Unzip a file.
@@ -549,6 +549,8 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     :type backdoor_name: str
     :param backdoor_version: Version of backdoor to relate this object to.
     :type backdoor_version: str
+    :param description: A description for this Sample
+    :type description: str
     :returns: list
     :raises: ZipFileError, Exception
     """
@@ -627,7 +629,8 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                                              relationship=relationship,
                                              is_return_only_md5=is_return_only_md5,
                                              backdoor_name=backdoor_name,
-                                             backdoor_version=backdoor_version)
+                                             backdoor_version=backdoor_version,
+                                             description=description)
                     if new_sample:
                         samples.append(new_sample)
                     filehandle.close()
@@ -806,19 +809,17 @@ def handle_file(filename, data, source, method='Generic', reference='',
         sample.sha1 = sha1_digest
         sample.sha256 = sha256_digest
         sample.mimetype = mimetype
-        sample.description = description
     else:
         if filename not in sample.filenames and filename != sample.filename:
             sample.filenames.append(filename)
-
-        if not sample.description:
-            sample.description = description
-        elif sample.description != description:
-            sample.description += "\n" + description
-
         if cached_results != None:
             cached_results[md5_digest] = sample
-
+    
+    if not sample.description:
+        sample.description = description
+    elif sample.description != description:
+        sample.description += "\n" + description
+   
     # this will be overwritten if binary exists
     sample.size = size
 
@@ -995,7 +996,7 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                          mimetype=None, bucket_list=None, ticket=None,
                          inherited_source=None, is_validate_only=False,
                          is_return_only_md5=True, cache={}, backdoor_name=None,
-                         backdoor_version=None):
+                         backdoor_version=None, description=''):
     """
     Handle an uploaded file.
 
@@ -1052,6 +1053,8 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
     :type backdoor_name: str
     :param backdoor_version: Version of backdoor to relate this object to.
     :type backdoor_version: str
+    :param description: A description for this Sample
+    :type description: str
     :returns: list
     """
 
@@ -1097,7 +1100,8 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             inherited_source=inherited_source,
             is_return_only_md5=is_return_only_md5,
             backdoor_name=backdoor_name,
-            backdoor_version=backdoor_version)
+            backdoor_version=backdoor_version,
+            description=description)
     else:
         new_sample = handle_file(filename, data, source, method, reference,
                                  related_md5=related_md5, related_id=related_id,
@@ -1111,7 +1115,8 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                                  is_validate_only=is_validate_only,
                                  is_return_only_md5=is_return_only_md5,
                                  cache=cache, backdoor_name=backdoor_name,
-                                 backdoor_version=backdoor_version)
+                                 backdoor_version=backdoor_version,
+                                 description=description)
 
         if new_sample:
             samples.append(new_sample)
@@ -1166,6 +1171,7 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     reference = data.get('reference')
     bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+    description = data.get('description', '')
     related_id=data.get('related_id')
     related_type=data.get('related_type')
     relationship_type=data.get('relationship_type')
@@ -1190,7 +1196,8 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
                                    ticket=ticket,
                                    is_validate_only=is_validate_only,
                                    is_return_only_md5=False,
-                                   cache=cache)
+                                   cache=cache,
+                                   description=description)
 
     # This block tries to add objects to the item
     if not errors or is_validate_only == True:
@@ -1306,6 +1313,7 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
     reference = rowData.get(form_consts.Sample.SOURCE_REFERENCE, "")
     bucket_list = rowData.get(form_consts.Sample.BUCKET_LIST, "")
     ticket = rowData.get(form_consts.Common.TICKET, "")
+    description = rowData.get(form_consts.Sample.DESCRIPTION, "")
     related_id = rowData.get(form_consts.Common.RELATED_ID, "")
     related_type = rowData.get(form_consts.Common.RELATED_TYPE, "")
     relationship_type = rowData.get(form_consts.Common.RELATIONSHIP_TYPE, "")
@@ -1330,6 +1338,7 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         'reference': reference,
         'bucket_list': bucket_list,
         'ticket': ticket,
+        'description': description
         'related_id': related_id,
         'related_type': related_type,
         'relationship_type': relationship_type
