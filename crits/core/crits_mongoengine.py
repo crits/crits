@@ -461,11 +461,12 @@ class CritsDocument(BaseDocument):
                 doc._meta['needs_migration'] = True
                 # reload doc to get full document from database
             if (doc._meta.get('needs_migration', False) and
-                not doc._meta.get('migrated', False)):
-                doc._meta['migrated'] = True
+                not doc._meta.get('migrating', False)):
+                doc._meta['migrating'] = True
                 doc.reload()
                 try:
                     doc.migrate()
+                    doc._meta['migrated'] = True
                 except Exception as e:
                     e.tlo = doc.id
                     raise e
