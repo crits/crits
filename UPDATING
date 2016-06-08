@@ -3,6 +3,12 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: dlahouss
+Date: 2016-06-08
+
+    Indicator Schema version has incremented.  It is required to run the updating script.
+    upgrade.py -a -s
+
 Author: mgoffin
 Date: 2015-11-19
 
