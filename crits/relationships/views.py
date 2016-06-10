@@ -6,7 +6,7 @@ from django.shortcuts import render_to_response
 from django.template.loader import render_to_string
 from django.template import RequestContext
 
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_user_permissions
 from crits.relationships.forms import ForgeRelationshipForm
 from crits.relationships.handlers import forge_relationship, update_relationship_dates, update_relationship_confidences
 from crits.relationships.handlers import update_relationship_types, delete_relationship, update_relationship_reasons
@@ -28,17 +28,24 @@ def add_new_relationship(request):
         choices = [(c,c) for c in RelationshipTypes.values(sort=True)]
         form.fields['forward_relationship'].choices = choices
         if form.is_valid():
-            cleaned_data = form.cleaned_data;
-            results = forge_relationship(type_=cleaned_data.get('forward_type'),
-                                         id_=cleaned_data.get('forward_value'),
-                                         right_type=cleaned_data.get('reverse_type'),
-                                         right_id=cleaned_data.get('dest_id'),
-                                         rel_type=cleaned_data.get('forward_relationship'),
-                                         rel_date=cleaned_data.get('relationship_date'),
-                                         user=request.user.username,
-                                         rel_reason=cleaned_data.get('rel_reason'),
-                                         rel_confidence=cleaned_data.get('rel_confidence'),
-                                         get_rels=True)
+            cleaned_data = form.cleaned_data
+            # Get user permission to verify the user can forge relationships...
+            # Should we check permission on both the forward and reverse TLO for this?
+
+            if get_user_permissions(request.user.username, cleaned_data.get('forward_type'))['relationships_add']:
+                results = forge_relationship(type_=cleaned_data.get('forward_type'),
+                                             id_=cleaned_data.get('forward_value'),
+                                             right_type=cleaned_data.get('reverse_type'),
+                                             right_id=cleaned_data.get('dest_id'),
+                                             rel_type=cleaned_data.get('forward_relationship'),
+                                             rel_date=cleaned_data.get('relationship_date'),
+                                             user=request.user.username,
+                                             rel_reason=cleaned_data.get('rel_reason'),
+                                             rel_confidence=cleaned_data.get('rel_confidence'),
+                                             get_rels=True)
+            else:
+                results = {"success":False,
+                           "message":"User does not have permission to forge relationships"}
             if results['success'] == True:
                 relationship = {'type': cleaned_data.get('forward_type'),
                                 'value': cleaned_data.get('forward_value')}
@@ -73,14 +80,18 @@ def update_relationship_type(request):
     """
 
     if request.method == 'POST' and request.is_ajax():
-        results = update_relationship_types(left_type=request.POST['my_type'],
-                                            left_id=request.POST['my_value'],
-                                            right_type=request.POST['reverse_type'],
-                                            right_id=request.POST['dest_id'],
-                                            rel_type=request.POST['forward_relationship'],
-                                            rel_date=request.POST['relationship_date'],
-                                            new_type=request.POST['new_relationship'],
-                                            analyst=request.user.username)
+        if get_user_permissions(request.user.username, request.POST['my_type'])['relationships_edit']:
+            results = update_relationship_types(left_type=request.POST['my_type'],
+                                                left_id=request.POST['my_value'],
+                                                right_type=request.POST['reverse_type'],
+                                                right_id=request.POST['dest_id'],
+                                                rel_type=request.POST['forward_relationship'],
+                                                rel_date=request.POST['relationship_date'],
+                                                new_type=request.POST['new_relationship'],
+                                                analyst=request.user.username)
+        else:
+            results = {'success':False,
+                       'message':'User does not have permission to update relationship.'}
         if results['success']:
             message = "Successfully updated relationship: %s" % results['message']
             result = {'success': True, 'message': message}
@@ -109,6 +120,9 @@ def update_relationship_confidence(request):
             result = {'success': False,
                       'message': 'Unknown confidence level.'}
             return HttpResponse(json.dumps(result), content_type="application/json")
+        elif not get_user_permissions(request.user.username, request.POST['my_type'])['relationships_edit']:
+            result = {'success': False,
+                      'message': 'User does not have permission to edit relationship.'}
         else:
             results = update_relationship_confidences(left_type=request.POST['my_type'],
                                                 left_id=request.POST['my_value'],
@@ -209,13 +223,17 @@ def break_relationship(request):
     """
 
     if request.method == 'POST' and request.is_ajax():
-        results = delete_relationship(left_type=request.POST['my_type'],
-                                      left_id=request.POST['my_value'],
-                                      right_type=request.POST['reverse_type'],
-                                      right_id=request.POST['dest_id'],
-                                      rel_type=request.POST['forward_relationship'],
-                                      rel_date=request.POST['relationship_date'],
-                                      analyst=request.user.username)
+        if get_user_permissions(request.user.username, request.POST['reverse_type'])['relationships_delete']:
+            results = delete_relationship(left_type=request.POST['my_type'],
+                                          left_id=request.POST['my_value'],
+                                          right_type=request.POST['reverse_type'],
+                                          right_id=request.POST['dest_id'],
+                                          rel_type=request.POST['forward_relationship'],
+                                          rel_date=request.POST['relationship_date'],
+                                          analyst=request.user.username)
+        else:
+            results = {"success":False,
+                       "message":"User does not have permission to delete relationship."}
         if results['success']:
             relationship = {'type': request.POST['my_type'],
                             'value': request.POST['my_value']}
