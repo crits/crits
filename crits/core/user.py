@@ -984,7 +984,7 @@ class CRITsAuthBackend(object):
                     		filter = '(|(cn='+fusername+')(uid='+fusername+'))'
                     		# use the retrieved dn for the second bind
                         	un = l.search_s(config.ldap_userdn,ldap.SCOPE_SUBTREE,filter,['dn'])[0][0]
-                        except Exception, err:
+                        except Exception as err:
             			logger.error("Error binding to LDAP for: %s" % config.ldap_bind_dn)
             			logger.error("ERR: %s" % err)
                         l.unbind()
@@ -1015,7 +1015,7 @@ class CRITsAuthBackend(object):
                 except ldap.INVALID_CREDENTIALS:
                     l.unbind()
                     logger.info("Invalid LDAP credentials for: %s" % un)
-                except Exception, err:
+                except Exception as err:
                     logger.info("LDAP Auth error: %s" % err)
             # If LDAP auth fails, attempt normal CRITs auth.
             # This will help with being able to use local admin accounts when
