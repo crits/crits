@@ -844,12 +844,12 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             try:
             	logger.info("binding with bind_dn: %s" % config.ldap_bind_dn)
             	l.simple_bind_s(config.ldap_bind_dn, config.ldap_bind_password)
-            	filter = '(|(cn='+self.username+')(uid='+self.username+'))'
+            	filter = '(|(cn='+self.username+')(uid='+self.username+')(mail='+self.username+'))'
             	# use the retrieved dn for the second bind
             	un = l.search_s(config.ldap_userdn,ldap.SCOPE_SUBTREE,filter,['dn'])[0][0]
-            except Exception, err:
-            	logger.error("Error binding to LDAP for: %s" % config.ldap_bind_dn)
-            	logger.error("ERR: %s" % err)
+            except Exception as err:
+            	#logger.error("Error binding to LDAP for: %s" % config.ldap_bind_dn)
+            	logger.error("Error in info_from_ldap: %s" % err)
             l.unbind()
             if len(ldap_server) == 2:
                 l = ldap.initialize('%s:%s' % (url.unparse(),
@@ -871,10 +871,10 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
 	try:
             # Try auth bind first
             l.simple_bind_s(un, password)
-            logger.info("Bound to LDAP for: %s" % self.username)
-        except Exception, e:
-            logger.error("Error binding to LDAP for: %s" % self.username)
-            logger.error("ERR: %s" % e)
+            logger.info("Bound to LDAP for: %s" % un)
+        except Exception as e:
+            #logger.error("Error binding to LDAP for: %s" % self.username)
+            logger.error("info_from_ldap:ERR: %s" % e)
         try:
             uatr = None
             uatr = l.search_s(config.ldap_userdn,
@@ -886,9 +886,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             resp['email'] = uatr['mail'][0]
             resp['result'] = "OK"
             logger.info("Retrieved LDAP info for: %s" % self.username)
-        except Exception, e:
-            logger.error("Error retrieving LDAP info for: %s" % self.username)
-            logger.error("ERR: %s" % e)
+        except Exception as e:
+            #logger.error("Error retrieving LDAP info for: %s" % self.username)
+            logger.error("info_from_ldap ERR: %s" % e)
         l.unbind()
         return resp
 
