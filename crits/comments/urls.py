@@ -1,7 +1,7 @@
 from django.conf.urls import patterns
 
 urlpatterns = patterns('crits.comments.views',
-    (r'^remove/(?P<obj_id>\S+)/$', 'remove_comment'),
+    (r'^remove/(?P<obj_type>\S+)/(?P<obj_id>\S+)/$', 'remove_comment'),
     (r'^(?P<method>\S+)/(?P<obj_type>\S+)/(?P<obj_id>\S+)/$', 'add_update_comment'),
     (r'^activity/$', 'activity'),
     (r'^activity/(?P<atype>\S+)/(?P<value>\S+)/$', 'activity'),

@@ -91,7 +91,7 @@ def get_screenshot(_id=None, tag=None, analyst=None, thumb=False):
     im.save(response, "PNG")
     return response
 
-def add_screenshot(description, tags, source, method, reference, analyst,
+def add_screenshot(description, tags, source, method, reference, tlp, analyst,
                    screenshot, screenshot_ids, oid, otype):
     """
     Add a screenshot or screenshots to a top-level object.
@@ -106,6 +106,8 @@ def add_screenshot(description, tags, source, method, reference, analyst,
     :type method: str
     :param reference: A reference to the source of this screenshot.
     :type reference: str
+    :param tlp: The TLP Sharing of this screenshot.
+    :type tlp: str
     :param analyst: The user adding the screenshot.
     :type analyst: str
     :param screenshot: The screenshot to add.
@@ -144,7 +146,7 @@ def add_screenshot(description, tags, source, method, reference, analyst,
             s = Screenshot.objects(id=screenshot_id).first()
             if s:
                 s.add_source(source=source, method=method, reference=reference,
-                        analyst=analyst)
+                        analyst=analyst, tlp=tlp)
                 s.add_tags(tags)
                 s.save()
                 obj.screenshots.append(screenshot_id)
@@ -164,7 +166,7 @@ def add_screenshot(description, tags, source, method, reference, analyst,
             screenshot.seek(0)
             s.add_screenshot(screenshot, tags)
         s.add_source(source=source, method=method, reference=reference,
-                    analyst=analyst)
+                    analyst=analyst, tlp=tlp)
         if not s.screenshot and not s.thumb:
             result['message'] = "Problem adding screenshot to GridFS. No screenshot uploaded."
             return result

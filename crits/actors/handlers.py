@@ -14,7 +14,7 @@ from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
-from crits.core.user_tools import is_user_favorite
+from crits.core.user_tools import is_user_favorite, get_user_permissions
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
 
@@ -253,11 +253,17 @@ def get_actor_details(id_, user):
         }
 
         #comments
-        comments = {'comments': actor.get_comments(),
-                    'url_key': actor.id}
+        if get_user_permissions(username, 'Actor')['comments_read']:
+            comments = {'comments': actor.get_comments(),
+                        'url_key': actor.id}
+        else:
+            comments = None
 
         #screenshots
-        screenshots = actor.get_screenshots(username)
+        if get_user_permissions(username, 'Actor')['screenshots_read']:
+            screenshots = actor.get_screenshots(username)
+        else:
+            screenshots = None
 
         # favorites
         favorite = is_user_favorite("%s" % username, 'Actor', actor.id)

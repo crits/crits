@@ -2432,6 +2432,9 @@ def add_update_action(request, method, obj_type, obj_id):
     :type obj_id: str
     :returns: :class:`django.http.HttpResponse`
     """
+    import logging
+    logger = logging.getLogger('crits')
+    logger.error('Performing some action')
 
     if request.method == "POST" and request.is_ajax():
         username = request.user.username
@@ -2449,20 +2452,24 @@ def add_update_action(request, method, obj_type, obj_id):
         }
         if method == "add":
             add['date'] = datetime.datetime.now()
+            logger.error("Adding Action")
             result = action_add(obj_type, obj_id, add, username)
         else:
+            logger.error("Editing Action")
             date = datetime.datetime.strptime(data['date'],
                                                 settings.PY_DATETIME_FORMAT)
             date = date.replace(microsecond=date.microsecond/1000*1000)
             add['date'] = date
             result = action_update(obj_type, obj_id, add, username)
-        if 'object' in result:
+            logger.error(result)
+        """if 'object' in result:
             result['html'] = render_to_string('action_row_widget.html',
                                                 {'action': result['object'],
                                                 'obj_type':obj_type,
-                                                'obj_id':obj_id})
+                                                'obj_id':obj_id})"""
+        logger.error(json.dumps(result,default=json_handler))
         return HttpResponse(json.dumps(result,
-                                        default=json_handler),
+                                       default=json_handler),
                             mimetype='application/json')
     return HttpResponse({})
 

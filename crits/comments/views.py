@@ -14,7 +14,7 @@ from crits.comments.forms import AddCommentForm
 from crits.comments.handlers import comment_add, comment_update, comment_remove
 from crits.comments.handlers import get_aggregate_comments, get_activity
 from crits.comments.handlers import generate_comment_jtable, generate_comment_csv
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_user_permissions
 from crits.core.data_tools import json_handler
 from crits.core.views import global_search_listing
 
@@ -74,23 +74,38 @@ def add_update_comment(request, method, obj_type, obj_id):
             subscr = cleaned_data.get('subscribable', False)
             analyst = request.user.username
             if method == "update":
-                return comment_update(cleaned_data, obj_type, obj_id,
-                                      subscr, analyst)
+                if get_user_permissions(analyst, obj_type)['comments_edit']:
+                    return comment_update(cleaned_data, obj_type, obj_id,
+                                          subscr, analyst)
+                else:
+                    result = {"success":False,
+                              "message":"User does not have permission to edit comments."}
+                    return HttpResponse(json.dumps(result),
+                                        content_type="application/json")
             else:
-                return comment_add(cleaned_data, obj_type, obj_id, method,
-                                      subscr, analyst)
+                if get_user_permissions(analyst, obj_type)['comments_edit']:
+                    return comment_add(cleaned_data, obj_type, obj_id, method,
+                                       subscr, analyst)
+                else:
+                    result = {"success":False,
+                              "message":"User does not have permission to add comments."}
+                    return HttpResponse(json.dumps(result),
+                                        content_type="application/json")
+
         return HttpResponse(json.dumps({'success':False,
                                         'form':form.as_table()}),
                             content_type="application/json")
     return render_to_response("error.html", {'error':'Expected AJAX/POST'})
 
 @user_passes_test(user_can_view_data)
-def remove_comment(request, obj_id):
+def remove_comment(request, obj_type, obj_id):
     """
     Remove a comment from a top-level object. Should be an AJAX POST.
 
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
+    :param obj_type: The TLO Type.
+    :type obj_type: str
     :param obj_id: The ObjectId of the top-level object.
     :type obj_id: str
     :returns: :class:`django.http.HttpResponse`
@@ -100,7 +115,11 @@ def remove_comment(request, obj_id):
         analyst = request.user.username
         date = datetime.datetime.strptime(request.POST['key'],
                                           settings.PY_DATETIME_FORMAT)
-        result = comment_remove(obj_id, analyst, date)
+        if get_user_permissions(analyst, obj_type)['comments_delete']:
+            result = comment_remove(obj_id, analyst, date)
+        else:
+            result = {"success":False,
+                      "message":"User does not have permission to remove comments."}
         return HttpResponse(json.dumps(result), content_type="application/json")
     return render_to_response("error.html", {'error':'Expected AJAX/POST'})
 

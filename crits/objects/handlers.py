@@ -680,4 +680,3 @@ def parse_row_to_bound_object_form(request, rowData, cache):
     bound_form.full_clean()
 
     return bound_form
-

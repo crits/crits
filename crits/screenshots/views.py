@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_user_permissions
 from crits.screenshots.handlers import get_screenshots_for_id, get_screenshot
 from crits.screenshots.handlers import add_screenshot, generate_screenshot_jtable
 from crits.screenshots.handlers import delete_screenshot_from_object
@@ -104,17 +104,22 @@ def add_new_screenshot(request):
 
     analyst = request.user.username
     description = request.POST.get('description', None)
-    reference = request.POST.get('reference', None)
-    method = request.POST.get('method', None)
+    reference = request.POST.get('source_reference', None)
+    method = request.POST.get('source_method', None)
+    tlp = request.POST.get('source_tlp', None)
     tags = request.POST.get('tags', None)
-    source = request.POST.get('source', None)
+    source = request.POST.get('source_name', None)
     oid = request.POST.get('oid', None)
     otype = request.POST.get('otype', None)
     screenshot_ids = request.POST.get('screenshot_ids', None)
     screenshot = request.FILES.get('screenshot', None)
 
-    result = add_screenshot(description, tags, source, method, reference,
-                            analyst, screenshot, screenshot_ids, oid, otype)
+    if get_user_permissions(analyst, otype)['screenshots_add']:
+        result = add_screenshot(description, tags, source, method, reference, tlp,
+                                analyst, screenshot, screenshot_ids, oid, otype)
+    else:
+        result = {"success":False,
+                  "message":"User does not have permission to add screenshots."}
 
     return HttpResponse(json.dumps(result),
                         content_type="application/json")
@@ -134,6 +139,10 @@ def remove_screenshot_from_object(request):
     oid = request.POST.get('oid', None)
     sid = request.POST.get('sid', None)
 
-    result = delete_screenshot_from_object(obj, oid, sid, analyst)
+    if get_user_permissions(analyst, obj)['screenshots_delete']:
+        result = delete_screenshot_from_object(obj, oid, sid, analyst)
+    else:
+        result = {"success":False,
+                  "message":"User does not have permission to remove screenshots."}
     return HttpResponse(json.dumps(result),
                         content_type="application/json")

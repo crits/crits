@@ -2487,8 +2487,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             self.sectors = None
         if not permissions['campaigns_read']:
             self.campaign = None
-        if not permissions['comments_read']:
-            self.comments = None
         if not permissions['locations_read']:
             self.locations = None
         if not permissions['objects_read']:
@@ -2679,6 +2677,12 @@ class CommonAccess(BaseDocument):
     description_read = BooleanField(default=False)
     description_edit = BooleanField(default=False)
 
+    #Actions List
+    actions_read = BooleanField(default=False)
+    actions_add = BooleanField(default=False)
+    actions_edit = BooleanField(default=False)
+    actions_delete = BooleanField(default=False)
+
     # Bucket List
     bucketlist_read = BooleanField(default=False)
     bucketlist_add = BooleanField(default=False)
@@ -2832,7 +2836,7 @@ def create_embedded_source(name, source_instance=None, date=None,
     if tlp not in ('white', 'green', 'amber', 'red', None):
         return None
 
-    if isinstance(name, basestring) and tlp:
+    if isinstance(name, basestring):
         s = EmbeddedSource()
         s.name = name
         if isinstance(source_instance, EmbeddedSource.SourceInstance):
