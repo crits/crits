@@ -284,6 +284,7 @@ class Sample(object):
     SOURCE_METHOD = Common.SOURCE_METHOD
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
     UPLOAD_TYPE = "Upload Type"
+    DESCRIPTION = "Description"
 
     CACHED_RESULTS = "sample_cached_results"
 
