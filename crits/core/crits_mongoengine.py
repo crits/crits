@@ -143,7 +143,7 @@ class CritsQuerySet(QS):
         csvout += "".join(obj.to_csv(fields) for obj in self)
         return csvout
 
-    def to_json(self, exclude=None):
+    def to_json(self, exclude=[]):
         """
         Converts a CritsQuerySet to JSON.
 
@@ -166,7 +166,7 @@ class CritsQuerySet(QS):
 
         return [self._document.from_yaml(doc) for doc in yaml_data]
 
-    def to_yaml(self, exclude=None):
+    def to_yaml(self, exclude=[]):
         """
         Converts a CritsQuerySet to a list of YAML docs.
 
@@ -584,7 +584,7 @@ class CritsDocument(BaseDocument):
             return result
         return data
 
-    def _json_yaml_convert(self, exclude=None):
+    def _json_yaml_convert(self, exclude=[]):
         """
         Helper to convert to a dict before converting to JSON.
 
@@ -610,7 +610,7 @@ class CritsDocument(BaseDocument):
 
         return cls._from_son(json_util.loads(json_data))
 
-    def to_json(self, exclude=None):
+    def to_json(self, exclude=[]):
         """
         Convert to JSON.
 
@@ -632,7 +632,7 @@ class CritsDocument(BaseDocument):
 
         return cls._from_son(yaml.load(yaml_data))
 
-    def to_yaml(self, exclude=None):
+    def to_yaml(self, exclude=[]):
         """
         Convert to JSON.
 
