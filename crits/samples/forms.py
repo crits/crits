@@ -20,6 +20,9 @@ class UnzipSampleForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     password = forms.CharField(widget=forms.TextInput, required=False)
+    inherit_filepath = forms.BooleanField(initial=False,
+                                         required=False,
+                                         label=form_consts.Sample.INHERIT_FILEPATH)
 
 class XORSearchForm(forms.Form):
     """
@@ -54,6 +57,10 @@ class UploadFileForm(forms.Form):
     md5 = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1 required'}),
                           required=False,
                           label=form_consts.Sample.MD5)
+    filepath = forms.CharField(widget=forms.TextInput, required=False, label=form_consts.Sample.FILE_PATH)
+    inherit_filepath = forms.BooleanField(initial=False,
+                                         required=False,
+                                         label=form_consts.Sample.INHERIT_FILEPATH)
     sha1 = forms.CharField(widget=forms.TextInput(attrs={form_consts.Common.CLASS_ATTRIBUTE: form_consts.Common.BULK_REQUIRED + ' id_upload_type_1'}),
                            required=False,
                            label=form_consts.Sample.SHA1)
@@ -143,6 +150,8 @@ class UploadFileForm(forms.Form):
         else:
             filedata = False
         filename = cleaned_data.get('filename')
+        filepath = cleaned_data.get('filepath')
+        inherit_filepath = cleaned_data.get('inherit_filepath')
         file_format = cleaned_data.get('file_format')
 
         if upload_type == "File Upload":

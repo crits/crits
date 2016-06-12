@@ -85,6 +85,7 @@ class SampleResource(CRITsAPIResource):
         backdoor_version = bundle.data.get('backdoor_version', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
+        filepath = bundle.data.get('filepath', None)
         sha1 = bundle.data.get('sha1', None)
         sha256 = bundle.data.get('sha256', None)
         size = bundle.data.get('size', None)
@@ -115,6 +116,7 @@ class SampleResource(CRITsAPIResource):
                                           mimetype=mimetype,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
+                                          filepath=filepath,
                                           is_return_only_md5=False,
                                           backdoor_name=backdoor_name,
                                           backdoor_version=backdoor_version)

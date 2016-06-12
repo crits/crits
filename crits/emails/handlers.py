@@ -1416,7 +1416,7 @@ def create_indicator_from_header_field(email, header_field, ind_type,
 def create_email_attachment(email, cleaned_data, analyst, source, method="Upload",
                             reference="", campaign=None, confidence='low',
                             bucket_list=None, ticket=None, filedata=None,
-                            filename=None, md5=None, email_addr=None, inherit_sources=False):
+                            filename=None, filepath=None, md5=None, email_addr=None, inherit_sources=False):
     """
     Create an attachment for an email.
 
@@ -1444,6 +1444,8 @@ def create_email_attachment(email, cleaned_data, analyst, source, method="Upload
     :type filedata: request file data.
     :param filename: The name of the file.
     :type filename: str
+    :param filepath: The path of the file.
+    :type filepath: str
     :param md5: The MD5 of the file.
     :type md5: str
     :param email_addr: Email address to which to email the sample
@@ -1457,6 +1459,8 @@ def create_email_attachment(email, cleaned_data, analyst, source, method="Upload
                 'message': 'Unknown error; unable to upload file.'}
     if filename:
         filename = filename.strip()
+    if filepath:
+        filepath = filepath.strip()
 
     # If selected, new sample inherits the campaigns of the related email.
     if cleaned_data.get('inherit_campaigns'):
@@ -1480,6 +1484,7 @@ def create_email_attachment(email, cleaned_data, analyst, source, method="Upload
                                           related_id=email.id,
                                           related_type='Email',
                                           filename=filename,
+                                          filepath=filepath,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
                                           inherited_source=inherited_source)
@@ -1498,6 +1503,7 @@ def create_email_attachment(email, cleaned_data, analyst, source, method="Upload
                                           related_id=email.id,
                                           related_type='Email',
                                           filename=filename,
+                                          filepath=filepath,
                                           md5=md5,
                                           bucket_list=bucket_list,
                                           ticket=ticket,

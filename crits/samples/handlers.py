@@ -507,6 +507,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                method='Zip', reference='', campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
                relationship_type=None, bucket_list=None, ticket=None,
+               filepath=None, inherit_filepath=None,
                inherited_source=None, is_return_only_md5=True,
                backdoor_name=None, backdoor_version=None, description=''):
 
@@ -541,6 +542,10 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     :type bucket_list: str
     :param ticket: The ticket to assign to this data.
     :type ticket: str
+    :param filepath: The filepath of the file.
+    :type filepath: str
+    :param inherit_filepath: Populate the archive contents with filepath. 
+    :type inherit_filepath: bool
     :param inherited_source: Source(s) to be inherited by the new Sample
     :type inherited_source: list, :class:`crits.core.crits_mongoengine.EmbeddedSource`
     :param backdoor_name: Name of backdoor to relate this object to.
@@ -560,6 +565,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     samples = []
     zipdir = ""
     extractdir = ""
+    filepathz = ""
     try:
         zip_md5 = md5(data).hexdigest()
 
@@ -575,7 +581,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
         if not os.access(crits_config.zip7_path, os.X_OK):
             errmsg = "7z is not executable at path specified in the config setting: %s\n" % crits_config.zip7_path
             raise ZipFileError, errmsg
-        args.append("e")
+        args.append("x")
         extractdir = tempfile.mkdtemp(dir=temproot)
         args.append("-o" + extractdir)  # Set output directory
 
@@ -610,10 +616,17 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                 relationship = RelationshipTypes.COMPRESSED_INTO
             else:
                 relationship = RelationshipTypes.RELATED_TO
-            for root, dirs, files in os.walk(extractdir):
+            for root, dirs, files in os.walk(extractdir, topdown=True):
                 for filename in files:
-                    filepath = extractdir + "/" + filename
-                    filehandle = open(filepath, 'rb')
+                    filep = os.path.join(root, filename)
+                    filehandle = open(filep, 'rb')
+                    rel_fi = os.path.relpath(filep, extractdir)
+                    if inherit_filepath:
+                        # if inherit_filepath checked, filepath + the zip's internal paths + filename
+                        filepathz = os.path.join(filepath, rel_fi)
+                    else:
+                        # if inherit_filepath not checked, just use the filepath + filename
+                        filepathz = os.path.join(filepath, filename)
                     new_sample = handle_file(filename, filehandle.read(),
                                              source, method, reference,
                                              related_md5=related_md5,
@@ -630,6 +643,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                                              is_return_only_md5=is_return_only_md5,
                                              backdoor_name=backdoor_name,
                                              backdoor_version=backdoor_version,
+                                             filepath=filepathz,
                                              description=description)
                     if new_sample:
                         samples.append(new_sample)
@@ -656,7 +670,8 @@ def handle_file(filename, data, source, method='Generic', reference='',
                 sha256_digest=None, size=0, mimetype=None, bucket_list=None,
                 ticket=None, relationship=None, inherited_source=None,
                 is_validate_only=False, is_return_only_md5=True, cache={},
-                backdoor_name=None, backdoor_version=None, description=''):
+                backdoor_name=None, backdoor_version=None, filepath=None,
+                description=''):
     """
     Handle adding a file.
 
@@ -713,6 +728,8 @@ def handle_file(filename, data, source, method='Generic', reference='',
     :type backdoor_name: str
     :param backdoor_version: Version of the backdoor to relate the file to.
     :type backdoor_version: str
+    :param filepath: The filepath of the file.
+    :type filepath: str
     :param description: A description for this Sample
     :type description: str
     :returns: str,
@@ -805,6 +822,9 @@ def handle_file(filename, data, source, method='Generic', reference='',
         is_sample_new = True
         sample = Sample()
         sample.filename = filename or md5_digest
+        if filepath != None: 
+            if len(filepath) >0:
+                sample.filepaths.append(filepath)
         sample.md5 = md5_digest
         sample.sha1 = sha1_digest
         sample.sha256 = sha256_digest
@@ -812,6 +832,16 @@ def handle_file(filename, data, source, method='Generic', reference='',
     else:
         if filename not in sample.filenames and filename != sample.filename:
             sample.filenames.append(filename)
+        if filepath != None: 
+            if len(filepath) >0:
+                if filepath not in sample.filepaths:
+                    sample.filepaths.append(filepath)
+
+        if not sample.description:
+            sample.description = description
+        elif sample.description != description:
+            sample.description += "\n" + description
+
         if cached_results != None:
             cached_results[md5_digest] = sample
     
@@ -992,7 +1022,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
 def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                          password=None, user=None, campaign=None, confidence='low',
                          related_md5=None, related_id=None, related_type=None,relationship_type=None,
-                         filename=None, md5=None, sha1=None, sha256=None, size=None,
+                         filename=None, filepath=None, inherit_filepath=None, md5=None, sha1=None, sha256=None, size=None,
                          mimetype=None, bucket_list=None, ticket=None,
                          inherited_source=None, is_validate_only=False,
                          is_return_only_md5=True, cache={}, backdoor_name=None,
@@ -1026,6 +1056,10 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
     :type related_type: str
     :param filename: The filename of the sample.
     :type filename: str
+    :param filepath: The filepath of the sample.
+    :type filepath: str
+    :param inherit_filepath: Populate the archive contents with filepath. 
+    :type inherit_filepath: bool
     :param md5: The MD5 of the sample.
     :type md5: str
     :param sha1: The SHA1 of the sample.
@@ -1097,6 +1131,8 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             relationship_type=relationship_type,
             bucket_list=bucket_list,
             ticket=ticket,
+            filepath=filepath,
+            inherit_filepath=inherit_filepath,
             inherited_source=inherited_source,
             is_return_only_md5=is_return_only_md5,
             backdoor_name=backdoor_name,
@@ -1110,7 +1146,7 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                                  confidence=confidence, md5_digest=md5,
                                  sha1_digest=sha1, sha256_digest=sha256,
                                  size=size, mimetype=mimetype,
-                                 bucket_list=bucket_list, ticket=ticket,
+                                 bucket_list=bucket_list, ticket=ticket, filepath=filepath,
                                  inherited_source=inherited_source,
                                  is_validate_only=is_validate_only,
                                  is_return_only_md5=is_return_only_md5,
@@ -1155,6 +1191,8 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     #upload_type = data.get('upload_type')
     #filedata = data.get('filedata')
     filename = data.get('filename')
+    filepath = data.get('filepath')
+    inherit_filepath = data.get('inherit_filepath')
     campaign = data.get('campaign')
     confidence = data.get('confidence')
     md5 = data.get('md5')
@@ -1194,6 +1232,8 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
                                    mimetype=mimetype,
                                    bucket_list=bucket_list,
                                    ticket=ticket,
+                                   filepath=filepath,
+                                   inherit_filepath=inherit_filepath,
                                    is_validate_only=is_validate_only,
                                    is_return_only_md5=False,
                                    cache=cache,
@@ -1283,6 +1323,8 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
     fileformat = None
     password = None
     filename = None
+    filepath = None
+    inherit_filepath = None
     md5 = None
     sha1 = None
     sha256 = None
@@ -1304,6 +1346,8 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         size = rowData.get(form_consts.Sample.SIZE, 0)
         mimetype = rowData.get(form_consts.Sample.MIMETYPE, "")
 
+    filepath = rowData.get(form_consts.Sample.FILE_PATH, "")
+    inherit_filepath = rowData.get(form_consts.Sample.INHERIT_FILEPATH, "")
     campaign = rowData.get(form_consts.Sample.CAMPAIGN, "")
     confidence = rowData.get(form_consts.Sample.CAMPAIGN_CONFIDENCE, "")
     is_email_results = convert_string_to_bool(rowData.get(form_consts.Sample.EMAIL_RESULTS, ""))
@@ -1322,6 +1366,8 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         'upload_type': upload_type,
         'filedata': filedata,
         'filename': filename,
+        'filepath': filepath,
+        'inherit_filepath': inherit_filepath,
         'md5': md5,
         'sha1': sha1,
         'sha256': sha256,
@@ -1444,6 +1490,30 @@ def modify_sample_filenames(id_, tags, analyst):
     sample = Sample.objects(id=id_).first()
     if sample:
         sample.set_filenames(tags)
+        try:
+            sample.save(username=analyst)
+            return {'success': True}
+        except ValidationError, e:
+            return {'success': False, 'message': "Invalid value: %s" % e}
+    else:
+        return {'success': False}
+
+def modify_sample_filepaths(id_, tags, analyst):
+    """
+    Modify the filepaths for a Sample.
+
+    :param id_: ObjectId of the Sample.
+    :type id_: str
+    :param tags: The new filepaths.
+    :type tags: list
+    :param analyst: The user setting the new filepaths.
+    :type analyst: str
+    :returns: dict with key 'success' (boolean) and 'message' (str) if failed.
+    """
+
+    sample = Sample.objects(id=id_).first()
+    if sample:
+        sample.set_filepaths(tags)
         try:
             sample.save(username=analyst)
             return {'success': True}

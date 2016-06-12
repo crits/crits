@@ -27,7 +27,7 @@ from crits.samples.handlers import get_source_counts
 from crits.samples.handlers import get_sample_details
 from crits.samples.handlers import generate_sample_jtable
 from crits.samples.handlers import generate_sample_csv, process_bulk_add_md5_sample
-from crits.samples.handlers import update_sample_filename, modify_sample_filenames
+from crits.samples.handlers import update_sample_filename, modify_sample_filenames, modify_sample_filepaths
 from crits.samples.sample import Sample
 from crits.stats.handlers import generate_sources
 
@@ -226,7 +226,6 @@ def upload_file(request, related_md5=None):
                 backdoor = backdoor.split('|||')
                 if len(backdoor) == 2:
                     (backdoor_name, backdoor_version) = backdoor[0], backdoor[1]
-
             try:
                 if request.FILES:
                     result = handle_uploaded_file(
@@ -243,6 +242,8 @@ def upload_file(request, related_md5=None):
                         related_id=related_id,
                         related_type=related_type,
                         relationship_type=relationship_type,
+                        filepath=request.POST['filepath'].strip(),
+                        inherit_filepath=form.cleaned_data['inherit_filepath'],
                         bucket_list=form.cleaned_data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
                         inherited_source=inherited_source,
@@ -265,6 +266,8 @@ def upload_file(request, related_md5=None):
                         related_type=related_type,
                         relationship_type=relationship_type,
                         filename=request.POST['filename'].strip(),
+                        filepath=request.POST['filepath'].strip(),
+                        inherit_filepath=inherit_filepath,
                         md5=request.POST['md5'].strip().lower(),
                         sha1=request.POST['sha1'].strip().lower(),
                         sha256=request.POST['sha256'].strip().lower(),
@@ -584,6 +587,28 @@ def set_sample_filenames(request):
                                                                tags,
                                                                request.user.username)),
                             content_type="application/json")
+    else:
+        error = "Expected POST"
+        return render_to_response("error.html", {"error" : error },
+                                  RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def set_sample_filepaths(request):
+    """
+    Set Sample filepaths. Should be an AJAX POST.
+
+    :param request: Django request object (Required)
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        tags = request.POST.get('tags', "").split(",")
+        id_ = request.POST.get('id', None)
+        return HttpResponse(json.dumps(modify_sample_filepaths(id_,
+                                                               tags,
+                                                               request.user.username)),
+                            mimetype="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html", {"error" : error },
