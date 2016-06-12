@@ -158,7 +158,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         if isinstance(filenames, list):
             self.filenames = filenames
 
-    def _json_yaml_convert(self, exclude=None):
+    def _json_yaml_convert(self, exclude=[]):
         """
         Helper to convert to a dict before converting to JSON.
 
