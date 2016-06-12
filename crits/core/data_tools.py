@@ -174,6 +174,9 @@ def format_file(data, file_format):
     :returns: tuple of (<formatted_data>, <file_extension>)
     """
 
+    if data == None:
+        return ("", "")
+
     if file_format == "base64":
         import base64
         data = base64.b64encode(data)
