@@ -745,11 +745,11 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                 try:
                     validate_ipv46_address(domain_or_ip)
                     url_contains_ip = True
-                except DjangoValidationError:
+                except (DjangoValidationError, TypeError):
                     pass
             else:
                 domain_or_ip = ind_value
-            if not url_contains_ip:
+            if not url_contains_ip and domain_or_ip:
                 success = None
                 if add_domain:
                     success = upsert_domain(domain_or_ip,
@@ -1352,10 +1352,7 @@ def validate_indicator_value(value, ind_type):
     domain = ""
 
     # URL
-    if ind_type == IndicatorTypes.URI:
-        if "://" not in value.split('.')[0]:
-            return ("", "URI must contain protocol "
-                        "prefix (e.g. http://, https://, ftp://) ")
+    if ind_type == IndicatorTypes.URI and "://" in value.split('.')[0]:
         domain_or_ip = urlparse.urlparse(value).hostname
         try:
             validate_ipv46_address(domain_or_ip)
@@ -1389,8 +1386,7 @@ def validate_indicator_value(value, ind_type):
             return (ip_address, "")
 
     # Domains
-    if ind_type in (IndicatorTypes.DOMAIN,
-                    IndicatorTypes.URI) or domain:
+    if ind_type == IndicatorTypes.DOMAIN or domain:
         (root, domain, error) = get_valid_root_domain(domain or value)
         if error:
             return ("", error)
