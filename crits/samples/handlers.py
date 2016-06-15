@@ -814,12 +814,12 @@ def handle_file(filename, data, source, method='Generic', reference='',
             sample.filenames.append(filename)
         if cached_results != None:
             cached_results[md5_digest] = sample
-    
+
     if not sample.description:
         sample.description = description
     elif sample.description != description:
         sample.description += "\n" + description
-   
+
     # this will be overwritten if binary exists
     sample.size = size
 
@@ -903,6 +903,23 @@ def handle_file(filename, data, source, method='Generic', reference='',
         sample.save(username=user)
 
         sources = user_sources(user)
+
+        # update relationship if a related top-level object is supplied
+        if related_obj and sample:
+            if related_obj.id != sample.id: #don't form relationship to itself
+                if not relationship:
+                    if related_obj._meta['crits_type'] == 'Email':
+                        relationship = RelationshipTypes.CONTAINED_WITHIN
+                    else:
+                        relationship=RelationshipTypes.inverse(relationship=relationship_type)
+                        if relationship is None:
+                            relationship = RelationshipTypes.RELATED_TO
+                sample.add_relationship(related_obj,
+                                        relationship,
+                                        analyst=user,
+                                        get_rels=False)
+                sample.save(username=user)
+
         if backdoor_name:
             # Relate this to the backdoor family if there is one.
             backdoor = Backdoor.objects(name=backdoor_name,
@@ -932,21 +949,8 @@ def handle_file(filename, data, source, method='Generic', reference='',
         if len(AnalysisResult.objects(object_id=str(sample.id))) < 1:
             run_triage(sample, user)
 
-        # update relationship if a related top-level object is supplied
-        if related_obj and sample:
-            if related_obj.id != sample.id: #don't form relationship to itself
-                if not relationship:
-                    if related_obj._meta['crits_type'] == 'Email':
-                        relationship = RelationshipTypes.CONTAINED_WITHIN
-                    else:
-                        relationship=RelationshipTypes.inverse(relationship=relationship_type)
-                        if relationship is None:
-                            relationship = RelationshipTypes.RELATED_TO
-                sample.add_relationship(related_obj,
-                                        relationship,
-                                        analyst=user,
-                                        get_rels=False)
-                sample.save(username=user)
+            if is_return_only_md5 == False:
+                sample.reload()
 
     if is_sample_new == True:
         # New sample, and successfully uploaded
