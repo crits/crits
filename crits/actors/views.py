@@ -250,15 +250,12 @@ def actor_tags_modify(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponseRedirect`
     """
-    import logging
-    logger = logging.getLogger('crits')
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
         tag_type = request.POST.get('tag_type', None)
         id_ = request.POST.get('oid', None)
         tags = request.POST.get('tags', None)
-        logger.error(tag_type)
         if not tag_type:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a tag type.'}),
@@ -272,14 +269,13 @@ def actor_tags_modify(request):
         elif tag_type=='ActorSophistication':
             perm_needed='sophistications_edit'
         elif tag_type=='ActorThreatType':
-            perm_needed='threat_types'
+            perm_needed='threat_types_edit'
 
         if get_user_permissions(request.user.username, 'Actor')[perm_needed]:
             result = update_actor_tags(id_, tag_type, tags, request.user)
         else:
             result = {'success':False,
                       'message':'User does not have permssion to modify tag.'}
-        logger.error(json.dumps(result))
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
@@ -506,7 +502,7 @@ def edit_actor_aliases(request):
         aliases = request.POST.get('aliases', None)
         id_ = request.POST.get('oid', None)
         permissions = get_user_permissions(request.user.username, 'Actor')
-        if permissions['aliases_add']:
+        if permissions['aliases_edit']:
             result = update_actor_aliases(id_, aliases, request.user)
             return HttpResponse(json.dumps(result),
                                 content_type="application/json")

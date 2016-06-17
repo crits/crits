@@ -289,7 +289,7 @@ def generate_raw_data_jtable(request, option):
 def handle_raw_data_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
-                         link_id=None, method='', reference='',
+                         link_id=None, method='', reference='', tlp='',
                          copy_rels=False, bucket_list=None, ticket=None,
                          related_id=None, related_type=None, relationship_type=None):
     """
@@ -321,6 +321,8 @@ def handle_raw_data_file(data, source_name, user=None,
     :type method: str
     :param reference: A reference to the source of this RawData.
     :type reference: str
+    :param tlp: TLP for the source.
+    :type tlp: str
     :param copy_rels: Copy relationships from the previous version to this one.
     :type copy_rels: bool
     :param bucket_list: Bucket(s) to add to this RawData
@@ -391,15 +393,16 @@ def handle_raw_data_file(data, source_name, user=None,
                                    date=timestamp,
                                    method=method,
                                    reference=reference,
+                                   tlp=tlp,
                                    analyst=user)
         # this will handle adding a new source, or an instance automatically
         raw_data.add_source(source)
     elif isinstance(source_name, EmbeddedSource):
-        raw_data.add_source(source_name, method=method, reference=reference)
+        raw_data.add_source(source_name, method=method, reference=reference, tlp=tlp)
     elif isinstance(source_name, list) and len(source_name) > 0:
         for s in source_name:
             if isinstance(s, EmbeddedSource):
-                raw_data.add_source(s, method=method, reference=reference)
+                raw_data.add_source(s, method=method, reference=reference, tlp=tlp)
 
     #XXX: need to validate this is a UUID
     if link_id:

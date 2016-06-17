@@ -241,7 +241,10 @@ def get_actor_details(id_, user):
         }
 
         #objects
-        objects = actor.sort_objects()
+        if get_user_permissions(username, 'Actor')['objects_read']:
+            objects = actor.sort_objects()
+        else:
+            objects = None
 
         #relationships
         relationships = actor.sort_relationships("%s" % username, meta=True)

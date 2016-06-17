@@ -354,7 +354,7 @@ def upload_raw_data(request, link_id=None):
             data = request.POST.get('data', None)
             has_file = False
         if form.is_valid():
-            source = form.cleaned_data.get('source')
+            source = form.cleaned_data.get('source_name')
             user = request.user.username
             description = form.cleaned_data.get('description', '')
             title = form.cleaned_data.get('title', None)
@@ -366,8 +366,9 @@ def upload_raw_data(request, link_id=None):
             link_id = link_id
             bucket_list = form.cleaned_data.get('bucket_list')
             ticket = form.cleaned_data.get('ticket')
-            method = form.cleaned_data.get('method', '') or 'Upload'
-            reference = form.cleaned_data.get('reference', '')
+            method = form.cleaned_data.get('source_method', '') or 'Upload'
+            reference = form.cleaned_data.get('source_reference', '')
+            tlp = form.cleaned_data.get('source_tlp', '')
             related_id = form.cleaned_data.get('related_id', '')
             related_type = form.cleaned_data.get('related_type', '')
             relationship_type = form.cleaned_data.get('relationship_type')
@@ -377,13 +378,14 @@ def upload_raw_data(request, link_id=None):
                                           link_id,
                                           method=method,
                                           reference=reference,
+                                          tlp=tlp,
                                           copy_rels=copy_rels,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
                                           related_id=related_id,
                                           related_type=related_type,
                                           relationship_type=relationship_type)
-            
+
 
             if status['success']:
                 jdump = json.dumps({

@@ -301,28 +301,18 @@ class ActorAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
     name_edit = BooleanField(default=False)
     aliases_read = BooleanField(default=False)
     aliases_edit = BooleanField(default=False)
-    aliases_add = BooleanField(default=False)
-    aliases_delete = BooleanField(default=False)
 
     intended_effects_read = BooleanField(default=False)
     intended_effects_edit = BooleanField(default=False)
-    intended_effects_add = BooleanField(default=False)
-    intended_effects_delete = BooleanField(default=False)
 
     motivations_read = BooleanField(default=False)
     motivations_edit = BooleanField(default=False)
-    motivations_add = BooleanField(default=False)
-    motivations_delete = BooleanField(default=False)
 
     sophistications_read = BooleanField(default=False)
     sophistications_edit = BooleanField(default=False)
-    sophistications_add = BooleanField(default=False)
-    sophistications_delete = BooleanField(default=False)
 
     threat_types_read = BooleanField(default=False)
     threat_types_edit = BooleanField(default=False)
-    threat_types_add = BooleanField(default=False)
-    threat_types_delete = BooleanField(default=False)
 
     # Actor Identifiers
     actor_identifiers_read = BooleanField(default=False)

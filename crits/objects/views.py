@@ -274,7 +274,7 @@ def update_objects_value(request):
         value = request.POST['value']
         new_value = request.POST['new_value']
         analyst = "%s" % request.user.username
-        if get_user_permissions(analyst, object_type)['objects_edit']:
+        if get_user_permissions(analyst, type_)['objects_edit']:
             results = update_object_value(type_,
                                           oid,
                                           object_type,

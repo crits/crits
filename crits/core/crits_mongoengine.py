@@ -2481,6 +2481,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             self.releasability[:] = [r for r in self.releasability if r.name in sources]
 
     def sanitize_tlo(self, username=None, permissions=None):
+        if not permissions['actions_read']:
+            self.actions = None
         if not permissions['bucketlist_read']:
             self.bucket_list = None
         if not permissions['sectors_read']:
@@ -2507,6 +2509,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             self.tickets = None
 
     def sanitize_actor(self, username=None, permissions=None):
+        if not permissions['description_read']:
+            self.description = None
         if not permissions['aliases_read']:
             self.alias = None
         if not permissions['intended_effects_read']:
@@ -2674,6 +2678,7 @@ class CommonAccess(BaseDocument):
     write = BooleanField(default=False)
     delete = BooleanField(default=False)
     download = BooleanField(default=False)
+
     description_read = BooleanField(default=False)
     description_edit = BooleanField(default=False)
 
@@ -2685,8 +2690,7 @@ class CommonAccess(BaseDocument):
 
     # Bucket List
     bucketlist_read = BooleanField(default=False)
-    bucketlist_add = BooleanField(default=False)
-    bucketlist_delete = BooleanField(default=False)
+    bucketlist_edit = BooleanField(default=False)
 
     # Campaigns
     campaigns_read = BooleanField(default=False)
@@ -2730,8 +2734,7 @@ class CommonAccess(BaseDocument):
 
     # Sectors
     sectors_read = BooleanField(default=False)
-    sectors_add = BooleanField(default=False)
-    sectors_delete = BooleanField(default=False)
+    sectors_edit = BooleanField(default=False)
 
     # Services
     services_read = BooleanField(default=False)

@@ -127,9 +127,9 @@ def update_object_description(request):
                                                           analyst)),
                             content_type="application/json")
         else:
-            return render_to_response("error.html",
-                                      {"error" : 'User does not have permission to edit description.'},
-                                      RequestContext(request))
+            return HttpResponse(json.dumps({'success':False,
+                                            'message':'User does not have permission to edit description.'}),
+                                content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -261,9 +261,9 @@ def update_status(request, type_, id_):
                                                      analyst)),
                             content_type="application/json")
         else:
-            return render_to_response("error.html",
-                                      {"error" : 'User does not have permission to edit status.'},
-                                      RequestContext(request))
+            return HttpResponse(json.dumps({"success":False,
+                                            "message":"User does not have permission to edit status."}),
+                                content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -577,13 +577,13 @@ def source_releasability(request):
                 result = remove_releasability(type_, id_, name, user)
             else:
                 result = {'success':False,
-                          'message':'User does not have permission to add releasability.'}
+                          'message':'User does not have permission to remove releasability.'}
         elif action == "remove_instance":
             if get_user_permissions(user, type_)['releasability_delete']:
                 result = remove_releasability_instance(type_, id_, name, date, user)
             else:
                 result = {'success':False,
-                          'message':'User does not have permission to add releasability.'}
+                          'message':'User does not have permission to delete releasability.'}
         else:
             error = "Unknown releasability action: %s" % action
             return render_to_response("error.html",
@@ -770,18 +770,36 @@ def add_update_source(request, method, obj_type, obj_id):
             if (data['name'] in user_sources(user)):
                 if method == "add":
                     date = datetime.datetime.now()
+                    if get_user_permissions(user,obj_type)['sources_add']:
+                        result = source_add_update(obj_type,
+                                                   obj_id,
+                                                   method,
+                                                   data['name'],
+                                                   method=data['method'],
+                                                   reference=data['reference'],
+                                                   tlp=data['tlp'],
+                                                   date=date,
+                                                   user=user)
+                    else:
+                        result = {"success":False,
+                                  "message":"User does not have permission to add sources to object."}
                 else:
                     date = datetime.datetime.strptime(data['date'],
                                                       settings.PY_DATETIME_FORMAT)
-                result = source_add_update(obj_type,
-                                           obj_id,
-                                           method,
-                                           data['name'],
-                                           method=data['method'],
-                                           reference=data['reference'],
-                                           tlp=data['tlp'],
-                                           date=date,
-                                           user=user)
+                    if get_user_permissions(user, obj_type)['sources_edit']:
+                        result = source_add_update(obj_type,
+                                                   obj_id,
+                                                   method,
+                                                   data['name'],
+                                                   method=data['method'],
+                                                   reference=data['reference'],
+                                                   tlp=data['tlp'],
+                                                   date=date,
+                                                   user=user)
+                    else:
+                        result = {"success":False,
+                                  "message":"User does not have permission to edit sources."}
+
                 if 'object' in result:
                     if method == "add":
                         result['header'] = result['object'].name
@@ -829,13 +847,18 @@ def remove_source(request, obj_type, obj_id):
         date = datetime.datetime.strptime(request.POST['key'],
                                             settings.PY_DATETIME_FORMAT)
         name = request.POST['name']
-        result = source_remove(obj_type,
-                                obj_id,
-                                name,
-                                date,
-                                '%s' % request.user.username)
+
+        if get_user_permissions(request.user.username, obj_type)['sources_delete']:
+            result = source_remove(obj_type,
+                                    obj_id,
+                                    name,
+                                    date,
+                                    '%s' % request.user.username)
+        else:
+            result = {"success":False,
+                      "message":"User does not have permission to remove sources."}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -906,7 +929,7 @@ def bucket_modify(request):
         tags = request.POST['tags'].split(",")
         oid = request.POST['oid']
         itype = request.POST['itype']
-        if get_user_permissions(request.user.username,itype)['bucketlist_add']:
+        if get_user_permissions(request.user.username,itype)['bucketlist_edit']:
             modify_bucket_list(itype, oid, tags, request.user.username)
     return HttpResponse({})
 
@@ -2092,7 +2115,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
             result = {"success":False,
                       "message":"User does not have permission to delete tickets."}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
 
     if request.method == "POST" and request.is_ajax():
         form = TicketForm(request.POST)
@@ -2278,8 +2301,7 @@ def sector_modify(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        permissions = get_user_permissions(request.user.username, request.POST['itype'])
-        if permissions['sectors_add']:
+        if get_user_permissions(request.user.username, request.POST['itype'])['sectors_edit']:
             sectors = request.POST['sectors'].split(",")
             oid = request.POST['oid']
             itype = request.POST['itype']
@@ -2351,7 +2373,7 @@ def tlp_modify(request):
         oid = request.POST['oid']
         itype = request.POST['itype']
         results = modify_tlp(itype, oid, tlp, request.user.username)
-        return HttpResponse(json.dumps(results), mimetype="application/json")
+        return HttpResponse(json.dumps(results), content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -2432,9 +2454,6 @@ def add_update_action(request, method, obj_type, obj_id):
     :type obj_id: str
     :returns: :class:`django.http.HttpResponse`
     """
-    import logging
-    logger = logging.getLogger('crits')
-    logger.error('Performing some action')
 
     if request.method == "POST" and request.is_ajax():
         username = request.user.username
@@ -2452,26 +2471,34 @@ def add_update_action(request, method, obj_type, obj_id):
         }
         if method == "add":
             add['date'] = datetime.datetime.now()
-            logger.error("Adding Action")
-            result = action_add(obj_type, obj_id, add, username)
+            if get_user_permissions(username, obj_type)['actions_add']:
+                result = action_add(obj_type, obj_id, add, username)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to add action."}
         else:
-            logger.error("Editing Action")
             date = datetime.datetime.strptime(data['date'],
                                                 settings.PY_DATETIME_FORMAT)
             date = date.replace(microsecond=date.microsecond/1000*1000)
             add['date'] = date
-            result = action_update(obj_type, obj_id, add, username)
-            logger.error(result)
-        """if 'object' in result:
+            if get_user_permissions(username, obj_type)['actions_edit']:
+                result = action_update(obj_type, obj_id, add, username)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to edit action."}
+        if 'object' in result:
             result['html'] = render_to_string('action_row_widget.html',
                                                 {'action': result['object'],
                                                 'obj_type':obj_type,
-                                                'obj_id':obj_id})"""
-        logger.error(json.dumps(result,default=json_handler))
+                                                'obj_id':obj_id})
+
         return HttpResponse(json.dumps(result,
                                        default=json_handler),
-                            mimetype='application/json')
-    return HttpResponse({})
+                            content_type='application/json')
+
+    return render_to_response("error.html",
+                              {'error': 'Expected AJAX/POST'},
+                              RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def remove_action(request, obj_type, obj_id):
@@ -2492,11 +2519,17 @@ def remove_action(request, obj_type, obj_id):
         date = datetime.datetime.strptime(request.POST['key'],
                                             settings.PY_DATETIME_FORMAT)
         date = date.replace(microsecond=date.microsecond/1000*1000)
-        result = action_remove(obj_type, obj_id, date, analyst)
+        if get_user_permissions(analyst, obj_type)['actions_delete']:
+            result = action_remove(obj_type, obj_id, date, analyst)
+        else:
+            result = {"success":False,
+                      "message":"User does not have permission to delete action."}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
 
-    return HttpResponse({})
+    return render_to_response("error.html",
+                              {'error': 'Expected AJAX/POST'},
+                              RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def get_actions_for_tlo(request):

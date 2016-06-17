@@ -64,9 +64,13 @@ def add_location(request, type_, id_):
                                       description=description,
                                       latitude=latitude,
                                       longitude=longitude)
-                if result['success']:
-                    return HttpResponse(json.dumps(result),
-                                        content_type="application/json")
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to add locations."}
+
+            if result['success']:
+                return HttpResponse(json.dumps(result),
+                                    content_type="application/json")
         result['form'] = form.as_table()
         result['success'] = False
         return HttpResponse(json.dumps(result),
@@ -104,10 +108,9 @@ def remove_location(request, type_, id_):
                                      user=request.user.username)
             return HttpResponse(json.dumps(result), content_type="application/json")
         else:
-            error = "User does not have permission to remove location."
-            return render_to_response("error.html",
-                                      {"error": error},
-                                      RequestContext(request))
+            result = {"success":False,
+                      "message":"User does not have permission to remove location."}
+            return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error": 'Expected AJAX POST.'},
@@ -143,10 +146,9 @@ def edit_location(request, type_, id_):
                                                          longitude=longitude)),
                                 content_type="application/json")
         else:
-            error = "User does not have permission to modify location."
-            return render_to_response("error.html",
-                                      {"error": error},
-                                      RequestContext(request))
+            result = {"success":False,
+                      "message":"User does not have permission to edit location."}
+            return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",

@@ -14,7 +14,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list
 from crits.core.handlers import jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
-from crits.core.user_tools import is_user_favorite
+from crits.core.user_tools import is_user_favorite, get_user_permissions
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
 
@@ -136,10 +136,16 @@ def get_backdoor_details(id_, user):
         }
 
         #objects
-        objects = backdoor.sort_objects()
+        if get_user_permissions(user,'Backdoor')['objects_read']:
+            objects = backdoor.sort_objects()
+        else:
+            objects = None
 
         #relationships
-        relationships = backdoor.sort_relationships("%s" % user, meta=True)
+        if get_user_permissions(user,'Backdoor')['relationships_read']:
+            relationships = backdoor.sort_relationships("%s" % user, meta=True)
+        else:
+            relationships = None
 
         # relationship
         relationship = {
@@ -148,11 +154,17 @@ def get_backdoor_details(id_, user):
         }
 
         #comments
-        comments = {'comments': backdoor.get_comments(),
-                    'url_key': backdoor.id}
+        if get_user_permissions(user,'Backdoor')['comments_read']:
+            comments = {'comments': backdoor.get_comments(),
+                        'url_key': backdoor.id}
+        else:
+            comments = None
 
         #screenshots
-        screenshots = backdoor.get_screenshots(user)
+        if get_user_permissions(user,'Backdoor')['screenshots_read']:
+            screenshots = backdoor.get_screenshots(user)
+        else:
+            screenshots = None
 
         # favorites
         favorite = is_user_favorite("%s" % user, 'Backdoor', backdoor.id)

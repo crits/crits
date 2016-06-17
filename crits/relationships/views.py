@@ -124,7 +124,7 @@ def update_relationship_confidence(request):
             result = {'success': False,
                       'message': 'User does not have permission to edit relationship.'}
         else:
-            results = update_relationship_confidences(left_type=request.POST['my_type'],
+            result = update_relationship_confidences(left_type=request.POST['my_type'],
                                                 left_id=request.POST['my_value'],
                                                 right_type=request.POST['reverse_type'],
                                                 right_id=request.POST['dest_id'],
@@ -133,11 +133,11 @@ def update_relationship_confidence(request):
                                                 analyst=request.user.username,
                                                 new_confidence=new_confidence)
 
-        if results['success']:
-            message = "Successfully updated relationship: %s" % results['message']
+        if result['success']:
+            message = "Successfully updated relationship: %s" % result['message']
             result = {'success': True, 'message': message}
         else:
-            message = "Error updating relationship: %s" % results['message']
+            message = "Error updating relationship: %s" % result['message']
             result = {'success': False, 'message': message}
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
@@ -145,9 +145,6 @@ def update_relationship_confidence(request):
         return render_to_response("error.html",
                                   {"error" : error },
                                   RequestContext(request))
-
-
-
 
 @user_passes_test(user_can_view_data)
 def update_relationship_reason(request):
@@ -223,7 +220,7 @@ def break_relationship(request):
     """
 
     if request.method == 'POST' and request.is_ajax():
-        if get_user_permissions(request.user.username, request.POST['reverse_type'])['relationships_delete']:
+        if get_user_permissions(request.user.username, request.POST['my_type'])['relationships_delete']:
             results = delete_relationship(left_type=request.POST['my_type'],
                                           left_id=request.POST['my_value'],
                                           right_type=request.POST['reverse_type'],

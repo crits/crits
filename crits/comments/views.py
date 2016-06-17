@@ -83,7 +83,7 @@ def add_update_comment(request, method, obj_type, obj_id):
                     return HttpResponse(json.dumps(result),
                                         content_type="application/json")
             else:
-                if get_user_permissions(analyst, obj_type)['comments_edit']:
+                if get_user_permissions(analyst, obj_type)['comments_add']:
                     return comment_add(cleaned_data, obj_type, obj_id, method,
                                        subscr, analyst)
                 else:
