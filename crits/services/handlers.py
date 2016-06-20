@@ -26,6 +26,7 @@ from crits.core.class_mapper import class_from_type, class_from_id
 from crits.core.crits_mongoengine import json_handler
 from crits.core.handlers import build_jtable, csv_export
 from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
+from crits.core.user_tools import user_sources
 from crits.services.analysis_result import AnalysisResult, AnalysisConfig
 from crits.services.analysis_result import EmbeddedAnalysisResultLog
 from crits.services.core import ServiceConfigError, AnalysisTask
@@ -321,7 +322,7 @@ def add_result(object_type, object_id, analysis_id, result, type_, subtype,
     :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
-    
+
     return add_results(object_type, object_id, analysis_id, [result], [type_],
                       [subtype], analyst)
 
@@ -383,7 +384,7 @@ def add_results(object_type, object_id, analysis_id, result, type_, subtype,
     ar = AnalysisResult.objects(analysis_id=analysis_id).first()
     if ar:
         AnalysisResult.objects(id=ar.id).update_one(push_all__results=final_list)
-        
+
     res['success'] = True
     return res
 
@@ -463,7 +464,7 @@ def finish_task(object_type, object_id, analysis_id, status, user):
 
     # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
-    sources = user.get_sources_list()
+    sources = user_sources(user)
     obj = klass.objects(id=object_id, source__name__in=sources).first()
     if not obj:
         results['message'] = "Could not find object to add results to."

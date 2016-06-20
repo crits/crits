@@ -215,7 +215,8 @@ class AnalysisTask(object):
         self.start_date = None
         self.finish_date = None
         self.status = None
-        self.username = user.username
+        self.username = user
+
 
         self.log = []
         self.results = []
@@ -465,6 +466,7 @@ class Service(object):
                     status = self.current_task.STATUS_ERROR
                 else:
                     status = self.current_task.STATUS_COMPLETED
+
                 self.complete(self.current_task.obj._meta['crits_type'],
                               str(self.current_task.obj.id),
                               self.current_task.task_id,
