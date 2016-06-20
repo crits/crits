@@ -117,32 +117,36 @@ def add_campaign(request):
     if request.method == "POST" and request.is_ajax():
         campaign_form = AddCampaignForm(request.POST)
         if campaign_form.is_valid():
-            data = campaign_form.cleaned_data
-            campaign_name = data['campaign']
-            campaign_aliases = data.get('aliases', None)
-            campaign_description = data.get('description', None)
-            bucket_list = data.get('bucket_list')
-            ticket = data.get('ticket')
-            related_id = data['related_id']
-            related_type = data['related_type']
-            relationship_type = data['relationship_type']
+            if get_user_permissions(request.user.username, 'Campaign')['write']:
+                data = campaign_form.cleaned_data
+                campaign_name = data['campaign']
+                campaign_aliases = data.get('aliases', None)
+                campaign_description = data.get('description', None)
+                bucket_list = data.get('bucket_list')
+                ticket = data.get('ticket')
+                related_id = data['related_id']
+                related_type = data['related_type']
+                relationship_type = data['relationship_type']
 
-            result = add_campaignh(campaign_name,
-                                   campaign_description,
-                                   campaign_aliases,
-                                   request.user.username,
-                                   bucket_list=bucket_list,
-                                   ticket=ticket,
-                                   related_id=related_id,
-                                   related_type=related_type,
-                                   relationship_type=relationship_type)
+                result = add_campaignh(campaign_name,
+                                       campaign_description,
+                                       campaign_aliases,
+                                       request.user.username,
+                                       bucket_list=bucket_list,
+                                       ticket=ticket,
+                                       related_id=related_id,
+                                       related_type=related_type,
+                                       relationship_type=relationship_type)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to add new campaigns.'}
             if result['success']:
                 message = {
                     'message': '<div>Campaign <a href="%s">%s</a> added successfully!</div>' % (reverse('crits.campaigns.views.campaign_details', args=[campaign_name]), campaign_name),
                     'success': True}
             else:
                 message = {
-                    'message': ['Campaign addition failed!']+result['message'],
+                    'message': 'Campaign addition failed!'+str(result['message']),
                     'success': False}
             return HttpResponse(json.dumps(message), content_type="application/json")
         else:

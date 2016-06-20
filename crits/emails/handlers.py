@@ -828,10 +828,6 @@ def handle_msg(data, sourcename, source_reference='', source_method='', source_t
               "message" (str)
               "reason" (str).
     """
-    import logging
-    logger = logging.getLogger("crits")
-
-    logger.error("MSG File")
     response = {'status': False}
 
     result = parse_ole_file(data)

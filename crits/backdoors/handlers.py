@@ -371,8 +371,11 @@ def backdoor_remove(id_, username):
 
     backdoor = Backdoor.objects(id=id_).first()
     if backdoor:
-        backdoor.delete(username=username)
-        return {'success': True}
+        if get_user_permissions(username, 'Backdoor')['delete']:
+            backdoor.delete(username=username)
+            return {'success': True}
+        else:
+            return {'success': False, 'message': 'User does not have permission to remove Backoor.'}
     else:
         return {'success': False, 'message': 'Could not find Backdoor.'}
 

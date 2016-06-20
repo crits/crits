@@ -32,6 +32,13 @@ def backdoors_listing(request,option=None):
 
     if option == "csv":
         return generate_backdoor_csv(request)
+    elif option== "jtdelete" and not get_user_permissions(request.user.username, 'Backdoor')['delete']:
+        result = {'sucess':False,
+                  'message':'User does not have permission to delete Backdoor.'}
+        return HttpResponse(json.dumps(result,
+                                       default=json_handler),
+                            content_type="application/json")
+
     return generate_backdoor_jtable(request, option)
 
 @user_passes_test(user_can_view_data)
@@ -70,39 +77,43 @@ def add_backdoor(request):
         data = request.POST
         form = AddBackdoorForm(request.user, data)
         if form.is_valid():
-            cleaned_data = form.cleaned_data
-            name = cleaned_data['name']
-            aliases = cleaned_data['aliases']
-            description = cleaned_data['description']
-            version = cleaned_data['version']
-            source = cleaned_data['source_name']
-            reference = cleaned_data['source_reference']
-            method = cleaned_data['source_method']
-            tlp = cleaned_data['source_tlp']
-            campaign = cleaned_data['campaign']
-            confidence = cleaned_data['confidence']
-            user = request.user
-            bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
-            ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
-            related_id = cleaned_data['related_id']
-            related_type = cleaned_data['related_type']
-            relationship_type = cleaned_data['relationship_type']
-            result = add_new_backdoor(name,
-                                      version=version,
-                                      aliases=aliases,
-                                      description=description,
-                                      source=source,
-                                      source_method=method,
-                                      source_reference=reference,
-                                      source_tlp=tlp,
-                                      campaign=campaign,
-                                      confidence=confidence,
-                                      user=user,
-                                      bucket_list=bucket_list,
-                                      ticket=ticket,
-                                      related_id=related_id,
-                                      related_type=related_type,
-                                      relationship_type=relationship_type)
+            if get_user_permissions(request.user.username, 'Backdoor')['write']:
+                cleaned_data = form.cleaned_data
+                name = cleaned_data['name']
+                aliases = cleaned_data['aliases']
+                description = cleaned_data['description']
+                version = cleaned_data['version']
+                source = cleaned_data['source_name']
+                reference = cleaned_data['source_reference']
+                method = cleaned_data['source_method']
+                tlp = cleaned_data['source_tlp']
+                campaign = cleaned_data['campaign']
+                confidence = cleaned_data['confidence']
+                user = request.user
+                bucket_list = cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
+                ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+                related_id = cleaned_data['related_id']
+                related_type = cleaned_data['related_type']
+                relationship_type = cleaned_data['relationship_type']
+                result = add_new_backdoor(name,
+                                          version=version,
+                                          aliases=aliases,
+                                          description=description,
+                                          source=source,
+                                          source_method=method,
+                                          source_reference=reference,
+                                          source_tlp=tlp,
+                                          campaign=campaign,
+                                          confidence=confidence,
+                                          user=user,
+                                          bucket_list=bucket_list,
+                                          ticket=ticket,
+                                          related_id=related_id,
+                                          related_type=related_type,
+                                          relationship_type=relationship_type)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to add new Backdoor."}
             return HttpResponse(json.dumps(result, default=json_handler),
                                 content_type="application/json")
         return HttpResponse(json.dumps({'success': False,
@@ -125,7 +136,8 @@ def remove_backdoor(request, id_):
     """
 
     if request.method == "POST":
-        backdoor_remove(id_, request.user.username)
+        if get_user_permissions(request.user.username, 'Backdoor')['delete']:
+            backdoor_remove(id_, request.user.username)
         return HttpResponseRedirect(reverse('crits.backdoors.views.backdoors_listing'))
     return render_to_response('error.html',
                               {'error':'Expected AJAX/POST'},
@@ -208,7 +220,7 @@ def edit_backdoor_version(request, id_):
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
                                 content_type="application/json")
-                                
+
         if get_user_permissions(user, 'Backdoor')['version_edit']:
             result = set_backdoor_version(id_, version, user)
             return HttpResponse(json.dumps(result), content_type="application/json")

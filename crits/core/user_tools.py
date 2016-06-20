@@ -64,8 +64,6 @@ def get_user_role(username):
 
 def get_user_permissions(username, crits_type):
     from crits.core.role import Role
-    import logging
-    logger = logging.getLogger("crits")
 
     ### So here we need to do something to get a master permissions dictionary
     ### that will take into account all permissions from all of that user's roles
@@ -80,7 +78,7 @@ def get_user_permissions(username, crits_type):
                     master_permissions[permission] = permissions[permission]
             else:
                 master_permissions[permission] = permissions[permission]
-                
+
     return master_permissions
 
 def sanitize_sources(username, items):
@@ -128,10 +126,6 @@ def user_can_view_data(user):
     :type user: str
     :returns: True, False
     """
-    import logging
-    logger = logging.getLogger("crits")
-    logger.error(user)
-
     if user.is_active:
         return user.is_authenticated()
     else:

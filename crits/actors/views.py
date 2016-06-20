@@ -111,38 +111,43 @@ def add_actor(request):
         data = request.POST
         form = AddActorForm(request.user.username, data)
         if form.is_valid():
-            cleaned_data = form.cleaned_data
-            name = cleaned_data['name']
-            aliases = cleaned_data['aliases']
-            description = cleaned_data['description']
-            source = cleaned_data['source_name']
-            reference = cleaned_data['source_reference']
-            method = cleaned_data['source_method']
-            tlp = cleaned_data['source_tlp']
-            campaign = cleaned_data['campaign']
-            confidence = cleaned_data['confidence']
-            bucket_list = cleaned_data.get(
-                form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
-            ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
-            related_id = cleaned_data['related_id']
-            related_type = cleaned_data['related_type']
-            relationship_type = cleaned_data['relationship_type']
+            if get_user_permissions(request.user.username, 'Actor')['write']:
+                cleaned_data = form.cleaned_data
+                name = cleaned_data['name']
+                aliases = cleaned_data['aliases']
+                description = cleaned_data['description']
+                source = cleaned_data['source_name']
+                reference = cleaned_data['source_reference']
+                method = cleaned_data['source_method']
+                tlp = cleaned_data['source_tlp']
+                campaign = cleaned_data['campaign']
+                confidence = cleaned_data['confidence']
+                bucket_list = cleaned_data.get(
+                    form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
+                ticket = cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+                related_id = cleaned_data['related_id']
+                related_type = cleaned_data['related_type']
+                relationship_type = cleaned_data['relationship_type']
 
-            result = add_new_actor(name,
-                                   aliases=aliases,
-                                   description=description,
-                                   source=source,
-                                   source_method=method,
-                                   source_reference=reference,
-                                   source_tlp=tlp,
-                                   campaign=campaign,
-                                   confidence=confidence,
-                                   user=request.user,
-                                   bucket_list=bucket_list,
-                                   ticket=ticket,
-                                   related_id=related_id,
-                                   related_type=related_type,
-                                   relationship_type=relationship_type)
+                result = add_new_actor(name,
+                                       aliases=aliases,
+                                       description=description,
+                                       source=source,
+                                       source_method=method,
+                                       source_reference=reference,
+                                       source_tlp=tlp,
+                                       campaign=campaign,
+                                       confidence=confidence,
+                                       user=request.user,
+                                       bucket_list=bucket_list,
+                                       ticket=ticket,
+                                       related_id=related_id,
+                                       related_type=related_type,
+                                       relationship_type=relationship_type)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to add Actors."}
+                          
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
                                 content_type="application/json")
@@ -167,8 +172,12 @@ def remove_actor(request, id_):
 
     request.user._setup()
     if request.method == "POST":
-        actor_remove(id_, request.user)
-        return HttpResponseRedirect(reverse('crits.actors.views.actors_listing'))
+        if get_user_permissions(request.user.username, 'Actor')['delete']:
+            actor_remove(id_, request.user)
+            return HttpResponseRedirect(reverse('crits.actors.views.actors_listing'))
+        else:
+            return HttpResponseRedirect(reverse('crits.actors.views.actors_listing'))
+
     return render_to_response('error.html',
                               {'error':'Expected AJAX/POST'},
                               RequestContext(request))

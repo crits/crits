@@ -1017,14 +1017,19 @@ def download_object(request):
                                       {"error" : "No matching data."},
                                       RequestContext(request))
 
-        result = download_object_handler(total_limit,
-                                         depth_limit,
-                                         rel_limit,
-                                         rst_fmt,
-                                         bin_fmt,
-                                         objects,
-                                         [(obj_type, obj_id)],
-                                         sources)
+        if get_user_permissions(request.user.username, obj_type)['download']:
+            result = download_object_handler(total_limit,
+                                             depth_limit,
+                                             rel_limit,
+                                             rst_fmt,
+                                             bin_fmt,
+                                             objects,
+                                             [(obj_type, obj_id)],
+                                             sources)
+        else:
+            return render_to_response("error.html",
+                                      {"error" : "User does not have permission to download %s" % obj_type},
+                                      RequestContext(request))
 
         if not result['success']:
             return render_to_response("error.html",

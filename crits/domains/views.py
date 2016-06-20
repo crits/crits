@@ -95,6 +95,12 @@ def domains_listing(request,option=None):
 
     if option == "csv":
         return generate_domain_csv(request)
+    elif option== "jtdelete" and not get_user_permissions(request.user.username, 'Domain')['delete']:
+        result = {'sucess':False,
+                  'message':'User does not have permission to delete Domain.'}
+        return HttpResponse(json.dumps(result,
+                                       default=json_handler),
+                            content_type="application/json")
     return generate_domain_jtable(request, option)
 
 @user_passes_test(user_can_view_data)
@@ -115,9 +121,16 @@ def add_domain(request):
         if add_form.is_valid():
             errors = []
             data = add_form.cleaned_data
-            (result, errors, retVal) = add_new_domain(data,
-                                                      request,
-                                                      errors)
+            if get_user_permissions(request.user.username, 'Domain')['write']:
+                (result, errors, retVal) = add_new_domain(data,
+                                                        request,
+                                                        errors)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to add Domain.'}
+                return HttpResponse(json.dumps(result,
+                                               default=json_handler),
+                                    content_type="application/json")
         if errors:
             if not 'message' in retVal:
                 retVal['message'] = ""
