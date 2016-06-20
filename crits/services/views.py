@@ -102,7 +102,7 @@ def enable(request, name):
 
     request.user._setup()
     result = set_enabled(name, True, request.user)
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type='application/json')
 
 
 @user_passes_test(user_can_view_data)
@@ -113,7 +113,7 @@ def disable(request, name):
 
     request.user._setup()
     result = set_enabled(name, False, request.user)
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type='application/json')
 
 @user_passes_test(user_can_view_data)
 def enable_triage(request, name):
@@ -123,7 +123,7 @@ def enable_triage(request, name):
 
     request.user._setup()
     result = set_triage(name, True, request.user)
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type='application/json')
 
 
 @user_passes_test(user_can_view_data)
@@ -134,7 +134,7 @@ def disable_triage(request, name):
 
     request.user._setup()
     result = set_triage(name, False, request.user)
-    return HttpResponse(json.dumps(result), mimetype="application/json")
+    return HttpResponse(json.dumps(result), content_type='application/json')
 
 
 @user_passes_test(user_can_view_data)
