@@ -32,6 +32,10 @@ def class_from_id(type_, _id):
               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     """
 
+    #Quick fail
+    if not _id or not type_:
+        return None
+
     # doing this to avoid circular imports
     from crits.actors.actor import ActorThreatIdentifier, Actor
     from crits.backdoors.backdoor import Backdoor
@@ -53,9 +57,6 @@ def class_from_id(type_, _id):
     from crits.screenshots.screenshot import Screenshot
     from crits.signatures.signature import Signature, SignatureType, SignatureDependency
     from crits.targets.target import Target
-
-    if not _id:
-        return None
 
     # make sure it's a string
     _id = str(_id)
@@ -130,6 +131,10 @@ def class_from_value(type_, value):
     :returns: class which inherits from
               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     """
+
+    #Quick fail
+    if not type_ or not value:
+        return None
 
     # doing this to avoid circular imports
     from crits.actors.actor import ActorThreatIdentifier, Actor
@@ -212,6 +217,10 @@ def class_from_type(type_):
     :returns: class which inherits from
               :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     """
+
+    #Quick fail
+    if not type_:
+        return None
 
     # doing this to avoid circular imports
     from crits.actors.actor import ActorThreatIdentifier, Actor

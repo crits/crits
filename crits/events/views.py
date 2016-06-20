@@ -63,6 +63,8 @@ def add_event(request):
                                    bucket_list=data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME],
                                    ticket=data[form_consts.Common.TICKET_VARIABLE_NAME],
                                    user=request.user,
+                                   campaign=data['campaign'],
+                                   campaign_confidence=data['campaign_confidence'],
                                    related_id=data['related_id'],
                                    related_type=data['related_type'],
                                    relationship_type=data['relationship_type'])

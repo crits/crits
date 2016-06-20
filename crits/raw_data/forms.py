@@ -25,11 +25,10 @@ class UploadRawDataFileForm(SourceInForm):
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                                'rows':'2'}),
                                                                required=False)
-
-    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
-                                          label='Relationship Type',
+                                          label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):

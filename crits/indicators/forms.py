@@ -55,10 +55,10 @@ class UploadIndicatorCSVForm(SourceInForm):
     error_css_class = 'error'
     required_css_class = 'required'
     filedata = forms.FileField()
-    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
-                                          label='Relationship Type',
+                                          label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
@@ -76,11 +76,12 @@ class UploadIndicatorTextForm(SourceInForm):
     data = forms.CharField(
         widget=forms.Textarea(attrs={'cols': '80', 'rows': '20'}),
         required=True)
-    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
-                                          label='Relationship Type',
+                                          label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
+
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorTextForm, self).__init__(username, *args, **kwargs)
         dt = "Indicator, Type, Threat Type, Attack Type, Description, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action, Status\n"
@@ -108,10 +109,10 @@ class UploadIndicatorForm(SourceInForm):
     impact = forms.ChoiceField(widget=forms.Select, required=True)
     campaign = forms.ChoiceField(widget=forms.Select, required=False)
     campaign_confidence = forms.ChoiceField(widget=forms.Select, required=False)
-    related_id = forms.CharField(widget=forms.HiddenInput(), required=False)
-    related_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
+    related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
-                                          label='Relationship Type',
+                                          label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
@@ -148,7 +149,7 @@ class UploadIndicatorForm(SourceInForm):
             ("low", "low"),
             ("medium", "medium"),
             ("high", "high")]
-            
+
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 

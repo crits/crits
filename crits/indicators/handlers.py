@@ -603,6 +603,7 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
                             source_tlp=None, user='', add_domain=False,
                             add_relationship=False, cache={}, related_id=None,
                             related_type=None, relationship_type=None):
+
     """
     Insert an individual indicator into the database.
 
@@ -834,9 +835,8 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
     if related_id:
         related_obj = class_from_id(related_type, related_id)
         if not related_obj:
-            retVal['success'] = False
-            retVal['message'] = 'Related Object not found.'
-            return retVal
+            return {'success': False,
+                    'message': 'Related Object not found.'}
 
     indicator.save(username=user)
 

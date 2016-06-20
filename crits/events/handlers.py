@@ -1,3 +1,4 @@
+import datetime
 import json
 import uuid
 
@@ -12,6 +13,7 @@ except ImportError:
 
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id
+from crits.campaigns.campaign import Campaign
 from crits.campaigns.forms import CampaignForm
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
 from crits.core.crits_mongoengine import EmbeddedCampaign
@@ -235,8 +237,8 @@ def generate_event_id(event):
 
 def add_new_event(title, description, event_type, source_name, source_method,
                   source_reference, source_tlp, date, user,
-                  bucket_list=None, ticket=None, related_id=None,
-                  related_type=None, relationship_type=None):
+                  bucket_list=None, ticket=None, campaign=None, campaign_confidence=None,
+                  related_id=None, related_type=None, relationship_type=None):
     """
     Add a new Event to CRITs.
 
@@ -267,10 +269,16 @@ def add_new_event(title, description, event_type, source_name, source_method,
     :param relationship_type: Type of relationship to create.
     :type relationship_type: str
     :returns: dict with keys "success" (boolean) and "message" (str)
+    :param campaign: Campaign to associate with this Event
+    :type campaign: str
+    :param campaign_confidence: Confidence to associate with the Campaign
+    :type campaign_confidence: str
     """
+
     if not source_name:
         return {'success': False, 'message': "Missing source information."}
 
+    result = dict()
     event = Event()
     event.title = title
     event.description = description
@@ -283,6 +291,27 @@ def add_new_event(title, description, event_type, source_name, source_method,
                                analyst=user.username,
                                date=date)
     event.add_source(s)
+
+    valid_campaign_confidence = {
+        'low': 'low',
+        'medium': 'medium',
+        'high': 'high'}
+    valid_campaigns = {}
+    for c in Campaign.objects(active='on'):
+        valid_campaigns[c['name'].lower()] = c['name']
+
+    if campaign:
+        if isinstance(campaign, basestring) and len(campaign) > 0:
+            if campaign.lower() not in valid_campaigns:
+                result = {'success':False, 'message':'{} is not a valid campaign.'.format(campaign)}
+            else:
+                confidence = valid_campaign_confidence.get(campaign_confidence, 'low')
+                campaign = EmbeddedCampaign(name=campaign,
+                                                   confidence=confidence,
+                                                   description="",
+                                                   analyst=analyst,
+                                                   date=datetime.datetime.now())
+                event.add_campaign(campaign)
 
     if bucket_list:
         event.add_bucket_list(bucket_list, user.username)

@@ -79,8 +79,8 @@ def upload_certificate(request):
             tlp = form.cleaned_data.get('source_tlp', None)
             status = handle_cert_file(filename, data, source, user, description,
                                       related_id=related, related_type=related_type,
-                                      relationship_type=relationship_type, method=method, 
-                                      reference=reference, tlp=tlp, bucket_list=bucket_list, 
+                                      relationship_type=relationship_type, method=method,
+                                      reference=reference, tlp=tlp, bucket_list=bucket_list,
                                       ticket=ticket)
             if status['success']:
                 return render_to_response('file_upload_response.html',
