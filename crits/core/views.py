@@ -35,7 +35,7 @@ from crits.core.handlers import add_new_source, generate_counts_jtable
 from crits.core.handlers import source_add_update, source_remove, source_remove_all
 from crits.core.handlers import modify_bucket_list, promote_bucket_list
 from crits.core.handlers import download_object_handler, unflatten
-from crits.core.handlers import modify_sector_list
+from crits.core.handlers import modify_sector_list, validate_next
 from crits.core.handlers import generate_bucket_jtable, generate_bucket_csv
 from crits.core.handlers import generate_sector_jtable, generate_sector_csv
 from crits.core.handlers import generate_dashboard, generate_global_search
@@ -347,6 +347,17 @@ def login(request):
     remote_addr = request.META.get('REMOTE_ADDR', '')
     accept_language = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
     next_url = request.GET.get('next', request.POST.get('next', None))
+
+    # Is the user already authenticated?
+    if request.user.is_authenticated():
+        resp = validate_next(next_url)
+        if not resp['success']:
+            return render_to_response('error.html',
+                                      {'data': resp,
+                                    'error': resp['message']},
+                                    RequestContext(request))
+        else:
+            return HttpResponseRedirect(resp['message'])
 
     # Setup defaults
     username = None

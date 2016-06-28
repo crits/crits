@@ -1,3 +1,5 @@
+import json
+
 from mongoengine import Document
 from mongoengine import StringField, ListField
 from mongoengine import IntField
@@ -7,6 +9,8 @@ from crits.samples.migrate import migrate_sample
 from crits.core.crits_mongoengine import CritsBaseAttributes
 from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.crits_mongoengine import CritsActionsDocument
+from crits.core.crits_mongoengine import json_handler
+from crits.core.data_tools import format_file
 from crits.core.fields import getFileField
 
 
@@ -153,3 +157,17 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
         if isinstance(filenames, list):
             self.filenames = filenames
+
+    def _json_yaml_convert(self, exclude=[]):
+        """
+        Helper to convert to a dict before converting to JSON.
+
+        :param exclude: list of fields to exclude.
+        :type exclude: list
+        :returns: json
+        """
+
+        d = self.to_dict(exclude)
+        if 'filedata' not in exclude:
+            (d['filedata'], ext) = format_file(self.filedata.read(), 'base64')
+        return json.dumps(d, default=json_handler)

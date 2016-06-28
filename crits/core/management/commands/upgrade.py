@@ -1,4 +1,5 @@
 import sys
+import traceback
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -9,6 +10,7 @@ from crits.backdoors.backdoor import Backdoor
 from crits.campaigns.campaign import Campaign
 from crits.certificates.certificate import Certificate
 from crits.config.config import CRITsConfig
+from crits.core.mongo_tools import mongo_find_one
 from crits.domains.domain import Domain
 from crits.emails.email import Email
 from crits.events.event import Event
@@ -159,6 +161,8 @@ def migrate_collection(class_obj, sort_ids):
     # find all documents that don't have the latest schema version
     # and migrate those.
     version = class_obj._meta['latest_schema_version']
+
+    print "\nMigrating %ss" % class_obj._meta['crits_type']
     if sort_ids:
         docs = (
             class_obj.objects(schema_version__lt=version)
@@ -167,24 +171,37 @@ def migrate_collection(class_obj, sort_ids):
         )
     else:
         docs = class_obj.objects(schema_version__lt=version).timeout(False)
-    print "Migrating %ss...%d" % (class_obj._meta['crits_type'], len(docs))
+        total = docs.count()
+
+    if not total:
+        print "\tNo %ss to migrate!" % class_obj._meta['crits_type']
+        return
+
+    print "\tMigrated 0 of %d" % total,
     count = 0
     doc = None
     try:
         for doc in docs:
-            print >> sys.stdout, "\r\t%d" % (count + 1),
-            sys.stdout.flush()
             if 'migrated' in doc._meta and doc._meta['migrated']:
                 count += 1
-    except Exception, e:
+            print "\r\tMigrated %d of %d" % (count, total),
+        print ""
+    except Exception as e:
         # Provide some basic info so admin can query their db and figure out
         # what bad data is blowing up the migration.
-        print "\n\tMigrated: %d" % count
-        print "\tError: %s" % e
+        print "\n\n\tAn error occurred during migration!"
+        print "\tMigrated: %d" % count
+        formatted_lines = traceback.format_exc().splitlines()
+        print "\tError: %s" % formatted_lines[-1]
+        if hasattr(e, 'tlo'):
+            print "\tDocument ID: %s" % e.tlo
+        else:
+            doc_id = mongo_find_one(class_obj._meta.get('collection'),
+                                    {'schema_version': {'$lt': version}}, '_id')
+            print "\tDocument ID: %s" % doc_id.get('_id')
         if doc:
             print "\tLast ID: %s" % doc.id
         sys.exit(1)
-    print "\n\t%d %ss migrated!" % (count, class_obj._meta['crits_type'])
 
 def upgrade(lv, options):
     """
