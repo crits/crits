@@ -749,7 +749,7 @@ def role_graph(request):
                                 analyst)
         if result:
             return HttpResponse(json.dumps(result),
-                                mimetype="application/json")
+                                content_type="application/json")
     return render_to_response("role_graph.html",
                               {"start_type": start_type,
                               "start_node": start_node,
@@ -893,7 +893,7 @@ def remove_all_source(request, obj_type, obj_id):
                                     name, '%s' % request.user.username)
         result['last'] = True
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -1037,7 +1037,7 @@ def download_object(request):
                                       RequestContext(request))
 
         response = HttpResponse()
-        response['mimetype'] = result['mimetype']
+        response['content_type'] = result['content_type']
         response['Content-Disposition'] = 'attachment; filename=%s' % result['filename']
         response.write(result['data'])
         return response
@@ -1944,7 +1944,7 @@ def role_value_change(request):
             result = {'success': False}
         else:
             result = set_role_value(rid, name, value, analyst)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1969,7 +1969,7 @@ def role_add_source(request):
             result = {'success': False}
         else:
             result = add_role_source(rid, name, analyst)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -1995,7 +1995,7 @@ def update_role_name(request):
             result = {'success': False}
         else:
             result = edit_role_name(rid, old_name, name, analyst)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -2020,7 +2020,7 @@ def update_role_description(request):
             result = {'success': False}
         else:
             result = edit_role_description(rid, description, analyst)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -2045,7 +2045,7 @@ def role_remove_source(request):
             result = {'success': False}
         else:
             result = remove_role_source(rid, name, analyst)
-        return HttpResponse(json.dumps(result), mimetype="application/json")
+        return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -2177,7 +2177,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
         result = {"success":False,
                   "message":"User does not have permission to delete tickets."}
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
 
     #default. Should we do anything else here?
     return HttpResponse({})
@@ -2422,7 +2422,7 @@ def add_preferred_actions(request):
     else:
         result = {'success': False, 'message': "Expected AJAX POST"}
     return HttpResponse(json.dumps(result, default=json_handler),
-                        mimetype='application/json')
+                        content_type='application/json')
 
 @user_passes_test(user_can_view_data)
 def new_action(request):

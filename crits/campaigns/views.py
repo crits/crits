@@ -63,10 +63,15 @@ def campaigns_listing(request, option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
+    if get_user_permissions(request.user.username, 'Campaign')['read']:
+        if option == "csv":
+            return generate_campaign_csv(request)
+        return generate_campaign_jtable(request, option)
 
-    if option == "csv":
-        return generate_campaign_csv(request)
-    return generate_campaign_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Campaign listing.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def campaign_names(request, active_only=True):
@@ -344,12 +349,18 @@ def campaign_aliases(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        tags = request.POST.get('tags', "").split(",")
-        name = request.POST.get('name', None)
-        return HttpResponse(json.dumps(modify_campaign_aliases(name,
-                                                               tags,
-                                                               request.user.username)),
-                            content_type="application/json")
+        if get_user_permissions(request.user.username, 'Campaign')['aliases_edit']:
+            tags = request.POST.get('tags', "").split(",")
+            name = request.POST.get('name', None)
+            return HttpResponse(json.dumps(modify_campaign_aliases(name,
+                                                                   tags,
+                                                                   request.user.username)),
+                                content_type="application/json")
+        else:
+            result = {'success': False,
+                      'message': 'User does not have permission to edit aliases.'}
+            return HttpResponse(json.dumps(result),
+                                content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html", {"error": error}, RequestContext(request))

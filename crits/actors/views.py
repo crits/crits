@@ -55,9 +55,14 @@ def actors_listing(request,option=None):
     """
 
     request.user._setup()
-    if option == "csv":
-        return generate_actor_csv(request)
-    return generate_actor_jtable(request, option)
+    if get_user_permissions(request.user.username, 'Actor')['read']:
+        if option == "csv":
+            return generate_actor_csv(request)
+        return generate_actor_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view actor listing.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def actor_search(request):
@@ -88,13 +93,18 @@ def actor_detail(request, id_):
 
     template = "actor_detail.html"
     request.user._setup()
-    (new_template, args) = get_actor_details(id_,
-                                             request.user)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    if get_user_permissions(request.user.username, 'Actor')['read']:
+        (new_template, args) = get_actor_details(id_,
+                                                 request.user)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view actor details.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def add_actor(request):
@@ -147,7 +157,7 @@ def add_actor(request):
             else:
                 result = {"success":False,
                           "message":"User does not have permission to add Actors."}
-                          
+
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
                                 content_type="application/json")
@@ -176,7 +186,9 @@ def remove_actor(request, id_):
             actor_remove(id_, request.user)
             return HttpResponseRedirect(reverse('crits.actors.views.actors_listing'))
         else:
-            return HttpResponseRedirect(reverse('crits.actors.views.actors_listing'))
+            return render_to_response('error.html',
+                                      {'error':'User does not have permission to remove actor.'},
+                                      RequestContext(request))
 
     return render_to_response('error.html',
                               {'error':'Expected AJAX/POST'},
@@ -377,19 +389,23 @@ def attribute_identifier(request):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
-        id_ = request.POST.get('id', None)
-        identifier_type = request.POST.get('identifier_type', None)
-        identifier = request.POST.get('identifier', None)
-        confidence = request.POST.get('confidence', 'low')
-        if not identifier_type or not identifier:
-            return HttpResponse(json.dumps({'success': False,
-                                            'message': 'Not all info provided.'}),
-                                content_type="application/json")
-        result = attribute_actor_identifier(id_,
-                                            identifier_type,
-                                            identifier,
-                                            confidence,
-                                            request.user)
+        if get_user_permissions(request.user.username, 'Actor')['actor_identifiers_add']:
+            id_ = request.POST.get('id', None)
+            identifier_type = request.POST.get('identifier_type', None)
+            identifier = request.POST.get('identifier', None)
+            confidence = request.POST.get('confidence', 'low')
+            if not identifier_type or not identifier:
+                return HttpResponse(json.dumps({'success': False,
+                                                'message': 'Not all info provided.'}),
+                                    content_type="application/json")
+            result = attribute_actor_identifier(id_,
+                                                identifier_type,
+                                                identifier,
+                                                confidence,
+                                                request.user)
+        else:
+            result = {'success': False,
+                      'message': 'User does not have permission to attribute actor identifier.' }
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
@@ -480,14 +496,18 @@ def edit_actor_name(request, id_):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
-        name = request.POST.get('name', None)
-        if not name:
-            return HttpResponse(json.dumps({'success': False,
-                                            'message': 'Not all info provided.'}),
-                                content_type="application/json")
-        result = set_actor_name(id_,
-                                name,
-                                request.user)
+        if get_user_permissions(request.user.username, 'Actor')['name_edit']:
+            name = request.POST.get('name', None)
+            if not name:
+                return HttpResponse(json.dumps({'success': False,
+                                                'message': 'Not all info provided.'}),
+                                    content_type="application/json")
+            result = set_actor_name(id_,
+                                    name,
+                                    request.user)
+        else:
+            result = {'success':False,
+                      'message':'User does not have permission to edit name.'}
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:

@@ -30,16 +30,21 @@ def backdoors_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if option == "csv":
-        return generate_backdoor_csv(request)
-    elif option== "jtdelete" and not get_user_permissions(request.user.username, 'Backdoor')['delete']:
-        result = {'sucess':False,
-                  'message':'User does not have permission to delete Backdoor.'}
-        return HttpResponse(json.dumps(result,
-                                       default=json_handler),
-                            content_type="application/json")
+    if get_user_permissions(request.user.username, 'Backdoor')['read']:
+        if option == "csv":
+            return generate_backdoor_csv(request)
+        elif option== "jtdelete" and not get_user_permissions(request.user.username, 'Backdoor')['delete']:
+            result = {'sucess':False,
+                      'message':'User does not have permission to delete Backdoor.'}
+            return HttpResponse(json.dumps(result,
+                                           default=json_handler),
+                                content_type="application/json")
 
-    return generate_backdoor_jtable(request, option)
+        return generate_backdoor_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view backdoor listing.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def backdoor_detail(request, id_):

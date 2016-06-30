@@ -160,9 +160,14 @@ def generate_actor_jtable(request, option):
                                        default=json_handler),
                             content_type="application/json")
     if option == "jtdelete":
-        response = {"Result": "ERROR"}
-        if jtable_ajax_delete(obj_type, request):
-            response = {"Result": "OK"}
+        if get_user_permissions(request.user.username, 'Actor')['delete']:
+            if jtable_ajax_delete(obj_type, request):
+                response = {"Result": "OK"}
+            else:
+                respones = {"Result": "ERROR"}
+        else:
+            response = {"Result": "OK",
+                        "message": "User does not have permission to delete"}
         return HttpResponse(json.dumps(response,
                                        default=json_handler),
                             content_type="application/json")
@@ -231,7 +236,10 @@ def get_actor_details(id_, user):
                                                   "obj_id": actor.id})
 
         # generate identifiers
-        actor_identifiers = actor.generate_identifiers_list(username)
+        if get_user_permissions(username, 'Actor')['actor_identifiers_read']:
+            actor_identifiers = actor.generate_identifiers_list(username)
+        else:
+            actor_identifiers = None
 
         # subscription
         subscription = {
@@ -272,10 +280,16 @@ def get_actor_details(id_, user):
         favorite = is_user_favorite("%s" % username, 'Actor', actor.id)
 
         # services
-        service_list = get_supported_services('Actor')
+        if get_user_permissions(username, 'Actor')['services_read']:
+            service_list = get_supported_services('Actor')
+        else:
+            service_list = None
 
         # analysis results
-        service_results = actor.get_analysis_results()
+        if get_user_permissions(username, 'Actor')['services_read']:
+            service_results = actor.get_analysis_results()
+        else:
+            service_results = None
 
         args = {'actor_identifiers': actor_identifiers,
                 'objects': objects,

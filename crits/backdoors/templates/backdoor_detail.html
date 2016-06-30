@@ -21,9 +21,7 @@
 <div id="details_section">
     <span class="horizontal_menu">
     <ul class="hmenu">
-        {% if admin %}
         <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="backdoor" action='{% url "crits.backdoors.views.remove_backdoor" backdoor.id %}'>Delete Backdoor</a></li>
-        {% endif %}
     </ul>
     </span>
 
@@ -156,4 +154,3 @@
 {% block javascript_includes %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/backdoors.js"></script>
 {% endblock %}
-

@@ -18,7 +18,7 @@ from crits.core.handlers import jtable_ajax_list, build_jtable
 from crits.core.handlers import csv_export, get_item_names
 from crits.core.mongo_tools import mongo_connector
 from crits.core.user_tools import user_sources, is_user_subscribed
-from crits.core.user_tools import is_user_favorite
+from crits.core.user_tools import is_user_favorite, get_user_permissions
 from crits.notifications.handlers import remove_user_from_notification
 from crits.stats.handlers import generate_campaign_stats
 
@@ -92,7 +92,10 @@ def get_campaign_details(campaign_name, analyst):
                 'url_key': campaign_name}
 
     #screenshots
-    screenshots = campaign_detail.get_screenshots(analyst)
+    if get_user_permissions(analyst, 'Campaign')['screenshots_read']:
+        screenshots = campaign_detail.get_screenshots(analyst)
+    else:
+        screenshots = None
 
     # Get item counts
     formatted_query = {'campaign.name': campaign_name}

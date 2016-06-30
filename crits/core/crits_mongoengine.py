@@ -2525,6 +2525,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             self.actor_identifiers = None
 
     def sanitize_backdoor(self, username=None, permissions=None):
+        if not permissions['aliases_read']:
+            self.aliases = None
         if not permissions['description_read']:
             self.description = None
 
@@ -2533,6 +2535,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             self.aliases = None
         if not permissions['ttps_read']:
             self.ttps = None
+        if not permissions['description_read']:
+            self.description = None
 
     def sanitize_certificate(self, username=None, permissions=None):
         return

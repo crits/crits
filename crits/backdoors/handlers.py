@@ -170,11 +170,17 @@ def get_backdoor_details(id_, user):
         favorite = is_user_favorite("%s" % user, 'Backdoor', backdoor.id)
 
         # services
-        service_list = get_supported_services('Backdoor')
+        if get_user_permissions(user, 'Backdoor')['services_read']:
+            service_list = get_supported_services('Backdoor')
+        else:
+            service_list = None
 
         # analysis results
-        service_results = backdoor.get_analysis_results()
-
+        if get_user_permissions(user, 'Backdoor')['services_read']:
+            service_results = backdoor.get_analysis_results()
+        else:
+            service_results = None
+            
         args = {'objects': objects,
                 'relationships': relationships,
                 'relationship': relationship,

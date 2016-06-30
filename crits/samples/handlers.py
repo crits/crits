@@ -34,7 +34,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
 from crits.core.source_access import SourceAccess
-from crits.core.user_tools import user_sources, get_user_organization
+from crits.core.user_tools import user_sources, get_user_organization, get_user_permissions
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
@@ -144,7 +144,10 @@ def get_sample_details(sample_md5, analyst, format_=None):
         }
 
         #objects
-        objects = sample.sort_objects()
+        if get_user_permissions(analyst, 'Sample')['objects_read']:
+            objects = sample.sort_objects()
+        else:
+            objects = None
 
         #relationships
         relationships = sample.sort_relationships("%s" % analyst,
@@ -157,17 +160,26 @@ def get_sample_details(sample_md5, analyst, format_=None):
         }
 
         #comments
-        comments = {'comments': sample.get_comments(),
-                    'url_key': sample_md5}
+        if get_user_permissions(analyst, 'Sample')['comments_read']:
+            comments = {'comments': sample.get_comments(),
+                        'url_key': sample_md5}
+        else:
+            comments = None
 
         #screenshots
-        screenshots = sample.get_screenshots(analyst)
+        if get_user_permissions(analyst, 'Sample')['screenshots_read']:
+            screenshots = sample.get_screenshots(analyst)
+        else:
+            screenshots = None
 
         # favorites
         favorite = is_user_favorite("%s" % analyst, 'Sample', sample.id)
 
         # services
-        service_list = get_supported_services('Sample')
+        if get_user_permissions(analyst, 'Sample')['services_read']:
+            service_list = get_supported_services('Sample')
+        else:
+            service_list = None
 
         # analysis results
         service_results = sample.get_analysis_results()
