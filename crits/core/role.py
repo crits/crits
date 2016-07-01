@@ -103,10 +103,10 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
                                     default=RawDataAccess())
     Sample = EmbeddedDocumentField(SampleAccess, required=True,
                                    default=SampleAccess())
-    Target = EmbeddedDocumentField(TargetAccess, required=True,
-                                   default=TargetAccess())
     Signature = EmbeddedDocumentField(SignatureAccess, required=True,
                                       default=SignatureAccess())
+    Target = EmbeddedDocumentField(TargetAccess, required=True,
+                                   default=TargetAccess())
 
     # Interfacing
     api_interface = BooleanField(default=False)

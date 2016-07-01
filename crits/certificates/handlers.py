@@ -14,7 +14,7 @@ from crits.core.crits_mongoengine import create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources
-from crits.core.user_tools import is_user_subscribed
+from crits.core.user_tools import is_user_subscribed, get_user_permissions
 from crits.certificates.certificate import Certificate
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.analysis_result import AnalysisResult
@@ -68,7 +68,10 @@ def get_certificate_details(md5, analyst):
         }
 
         #objects
-        objects = cert.sort_objects()
+        if get_user_permissions(analyst, 'Certificate')['objects_read']:
+            objects = cert.sort_objects()
+        else:
+            objects = None
 
         #relationships
         relationships = cert.sort_relationships("%s" % analyst, meta=True)
@@ -80,17 +83,29 @@ def get_certificate_details(md5, analyst):
         }
 
         #comments
-        comments = {'comments': cert.get_comments(),
-                    'url_key': md5}
+        if get_user_permissions(analyst, 'Certificate')['comments_read']:
+            comments = {'comments': cert.get_comments(),
+                        'url_key': md5}
+        else:
+            comments = None
 
         #screenshots
-        screenshots = cert.get_screenshots(analyst)
+        if get_user_permissions(analyst, 'Certificate')['screenshots_read']:
+            screenshots = cert.get_screenshots(analyst)
+
+        else:
+            screenshots = None
 
         # services
-        service_list = get_supported_services('Certificate')
+        if get_user_permissions(analyst, 'Certificate')['services_read']:
+            service_list = get_supported_services('Certificate')
 
-        # analysis results
-        service_results = cert.get_analysis_results()
+            # analysis results
+            service_results = cert.get_analysis_results()
+        else:
+            service_list = None
+
+            service_results = None
 
         args = {'service_list': service_list,
                 'objects': objects,
@@ -205,8 +220,8 @@ def generate_cert_jtable(request, option):
                                   RequestContext(request))
 
 def handle_cert_file(filename, data, source_name, user=None,
-                     description=None, related_md5=None, method='', 
-                     reference='', tlp=None, relationship=None, bucket_list=None, 
+                     description=None, related_md5=None, method='',
+                     reference='', tlp=None, relationship=None, bucket_list=None,
                      ticket=None, related_id=None, related_type=None,
                      relationship_type=None):
     """
@@ -340,7 +355,7 @@ def handle_cert_file(filename, data, source_name, user=None,
             relationship=RelationshipTypes.inverse(relationship=relationship_type)
         if not relationship:
             relationship = RelationshipTypes.RELATED_TO
-            
+
         cert.add_relationship(related_obj,
                               relationship,
                               analyst=user,

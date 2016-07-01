@@ -26,16 +26,21 @@ def certificates_listing(request,option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
+    if get_user_permissions(request.user.username, 'Certificate')['read']:
+        if option == "csv":
+            return generate_cert_csv(request)
+        elif option== "jtdelete" and not get_user_permissions(request.user.username, 'Certificate')['delete']:
+            result = {'sucess':False,
+                      'message':'User does not have permission to delete Certificate.'}
+            return HttpResponse(json.dumps(result,
+                                           default=json_handler),
+                                content_type="application/json")
+        return generate_cert_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Certificate listing.'},
+                                  RequestContext(request))
 
-    if option == "csv":
-        return generate_cert_csv(request)
-    elif option== "jtdelete" and not get_user_permissions(request.user.username, 'Certificate')['delete']:
-        result = {'sucess':False,
-                  'message':'User does not have permission to delete Certificate.'}
-        return HttpResponse(json.dumps(result,
-                                       default=json_handler),
-                            content_type="application/json")
-    return generate_cert_jtable(request, option)
 
 @user_passes_test(user_can_view_data)
 def certificate_details(request, md5):
@@ -51,12 +56,17 @@ def certificate_details(request, md5):
 
     template = 'certificate_details.html'
     analyst = request.user.username
-    (new_template, args) = get_certificate_details(md5, analyst)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    if get_user_permissions(analyst, 'Certificate')['read']:
+        (new_template, args) = get_certificate_details(md5, analyst)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Certificate.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def upload_certificate(request):

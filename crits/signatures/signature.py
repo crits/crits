@@ -102,17 +102,19 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
 class SignatureAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
     """
-    ACL for Samples.
+    ACL for Signatures.
     """
 
-    upload_related_sample = BooleanField(default=False)
-    upload_related_pcap = BooleanField(default=False)
+    upload_new_version = BooleanField(default=False)
 
-    text_view = BooleanField(default=False)
-    yaml_view = BooleanField(default=False)
-    unrar_sample = BooleanField(default=False)
-    unzip_sample = BooleanField(default=False)
+    data_type_read = BooleanField(default=False)
+    data_type_edit = BooleanField(default=False)
 
-    filename_edit = BooleanField(default=False)
-    filenames_add = BooleanField(default=False)
-    filenames_remove = BooleanField(default=False)
+    data_type_min_version_read = BooleanField(default=False)
+    data_type_min_version_edit = BooleanField(default=False)
+
+    data_type_max_version_read = BooleanField(default=False)
+    data_type_max_version_edit = BooleanField(default=False)
+
+    data_read = BooleanField(default=False)
+    data_edit = BooleanField(default=False)

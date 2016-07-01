@@ -58,19 +58,6 @@ class AddDomainForm(SourceInForm):
                                      widget=forms.CheckboxInput(attrs={'class':'togglewithip bulkskip'}),
                                      label=form_consts.Domain.SAME_SOURCE)
 
-    """    ip_source = forms.ChoiceField(
-        widget=forms.Select(attrs={'class': 'togglewithipsource togglewithip bulkrequired bulknoinitial no_clear'}),
-        label=form_consts.Indicator.SOURCE,
-        required=True)
-    ip_method = forms.CharField(
-        widget=forms.TextInput(attrs={'class':'togglewithipsource togglewithip'}),
-        label=form_consts.Indicator.SOURCE_METHOD,
-        required=False)
-    ip_reference = forms.CharField(
-        widget=forms.TextInput(attrs={'size': '90',
-                                      'class':'togglewithipsource togglewithip'}),
-        label=form_consts.Indicator.SOURCE_REFERENCE,
-        required=False)"""
     ip_source = forms.ChoiceField(required=False,
                                   widget=forms.Select(attrs={'class':'togglewithipsource togglewithip bulkrequired bulknoinitial'}),
                                   label=form_consts.Domain.IP_SOURCE)
@@ -95,7 +82,13 @@ class AddDomainForm(SourceInForm):
 
     def __init__(self, username, *args, **kwargs):
         super(AddDomainForm, self).__init__(username, *args, **kwargs)
-        #self.fields['ip_source'].initial = get_user_organization(username)
+        self.fields['ip_source'].choices = [
+            (c.name, c.name) for c in get_source_names(True, True, username)]
+        self.fields['ip_source'].initial = get_user_organization(username)
+        self.fields['ip_tlp'].choices = [
+            (t, t) for t in ('red', 'amber', 'green', 'white')]
+        self.fields['ip_tlp'].initial = 'red'
+
         self.fields['campaign'].choices = [('', '')] + [(c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['confidence'].choices = [('',''),
                                              ('low', 'low'),

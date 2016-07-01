@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 
 from crits.core import form_consts
-from crits.core.user_tools import user_can_view_data, user_sources
+from crits.core.user_tools import user_can_view_data, user_sources, get_user_permissions
 from crits.emails.email import Email
 from crits.emails.forms import EmailYAMLForm, EmailOutlookForm
 from crits.emails.forms import EmailEMLForm, EmailUploadForm, EmailRawUploadForm
@@ -35,9 +35,14 @@ def emails_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if option == "csv":
-        return generate_email_csv(request)
-    return generate_email_jtable(request, option)
+    if get_user_permissions(request.user.username, 'Email')['read']:
+        if option == "csv":
+            return generate_email_csv(request)
+        return generate_email_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Email listing.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def email_search(request):
@@ -485,18 +490,23 @@ def email_detail(request, email_id):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    template = 'email_detail.html'
-    analyst = request.user.username
-    if request.method == "GET" and request.is_ajax():
-        return get_email_formatted(email_id,
-                                   analyst,
-                                   request.GET.get("format", "json"))
-    (new_template, args) = get_email_detail(email_id, analyst)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    if get_user_permissions(request.user.username, 'Email')['read']:
+        template = 'email_detail.html'
+        analyst = request.user.username
+        if request.method == "GET" and request.is_ajax():
+            return get_email_formatted(email_id,
+                                       analyst,
+                                       request.GET.get("format", "json"))
+        (new_template, args) = get_email_detail(email_id, analyst)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Email Details.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def indicator_from_header_field(request, email_id):

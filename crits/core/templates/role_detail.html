@@ -61,17 +61,18 @@
     <li><a href="#pcap_section" id="pcap_button"><span>PCAP</span></a></li>
     <li><a href="#rawdata_section" id="rawdata_button"><span>Raw Data</span></a></li>
     <li><a href="#sample_section" id="sample_button"><span>Sample</span></a></li>
+    <li><a href="#signature_section" id="signature_button"><span>Signature</span></a></li>
     <li><a href="#target_section" id="ttarget_button"><span>Target</span></a></li>
     </ul>
 <div id="general_section">
     {% if show_roles %}
     <div>
-        <h3>Role Combination Preview for: 
+        <h3>Role Combination Preview for:
             {% for r in show_roles %}
                 {% if forloop.last %}
                     {{ r }}
                 {% else %}
-                    {{ r }}, 
+                    {{ r }},
                 {% endif %}
             {% endfor %}
         </h3>
@@ -245,6 +246,17 @@
         </tbody>
     </table>
 </div>
+<div id="signature_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Sample" %}
+                {% for k,v in role.Signature.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
 <div id="target_section">
     <table class="vertical">
         <tbody>
@@ -265,4 +277,3 @@
 {% block javascript_includes %}
  <script type="text/javascript" src="{{ STATIC_URL }}js/roles.js"></script>
 {% endblock %}
-

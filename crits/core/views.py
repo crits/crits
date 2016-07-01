@@ -2066,12 +2066,22 @@ def download_file(request, sample_md5):
     """
 
     dtype = request.GET.get("type", "sample")
-    if dtype in ('object', 'pcap', 'cert'):
-        return download_grid_file(request, dtype, sample_md5)
+    if dtype=='cert':
+        tlo_type = 'Certificate'
+    else:
+        tlo_type = dtype
+    if get_user_permissions(request.user.username, tlo_type)['download']:
+        if dtype in ('object', 'pcap', 'cert'):
+            return download_grid_file(request, dtype, sample_md5)
+        else:
+            return render_to_response('error.html',
+                                      {'data': request,
+                                       'error': "Unknown Type: %s" % dtype},
+                                      RequestContext(request))
     else:
         return render_to_response('error.html',
                                   {'data': request,
-                                   'error': "Unknown Type: %s" % dtype},
+                                   'error': "User does not have permission to download %s" % dtype},
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)

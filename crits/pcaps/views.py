@@ -8,6 +8,7 @@ from django.template import RequestContext
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import get_user_permissions
 from crits.pcaps.forms import UploadPcapForm
 from crits.pcaps.handlers import handle_pcap_file
 from crits.pcaps.handlers import delete_pcap, get_pcap_details
@@ -25,9 +26,15 @@ def pcaps_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if option == "csv":
-        return generate_pcap_csv(request)
-    return generate_pcap_jtable(request, option)
+    if get_user_permissions(request.user.username, 'PCAP')['read']:
+        if option == "csv":
+            return generate_pcap_csv(request)
+        return generate_pcap_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view PCAP listing.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def pcap_details(request, md5):
@@ -43,12 +50,18 @@ def pcap_details(request, md5):
 
     template = 'pcap_detail.html'
     analyst = request.user.username
-    (new_template, args) = get_pcap_details(md5, analyst)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    if get_user_permissions(analyst, 'PCAP')['read']:
+        (new_template, args) = get_pcap_details(md5, analyst)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view PCAP Details.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def upload_pcap(request):

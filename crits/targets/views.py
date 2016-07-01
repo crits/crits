@@ -8,6 +8,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import get_user_permissions
 from crits.core.class_mapper import class_from_value
 from crits.targets.forms import TargetInfoForm
 from crits.targets.handlers import upsert_target, get_target_details
@@ -27,9 +28,14 @@ def targets_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if option == "csv":
-        return generate_target_csv(request)
-    return generate_target_jtable(request, option)
+    if get_user_permissions(request.user.username, 'Target')['read']:
+        if option == "csv":
+            return generate_target_csv(request)
+        return generate_target_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Target listing.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def divisions_listing(request,option=None):
@@ -73,11 +79,17 @@ def target_info(request, email_address):
     """
 
     analyst = request.user.username
-    template = "target.html"
-    (new_template, args) = get_target_details(email_address, analyst)
-    if new_template:
-        template = new_template
-    return render_to_response(template, args, RequestContext(request))
+    if get_user_permissions(analyst, 'Target')['read']:
+        template = "target.html"
+        (new_template, args) = get_target_details(email_address, analyst)
+        if new_template:
+            template = new_template
+        return render_to_response(template, args, RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Target details.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def add_update_target(request):

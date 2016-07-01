@@ -9,7 +9,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from crits.core import form_consts
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_user_permissions
 from crits.events.forms import EventForm
 from crits.events.handlers import event_remove
 from crits.events.handlers import update_event_title, update_event_type
@@ -32,10 +32,14 @@ def events_listing(request, option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
-
-    if option == "csv":
-        return generate_event_csv(request)
-    return generate_event_jtable(request, option)
+    if get_user_permissions(request.user.username, 'Event')['read']:
+        if option == "csv":
+            return generate_event_csv(request)
+        return generate_event_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Event listing.'},
+                                  RequestContext(request))
 
 
 @user_passes_test(user_can_view_data)
@@ -109,14 +113,19 @@ def view_event(request, eventid):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
-    template = 'event_detail.html'
-    (new_template, args) = get_event_details(eventid, analyst)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    if get_user_permissions(request.user.username, 'Event')['read']:
+        analyst = request.user.username
+        template = 'event_detail.html'
+        (new_template, args) = get_event_details(eventid, analyst)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Event Details.'},
+                                  RequestContext(request))
 
 
 @user_passes_test(user_can_view_data)

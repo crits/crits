@@ -12,6 +12,7 @@ from django.template.loader import render_to_string
 
 from crits.core.crits_mongoengine import json_handler
 from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import get_user_permissions
 from crits.core import form_consts
 from crits.indicators.forms import UploadIndicatorCSVForm
 from crits.indicators.forms import UploadIndicatorForm, UploadIndicatorTextForm
@@ -53,14 +54,20 @@ def indicator(request, indicator_id):
     """
 
     user = request.user.username
-    template = "indicator_detail.html"
-    (new_template, args) = get_indicator_details(indicator_id,
-                                                 user)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    if get_user_permissions(user, 'Indicator')['read']:
+        template = "indicator_detail.html"
+        (new_template, args) = get_indicator_details(indicator_id,
+                                                     user)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Indicator details.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def indicators_listing(request, option=None):
@@ -74,9 +81,15 @@ def indicators_listing(request, option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if option == "csv":
-        return generate_indicator_csv(request)
-    return generate_indicator_jtable(request, option)
+    if get_user_permissions(request.user.username, 'Indicator')['read']:
+        if option == "csv":
+            return generate_indicator_csv(request)
+        return generate_indicator_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Indicator listing.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def remove_indicator(request, _id):

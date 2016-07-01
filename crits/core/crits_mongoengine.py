@@ -2539,12 +2539,18 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             self.description = None
 
     def sanitize_certificate(self, username=None, permissions=None):
+        if not permissions['description_read']:
+            self.description = None
         return
 
     def sanitize_domain(self, username=None, permissions=None):
+        if not permissions['description_read']:
+            self.description = None
         return
 
     def sanitize_email(self, username=None, permissions=None):
+        if not permissions['description_read']:
+            self.description = None
         return
 
     def sanitize_event(self, username=None, permissions=None):

@@ -21,6 +21,7 @@ from crits.core.data_tools import convert_string_to_bool
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
+from crits.core.user_tools import get_user_permissions
 from crits.domains.domain import Domain, TLD
 from crits.domains.forms import AddDomainForm
 from crits.ips.ip import IP
@@ -111,20 +112,30 @@ def get_domain_details(domain, analyst):
     }
 
     #comments
-    comments = {'comments': dmain.get_comments(),
-                'url_key':dmain.domain}
+    if get_user_permissions(analyst, 'Domain')['comments_read']:
+        comments = {'comments': dmain.get_comments(),
+                    'url_key':dmain.domain}
+    else:
+        comments = None
 
     #screenshots
-    screenshots = dmain.get_screenshots(analyst)
+    if get_user_permissions(analyst, 'Domain')['screenshots_read']:
+        screenshots = dmain.get_screenshots(analyst)
+    else:
+        screenshots = None
 
     # favorites
     favorite = is_user_favorite("%s" % analyst, 'Domain', dmain.id)
 
     # services
-    service_list = get_supported_services('Domain')
+    if get_user_permissions(analyst, 'Domain')['services_read']:
+        service_list = get_supported_services('Domain')
 
-    # analysis results
-    service_results = dmain.get_analysis_results()
+        # analysis results
+        service_results = dmain.get_analysis_results()
+    else:
+        service_list = None
+        service_results = None
 
     args = {'objects': objects,
             'relationships': relationships,

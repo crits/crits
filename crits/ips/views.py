@@ -12,6 +12,7 @@ from crits.core import form_consts
 from crits.core.data_tools import json_handler
 from crits.core.handsontable_tools import form_to_dict
 from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import get_user_permissions
 from crits.ips.forms import AddIPForm
 from crits.ips.handlers import ip_add_update, ip_remove
 from crits.ips.handlers import generate_ip_jtable, get_ip_details
@@ -31,9 +32,15 @@ def ips_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if option == "csv":
-        return generate_ip_csv(request)
-    return generate_ip_jtable(request, option)
+    if get_user_permissions(request.user.username, 'IP')['read']:
+        if option == "csv":
+            return generate_ip_csv(request)
+        return generate_ip_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view IP listing.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def ip_search(request):
@@ -63,15 +70,21 @@ def ip_detail(request, ip):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    template = "ip_detail.html"
     analyst = request.user.username
-    (new_template, args) = get_ip_details(ip,
-                                          analyst)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    if get_user_permissions(analyst, 'IP')['read']:
+        template = "ip_detail.html"
+        (new_template, args) = get_ip_details(ip,
+                                              analyst)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view IP details.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def bulk_add_ip(request):

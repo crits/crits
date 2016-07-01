@@ -8,6 +8,7 @@ from django.template import RequestContext
 
 from crits.core.handlers import get_item_names
 from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import get_user_permissions
 from crits.raw_data.forms import UploadRawDataFileForm, UploadRawDataForm
 from crits.raw_data.forms import NewRawDataTypeForm
 from crits.raw_data.handlers import update_raw_data_tool_details
@@ -38,9 +39,15 @@ def raw_data_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if option == "csv":
-        return generate_raw_data_csv(request)
-    return generate_raw_data_jtable(request, option)
+    if get_user_permissions(request.user.username, 'RawData')['read']:
+        if option == "csv":
+            return generate_raw_data_csv(request)
+        return generate_raw_data_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Raw Data listing.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def set_raw_data_tool_details(request, _id):
@@ -306,12 +313,18 @@ def raw_data_details(request, _id):
 
     template = 'raw_data_details.html'
     analyst = request.user.username
-    (new_template, args) = get_raw_data_details(_id, analyst)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    if get_user_permissions(analyst, 'RawData')['read']:
+        (new_template, args) = get_raw_data_details(_id, analyst)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Raw Data Details.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def details_by_link(request, link):
