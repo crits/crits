@@ -34,6 +34,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
             'sha1': 'The SHA1 of the file',
             'sha256': 'The SHA256 of the file',
             'ssdeep': 'The ssdeep of the file',
+            'impfuzzy': 'The impfuzzy of the executable file',
             'campaign': 'List [] of campaigns using this file',
             'source': 'List [] of sources that provided this file',
             'created': 'ISODate of when this file was uploaded',
@@ -77,6 +78,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     sha256 = StringField()
     size = IntField(default=0)
     ssdeep = StringField()
+    impfuzzy = StringField()
 
     def migrate(self):
         migrate_sample(self)
@@ -94,6 +96,10 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         import pydeep
         import magic
         from hashlib import md5, sha1, sha256
+        try:
+            import pyimpfuzzy
+        except ImportError:
+            pass
         try:
             self.filetype = magic.from_buffer(data)
         except:
@@ -118,6 +124,10 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
             self.ssdeep = pydeep.hash_bytes(data)
         except:
             self.ssdeep = None
+        try:
+            self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(data)
+        except:
+            self.impfuzzy = None
 
     def is_pe(self):
         """
