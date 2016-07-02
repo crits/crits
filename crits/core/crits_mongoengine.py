@@ -1804,7 +1804,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 their_rel.relationship_date = my_existing_rel.relationship_date
                 their_rel.rel_confidence = my_existing_rel.rel_confidence
                 their_rel.rel_reason = my_existing_rel.rel_reason
-            rel_item.update(add_to_set__relationships=their_rel) # add new rel
+            rel_item.relationships.append(their_rel) # add to passed rel_item
+
+            # updating DB this way can be much faster than saving entire TLO
+            rel_item.update(add_to_set__relationships=their_rel)
 
         if get_rels:
             results = {'success': True,
