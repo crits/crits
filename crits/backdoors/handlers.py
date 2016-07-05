@@ -135,14 +135,15 @@ def get_backdoor_details(id_, user):
                                              backdoor.id),
         }
 
+        permissions = get_user_permissions(user, 'Backdoor')
         #objects
-        if get_user_permissions(user,'Backdoor')['objects_read']:
+        if permissions['objects_read']:
             objects = backdoor.sort_objects()
         else:
             objects = None
 
         #relationships
-        if get_user_permissions(user,'Backdoor')['relationships_read']:
+        if permissions['relationships_read']:
             relationships = backdoor.sort_relationships("%s" % user, meta=True)
         else:
             relationships = None
@@ -154,14 +155,14 @@ def get_backdoor_details(id_, user):
         }
 
         #comments
-        if get_user_permissions(user,'Backdoor')['comments_read']:
+        if permissions['comments_read']:
             comments = {'comments': backdoor.get_comments(),
                         'url_key': backdoor.id}
         else:
             comments = None
 
         #screenshots
-        if get_user_permissions(user,'Backdoor')['screenshots_read']:
+        if permissions['screenshots_read']:
             screenshots = backdoor.get_screenshots(user)
         else:
             screenshots = None
@@ -170,17 +171,17 @@ def get_backdoor_details(id_, user):
         favorite = is_user_favorite("%s" % user, 'Backdoor', backdoor.id)
 
         # services
-        if get_user_permissions(user, 'Backdoor')['services_read']:
+        if permissions['services_read']:
             service_list = get_supported_services('Backdoor')
         else:
             service_list = None
 
         # analysis results
-        if get_user_permissions(user, 'Backdoor')['services_read']:
+        if permissions['services_read']:
             service_results = backdoor.get_analysis_results()
         else:
             service_results = None
-            
+
         args = {'objects': objects,
                 'relationships': relationships,
                 'relationship': relationship,
@@ -191,7 +192,8 @@ def get_backdoor_details(id_, user):
                 'screenshots': screenshots,
                 'backdoor': backdoor,
                 'backdoor_id': id_,
-                'comments': comments}
+                'comments': comments,
+                'permissions': permissions}
     return template, args
 
 def add_new_backdoor(name, version=None, aliases=None, description=None,

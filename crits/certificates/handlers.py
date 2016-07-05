@@ -14,7 +14,8 @@ from crits.core.crits_mongoengine import create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources
-from crits.core.user_tools import is_user_subscribed, get_user_permissions
+from crits.core.user_tools import is_user_subscribed
+from crits.core.user_tools import get_user_permissions
 from crits.certificates.certificate import Certificate
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.analysis_result import AnalysisResult
@@ -56,6 +57,8 @@ def get_certificate_details(md5, analyst):
 
         cert.sanitize("%s" % analyst)
 
+        permissions = get_user_permissions(analyst, 'Certificate')
+
         # remove pending notifications for user
         remove_user_from_notification("%s" % analyst, cert.id, 'Certificate')
 
@@ -68,7 +71,7 @@ def get_certificate_details(md5, analyst):
         }
 
         #objects
-        if get_user_permissions(analyst, 'Certificate')['objects_read']:
+        if permissions['objects_read']:
             objects = cert.sort_objects()
         else:
             objects = None
@@ -83,21 +86,21 @@ def get_certificate_details(md5, analyst):
         }
 
         #comments
-        if get_user_permissions(analyst, 'Certificate')['comments_read']:
+        if permissions['comments_read']:
             comments = {'comments': cert.get_comments(),
                         'url_key': md5}
         else:
             comments = None
 
         #screenshots
-        if get_user_permissions(analyst, 'Certificate')['screenshots_read']:
+        if permissions['screenshots_read']:
             screenshots = cert.get_screenshots(analyst)
 
         else:
             screenshots = None
 
         # services
-        if get_user_permissions(analyst, 'Certificate')['services_read']:
+        if permissions['services_read']:
             service_list = get_supported_services('Certificate')
 
             # analysis results
@@ -115,7 +118,8 @@ def get_certificate_details(md5, analyst):
                 "subscription": subscription,
                 "screenshots": screenshots,
                 'service_results': service_results,
-                "cert": cert}
+                "cert": cert,
+                "permissions": permissions}
 
     return template, args
 

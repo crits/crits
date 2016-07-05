@@ -14,17 +14,25 @@
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+    {% if permissions.services_read %}
+      <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
 </ul>
 
 <div id="details_section">
+    {% if permissions.download or permissions.delete %}
     <span class="horizontal_menu">
     <ul class="hmenu">
+      {% if permissions.download %}
         <li><a href="{% url 'crits.core.views.download_file' cert.md5 %}?type=cert">Download Certificate</a></li>
+      {% endif %}
+      {% if permissions.delete %}
         <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="certifcate" action='{% url "crits.certificates.views.remove_certificate" cert.md5 %}'>Delete Certificate</a></li>
+      {% endif %}
     </ul>
     </span>
+    {% endif %}
     <div class="content_box content_details">
         <h3 class="titleheader">
         <span>Certificate Details<span>
@@ -57,11 +65,14 @@
             <td class='key'>MD5</td>
             <td>{{ cert.md5 }}</td>
             </tr>
+            {% if permissions.description_read %}
             <tr>
                 {% with description=cert.description %}
                     {% include 'description_widget.html' %}
                 {% endwith %}
             </tr>
+            {% endif %}
+            {% if permissions.status_read %}
             <tr>
                 <td class="key">Status
                     <span style="float: right;" class="object_status_response"></span>
@@ -70,69 +81,96 @@
                     <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{cert.status}}</span>
                 </td>
             </tr>
+            {% endif %}
             {% with tlp=cert.tlp %}
                 {% include "tlp_widget.html" %}
             {% endwith %}
+            {% if permissions.sectors_read %}
             {% with sectors=cert.sectors %}
                 {% include "sector_widget.html" %}
             {% endwith %}
-            <tr>
-            {% with sources=cert.source obj_id=cert.id obj_type=subscription.type %}
-                {% include "sources_listing_widget.html" %}
-            {% endwith %}
-            </tr>
-            <tr>
-                {% with releasability=cert.releasability %}
-                    {% include 'releasability_list_widget.html' %}
-                {% endwith %}
-            </tr>
+            {% endif %}
+            {% if permissions.sources_read %}
+              <tr>
+              {% with sources=cert.source obj_id=cert.id obj_type=subscription.type %}
+                  {% include "sources_listing_widget.html" %}
+              {% endwith %}
+              </tr>
+            {% endif %}
+            {% if permissions.releasability_read %}
+              <tr>
+                  {% with releasability=cert.releasability %}
+                      {% include 'releasability_list_widget.html' %}
+                  {% endwith %}
+              </tr>
+            {% endif %}
         </tbody>
         </table>
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% with bucket_list=cert.bucket_list %}
-            {% include 'bucket_list_widget.html' %}
-        {% endwith %}
+        {% if permissions.bucketlist_read %}
+          {% with bucket_list=cert.bucket_list %}
+              {% include 'bucket_list_widget.html' %}
+          {% endwith %}
+        {% endif %}
         {% include 'add_related_widget.html' %}
     </div>
+    {% if permissions.actions_read %}
     <div class="content_box">
         {% with obj=cert obj_type="Certificate" %}
             {% include 'action_listing_widget.html' %}
         {% endwith %}
     </div>
+    {% endif %}
+    {% if permissions.tickets_read %}
     <div>
       {% with obj=cert obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
     </div>
+    {% endif %}
+    {% if permissions.campaigns_read %}
     <div>
         {% with hit=cert col=COL_CERTIFICATES %}
             {% include "campaigns_display_widget.html" %}
         {% endwith %}
     </div>
+    {% endif %}
+    {% if permissions.locations_read %}
     <div>
         {% with hit=cert col=COL_CERTIFICATES %}
             {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
+    {% endif %}
+    {% if permissions.relationships_read %}
     <div>
         {% include 'relationships_listing_widget.html' %}
     </div>
+    {% endif %}
+    {% if permissions.objects_read %}
     <div>
         {% include 'objects_listing_widget.html' %}
     </div>
+    {% endif %}
+    {% if permissions.screenshots_read %}
     <div>
     {% include 'screenshot_widget.html' %}
     </div>
+    {% endif %}
+    {% if permissions.comments_read %}
     <div>
         {% include "comments_listing_widget.html" %}
     </div>
+    {% endif %}
 </div>
-{% with item=cert %}
-    {% include "services_analysis_section.html" with crits_type="certificate" identifier=cert.md5 %}
-{% endwith %}
-{% include 'services_tab_tabs_widget.html' %}
+{% if permissions.services_read %}
+  {% with item=cert %}
+      {% include "services_analysis_section.html" with crits_type="certificate" identifier=cert.md5 %}
+  {% endwith %}
+  {% include 'services_tab_tabs_widget.html' %}
+{% endif %}
 </div>
 
 {% else %}
@@ -145,4 +183,3 @@
 {% block javascript_includes %}
  <script type="text/javascript" src="{{ STATIC_URL }}js/certificates.js"></script>
 {% endblock %}
-

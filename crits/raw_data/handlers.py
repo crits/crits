@@ -19,6 +19,7 @@ from crits.core.class_mapper import class_from_id
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
+from crits.core.user_tools import get_user_permissions
 from crits.notifications.handlers import remove_user_from_notification
 from crits.raw_data.raw_data import RawData, RawDataType
 from crits.services.handlers import run_triage, get_supported_services
@@ -79,6 +80,8 @@ def get_raw_data_details(_id, analyst):
 
         raw_data.sanitize("%s" % analyst)
 
+        permissions = get_user_permissions(analyst, 'RawData')
+
         # remove pending notifications for user
         remove_user_from_notification("%s" % analyst, raw_data.id, 'RawData')
 
@@ -130,7 +133,8 @@ def get_raw_data_details(_id, analyst):
                 "screenshots": screenshots,
                 "versions": versions,
                 "service_results": service_results,
-                "raw_data": raw_data}
+                "raw_data": raw_data,
+                "permissions": permissions}
 
     return template, args
 

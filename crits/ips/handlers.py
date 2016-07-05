@@ -18,6 +18,7 @@ from crits.core.data_tools import convert_string_to_bool
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
+from crits.core.user_tools import get_user_permissions
 from crits.ips.forms import AddIPForm
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
@@ -165,6 +166,8 @@ def get_ip_details(ip, analyst):
     else:
         ip.sanitize("%s" % analyst)
 
+        permissions = get_user_permissions(analyst, 'IP')
+
         # remove pending notifications for user
         remove_user_from_notification("%s" % analyst, ip.id, 'IP')
 
@@ -212,7 +215,8 @@ def get_ip_details(ip, analyst):
                 'service_results': service_results,
                 'screenshots': screenshots,
                 'ip': ip,
-                'comments':comments}
+                'comments':comments,
+                'permissions': permissions}
     return template, args
 
 def get_ip(allowed_sources, ip_address):

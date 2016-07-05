@@ -34,6 +34,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
+from crits.core.user_tools import get_user_permissions
 from crits.domains.handlers import get_valid_root_domain
 from crits.emails.email import Email
 from crits.indicators.handlers import handle_indicator_ind
@@ -155,6 +156,8 @@ def get_email_detail(email_id, analyst):
         args = {'error': "ID does not exist or insufficient privs for source"}
     else:
         email.sanitize(username="%s" % analyst, sources=sources)
+        permissions = get_user_permissions(analyst, 'Email')
+
         update_data_form = EmailYAMLForm(analyst)
         campaign_form = CampaignForm()
         download_form = DownloadFileForm(initial={"obj_type": 'Email',
@@ -172,10 +175,16 @@ def get_email_detail(email_id, analyst):
         }
 
         # objects
-        objects = email.sort_objects()
+        if permissions['objects_read']:
+            objects = email.sort_objects()
+        else:
+            objects = None
 
         # relationships
-        relationships = email.sort_relationships("%s" % analyst, meta=True)
+        if permissions['relationships_read']:
+            relationships = email.sort_relationships("%s" % analyst, meta=True)
+        else:
+            relationships = None
 
         # relationship
         relationship = {
@@ -184,11 +193,17 @@ def get_email_detail(email_id, analyst):
         }
 
         # comments
-        comments = {'comments': email.get_comments(),
-                    'url_key': email.id}
+        if permissions['comments_read']:
+            comments = {'comments': email.get_comments(),
+                        'url_key': email.id}
+        else:
+            comments = None
 
         #screenshots
-        screenshots = email.get_screenshots(analyst)
+        if permissions['screenshots_read']:
+            screenshots = email.get_screenshots(analyst)
+        else:
+            screenshots = None
 
         # favorites
         favorite = is_user_favorite("%s" % analyst, 'Email', email.id)
@@ -328,7 +343,8 @@ def get_email_detail(email_id, analyst):
                 'download_form': download_form,
                 'update_data_form': update_data_form,
                 'service_results': service_results,
-                'rt_url': settings.RT_URL}
+                'rt_url': settings.RT_URL,
+                'permissions': permissions}
     return template, args
 
 def generate_email_jtable(request, option):

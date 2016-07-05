@@ -24,6 +24,7 @@ from crits.core.handlers import jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
+from crits.core.user_tools import get_user_permissions
 from crits.events.event import Event
 from crits.notifications.handlers import remove_user_from_notification
 from crits.samples.handlers import handle_uploaded_file, mail_sample
@@ -65,6 +66,8 @@ def get_event_details(event_id, analyst):
         return template, args
 
     event.sanitize("%s" % analyst)
+
+    permissions = get_user_permissions(analyst, 'Event')
 
     campaign_form = CampaignForm()
     download_form = DownloadFileForm(initial={"obj_type": 'Event',
@@ -119,7 +122,8 @@ def get_event_details(event_id, analyst):
             'event': event,
             'campaign_form': campaign_form,
             'service_results': service_results,
-            'download_form': download_form}
+            'download_form': download_form,
+            'permissions': permissions}
 
     return template, args
 
@@ -256,8 +260,8 @@ def add_new_event(title, description, event_type, source_name, source_method,
     :type reference: str
     :param date: Date of acquiring this data.
     :type date: datetime.datetime
-    :param analyst: The user adding this Event.
-    :type analyst: str
+    :param user: The user adding this Event.
+    :type user: str
     :param bucket_list: The bucket(s) to associate with this Event.
     :type: str
     :param ticket: Ticket to associate with this event.
@@ -309,7 +313,7 @@ def add_new_event(title, description, event_type, source_name, source_method,
                 campaign = EmbeddedCampaign(name=campaign,
                                                    confidence=confidence,
                                                    description="",
-                                                   analyst=analyst,
+                                                   analyst=user.username,
                                                    date=datetime.datetime.now())
                 event.add_campaign(campaign)
 

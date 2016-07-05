@@ -19,17 +19,28 @@
     <li><a href="#raw_section" id="raw_button"><span>Raw Email</span></a></li>
     <li><a href="#json_section" id="json_button"><span>JSON View</span></a></li>
     <li><a href="#yaml_section" id="yaml_button"><span>YAML View</span></a></li>
+    {% if permissions.services_read %}
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
     </ul>
+
 <div id="details_section">
+  {% if permissions.add_attachment or permissions.download or permissions.delete %}
     <span class="horizontal_menu">
     <ul class="hmenu">
-        <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.emails.views.upload_attach' email.id %}">Add Attachment</a></li>
-        <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
-        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
+        {% if permissions.add_attachment %}
+          <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.emails.views.upload_attach' email.id %}">Add Attachment</a></li>
+        {% endif %}
+        {% if permissions.download %}
+          <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
+        {% endif %}
+        {% if permissions.delete %}
+          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
+        {% endif %}
     </ul>
     </span>
+  {% endif %}
 
 {% if email %}
     <div class='content_box content_details'>
@@ -50,11 +61,13 @@
                 {{ email.id }}
             </td>
         </tr>
-        <tr>
-            {% with description=email.description %}
-                {% include 'description_widget.html' %}
-            {% endwith %}
-        </tr>
+        {% if permissions.description_read %}
+          <tr>
+              {% with description=email.description %}
+                  {% include 'description_widget.html' %}
+              {% endwith %}
+          </tr>
+        {% endif %}
 
         {% for email_field in email_fields %}
         <tr>
@@ -97,73 +110,99 @@
             </td>
         </tr>
         {% endfor %}
-        <tr>
-            <td class="key">Status
-                <span style="float: right;" class="object_status_response"></span>
-            </td>
-            <td>
-                <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{email.status}}</span>
-            </td>
-        </tr>
+        {% if permissions.status_read %}
+          <tr>
+              <td class="key">Status
+                  <span style="float: right;" class="object_status_response"></span>
+              </td>
+              <td>
+                  <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{email.status}}</span>
+              </td>
+          </tr>
+        {% endif %}
         {% with tlp=email.tlp %}
             {% include "tlp_widget.html" %}
         {% endwith %}
-        {% with sectors=email.sectors %}
-            {% include "sector_widget.html" %}
-        {% endwith %}
+        {% if permissions.sectors_read %}
+          {% with sectors=email.sectors %}
+              {% include "sector_widget.html" %}
+          {% endwith %}
+        {% endif %}
+        {% if permissions.sources_read %}
+          <tr>
+          {% with sources=email.source obj_id=email.id obj_type=subscription.type %}
+              {% include "sources_listing_widget.html" %}
+          {% endwith %}
+          </tr>
+        {% endif %}
+        {% if permissions.releasability_read %}
         <tr>
-        {% with sources=email.source obj_id=email.id obj_type=subscription.type %}
-            {% include "sources_listing_widget.html" %}
-        {% endwith %}
+          {% with releasability=email.releasability %}
+               {% include 'releasability_list_widget.html' %}
+          {% endwith %}
         </tr>
-        <tr>
-        {% with releasability=email.releasability %}
-             {% include 'releasability_list_widget.html' %}
-        {% endwith %}
-        </tr>
+        {% endif %}
         </tbody>
     </table>
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% with bucket_list=email.bucket_list %}
-            {% include 'bucket_list_widget.html' %}
-        {% endwith %}
+        {% if permissions.bucketlist_read %}
+          {% with bucket_list=email.bucket_list %}
+              {% include 'bucket_list_widget.html' %}
+          {% endwith %}
+        {% endif %}
         {% include 'add_related_widget.html' %}
 
     </div>
-    <div class="content_box">
-        {% with obj=email obj_type="Email" %}
-            {% include 'action_listing_widget.html' %}
+    {% if permissions.actions_read %}
+      <div class="content_box">
+          {% with obj=email obj_type="Email" %}
+              {% include 'action_listing_widget.html' %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if permissions.tickets_read %}
+      <div>
+        {% with obj=email obj_type=subscription.type %}
+           {% include 'tickets_listing_widget.html' %}
         {% endwith %}
-    </div>
-    <div>
-      {% with obj=email obj_type=subscription.type %}
-         {% include 'tickets_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if permissions.campaigns_read %}
+      <div>
+      {% with hit=email col=COL_EMAIL %}
+          {% include 'campaigns_display_widget.html' %}
       {% endwith %}
-    </div>
-    <div>
-    {% with hit=email col=COL_EMAIL %}
-        {% include 'campaigns_display_widget.html' %}
-    {% endwith %}
-    </div>
-    <div>
-    {% with hit=email col=COL_EMAIL %}
-        {% include 'locations_display_widget.html' %}
-    {% endwith %}
-    </div>
-    <div id="relationships_div_container">
-        {% include 'relationships_listing_widget.html' %}
-    </div>
-    <div>
-        {% include 'objects_listing_widget.html' %}
-    </div>
-    <div>
-        {% include "screenshot_widget.html" %}
-    </div>
-    <div>
-        {% include "comments_listing_widget.html" %}
-    </div>
+      </div>
+    {% endif %}
+    {% if permissions.locations_read %}
+      <div>
+      {% with hit=email col=COL_EMAIL %}
+          {% include 'locations_display_widget.html' %}
+      {% endwith %}
+      </div>
+    {% endif %}
+    {% if permissions.relationships_read %}
+      <div id="relationships_div_container">
+          {% include 'relationships_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if permissions.objects_read %}
+      <div>
+          {% include 'objects_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if permissions.screenshots_read %}
+      <div>
+          {% include "screenshot_widget.html" %}
+      </div>
+    {% endif %}
+    {% if permissions.comments_read %}
+      <div>
+          {% include "comments_listing_widget.html" %}
+      </div>
+    {% endif %}
 </div>
 <div id="raw_section">
     <div class='content_box'>
@@ -210,20 +249,25 @@
     <textarea id="yaml_display" cols="150" rows="40"></textarea>
 </div>
 
+{% if permissions.services_read %}
 {% with item=email %}
     {% include "services_analysis_section.html" with crits_type="Email" identifier=email.id %}
 {% endwith %}
 
 {% include 'services_tab_tabs_widget.html' %}
+{% endif %}
+
 </div>
 
 <div style="display: none;">
 
+{% if permissions.download %}
 <div id="dialog-download-email">
     <form id="form-download-email" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
     <table class="form">{{download_form.as_table}}</table>
     </form>
 </div>
+{% endif %}
 
 </div>
 

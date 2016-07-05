@@ -303,7 +303,8 @@ def get_actor_details(id_, user):
                 'screenshots': screenshots,
                 'actor': actor,
                 'actor_id': id_,
-                'comments': comments}
+                'comments': comments,
+                'permissions': get_user_permissions(username,'Actor'),}
     return template, args
 
 def get_actor_by_name(allowed_sources, actor):

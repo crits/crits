@@ -24,7 +24,9 @@
     <li><a href="{% url 'crits.pcaps.views.pcaps_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="pcaps_tab"><span>PCAPs ({{ counts.PCAP }})</span></a></li>
     <li><a href="{% url 'crits.samples.views.samples_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="samples_tab"><span>Samples ({{ counts.Sample }})</span></a></li>
     <li><a href="{% url 'crits.targets.views.targets_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="targets_tab"><span>Targets ({{ counts.Target }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+    {% if permissions.services_read %}
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
     </ul>
 
 <div id="details_section">
@@ -42,6 +44,8 @@
                 <td>
                     {{ campaign_detail.id }}
                 </td>
+              </tr>
+            {% if permissions.aliases_read %}
             <tr>
                 <td class="key">Aliases</td>
                 <td>
@@ -52,14 +56,20 @@
                     </ul>
                 </td>
             </tr>
+            {% endif %}
+            {% if permissions.description_read %}
             <tr>
             {% with description=campaign_detail.description %}
                 {% include 'description_widget.html' %}
             {% endwith %}
             </tr>
+            {% endif %}
+            {% if permissions.ttps_read %}
             <tr id="ttps_container">
                 {% include 'campaign_ttps_list_widget.html' %}
             </tr>
+            {% endif %}
+            {% if permissions.status_read %}
             <tr>
                 <td class="key">Status
                     <span style="float: right;" class="object_status_response"></span>
@@ -68,30 +78,39 @@
                     <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{campaign_detail.status}}</span>
                 </td>
             </tr>
+            {% endif %}
+            {% if permissions.sectors_read %}
             {% with sectors=campaign_detail.sectors %}
                 {% include "sector_widget.html" %}
             {% endwith %}
+            {% endif %}
+            {% if permissions.releasability_read %}
             <tr>
                 {% with releasability=campaign_detail.releasability %}
                     {% include "releasability_list_widget.html" %}
                 {% endwith %}
             </tr>
+            {% endif %}
         </tbody>
         </table>
     </div>
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
+        {% if permissions.bucketlist_read %}
         {% with bucket_list=campaign_detail.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% endif %}
         {% include 'add_related_widget.html' %}
     </div>
+    {% if permissions.actions_read %}
     <div class="content_box">
         {% with obj=campaign_detail obj_type="Campaign" %}
             {% include 'action_listing_widget.html' %}
         {% endwith %}
     </div>
+    {% endif %}
     <div class='content_box'>
       <h3 class="titleheader">
         <span>Email Activity</span>
@@ -102,34 +121,46 @@
         {% endwith %}
       </div>
     </div>
+    {% if permissions.locations_read %}
     <div>
         {% with hit=campaign_detail col=COL_CAMPAIGNS obj=campaign_detail %}
             {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
+    {% endif %}
+    {% if permissions.tickets_read %}
     <div>
       {% with obj=campaign_detail obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
     </div>
+    {% endif %}
+    {% if permissions.relationships_read %}
     <div>
         {% include 'relationships_listing_widget.html' %}
     </div>
+    {% endif %}
+    {% if permissions.objects_read %}
     <div>
         {% include 'objects_listing_widget.html' %}
     </div>
+    {% endif %}
+    {% if permissions.screenshots_read %}
     <div>
     {% include 'screenshot_widget.html' %}
     </div>
+    {% endif %}
+    {% if permissions.comments_read %}
     <div>
         {% include "comments_listing_widget.html" %}
     </div>
+    {% endif %}
 
 </div>
 
-
+{% if permissions.services_read %}
 {% include 'services_tab_tabs_widget.html' %}
-
+{% endif %}
 <div style="display: none;">
 
 {% include 'campaign_ttps_form.html' %}

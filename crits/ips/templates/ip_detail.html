@@ -6,13 +6,16 @@
 
 <script>
     var ip_id = "{{ ip.id | escapejs }}";
+    var perms = "{{permissions}}"
 </script>
 
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+    {% if permissions.services_read %}
+      <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
     </ul>
 
 <div id="details_section">
@@ -33,11 +36,13 @@
                         <td class="key">Created</td>
                         <td>{{ip.created}}</td>
                     </tr>
-                    <tr>
-                        {% with description=ip.description %}
-                            {% include 'description_widget.html' %}
-                        {% endwith %}
-                    </tr>
+                    {% if permissions.description_read %}
+                      <tr>
+                          {% with description=ip.description %}
+                              {% include 'description_widget.html' %}
+                          {% endwith %}
+                      </tr>
+                    {% endif %}
                     <tr>
                         <td class="key">Analyst</td>
                         <td>{{ip.analyst}}</td>
@@ -46,6 +51,7 @@
                         <td class="key">Type</td>
                         <td>{{ip.ip_type}}</td>
                     </tr>
+                    {% if permissions.status_read %}
                     <tr>
                         <td class="key">Status
                             <span style="float: right;" class="object_status_response"></span>
@@ -54,73 +60,100 @@
                             <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{ip.status}}</span>
                         </td>
                     </tr>
+                    {% endif %}
                     {% with tlp=ip.tlp %}
                         {% include "tlp_widget.html" %}
                     {% endwith %}
-                    {% with sectors=ip.sectors %}
-                        {% include "sector_widget.html" %}
-                    {% endwith %}
+                    {% if permissions.sectors_read %}
+                      {% with sectors=ip.sectors %}
+                          {% include "sector_widget.html" %}
+                      {% endwith %}
+                    {% endif %}
+                    {% if permissions.sources_read %}
                     <tr>
                         {% with sources=ip.source obj_id=ip.id obj_type=subscription.type %}
                             {% include "sources_listing_widget.html" %}
                         {% endwith %}
                     </tr>
+                    {% endif %}
+                    {% if permissions.releasability_read %}
                     <tr>
                         {% with releasability=ip.releasability %}
                             {% include "releasability_list_widget.html" %}
                         {% endwith %}
                     </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div> <!-- content_body -->
      </div> <!-- content_box -->
      <div id="detail_floaters">
          {% include 'details_options_widget.html' %}
+         {% if permissions.bucketlist_read %}
          {% with bucket_list=ip.bucket_list %}
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
+         {% endif %}
          {% include 'add_related_widget.html' %}
 
      </div>
-    <div class="content_box">
-        {% with obj=ip obj_type="IP" %}
-            {% include 'action_listing_widget.html' %}
-        {% endwith %}
-    </div>
+     {% if permissions.actions_read %}
+     <div class="content_box">
+          {% with obj=ip obj_type="IP" %}
+              {% include 'action_listing_widget.html' %}
+          {% endwith %}
+     </div>
+     {% endif %}
+     {% if permissions.tickets_read %}
      <div>
 	    {% with obj=ip obj_type=subscription.type %}
                 {% include 'tickets_listing_widget.html' %}
 	    {% endwith %}
     </div>
+    {% endif %}
+    {% if permissions.campaigns_read %}
     <div>
         {% with hit=ip col=COL_IPS %}
             {% include "campaigns_display_widget.html" %}
         {% endwith %}
     </div>
+    {% endif %}
+    {% if permissions.locations_read %}
     <div>
         {% with hit=ip col=COL_IPS %}
             {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
+    {% endif %}
+    {% if permissions.relationships_read %}
     <div>
         {% include 'relationships_listing_widget.html' %}
     </div>
+    {% endif %}
+    {% if permissions.objects_read %}
     <div>
         {% include 'objects_listing_widget.html' %}
     </div>
+    {% endif %}
+    {% if permissions.screenshots_read %}
     <div>
     {% include 'screenshot_widget.html' %}
     </div>
+    {% endif %}
+    {% if permissions.comments_read %}
     <div>
         {% include "comments_listing_widget.html" %}
     </div>
+    {% endif %}
 </div> <!-- details_section -->
 
+{% if permissions.services_read %}
 {% with item=ip %}
     {% include "services_analysis_section.html" with crits_type="IP" identifier=ip.id %}
 {% endwith %}
 
 {% include 'services_tab_tabs_widget.html' %}
+{% endif %}
 </div>
 
 {% endblock %}
@@ -128,4 +161,3 @@
 {% block javascript_includes %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/ips.js"></script>
 {% endblock %}
-

@@ -54,9 +54,11 @@
                         </td>
                     </tr>
                     <tr>
+                      {% if permissions.description_read %}
                         {% with description=actor.description %}
                             {% include 'description_widget.html' %}
                         {% endwith %}
+                      {% endif %}
                     </tr>
                     <tr>
                         <td class="key">Created</td>
@@ -78,13 +80,17 @@
                     {% with tlp=actor.tlp %}
                         {% include "tlp_widget.html" %}
                     {% endwith %}
-                    {% with sectors=actor.sectors %}
-                        {% include "sector_widget.html" %}
-                    {% endwith %}
+                    {% if permissions.sectors_read %}
+                      {% with sectors=actor.sectors %}
+                          {% include "sector_widget.html" %}
+                      {% endwith %}
+                    {% endif %}
                     <tr>
+                        {% if permissions.sources_read %}
                         {% with sources=actor.source obj_id=actor.id obj_type=subscription.type %}
                             {% include "sources_listing_widget.html" %}
                         {% endwith %}
+                        {% endif %}
                     </tr>
                     <tr>
                         {% with releasability=actor.releasability %}
@@ -97,45 +103,65 @@
      </div> <!-- content_box -->
      <div id="detail_floaters">
          {% include 'details_options_widget.html' %}
+         {% if permissions.bucketlist_read %}
          {% with bucket_list=actor.bucket_list %}
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
+         {% endif %}
          {% include 'add_related_widget.html' %}
      </div>
     <div class="content_box">
+      {% if permissions.actions_read %}
         {% with obj=actor obj_type="Actor" %}
             {% include 'action_listing_widget.html' %}
         {% endwith %}
+      {% endif %}
     </div>
      <div id="actor_identifier_widget_container">
+       {% if permissions.actor_identifiers_read %}
          {% include "actor_identifiers_widget.html" %}
+        {% endif %}
      </div>
      <div>
+      {%if permissions.tickets_read %}
 	    {% with obj=actor obj_type=subscription.type %}
                 {% include 'tickets_listing_widget.html' %}
 	    {% endwith %}
+      {%endif%}
     </div>
     <div>
+      {% if permissions.campaigns_read %}
         {% with hit=actor col=COL_ACTORS %}
             {% include "campaigns_display_widget.html" %}
         {% endwith %}
+      {%endif%}
     </div>
     <div>
+      {% if permissions.locations_read %}
         {% with hit=actor col=COL_ACTORS %}
             {% include "locations_display_widget.html" %}
         {% endwith %}
+      {% endif %}
     </div>
     <div>
+      {% if permissions.relationships_read %}
         {% include 'relationships_listing_widget.html' %}
+      {% endif %}
     </div>
     <div>
+      {% if permissions.objects_read %}
         {% include 'objects_listing_widget.html' %}
+      {% endif %}
     </div>
     <div>
-    {% include 'screenshot_widget.html' %}
+    {% if permissions.screenshots_read %}
+      {% include 'screenshot_widget.html' %}
+    {% endif %}
     </div>
     <div>
+      {% if permissions.comments_read %}
         {% include "comments_listing_widget.html" %}
+      {% endif %}
     </div>
 </div> <!-- details_section -->
 
@@ -167,4 +193,3 @@
 {% block javascript_includes %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/actors.js"></script>
 {% endblock %}
-

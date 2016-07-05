@@ -15,6 +15,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
+from crits.core.user_tools import get_user_permissions
 from crits.notifications.handlers import remove_user_from_notification
 from crits.pcaps.pcap import PCAP
 from crits.services.handlers import run_triage, get_supported_services
@@ -54,6 +55,8 @@ def get_pcap_details(md5, analyst):
     else:
 
         pcap.sanitize("%s" % analyst)
+
+        permissions = get_user_permissions(analyst, 'PCAP')
 
         # remove pending notifications for user
         remove_user_from_notification("%s" % analyst, pcap.id, 'PCAP')
@@ -104,7 +107,8 @@ def get_pcap_details(md5, analyst):
                 "subscription": subscription,
                 "screenshots": screenshots,
                 "service_results": service_results,
-                "pcap": pcap}
+                "pcap": pcap,
+                "permissions": permissions}
 
     return template, args
 
