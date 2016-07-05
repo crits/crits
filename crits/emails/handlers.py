@@ -36,6 +36,7 @@ from crits.core.user_tools import user_sources, is_admin, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.domains.handlers import get_valid_root_domain
 from crits.emails.email import Email
+from crits.events.event import Event
 from crits.indicators.handlers import handle_indicator_ind
 from crits.indicators.indicator import Indicator
 from crits.notifications.handlers import remove_user_from_notification

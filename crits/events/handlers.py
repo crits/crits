@@ -159,7 +159,6 @@ def generate_event_jtable(request, option):
         # filter list on relationship to given ObjectId
         query = {}
         if 'related' in request.GET:
-            from bson.objectid import ObjectId
             try:
                 oid = ObjectId(request.GET.get('related'))
                 query = {'relationships.value': oid}
