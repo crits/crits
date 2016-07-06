@@ -118,3 +118,6 @@ class SignatureAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
 
     data_read = BooleanField(default=False)
     data_edit = BooleanField(default=False)
+
+    dependencies_read = BooleanField(default=False)
+    dependencies_edit = BooleanField(default=False)

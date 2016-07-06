@@ -16,6 +16,7 @@ from crits.core.handlers import jtable_ajax_list, build_jtable, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
+from crits.core.user_tools import get_user_permissions
 from crits.emails.email import Email
 from crits.services.handlers import run_triage
 from crits.stats.handlers import target_user_stats
@@ -238,7 +239,8 @@ def get_target_details(email_address, analyst):
             'email_list': email_list,
             'target_detail': target,
             'service_results': service_results,
-            'form': form}
+            'form': form,
+            'permissions': get_user_permissions(analyst, 'Target')}
 
     return template, args
 

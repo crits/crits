@@ -1037,7 +1037,7 @@ def download_object(request):
                                       RequestContext(request))
 
         response = HttpResponse()
-        response['content_type'] = result['content_type']
+        response['mimetype'] = result['mimetype']
         response['Content-Disposition'] = 'attachment; filename=%s' % result['filename']
         response.write(result['data'])
         return response

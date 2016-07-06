@@ -18,6 +18,7 @@ from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
+from crits.core.user_tools import get_user_permissions
 from crits.notifications.handlers import remove_user_from_notification
 from crits.signatures.signature import Signature, SignatureType, SignatureDependency
 from crits.services.handlers import run_triage, get_supported_services
@@ -130,7 +131,8 @@ def get_signature_details(_id, analyst):
                 "screenshots": screenshots,
                 "versions": versions,
                 "service_results": service_results,
-                "signature": signature}
+                "signature": signature,
+                'permissions': get_user_permissions(analyst, 'Signature')}
 
     return template, args
 
