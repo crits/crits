@@ -179,6 +179,9 @@ def activity(request, atype=None, value=None):
     """
 
     analyst = request.user.username
+    permissions = get_user_permissions(analyst)
+    if not permissions['recent_activity_read']:
+        return render_to_response("error.html", {'error':'User does not have permission to view Recent Activity.'})
     if request.method == "POST" and request.is_ajax():
         atype = request.POST.get('atype', 'all')
         value = request.POST.get('value', None)

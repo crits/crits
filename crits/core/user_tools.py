@@ -62,7 +62,7 @@ def get_user_role(username):
     roles = Role.objects(name=user.roles[0])
     return roles
 
-def get_user_permissions(username, crits_type):
+def get_user_permissions(username, crits_type=None):
     from crits.core.role import Role
 
     ### So here we need to do something to get a master permissions dictionary
@@ -71,7 +71,11 @@ def get_user_permissions(username, crits_type):
     master_permissions = {}
     for name in user.roles:
         role = Role.objects(name=name)[0]
-        permissions = role[crits_type]
+        if crits_type:
+            permissions = role[crits_type]
+        else:
+            permissions = role
+
         for permission in permissions:
             if permission in master_permissions:
                 if not master_permissions[permission]:

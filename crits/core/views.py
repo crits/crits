@@ -564,6 +564,7 @@ def source_releasability(request):
         if not isinstance(date, datetime.datetime):
             date = parse(date, fuzzy=True)
         user = str(request.user.username)
+        permissions = get_user_permissions(user, type_)
 
         if not type_ or not id_ or not name or not action:
             error = "Modifying releasability requires a type, id, source, and action"
@@ -571,26 +572,26 @@ def source_releasability(request):
                                       {"error" : error },
                                       RequestContext(request))
         if action  == "add":
-            if get_user_permissions(user, type_)['releasability_add']:
+            if permissions['releasability_add']:
                 result = add_releasability(type_, id_, name, user)
             else:
                 result = {'success':False,
                           'message':'User does not have permission to add releasability.'}
         elif action  == "add_instance":
-            if get_user_permissions(user, type_)['releasability_add']:
+            if permissions['releasability_add']:
                 result = add_releasability_instance(type_, id_, name, user,
                                                     note=note)
             else:
                 result = {'success':False,
                           'message':'User does not have permission to add releasability.'}
         elif action == "remove":
-            if get_user_permissions(user, type_)['releasability_delete']:
+            if permissions['releasability_delete']:
                 result = remove_releasability(type_, id_, name, user)
             else:
                 result = {'success':False,
                           'message':'User does not have permission to remove releasability.'}
         elif action == "remove_instance":
-            if get_user_permissions(user, type_)['releasability_delete']:
+            if permissions['releasability_delete']:
                 result = remove_releasability_instance(type_, id_, name, date, user)
             else:
                 result = {'success':False,
@@ -777,11 +778,12 @@ def add_update_source(request, method, obj_type, obj_id):
         if form.is_valid():
             data = form.cleaned_data
             user = request.user.username
+            permissions = get_user_permissions(user, obj_type)
             # check to see that this user can already see the object
             if (data['name'] in user_sources(user)):
                 if method == "add":
                     date = datetime.datetime.now()
-                    if get_user_permissions(user,obj_type)['sources_add']:
+                    if permissions['sources_add']:
                         result = source_add_update(obj_type,
                                                    obj_id,
                                                    method,
@@ -797,7 +799,7 @@ def add_update_source(request, method, obj_type, obj_id):
                 else:
                     date = datetime.datetime.strptime(data['date'],
                                                       settings.PY_DATETIME_FORMAT)
-                    if get_user_permissions(user, obj_type)['sources_edit']:
+                    if permissions['sources_edit']:
                         result = source_add_update(obj_type,
                                                    obj_id,
                                                    method,
@@ -1061,6 +1063,7 @@ def timeline(request, data_type="dns"):
     format = request.GET.get("format", "none")
     analyst = request.user.username
     sources = user_sources(analyst)
+    permissions = get_user_permissions(analyst)
     query = {}
     params = {}
     if request.GET.get("campaign"):
@@ -1082,32 +1085,57 @@ def timeline(request, data_type="dns"):
 
         # DNS data
 
-        if data_type == "dns":
+        if data_type == "dns" and permissions['dns_timeline_read']:
             tline['title'] = "DNS"
             events = dns_timeline(query, analyst, sources)
         # Email data
 
-        elif data_type == "email":
-            tline['title'] = "Emails"
-            events = email_timeline(query, analyst, sources)
-        # Indicator data
+        elif data_type == "email" and permissions['emails_timeline_read']:
+                tline['title'] = "Emails"
+                events = email_timeline(query, analyst, sources)
+            # Indicator data
 
-        elif data_type == "indicator":
-            tline['title'] = "Indicators"
-            tline['initial_zoom'] = "14"
-            events = indicator_timeline(query, analyst, sources)
+        elif data_type == "indicator" and permissions['indicators_timeline_read']:
+                tline['title'] = "Indicators"
+                tline['initial_zoom'] = "14"
+                events = indicator_timeline(query, analyst, sources)
 
-        tline['events'] = events
-        timeglider.append(tline)
-        return HttpResponse(json.dumps(timeglider,
-                                       default=json_util.default),
-                            content_type="application/json")
+        if events:
+            tline['events'] = events
+            timeglider.append(tline)
+            return HttpResponse(json.dumps(timeglider,
+                                           default=json_util.default),
+                                content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': "User does not have permission to view timeline."}),
+                                content_type="application/json")
     else:
-        return render_to_response('timeline.html',
-                                  {'data_type': data_type,
-                                   'params': json.dumps(params),
-                                   'page_title': page_title},
-                                  RequestContext(request))
+        if permissions['dns_timeline_read'] and data_type=="dns":
+            return render_to_response('timeline.html',
+                                      {'data_type': data_type,
+                                       'params': json.dumps(params),
+                                       'page_title': page_title},
+                                      RequestContext(request))
+
+        elif permissions['emails_timeline_read'] and data_type=="email":
+            return render_to_response('timeline.html',
+                                      {'data_type': data_type,
+                                       'params': json.dumps(params),
+                                       'page_title': page_title},
+                                      RequestContext(request))
+
+        elif permissions['indicators_timeline_read'] and data_type=="indicator":
+            return render_to_response('timeline.html',
+                                      {'data_type': data_type,
+                                       'params': json.dumps(params),
+                                       'page_title': page_title},
+                                      RequestContext(request))
+        else:
+            error = "User does not have permission to view timeline."
+            return render_to_response("error.html",
+                                      {"error" : error },
+                                      RequestContext(request))
 
 def base_context(request):
     """
@@ -1871,8 +1899,13 @@ def audit_listing(request, option=None):
     :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
     :returns: :class:`django.http.HttpResponse`
     """
-
-    return generate_audit_jtable(request, option)
+    if get_user_permissions(request.user.username)['control_panel_audit_log_read']:
+        return generate_audit_jtable(request, option)
+    else:
+        error = "User does not have permission to view audit listing."
+        return render_to_response("error.html",
+                                  {"error" : error },
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def toggle_item_active(request):
@@ -2129,13 +2162,15 @@ def add_update_ticket(request, method, type_=None, id_=None):
     :returns: :class:`django.http.HttpResponseRedirect`
     """
 
+    permissions = get_user_permissions(analyst, type_)
+
 
     if method =="remove" and request.method == "POST" and request.is_ajax():
         analyst = request.user.username
         date = datetime.datetime.strptime(request.POST['key'],
                                             settings.PY_DATETIME_FORMAT)
         date = date.replace(microsecond=date.microsecond/1000*1000)
-        if get_user_permissions(analyst, type_)['tickets_delete']:
+        if permissions['tickets_delete']:
             result = ticket_remove(type_, id_, date, analyst)
         else:
             result = {"success":False,
@@ -2153,7 +2188,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
             }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                if get_user_permissions(request.user.username, type_)['tickets_add']:
+                if permissions['tickets_add']:
                     result = ticket_add(type_, id_, add, user)
                 else:
                     result = {"success":False,
@@ -2163,7 +2198,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
                                                          settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                if get_user_permissions(request.user.username, type_)['tickets_edit']:
+                if permissions['tickets_edit']:
                     result = ticket_update(type_, id_, add, user)
                 else:
                     result = {"success":False,
@@ -2483,6 +2518,7 @@ def add_update_action(request, method, obj_type, obj_id):
 
     if request.method == "POST" and request.is_ajax():
         username = request.user.username
+        permissions = get_user_permissions(username, obj_type)
         form = ActionsForm(request.POST)
         form.is_valid()
         data = form.cleaned_data
@@ -2497,7 +2533,7 @@ def add_update_action(request, method, obj_type, obj_id):
         }
         if method == "add":
             add['date'] = datetime.datetime.now()
-            if get_user_permissions(username, obj_type)['actions_add']:
+            if permissions['actions_add']:
                 result = action_add(obj_type, obj_id, add, username)
             else:
                 result = {"success":False,
@@ -2507,7 +2543,7 @@ def add_update_action(request, method, obj_type, obj_id):
                                                 settings.PY_DATETIME_FORMAT)
             date = date.replace(microsecond=date.microsecond/1000*1000)
             add['date'] = date
-            if get_user_permissions(username, obj_type)['actions_edit']:
+            if permissions['actions_edit']:
                 result = action_update(obj_type, obj_id, add, username)
             else:
                 result = {"success":False,

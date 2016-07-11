@@ -240,36 +240,55 @@
     <link rel="stylesheet" href="{{ STATIC_URL }}css/config.css" type="text/css" media="screen" />
     <div id="wrapper">
         <div id="sidebar" ></div>
-        <div id='systemContainer' class='rightContent forceInvisible'>
-               <div id="config_results"></div>
-            <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
-                <div id='CRITsTab' class='box forceInvisible'>
-                    <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
-                </div>
-                <div id='generalTab' class='box forceInvisible'>
-                    <table class="systemTable">{{ config_general_form.as_table }}</table>
-                </div>
-                <div id="LDAP" class='box forceInvisible'>
-                    <table class="systemTable">{{ config_LDAP_form.as_table }}</table>
-                </div>
-                <div id="securityTab" class='box forceInvisible'>
-                    <table class="systemTable">{{ config_security_form.as_table }}</table>
-                </div>
-                <div id="downloadTab" class='box forceInvisible'>
-                    <table class="systemTable">{{ config_download_form.as_table }}</table>
-                </div>
-                <div id="servicesTab" class='box forceInvisible'>
-                    <table class="systemTable">{{ config_services_form.as_table }}</table>
-                </div>
-                <div id="loggingTab" class='box forceInvisible'>
-                    <table class="systemTable">{{ config_logging_form.as_table }}</table>
-                </div>
-                <div id="submitWrapper">
-                    <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
-                    <input id="reset_button" type="button" value="Reset"></input>
-                </div>
-            </form>   
-        </div> 
+        {% if permissions.control_panel_system_read %}
+          <div id='systemContainer' class='rightContent forceInvisible'>
+                 <div id="config_results"></div>
+              <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
+                  <div id='CRITsTab' class='box forceInvisible'>
+                      <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
+                  </div>
+                  {% if permissions.control_panel_general_read %}
+                    <div id='generalTab' class='box forceInvisible'>
+                        <table class="systemTable">{{ config_general_form.as_table }}</table>
+                    </div>
+                  {% else %}
+                    <div>
+                      {% var error='user does not have perms'}
+                      {% include 'error.html' %}
+                    </div>
+                  {% endif %}
+                  {% if permissions.control_panel_ldap_read %}
+                    <div id="LDAP" class='box forceInvisible'>
+                        <table class="systemTable">{{ config_LDAP_form.as_table }}</table>
+                    </div>
+                  {% endif %}
+                  {% if permissions.control_panel_security_read %}
+                    <div id="securityTab" class='box forceInvisible'>
+                        <table class="systemTable">{{ config_security_form.as_table }}</table>
+                    </div>
+                  {% endif %}
+                  {% if permissions.control_panel_downloading_read %}
+                    <div id="downloadTab" class='box forceInvisible'>
+                        <table class="systemTable">{{ config_download_form.as_table }}</table>
+                    </div>
+                  {% endif %}
+                  {% if permissions.control_panel_system_services_read %}
+                    <div id="servicesTab" class='box forceInvisible'>
+                        <table class="systemTable">{{ config_services_form.as_table }}</table>
+                    </div>
+                  {% endif %}
+                  {% if permissions.control_panel_logging_read %}
+                    <div id="loggingTab" class='box forceInvisible'>
+                        <table class="systemTable">{{ config_logging_form.as_table }}</table>
+                    </div>
+                  {% endif %}
+                  <div id="submitWrapper">
+                      <input id="config_form_submit" type="submit" name="submit" value="Submit"></input>
+                      <input id="reset_button" type="button" value="Reset"></input>
+                  </div>
+              </form>
+          </div>
+        {% endif %}
         <div id="itemsContainer" class='rightContent forceInvisible'></div>
         <div id="itemsContainer" class='rightContent forceInvisible'>
             <div id="add-new-action-form" title="Add/Edit Action">

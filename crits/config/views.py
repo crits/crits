@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
+from crits.core.user_tools import get_user_permissions
 from crits.config.config import CRITsConfig
 from crits.config.forms import ConfigGeneralForm, ConfigLDAPForm, ConfigSecurityForm, ConfigCritsForm
 from crits.config.forms import ConfigLoggingForm, ConfigServicesForm, ConfigDownloadForm
@@ -21,6 +22,7 @@ def crits_config(request):
     """
 
     crits_config = CRITsConfig.objects().first()
+    permissions = get_user_permissions(request.user.username)
     if crits_config:
         crits_config = crits_config.to_dict()
         crits_config['allowed_hosts'] = ", ".join(crits_config['allowed_hosts'])
@@ -47,7 +49,8 @@ def crits_config(request):
                                'config_logging_form': config_logging_form,
                                'config_services_form': config_services_form,
                                'config_download_form': config_download_form,
-                               'config_CRITs_form': config_CRITs_form},
+                               'config_CRITs_form': config_CRITs_form,
+                               'permissions': permissions},
                               RequestContext(request))
 
 @user_passes_test(user_can_view_data)
@@ -60,14 +63,51 @@ def modify_config(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
+    # Get the current configuration, set as default unless user has permission to edit.
+    crits_config = CRITsConfig.objects().first()
+    config_data = crits_config.__dict__.get('_data')
+    permissions = get_user_permissions(request.user.username)
+
     if request.method == "POST" and request.is_ajax():
-        config_general_form = ConfigGeneralForm(request.POST)
-        config_LDAP_form = ConfigLDAPForm(request.POST)
-        config_security_form = ConfigSecurityForm(request.POST)
-        config_logging_form = ConfigLoggingForm(request.POST)
-        config_services_form = ConfigServicesForm(request.POST)
-        config_download_form = ConfigDownloadForm(request.POST)
-        config_CRITs_form = ConfigCritsForm(request.POST)
+        if permissions['control_panel_general_edit']:
+            config_general_form = ConfigGeneralForm(request.POST)
+        else:
+            config_general_form = ConfigGeneralForm(config_data)
+        if permissions['control_panel_ldap_edit']:
+            config_LDAP_form = ConfigLDAPForm(request.POST)
+        else:
+            config_LDAP_form = ConfigLDAPForm(config_data)
+        if permissions['control_panel_security_edit']:
+            config_security_form = ConfigSecurityForm(request.POST)
+        else:
+            new_allowed_hosts = []
+            for host in config_data['allowed_hosts']:
+                new_allowed_hosts.append(str(host))
+            config_data['allowed_hosts'] = ','.join(new_allowed_hosts)
+
+
+            config_security_form = ConfigSecurityForm(config_data)
+        if permissions['control_panel_logging_edit']:
+            config_logging_form = ConfigLoggingForm(request.POST)
+        else:
+            config_logging_form = ConfigLoggingForm(config_data)
+        if permissions['control_panel_system_services_edit']:
+            config_services_form = ConfigServicesForm(request.POST)
+        else:
+            new_service_dirs = []
+            for directory in config_data['service_dirs']:
+                new_service_dirs.append(str(directory))
+            config_data['service_dirs'] = ','.join(new_service_dirs)
+
+            config_services_form = ConfigServicesForm(config_data)
+        if permissions['control_panel_downloading_edit']:
+            config_download_form = ConfigDownloadForm(request.POST)
+        else:
+            config_download_form = ConfigDownloadForm(config_data)
+        if permissions['control_panel_crits_edit']:
+            config_CRITs_form = ConfigCritsForm(request.POST)
+        else:
+            config_CRITs_form = ConfigCritsForm(config_data)
 
         forms = [config_general_form,
                  config_LDAP_form,

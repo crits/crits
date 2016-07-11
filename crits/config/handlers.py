@@ -1,6 +1,8 @@
 from django.conf import settings
 
 from crits.config.config import CRITsConfig
+from crits.core.user_tools import get_user_permissions
+
 
 def modify_configuration(forms, analyst):
     """
@@ -12,19 +14,20 @@ def modify_configuration(forms, analyst):
     :type analyst: str
     :returns: dict with key "message"
     """
-
+    
     config = CRITsConfig.objects().first()
     if not config:
         config = CRITsConfig()
 
     data = None
+
     for form in forms:
         if not data:
             data = form.cleaned_data
         else:
             data.update(form.cleaned_data)
 
-   # data = config_form.cleaned_data
+    # data = config.cleaned_data
     allowed_hosts_list = data['allowed_hosts'].split(',')
     allowed_hosts = ()
     for allowed_host in allowed_hosts_list:
