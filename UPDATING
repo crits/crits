@@ -6,10 +6,10 @@ descending.
 Author: frbapolkosnik
 Date:   2016-07-13
 
-    Impfuzzy fuzzy import hashes have been added see:
+    Support for Impfuzzy has been added, see:
     https://github.com/JPCERTCC/aa-tools/tree/master/impfuzzy
-    In order to build them up for your current sample set run the following:
-    python manage.py upgrade -Ss
+    In order to populate the hashes for our current sample set run the following:
+        python manage.py upgrade -Ss
 
 Author: frbapolkosnik
 Date:   2016-02-03
