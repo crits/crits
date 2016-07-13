@@ -21,7 +21,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     meta = {
         "collection": settings.COL_SAMPLES,
         "crits_type": 'Sample',
-        "latest_schema_version": 4,
+        "latest_schema_version": 5,
         "shard_key": ('md5',),
         "schema_doc": {
             'filename': 'The name of the last file that was uploaded with this'\
