@@ -1802,6 +1802,7 @@ POST:
 
 Unique POST Parameters:
 
+:description: Add a description to the IP address
 :add_indicator: Add this IP as an Indicator.
 :indicator_reference: Reference for the source of the Indicator.
 :ip: IP Address.
