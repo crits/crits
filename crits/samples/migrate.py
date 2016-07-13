@@ -72,17 +72,40 @@ def migrate_sample(self):
     Migrate to the latest schema version.
     """
 
-    migrate_3_to_4(self)
-    populate_impfuzzy()
+    migrate_4_to_5()
 
-def populate_impfuzzy(self):
-    if self.schema_versions >= 4 and self.is_pe():
-        if not hasattr(self, "impfuzzy"):
+def migrate_4_to_5(self):
+    """
+    Migrate from schema 4 to 5.
+    """
+
+    if self.schema_version < 4:
+        migrate_3_to_4(self)
+
+    if self.is_pe():
+        try:
+            import pyimpfuzzy
+        except ImportError:
+            pass
+        if not hasattr(self, 'impfuzzy'):
             try:
                 self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(self.filedata.read())
             except Exception:
-                # The sample is probably not a PE
+                # The sample is probably not a PE with valid imports or we don't have pyimpfuzzy
                 self.impfuzzy = None
+        elif self.impfuzzy None:
+            #in case we had some Pes that were not covered
+            try:
+               self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(self.filedata.read())
+            except Exception:
+                # The sample is probably not a PE wit valid imports or we don't have pyimpfuzzy
+                self.impfuzzy = None
+    else:
+        # not a PE, so no point in populating it
+        self.impfuzzy = None
+        self.schema_version = 5
+        self.save()
+        self.reload()
 
 def migrate_3_to_4(self):
     """
