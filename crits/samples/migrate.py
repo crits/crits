@@ -76,10 +76,10 @@ def migrate_sample(self):
     populate_impfuzzy()
 
 def populate_impfuzzy(self):
-    if self.schema_versions >= 4:
+    if self.schema_versions >= 4 and self.is_pe():
         if not hasattr(self, "impfuzzy"):
             try:
-                self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(data)
+                self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(self.filedata.read())
             except Exception:
                 # The sample is probably not a PE
                 self.impfuzzy = None
