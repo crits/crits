@@ -60,6 +60,7 @@ class SampleResource(CRITsAPIResource):
         if type_ == 'metadata':
             filename = bundle.data.get('filename', None)
             md5 = bundle.data.get('md5', None)
+            description = bundle.data.get('description', None)
             password = None
             filedata = None
         elif type_ == 'file':
@@ -83,6 +84,7 @@ class SampleResource(CRITsAPIResource):
         related_type = bundle.data.get('related_type', None)
         backdoor_name = bundle.data.get('backdoor_name', None)
         backdoor_version = bundle.data.get('backdoor_version', None)
+	description = bundle.data.get('description', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
         sha1 = bundle.data.get('sha1', None)
@@ -102,6 +104,7 @@ class SampleResource(CRITsAPIResource):
                                           file_format,
                                           password,
                                           user=analyst,
+                                          description=description,
                                           campaign=campaign,
                                           confidence=confidence,
                                           related_md5=related_md5,
