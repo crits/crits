@@ -1802,6 +1802,7 @@ POST:
 
 Unique POST Parameters:
 
+:description: Add a description to the IP address
 :add_indicator: Add this IP as an Indicator.
 :indicator_reference: Reference for the source of the Indicator.
 :ip: IP Address.
@@ -1874,6 +1875,7 @@ POST:
 Unique POST Parameters:
 
 :upload_type: One of "metadata" or "file".
+:description: The description of the file.
 :filename: The name of the file if this is a "metadata" upload.
 :md5: The MD5 of the file if this is a "metadata" upload.
 :sha1: The SHA1 of the file if this is a "metadata" upload.
