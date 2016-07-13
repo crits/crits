@@ -103,9 +103,10 @@ def migrate_4_to_5(self):
     else:
         # not a PE, so no point in populating it
         self.impfuzzy = None
-        self.schema_version = 5
-        self.save()
-        self.reload()
+    
+    self.schema_version = 5
+    self.save()
+    self.reload()
 
 def migrate_3_to_4(self):
     """
