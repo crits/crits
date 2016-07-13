@@ -72,7 +72,7 @@ def migrate_sample(self):
     Migrate to the latest schema version.
     """
 
-    migrate_4_to_5()
+    migrate_4_to_5(self)
 
 def migrate_4_to_5(self):
     """
