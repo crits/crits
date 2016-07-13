@@ -73,7 +73,6 @@ class SampleResource(CRITsAPIResource):
             filename = None
 
         campaign = bundle.data.get('campaign', None)
-        description = bundle.data.get('description', None)
         confidence = bundle.data.get('confidence', None)
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', "")
