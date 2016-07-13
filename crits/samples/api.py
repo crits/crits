@@ -60,7 +60,6 @@ class SampleResource(CRITsAPIResource):
         if type_ == 'metadata':
             filename = bundle.data.get('filename', None)
             md5 = bundle.data.get('md5', None)
-            description = bundle.data.get('description', None)
             password = None
             filedata = None
         elif type_ == 'file':
@@ -74,6 +73,7 @@ class SampleResource(CRITsAPIResource):
             filename = None
 
         campaign = bundle.data.get('campaign', None)
+        description = bundle.data.get('description', None)
         confidence = bundle.data.get('confidence', None)
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', "")
