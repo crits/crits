@@ -4,6 +4,14 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: frbapolkosnik
+Date:   2016-07-13
+
+    Impfuzzy fuzzy import hashes have been added see:
+    https://github.com/JPCERTCC/aa-tools/tree/master/impfuzzy
+    In order to build them up for your current sample set run the following:
+    python manage.py upgrade -Ss
+
+Author: frbapolkosnik
 Date:   2016-02-03
 
     You can run your CRITs-master on Django 1.7 with the latest commit!
