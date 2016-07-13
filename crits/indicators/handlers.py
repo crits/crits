@@ -387,28 +387,29 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         valid_ind_types[obj.lower().replace(' - ', '-')] = obj
 
     # Start line-by-line import
+    msg = "Cannot process row %s: %s<br />"
     added = 0
     for processed, d in enumerate(data, 1):
         ind = {}
-        ind['value'] = d.get('Indicator', '').strip()
-        ind['lower'] = d.get('Indicator', '').lower().strip()
-        ind['description'] = d.get('Description', '').strip()
+        ind['value'] = (d.get('Indicator') or '').strip()
+        ind['lower'] = (d.get('Indicator') or '').lower().strip()
+        ind['description'] = (d.get('Description') or '').strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
-        ind['threat_type'] = d.get('Threat Type', IndicatorThreatTypes.UNKNOWN)
-        ind['attack_type'] = d.get('Attack Type', IndicatorAttackTypes.UNKNOWN)
+        ind['threat_type'] = d.get('Threat Type')
+        ind['attack_type'] = d.get('Attack Type')
 
-        if len(ind['threat_type']) < 1:
+        if not ind['threat_type']:
             ind['threat_type'] = IndicatorThreatTypes.UNKNOWN
         if ind['threat_type'] not in IndicatorThreatTypes.values():
             result['success'] = False
-            result_message += "Cannot process row %s: Invalid Threat Type<br />" % processed
+            result_message += msg % (processed + 1, "Invalid Threat Type")
             continue
 
-        if len(ind['attack_type']) < 1:
+        if not ind['attack_type']:
             ind['attack_type'] = IndicatorAttackTypes.UNKNOWN
         if ind['attack_type'] not in IndicatorAttackTypes.values():
             result['success'] = False
-            result_message += "Cannot process row %s: Invalid Attack Type<br />" % processed
+            result_message += msg % (processed + 1, "Invalid Attack Type")
             continue
 
         ind['status'] = d.get('Status', Status.NEW)
@@ -420,7 +421,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                 i += "No valid Indicator value "
             if not ind['type']:
                 i += "No valid Indicator type "
-            result_message += "Cannot process row %s: %s<br />" % (processed, i)
+            result_message += msg % (processed + 1, i)
             continue
         campaign = get_verified_field(d, valid_campaigns, 'Campaign')
         if campaign:
@@ -433,7 +434,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
             actions = get_verified_field(actions.split(','), valid_actions)
             if not actions:
                 result['success'] = False
-                result_message += "Cannot process row %s: Invalid Action<br />" % processed
+                result_message += msg % (processed + 1, "Invalid Action")
                 continue
         ind['confidence'] = get_verified_field(d, valid_ratings, 'Confidence',
                                                default='unknown')
@@ -448,7 +449,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                                                related_type=related_type, relationship_type=relationship_type)
         except Exception, e:
             result['success'] = False
-            result_message += "Failure processing row %s: %s<br />" % (processed, str(e))
+            result_message += msg % (processed + 1, e)
             continue
         if response['success']:
             if actions:
@@ -465,7 +466,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                                user=username)
         else:
             result['success'] = False
-            result_message += "Failure processing row %s: %s<br />" % (processed, response['message'])
+            result_message += msg % (processed + 1, response['message'])
             continue
         added += 1
     if processed < 1:
@@ -718,21 +719,18 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         if ticket:
             indicator.add_ticket(ticket, analyst)
 
-    if isinstance(source, list):
-        for s in source:
-            indicator.add_source(source_item=s, method=method, reference=reference)
+    # generate new source information and add to indicator
+    if isinstance(source, basestring) and source:
+        indicator.add_source(source=source, method=method,
+                             reference=reference, analyst=analyst)
     elif isinstance(source, EmbeddedSource):
-        indicator.add_source(source_item=source, method=method, reference=reference)
-    elif isinstance(source, basestring):
-        s = EmbeddedSource()
-        s.name = source
-        instance = EmbeddedSource.SourceInstance()
-        instance.reference = reference
-        instance.method = method
-        instance.analyst = analyst
-        instance.date = datetime.datetime.now()
-        s.instances = [instance]
-        indicator.add_source(s)
+        indicator.add_source(source_item=source, method=method,
+                             reference=reference)
+    elif isinstance(source, list):
+        for s in source:
+            if isinstance(s, EmbeddedSource):
+                indicator.add_source(source_item=s, method=method,
+                                     reference=reference)
 
     if add_domain or add_relationship:
         ind_type = indicator.ind_type

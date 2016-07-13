@@ -4,7 +4,6 @@ urlpatterns = [
     url(r'^details/(?P<eventid>\w+)/$', 'view_event', prefix='crits.events.views'),
     url(r'^add/$', 'add_event', prefix='crits.events.views'),
     url(r'^search/$', 'event_search', prefix='crits.events.views'),
-    url(r'^upload/sample/(?P<event_id>\w+)/$', 'upload_sample', prefix='crits.events.views'),
     url(r'^remove/(?P<_id>[\S ]+)$', 'remove_event', prefix='crits.events.views'),
     url(r'^set_title/(?P<event_id>\w+)/$', 'set_event_title', prefix='crits.events.views'),
     url(r'^set_type/(?P<event_id>\w+)/$', 'set_event_type', prefix='crits.events.views'),
