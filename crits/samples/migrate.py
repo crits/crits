@@ -93,7 +93,7 @@ def migrate_4_to_5(self):
             except Exception:
                 # The sample is probably not a PE with valid imports or we don't have pyimpfuzzy
                 self.impfuzzy = None
-        elif self.impfuzzy None:
+        elif not self.impfuzzy:
             #in case we had some Pes that were not covered
             try:
                self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(self.filedata.read())
