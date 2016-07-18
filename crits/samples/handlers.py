@@ -84,6 +84,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
     if not sample:
         return ('error.html', {'error': "File not yet available or you do not have access to view it."})
     sample.sanitize_sources(username=analyst)
+    permissions = get_user_permissions(analyst, 'Sample')
     if format_:
         exclude = [
                     "source",
@@ -144,7 +145,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
         }
 
         #objects
-        if get_user_permissions(analyst, 'Sample')['objects_read']:
+        if permissions['objects_read']:
             objects = sample.sort_objects()
         else:
             objects = None
@@ -160,14 +161,14 @@ def get_sample_details(sample_md5, analyst, format_=None):
         }
 
         #comments
-        if get_user_permissions(analyst, 'Sample')['comments_read']:
+        if permissions['comments_read']:
             comments = {'comments': sample.get_comments(),
                         'url_key': sample_md5}
         else:
             comments = None
 
         #screenshots
-        if get_user_permissions(analyst, 'Sample')['screenshots_read']:
+        if permissions['screenshots_read']:
             screenshots = sample.get_screenshots(analyst)
         else:
             screenshots = None
@@ -176,7 +177,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
         favorite = is_user_favorite("%s" % analyst, 'Sample', sample.id)
 
         # services
-        if get_user_permissions(analyst, 'Sample')['services_read']:
+        if permissions['services_read']:
             service_list = get_supported_services('Sample')
         else:
             service_list = None
@@ -211,7 +212,8 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'favorite': favorite,
                 'screenshots': screenshots,
                 'service_list': service_list,
-                'service_results': service_results}
+                'service_results': service_results,
+                'permissions': permissions}
 
     return template, args
 

@@ -16,7 +16,7 @@ from tastypie_mongoengine.resources import MongoEngineResource
 
 from crits.core.data_tools import format_file, create_zip
 from crits.core.handlers import remove_quotes, generate_regex
-from crits.core.user_tools import user_sources
+from crits.core.user_tools import user_sources, get_user_permissions
 
 
 # The following leverages code from the Tastypie library.
@@ -53,6 +53,9 @@ class CRITsApiKeyAuthentication(ApiKeyAuthentication):
             return self._unauthorized()
 
         if not user.is_active:
+            return self._unauthorized()
+
+        if not get_user_permissions(user.username)['api_interface']:
             return self._unauthorized()
 
         key_auth_check = self.get_key(user, api_key)

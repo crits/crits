@@ -369,7 +369,7 @@ def login(request):
     next_url = request.GET.get('next', request.POST.get('next', None))
 
     # Is the user already authenticated?
-    if request.user.is_authenticated():
+    if request.user.is_authenticated() and get_user_permissions(request.user.username)['web_interface']:
         resp = validate_next(next_url)
         if not resp['success']:
             return render_to_response('error.html',

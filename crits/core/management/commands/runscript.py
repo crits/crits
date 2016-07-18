@@ -8,6 +8,7 @@ from crits.core.user import CRITsUser
 from optparse import make_option
 
 from crits.core.handlers import login_user
+from crits.core.user_tools import get_user_permissions
 
 class Command(BaseCommand):
     """
@@ -86,8 +87,12 @@ class Command(BaseCommand):
                   remote_addr=remote_addr, accept_language=accept_language,
                   totp_pass=totp_pass)
 
-        script = script_class(user=u)
-        script.run(arg_list)
+        if get_user_permissions(username)['script_interface']:
+            script = script_class(user=u)
+            script.run(arg_list)
+        else:
+            raise CommandError(('User does not have permission to run CRITs Scripts.'))
+
 
 def try_login(username, password, user_agent, remote_addr, accept_language,
               totp_pass=None):

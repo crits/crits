@@ -8,6 +8,8 @@ from crits.core.data_tools import generate_qrcode
 from crits.core.totp import gen_user_secret
 
 from django.conf import settings
+from django.contrib.auth.views import logout_then_login
+
 
 def is_user_favorite(analyst, type_, id_):
     """
@@ -131,7 +133,10 @@ def user_can_view_data(user):
     :returns: True, False
     """
     if user.is_active:
-        return user.is_authenticated()
+        if get_user_permissions(user)['web_interface']:
+            return user.is_authenticated()
+        else:
+            return False
     else:
         return False
 
