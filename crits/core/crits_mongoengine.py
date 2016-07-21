@@ -302,6 +302,7 @@ class CritsDocument(BaseDocument):
     meta = {
         'duplicate_attrs':[],
         'migrated': False,
+        'migrating': False,
         'needs_migration': False,
         'queryset_class': CritsQuerySet
     }
@@ -452,8 +453,6 @@ class CritsDocument(BaseDocument):
 
         # perform migration, if needed
         if hasattr(doc, '_meta'):
-            if not doc._meta.get('migrated',False):
-                doc._meta['migrated'] = False
             if ('schema_version' in doc and
                 'latest_schema_version' in doc._meta and
                 doc.schema_version < doc._meta['latest_schema_version']):
@@ -467,10 +466,11 @@ class CritsDocument(BaseDocument):
                 try:
                     doc.migrate()
                     doc._meta['migrated'] = True
+                    doc._meta['needs_migration'] = False
+                    doc._meta['migrating'] = False
                 except Exception as e:
                     e.tlo = doc.id
                     raise e
-
 
         return doc
 
