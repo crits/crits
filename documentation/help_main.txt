@@ -2131,8 +2131,8 @@ Indicator PATCH actions
 :activity_remove:
 :activity_update:
 :ci_update:
-:set_indicator_attack_type:
-:set_indicator_threat_type:
+:modify_attack_types:
+:modify_threat_types:
 
 Signature PATCH actions
 -----------------------
