@@ -35,7 +35,7 @@ Date:   2016-07-28
     duplicates.
 
     If you use the API to update indicators, note that the actions have now
-    changed to "modify_attack_type" and "modify_threat_type" and take the
+    changed to "modify_attack_types" and "modify_threat_types" and take the
     parameter "attack_types" and "threat_types" respectively. Note that using
     these calls will *replace* the existing types there, so make sure to provide
     the complete list you want to be there after the update is made.
