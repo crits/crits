@@ -57,7 +57,7 @@ def get_certificate_details(md5, analyst):
 
         cert.sanitize("%s" % analyst)
 
-        permissions = get_user_permissions(analyst, 'Certificate')
+        permissions = get_user_permissions(analyst)
 
         # remove pending notifications for user
         remove_user_from_notification("%s" % analyst, cert.id, 'Certificate')
@@ -71,7 +71,7 @@ def get_certificate_details(md5, analyst):
         }
 
         #objects
-        if permissions['objects_read']:
+        if permissions['Certificate']['objects_read']:
             objects = cert.sort_objects()
         else:
             objects = None
@@ -86,21 +86,21 @@ def get_certificate_details(md5, analyst):
         }
 
         #comments
-        if permissions['comments_read']:
+        if permissions['Certificate']['comments_read']:
             comments = {'comments': cert.get_comments(),
                         'url_key': md5}
         else:
             comments = None
 
         #screenshots
-        if permissions['screenshots_read']:
+        if permissions['Certificate']['screenshots_read']:
             screenshots = cert.get_screenshots(analyst)
 
         else:
             screenshots = None
 
         # services
-        if permissions['services_read']:
+        if permissions['Certificate']['services_read']:
             service_list = get_supported_services('Certificate')
 
             # analysis results

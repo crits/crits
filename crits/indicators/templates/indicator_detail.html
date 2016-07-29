@@ -14,7 +14,7 @@
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    {% if permissions.services_read %}
+    {% if permissions.Indicator.services_read %}
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     {% endif %}
@@ -22,13 +22,13 @@
 <div id="details_section">
 
 {% if indicator %}
-    {% if permissions.download or permissions.delete %}
+    {% if permissions.Indicator.download or permissions.Indicator.delete %}
     <span class="horizontal_menu">
     <ul class="hmenu">
-        {% if permissions.download %}
+        {% if permissions.Indicator.download %}
           <li><a href="#" class="dialogClick" dialog="download-indicator">Download Indicator</a></li>
         {% endif %}
-        {% if permissions.delete %}
+        {% if permissions.Indicator.delete %}
           <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="indicator" action='{% url "crits.indicators.views.remove_indicator" indicator.id %}'>Delete Indicator</a></li>
         {% endif %}
     </ul>
@@ -154,7 +154,7 @@
             </div>
         </td>
         </tr>
-        {% if permissions.status_read %}
+        {% if permissions.Indicator.status_read %}
           <tr>
             <td class="key">Status
                 <span style="float: right;" class="object_status_response"></span>
@@ -172,14 +172,14 @@
               {% include "sector_widget.html" %}
           {% endwith %}
         {% endif %}
-        {% if permissions.sources_read %}
+        {% if permissions.Indicator.sources_read %}
         <tr>
           {% with sources=indicator.source obj_id=indicator_id obj_type=subscription.type %}
               {% include "sources_listing_widget.html" %}
           {% endwith %}
         </tr>
         {% endif %}
-        {% if permissions.releasability_read %}
+        {% if permissions.Indicator.releasability_read %}
         <tr>
           {% with releasability=indicator.releasability %}
               {% include 'releasability_list_widget.html' %}
@@ -192,7 +192,7 @@
 </div>
 <div id="detail_floaters">
     {% include 'details_options_widget.html' %}
-    {% if permissions.bucketlist_read %}
+    {% if permissions.Indicator.bucketlist_read %}
     {% with bucket_list=indicator.bucket_list %}
         {% include 'bucket_list_widget.html' %}
     {% endwith %}
@@ -200,35 +200,35 @@
     {% include 'add_related_widget.html' %}
 
 </div>
-{% if permissions.actions_read %}
+{% if permissions.Indicator.actions_read %}
 <div class="content_box">
     {% with obj=indicator obj_type="Indicator" %}
         {% include 'action_listing_widget.html' %}
     {% endwith %}
 </div>
 {% endif %}
-{% if permissions.tickets_read %}
+{% if permissions.Indicator.tickets_read %}
 <div>
     {% with obj=indicator obj_type=subscription.type %}
         {% include 'tickets_listing_widget.html' %}
     {% endwith %}
 </div>
 {% endif %}
-{% if permissions.campaigns_read %}
+{% if permissions.Indicator.campaigns_read and permissions.Campaign.read %}
 <div>
     {% with hit=indicator col=COL_INDICATORS obj=indicator %}
         {% include "campaigns_display_widget.html" %}
     {% endwith %}
 </div>
 {% endif %}
-{% if permissions.locations_read %}
+{% if permissions.Indicator.locations_read %}
 <div>
     {% with hit=indicator col=COL_INDICATORS obj=indicator %}
         {% include "locations_display_widget.html" %}
     {% endwith %}
 </div>
 {% endif %}
-{% if permissions.activity_read %}
+{% if permissions.Indicator.activity_read %}
 <div class="content_box">
     <h3 class="titleheader">
     <span>Activity</span>
@@ -263,29 +263,29 @@
     </div>
 </div>
 {% endif %}
-{% if permissions.relationships_read %}
+{% if permissions.Indicator.relationships_read %}
 <div>
 {% include 'relationships_listing_widget.html' %}
 </div>
 {% endif %}
-{% if permissions.objects_read %}
+{% if permissions.Indicator.objects_read %}
 <div>
 {% include 'objects_listing_widget.html' %}
 </div>
 {% endif %}
-{% if permissions.screenshots_read %}
+{% if permissions.Indicator.screenshots_read %}
 <div>
 {% include 'screenshot_widget.html' %}
 </div>
 {% endif %}
-{% if permissions.comments_read %}
+{% if permissions.Indicator.comments_read %}
 <div>
 {% include "comments_listing_widget.html" %}
 </div>
 {% endif%}
 </div>
 
-{% if permissions.services_read %}
+{% if permissions.Indicator.services_read %}
   {% with item=indicator %}
       {% include "services_analysis_section.html" with crits_type="Indicator" identifier=indicator.id %}
   {% endwith %}

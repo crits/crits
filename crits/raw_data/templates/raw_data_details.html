@@ -8,7 +8,6 @@
 
 <script>
     var raw_data_id = "{{ raw_data.id }}";
-    var perms = "{{ permissions }}";
     var add_highlight = "{% url 'crits.raw_data.views.add_highlight' raw_data.id %}";
     var remove_highlight = "{% url 'crits.raw_data.views.remove_highlight' raw_data.id %}";
     var details_by_link = "{% url 'crits.raw_data.views.details_by_link' raw_data.link_id|stringformat:"s" %}"
@@ -29,20 +28,20 @@
     <li><a href="#highlights_section" id="highlights_button"><span>Highlights</span></a></li>
     <li><a href="#raw_section" id="raw_button"><span>Raw Data</span></a></li>
     <li><a href="#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
-    {% if permissions.services_read %}
+    {% if permissions.RawData.services_read %}
       <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
       {% include 'services_tab_list_widget.html' %}
     {% endif %}
 </ul>
 
 <div id="details_section">
-    {% if permissions.upload_new_version or permissions.delete %}
+    {% if permissions.RawData.upload_new_version or permissions.RawData.delete %}
       <span class="horizontal_menu">
       <ul class="hmenu">
-        {% if permissions.upload_new_version %}
+        {% if permissions.RawData.upload_new_version %}
           <li><a href="#" id="upload-new-version" class="dialogClick" dialog="upload-new-version" data-action="{% url 'crits.raw_data.views.upload_raw_data' raw_data.link_id|stringformat:"s" %}">Upload New Version</a></li>
         {% endif %}
-        {% if permissions.delete %}
+        {% if permissions.RawData.delete %}
           <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="raw_data" action='{% url "crits.raw_data.views.remove_raw_data" raw_data.id %}'>Delete Raw Data</a></li>
         {% endif %}
       </ul>
@@ -108,14 +107,14 @@
                 </select>
             </td>
             </tr>
-            {% if permissions.description_read %}
+            {% if permissions.RawData.description_read %}
               <tr>
                   {% with description=raw_data.description %}
                       {% include 'description_widget.html' %}
                   {% endwith %}
               </tr>
             {% endif %}
-            {% if permissions.status_read %}
+            {% if permissions.RawData.status_read %}
               <tr>
                   <td class="key">Status
                       <span style="float: right;" class="object_status_response"></span>
@@ -124,20 +123,21 @@
                       <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{raw_data.status}}</span>
                   </td>
               </tr>
-            {% endif% }
-            {% if permissions.sectors_read %}
+            {% endif %}
+
+            {% if permissions.RawData.sectors_read %}
               {% with sectors=raw_data.sectors %}
                   {% include "sector_widget.html" %}
               {% endwith %}
             {% endif %}
-            {% if permissions.sources_read %}
+            {% if permissions.RawData.sources_read %}
               <tr>
               {% with sources=raw_data.source obj_id=raw_data.id obj_type=subscription.type %}
                   {% include "sources_listing_widget.html" %}
               {% endwith %}
               </tr>
             {% endif %}
-            {% if permissions.releasability_read %}
+            {% if permissions.RawData.releasability_read %}
               <tr>
                   {% with releasability=raw_data.releasability %}
                       {% include 'releasability_list_widget.html' %}
@@ -149,7 +149,7 @@
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% if permissions.bucketlist_read %}
+        {% if permissions.RawData.bucketlist_read %}
           {% with bucket_list=raw_data.bucket_list %}
               {% include 'bucket_list_widget.html' %}
           {% endwith %}
@@ -160,50 +160,50 @@
     <div>
         {% include 'raw_data_data.html' %}
     </div>
-    {% if permissions.actions_read %}
+    {% if permissions.RawData.actions_read %}
       <div class="content_box">
           {% with obj=raw_data obj_type="RawData" %}
               {% include 'action_listing_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.tickets_read %}
+    {% if permissions.RawData.tickets_read %}
       <div>
         {% with obj=raw_data obj_type=subscription.type %}
            {% include 'tickets_listing_widget.html' %}
         {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.campaigns_read %}
+    {% if permissions.RawData.campaigns_read and permissions.Campaign.read %}
       <div>
           {% with hit=raw_data col=COL_RAW_DATA %}
               {% include "campaigns_display_widget.html" %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.locations_read %}
+    {% if permissions.RawData.locations_read %}
       <div>
           {% with hit=raw_data col=COL_RAW_DATA %}
               {% include "locations_display_widget.html" %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.relationships_view %}
+    {% if permissions.RawData.relationships_view %}
       <div>
           {% include 'relationships_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.objects_read %}
+    {% if permissions.RawData.objects_read %}
       <div>
           {% include 'objects_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.screenshots_read %}
+    {% if permissions.RawData.screenshots_read %}
       <div>
         {% include 'screenshot_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.comments_read %}
+    {% if permissions.RawData.comments_read %}
       <div>
           {% include "comments_listing_widget.html" %}
       </div>
@@ -223,7 +223,7 @@
     </div>
 </div>
 {% include 'raw_data_versions.html' %}
-{% if permissions.services_read %}
+{% if permissions.RawData.services_read %}
   {% with item=raw_data %}
       {% include "services_analysis_section.html" with crits_type="RawData" identifier=raw_data.id %}
   {% endwith %}
@@ -237,7 +237,6 @@
 {% endif %}
 <a href="#" id="add_inline_comment" title="Add Comment" class="ui-icon
 ui-icon-comment dialogClick" dialog="comments" persona="new" action="{% url 'crits.raw_data.views.add_inline_comment' raw_data.id|stringformat:"s" %}"></a>
-{% endif %}
 {% endblock %}
 
 {% block javascript_includes %}

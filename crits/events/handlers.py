@@ -67,7 +67,7 @@ def get_event_details(event_id, analyst):
 
     event.sanitize("%s" % analyst)
 
-    permissions = get_user_permissions(analyst, 'Event')
+    permissions = get_user_permissions(analyst)
 
     campaign_form = CampaignForm()
     download_form = DownloadFileForm(initial={"obj_type": 'Event',
@@ -85,10 +85,16 @@ def get_event_details(event_id, analyst):
     }
 
     #objects
-    objects = event.sort_objects()
+    if permissions['Event']['objects_read']:
+        objects = event.sort_objects()
+    else:
+        objects = None
 
     #relationships
-    relationships = event.sort_relationships("%s" % analyst, meta=True)
+    if permissions['Event']['relationships_read']:
+        relationships = event.sort_relationships("%s" % analyst, meta=True)
+    else:
+        relationships = None
 
     # relationship
     relationship = {

@@ -464,13 +464,17 @@ def new_raw_data_type(request):
         form = NewRawDataTypeForm(request.POST)
         analyst = request.user.username
         if form.is_valid():
-            result = add_new_raw_data_type(form.cleaned_data['data_type'],
-                                           analyst)
-            if result:
-                message = {'message': '<div>Raw Data Type added successfully!</div>',
-                           'success': True}
+            if get_user_permissions(analyst)['add_new_raw_data_type']:
+                result = add_new_raw_data_type(form.cleaned_data['data_type'],
+                                               analyst)
+                if result:
+                    message = {'message': '<div>Raw Data Type added successfully!</div>',
+                               'success': True}
+                else:
+                    message = {'message': '<div>Raw Data Type addition failed!</div>',
+                               'success': False}
             else:
-                message = {'message': '<div>Raw Data Type addition failed!</div>',
+                message = {'message': 'User does not have permission to add raw data type.',
                            'success': False}
         else:
             message = {'form': form.as_table()}

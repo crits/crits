@@ -15,23 +15,23 @@
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    {% if permissions.services_read %}
+    {% if permissions.Event.services_read %}
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     {% endif %}
 </ul>
 
 <div id="details_section">
-    {% if permissions.add_sample or permissions.download or permissions.delete %}
+    {% if permissions.Event.add_sample or permissions.Event.download or permissions.Event.delete %}
     <span class="horizontal_menu">
         <ul class="hmenu">
-            {% if permissions.add_sample %}
+            {% if permissions.Event.add_sample %}
               <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.events.views.upload_sample' event.id %}">Add Sample</a></li>
             {% endif %}
-            {% if permissions.download %}
+            {% if permissions.Event.download %}
               <li><a href="#" class="dialogClick" dialog="download-event">Download Event</a></li>
             {% endif %}
-            {% if permissions.delete %}
+            {% if permissions.Event.delete %}
               <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="event" action='{% url "crits.events.views.remove_event" event.id %}'>Delete Event</a></li>
             {% endif %}
         </ul>
@@ -68,14 +68,14 @@
                         <td class='key'>Created</td>
                         <td>{{ event.created }}</td>
                     </tr>
-                    {% if permissions.description_read %}
+                    {% if permissions.Event.description_read %}
                       <tr>
                           {% with description=event.description %}
                               {% include 'description_widget.html' %}
                           {% endwith %}
                       </tr>
                     {% endif %}
-                    {% if permissions.status_read %}
+                    {% if permissions.Event.status_read %}
                       <tr>
                           <td class="key">Status
                               <span style="float: right;" class="object_status_response"></span>
@@ -88,19 +88,19 @@
                     {% with tlp=event.tlp %}
                         {% include "tlp_widget.html" %}
                     {% endwith %}
-                    {% if permissions.sectors_read %}
+                    {% if permissions.Event.sectors_read %}
                       {% with sectors=event.sectors %}
                           {% include "sector_widget.html" %}
                       {% endwith %}
                     {% endif %}
-                    {% if permissions.sources_read %}
+                    {% if permissions.Event.sources_read %}
                       <tr>
                       {% with sources=event.source obj_id=event.id obj_type=subscription.type %}
                           {% include "sources_listing_widget.html" %}
                       {% endwith %}
                       </tr>
                     {% endif %}
-                    {% if permissions.releasability_read %}
+                    {% if permissions.Event.releasability_read %}
                       <tr>
                       {% with releasability=event.releasability %}
                           {% include 'releasability_list_widget.html' %}
@@ -113,7 +113,7 @@
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% if permissions.bucketlist_read %}
+        {% if permissions.Event.bucketlist_read %}
           {% with bucket_list=event.bucket_list %}
               {% include 'bucket_list_widget.html' %}
           {% endwith %}
@@ -121,56 +121,56 @@
         {% include 'add_related_widget.html' %}
 
     </div>
-    {% if permissions.actions_read %}
+    {% if permissions.Event.actions_read %}
       <div class="content_box">
           {% with obj=event obj_type="Event" %}
               {% include 'action_listing_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.tickets_read %}
+    {% if permissions.Event.tickets_read %}
       <div>
     	{% with obj=event obj_type=subscription.type %}
                  {% include 'tickets_listing_widget.html' %}
     	{% endwith %}
       </div>
     {% endif %}
-    {% if permissions.campaigns_read %}
+    {% if permissions.Event.campaigns_read and permissions.Campaign.read %}
       <div>
           {% with hit=event col=COL_EVENTS %}
                {% include 'campaigns_display_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.locations_read %}
+    {% if permissions.Event.locations_read %}
       <div>
           {% with hit=event col=COL_EVENTS %}
                {% include 'locations_display_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.relationships_read %}
+    {% if permissions.Event.relationships_read %}
       <div>
           {% include 'relationships_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.objects_read %}
+    {% if permissions.Event.objects_read %}
       <div>
           {% include 'objects_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.screenshots_read %}
+    {% if permissions.Event.screenshots_read %}
       <div>
       {% include 'screenshot_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.comments_read %}
+    {% if permissions.Event.comments_read %}
       <div>
           {% include "comments_listing_widget.html" %}
       </div>
     {% endif %}
 </div>
-{% if permissions.services_read %}
+{% if permissions.Event.services_read %}
   {% with item=event %}
       {% include "services_analysis_section.html" with crits_type="Event" identifier=event.id %}
   {% endwith %}

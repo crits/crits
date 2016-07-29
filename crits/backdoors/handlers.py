@@ -135,15 +135,15 @@ def get_backdoor_details(id_, user):
                                              backdoor.id),
         }
 
-        permissions = get_user_permissions(user, 'Backdoor')
+        permissions = get_user_permissions(user)
         #objects
-        if permissions['objects_read']:
+        if permissions['Backdoor']['objects_read']:
             objects = backdoor.sort_objects()
         else:
             objects = None
 
         #relationships
-        if permissions['relationships_read']:
+        if permissions['Backdoor']['relationships_read']:
             relationships = backdoor.sort_relationships("%s" % user, meta=True)
         else:
             relationships = None
@@ -155,14 +155,14 @@ def get_backdoor_details(id_, user):
         }
 
         #comments
-        if permissions['comments_read']:
+        if permissions['Backdoor']['comments_read']:
             comments = {'comments': backdoor.get_comments(),
                         'url_key': backdoor.id}
         else:
             comments = None
 
         #screenshots
-        if permissions['screenshots_read']:
+        if permissions['Backdoor']['screenshots_read']:
             screenshots = backdoor.get_screenshots(user)
         else:
             screenshots = None
@@ -171,13 +171,13 @@ def get_backdoor_details(id_, user):
         favorite = is_user_favorite("%s" % user, 'Backdoor', backdoor.id)
 
         # services
-        if permissions['services_read']:
+        if permissions['Backdoor']['services_read']:
             service_list = get_supported_services('Backdoor')
         else:
             service_list = None
 
         # analysis results
-        if permissions['services_read']:
+        if permissions['Backdoor']['services_read']:
             service_results = backdoor.get_analysis_results()
         else:
             service_results = None

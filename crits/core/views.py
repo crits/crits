@@ -667,16 +667,19 @@ def source_add(request):
         source_form = AddSourceForm(request.POST)
         analyst = request.user.username
         if source_form.is_valid():
-            result = add_new_source(source_form.cleaned_data['source'],
-                                    analyst)
-            if result:
-                msg = ('<div>Source added successfully! Add this source to '
-                       'users to utilize it.</div>')
-                message = {'message': msg,
-                           'success': True}
+            if get_user_permissions(analyst)['add_new_source']:
+                result = add_new_source(source_form.cleaned_data['source'],
+                                        analyst)
+                if result:
+                    msg = ('<div>Source added successfully! Add this source to '
+                           'users to utilize it.</div>')
+                    message = {'message': msg,
+                               'success': True}
+                else:
+                    message = {'message': '<div>Source addition failed!</div>', 'success':
+                               False}
             else:
-                message = {'message': '<div>Source addition failed!</div>', 'success':
-                           False}
+                message = {'message': 'User does not have permission to add source.', 'success':False}
 
         else:
             message = {'success': False,
@@ -701,20 +704,24 @@ def role_add(request):
         role_form = AddRoleForm(request.POST)
         analyst = request.user.username
         if role_form.is_valid():
-            name = role_form.cleaned_data['name']
-            description = role_form.cleaned_data['description']
-            copy_from = role_form.cleaned_data['copy_from']
-            result = add_new_role(name,
-                                  copy_from,
-                                  description,
-                                  analyst)
-            if result['success']:
-                url = reverse('crits.core.views.role_details',
-                              args=[result['id']])
-                message = {'message': '<div><a href="%s">Role</a> added successfully!</div>' % url,
-                           'success': True}
+            if get_user_permissions(analyst)['add_new_user_role']:
+                name = role_form.cleaned_data['name']
+                description = role_form.cleaned_data['description']
+                copy_from = role_form.cleaned_data['copy_from']
+                result = add_new_role(name,
+                                      copy_from,
+                                      description,
+                                      analyst)
+                if result['success']:
+                    url = reverse('crits.core.views.role_details',
+                                  args=[result['id']])
+                    message = {'message': '<div><a href="%s">Role</a> added successfully!</div>' % url,
+                               'success': True}
+                else:
+                    message = {'message': '<div>Role addition failed!</div>',
+                               'success': False}
             else:
-                message = {'message': '<div>Role addition failed!</div>',
+                message = {'message': 'User does not have permission to add user role.',
                            'success': False}
         else:
             message = {'success': False,
@@ -2483,15 +2490,19 @@ def new_action(request):
         form = NewActionForm(request.POST)
         analyst = request.user.username
         if form.is_valid():
-            result = add_new_action(form.cleaned_data['action'],
-                                    form.cleaned_data['object_types'],
-                                    form.cleaned_data['preferred'],
-                                    analyst)
-            if result:
-                message = {'message': '<div>Action added successfully!</div>',
-                           'success': True}
+            if get_user_permissions(analyst)['add_new_indicator_action']:
+                result = add_new_action(form.cleaned_data['action'],
+                                        form.cleaned_data['object_types'],
+                                        form.cleaned_data['preferred'],
+                                        analyst)
+                if result:
+                    message = {'message': '<div>Action added successfully!</div>',
+                               'success': True}
+                else:
+                    message = {'message': '<div>Action addition failed!</div>',
+                               'success': False}
             else:
-                message = {'message': '<div>Action addition failed!</div>',
+                message = {'message': '<div>User does not have permission to add indicator action.</div>',
                            'success': False}
         else:
             message = {'form': form.as_table()}

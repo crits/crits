@@ -235,8 +235,9 @@ def get_actor_details(id_, user):
         download_form = DownloadFileForm(initial={"obj_type": 'Actor',
                                                   "obj_id": actor.id})
 
+        permissions = get_user_permissions(username)
         # generate identifiers
-        if get_user_permissions(username, 'Actor')['actor_identifiers_read']:
+        if permissions['Actor']['actor_identifiers_read']:
             actor_identifiers = actor.generate_identifiers_list(username)
         else:
             actor_identifiers = None
@@ -249,7 +250,7 @@ def get_actor_details(id_, user):
         }
 
         #objects
-        if get_user_permissions(username, 'Actor')['objects_read']:
+        if permissions['Actor']['objects_read']:
             objects = actor.sort_objects()
         else:
             objects = None
@@ -264,14 +265,14 @@ def get_actor_details(id_, user):
         }
 
         #comments
-        if get_user_permissions(username, 'Actor')['comments_read']:
+        if permissions['Actor']['comments_read']:
             comments = {'comments': actor.get_comments(),
                         'url_key': actor.id}
         else:
             comments = None
 
         #screenshots
-        if get_user_permissions(username, 'Actor')['screenshots_read']:
+        if permissions['Actor']['screenshots_read']:
             screenshots = actor.get_screenshots(username)
         else:
             screenshots = None
@@ -280,13 +281,13 @@ def get_actor_details(id_, user):
         favorite = is_user_favorite("%s" % username, 'Actor', actor.id)
 
         # services
-        if get_user_permissions(username, 'Actor')['services_read']:
+        if permissions['Actor']['services_read']:
             service_list = get_supported_services('Actor')
         else:
             service_list = None
 
         # analysis results
-        if get_user_permissions(username, 'Actor')['services_read']:
+        if permissions['Actor']['services_read']:
             service_results = actor.get_analysis_results()
         else:
             service_results = None
@@ -304,7 +305,7 @@ def get_actor_details(id_, user):
                 'actor': actor,
                 'actor_id': id_,
                 'comments': comments,
-                'permissions': get_user_permissions(username,'Actor'),}
+                'permissions': permissions,}
     return template, args
 
 def get_actor_by_name(allowed_sources, actor):

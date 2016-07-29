@@ -249,11 +249,16 @@ def new_actor_identifier_type(request):
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
         identifier_type = request.POST.get('identifier_type', None)
+
         if not identifier_type:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
                                 mimetype="application/json")
-        result = create_actor_identifier_type(identifier_type, request.user)
+        if get_user_permissions(request.user.username)['add_new_actor_identifier_type']:
+            result = create_actor_identifier_type(identifier_type, request.user)
+        else:
+            result = {'message': 'User does not have permission to add actor identifier',
+                      'success': False}
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:

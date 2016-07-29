@@ -156,7 +156,7 @@ def get_email_detail(email_id, analyst):
         args = {'error': "ID does not exist or insufficient privs for source"}
     else:
         email.sanitize(username="%s" % analyst, sources=sources)
-        permissions = get_user_permissions(analyst, 'Email')
+        permissions = get_user_permissions(analyst)
 
         update_data_form = EmailYAMLForm(analyst)
         campaign_form = CampaignForm()
@@ -175,13 +175,13 @@ def get_email_detail(email_id, analyst):
         }
 
         # objects
-        if permissions['objects_read']:
+        if permissions['Email']['objects_read']:
             objects = email.sort_objects()
         else:
             objects = None
 
         # relationships
-        if permissions['relationships_read']:
+        if permissions['Email']['relationships_read']:
             relationships = email.sort_relationships("%s" % analyst, meta=True)
         else:
             relationships = None
@@ -193,14 +193,14 @@ def get_email_detail(email_id, analyst):
         }
 
         # comments
-        if permissions['comments_read']:
+        if permissions['Email']['comments_read']:
             comments = {'comments': email.get_comments(),
                         'url_key': email.id}
         else:
             comments = None
 
         #screenshots
-        if permissions['screenshots_read']:
+        if permissions['Email']['screenshots_read']:
             screenshots = email.get_screenshots(analyst)
         else:
             screenshots = None

@@ -132,7 +132,7 @@ def get_signature_details(_id, analyst):
                 "versions": versions,
                 "service_results": service_results,
                 "signature": signature,
-                'permissions': get_user_permissions(analyst, 'Signature')}
+                'permissions': get_user_permissions(analyst)}
 
     return template, args
 

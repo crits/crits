@@ -1,4 +1,3 @@
-
 <tr>
     <td colspan="2" class="relationship_spacer"></td>
 </tr>
@@ -138,19 +137,21 @@
                         {% endif %}
                         {% if rel_type in "RawDataSignaturePCAPCertificateIndicatorEventActorExploitBackdoor" %}
                             <td class='campaignWidth'>
-                                {% for campaign in rel.campaign %}
-                                    <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
-                                        {% if campaign.confidence == 'low' %}
-                                            <font color="green">
-                                        {% elif campaign.confidence == 'medium' %}
-                                            <font color="orange">
-                                        {% elif campaign.confidence == 'high' %}
-                                            <font color="red">
-                                        {% endif %}
-                                            {{ campaign.name }}
-                                        </font>
-                                    </a><br />
-                                {% endfor %}
+                                {% if permissions.Campaign.read %}
+                                  {% for campaign in rel.campaign %}
+                                      <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
+                                          {% if campaign.confidence == 'low' %}
+                                              <font color="green">
+                                          {% elif campaign.confidence == 'medium' %}
+                                              <font color="orange">
+                                          {% elif campaign.confidence == 'high' %}
+                                              <font color="red">
+                                          {% endif %}
+                                              {{ campaign.name }}
+                                          </font>
+                                      </a><br />
+                                  {% endfor %}
+                                {% endif %}
                             </td>
                         {% endif %}
                         <td width="125px">{{rel.analyst}}</td>
@@ -186,4 +187,3 @@
         </table>
     </td>
 </tr>
-

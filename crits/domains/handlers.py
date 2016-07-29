@@ -87,7 +87,7 @@ def get_domain_details(domain, analyst):
     dmain.sanitize(username="%s" % analyst,
                            sources=allowed_sources)
 
-    permissions = get_user_permissions(analyst, 'Domain')
+    permissions = get_user_permissions(analyst)
 
     # remove pending notifications for user
     remove_user_from_notification("%s" % analyst, dmain.id, 'Domain')
@@ -114,14 +114,14 @@ def get_domain_details(domain, analyst):
     }
 
     #comments
-    if permissions['comments_read']:
+    if permissions['Domain']['comments_read']:
         comments = {'comments': dmain.get_comments(),
                     'url_key':dmain.domain}
     else:
         comments = None
 
     #screenshots
-    if permissions['screenshots_read']:
+    if permissions['Domain']['screenshots_read']:
         screenshots = dmain.get_screenshots(analyst)
     else:
         screenshots = None
@@ -130,7 +130,7 @@ def get_domain_details(domain, analyst):
     favorite = is_user_favorite("%s" % analyst, 'Domain', dmain.id)
 
     # services
-    if permissions['services_read']:
+    if permissions['Domain']['services_read']:
         service_list = get_supported_services('Domain')
 
         # analysis results

@@ -13,7 +13,7 @@
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
     <li><a href="#emails_section" id="emails_button"><span>Emails ({{email_list.count}})</span></a></li>
-    {% if permissions.services_read %}
+    {% if permissions.Target.services_read %}
       <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
       {% include 'services_tab_list_widget.html' %}
     {% endif %}
@@ -40,7 +40,7 @@
                 {% endif %}
             </td>
         </tr>
-        {% if permissions.description_read %}
+        {% if permissions.Target.description_read %}
           <tr>
               {% with description=target_detail.description %}
                   {% include 'description_widget.html' %}
@@ -76,7 +76,7 @@
             <td class="key">Notes</td>
             <td>{{target_detail.note}}</td>
         </tr>
-        {% if permissions.status_read %}
+        {% if permissions.Target.status_read %}
           <tr>
               <td class="key">Status
                   <span style="float: right;" class="object_status_response"></span>
@@ -86,12 +86,12 @@
               </td>
           </tr>
         {% endif %}
-        {% if permissions.sectors_read %}
+        {% if permissions.Target.sectors_read %}
           {% with sectors=target_detail.sectors %}
               {% include "sector_widget.html" %}
           {% endwith %}
         {% endif %}
-        {% if permissions.releasability_read %}
+        {% if permissions.Target.releasability_read %}
           <tr>
               {% with releasability=target_detail.releasability %}
                   {% include "releasability_list_widget.html" %}
@@ -101,64 +101,64 @@
         </tbody>
     </table>
     </div>
-    {% if permissions.edit_details %}
+    {% if permissions.Target.edit_details %}
       <button class="form_submit_button" id="edit_details">Edit Details</button>
     {% endif %}
 </div>
 {% if target_detail.id %}
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% if permissions.bucketlist_read %}
+        {% if permissions.Target.bucketlist_read %}
           {% with bucket_list=target_detail.bucket_list %}
               {% include 'bucket_list_widget.html' %}
           {% endwith %}
         {% endif %}
         {% include 'add_related_widget.html' %}
     </div>
-    {% if permissions.actions_read %}
+    {% if permissions.Target.actions_read %}
       <div class="content_box">
           {% with obj=target_detail obj_type="Target" %}
               {% include 'action_listing_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.tickets_read %}
+    {% if permissions.Target.tickets_read %}
       <div>
         {% with obj=target_detail obj_type=subscription.type %}
            {% include 'tickets_listing_widget.html' %}
         {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.campaigns_read %}
+    {% if permissions.Target.campaigns_read and permissions.Campaign.read %}
       <div>
         {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
            {% include "campaigns_display_widget.html" %}
         {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.locations_read %}
+    {% if permissions.Target.locations_read %}
       <div>
         {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
            {% include "locations_display_widget.html" %}
         {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.relationships_read %}
+    {% if permissions.Target.relationships_read %}
       <div>
           {% include 'relationships_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.objects_read %}
+    {% if permissions.Target.objects_read %}
       <div>
           {% include 'objects_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.screenshots_read %}
+    {% if permissions.Target.screenshots_read %}
       <div>
       {% include 'screenshot_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.comments_read %}
+    {% if permissions.Target.comments_read %}
       <div>
           {% include 'comments_listing_widget.html' %}
       </div>
@@ -172,7 +172,7 @@
     </div>
 </div>
 
-{% if permissions.services_read %}
+{% if permissions.Target.services_read %}
   {% with item=target_detail %}
       {% include "services_analysis_section.html" with crits_type="Target" identifier=target_detail.id %}
   {% endwith %}
@@ -183,7 +183,7 @@
   {% endif %}
 {% endif %}
 
-{% if permissions.edit_details %}
+{% if permissions.Target.edit_details %}
   <div style="display: none;">
       <div id="edit-details-form" title="Edit Details" style="display: table;">
           <form id="form-edit-details" action='{% url 'crits.targets.views.add_update_target' %}' method='POST' style="display: inline;">{% csrf_token %}

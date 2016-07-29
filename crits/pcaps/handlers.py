@@ -56,7 +56,7 @@ def get_pcap_details(md5, analyst):
 
         pcap.sanitize("%s" % analyst)
 
-        permissions = get_user_permissions(analyst, 'PCAP')
+        permissions = get_user_permissions(analyst)
 
         # remove pending notifications for user
         remove_user_from_notification("%s" % analyst, pcap.id, 'PCAP')

@@ -166,7 +166,7 @@ def get_ip_details(ip, analyst):
     else:
         ip.sanitize("%s" % analyst)
 
-        permissions = get_user_permissions(analyst, 'IP')
+        permissions = get_user_permissions(analyst)
 
         # remove pending notifications for user
         remove_user_from_notification("%s" % analyst, ip.id, 'IP')
@@ -179,10 +179,16 @@ def get_ip_details(ip, analyst):
         }
 
         #objects
-        objects = ip.sort_objects()
+        if permissions['IP']['objects_read']:
+            objects = ip.sort_objects()
+        else:
+            objects = None
 
         #relationships
-        relationships = ip.sort_relationships("%s" % analyst, meta=True)
+        if permissions['IP']['relationships_read']:
+            relationships = ip.sort_relationships("%s" % analyst, meta=True)
+        else:
+            relationships = None
 
         # relationship
         relationship = {

@@ -84,7 +84,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
     if not sample:
         return ('error.html', {'error': "File not yet available or you do not have access to view it."})
     sample.sanitize_sources(username=analyst)
-    permissions = get_user_permissions(analyst, 'Sample')
+    permissions = get_user_permissions(analyst)
     if format_:
         exclude = [
                     "source",
@@ -145,7 +145,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
         }
 
         #objects
-        if permissions['objects_read']:
+        if permissions['Sample']['objects_read']:
             objects = sample.sort_objects()
         else:
             objects = None
@@ -161,14 +161,14 @@ def get_sample_details(sample_md5, analyst, format_=None):
         }
 
         #comments
-        if permissions['comments_read']:
+        if permissions['Sample']['comments_read']:
             comments = {'comments': sample.get_comments(),
                         'url_key': sample_md5}
         else:
             comments = None
 
         #screenshots
-        if permissions['screenshots_read']:
+        if permissions['Sample']['screenshots_read']:
             screenshots = sample.get_screenshots(analyst)
         else:
             screenshots = None
@@ -177,7 +177,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
         favorite = is_user_favorite("%s" % analyst, 'Sample', sample.id)
 
         # services
-        if permissions['services_read']:
+        if permissions['Sample']['services_read']:
             service_list = get_supported_services('Sample')
         else:
             service_list = None

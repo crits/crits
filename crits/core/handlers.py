@@ -48,6 +48,7 @@ from crits.core.user import EmbeddedLoginAttempt
 from crits.core.user_tools import user_sources
 from crits.core.user_tools import save_user_secret
 from crits.core.user_tools import get_user_email_notification
+from crits.core.user_tools import get_user_permissions
 
 from crits.actors.actor import Actor
 from crits.backdoors.backdoor import Backdoor
@@ -2287,6 +2288,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         response['Records'] = response.pop('data')
         response['TotalRecordCount'] = response.pop('count')
         response['Result'] = response.pop('result')
+
+        permissions = get_user_permissions(request.user.username)
         for doc in response['Records']:
             for key, value in doc.items():
                 # all dates should look the same
@@ -2297,14 +2300,16 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     doc['password_reset'] = None
                 if key == "campaign":
                     camps = []
-                    for campdict in value:
-                        camps.append(campdict['name'])
+                    if permissions['Campaign']['read'] and permissions[col_obj._meta['crits_type']]['campaigns_read']:
+                        for campdict in value:
+                            camps.append(campdict['name'])
                     doc[key] = "|||".join(camps)
                 elif key == "source":
                     srcs = []
-                    for srcdict in doc[key]:
-                        if srcdict['name'] in users_sources:
-                            srcs.append(srcdict['name'])
+                    if permissions[col_obj._meta['crits_type']]['sources_read']:
+                        for srcdict in doc[key]:
+                            if srcdict['name'] in users_sources:
+                                srcs.append(srcdict['name'])
                     doc[key] = "|||".join(srcs)
                 elif key == "tags":
                     tags = []

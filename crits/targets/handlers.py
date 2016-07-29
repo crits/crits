@@ -240,7 +240,7 @@ def get_target_details(email_address, analyst):
             'target_detail': target,
             'service_results': service_results,
             'form': form,
-            'permissions': get_user_permissions(analyst, 'Target')}
+            'permissions': get_user_permissions(analyst)}
 
     return template, args
 

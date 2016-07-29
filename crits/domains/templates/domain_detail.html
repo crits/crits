@@ -16,7 +16,7 @@
 <div id="tabnav" class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    {% if permissions.services_read %}
+    {% if permissions.Domain.services_read %}
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     {% endif %}
@@ -40,7 +40,7 @@
                 <td class="key">Created</td>
                 <td>{{domain.created}}</td>
             </tr>
-            {% if permissions.description_read %}
+            {% if permissions.Domain.description_read %}
             <tr>
                 {% with description=domain.description %}
                     {% include 'description_widget.html' %}
@@ -51,7 +51,7 @@
                 <td class="key">DNSMon Enabled</td>
                 <td>{{domain.watchlistEnabled|default:"False"}}</td>
             </tr>
-            {% if permissions.status_read %}
+            {% if permissions.Domain.status_read %}
             <tr>
                 <td class="key">Status
                     <span style="float: right;" class="object_status_response"></span>
@@ -64,19 +64,19 @@
             {% with tlp=domain.tlp %}
                         {% include "tlp_widget.html" %}
             {% endwith %}
-            {% if permissions.sectors_read %}
+            {% if permissions.Domain.sectors_read %}
             {% with sectors=domain.sectors %}
                 {% include "sector_widget.html" %}
             {% endwith %}
             {% endif %}
-            {% if permissions.sources_read %}
+            {% if permissions.Domain.sources_read %}
             <tr>
                 {% with sources=domain.source obj_id=domain.id obj_type=subscription.type %}
                     {% include "sources_listing_widget.html" %}
                 {% endwith %}
             </tr>
             {% endif %}
-            {% if permissions.releasability_read %}
+            {% if permissions.Domain.releasability_read %}
             <tr>
                 {% with releasability=domain.releasability %}
                     {% include "releasability_list_widget.html" %}
@@ -89,7 +89,7 @@
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% if permissions.bucketlist_read %}
+        {% if permissions.Domain.bucketlist_read %}
         {% with bucket_list=domain.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
@@ -97,57 +97,57 @@
         {% include 'add_related_widget.html' %}
 
     </div>
-    {% if permissions.actions_read %}
+    {% if permissions.Domain.actions_read %}
     <div class="content_box">
         {% with obj=domain obj_type="Domain" %}
             {% include 'action_listing_widget.html' %}
         {% endwith %}
     </div>
     {% endif %}
-    {% if permissions.tickets_read %}
+    {% if permissions.Domain.tickets_read %}
     <div>
       {% with obj=domain obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
     </div>
     {% endif %}
-    {% if permissions.campaigns_read %}
+    {% if permissions.Domain.campaigns_read and permissions.Campaign.read%}
     <div>
         {% with hit=domain col=COL_DOMAINS %}
             {% include "campaigns_display_widget.html" %}
         {% endwith %}
     </div>
     {% endif %}
-    {% if permissions.locations_read %}
+    {% if permissions.Domain.locations_read %}
     <div>
         {% with hit=domain col=COL_DOMAINS %}
             {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
     {% endif %}
-    {% if permissions.relationships_read %}
+    {% if permissions.Domain.relationships_read %}
     <div>
        {% include 'relationships_listing_widget.html' %}
     </div>
     {% endif %}
-    {% if permissions.objects_read %}
+    {% if permissions.Domain.objects_read %}
     <div>
        {% include 'objects_listing_widget.html' %}
     </div>
     {% endif %}
-    {% if permissions.screenshots_read %}
+    {% if permissions.Domain.screenshots_read %}
     <div>
     {% include 'screenshot_widget.html' %}
     </div>
     {% endif %}
-    {% if permissions.comments_read %}
+    {% if permissions.Domain.comments_read %}
     <div>
        {% include "comments_listing_widget.html" %}
     </div>
     {% endif %}
     </div> <!-- details_section -->
 
-    {% if permissions.services_read %}
+    {% if permissions.Domain.services_read %}
     {% with item=domain %}
         {% include "services_analysis_section.html" with crits_type="Domain" identifier=domain.id %}
     {% endwith %}

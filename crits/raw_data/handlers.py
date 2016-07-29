@@ -80,7 +80,7 @@ def get_raw_data_details(_id, analyst):
 
         raw_data.sanitize("%s" % analyst)
 
-        permissions = get_user_permissions(analyst, 'RawData')
+        permissions = get_user_permissions(analyst)
 
         # remove pending notifications for user
         remove_user_from_notification("%s" % analyst, raw_data.id, 'RawData')

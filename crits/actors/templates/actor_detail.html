@@ -54,7 +54,7 @@
                         </td>
                     </tr>
                     <tr>
-                      {% if permissions.description_read %}
+                      {% if permissions.Actor.description_read %}
                         {% with description=actor.description %}
                             {% include 'description_widget.html' %}
                         {% endwith %}
@@ -80,13 +80,13 @@
                     {% with tlp=actor.tlp %}
                         {% include "tlp_widget.html" %}
                     {% endwith %}
-                    {% if permissions.sectors_read %}
+                    {% if permissions.Actor.sectors_read %}
                       {% with sectors=actor.sectors %}
                           {% include "sector_widget.html" %}
                       {% endwith %}
                     {% endif %}
                     <tr>
-                        {% if permissions.sources_read %}
+                        {% if permissions.Actor.sources_read %}
                         {% with sources=actor.source obj_id=actor.id obj_type=subscription.type %}
                             {% include "sources_listing_widget.html" %}
                         {% endwith %}
@@ -103,7 +103,7 @@
      </div> <!-- content_box -->
      <div id="detail_floaters">
          {% include 'details_options_widget.html' %}
-         {% if permissions.bucketlist_read %}
+         {% if permissions.Actor.bucketlist_read %}
          {% with bucket_list=actor.bucket_list %}
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
@@ -111,55 +111,56 @@
          {% include 'add_related_widget.html' %}
      </div>
     <div class="content_box">
-      {% if permissions.actions_read %}
+      {% if permissions.Actor.actions_read %}
         {% with obj=actor obj_type="Actor" %}
             {% include 'action_listing_widget.html' %}
         {% endwith %}
       {% endif %}
     </div>
      <div id="actor_identifier_widget_container">
-       {% if permissions.actor_identifiers_read %}
+       {% if permissions.Actor.actor_identifiers_read %}
          {% include "actor_identifiers_widget.html" %}
         {% endif %}
      </div>
      <div>
-      {%if permissions.tickets_read %}
+      {%if permissions.Actor.tickets_read %}
 	    {% with obj=actor obj_type=subscription.type %}
                 {% include 'tickets_listing_widget.html' %}
 	    {% endwith %}
       {%endif%}
     </div>
     <div>
-      {% if permissions.campaigns_read %}
+      {% if permissions.Actor.campaigns_read and permissions.Campaign.read%}
         {% with hit=actor col=COL_ACTORS %}
             {% include "campaigns_display_widget.html" %}
         {% endwith %}
       {%endif%}
     </div>
     <div>
-      {% if permissions.locations_read %}
+      {% if permissions.Actor.locations_read %}
         {% with hit=actor col=COL_ACTORS %}
             {% include "locations_display_widget.html" %}
         {% endwith %}
       {% endif %}
     </div>
     <div>
-      {% if permissions.relationships_read %}
+      {% if permissions.Actor.relationships_read %}
         {% include 'relationships_listing_widget.html' %}
       {% endif %}
+
     </div>
     <div>
-      {% if permissions.objects_read %}
+      {% if permissions.Actor.objects_read %}
         {% include 'objects_listing_widget.html' %}
       {% endif %}
     </div>
     <div>
-    {% if permissions.screenshots_read %}
+    {% if permissions.Actor.screenshots_read %}
       {% include 'screenshot_widget.html' %}
     {% endif %}
     </div>
     <div>
-      {% if permissions.comments_read %}
+      {% if permissions.Actor.comments_read %}
         {% include "comments_listing_widget.html" %}
       {% endif %}
     </div>

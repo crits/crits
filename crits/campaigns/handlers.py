@@ -65,7 +65,7 @@ def get_campaign_details(campaign_name, analyst):
 
     ttp_form = TTPForm()
 
-    permissions = get_user_permissions(analyst, 'Campaign')
+    permissions = get_user_permissions(analyst)
 
     # remove pending notifications for user
     remove_user_from_notification("%s" % analyst, campaign_detail.id, 'Campaign')
@@ -94,7 +94,7 @@ def get_campaign_details(campaign_name, analyst):
                 'url_key': campaign_name}
 
     #screenshots
-    if permissions['screenshots_read']:
+    if permissions['Campaign']['screenshots_read']:
         screenshots = campaign_detail.get_screenshots(analyst)
     else:
         screenshots = None
