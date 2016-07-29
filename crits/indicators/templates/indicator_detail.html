@@ -61,7 +61,7 @@
         <tr>
             <td class='key'>Threat Types</td>
             <td>
-                <ul id="threat_type_list">
+                <ul id="threat_type_list" class="ctaglist">
                     {% for threat_type in indicator.threat_types %}
                         <li>{{threat_type}}</li>
                     {% endfor %}
@@ -71,7 +71,7 @@
         <tr>
             <td class='key'>Attack Types</td>
             <td>
-                <ul id="attack_type_list">
+                <ul id="attack_type_list" class="ctaglist">
                     {% for attack_type in indicator.attack_types %}
                         <li>{{attack_type}}</li>
                     {% endfor %}
