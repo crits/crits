@@ -173,6 +173,12 @@ $(document).ready(function() {
                 return false;
             }
         },
+        beforeTagRemoved: function(event, ui) {
+            var my_threat_types = $("#threat_type_list").tagit("assignedTags");
+            if (my_threat_types.length <= 1) {
+                return false;
+            }
+        },
         afterTagAdded: function(event, ui) {
             var my_threat_types = $("#threat_type_list").tagit("assignedTags");
             update_threat_types(my_threat_types);
@@ -214,6 +220,12 @@ $(document).ready(function() {
                 return false;
             }
             if (ui.tagLabel == "not found") {
+                return false;
+            }
+        },
+        beforeTagRemoved: function(event, ui) {
+            var my_attack_types = $("#attack_type_list").tagit("assignedTags");
+            if (my_attack_types.length <= 1) {
                 return false;
             }
         },

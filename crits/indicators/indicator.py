@@ -11,6 +11,11 @@ from crits.core.crits_mongoengine import CritsSourceDocument, CritsActionsDocume
 from crits.core.fields import CritsDateTimeField
 from crits.indicators.migrate import migrate_indicator
 
+from crits.vocabulary.indicators import (
+    IndicatorThreatTypes,
+    IndicatorAttackTypes
+)
+
 
 class EmbeddedActivity(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -254,6 +259,9 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
 
         parsed_threat_types = [s.strip() for s in parsed_threat_types]
 
+        if IndicatorThreatTypes.UNKNOWN in self.threat_types:
+            self.threat_types.remove(IndicatorThreatTypes.UNKNOWN)
+
         if append:
             for t in parsed_threat_types:
                 if t not in self.sectors:
@@ -292,6 +300,9 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
             parsed_attack_types = attack_types
 
         parsed_attack_types = [s.strip() for s in parsed_attack_types]
+
+        if IndicatorAttackTypes.UNKNOWN in self.attack_types:
+            self.attack_types.remove(IndicatorThreatTypes.UNKNOWN)
 
         if append:
             for t in parsed_attack_types:
