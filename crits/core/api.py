@@ -610,8 +610,8 @@ class CRITsAPIResource(MongoEngineResource):
             'Event': {},
             'Exploit': {},
             'Indicator': {
-                'set_indicator_attack_type' : indh.set_indicator_attack_type,
-                'set_indicator_threat_type' : indh.set_indicator_threat_type,
+                'modify_attack_types' : indh.modify_attack_types,
+                'modify_threat_types' : indh.modify_threat_types,
                 'activity_add' : indh.activity_add,
                 'activity_update' : indh.activity_update,
                 'activity_remove' : indh.activity_remove,
