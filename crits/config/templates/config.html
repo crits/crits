@@ -289,32 +289,42 @@
               </form>
           </div>
         {% endif %}
-        <div id="itemsContainer" class='rightContent forceInvisible'></div>
-        <div id="itemsContainer" class='rightContent forceInvisible'>
-            <div id="add-new-action-form" title="Add/Edit Action">
-                <form id="form-add-new-action" action='{% url "crits.core.views.new_action" %}' method='POST' enctype="multipart/form-data">
-                    <table class="form">{{ add_new_action.as_table }}</table>
-                    <div id="form-add-new-action-results" class="form_results"></div>
-                </form>
-            </div>
-        </div>
-        <div id="rolesContainer" class="rightContent forceInvisible"></div>
-        <div id="usersContainer" class="rightContent forceInvisible">
-            <div id="add-new-user-form" title="Add/Edit User">
-                <select class="selectbox" name="user" onchange="getUserSources(this);">
-                    {% for user in user_list %}
-                        <option value="{{ user.username }}">{{ user.username }}</option>
-                    {% endfor %}
-                </select>
-                <br />
-                <br />
-                <form id="form-add-new-user" action='{% url "crits.core.views.source_access" %}' method='POST' enctype="multipart/form-data">
-                    <table class="form">{{ source_access.as_table }}</table>
-                    <div id="form-add-new-user-results" class="form_results"></div>
-                </form>
-            </div>
-        </div>
-        <div id='servicesContainer' class="rightContent forceInvisible"></div>
-        <div id="audit_logContainer" class="rightContent forceInvisible"></div>
+        {% if permissions.control_panel_items_read %}
+          <div id="itemsContainer" class='rightContent forceInvisible'></div>
+          <div id="itemsContainer" class='rightContent forceInvisible'>
+              <div id="add-new-action-form" title="Add/Edit Action">
+                  <form id="form-add-new-action" action='{% url "crits.core.views.new_action" %}' method='POST' enctype="multipart/form-data">
+                      <table class="form">{{ add_new_action.as_table }}</table>
+                      <div id="form-add-new-action-results" class="form_results"></div>
+                  </form>
+              </div>
+          </div>
+        {% endif %}
+        {% if permissions.control_panel_roles_read %}
+          <div id="rolesContainer" class="rightContent forceInvisible"></div>
+        {% endif %}
+        {% if permissions.control_panel_users_read %}
+          <div id="usersContainer" class="rightContent forceInvisible">
+              <div id="add-new-user-form" title="Add/Edit User">
+                  <select class="selectbox" name="user" onchange="getUserSources(this);">
+                      {% for user in user_list %}
+                          <option value="{{ user.username }}">{{ user.username }}</option>
+                      {% endfor %}
+                  </select>
+                  <br />
+                  <br />
+                  <form id="form-add-new-user" action='{% url "crits.core.views.source_access" %}' method='POST' enctype="multipart/form-data">
+                      <table class="form">{{ source_access.as_table }}</table>
+                      <div id="form-add-new-user-results" class="form_results"></div>
+                  </form>
+              </div>
+          </div>
+        {% endif %}
+        {% if permissions.control_panel_services_read %}
+          <div id='servicesContainer' class="rightContent forceInvisible"></div>
+        {% endif %}
+        {% if permissions.control_panel_audit_log_read %}
+          <div id="audit_logContainer" class="rightContent forceInvisible"></div>
+        {% endif %}
 </div>
 {% endblock %}

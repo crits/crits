@@ -23,36 +23,40 @@ def crits_config(request):
 
     crits_config = CRITsConfig.objects().first()
     permissions = get_user_permissions(request.user.username)
-    if crits_config:
-        crits_config = crits_config.to_dict()
-        crits_config['allowed_hosts'] = ", ".join(crits_config['allowed_hosts'])
-        crits_config['service_dirs'] = ", ".join(crits_config['service_dirs'])
-        config_general_form = ConfigGeneralForm(initial=crits_config)
-        config_LDAP_form = ConfigLDAPForm(initial=crits_config)
-        config_security_form = ConfigSecurityForm(initial=crits_config)
-        config_logging_form = ConfigLoggingForm(initial=crits_config)
-        config_services_form = ConfigServicesForm(initial=crits_config)
-        config_download_form = ConfigDownloadForm(initial=crits_config)
-        config_CRITs_form = ConfigCritsForm(initial=crits_config)
+    if permissions['control_panel_read']:
+        if crits_config:
+            crits_config = crits_config.to_dict()
+            crits_config['allowed_hosts'] = ", ".join(crits_config['allowed_hosts'])
+            crits_config['service_dirs'] = ", ".join(crits_config['service_dirs'])
+            config_general_form = ConfigGeneralForm(initial=crits_config)
+            config_LDAP_form = ConfigLDAPForm(initial=crits_config)
+            config_security_form = ConfigSecurityForm(initial=crits_config)
+            config_logging_form = ConfigLoggingForm(initial=crits_config)
+            config_services_form = ConfigServicesForm(initial=crits_config)
+            config_download_form = ConfigDownloadForm(initial=crits_config)
+            config_CRITs_form = ConfigCritsForm(initial=crits_config)
+        else:
+            config_general_form = ConfigGeneralForm()
+            config_LDAP_form = ConfigLDAPForm()
+            config_security_form = ConfigSecurityForm()
+            config_logging_form = ConfigLoggingForm()
+            config_services_form = ConfigServicesForm()
+            config_download_form = ConfigDownloadForm()
+            config_CRITs_form = ConfigCritsForm()
+        return render_to_response('config.html',
+                                  {'config_general_form': config_general_form,
+                                   'config_LDAP_form': config_LDAP_form,
+                                   'config_security_form': config_security_form,
+                                   'config_logging_form': config_logging_form,
+                                   'config_services_form': config_services_form,
+                                   'config_download_form': config_download_form,
+                                   'config_CRITs_form': config_CRITs_form,
+                                   'permissions': permissions},
+                                  RequestContext(request))
     else:
-        config_general_form = ConfigGeneralForm()
-        config_LDAP_form = ConfigLDAPForm()
-        config_security_form = ConfigSecurityForm()
-        config_logging_form = ConfigLoggingForm()
-        config_services_form = ConfigServicesForm()
-        config_download_form = ConfigDownloadForm()
-        config_CRITs_form = ConfigCritsForm()
-    return render_to_response('config.html',
-                              {'config_general_form': config_general_form,
-                               'config_LDAP_form': config_LDAP_form,
-                               'config_security_form': config_security_form,
-                               'config_logging_form': config_logging_form,
-                               'config_services_form': config_services_form,
-                               'config_download_form': config_download_form,
-                               'config_CRITs_form': config_CRITs_form,
-                               'permissions': permissions},
-                              RequestContext(request))
-
+        return render_to_response('error.html',
+                                  {'error': 'User does not have permission to view Control Panel.'},
+                                  RequestContext(request))
 @user_passes_test(user_can_view_data)
 def modify_config(request):
     """

@@ -143,6 +143,8 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
     control_panel_users_add = BooleanField(default=False)
     control_panel_users_edit = BooleanField(default=False)
     control_panel_users_active = BooleanField(default=False)
+    control_panel_roles_read = BooleanField(default=False)
+    control_panel_roles_edit = BooleanField(default=False)
     control_panel_services_read = BooleanField(default=False)
     control_panel_services_edit = BooleanField(default=False)
     control_panel_audit_log_read = BooleanField(default=False)
