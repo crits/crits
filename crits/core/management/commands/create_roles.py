@@ -47,3 +47,92 @@ def add_uber_admin_role(drop=False):
     role.add_all_sources()
     role.make_all_true()
     role.save()
+
+def add_readonly_role():
+    """
+    Add Read Only role to the system. This will always reset the Read Only role
+    back to the original state if found in the database.
+
+    """
+    role = Role.objects(name='Read Only').first()
+    if not role:
+        role = Role()
+        role.name = "Read Only"
+        role.description = "Read Only Role"
+
+    dont_modify = ['name',
+                   'schema_version',
+                   'active',
+                   'id',
+                   'description',
+                   'unsupported_attrs']
+
+    for p in role._data.iterkeys():
+        if p in settings.CRITS_TYPES.iterkeys():
+            attr = getattr(role, p)
+            # Modify the attributes.
+            for x in attr._data.iterkeys():
+                if 'read' in str(x):
+                    setattr(attr, x, True)
+                else:
+                    setattr(attr, x, False)
+            # Set the attribute on the ACL.
+            setattr(role, p, attr)
+        elif p == "sources":
+            for s in getattr(role, p):
+                for x in s._data.iterkeys():
+                    if x != "name":
+                        setattr(s, x, True)
+
+        elif p not in dont_modify:
+            if p == 'api_interface' or p == 'web_interface' or p == 'script_interface':
+                setattr(role, p, True)
+            else:
+                setattr(role, p, False)
+
+    role.save()
+
+def add_analyst_role():
+    """
+    Add Analyst role to the system. This will always reset the Analyst role
+    back to the original state if found in the database.
+
+
+    """
+    role = Role.objects(name='Analyst').first()
+    if not role:
+        role = Role()
+        role.name = "Analyst"
+        role.description = "Default Analyst Role"
+
+    dont_modify = ['name',
+                   'schema_version',
+                   'active',
+                   'id',
+                   'description',
+                   'unsupported_attrs']
+
+    for p in role._data.iterkeys():
+        if p in settings.CRITS_TYPES.iterkeys():
+            attr = getattr(role, p)
+            # Modify the attributes.
+            for x in attr._data.iterkeys():
+                if 'delete' not in str(x):
+                    setattr(attr, x, True)
+                else:
+                    setattr(attr, x, False)
+            # Set the attribute on the ACL.
+            setattr(role, p, attr)
+        elif p == "sources":
+            for s in getattr(role, p):
+                for x in s._data.iterkeys():
+                    if x != "name":
+                        setattr(s, x, True)
+
+        elif p not in dont_modify:
+            if p == 'api_interface' or p == 'web_interface' or p == 'script_interface':
+                setattr(role, p, True)
+            else:
+                setattr(role, p, False)
+
+    role.save()

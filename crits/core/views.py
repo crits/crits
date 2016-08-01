@@ -2168,17 +2168,16 @@ def add_update_ticket(request, method, type_=None, id_=None):
     :type id_: str
     :returns: :class:`django.http.HttpResponseRedirect`
     """
-
-    permissions = get_user_permissions(analyst, type_)
+    user = request.user.username
+    permissions = get_user_permissions(user, type_)
 
 
     if method =="remove" and request.method == "POST" and request.is_ajax():
-        analyst = request.user.username
         date = datetime.datetime.strptime(request.POST['key'],
                                             settings.PY_DATETIME_FORMAT)
         date = date.replace(microsecond=date.microsecond/1000*1000)
         if permissions['tickets_delete']:
-            result = ticket_remove(type_, id_, date, analyst)
+            result = ticket_remove(type_, id_, date, user)
         else:
             result = {"success":False,
                       "message":"User does not have permission to delete tickets."}
@@ -2189,7 +2188,6 @@ def add_update_ticket(request, method, type_=None, id_=None):
         form = TicketForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            user = request.user.username
             add = {
                     'ticket_number': data['ticket_number'],
             }

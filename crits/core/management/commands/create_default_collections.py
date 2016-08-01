@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from optparse import make_option
 
 from create_indexes import create_indexes
-from create_roles import add_uber_admin_role
+from create_roles import add_uber_admin_role, add_readonly_role, add_analyst_role
 from create_locations import add_location_objects
 from setconfig import create_config_if_not_exist
 from create_default_dashboard import create_dashboard
@@ -50,6 +50,8 @@ class Command(BaseCommand):
         populate_tlds(drop)
         add_location_objects(drop)
         add_uber_admin_role(drop)
+        add_readonly_role()
+        add_analyst_role()
         create_dashboard(drop)
         create_config_if_not_exist()
         create_indexes()
