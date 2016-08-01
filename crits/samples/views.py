@@ -291,24 +291,16 @@ def upload_file(request, related_md5=None):
                                 'message': message }
                     md5_response = result
                 elif len(result) == 1:
-                    md5_response = None
-                    if not request.FILES:
-                        response['success'] = result[0].get('success', False)
-                        if(response['success'] == False):
-                            response['message'] = result[0].get('message', response.get('message'))
-                        else:
-                            md5_response = [result[0].get('object').md5]
-                    else:
-                        md5_response = [result[0]]
-                        response['success'] = True
-
-                    if md5_response != None:
-                        response['message'] = ('File uploaded successfully. <a href="%s">View Sample.</a>'
-                                               % reverse('crits.samples.views.detail',
-                                                         args=md5_response))
+                    response['success'] = result[0].get('success', False)
+                    response['message'] = result[0].get('message',
+                                                        response.get('message'))
+                    try:
+                        md5_response = [result[0].get('object').md5]
+                    except:
+                        md5_response = None
 
                 if response['success']:
-                    if request.POST.get('email'):
+                    if request.POST.get('email') and md5_response:
                         for s in md5_response:
                             email_errmsg = mail_sample(s, [request.user.email])
                             if email_errmsg is not None:

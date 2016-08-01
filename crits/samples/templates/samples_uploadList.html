@@ -17,6 +17,7 @@
             <tr>
                 <td class="key">Filename</td>
                 <td><a href="{% url 'crits.samples.views.detail' s %}">{{ s }}</a></td>
+                <td>In the event this was a PCAP: <a href="{% url 'crits.pcaps.views.pcap_details' s %}">{{ s }}</a></td>
             </tr>
         {% endfor %}
         </tbody>
