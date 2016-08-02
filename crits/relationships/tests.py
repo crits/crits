@@ -71,6 +71,11 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
                            rel_type=TRELATIONSHIP_TYPE,
                            user=self.user.username,
                            rel_confidence=TRELATIONSHIP_CONFIDENCE)
+        forge_relationship(class_=self.campaign2,
+                           right_class=self.campaign1,
+                           rel_type=TRELATIONSHIP_TYPE,
+                           user=self.user.username,
+                           rel_confidence=TRELATIONSHIP_CONFIDENCE)
     def tearDown(self):
         clean_db()
     def testCreateRelationship(self):
@@ -83,8 +88,8 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
     def testChangingReason(self):
         relationship1 = self.campaign1.relationships[0]
         relationship2 = self.campaign2.relationships[0]
-        self.assertEqual(relationship1.rel_reason, "N/A")
-        self.assertEqual(relationship2.rel_reason, "N/A")
+        self.assertEqual(relationship1.rel_reason, "")
+        self.assertEqual(relationship2.rel_reason, "")
         update_relationship_reasons(left_class=self.campaign1,
                                     right_class=self.campaign2,
                                     rel_type=TRELATIONSHIP_TYPE,

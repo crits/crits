@@ -285,6 +285,7 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
     related_id = data.get('related_id')
     related_type = data.get('related_type')
     relationship_type = data.get('relationship_type')
+    description = data.get('description')
 
     retVal = ip_add_update(ip, ip_type,
             source=source,
@@ -302,7 +303,8 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
             cache=cache,
             related_id=related_id,
             related_type=related_type,
-            relationship_type=relationship_type)
+            relationship_type=relationship_type,
+            description = description)
 
     if not retVal['success']:
         errors.append(retVal.get('message'))
@@ -351,7 +353,8 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
                   confidence='low', user=None, is_add_indicator=False,
                   indicator_reference='', bucket_list=None, ticket=None,
                   is_validate_only=False, cache={}, related_id=None,
-                  related_type=None, relationship_type=None):
+                  related_type=None, relationship_type=None, description=''):
+
     """
     Add/update an IP address.
 
@@ -390,6 +393,8 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
     :type related_type: str
     :param relationship_type: Type of relationship to create.
     :type relationship_type: str
+    :param description: A description for this IP
+    :type description: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -422,6 +427,11 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
 
         if cached_results != None:
             cached_results[ip_address] = ip_object
+
+    if not ip_object.description:
+        ip_object.description = description or ''
+    elif ip_object.description != description:
+        ip_object.description += "\n" + (description or '')
 
     if isinstance(source, basestring):
         source = [create_embedded_source(source,

@@ -3,6 +3,43 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: mgoffin
+Date:   2016-07-28
+
+    Based on community feedback we've decided to change how Indicator Threat
+    Type and Attack Type work. Now instead of it being a single static value
+    which is used in determining duplicate indicators, they are now lists which
+    are not involved in determining duplicates. Now, when adding an Indicator
+    duplicates are once again determined based on type and value only. Threat
+    and Attack Types will be combined with existing ones if an Indicator gets
+    uploaded that would cause an existing indicator to get updated.
+
+    This caused a schema migration. To update your indicators, you can run:
+
+        python manage.py upgrade -si
+
+    If you want to detect the duplicates created by having different Threat or
+    Attack Types, you can run the following aggregation in mongo shell:
+
+        db.indicators.aggregate({$group:{_id:"$value",count:{$sum :1}}},
+                                {$project:{_id:0, val:"$_id", count:1}},
+                                {$match:{$count: {$gt: 1}}})
+
+    This will show you the value of the Indicator and the count of duplicates.
+    You can then search in the UI using a global search like:
+
+        type:indicator field:value foo
+
+    Where "foo" is the duplicate value returned in the aggregation results. You
+    can decide how you want to resolve the conflicts before removing the
+    duplicates.
+
+    If you use the API to update indicators, note that the actions have now
+    changed to "modify_attack_types" and "modify_threat_types" and take the
+    parameter "attack_types" and "threat_types" respectively. Note that using
+    these calls will *replace* the existing types there, so make sure to provide
+    the complete list you want to be there after the update is made.
+
 Author: frbapolkosnik
 Date:   2016-02-03
 

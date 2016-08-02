@@ -33,7 +33,7 @@ def forge_relationship(type_=None, id_=None,
                        class_=None, right_type=None,
                        right_id=None, right_class=None,
                        rel_type=None, rel_date=None,
-                       user=None, rel_reason="N/A",
+                       user=None, rel_reason="",
                        rel_confidence='unknown', get_rels=False, **kwargs):
     """
     Forge a relationship between two top-level objects.
@@ -62,11 +62,13 @@ def forge_relationship(type_=None, id_=None,
     :type rel_confidence: str
     :param get_rels: Return the relationships after forging.
     :type get_rels: boolean
-    :returns: dict with keys "success" (boolean) and "message" (str if
-                failed, dict if successful)
+    :returns: dict with keys:
+              "success" (boolean)
+              "message" (str if fail, EmbeddedObject if success)
+              "relationships" (dict)
     """
 
-    if rel_date is None or rel_date == 'None':
+    if rel_date == 'None':
         rel_date = None
     elif isinstance(rel_date, basestring) and rel_date != '':
         rel_date = parse(rel_date, fuzzy=True)
@@ -76,45 +78,26 @@ def forge_relationship(type_=None, id_=None,
     if not class_:
         if type_ and id_:
             class_ = class_from_id(type_, id_)
-            if not class_:
-                return {'success': False,
-                        'message': "Unable to get left object."}
-        else:
-            return {'success': False,
-                    'message': "Need a valid left type and id"}
+        if not class_:
+            return {'success': False, 'message': "Failed to get left TLO"}
+    if not right_class:
+        if right_type and right_id:
+            right_class = class_from_id(right_type, right_id)
+        if not right_class:
+            return {'success': False, 'message': "Failed to get right TLO"}
+
     try:
         # forge relationship
-        if right_class:
-            results = class_.add_relationship(right_class,
-                                        rel_type,
-                                        rel_date=rel_date,
-                                        analyst=user,
-                                        rel_confidence=rel_confidence,
-                                        rel_reason=rel_reason)
-        else:
-            if right_type and right_id:
-                rel_item = class_from_id(right_type, right_id)
-                if rel_item:
-                    results = class_.add_relationship(rel_item,
-                                                rel_type,
-                                                rel_date=rel_date,
-                                                analyst=user,
-                                                rel_confidence=rel_confidence,
-                                                rel_reason=rel_reason)
-                else:
-                    return {'success': False,
-                            'message': "Failed to get right object"}
-            else:
-                return {'success': False,
-                        'message': "Need a valid right type and id"}
-    except Exception, e:
+        results = class_.add_relationship(right_class, rel_type, rel_date,
+                                          user, rel_confidence, rel_reason)
+    except Exception as e:
         return {'success': False, 'message': e}
 
     if results['success']:
-        class_.save(username=user)
-        class_.reload()
+        class_.update(add_to_set__relationships=results['message'])
         if get_rels:
-            results['relationships'] = class_.sort_relationships("%s" % user, meta=True)
+            results['relationships'] = class_.sort_relationships("%s" % user,
+                                                                 meta=True)
     return results
 
 def delete_all_relationships(left_class=None, left_type=None,

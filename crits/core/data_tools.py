@@ -93,9 +93,9 @@ def create_zip(files, pw_protect=True):
         from crits.config.config import CRITsConfig
         crits_config = CRITsConfig.objects().first()
         if crits_config:
-            zip7_password = crits_config.zip7_password
+            zip7_password = crits_config.zip7_password or 'infected'
         else:
-            zip7_password = settings.ZIP7_PASSWORD
+            zip7_password = settings.ZIP7_PASSWORD or 'infected'
         dumpdir = tempfile.mkdtemp() #dir=temproot
         #write out binary files
         for f in files:
@@ -173,6 +173,9 @@ def format_file(data, file_format):
     :type file_format: str
     :returns: tuple of (<formatted_data>, <file_extension>)
     """
+
+    if data == None:
+        return ("", "")
 
     if file_format == "base64":
         import base64

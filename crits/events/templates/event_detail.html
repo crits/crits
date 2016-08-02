@@ -26,7 +26,7 @@
     <span class="horizontal_menu">
         <ul class="hmenu">
             {% if permissions.Event.add_sample %}
-              <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.events.views.upload_sample' event.id %}">Add Sample</a></li>
+              <li><li><a href="#" class="dialogClick" dialog="new-sample" persona="related">Add Sample</a></li>
             {% endif %}
             {% if permissions.Event.download %}
               <li><a href="#" class="dialogClick" dialog="download-event">Download Event</a></li>
