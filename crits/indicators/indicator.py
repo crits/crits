@@ -260,7 +260,7 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
         parsed_threat_types = [s.strip() for s in parsed_threat_types]
 
         unknown = IndicatorThreatTypes.UNKNOWN
-        if len(self.threat_types) and unknown in parsed_threat_types:
+        if len(self.threat_types) and unknown in parsed_threat_types and append:
             parsed_threat_types.remove(unknown)
         if unknown in self.threat_types:
             self.threat_types.remove(unknown)
