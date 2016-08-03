@@ -17,6 +17,7 @@ MD5          {{ sample.md5 }}
 SHA1         {{ sample.sha1 }}
 SHA256       {{ sample.sha256 }}
 SSDEEP       {{ sample.ssdeep }}
+IMPFUZZY     {{ sample.impfuzzy }}
 {% if sample.obj %}
 Objects{% for object in sample.obj %}
 * {{object.value}} ({{ object.name}}){% endfor %}{% endif %}
