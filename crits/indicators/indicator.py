@@ -308,7 +308,7 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
         parsed_attack_types = [s.strip() for s in parsed_attack_types]
 
         unknown = IndicatorAttackTypes.UNKNOWN
-        if len(self.attack_types) and unknown in parsed_attack_types:
+        if len(self.attack_types) and unknown in parsed_attack_types and append:
             parsed_attack_types.remove(unknown)
         if unknown in self.attack_types:
             self.attack_types.remove(unknown)
