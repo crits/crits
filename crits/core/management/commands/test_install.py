@@ -34,6 +34,7 @@ class Command(BaseCommand):
                    'importlib',
                    'lxml',
                    'M2Crypto',
+                   'pyimpfuzzy',
                    'magic',
                    'mongoengine',
                    'nids',
