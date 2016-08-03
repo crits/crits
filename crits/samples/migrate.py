@@ -85,20 +85,13 @@ def migrate_4_to_5(self):
     if self.is_pe():
         try:
             import pyimpfuzzy
-        except ImportError:
-            pass
-        if not hasattr(self, 'impfuzzy'):
-            try:
+            if not hasattr(self, 'impfuzzy'):
                 self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(self.filedata.read())
-            except Exception:
-                # The sample is probably not a PE with valid imports or we don't have pyimpfuzzy
-                self.impfuzzy = None
-        elif not self.impfuzzy:
-            #in case we had some Pes that were not covered
-            try:
-               self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(self.filedata.read())
-            except Exception:
-                # The sample is probably not a PE wit valid imports or we don't have pyimpfuzzy
+            elif not self.impfuzzy:
+                # In case we don't have some PEs covered...
+               self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(self.filedata.read()) 
+        except Exception:
+                print("\n\tError migrating %s: %s" % (self.id, "The sample is probably not a PE with valid imports or we don't have pyimpfuzzy"))
                 self.impfuzzy = None
     else:
         # not a PE, so no point in populating it
