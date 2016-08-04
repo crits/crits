@@ -124,7 +124,9 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         Is this a PE file.
         """
 
-        return self.filedata.grid_id != None and self.filedata.read(2) == "MZ"
+        ret = self.filedata.grid_id != None and self.filedata.read(2) == "MZ"
+        self.filedata.seek(0)
+        return ret
 
     def is_pdf(self):
         """
