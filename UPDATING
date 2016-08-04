@@ -3,7 +3,7 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
-Author: frbapolkosnik
+Author: apolkosnik
 Date:   2016-07-13
 
     Support for Impfuzzy has been added, see:
@@ -12,7 +12,7 @@ Date:   2016-07-13
     In order to populate the hashes for our current sample set run the following:
         python manage.py upgrade -Ss
 
-Author: frbapolkosnik
+Author: apolkosnik
 Date:   2016-02-03
 
     You can run your CRITs-master on Django 1.7 with the latest commit!
@@ -60,7 +60,7 @@ Date: 2015-11-18
         Unlike most other Control Panel lists, this list allows entries to be deleted so
         that this list doesn't become cumbersome over time.
 
-Author: frbapolkosnik
+Author: apolkosnik
 Date: 2015-08-31
 
     Unzip functionality was set up to use the 7za rather than 7z. 7z suports
@@ -193,7 +193,7 @@ Date:   2015-04-28
 
         python manage.py create_locations
 
-Author: frbapolkosnik
+Author: apolkosnik
 Date:   2015-04-17
 
     Bundled version of OleFileIO_PL has been removed and replaced with
@@ -507,7 +507,7 @@ Date:  2014-05-15
     - Existing notifications in the comments collection:
         db.comments.remove({'type': 'notification'}, {'multi': 1})
 
-Author: frbapolkosnik
+Author: apolkosnik
 Date:   2014-04-28
 
     Some LDAP servers might set an urgent flag on some of their messages, and
