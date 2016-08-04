@@ -28,6 +28,7 @@ from crits.core.crits_mongoengine import EmbeddedSource, EmbeddedCampaign
 from crits.core.crits_mongoengine import json_handler, create_embedded_source
 from crits.core.data_tools import convert_string_to_bool, validate_md5_checksum
 from crits.core.data_tools import validate_sha1_checksum, validate_sha256_checksum
+from crits.core.data_tools import detect_pcap
 from crits.core.exceptions import ZipFileError
 from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
@@ -39,6 +40,7 @@ from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
 from crits.objects.handlers import validate_and_add_new_handler_object
+from crits.pcaps.handlers import handle_pcap_file
 from crits.samples.forms import XORSearchForm, UnzipSampleForm, UploadFileForm
 from crits.samples.sample import Sample
 from crits.samples.yarahit import YaraHit
@@ -727,6 +729,38 @@ def handle_file(filename, data, source, method='Generic', reference='',
     retVal['message'] = ""
     is_sample_new = False
 
+    if data:
+        try:
+            # do we have a pcap?
+            if detect_pcap(data):
+                pres = handle_pcap_file(filename,
+                                        data,
+                                        source,
+                                        user=user,
+                                        description=description,
+                                        related_id=related_id,
+                                        related_md5=related_md5,
+                                        related_type=related_type,
+                                        method=method,
+                                        reference=reference,
+                                        relationship=relationship,
+                                        bucket_list=bucket_list,
+                                        ticket=ticket)
+                if pres.get('success', False):
+                    if is_return_only_md5 == True:
+                        return pres['md5'].lower()
+                    retVal['message'] += ('Detected a PCAP! New PCAP: <a href="%s">%s.</a>'
+                                        % (reverse('crits.pcaps.views.pcap_details',
+                                                    args=[pres['md5'].lower()]),
+                                                    pres['md5'].lower()))
+                else:
+                    retVal['success'] = False
+                    retVal['message'] += pres.get('message', '')
+                return retVal
+        except:
+            # Continue on adding this as a Sample
+            pass
+
     # get sample from database, or create it if one doesn't exist
     if not data and not md5_digest:
         retVal['success'] = False
@@ -999,7 +1033,7 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                          filename=None, md5=None, sha1=None, sha256=None, size=None,
                          mimetype=None, bucket_list=None, ticket=None,
                          inherited_source=None, is_validate_only=False,
-                         is_return_only_md5=True, cache={}, backdoor_name=None,
+                         is_return_only_md5=False, cache={}, backdoor_name=None,
                          backdoor_version=None, description=''):
     """
     Handle an uploaded file.
@@ -1102,7 +1136,7 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             bucket_list=bucket_list,
             ticket=ticket,
             inherited_source=inherited_source,
-            is_return_only_md5=is_return_only_md5,
+            is_return_only_md5=True,
             backdoor_name=backdoor_name,
             backdoor_version=backdoor_version,
             description=description)
