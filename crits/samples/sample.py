@@ -125,10 +125,8 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         """
 
         ret = self.filedata.grid_id != None and self.filedata.read(2) == "MZ"
-        try:
+        if self.filedata.grid_id:
           self.filedata.seek(0)
-        except Exception:
-          pass
         return ret
 
     def is_pdf(self):
@@ -137,10 +135,8 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         """
 
         ret = self.filedata.grid_id != None and "%PDF-" in self.filedata.read(1024)
-        try:
+        if self.filedata.grid_id:
           self.filedata.seek(0)
-        except Exception:
-          pass
         return ret
 
     def discover_binary(self):
