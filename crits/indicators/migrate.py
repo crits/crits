@@ -1,11 +1,36 @@
 from crits.core.crits_mongoengine import EmbeddedCampaign
+from crits.vocabulary.indicators import (
+    IndicatorThreatTypes,
+    IndicatorAttackTypes
+)
 
 def migrate_indicator(self):
     """
     Migrate to the latest schema version.
     """
 
-    migrate_3_to_4(self)
+    migrate_4_to_5(self)
+
+def migrate_4_to_5(self):
+    """
+    Migrate from schema 4 to 5.
+    """
+
+    if self.schema_version < 4:
+        migrate_3_to_4(self)
+
+    if self.schema_version == 4:
+        old_threat_type = getattr(self.unsupported_attrs, 'threat_type', None)
+        old_attack_type = getattr(self.unsupported_attrs, 'attack_type', None)
+        if old_threat_type is None:
+            old_threat_type = IndicatorThreatTypes.UNKNOWN
+        if old_attack_type is None:
+            old_attack_type = IndicatorAttackTypes.UNKNOWN
+        self.threat_types = [old_threat_type]
+        self.attack_types = [old_attack_type]
+        self.schema_version = 5
+        self.save()
+        self.reload()
 
 def migrate_3_to_4(self):
     """

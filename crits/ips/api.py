@@ -53,6 +53,7 @@ class IPResource(CRITsAPIResource):
         reference = data.get('reference', None)
         method = data.get('method', None)
         campaign = data.get('campaign', None)
+        description = data.get('description', None)
         confidence = data.get('confidence', None)
         ip_type = data.get('ip_type', None)
         add_indicator = data.get('add_indicator', False)
@@ -74,6 +75,7 @@ class IPResource(CRITsAPIResource):
                                source_reference=reference,
                                campaign=campaign,
                                confidence=confidence,
+                               description=description,
                                analyst=analyst,
                                bucket_list=bucket_list,
                                ticket=ticket,

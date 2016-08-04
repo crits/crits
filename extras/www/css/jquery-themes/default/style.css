@@ -1626,3 +1626,7 @@ a#reply_inline_comment {
     display: inline-block;
     border-radius: 0px;
 }
+
+.ctaglist {
+     margin: 1px;
+}

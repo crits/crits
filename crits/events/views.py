@@ -118,49 +118,6 @@ def view_event(request, eventid):
                               RequestContext(request))
 
 
-@user_passes_test(user_can_view_data)
-def upload_sample(request, event_id):
-    """
-    Upload a sample to associate with this event.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param event_id: The ObjectId of the event to associate with this sample.
-    :type event_id: str
-    :returns: :class:`django.http.HttpResponse`, :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':    # and request.is_ajax():
-        form = UploadFileForm(request.user, request.POST, request.FILES)
-        if form.is_valid():
-            email = None
-            if request.POST.get('email'):
-                email = request.user.email
-
-            result = add_sample_for_event(event_id,
-                                          form.cleaned_data,
-                                          request.user.username,
-                                          request.FILES.get('filedata', None),
-                                          request.POST.get('filename', None),
-                                          request.POST.get('md5', None),
-                                          email,
-                                          form.cleaned_data['inherit_sources'])
-            if result['success']:
-                result['redirect_url'] = reverse('crits.events.views.view_event', args=[event_id])
-            return render_to_response('file_upload_response.html',
-                                      {'response': json.dumps(result)},
-                                      RequestContext(request))
-        else:
-            form.fields['related_md5'].widget = forms.HiddenInput() #hide field so it doesn't reappear
-            return render_to_response('file_upload_response.html',
-                                      {'response': json.dumps({'success': False,
-                                                               'form': form.as_table()})},
-                                      RequestContext(request))
-    else:
-        return HttpResponseRedirect(reverse('crits.events.views.view_event',
-                                            args=[event_id]))
-
-
 @user_passes_test(user_is_admin)
 def remove_event(request, _id):
     """

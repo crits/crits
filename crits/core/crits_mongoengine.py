@@ -302,6 +302,7 @@ class CritsDocument(BaseDocument):
     meta = {
         'duplicate_attrs':[],
         'migrated': False,
+        'migrating': False,
         'needs_migration': False,
         'queryset_class': CritsQuerySet
     }
@@ -452,8 +453,6 @@ class CritsDocument(BaseDocument):
 
         # perform migration, if needed
         if hasattr(doc, '_meta'):
-            if not doc._meta.get('migrated',False):
-                doc._meta['migrated'] = False
             if ('schema_version' in doc and
                 'latest_schema_version' in doc._meta and
                 doc.schema_version < doc._meta['latest_schema_version']):
@@ -467,10 +466,11 @@ class CritsDocument(BaseDocument):
                 try:
                     doc.migrate()
                     doc._meta['migrated'] = True
+                    doc._meta['needs_migration'] = False
+                    doc._meta['migrating'] = False
                 except Exception as e:
                     e.tlo = doc.id
                     raise e
-
 
         return doc
 
@@ -1804,7 +1804,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 their_rel.relationship_date = my_existing_rel.relationship_date
                 their_rel.rel_confidence = my_existing_rel.rel_confidence
                 their_rel.rel_reason = my_existing_rel.rel_reason
-            rel_item.update(add_to_set__relationships=their_rel) # add new rel
+            rel_item.relationships.append(their_rel) # add to passed rel_item
+
+            # updating DB this way can be much faster than saving entire TLO
+            rel_item.update(add_to_set__relationships=their_rel)
 
         if get_rels:
             results = {'success': True,
@@ -2178,7 +2181,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             'Email': ('id', 'from_address', 'sender', 'subject', 'campaign'),
             'Event': ('id', 'title', 'event_type', 'description', 'campaign'),
             'Exploit': ('id', 'name', 'cve', 'campaign'),
-            'Indicator': ('id', 'ind_type', 'value', 'campaign'),
+            'Indicator': ('id', 'ind_type', 'value', 'campaign', 'actions'),
             'IP': ('id', 'ip', 'campaign'),
             'PCAP': ('id', 'md5', 'filename', 'description', 'campaign'),
             'RawData': ('id', 'title', 'data_type', 'tool', 'description',

@@ -26,8 +26,8 @@ from crits.indicators.handlers import (
     ci_update,
     create_indicator_and_ip,
     set_indicator_type,
-    set_indicator_threat_type,
-    set_indicator_attack_type,
+    modify_threat_types,
+    modify_attack_types,
     get_indicator_details,
     generate_indicator_jtable,
     generate_indicator_csv,
@@ -492,9 +492,9 @@ def update_indicator_type(request, indicator_id):
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)
-def update_indicator_threat_type(request, indicator_id):
+def threat_type_modify(request, indicator_id):
     """
-    Update an indicator's threat type. Should be an AJAX POST.
+    Update an indicator's threat types. Should be an AJAX POST.
 
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
@@ -504,17 +504,10 @@ def update_indicator_threat_type(request, indicator_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        if 'type' in request.POST and len(request.POST['type']) > 0:
-            result = set_indicator_threat_type(indicator_id,
-                                        request.POST['type'],
-                                        '%s' % request.user.username)
-            if result['success']:
-                message = {'success': True}
-            else:
-                message = {'success': False}
-        else:
-            message = {'success': False}
-        return HttpResponse(json.dumps(message),
+        threat_types = request.POST['threat_types'].split(",")
+        result = modify_threat_types(indicator_id, threat_types,
+                                     user=request.user.username)
+        return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
@@ -523,9 +516,9 @@ def update_indicator_threat_type(request, indicator_id):
                                   RequestContext(request))
 
 @user_passes_test(user_can_view_data)
-def update_indicator_attack_type(request, indicator_id):
+def attack_type_modify(request, indicator_id):
     """
-    Update an indicator's attack type. Should be an AJAX POST.
+    Update an indicator's attack types. Should be an AJAX POST.
 
     :param request: Django request object (Required)
     :type request: :class:`django.http.HttpRequest`
@@ -535,20 +528,49 @@ def update_indicator_attack_type(request, indicator_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        if 'type' in request.POST and len(request.POST['type']) > 0:
-            result = set_indicator_attack_type(indicator_id,
-                                        request.POST['type'],
-                                        '%s' % request.user.username)
-            if result['success']:
-                message = {'success': True}
-            else:
-                message = {'success': False}
-        else:
-            message = {'success': False}
-        return HttpResponse(json.dumps(message),
+        attack_types = request.POST['attack_types'].split(",")
+        result = modify_attack_types(indicator_id, attack_types,
+                                     user=request.user.username)
+        return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
                                   {"error": error},
                                   RequestContext(request))
+
+@user_passes_test(user_can_view_data)
+def get_available_threat_types(request):
+    """
+    Get the available threat types to use.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        return HttpResponse(
+            json.dumps(IndicatorThreatTypes.values(sort=True),
+                       default=json_handler),
+            content_type='application/json'
+        )
+    return HttpResponse({})
+
+@user_passes_test(user_can_view_data)
+def get_available_attack_types(request):
+    """
+    Get the available attack types to use.
+
+    :param request: Django request.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    if request.method == "POST" and request.is_ajax():
+        return HttpResponse(
+            json.dumps(IndicatorAttackTypes.values(sort=True),
+                       default=json_handler),
+            content_type='application/json'
+        )
+    return HttpResponse({})
