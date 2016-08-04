@@ -193,7 +193,7 @@ def run_service(name, type_, id_, user, obj=None,
     try:
         service_class.valid_for(local_obj.obj)
         if hasattr(local_obj.obj, 'filedata'):
-            if hasattr(local_obj.obj.filedata, 'seek'):
+            if local_obj.obj.filedata.grid_id:
                 # Reset back to the start so the service gets the full file.
                 local_obj.obj.filedata.seek(0)
     except ServiceConfigError as e:
