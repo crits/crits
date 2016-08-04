@@ -134,14 +134,20 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         Is this a PE file.
         """
 
-        return self.filedata.grid_id != None and self.filedata.read(2) == "MZ"
+        ret = self.filedata.grid_id != None and self.filedata.read(2) == "MZ"
+        if self.filedata.grid_id:
+          self.filedata.seek(0)
+        return ret
 
     def is_pdf(self):
         """
         Is this a PDF.
         """
 
-        return self.filedata.grid_id != None and "%PDF-" in self.filedata.read(1024)
+        ret = self.filedata.grid_id != None and "%PDF-" in self.filedata.read(1024)
+        if self.filedata.grid_id:
+          self.filedata.seek(0)
+        return ret
 
     def discover_binary(self):
         """
