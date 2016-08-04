@@ -85,11 +85,8 @@ def migrate_4_to_5(self):
     if self.is_pe():
         try:
             import pyimpfuzzy
-            if not hasattr(self, 'impfuzzy'):
+            if not self.impfuzzy:
                 self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(self.filedata.read())
-            elif not self.impfuzzy:
-                # In case we don't have some PEs covered...
-               self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(self.filedata.read()) 
         except Exception:
                 print("\n\tError migrating %s: %s" % (self.id, "The sample is probably not a PE with valid imports or we don't have pyimpfuzzy"))
                 self.impfuzzy = None
