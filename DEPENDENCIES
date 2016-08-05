@@ -55,6 +55,10 @@ pydeep==0.2
 Provides: pydeep
 Note: Requires libfuzzy and its development headers on your system to build
 
+pyimpfuzzy
+Provides: pyimpfuzzy
+Note: Requires ssdeep development headers and pefile on your system to build
+
 M2Crypto
 Provides: M2Crypto
 Note: Requires the swig tool and openssl development headers on your system to build

@@ -1,3 +1,7 @@
+var threat_type_load = true;
+var attack_type_load = true;
+var available_threat_types = [];
+var available_attack_types = [];
 $(document).ready(function() {
     $('[id^="accordion"]').accordion({
                     collapsible: true,
@@ -151,115 +155,147 @@ $(document).ready(function() {
         style:'display:inline',
         submit:'OK'
     });
-    //edit threat type in place
-    $('#indicator_threat_type.edit').editable(function(value, settings) {
-        var revert = this.revert;
-        return function(value, settings, elem) {
-            $.ajax({
-                type:"POST",
-                async:false,
-                url:$(elem).attr('action'),
-                data: {'type':value},
-                success: function(data) {
-                    if (!data.success) {
-                        value = revert;
-                        $("#indicator_threat_type_error").addClass('ui-icon');
-                        $("#indicator_threat_type_error").removeClass('ui-icon-circle-check');
-                        $("#indicator_threat_type_error").addClass('ui-icon-alert');
-                        $("#indicator_threat_type_error").attr("title", "Duplicate Indicator detected");
-                    } else {
-                        $("#indicator_threat_type_error").addClass('ui-icon');
-                        $("#indicator_threat_type_error").removeClass('ui-icon-alert');
-                        $("#indicator_threat_type_error").addClass('ui-icon-circle-check');
-                        $("#indicator_threat_type_error").attr("title", "Success!");
-                    }
-                },
-            });
-            return value;
-        }(value, settings, this);
-    },
-    {
-        type:'select',
-        data: (function() {
-            var dtypes = {};
-            var sorted = [];
-            $.ajax({
-                type: "POST",
-                async: false,
-                url: get_indicator_type_dropdown,
-                data: {'type': 'threat_type'},
-                success: function(data) {
-                    $.each(data.types, function(key, value) {
-                        sorted.push(key);
-                    });
-                    sorted.sort();
-                    len = sorted.length;
-                    for (var i=0; i < len; i++) {
-                        dtypes[sorted[i]] = sorted[i];
-                    }
-                }
-            });
-            return dtypes;
-        }),
-        style:'display:inline',
-        submit:'OK'
-    });
-    //edit attack type in place
-    $('#indicator_attack_type.edit').editable(function(value, settings) {
-        var revert = this.revert;
-        return function(value, settings, elem) {
-            $.ajax({
-                type:"POST",
-                async:false,
-                url:$(elem).attr('action'),
-                data: {'type':value},
-                success: function(data) {
-                    if (!data.success) {
-                        value = revert;
-                        $("#indicator_attack_type_error").addClass('ui-icon');
-                        $("#indicator_attack_type_error").removeClass('ui-icon-circle-check');
-                        $("#indicator_attack_type_error").addClass('ui-icon-alert');
-                        $("#indicator_attack_type_error").attr("title", "Duplicate Indicator detected");
-                    } else {
-                        $("#indicator_attack_type_error").addClass('ui-icon');
-                        $("#indicator_attack_type_error").removeClass('ui-icon-alert');
-                        $("#indicator_attack_type_error").addClass('ui-icon-circle-check');
-                        $("#indicator_attack_type_error").attr("title", "Success!");
-                    }
-                },
-            });
-            return value;
-        }(value, settings, this);
-    },
-    {
-        type:'select',
-        data: (function() {
-            var dtypes = {};
-            var sorted = [];
-            $.ajax({
-                type: "POST",
-                async: false,
-                url: get_indicator_type_dropdown,
-                data: {'type': 'attack_type'},
-                success: function(data) {
-                    $.each(data.types, function(key, value) {
-                        sorted.push(key);
-                    });
-                    sorted.sort();
-                    len = sorted.length;
-                    for (var i=0; i < len; i++) {
-                        dtypes[sorted[i]] = sorted[i];
-                    }
-                }
-            });
-            return dtypes;
-        }),
-        style:'display:inline',
-        submit:'OK'
-    });
 
     populate_id(indicator_id, 'Indicator');
     details_copy_id('Indicator');
     toggle_favorite('Indicator');
-}); //document.ready
 
+    $("#threat_type_list").tagit({
+        allowSpaces: true,
+        allowDuplicates: false,
+        removeCOnfirmation: true,
+        showAutocompleteOnFocus: true,
+        beforeTagAdded: function(event, ui) {
+            if (available_threat_types.indexOf(ui.tagLabel) == -1) {
+                return false;
+            }
+            if (ui.tagLabel == "not found") {
+                return false;
+            }
+        },
+        afterTagAdded: function(event, ui) {
+            var my_threats = $("#threat_type_list").tagit("assignedTags");
+            if (my_threats.length > 1 && my_threats.indexOf("Unknown") > -1) {
+                $("#threat_type_list").tagit("removeTagByLabel", "Unknown");
+            }
+            else {
+                update_threat_types(my_threats);
+            }
+        },
+        afterTagRemoved: function(event, ui) {
+            var my_threat_types = $("#threat_type_list").tagit("assignedTags");
+            if (my_threat_types.length < 1) {
+                $("#threat_type_list").tagit("createTag", "Unknown");
+            }
+            update_threat_types(my_threat_types);
+        },
+        onTagClicked: function(event, ui) {
+            var url = ta_search + "?search_type=global&q=type%3Aindicator+field%3Athreat_types+" + ui.tagLabel;
+            window.open(url, '_blank');
+        },
+        availableTags: (function() {
+            var tmp = [];
+            $.ajax({
+                async: false,
+                type: "POST",
+                url: threat_type_list,
+                data: {},
+                datatype: 'json',
+                success: function(data) {
+                    available_threat_types = data;
+                    tmp = data.filter(function(i) {
+	                    return i != "Unknown"
+                    });
+                }
+            });
+            return tmp;
+        })(),
+        autocomplete: {
+            delay: 0,
+            minLength: 0,
+        },
+    });
+    $("#attack_type_list").tagit({
+        allowSpaces: true,
+        allowDuplicates: false,
+        removeCOnfirmation: true,
+        showAutocompleteOnFocus: true,
+        beforeTagAdded: function(event, ui) {
+            if (available_attack_types.indexOf(ui.tagLabel) == -1) {
+                return false;
+            }
+            if (ui.tagLabel == "not found") {
+                return false;
+            }
+        },
+        afterTagAdded: function(event, ui) {
+            var my_attacks = $("#attack_type_list").tagit("assignedTags");
+            if (my_attacks.length > 1 && my_attacks.indexOf("Unknown") > -1) {
+                $("#attack_type_list").tagit("removeTagByLabel", "Unknown");
+            }
+            else {
+                update_attack_types(my_attacks);
+            }
+        },
+        afterTagRemoved: function(event, ui) {
+            var my_attack_types = $("#attack_type_list").tagit("assignedTags");
+            if (my_attack_types.length < 1) {
+                $("#attack_type_list").tagit("createTag", "Unknown");
+            }
+            update_attack_types(my_attack_types);
+        },
+        onTagClicked: function(event, ui) {
+            var url = ta_search + "?search_type=global&q=type%3Aindicator+field%3Athreat_types+" + ui.tagLabel;
+            window.open(url, '_blank');
+        },
+        availableTags: (function() {
+            var tmp = [];
+            $.ajax({
+                async: false,
+                type: "POST",
+                url: attack_type_list,
+                data: {},
+                datatype: 'json',
+                success: function(data) {
+                    available_attack_types = data;
+                    tmp = data.filter(function(i) {
+	                    return i != "Unknown"
+                    });
+                }
+            });
+            return tmp;
+        })(),
+        autocomplete: {
+            delay: 0,
+            minLength: 0,
+        },
+    });
+    function update_threat_types(my_threat_types) {
+        if (!threat_type_load) {
+            var data = {
+                        'threat_types': my_threat_types.toString(),
+            };
+            $.ajax({
+                type: "POST",
+                url: threat_type_modify,
+                data: data,
+                datatype: 'json',
+            });
+        }
+    }
+    function update_attack_types(my_attack_types) {
+        if (!attack_type_load) {
+            var data = {
+                        'attack_types': my_attack_types.toString(),
+            };
+            $.ajax({
+                type: "POST",
+                url: attack_type_modify,
+                data: data,
+                datatype: 'json',
+            });
+        }
+    }
+    $(document).trigger('enable_threat_types');
+    $(document).trigger('enable_attack_types');
+}); //document.ready

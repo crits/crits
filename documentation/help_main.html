@@ -491,10 +491,11 @@ phrase.</p>
 <li><a class="reference internal" href="#signature-api" id="id103">18.25&nbsp;&nbsp;&nbsp;Signature API</a></li>
 <li><a class="reference internal" href="#target-api" id="id104">18.26&nbsp;&nbsp;&nbsp;Target API</a></li>
 <li><a class="reference internal" href="#updating-tlos-through-the-api-using-patch" id="id105">18.27&nbsp;&nbsp;&nbsp;Updating TLOs through the API using PATCH</a></li>
-<li><a class="reference internal" href="#common-patch-actions-for-all-tlos" id="id106">18.28&nbsp;&nbsp;&nbsp;Common PATCH actions for all TLOs</a></li>
-<li><a class="reference internal" href="#actor-patch-actions" id="id107">18.29&nbsp;&nbsp;&nbsp;Actor PATCH actions</a></li>
-<li><a class="reference internal" href="#indicator-patch-actions" id="id108">18.30&nbsp;&nbsp;&nbsp;Indicator PATCH actions</a></li>
-<li><a class="reference internal" href="#signature-patch-actions" id="id109">18.31&nbsp;&nbsp;&nbsp;Signature PATCH actions</a></li>
+<li><a class="reference internal" href="#submitting-a-patch-request-with-python-requests" id="id106">18.28&nbsp;&nbsp;&nbsp;Submitting a PATCH request with python requests</a></li>
+<li><a class="reference internal" href="#common-patch-actions-for-all-tlos" id="id107">18.29&nbsp;&nbsp;&nbsp;Common PATCH actions for all TLOs</a></li>
+<li><a class="reference internal" href="#actor-patch-actions" id="id108">18.30&nbsp;&nbsp;&nbsp;Actor PATCH actions</a></li>
+<li><a class="reference internal" href="#indicator-patch-actions" id="id109">18.31&nbsp;&nbsp;&nbsp;Indicator PATCH actions</a></li>
+<li><a class="reference internal" href="#signature-patch-actions" id="id110">18.32&nbsp;&nbsp;&nbsp;Signature PATCH actions</a></li>
 </ul>
 </li>
 </ul>
@@ -2592,6 +2593,8 @@ only &quot;date&quot; is required:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
+<tr class="field"><th class="field-name">description:</th><td class="field-body">Add a description to the IP address</td>
+</tr>
 <tr class="field"><th class="field-name">add_indicator:</th><td class="field-body">Add this IP as an Indicator.</td>
 </tr>
 <tr class="field"><th class="field-name" colspan="2">indicator_reference:</th></tr>
@@ -2698,6 +2701,8 @@ only &quot;date&quot; is required:</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">upload_type:</th><td class="field-body">One of &quot;metadata&quot; or &quot;file&quot;.</td>
+</tr>
+<tr class="field"><th class="field-name">description:</th><td class="field-body">The description of the file.</td>
 </tr>
 <tr class="field"><th class="field-name">filename:</th><td class="field-body">The name of the file if this is a &quot;metadata&quot; upload.</td>
 </tr>
@@ -2924,8 +2929,71 @@ the details URL for a TLO like so:</p>
 arguments, and provide them in your request.</p>
 <p>Here is a list of currently exposed handlers:</p>
 </div>
+<div class="section" id="submitting-a-patch-request-with-python-requests">
+<h2><a class="toc-backref" href="#id106">18.28&nbsp;&nbsp;&nbsp;Submitting a PATCH request with python requests</a></h2>
+<p>As usual, this can be accomplished with the python requests library. As an
+example, let's use the ticket_add action on an Event TLO.</p>
+<pre class="code literal-block">
+import datetime
+import json
+import requests
+
+event_id = crits_event_object_id
+submit_url = 'https://crits_server.com/api/v1/events/{}/'.format(event_id)
+
+params = {
+    'api_key' : api_key,
+    'username' : username,
+}
+
+headers = {
+    'Content-Type' : 'application/json',
+}
+
+# date must be in the format %Y-%m-%d %H:%M:%S.%f
+formatted_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+
+data = {
+    'action' : 'ticket_add',
+    'ticket' : {
+        'ticket_number' : 12345,
+        'date' : formatted_date,
+    }
+}
+
+r = requests.patch(submit_url, headers=headers, proxies=proxies, params=params,
+                data=json.dumps(data), verify=False)
+
+if r.status_code == 200:
+    print('Yay!')
+</pre>
+<p>There are a couple of important things to note about the above example. First,
+all datetime objects must be formatted properly with the provided strftime
+string. Second, when passing a python dict structure as part of the data, you
+must pass it through json.dumps() so it is handled properly by the requests
+library. Otherwise the corresponding function on the CRITs side will receive
+incorrect data.</p>
+<p>Finally, we can view the ticket_add function within the CRITs code itself to
+verify the data it expects in the PATCH request.</p>
+<pre class="code literal-block">
+def ticket_add(type_, id_, ticket, user, **kwargs):
+    :param ticket: The ticket to add.
+    :type ticket: dict with keys &quot;date&quot;, and &quot;ticket_number&quot;.
+    :param user: The user creating the ticket.
+    :type user: str
+    :returns: dict with keys:
+            &quot;success&quot; (boolean),
+            &quot;object&quot; (str) if successful,
+            &quot;message&quot; (str) if failed.
+    &quot;&quot;&quot;
+    # Code
+</pre>
+<p>Recall that the type_, id_, and user are all passed in automatically by the
+API handler. Notice the 'ticket' param is a dict with two keys, so our
+example code used json.dumps() above.</p>
+</div>
 <div class="section" id="common-patch-actions-for-all-tlos">
-<h2><a class="toc-backref" href="#id106">18.28&nbsp;&nbsp;&nbsp;Common PATCH actions for all TLOs</a></h2>
+<h2><a class="toc-backref" href="#id107">18.29&nbsp;&nbsp;&nbsp;Common PATCH actions for all TLOs</a></h2>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -2966,7 +3034,7 @@ arguments, and provide them in your request.</p>
 </table>
 </div>
 <div class="section" id="actor-patch-actions">
-<h2><a class="toc-backref" href="#id107">18.29&nbsp;&nbsp;&nbsp;Actor PATCH actions</a></h2>
+<h2><a class="toc-backref" href="#id108">18.30&nbsp;&nbsp;&nbsp;Actor PATCH actions</a></h2>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -2992,7 +3060,7 @@ arguments, and provide them in your request.</p>
 </table>
 </div>
 <div class="section" id="indicator-patch-actions">
-<h2><a class="toc-backref" href="#id108">18.30&nbsp;&nbsp;&nbsp;Indicator PATCH actions</a></h2>
+<h2><a class="toc-backref" href="#id109">18.31&nbsp;&nbsp;&nbsp;Indicator PATCH actions</a></h2>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -3007,17 +3075,17 @@ arguments, and provide them in your request.</p>
 </tr>
 <tr class="field"><th class="field-name">ci_update:</th><td class="field-body"></td>
 </tr>
-<tr class="field"><th class="field-name" colspan="2">set_indicator_attack_type:</th></tr>
+<tr class="field"><th class="field-name" colspan="2">modify_attack_types:</th></tr>
 <tr class="field"><td>&nbsp;</td><td class="field-body"></td>
 </tr>
-<tr class="field"><th class="field-name" colspan="2">set_indicator_threat_type:</th></tr>
+<tr class="field"><th class="field-name" colspan="2">modify_threat_types:</th></tr>
 <tr class="field"><td>&nbsp;</td><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="signature-patch-actions">
-<h2><a class="toc-backref" href="#id109">18.31&nbsp;&nbsp;&nbsp;Signature PATCH actions</a></h2>
+<h2><a class="toc-backref" href="#id110">18.32&nbsp;&nbsp;&nbsp;Signature PATCH actions</a></h2>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

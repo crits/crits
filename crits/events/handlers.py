@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from builtins import str
 from past.builtins import basestring
+from bson.objectid import ObjectId
 import datetime
 import json
 import uuid
@@ -90,6 +91,18 @@ def get_event_details(event_id, analyst):
     #relationships
     relationships = event.sort_relationships("%s" % analyst, meta=True)
 
+    # Get count of related Events for each related Indicator
+    for ind in relationships.get('Indicator', []):
+        count = Event.objects(relationships__object_id=ind['id'],
+                              source__name__in=sources).count()
+        ind['rel_ind_events'] = count
+
+    # Get count of related Events for each related Sample
+    for smp in relationships.get('Sample', []):
+        count = Event.objects(relationships__object_id=smp['id'],
+                              source__name__in=sources).count()
+        smp['rel_smp_events'] = count
+
     # relationship
     relationship = {
             'type': 'Event',
@@ -145,11 +158,22 @@ def generate_event_jtable(request, option):
         details_url = mapper['details_url']
         details_url_key = mapper['details_url_key']
         fields = mapper['fields']
+
+        # filter list on relationship to given ObjectId
+        query = {}
+        if 'related' in request.GET:
+            try:
+                oid = ObjectId(request.GET.get('related'))
+                query = {'relationships.value': oid}
+            except:
+                pass
+
         response = jtable_ajax_list(obj_type,
                                     details_url,
                                     details_url_key,
                                     request,
-                                    includes=fields)
+                                    includes=fields,
+                                    query=query)
         return HttpResponse(json.dumps(response,
                                        default=json_handler),
                             content_type="application/json")
