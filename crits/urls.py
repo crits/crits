@@ -59,6 +59,7 @@ if settings.ENABLE_API:
     from crits.services.api import ServiceResource
     from crits.signatures.api import SignatureResource
     from crits.targets.api import TargetResource
+    from crits.vocabulary.api import VocabResource
 
     v1_api = Api(api_name='v1')
     v1_api.register(ActorResource())
@@ -81,6 +82,7 @@ if settings.ENABLE_API:
     v1_api.register(ServiceResource())
     v1_api.register(SignatureResource())
     v1_api.register(TargetResource())
+    v1_api.register(VocabResource())
 
     for service_directory in settings.SERVICE_DIRS:
         if os.path.isdir(service_directory):
