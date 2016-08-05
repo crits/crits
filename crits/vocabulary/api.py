@@ -1,10 +1,9 @@
 from tastypie import authorization, fields, http
 from tastypie.authentication import MultiAuthentication
 from tastypie.exceptions import ImmediateHttpResponse
-from tastypie_mongoengine.resources import MongoEngineResource
 
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
-from crits.core.api import CRITsSerializer, CRITsAPIResource, MongoObject
+from crits.core.api import CRITsAPIResource, MongoObject
 from crits.vocabulary.actors import ThreatTypes, Motivations
 from crits.vocabulary.actors import Sophistications, IntendedEffects
 from crits.vocabulary.confidence import Confidence
@@ -18,7 +17,7 @@ from crits.vocabulary.relationships import RelationshipTypes
 from crits.vocabulary.sectors import Sectors
 from crits.vocabulary.status import Status
 
-class VocabResource(MongoEngineResource):
+class VocabResource(CRITsAPIResource):
     """
     Class to handle everything related to the Vocabulary API.
 
