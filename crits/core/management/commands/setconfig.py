@@ -78,6 +78,8 @@ class Command(BaseCommand):
            ldap_auth:\t\t\t<boolean> (ex: True, true, yes, or 1)
            ldap_tls:\t\t\t<boolean> (ex: True, true, yes, or 1)
            ldap_server:\t\t\t<string>
+           ldap_bind_dn:\t\t\t<string>
+           ldap_bind_password:\t\t\t<string>
            ldap_usercn:\t\t\t<string>
            ldap_userdn:\t\t\t<string>
            ldap_update_on_login:\t<boolean> (ex: True, true, yes, or 1)

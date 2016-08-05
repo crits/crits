@@ -47,6 +47,8 @@ class CRITsConfig(CritsDocument, Document):
     ldap_auth = BooleanField(default=False)
     ldap_tls = BooleanField(default=False)
     ldap_server = StringField(default='')
+    ldap_bind_dn = StringField(default='')
+    ldap_bind_password = StringField(default='')
     ldap_usercn = StringField(default='')
     ldap_userdn = StringField(default='')
     ldap_update_on_login = BooleanField(default=False)
