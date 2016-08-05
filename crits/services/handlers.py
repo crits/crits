@@ -296,7 +296,8 @@ def run_triage(obj, user):
                         obj.id,
                         user,
                         obj=obj,
-                        execute=settings.SERVICE_MODEL)
+                        execute=settings.SERVICE_MODEL,
+                        custom_config={})
         except:
             pass
     return
