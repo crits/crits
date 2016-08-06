@@ -41,6 +41,10 @@
                     {% elif rel_type == 'Indicator' %}
                         <th>Value</th>
                         <th>Type</th>
+                        <th>Actions</th>
+                        {% if relationship.type in 'EventEmail' %}
+                            <th>Event Count</th>
+                        {% endif %}
                     {% elif rel_type == 'Certificate' %}
                         <th>Filename</th>
                         <th>Filetype</th>
@@ -115,6 +119,23 @@
                                 {% endif%}
                             </td>
                             <td><a href="{% url 'crits.indicators.views.indicators_listing' %}?type={{ rel.ind_type }}">{{ rel.ind_type }}</a></td>
+                            <td>
+                                {% for action in rel.actions %}
+                                    {% if action.active == 'off' %}
+                                        <s>
+                                    {% endif %}
+                                    {{ action.action_type }}
+                                    {% if action.active == 'off' %}
+                                        </s>
+                                    {% endif %}
+                                    <br />
+                                {% endfor %}
+                            </td>
+                            {% if relationship.type in 'EventEmail' %}
+                                <td class='eventCountWidth'>
+                                    <a href="{% url 'crits.events.views.events_listing' %}?related={{ rel.id }}">{{ rel.rel_ind_events }}</a>
+                                </td>
+                            {% endif %}
                         {% elif rel_type == 'IP' %}
                             <td>{{ rel.ip }}</td>
                         {% elif rel_type == 'Certificate' %}

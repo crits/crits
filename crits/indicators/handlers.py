@@ -387,29 +387,32 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         valid_ind_types[obj.lower().replace(' - ', '-')] = obj
 
     # Start line-by-line import
+    msg = "Cannot process row %s: %s<br />"
     added = 0
     for processed, d in enumerate(data, 1):
         ind = {}
-        ind['value'] = d.get('Indicator', '').strip()
-        ind['lower'] = d.get('Indicator', '').lower().strip()
-        ind['description'] = d.get('Description', '').strip()
+        ind['value'] = (d.get('Indicator') or '').strip()
+        ind['lower'] = (d.get('Indicator') or '').lower().strip()
+        ind['description'] = (d.get('Description') or '').strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
-        ind['threat_type'] = d.get('Threat Type', IndicatorThreatTypes.UNKNOWN)
-        ind['attack_type'] = d.get('Attack Type', IndicatorAttackTypes.UNKNOWN)
+        ind['threat_types'] = d.get('Threat Types').split(',')
+        ind['attack_types'] = d.get('Attack Types').split(',')
 
-        if len(ind['threat_type']) < 1:
-            ind['threat_type'] = IndicatorThreatTypes.UNKNOWN
-        if ind['threat_type'] not in IndicatorThreatTypes.values():
-            result['success'] = False
-            result_message += "Cannot process row %s: Invalid Threat Type<br />" % processed
-            continue
+        if not ind['threat_types']:
+            ind['threat_types'] = [IndicatorThreatTypes.UNKNOWN]
+        for t in ind['threat_types']:
+            if t not in IndicatorThreatTypes.values():
+                result['success'] = False
+                result_message += msg % (processed + 1, "Invalid Threat Type: %s" % t)
+                continue
 
-        if len(ind['attack_type']) < 1:
-            ind['attack_type'] = IndicatorAttackTypes.UNKNOWN
-        if ind['attack_type'] not in IndicatorAttackTypes.values():
-            result['success'] = False
-            result_message += "Cannot process row %s: Invalid Attack Type<br />" % processed
-            continue
+        if not ind['attack_types']:
+            ind['attack_types'] = [IndicatorAttackTypes.UNKNOWN]
+        for a in ind['attack_types']:
+            if a not in IndicatorAttackTypes.values():
+                result['success'] = False
+                result_message += msg % (processed + 1, "Invalid Attack Type:%s" % a)
+                continue
 
         ind['status'] = d.get('Status', Status.NEW)
         if not ind['value'] or not ind['type']:
@@ -420,7 +423,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                 i += "No valid Indicator value "
             if not ind['type']:
                 i += "No valid Indicator type "
-            result_message += "Cannot process row %s: %s<br />" % (processed, i)
+            result_message += msg % (processed + 1, i)
             continue
         campaign = get_verified_field(d, valid_campaigns, 'Campaign')
         if campaign:
@@ -433,7 +436,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
             actions = get_verified_field(actions.split(','), valid_actions)
             if not actions:
                 result['success'] = False
-                result_message += "Cannot process row %s: Invalid Action<br />" % processed
+                result_message += msg % (processed + 1, "Invalid Action")
                 continue
         ind['confidence'] = get_verified_field(d, valid_ratings, 'Confidence',
                                                default='unknown')
@@ -448,7 +451,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                                                related_type=related_type, relationship_type=relationship_type)
         except Exception, e:
             result['success'] = False
-            result_message += "Failure processing row %s: %s<br />" % (processed, str(e))
+            result_message += msg % (processed + 1, e)
             continue
         if response['success']:
             if actions:
@@ -465,7 +468,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                                user=username)
         else:
             result['success'] = False
-            result_message += "Failure processing row %s: %s<br />" % (processed, response['message'])
+            result_message += msg % (processed + 1, response['message'])
             continue
         added += 1
     if processed < 1:
@@ -552,8 +555,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     else:
         ind = {}
         ind['type'] = ctype.strip()
-        ind['threat_type'] = threat_type.strip()
-        ind['attack_type'] = attack_type.strip()
+        ind['threat_types'] = [threat_type.strip()]
+        ind['attack_types'] = [attack_type.strip()]
         ind['value'] = value.strip()
         ind['lower'] = value.lower().strip()
         ind['description'] = description.strip()
@@ -629,12 +632,14 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     if ind['type'] not in IndicatorTypes.values():
         return {'success': False,
                 'message': "Not a valid Indicator Type: %s" % ind['type']}
-    if ind['threat_type'] not in IndicatorThreatTypes.values():
-        return {'success': False,
-                'message': "Not a valid Indicator Threat Type: %s" % ind['threat_type']}
-    if ind['attack_type'] not in IndicatorAttackTypes.values():
-        return {'success': False,
-                'message': "Not a valid Indicator Attack Type: " % ind['attack_type']}
+    for t in ind['threat_types']:
+        if t not in IndicatorThreatTypes.values():
+            return {'success': False,
+                    'message': "Not a valid Indicator Threat Type: %s" % t}
+    for a in ind['attack_types']:
+        if a not in IndicatorAttackTypes.values():
+            return {'success': False,
+                    'message': "Not a valid Indicator Attack Type: " % a}
 
     (ind['value'], error) = validate_indicator_value(ind['value'], ind['type'])
     if error:
@@ -655,14 +660,13 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         ind['status'] = Status.NEW
 
     indicator = Indicator.objects(ind_type=ind['type'],
-                                  lower=ind['lower'],
-                                  threat_type=ind['threat_type'],
-                                  attack_type=ind['attack_type']).first()
+                                  lower=ind['lower']).first()
+
     if not indicator:
         indicator = Indicator()
         indicator.ind_type = ind.get('type')
-        indicator.threat_type = ind.get('threat_type')
-        indicator.attack_type = ind.get('attack_type')
+        indicator.threat_types = ind.get('threat_types')
+        indicator.attack_types = ind.get('attack_types')
         indicator.value = ind.get('value')
         indicator.lower = ind.get('lower')
         indicator.description = ind.get('description', '')
@@ -682,6 +686,10 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             indicator.description += "\n" + ind.get('description', '') + add_desc
         else:
             indicator.description += add_desc
+        indicator.add_threat_type_list(ind.get('threat_types'), analyst,
+                                       append=True)
+        indicator.add_attack_type_list(ind.get('attack_types'), analyst,
+                                       append=True)
 
     if 'campaign' in ind:
         if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:
@@ -718,21 +726,18 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         if ticket:
             indicator.add_ticket(ticket, analyst)
 
-    if isinstance(source, list):
-        for s in source:
-            indicator.add_source(source_item=s, method=method, reference=reference)
+    # generate new source information and add to indicator
+    if isinstance(source, basestring) and source:
+        indicator.add_source(source=source, method=method,
+                             reference=reference, analyst=analyst)
     elif isinstance(source, EmbeddedSource):
-        indicator.add_source(source_item=source, method=method, reference=reference)
-    elif isinstance(source, basestring):
-        s = EmbeddedSource()
-        s.name = source
-        instance = EmbeddedSource.SourceInstance()
-        instance.reference = reference
-        instance.method = method
-        instance.analyst = analyst
-        instance.date = datetime.datetime.now()
-        s.instances = [instance]
-        indicator.add_source(s)
+        indicator.add_source(source_item=source, method=method,
+                             reference=reference)
+    elif isinstance(source, list):
+        for s in source:
+            if isinstance(s, EmbeddedSource):
+                indicator.add_source(source_item=s, method=method,
+                                     reference=reference)
 
     if add_domain or add_relationship:
         ind_type = indicator.ind_type
@@ -745,11 +750,11 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                 try:
                     validate_ipv46_address(domain_or_ip)
                     url_contains_ip = True
-                except DjangoValidationError:
+                except (DjangoValidationError, TypeError):
                     pass
             else:
                 domain_or_ip = ind_value
-            if not url_contains_ip:
+            if not url_contains_ip and domain_or_ip:
                 success = None
                 if add_domain:
                     success = upsert_domain(domain_or_ip,
@@ -935,69 +940,59 @@ def set_indicator_type(indicator_id, itype, username):
         except ValidationError:
             return {'success': False}
 
-def set_indicator_threat_type(id_, threat_type, user, **kwargs):
+def modify_threat_types(id_, threat_types, user, **kwargs):
     """
-    Set the Indicator threat type.
+    Set the Indicator threat types.
 
     :param indicator_id: The ObjectId of the indicator to update.
     :type indicator_id: str
-    :param threat_type: The new indicator threat type.
-    :type threat_type: str
+    :param threat_types: The new indicator threat types.
+    :type threat_types: list,str
     :param user: The user updating the indicator.
     :type user: str
     :returns: dict with key "success" (boolean)
     """
 
-    # check to ensure we're not duping an existing indicator
     indicator = Indicator.objects(id=id_).first()
-    value = indicator.value
-    ind_check = Indicator.objects(threat_type=threat_type, value=value).first()
-    if ind_check:
-        # we found a dupe
-        return {'success': False,
-                'message': "Duplicate would exist making this change."}
-    elif threat_type not in IndicatorThreatTypes.values():
-        return {'success': False,
-                'message': "Not a valid Threat Type."}
-    else:
-        try:
-            indicator.threat_type = threat_type
-            indicator.save(username=user)
-            return {'success': True}
-        except ValidationError:
-            return {'success': False}
+    if isinstance(threat_types, basestring):
+        threat_types = threat_types.split(',')
+    for t in threat_types:
+        if t not in IndicatorThreatTypes.values():
+            return {'success': False,
+                    'message': "Not a valid Threat Type: %s" % t}
+    try:
+        indicator.add_threat_type_list(threat_types, user, append=False)
+        indicator.save(username=user)
+        return {'success': True}
+    except ValidationError:
+        return {'success': False}
 
-def set_indicator_attack_type(id_, attack_type, user, **kwargs):
+def modify_attack_types(id_, attack_types, user, **kwargs):
     """
     Set the Indicator attack type.
 
     :param indicator_id: The ObjectId of the indicator to update.
     :type indicator_id: str
-    :param attack_type: The new indicator attack type.
-    :type attack_type: str
+    :param attack_types: The new indicator attack types.
+    :type attack_type: list,str
     :param user: The user updating the indicator.
     :type user: str
     :returns: dict with key "success" (boolean)
     """
 
-    # check to ensure we're not duping an existing indicator
     indicator = Indicator.objects(id=id_).first()
-    value = indicator.value
-    ind_check = Indicator.objects(attack_type=attack_type, value=value).first()
-    if ind_check:
-        # we found a dupe
-        return {'success': False,
-                'message': "Duplicate would exist making this change."}
-    elif attack_type not in IndicatorAttackTypes.values():
-        return {'success': False,
-                'message': "Not a valid Attack Type."}
-    else:
-        try:
-            indicator.attack_type = attack_type
-            indicator.save(username=user)
-            return {'success': True}
-        except ValidationError:
-            return {'success': False}
+    if isinstance(attack_types, basestring):
+        attack_types = attack_types.split(',')
+    for a in attack_types:
+        if a not in IndicatorAttackTypes.values():
+            return {'success': False,
+                    'message': "Not a valid Attack Type: %s" % a}
+    try:
+        indicator.add_attack_type_list(attack_types, user, append=False)
+        indicator.save(username=user)
+        return {'success': True}
+    except ValidationError:
+        return {'success': False}
 
 def indicator_remove(_id, username):
     """
@@ -1352,10 +1347,7 @@ def validate_indicator_value(value, ind_type):
     domain = ""
 
     # URL
-    if ind_type == IndicatorTypes.URI:
-        if "://" not in value.split('.')[0]:
-            return ("", "URI must contain protocol "
-                        "prefix (e.g. http://, https://, ftp://) ")
+    if ind_type == IndicatorTypes.URI and "://" in value.split('.')[0]:
         domain_or_ip = urlparse.urlparse(value).hostname
         try:
             validate_ipv46_address(domain_or_ip)
@@ -1389,8 +1381,7 @@ def validate_indicator_value(value, ind_type):
             return (ip_address, "")
 
     # Domains
-    if ind_type in (IndicatorTypes.DOMAIN,
-                    IndicatorTypes.URI) or domain:
+    if ind_type == IndicatorTypes.DOMAIN or domain:
         (root, domain, error) = get_valid_root_domain(domain or value)
         if error:
             return ("", error)

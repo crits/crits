@@ -1474,6 +1474,7 @@ var stdDialogs = {
 		       new: {open: function(e) {
                     $('#id_action_performed_date').val(timenow());
                     var sel = $('#form-add-action').find('#id_action_type');
+                    sel.children().remove();
                     if (typeof subscription_type !== "undefined") {
                         $.ajax({
                             type:'GET',

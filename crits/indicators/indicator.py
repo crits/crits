@@ -12,8 +12,8 @@ from crits.core.fields import CritsDateTimeField
 from crits.indicators.migrate import migrate_indicator
 
 from crits.vocabulary.indicators import (
-    IndicatorAttackTypes,
-    IndicatorThreatTypes
+    IndicatorThreatTypes,
+    IndicatorAttackTypes
 )
 
 
@@ -53,11 +53,11 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
     meta = {
         "collection": settings.COL_INDICATORS,
         "crits_type": 'Indicator',
-        "latest_schema_version": 4,
+        "latest_schema_version": 5,
         "schema_doc": {
             'type': 'The type of this indicator.',
-            'threat_type': 'The threat type of this indicator.',
-            'attack_type': 'The attack type of this indicator.',
+            'threat_types': 'The threat types of this indicator.',
+            'attack_types': 'The attack types of this indicator.',
             'value': 'The value of this indicator',
             'lower': 'The lowered value of this indicator',
             'description': 'The description for this indicator',
@@ -82,14 +82,14 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
             'details_url_key': 'id',
             'default_sort': "created DESC",
             'searchurl': 'crits.indicators.views.indicators_listing',
-            'fields': ["value", "ind_type", "threat_type", "attack_type",
+            'fields': ["value", "ind_type", "threat_types", "attack_types",
                        "created", "modified", "source", "campaign", "status",
                        "id"],
             'jtopts_fields': ["details", "splunk", "value", "type",
-                              "threat_type", "attack_type", "created",
+                              "threat_types", "attack_types", "created",
                               "modified", "source", "campaign", "status",
                               "favorite", "actions", "id"],
-            'hidden_fields': ["threat_type", "attack_type"],
+            'hidden_fields': ["threat_types", "attack_types"],
             'linked_fields': ["value", "source", "campaign", "type", "status"],
             'details_link': 'details',
             'no_sort': ['details', 'splunk'],
@@ -102,8 +102,8 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
     impact = EmbeddedDocumentField(EmbeddedImpact,
                                    default=EmbeddedImpact())
     ind_type = StringField(db_field="type")
-    threat_type = StringField(default=IndicatorThreatTypes.UNKNOWN)
-    attack_type = StringField(default=IndicatorAttackTypes.UNKNOWN)
+    threat_types = ListField(StringField())
+    attack_types = ListField(StringField())
     value = StringField()
     lower = StringField()
 
@@ -235,3 +235,100 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
             if t.date == date:
                 self.activity.remove(t)
                 break
+
+    def add_threat_type_list(self, threat_types, analyst, append=True):
+        """
+        Add threat types to this Indicator.
+
+        :param threat_types: The threat types to be added.
+        :type threat_types: list, str
+        :param analyst: The analyst adding these threat types.
+        :type analyst: str
+        :param append: Whether or not to replace or append these threat types.
+        :type append: boolean
+        """
+
+        if (isinstance(threat_types, list) and
+            len(threat_types) == 1 and
+            threat_types[0] == ''):
+            parsed_threat_types = []
+        elif isinstance(threat_types, (str, unicode)):
+            parsed_threat_types = threat_types.split(',')
+        else:
+            parsed_threat_types = threat_types
+
+        parsed_threat_types = [s.strip() for s in parsed_threat_types]
+
+        unknown = IndicatorThreatTypes.UNKNOWN
+        if len(self.threat_types) and unknown in parsed_threat_types and append:
+            parsed_threat_types.remove(unknown)
+        if unknown in self.threat_types:
+            self.threat_types.remove(unknown)
+
+        if append:
+            for t in parsed_threat_types:
+                if t not in self.sectors:
+                    self.threat_types.append(t)
+        elif len(parsed_threat_types):
+            self.threat_types = parsed_threat_types
+
+        if len(self.threat_types) == 0:
+            self.threat_types = [unknown]
+
+    def get_threat_types_list_string(self):
+        """
+        Collapse the list of threat types into a single comma-separated string.
+
+        :returns: str
+        """
+
+        return ','.join(str(x) for x in self.threat_types)
+
+    def add_attack_type_list(self, attack_types, analyst, append=True):
+        """
+        Add attack types to this Indicator.
+
+        :param attack_types: The attack types to be added.
+        :type attack_types: list, str
+        :param analyst: The analyst adding these attack types.
+        :type analyst: str
+        :param append: Whether or not to replace or append these attack types.
+        :type append: boolean
+        """
+
+        if (isinstance(attack_types, list) and
+            len(attack_types) == 1 and
+            attack_types[0] == ''):
+            parsed_attack_types = []
+        elif isinstance(attack_types, (str, unicode)):
+            parsed_attack_types = attack_types.split(',')
+        else:
+            parsed_attack_types = attack_types
+
+        parsed_attack_types = [s.strip() for s in parsed_attack_types]
+
+        unknown = IndicatorAttackTypes.UNKNOWN
+        if len(self.attack_types) and unknown in parsed_attack_types and append:
+            parsed_attack_types.remove(unknown)
+        if unknown in self.attack_types:
+            self.attack_types.remove(unknown)
+
+        if append:
+            for t in parsed_attack_types:
+                if t not in self.sectors:
+                    self.attack_types.append(t)
+        elif len(parsed_attack_types):
+            self.attack_types = parsed_attack_types
+
+        if len(self.attack_types) == 0:
+            self.attack_types = [unknown]
+
+    def get_attack_types_list_string(self):
+        """
+        Collapse the list of attack types into a single comma-separated string.
+
+        :returns: str
+        """
+
+        return ','.join(str(x) for x in self.attack_types)
+

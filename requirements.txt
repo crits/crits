@@ -31,3 +31,4 @@ six
 ushlex
 wsgiref
 olefile
+pyimpfuzzy

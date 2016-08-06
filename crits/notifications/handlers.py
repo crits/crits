@@ -41,6 +41,7 @@ def create_notification(obj, username, message, source_filter=None,
     n = Notification()
     n.analyst = username
     obj_type = obj._meta['crits_type']
+    users = set()
 
     if notification_type not in NotificationType.ALL:
         notification_type = NotificationType.ALERT
@@ -51,6 +52,11 @@ def create_notification(obj, username, message, source_filter=None,
         n.obj_id = obj.obj_id
         n.obj_type = obj.obj_type
         n.notification = "%s added a comment: %s" % (username, obj.comment)
+        users.update(obj.users) # notify mentioned users
+
+        # for comments, use the sources from the object that it is linked to
+        # instead of the comments's sources
+        obj = class_from_id(n.obj_type, n.obj_id)
     else:
         n.notification = message
         n.obj_id = obj.id
@@ -58,13 +64,6 @@ def create_notification(obj, username, message, source_filter=None,
 
     if hasattr(obj, 'source'):
         sources = [s.name for s in obj.source]
-
-        if obj_type == 'Comment':
-            # for comments, use the sources from the object that it is linked to
-            # instead of the comments's sources
-            referenced_obj = class_from_id(n.obj_type, n.obj_id)
-            sources = [s.name for s in referenced_obj.source]
-
         subscribed_users = get_subscribed_users(n.obj_type, n.obj_id, sources)
 
         # Filter on users that have access to the source of the object
@@ -74,18 +73,13 @@ def create_notification(obj, username, message, source_filter=None,
             for allowed_source in allowed_sources:
                 if allowed_source in sources:
                     if source_filter is None or allowed_source in source_filter:
-                        n.users.append(subscribed_user)
+                        users.add(subscribed_user)
                         break
     else:
-        n.users = get_subscribed_users(n.obj_type, n.obj_id, [])
+        users.update(get_subscribed_users(n.obj_type, n.obj_id, []))
 
-    if obj_type == 'Comment':
-        for u in obj.users:
-            if u not in n.users:
-                n.users.append(u)
-
-    # don't notify the user creating this notification
-    n.users = [u for u in n.users if u != username]
+    users.discard(username) # don't notify the user creating this notification
+    n.users = list(users)
     if not len(n.users):
         return
     try:

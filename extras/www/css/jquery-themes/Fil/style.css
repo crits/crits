@@ -17,7 +17,7 @@ div.top {
     margin: 0px;
     vertical-align: middle;
     height: 25px;
-    background: #d7d5c0 url(images/ui-bg_highlight-soft_75_d7d5c0_1x100.png) 50% 50% repeat-x;
+    background: #d7d5c0;
     box-shadow: 0px 2px 3px #969696;
     -webkit-box-shadow: 0px 2px 3px #969696;
     z-index: 2;
@@ -34,7 +34,7 @@ div.bottom {
     margin-top: 5px;
     vertical-align: middle;
     height: 25px;
-    background: #d7d5c0 url(images/ui-bg_highlight-soft_75_d7d5c0_1x100.png) 50% 50% repeat-x;
+    background: #d7d5c0;
     box-shadow: 0px -2px 3px #969696;
     -webkit-box-shadow: 0px -2px 3px #969696;
     z-index: 2;
@@ -1604,4 +1604,8 @@ a#reply_inline_comment {
     min-height: 20px;
     display: inline-block;
     border-radius: 0px;
+}
+
+.ctaglist {
+     margin: 1px;
 }

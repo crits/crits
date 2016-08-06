@@ -12,7 +12,7 @@ except ImportError:
 
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id, class_from_type
-from crits.core.data_tools import convert_string_to_bool
+from crits.core.data_tools import convert_string_to_bool, detect_pcap
 from crits.core.handsontable_tools import form_to_dict, get_field_from_label
 from crits.core.mongo_tools import put_file, mongo_connector
 from crits.core.user_tools import get_user_organization
@@ -281,9 +281,7 @@ def add_object(type_, id_, object_type, source, method, reference, user,
 
         if file_:
             # do we have a pcap?
-            if data[:4] in ('\xa1\xb2\xc3\xd4',
-                            '\xd4\xc3\xb2\xa1',
-                            '\x0a\x0d\x0d\x0a'):
+            if detect_pcap(data):
                 handle_pcap_file(filename,
                                  data,
                                  source,

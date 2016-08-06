@@ -259,6 +259,10 @@ A.noclick {
     color:white;
 }
 
+.eventCountWidth {
+    width:40px;
+}
+
 .campaignWidth {
     width:150px;
 }

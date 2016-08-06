@@ -8,6 +8,11 @@
 <script>
     var get_indicator_type_dropdown = "{% url 'crits.indicators.views.get_indicator_type_dropdown' %}";
     var indicator_id = "{{ indicator.id | escapejs }}";
+    var ta_search = "{% url 'crits.core.views.global_search_listing' %}";
+    var threat_type_modify = "{% url 'crits.indicators.views.threat_type_modify' indicator.id|escapejs%}";
+    var attack_type_modify = "{% url 'crits.indicators.views.attack_type_modify' indicator.id|escapejs%}";
+    var threat_type_list = "{% url 'crits.indicators.views.get_available_threat_types' %}";
+    var attack_type_list = "{% url 'crits.indicators.views.get_available_attack_types' %}";
 
 </script>
 
@@ -54,22 +59,24 @@
         </td>
         </tr>
         <tr>
-        <td class='key'>
-            Threat Type
-            <span style="float: right;display: inline-block" id="indicator_threat_type_error"></span>
-        </td>
-        <td>
-            <span class="edit" id="indicator_threat_type" action="{% url 'crits.indicators.views.update_indicator_threat_type' indicator.id %}">{{indicator.threat_type}}</span>
-        </td>
+            <td class='key'>Threat Types</td>
+            <td>
+                <ul id="threat_type_list" class="ctaglist">
+                    {% for threat_type in indicator.threat_types %}
+                        <li>{{threat_type}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
         </tr>
         <tr>
-        <td class='key'>
-            Attack Type
-            <span style="float: right;display: inline-block" id="indicator_attack_type_error"></span>
-        </td>
-        <td>
-            <span class="edit" id="indicator_attack_type" action="{% url 'crits.indicators.views.update_indicator_attack_type' indicator.id %}">{{indicator.attack_type}}</span>
-        </td>
+            <td class='key'>Attack Types</td>
+            <td>
+                <ul id="attack_type_list" class="ctaglist">
+                    {% for attack_type in indicator.attack_types %}
+                        <li>{{attack_type}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
         </tr>
     {% if indicator.ind_type == 'Domain' %}
         <tr>
@@ -278,6 +285,14 @@
 {% endblock %}
 
 {% block javascript_includes %}
+<script type="text/javascript">
+    $(document).bind('enable_threat_types', function(){
+        threat_type_load = false;
+    });
+    $(document).bind('enable_attack_types', function(){
+        attack_type_load = false;
+    });
+</script>
  <script type="text/javascript" src="{{ STATIC_URL }}js/indicators.js"></script>
 
  {% comment %}

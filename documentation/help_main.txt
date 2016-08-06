@@ -1802,6 +1802,7 @@ POST:
 
 Unique POST Parameters:
 
+:description: Add a description to the IP address
 :add_indicator: Add this IP as an Indicator.
 :indicator_reference: Reference for the source of the Indicator.
 :ip: IP Address.
@@ -1874,6 +1875,7 @@ POST:
 Unique POST Parameters:
 
 :upload_type: One of "metadata" or "file".
+:description: The description of the file.
 :filename: The name of the file if this is a "metadata" upload.
 :md5: The MD5 of the file if this is a "metadata" upload.
 :sha1: The SHA1 of the file if this is a "metadata" upload.
@@ -2023,6 +2025,77 @@ arguments, and provide them in your request.
 Here is a list of currently exposed handlers:
 
 
+Submitting a PATCH request with python requests
+-----------------------------------------------
+
+As usual, this can be accomplished with the python requests library. As an
+example, let's use the ticket_add action on an Event TLO.
+
+.. code::
+
+    import datetime
+    import json
+    import requests
+    
+    event_id = crits_event_object_id
+    submit_url = 'https://crits_server.com/api/v1/events/{}/'.format(event_id)
+    
+    params = {
+        'api_key' : api_key,
+        'username' : username,
+    }
+    
+    headers = {
+        'Content-Type' : 'application/json',
+    }
+    
+    # date must be in the format %Y-%m-%d %H:%M:%S.%f
+    formatted_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    
+    data = {
+        'action' : 'ticket_add',
+        'ticket' : {
+            'ticket_number' : 12345,
+            'date' : formatted_date,
+        }
+    }
+    
+    r = requests.patch(submit_url, headers=headers, proxies=proxies, params=params,
+                    data=json.dumps(data), verify=False)
+    
+    if r.status_code == 200:
+        print('Yay!')
+
+There are a couple of important things to note about the above example. First,
+all datetime objects must be formatted properly with the provided strftime
+string. Second, when passing a python dict structure as part of the data, you
+must pass it through json.dumps() so it is handled properly by the requests
+library. Otherwise the corresponding function on the CRITs side will receive
+incorrect data. 
+
+Finally, we can view the ticket_add function within the CRITs code itself to
+verify the data it expects in the PATCH request.
+
+.. code::
+
+    def ticket_add(type_, id_, ticket, user, **kwargs):
+        :param ticket: The ticket to add.
+        :type ticket: dict with keys "date", and "ticket_number".
+        :param user: The user creating the ticket.
+        :type user: str
+        :returns: dict with keys:
+                "success" (boolean),
+                "object" (str) if successful,
+                "message" (str) if failed.
+        """
+        # Code
+
+
+Recall that the type\_, id\_, and user are all passed in automatically by the
+API handler. Notice the 'ticket' param is a dict with two keys, so our
+example code used json.dumps() above.
+
+
 Common PATCH actions for all TLOs
 ---------------------------------
 
@@ -2058,8 +2131,8 @@ Indicator PATCH actions
 :activity_remove:
 :activity_update:
 :ci_update:
-:set_indicator_attack_type:
-:set_indicator_threat_type:
+:modify_attack_types:
+:modify_threat_types:
 
 Signature PATCH actions
 -----------------------
