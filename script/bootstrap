@@ -98,8 +98,12 @@ depend_crits()
          CFLAGS=-I$(brew --prefix openssl)/include \
          SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include" \
          ${PIP} install -U -r requirements.txt
-    else
-         sudo -E ${PIP} install -U -r requirements.txt
+    else 
+        sudo -E env LDFLAGS=-L/opt/local/lib \
+                    CFLAGS=-I/opt/local/include \
+                    SWIG_FEATURES=-cpperraswarn -includeall -I/opt/local/include \
+                    ${PIP} install M2Crypto
+        sudo -E ${PIP} install -U -r requirements.txt
     fi
     if [ $? -ne 0 ]
     then
@@ -255,9 +259,12 @@ exit_restart()
 ubuntu_install()
 {
     printf "${INFO}Installing dependencies with apt-get${END}\n"
-    sudo -E apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
-    echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
-    sudo -E add-apt-repository universe
+    sudo -E apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+    #https://docs.mongodb.com/master/tutorial/install-mongodb-on-ubuntu/?_ga=1.117787275.388078321.1470470133
+    echo "deb http://repo.mongodb.org/apt/ubuntu precise/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+    echo "deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+    echo "deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+    sudo -E add-apt-repository multiverse
     sudo -E apt-get update
     sudo -E apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libjpeg-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip swig libssl-dev
     sudo ldconfig
@@ -266,7 +273,7 @@ ubuntu_install()
 debian_install()
 {
     printf "${INFO}Installing dependencies with apt-get${END}\n"
-    sudo -E apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+    sudo -E apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
     echo 'deb http://downloads-distro.mongodb.org/repo/debian-sysvinit dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
     sudo -E add-apt-repository universe
     sudo -E apt-get update
@@ -377,7 +384,7 @@ do
     case $STEP in
         1)
             verify
-            if [ "$OS" = 'ubuntu' ]
+            if [ "$OS" = 'ubuntu' ] || [ "$OS" = 'linuxmint' ]
             then
                 printf "${PASS}ubuntu is Supported!${END}\n"
                 ubuntu_install || exit_restart $STEP
