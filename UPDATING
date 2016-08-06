@@ -4,6 +4,20 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: apolkosnik
+Date:   2016-08-06
+
+    Added support for Mongoengine 0.10.x while allowing you to use currently
+    supported version of mongoengine (0.10.x), in essence everything should
+    continue to work.
+    
+    If you want to go with mongoengine 0.10.x, you'll need to upgrade via pip.
+    
+        pip install -U -r requirements.txt
+    
+    It will install Mongoengine 0.10.6 and Pymongo 3.2.2 and then
+        also django_mongoengine from git.
+
+Author: apolkosnik
 Date:   2016-07-13
 
     Support for Impfuzzy has been added, see:
