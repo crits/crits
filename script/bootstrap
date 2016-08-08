@@ -98,8 +98,12 @@ depend_crits()
          CFLAGS=-I$(brew --prefix openssl)/include \
          SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include" \
          ${PIP} install -U -r requirements.txt
-    else
-         sudo -E ${PIP} install -U -r requirements.txt
+    else 
+        sudo -E env LDFLAGS=-L/opt/local/lib \
+                    CFLAGS=-I/opt/local/include \
+                    SWIG_FEATURES=-cpperraswarn -includeall -I/opt/local/include \
+                    ${PIP} install M2Crypto
+        sudo -E ${PIP} install -U -r requirements.txt
     fi
     if [ $? -ne 0 ]
     then
@@ -377,7 +381,7 @@ do
     case $STEP in
         1)
             verify
-            if [ "$OS" = 'ubuntu' ]
+            if [ "$OS" = 'ubuntu' ] || [ "$OS" = 'linuxmint' ]
             then
                 printf "${PASS}ubuntu is Supported!${END}\n"
                 ubuntu_install || exit_restart $STEP
