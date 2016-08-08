@@ -70,7 +70,7 @@ def create_zip(files, pw_protect=True):
     Create a zip file. Creates a temporary directory to write files to on disk
     using :class:`tempfile`. Uses /usr/bin/zip as the zipping mechanism
     currently. Will password protect the zip file as a default. The password for
-    the zip file defaults to "infected", but it can be changed in the config 
+    the zip file defaults to "infected", but it can be changed in the config
     under zip7_password.
 
     :param files: The files to add to the zip file.
@@ -93,9 +93,9 @@ def create_zip(files, pw_protect=True):
         from crits.config.config import CRITsConfig
         crits_config = CRITsConfig.objects().first()
         if crits_config:
-            zip7_password = crits_config.zip7_password
+            zip7_password = crits_config.zip7_password or 'infected'
         else:
-            zip7_password = settings.ZIP7_PASSWORD
+            zip7_password = settings.ZIP7_PASSWORD or 'infected'
         dumpdir = tempfile.mkdtemp() #dir=temproot
         #write out binary files
         for f in files:
@@ -173,6 +173,9 @@ def format_file(data, file_format):
     :type file_format: str
     :returns: tuple of (<formatted_data>, <file_extension>)
     """
+
+    if data == None:
+        return ("", "")
 
     if file_format == "base64":
         import base64
@@ -657,3 +660,24 @@ def validate_sha256_checksum(sha256_checksum):
         retVal['success'] = False
 
     return retVal
+
+def detect_pcap(data):
+    """
+    Detect if the data has the magic numbers for a PCAP.
+
+    :param data: The data to inspect.
+    :type data: str
+    :returns: bool
+    """
+
+    magic = ''.join(x.encode('hex') for x in data[:4])
+    if magic in (
+        'a1b2c3d4', #identical
+        'd4c3b2a1', #swapped
+        '4d3cb2a1',
+        'a1b23c4d', #nanosecond resolution
+        '0a0d0d0a', #pcap-ng
+    ):
+        return True
+    else:
+        return False

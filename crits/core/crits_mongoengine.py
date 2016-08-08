@@ -143,7 +143,7 @@ class CritsQuerySet(QS):
         csvout += "".join(obj.to_csv(fields) for obj in self)
         return csvout
 
-    def to_json(self, exclude=None):
+    def to_json(self, exclude=[]):
         """
         Converts a CritsQuerySet to JSON.
 
@@ -166,7 +166,7 @@ class CritsQuerySet(QS):
 
         return [self._document.from_yaml(doc) for doc in yaml_data]
 
-    def to_yaml(self, exclude=None):
+    def to_yaml(self, exclude=[]):
         """
         Converts a CritsQuerySet to a list of YAML docs.
 
@@ -302,6 +302,7 @@ class CritsDocument(BaseDocument):
     meta = {
         'duplicate_attrs':[],
         'migrated': False,
+        'migrating': False,
         'needs_migration': False,
         'queryset_class': CritsQuerySet
     }
@@ -452,17 +453,24 @@ class CritsDocument(BaseDocument):
 
         # perform migration, if needed
         if hasattr(doc, '_meta'):
-            doc._meta['migrated'] = False
-            if doc._meta.get('needs_migration', False):
-                doc.migrate()
-                doc._meta['migrated'] = True
             if ('schema_version' in doc and
                 'latest_schema_version' in doc._meta and
                 doc.schema_version < doc._meta['latest_schema_version']):
                 # mark for migration
                 doc._meta['needs_migration'] = True
                 # reload doc to get full document from database
+            if (doc._meta.get('needs_migration', False) and
+                not doc._meta.get('migrating', False)):
+                doc._meta['migrating'] = True
                 doc.reload()
+                try:
+                    doc.migrate()
+                    doc._meta['migrated'] = True
+                    doc._meta['needs_migration'] = False
+                    doc._meta['migrating'] = False
+                except Exception as e:
+                    e.tlo = doc.id
+                    raise e
 
         return doc
 
@@ -576,7 +584,7 @@ class CritsDocument(BaseDocument):
             return result
         return data
 
-    def _json_yaml_convert(self, exclude=None):
+    def _json_yaml_convert(self, exclude=[]):
         """
         Helper to convert to a dict before converting to JSON.
 
@@ -602,7 +610,7 @@ class CritsDocument(BaseDocument):
 
         return cls._from_son(json_util.loads(json_data))
 
-    def to_json(self, exclude=None):
+    def to_json(self, exclude=[]):
         """
         Convert to JSON.
 
@@ -624,7 +632,7 @@ class CritsDocument(BaseDocument):
 
         return cls._from_son(yaml.load(yaml_data))
 
-    def to_yaml(self, exclude=None):
+    def to_yaml(self, exclude=[]):
         """
         Convert to JSON.
 
@@ -1513,22 +1521,30 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type analyst: str
         :param object_item: An entire object ready to be added.
         :type object_item: :class:`crits.core.crits_mongoengine.EmbeddedObject`
+        :returns: dict with keys:
+                  "success" (boolean)
+                  "message" (str)
+                  "object"  (EmbeddedObject)
         """
 
         if not isinstance(object_item, EmbeddedObject):
             object_item = EmbeddedObject()
             object_item.analyst = analyst
-            object_item.source = [create_embedded_source(source,
-                                                         method=method,
-                                                         reference=reference,
-                                                         analyst=analyst)]
+            src = create_embedded_source(source, method=method,
+                                         reference=reference, analyst=analyst)
+            if not src:
+                return {'success': False, 'message': 'Invalid Source'}
+            object_item.source = [src]
             object_item.object_type = object_type
             object_item.value = value
         for o in self.obj:
-            if o.object_type == object_type and o.value == value:
-                break
-        else:
-            self.obj.append(object_item)
+            if (o.object_type == object_item.object_type
+                and o.value == object_item.value):
+                return {'success': False, 'object': o,
+                        'message': 'Object already exists'}
+
+        self.obj.append(object_item)
+        return {'success': True, 'object': object_item}
 
     def remove_object(self, object_type, value):
         """
@@ -1686,7 +1702,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
 
     def add_relationship(self, rel_item, rel_type, rel_date=None,
                          analyst=None, rel_confidence='unknown',
-                         rel_reason='N/A', get_rels=False):
+                         rel_reason='', get_rels=False):
         """
         Add a relationship to this top-level object. The rel_item will be
         saved. It is up to the caller to save "self".
@@ -1704,17 +1720,25 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type rel_confidence: str
         :param rel_reason: The reason for the relationship.
         :type rel_reason: str
-        :param get_rels: Return the relationships after forging.
+        :param get_rels: If True, return all relationships after forging.
+                         If False, return the new EmbeddedRelationship object
         :type get_rels: boolean
-        :returns: dict with keys "success" (boolean) and "message" (str if
-                  failed, dict if successful)
+        :returns: dict with keys:
+                  "success" (boolean)
+                  "message" (str if failed, else dict or EmbeddedRelationship)
         """
+
+        # Prevent class from having a relationship to itself
+        if self == rel_item:
+            return {'success': False,
+                    'message': 'Cannot forge relationship to oneself'}
 
         # get reverse relationship
         rev_type = RelationshipTypes.inverse(rel_type)
         if rev_type is None:
             return {'success': False,
                     'message': 'Could not find relationship type'}
+
         date = datetime.datetime.now()
 
         # setup the relationship for me
@@ -1740,93 +1764,57 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         their_rel.rel_reason = rel_reason
 
         # variables for detecting if an existing relationship exists
-        is_left_rel_exist = False
-        is_right_rel_exist = False
-        left_found_rel = None
-        right_found_rel = None
+        my_existing_rel = None
+        their_existing_rel = None
 
-        # check for existing relationship before
-        # blindly adding them
+        # check for existing relationship before blindly adding
         for r in self.relationships:
-            if rel_date:
-                if (r.object_id == my_rel.object_id
-                    and r.relationship == my_rel.relationship
-                    and r.relationship_date == my_rel.relationship_date
-                    and r.rel_type == my_rel.rel_type):
-                    is_left_rel_exist = True
-                    left_found_rel = r
-            else:
-                if (r.object_id == my_rel.object_id
-                    and r.relationship == my_rel.relationship
-                    and r.rel_type == my_rel.rel_type):
-                    is_left_rel_exist = True
-                    left_found_rel = r
-
-            # If the relationship already exists then we we're done looping
-            if is_left_rel_exist:
-                break
-
+            if (r.object_id == my_rel.object_id
+                and r.relationship == my_rel.relationship
+                and (not rel_date or r.relationship_date == rel_date)
+                and r.rel_type == my_rel.rel_type):
+                my_existing_rel = r
+                break # If relationship already exists then exit loop
         for r in rel_item.relationships:
-            if rel_date:
-                if (r.object_id == their_rel.object_id
-                    and r.relationship == their_rel.relationship
-                    and r.relationship_date == their_rel.relationship_date
-                    and r.rel_type == their_rel.rel_type):
-                    is_right_rel_exist = True
-                    right_found_rel = r
-            else:
-                if (r.object_id == their_rel.object_id
-                    and r.relationship == their_rel.relationship
-                    and r.rel_type == their_rel.rel_type):
-                    is_right_rel_exist = True
-                    right_found_rel = r
-
-            # If the relationship already exists then we we're done looping
-            if is_right_rel_exist:
-                break
+            if (r.object_id == their_rel.object_id
+                and r.relationship == their_rel.relationship
+                and (not rel_date or r.relationship_date == rel_date)
+                and r.rel_type == their_rel.rel_type):
+                their_existing_rel = r
+                break # If relationship already exists then exit loop
 
         # If the relationship already exists on both sides then do nothing
-        if is_left_rel_exist and is_right_rel_exist:
+        if my_existing_rel and their_existing_rel:
             return {'success': False,
                     'message': 'Relationship already exists'}
 
-        # If the relationship does not exist on the left side then add it.
-        if is_left_rel_exist is False:
-            # If the right relationship exists then use the right relationship's data
-            if is_right_rel_exist:
-                my_rel.relationship = right_found_rel.relationship
-                my_rel.analyst = right_found_rel.analyst
-                my_rel.date = right_found_rel.date
-                my_rel.relationship_date = right_found_rel.relationship_date
-                my_rel.rel_confidence = right_found_rel.rel_confidence
-                my_rel.rel_reason = right_found_rel.rel_reason
-                self.relationships.append(my_rel)
-            # otherwise just normally add the new relationship
-            else:
-                self.relationships.append(my_rel)
+        # Repair unreciprocated relationships
+        if not my_existing_rel: # If my rel does not exist then add it
+            if their_existing_rel: # If their rel exists then use its data
+                my_rel.analyst = their_existing_rel.analyst
+                my_rel.date = their_existing_rel.date
+                my_rel.relationship_date = their_existing_rel.relationship_date
+                my_rel.rel_confidence = their_existing_rel.rel_confidence
+                my_rel.rel_reason = their_existing_rel.rel_reason
+            self.relationships.append(my_rel) # add my new relationship
+        if not their_existing_rel: # If their rel does not exist then add it
+            if my_existing_rel: # If my rel exists then use its data
+                their_rel.analyst = my_existing_rel.analyst
+                their_rel.date = my_existing_rel.date
+                their_rel.relationship_date = my_existing_rel.relationship_date
+                their_rel.rel_confidence = my_existing_rel.rel_confidence
+                their_rel.rel_reason = my_existing_rel.rel_reason
+            rel_item.relationships.append(their_rel) # add to passed rel_item
 
-        # If the relationship does not exist on the right side then add it.
-        if is_right_rel_exist is False:
-            # If the left relationship exists then use the left relationship's data
-            if is_left_rel_exist:
-                their_rel.relationship = left_found_rel.relationship
-                their_rel.analyst = left_found_rel.analyst
-                their_rel.date = left_found_rel.date
-                their_rel.relationship_date = left_found_rel.relationship_date
-                their_rel.rel_confidence = left_found_rel.rel_confidence
-                their_rel.rel_reason = left_found_rel.rel_reason
-                rel_item.relationships.append(their_rel)
-            else:
-                rel_item.relationships.append(their_rel)
-
-            rel_item.save(username=analyst)
+            # updating DB this way can be much faster than saving entire TLO
+            rel_item.update(add_to_set__relationships=their_rel)
 
         if get_rels:
             results = {'success': True,
                        'message': self.sort_relationships(analyst, meta=True)}
         else:
             results = {'success': True,
-                       'message': 'Relationship forged'}
+                       'message': my_rel}
 
         # In case of relating to a versioned backdoor we also want to relate to
         # the family backdoor.
@@ -2193,7 +2181,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             'Email': ('id', 'from_address', 'sender', 'subject', 'campaign'),
             'Event': ('id', 'title', 'event_type', 'description', 'campaign'),
             'Exploit': ('id', 'name', 'cve', 'campaign'),
-            'Indicator': ('id', 'ind_type', 'value', 'campaign'),
+            'Indicator': ('id', 'ind_type', 'value', 'campaign', 'actions'),
             'IP': ('id', 'ip', 'campaign'),
             'PCAP': ('id', 'md5', 'filename', 'description', 'campaign'),
             'RawData': ('id', 'title', 'data_type', 'tool', 'description',

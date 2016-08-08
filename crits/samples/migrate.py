@@ -11,8 +11,6 @@ def migrate_backdoors(self):
     if 'backdoor' not in self.unsupported_attrs:
         return
 
-    print "Migrating backdoor for %s" % self.id
-
     from crits.backdoors.handlers import add_new_backdoor
     backdoor = self.unsupported_attrs['backdoor']
     name = backdoor.get('name', '')
@@ -34,7 +32,7 @@ def migrate_backdoors(self):
         # Save the object after relationship was created.
         self.save()
     else:
-        print "Error migrating %s: %s" % (self.id, result['message'])
+        print "\n\tError migrating %s: %s" % (self.id, result['message'])
 
 def migrate_exploits(self):
     """
@@ -50,7 +48,6 @@ def migrate_exploits(self):
     from crits.exploits.handlers import add_new_exploit
     exploits = self.unsupported_attrs['exploit']
     for exp in exploits:
-        print "Migrating exploit for %s" % self.id
 
         # Create a new exploit object. Use the source and campaign from the
         # current sample. The "old" exploit format was a list of dictionaries
@@ -66,7 +63,7 @@ def migrate_exploits(self):
             # Save the object after relationship was created.
             self.save()
         else:
-            print "Error migrating %s: %s" % (self.id, result['message'])
+            print "\n\tError migrating %s: %s" % (self.id, result['message'])
 
 
 
@@ -75,7 +72,30 @@ def migrate_sample(self):
     Migrate to the latest schema version.
     """
 
-    migrate_3_to_4(self)
+    migrate_4_to_5(self)
+
+def migrate_4_to_5(self):
+    """
+    Migrate from schema 4 to 5.
+    """
+
+    if self.schema_version < 4:
+        migrate_3_to_4(self)
+
+    if self.is_pe():
+        try:
+            import pyimpfuzzy
+            if not self.impfuzzy:
+                self.impfuzzy = pyimpfuzzy.get_impfuzzy_data(self.filedata.read())
+        except Exception:
+                self.impfuzzy = None
+    else:
+        # not a PE, so no point in populating it
+        self.impfuzzy = None
+    
+    self.schema_version = 5
+    self.save()
+    self.reload()
 
 def migrate_3_to_4(self):
     """

@@ -79,7 +79,7 @@ def upload_certificate(request):
             reference = form.cleaned_data.get('reference', '')
             status = handle_cert_file(filename, data, source, user, description,
                                       related_id=related, related_type=related_type,
-                                      relationship_type=relationship_type, method=method, 
+                                      relationship_type=relationship_type, method=method,
                                       reference=reference, bucket_list=bucket_list, ticket=ticket)
             if status['success']:
                 return render_to_response('file_upload_response.html',

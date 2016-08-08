@@ -350,7 +350,7 @@ class LoginTests(SimpleTestCase):
             response = self.client.get(path, follow=True)
             redirs = response.redirect_chain
             self.assertEquals(response.status_code, 200)
-            self.assertEquals(redirs[0][0], redir_url + path)
+            self.assertTrue(redirs[0][0] in redir_url + path)
             self.assertEquals(redirs[0][1], 302)
 
     def testBasicLogin(self):

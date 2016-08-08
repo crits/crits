@@ -363,9 +363,11 @@ def handle_raw_data_file(data, source_name, user=None,
             'message':  'Data length <= 0'
         }
         return status
-
+    
+    if isinstance(data, unicode):
+        data=data.encode('utf-8')
     # generate md5 and timestamp
-    md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
+    md5 = hashlib.md5(data).hexdigest()
     timestamp = datetime.datetime.now()
 
     # generate raw_data

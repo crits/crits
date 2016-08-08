@@ -3,7 +3,53 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
-Author: frbapolkosnik
+Author: apolkosnik
+Date:   2016-07-13
+
+    Support for Impfuzzy has been added, see:
+    https://github.com/JPCERTCC/aa-tools/tree/master/impfuzzy
+    And of course you'll need to install pyimpfuzzy via pip
+    In order to populate the hashes for our current sample set run the following:
+        python manage.py upgrade -Ss
+
+Author: mgoffin
+Date:   2016-07-28
+
+    Based on community feedback we've decided to change how Indicator Threat
+    Type and Attack Type work. Now instead of it being a single static value
+    which is used in determining duplicate indicators, they are now lists which
+    are not involved in determining duplicates. Now, when adding an Indicator
+    duplicates are once again determined based on type and value only. Threat
+    and Attack Types will be combined with existing ones if an Indicator gets
+    uploaded that would cause an existing indicator to get updated.
+
+    This caused a schema migration. To update your indicators, you can run:
+
+        python manage.py upgrade -si
+
+    If you want to detect the duplicates created by having different Threat or
+    Attack Types, you can run the following aggregation in mongo shell:
+
+        db.indicators.aggregate({$group:{_id:"$value",count:{$sum :1}}},
+                                {$project:{_id:0, val:"$_id", count:1}},
+                                {$match:{$count: {$gt: 1}}})
+
+    This will show you the value of the Indicator and the count of duplicates.
+    You can then search in the UI using a global search like:
+
+        type:indicator field:value foo
+
+    Where "foo" is the duplicate value returned in the aggregation results. You
+    can decide how you want to resolve the conflicts before removing the
+    duplicates.
+
+    If you use the API to update indicators, note that the actions have now
+    changed to "modify_attack_types" and "modify_threat_types" and take the
+    parameter "attack_types" and "threat_types" respectively. Note that using
+    these calls will *replace* the existing types there, so make sure to provide
+    the complete list you want to be there after the update is made.
+
+Author: apolkosnik
 Date:   2016-02-03
 
     You can run your CRITs-master on Django 1.7 with the latest commit!
@@ -51,7 +97,7 @@ Date: 2015-11-18
         Unlike most other Control Panel lists, this list allows entries to be deleted so
         that this list doesn't become cumbersome over time.
 
-Author: frbapolkosnik
+Author: apolkosnik
 Date: 2015-08-31
 
     Unzip functionality was set up to use the 7za rather than 7z. 7z suports
@@ -184,7 +230,7 @@ Date:   2015-04-28
 
         python manage.py create_locations
 
-Author: frbapolkosnik
+Author: apolkosnik
 Date:   2015-04-17
 
     Bundled version of OleFileIO_PL has been removed and replaced with
@@ -498,7 +544,7 @@ Date:  2014-05-15
     - Existing notifications in the comments collection:
         db.comments.remove({'type': 'notification'}, {'multi': 1})
 
-Author: frbapolkosnik
+Author: apolkosnik
 Date:   2014-04-28
 
     Some LDAP servers might set an urgent flag on some of their messages, and

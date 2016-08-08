@@ -12,7 +12,7 @@ except ImportError:
 
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id, class_from_type
-from crits.core.data_tools import convert_string_to_bool
+from crits.core.data_tools import convert_string_to_bool, detect_pcap
 from crits.core.handsontable_tools import form_to_dict, get_field_from_label
 from crits.core.mongo_tools import put_file, mongo_connector
 from crits.core.user_tools import get_user_organization
@@ -176,6 +176,8 @@ def add_new_handler_object(data, rowData, request, is_validate_only=False,
 
     if object_result['success']:
         result = True
+        if 'message' in object_result:
+            retVal['message'] = object_result['message']
         if is_validate_only == False:
             if obj == None:
                 obj = class_from_id(otype, oid)
@@ -190,12 +192,10 @@ def add_new_handler_object(data, rowData, request, is_validate_only=False,
 
     return result, retVal
 
-def add_object(type_, id_, object_type, source, method,
-               reference, user, value=None, file_=None,
-               add_indicator=False, get_objects=True,
-               tlo=None, is_sort_relationships=False,
-               is_validate_only=False, is_validate_locally=False, cache={},
-               **kwargs):
+def add_object(type_, id_, object_type, source, method, reference, user,
+               value=None, file_=None, add_indicator=False, get_objects=True,
+               tlo=None, is_sort_relationships=False, is_validate_only=False,
+               is_validate_locally=False, cache={}, **kwargs):
     """
     Add an object to the database.
 
@@ -220,12 +220,14 @@ def add_object(type_, id_, object_type, source, method,
     :param add_indicator: Also add an indicator for this object.
     :type add_indicator: bool
     :param get_objects: Return the formatted list of objects when completed.
-    :type get_object: bool
+    :type get_objects: bool
     :param tlo: The CRITs top-level object we are adding objects to.
                 This is an optional parameter used mainly for performance
                 reasons (by not querying mongo if we already have the
                 top level-object).
     :type tlo: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :param is_sort_relationships: Return all relationships and meta, sorted
+    :type is_sort_relationships: bool
     :param is_validate_only: Validate, but do not add to TLO.
     :type is_validate_only: bool
     :param is_validate_locally: Validate, but do not add b/c there is no TLO.
@@ -240,116 +242,94 @@ def add_object(type_, id_, object_type, source, method,
               "relationships" (list)
     """
 
-    results = {}
-    obj = tlo
-    if id_ == None:
-        id_ = ""
-
-    if obj == None:
-        obj = class_from_id(type_, id_)
-
-    from crits.indicators.handlers import validate_indicator_value
-    if value is not None:
+    # if object_type is a validated indicator type, then validate value
+    if value:
+        from crits.indicators.handlers import validate_indicator_value
         (value, error) = validate_indicator_value(value, object_type)
         if error:
             return {"success": False, "message": error}
 
-    if is_validate_locally: # no obj provided
-        results['success'] = True
-        return results
+    if is_validate_locally: # no TLO provided
+        return {"success": True}
 
-    if not obj:
-        results['message'] = "TLO could not be found"
-        results['success'] = False
-        return results
+    if not tlo:
+        if type_ and id_:
+            tlo = class_from_id(type_, id_)
+        if not tlo:
+            return {'success': False, 'message': "Failed to find TLO"}
 
     try:
-        cur_len = len(obj.obj)
         if file_:
             data = file_.read()
             filename = file_.name
             md5sum = md5(data).hexdigest()
             value = md5sum
             reference = filename
-        obj.add_object(object_type,
-                       value,
-                       source,
-                       method,
-                       reference,
-                       user)
+        ret = tlo.add_object(object_type, value,
+                             source, method, reference, user)
 
-        if is_validate_only == False:
-            obj.save(username=user)
-
-        new_len = len(obj.obj)
-        if new_len > cur_len:
-            if not is_validate_only:
-                results['message'] = "Object added successfully!"
-            results['success'] = True
-            if file_:
-                # do we have a pcap?
-                if data[:4] in ('\xa1\xb2\xc3\xd4',
-                                '\xd4\xc3\xb2\xa1',
-                                '\x0a\x0d\x0d\x0a'):
-                    handle_pcap_file(filename,
-                                     data,
-                                     source,
-                                     user=user,
-                                     related_id=id_,
-                                     related_type=type_)
-                else:
-                    #XXX: MongoEngine provides no direct GridFS access so we
-                    #     need to use pymongo directly.
-                    col = settings.COL_OBJECTS
-                    grid = mongo_connector("%s.files" % col)
-                    if grid.find({'md5': md5sum}).count() == 0:
-                        put_file(filename, data, collection=col)
-            if add_indicator and is_validate_only == False:
-                from crits.indicators.handlers import handle_indicator_ind
-
-                campaign = obj.campaign if hasattr(obj, 'campaign') else None
-                ind_res = handle_indicator_ind(value,
-                                               source,
-                                               object_type,
-                                               IndicatorThreatTypes.UNKNOWN,
-                                               IndicatorAttackTypes.UNKNOWN,
-                                               user,
-                                               method,
-                                               reference,
-                                               add_domain=True,
-                                               campaign=campaign,
-                                               cache=cache)
-
-                if ind_res['success']:
-                    ind = ind_res['object']
-                    forge_relationship(class_=obj,
-                                       right_class=ind,
-                                       rel_type=RelationshipTypes.RELATED_TO,
-                                       user=user,
-                                       get_rels=is_sort_relationships)
-                else:
-                    results['message'] = "Object was added, but failed to add Indicator." \
-                                         "<br>Error: " + ind_res.get('message')
-
-            if is_sort_relationships == True:
-                if file_ or add_indicator:
-                    # does this line need to be here?
-                    # obj.reload()
-                    results['relationships'] = obj.sort_relationships(user, meta=True)
-                else:
-                    results['relationships'] = obj.sort_relationships(user, meta=True)
-
+        if not ret['success']:
+            msg = '%s! [Type: "%s"][Value: "%s"]'
+            return {"success": False,
+                    "message": msg % (ret['message'], object_type, value)}
         else:
-            results['message'] = "Object already exists! [Type: " + object_type + "][Value: " + value + "] "
-            results['success'] = False
-        if (get_objects):
-            results['objects'] = obj.sort_objects()
+            results = {'success': True}
 
-        results['id'] = str(obj.id)
+        if not is_validate_only: # save the object
+            tlo.update(add_to_set__obj=ret['object'])
+            results['message'] = "Object added successfully"
+
+        if file_:
+            # do we have a pcap?
+            if detect_pcap(data):
+                handle_pcap_file(filename,
+                                 data,
+                                 source,
+                                 user=user,
+                                 related_id=id_,
+                                 related_type=type_)
+            else:
+                #XXX: MongoEngine provides no direct GridFS access so we
+                #     need to use pymongo directly.
+                col = settings.COL_OBJECTS
+                grid = mongo_connector("%s.files" % col)
+                if grid.find({'md5': md5sum}).count() == 0:
+                    put_file(filename, data, collection=col)
+
+        if add_indicator and not is_validate_only:
+            campaign = tlo.campaign if hasattr(tlo, 'campaign') else None
+            from crits.indicators.handlers import handle_indicator_ind
+            ind_res = handle_indicator_ind(value,
+                                           source,
+                                           object_type,
+                                           IndicatorThreatTypes.UNKNOWN,
+                                           IndicatorAttackTypes.UNKNOWN,
+                                           user,
+                                           method,
+                                           reference,
+                                           add_domain=True,
+                                           campaign=campaign,
+                                           cache=cache)
+
+            if ind_res['success']:
+                forge_relationship(class_=tlo,
+                                   right_class=ind_res['object'],
+                                   rel_type=RelationshipTypes.RELATED_TO,
+                                   user=user)
+            else:
+                msg = "Object added, but failed to add Indicator.<br>Error: %s"
+                results['message'] = msg % ind_res.get('message')
+
+        if is_sort_relationships == True:
+            results['relationships'] = tlo.sort_relationships(user, meta=True)
+
+        if get_objects:
+            results['objects'] = tlo.sort_objects()
+
+        results['id'] = str(tlo.id)
         return results
-    except ValidationError, e:
-        return {'success': False,
-                'message': str(e)}
+    except ValidationError as e:
+        return {'success': False, 'message': str(e)}
 
 def delete_object_file(value):
     """

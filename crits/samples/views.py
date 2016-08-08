@@ -177,10 +177,10 @@ def upload_file(request, related_md5=None):
             method = form.cleaned_data['method']
             reference = form.cleaned_data['reference']
             analyst = request.user.username
+            description = form.cleaned_data['description']
             related_id = form.cleaned_data.get('related_id', None)
             related_type = form.cleaned_data.get('related_type', None)
             relationship_type = form.cleaned_data.get('relationship_type', None)
-
 
             if related_md5:
                 reload_page = True
@@ -247,7 +247,8 @@ def upload_file(request, related_md5=None):
                         ticket=form.cleaned_data[form_consts.Common.TICKET_VARIABLE_NAME],
                         inherited_source=inherited_source,
                         backdoor_name=backdoor_name,
-                        backdoor_version=backdoor_version)
+                        backdoor_version=backdoor_version,
+                        description=description)
                 else:
                     result = handle_uploaded_file(
                         None,
@@ -272,7 +273,8 @@ def upload_file(request, related_md5=None):
                         inherited_source=inherited_source,
                         is_return_only_md5=False,
                         backdoor_name=backdoor_name,
-                        backdoor_version=backdoor_version)
+                        backdoor_version=backdoor_version,
+                        description=description)
 
             except ZipFileError, zfe:
                 return render_to_response('file_upload_response.html',
@@ -289,24 +291,16 @@ def upload_file(request, related_md5=None):
                                 'message': message }
                     md5_response = result
                 elif len(result) == 1:
-                    md5_response = None
-                    if not request.FILES:
-                        response['success'] = result[0].get('success', False)
-                        if(response['success'] == False):
-                            response['message'] = result[0].get('message', response.get('message'))
-                        else:
-                            md5_response = [result[0].get('object').md5]
-                    else:
-                        md5_response = [result[0]]
-                        response['success'] = True
-
-                    if md5_response != None:
-                        response['message'] = ('File uploaded successfully. <a href="%s">View Sample.</a>'
-                                               % reverse('crits.samples.views.detail',
-                                                         args=md5_response))
+                    response['success'] = result[0].get('success', False)
+                    response['message'] = result[0].get('message',
+                                                        response.get('message'))
+                    try:
+                        md5_response = [result[0].get('object').md5]
+                    except:
+                        md5_response = None
 
                 if response['success']:
-                    if request.POST.get('email'):
+                    if request.POST.get('email') and md5_response:
                         for s in md5_response:
                             email_errmsg = mail_sample(s, [request.user.email])
                             if email_errmsg is not None:

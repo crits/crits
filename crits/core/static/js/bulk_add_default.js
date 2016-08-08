@@ -784,7 +784,7 @@ function parseFailedResults(result, table, errors, isShowIcons)
     }
 }
 
-function parseSuccessfulResults(result, table, progress, isShowIcons, linkData) {
+function parseSuccessfulResults(result, table, progress, isShowIcons, linkData, messages) {
 
     var linkColumnIndex = getColumnIndexFromName(table, LINK_COLUMN_NAME);
 
@@ -798,6 +798,7 @@ function parseSuccessfulResults(result, table, progress, isShowIcons, linkData) 
                 createLiStatusElement(progress.find('#duplicates'), result.successfulRows[thisRow].message, offsetRow, -1, isShowIcons);
             } else {
                 createLiStatusElement(progress.find('#messages'), result.successfulRows[thisRow].message, offsetRow, -1, false);
+                messages.append(result.successfulRows[thisRow].message + '<br>');
             }
         }
 
@@ -843,7 +844,7 @@ function parseResults(result, table, progress, errors, isValidateOnly, offset, i
 
     appendSummary(result, isValidateOnly, progress.find('#messages'), errors, progress);
     parseFailedResults(result, table, errors, isShowIcons);
-    parseSuccessfulResults(result, table, progress, isShowIcons, linkData);
+    parseSuccessfulResults(result, table, progress, isShowIcons, linkData, errors);
 
     updateResultsCounts(progress);
 

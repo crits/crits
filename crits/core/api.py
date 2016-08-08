@@ -610,8 +610,8 @@ class CRITsAPIResource(MongoEngineResource):
             'Event': {},
             'Exploit': {},
             'Indicator': {
-                'set_indicator_attack_type' : indh.set_indicator_attack_type,
-                'set_indicator_threat_type' : indh.set_indicator_threat_type,
+                'modify_attack_types' : indh.modify_attack_types,
+                'modify_threat_types' : indh.modify_threat_types,
                 'activity_add' : indh.activity_add,
                 'activity_update' : indh.activity_update,
                 'activity_remove' : indh.activity_remove,
@@ -751,3 +751,21 @@ def determine_format(request, serializer, default_format='application/json'):
 
     # No valid 'Accept' header/formats. Sane default.
     return default_format
+
+
+class MongoObject(object):
+    """Class that represents a Mongo-like object"""
+    def __init__(self, initial=None):
+        self.__dict__['_data'] = {}
+
+        if hasattr(initial, 'items'):
+            self.__dict__['_data'] = initial
+
+    def __getattr__(self, name):
+        return self._data.get(name, None)
+
+    def __setattr__(self, name, value):
+        self.__dict__['_data'][name] = value
+
+    def to_dict(self):
+        return self._data

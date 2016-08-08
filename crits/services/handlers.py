@@ -192,9 +192,10 @@ def run_service(name, type_, id_, user, obj=None,
     # Give the service a chance to check for required fields.
     try:
         service_class.valid_for(local_obj.obj)
-        if hasattr(local_obj.obj, 'filedata') and local_obj.obj.filedata:
-            # Reset back to the start so the service gets the full file.
-            local_obj.obj.filedata.seek(0)
+        if hasattr(local_obj.obj, 'filedata'):
+            if local_obj.obj.filedata.grid_id:
+                # Reset back to the start so the service gets the full file.
+                local_obj.obj.filedata.seek(0)
     except ServiceConfigError as e:
         result['html'] = str(e)
         return result
@@ -295,7 +296,8 @@ def run_triage(obj, user):
                         obj.id,
                         user,
                         obj=obj,
-                        execute=settings.SERVICE_MODEL)
+                        execute=settings.SERVICE_MODEL,
+                        custom_config={})
         except:
             pass
     return

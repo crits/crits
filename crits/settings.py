@@ -214,6 +214,8 @@ INVALID_LOGIN_ATTEMPTS =    crits_config.get('invalid_login_attempts', 3) - 1
 LANGUAGE_CODE =             crits_config.get('language_code', 'en-us')
 LDAP_AUTH =                 crits_config.get('ldap_auth', False)
 LDAP_SERVER =               crits_config.get('ldap_server', '')
+LDAP_BIND_DN =              crits_config.get('ldap_bind_dn', '')
+LDAP_BIND_PASSWORD =        crits_config.get('ldap_bind_password', '')
 LDAP_USERDN =               crits_config.get('ldap_userdn', '')
 LDAP_USERCN =               crits_config.get('ldap_usercn', '')
 LOG_DIRECTORY =             crits_config.get('log_directory', os.path.join(SITE_ROOT, '..', 'logs'))
@@ -585,14 +587,14 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         #'APP_DIRS': False,'
         'DIRS': _TEMPLATE_DIRS,
- 
+
         'OPTIONS': {
 
             #'dirs' : #_TEMPLATE_DIRS,
             'context_processors' : _TEMPLATE_CONTEXT_PROCESSORS,
             'debug' : _TEMPLATE_DEBUG,
             'loaders' : _TEMPLATE_LOADERS,
-            
+
         },
     },
 ]

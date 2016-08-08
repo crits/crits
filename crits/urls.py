@@ -2,35 +2,35 @@ import imp
 import os
 
 from django.conf import settings
-from django.conf.urls import include, patterns
+from django.conf.urls import include, url
 
-urlpatterns = patterns('',
+urlpatterns = [
 
-    (r'^', include('crits.core.urls')),                        # Core
-    (r'^dashboards/', include('crits.dashboards.urls')),       # Dashboard
-    (r'^actors/', include('crits.actors.urls')),               # Actors
-    (r'^backdoors/', include('crits.backdoors.urls')),         # Backdoors
-    (r'^campaigns/', include('crits.campaigns.urls')),         # Campaigns
-    (r'^certificates/', include('crits.certificates.urls')),   # Certificates
-    (r'^comments/', include('crits.comments.urls')),           # Comments
-    (r'^domains/', include('crits.domains.urls')),             # Domains
-    (r'^emails/', include('crits.emails.urls')),               # Emails
-    (r'^events/', include('crits.events.urls')),               # Events
-    (r'^exploits/', include('crits.exploits.urls')),           # Exploits
-    (r'^indicators/', include('crits.indicators.urls')),       # Indicators
-    (r'^ips/', include('crits.ips.urls')),                     # IPs
-    (r'^locations/', include('crits.locations.urls')),         # Locations
-    (r'^notifications/', include('crits.notifications.urls')), # Notifications
-    (r'^objects/', include('crits.objects.urls')),             # Objects
-    (r'^pcaps/', include('crits.pcaps.urls')),                 # PCAPs
-    (r'^raw_data/', include('crits.raw_data.urls')),           # Raw Data
-    (r'^relationships/', include('crits.relationships.urls')), # Relationships
-    (r'^samples/', include('crits.samples.urls')),             # Samples
-    (r'^screenshots/', include('crits.screenshots.urls')),     # Screenshots
-    (r'^services/', include('crits.services.urls')),           # Services
-    (r'^signatures/', include('crits.signatures.urls')),       # Signatures
-    (r'^targets/', include('crits.targets.urls')),             # Targets
-)
+    url(r'^', include('crits.core.urls')),                        # Core
+    url(r'^dashboards/', include('crits.dashboards.urls')),       # Dashboard
+    url(r'^actors/', include('crits.actors.urls')),               # Actors
+    url(r'^backdoors/', include('crits.backdoors.urls')),         # Backdoors
+    url(r'^campaigns/', include('crits.campaigns.urls')),         # Campaigns
+    url(r'^certificates/', include('crits.certificates.urls')),   # Certificates
+    url(r'^comments/', include('crits.comments.urls')),           # Comments
+    url(r'^domains/', include('crits.domains.urls')),             # Domains
+    url(r'^emails/', include('crits.emails.urls')),               # Emails
+    url(r'^events/', include('crits.events.urls')),               # Events
+    url(r'^exploits/', include('crits.exploits.urls')),           # Exploits
+    url(r'^indicators/', include('crits.indicators.urls')),       # Indicators
+    url(r'^ips/', include('crits.ips.urls')),                     # IPs
+    url(r'^locations/', include('crits.locations.urls')),         # Locations
+    url(r'^notifications/', include('crits.notifications.urls')), # Notifications
+    url(r'^objects/', include('crits.objects.urls')),             # Objects
+    url(r'^pcaps/', include('crits.pcaps.urls')),                 # PCAPs
+    url(r'^raw_data/', include('crits.raw_data.urls')),           # Raw Data
+    url(r'^relationships/', include('crits.relationships.urls')), # Relationships
+    url(r'^samples/', include('crits.samples.urls')),             # Samples
+    url(r'^screenshots/', include('crits.screenshots.urls')),     # Screenshots
+    url(r'^services/', include('crits.services.urls')),           # Services
+    url(r'^signatures/', include('crits.signatures.urls')),       # Signatures
+    url(r'^targets/', include('crits.targets.urls')),             # Targets
+]
 
 # Error overrides
 handler500 = 'crits.core.errors.custom_500'
@@ -59,6 +59,7 @@ if settings.ENABLE_API:
     from crits.services.api import ServiceResource
     from crits.signatures.api import SignatureResource
     from crits.targets.api import TargetResource
+    from crits.vocabulary.api import VocabResource
 
     v1_api = Api(api_name='v1')
     v1_api.register(ActorResource())
@@ -81,6 +82,7 @@ if settings.ENABLE_API:
     v1_api.register(ServiceResource())
     v1_api.register(SignatureResource())
     v1_api.register(TargetResource())
+    v1_api.register(VocabResource())
 
     for service_directory in settings.SERVICE_DIRS:
         if os.path.isdir(service_directory):
@@ -93,7 +95,7 @@ if settings.ENABLE_API:
                     except Exception, e:
                         pass
 
-    urlpatterns += patterns('', (r'^api/', include(v1_api.urls)))
+    urlpatterns.append(url(r'^api/', include(v1_api.urls)))
 
 # This code allows static content to be served up by the development server
 if settings.DEVEL_INSTANCE:
@@ -101,6 +103,6 @@ if settings.DEVEL_INSTANCE:
     _media_url = settings.MEDIA_URL
     if _media_url.startswith('/'):
         _media_url = _media_url[1:]
-        urlpatterns += patterns('',
-            (r'^%s(?P<path>.*)$' % _media_url, serve, {'document_root': settings.MEDIA_ROOT}))
+        urlpatterns.append(
+            url(r'^%s(?P<path>.*)$' % _media_url, serve, {'document_root': settings.MEDIA_ROOT}))
     del(_media_url, serve)
