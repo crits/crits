@@ -11,12 +11,7 @@ django-tastypie==0.13.3
 django-tastypie-mongoengine==0.4.6
 kombu
 lxml
-<<<<<<< HEAD
 cryptography
---allow-external mongoengine
-=======
-m2crypto
->>>>>>> 6f308df34ceb06fab60b9ad6a882e77e9763398e
 mongoengine==0.8.8
 pydeep==0.2
 pymongo==2.7.2
