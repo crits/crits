@@ -64,7 +64,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
                          'linked_fields': ["filename", "source", "campaign",
                                            "filetype"],
                          'details_link': 'details',
-                         'no_sort': ['details', 'id']
+                         'no_sort': ['details']
                        },
     }
 

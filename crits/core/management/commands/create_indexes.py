@@ -186,6 +186,7 @@ def create_indexes():
     samples.ensure_index("sha1", background=True)
     samples.ensure_index("sha256", background=True)
     samples.ensure_index("ssdeep", background=True)
+    samples.ensure_index("impfuzzy", background=True)
     samples.ensure_index("mimetype", background=True)
     samples.ensure_index("filetype", background=True)
     samples.ensure_index("size", background=True)
