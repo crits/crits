@@ -7,6 +7,7 @@ from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceI
 from crits.core.handlers import get_source_names, get_item_names
 from crits.backdoors.handlers import get_backdoor_names
 from crits.core.user_tools import get_user_organization
+from crits.core.user_tools import get_user_permissions
 
 from crits.vocabulary.relationships import RelationshipTypes
 
@@ -99,7 +100,8 @@ class UploadFileForm(SourceInForm):
 
     def __init__(self, username, *args, **kwargs):
         super(UploadFileForm, self).__init__(username, *args, **kwargs)
-        self.fields['campaign'].choices = [('', '')] + [
+        if get_user_permissions(username, 'Campaign')['read']:
+            self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['confidence'].choices = [('', ''),
                                              ('low', 'low'),

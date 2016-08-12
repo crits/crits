@@ -865,7 +865,7 @@ def get_action_types_for_tlo(obj_type):
 
     return final
 
-def get_item_names(obj, active=None):
+def get_item_names(obj, active=None, user=None):
     """
     Get a list of item names for a specific item in CRITs.
 
@@ -881,6 +881,9 @@ def get_item_names(obj, active=None):
 
     # Don't use this to get sources.
     if isinstance(obj, SourceAccess):
+        return []
+
+    if user and not get_user_permissions(obj, user)['read']:
         return []
 
     if active is None:

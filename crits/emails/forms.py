@@ -7,6 +7,8 @@ from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceInForm
 from crits.core.widgets import CalWidget
 from crits.core.user_tools import get_user_organization
+from crits.core.user_tools import get_user_permissions
+
 from crits.core.handlers import get_source_names, get_item_names
 from datetime import datetime
 from crits.vocabulary.relationships import RelationshipTypes
@@ -33,10 +35,9 @@ class EmailOutlookForm(SourceInForm):
     def __init__(self, username, *args, **kwargs):
         super(EmailOutlookForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        self.fields['campaign'].choices += [(c.name,
-                                             c.name
-                                             ) for c in get_item_names(Campaign,
-                                                                       True)]
+        if get_user_permissions(username, 'Campaign')['read']:
+            self.fields['campaign'].choices = [('', '')] + [
+                (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
                                              ("low", "low"),
                                              ("medium", "medium"),
@@ -67,10 +68,9 @@ class EmailYAMLForm(SourceInForm):
     def __init__(self, username, *args, **kwargs):
         super(EmailYAMLForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        self.fields['campaign'].choices += [(c.name,
-                                             c.name
-                                             ) for c in get_item_names(Campaign,
-                                                                       True)]
+        if get_user_permissions(username, 'Campaign')['read']:
+            self.fields['campaign'].choices = [('', '')] + [
+                (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
                                              ("low", "low"),
                                              ("medium", "medium"),
@@ -99,10 +99,9 @@ class EmailEMLForm(SourceInForm):
     def __init__(self, username, *args, **kwargs):
         super(EmailEMLForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        self.fields['campaign'].choices += [(c.name,
-                                             c.name
-                                             ) for c in get_item_names(Campaign,
-                                                                       True)]
+        if get_user_permissions(username, 'Campaign')['read']:
+            self.fields['campaign'].choices = [('', '')] + [
+                (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
                                              ("low", "low"),
                                              ("medium", "medium"),
@@ -132,10 +131,9 @@ class EmailRawUploadForm(SourceInForm):
     def __init__(self, username, *args, **kwargs):
         super(EmailRawUploadForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        self.fields['campaign'].choices += [(c.name,
-                                             c.name
-                                             ) for c in get_item_names(Campaign,
-                                                                       True)]
+        if get_user_permissions(username, 'Campaign')['read']:
+            self.fields['campaign'].choices = [('', '')] + [
+                (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
                                              ("low", "low"),
                                              ("medium", "medium"),
@@ -182,10 +180,9 @@ class EmailUploadForm(SourceInForm):
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
         self.fields['campaign'].choices = [("","")]
-        self.fields['campaign'].choices += [(c.name,
-                                             c.name
-                                             ) for c in get_item_names(Campaign,
-                                                                       True)]
+        if get_user_permissions(username, 'Campaign')['read']:
+            self.fields['campaign'].choices = [('', '')] + [
+                (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
                                              ("low", "low"),
                                              ("medium", "medium"),

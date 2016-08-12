@@ -224,12 +224,11 @@ def get_dialog(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
     import logging
-    logger = logging.getLogger("crits")
-    logger.error(request.GET.get('dialog',''))
+    logger = logging.getLogger('crits')
+    dialog = str(request.GET.get('dialog', ''))
+    logger.error(dialog)
 
-    dialog = request.GET.get('dialog', '')
     # Regex in urls.py doesn't seem to be working, should sanity check dialog
     return render_to_response(dialog + ".html",
                               {"error" : 'Dialog not found'},
@@ -1216,7 +1215,6 @@ def base_context(request):
         base_context['permissions'] = permissions
         # Forms that don't require a user
         base_context['add_new_action'] = NewActionForm()
-        base_context['add_target'] = TargetInfoForm()
         base_context['campaign_add'] = AddCampaignForm()
         base_context['comment_add'] = AddCommentForm()
         base_context['inline_comment_add'] = InlineCommentForm()
@@ -1235,6 +1233,10 @@ def base_context(request):
         base_context['attribute_actor_identifier'] = AttributeIdentifierForm()
 
         # Forms that require a user
+        try:
+            base_context['add_target'] = TargetInfoForm(user)
+        except Exception, e:
+            logger.warning("Base Context TargetInfoForm Error: %s" %e)
         try:
             base_context['actor_add'] = AddActorForm(user)
         except Exception, e:

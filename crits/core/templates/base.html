@@ -414,12 +414,14 @@
       <li class='nav_objects mmenu_item'>
           <a href="{% url 'crits.actors.views.actors_listing' %}">Actors</a>
           <a href id="new-actor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor" persona="new" title="New Actor"></a>
+        {% if permissions.Actor.actor_identifiers_add %}
         <ul class='sub-mmenu'>
           <li class='mmenu_item'>
             <a href="{% url 'crits.actors.views.actor_identifiers_listing' %}">Actor Identifiers</a>
           <a href id="new-actor-identifier" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor-identifier" persona="new" title="New Actor Identifier"></a>
           </li>
         </ul>
+        {% endif %}
       </li>
     {% endif %}
     {% if permissions.Backdoor.read %}

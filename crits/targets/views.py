@@ -104,7 +104,7 @@ def add_update_target(request):
     if request.method == "POST":
         email = request.POST['email_address']
         new_email = email.strip().lower()
-        form = TargetInfoForm(request.POST)
+        form = TargetInfoForm(request.user.username, request.POST)
         analyst = request.user.username
         if form.is_valid():
             data = form.cleaned_data
@@ -174,9 +174,9 @@ def target_details(request, email_address=None):
     else:
         target = class_from_value('Target', email_address)
         if not target:
-            form = TargetInfoForm(initial={'email_address': email_address})
+            form = TargetInfoForm(request.user.username, initial={'email_address': email_address})
         else:
-            form = TargetInfoForm(initial=target.to_dict())
+            form = TargetInfoForm(request.user.username, initial=target.to_dict())
     return render_to_response('target_form.html',
                               {'form': form},
                               RequestContext(request))

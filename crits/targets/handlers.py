@@ -181,9 +181,9 @@ def get_target_details(email_address, analyst):
     if not target:
         target = Target()
         target.email_address = email_address.strip().lower()
-        form = TargetInfoForm(initial={'email_address': email_address})
+        form = TargetInfoForm(analyst, initial={'email_address': email_address})
     email_list = target.find_emails(analyst)
-    form = TargetInfoForm(initial=target.to_dict())
+    form = TargetInfoForm(analyst, initial=target.to_dict())
 
     if form.fields.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME) != None:
         form.fields.pop(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)

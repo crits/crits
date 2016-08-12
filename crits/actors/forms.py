@@ -9,6 +9,7 @@ from crits.core.forms import (
     SourceInForm)
 from crits.core.handlers import get_item_names
 from crits.core import form_consts
+from crits.core.user_tools import get_user_permissions
 
 from crits.vocabulary.relationships import RelationshipTypes
 
@@ -43,8 +44,9 @@ class AddActorForm(SourceInForm):
     def __init__(self, username, *args, **kwargs):
         super(AddActorForm, self).__init__(username, *args, **kwargs)
 
-        self.fields['campaign'].choices = [('', '')] + [
-            (c.name, c.name) for c in get_item_names(Campaign, True)]
+        if get_user_permissions(username, 'Campaign')['read']:
+            self.fields['campaign'].choices = [('', '')] + [
+                (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['confidence'].choices = [
             ('', ''),
             ('low', 'low'),

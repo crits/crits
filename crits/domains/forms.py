@@ -8,6 +8,7 @@ from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceI
 from crits.core.widgets import CalWidget
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
+from crits.core.user_tools import get_user_permissions
 
 from crits.vocabulary.ips import IPTypes
 
@@ -89,7 +90,9 @@ class AddDomainForm(SourceInForm):
             (t, t) for t in ('red', 'amber', 'green', 'white')]
         self.fields['ip_tlp'].initial = 'red'
 
-        self.fields['campaign'].choices = [('', '')] + [(c.name, c.name) for c in get_item_names(Campaign, True)]
+        if get_user_permissions(username, 'Campaign')['read']:
+            self.fields['campaign'].choices = [('', '')] + [
+                (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['confidence'].choices = [('',''),
                                              ('low', 'low'),
                                              ('medium', 'medium'),
