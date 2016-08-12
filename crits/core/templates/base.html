@@ -410,28 +410,37 @@
     <li class='nav_main mmenu_item'>
       <a href="{% url 'crits.core.views.sector_list' %}">Sector Lists</a>
     </li>
-    <li class='nav_objects mmenu_item'>
-        <a href="{% url 'crits.actors.views.actors_listing' %}">Actors</a>
-        <a href id="new-actor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor" persona="new" title="New Actor"></a>
-      <ul class='sub-mmenu'>
-        <li class='mmenu_item'>
-          <a href="{% url 'crits.actors.views.actor_identifiers_listing' %}">Actor Identifiers</a>
-        <a href id="new-actor-identifier" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor-identifier" persona="new" title="New Actor Identifier"></a>
-        </li>
-      </ul>
-    </li>
+    {% if permissions.Actor.read %}
+      <li class='nav_objects mmenu_item'>
+          <a href="{% url 'crits.actors.views.actors_listing' %}">Actors</a>
+          <a href id="new-actor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor" persona="new" title="New Actor"></a>
+        <ul class='sub-mmenu'>
+          <li class='mmenu_item'>
+            <a href="{% url 'crits.actors.views.actor_identifiers_listing' %}">Actor Identifiers</a>
+          <a href id="new-actor-identifier" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor-identifier" persona="new" title="New Actor Identifier"></a>
+          </li>
+        </ul>
+      </li>
+    {% endif %}
+    {% if permissions.Backdoor.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.backdoors.views.backdoors_listing' %}">Backdoors</a>
       <a href id="new-backdoor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-backdoor" persona="new" title="New Backdoor"></a>
     </li>
+    {% endif %}
+    {% if permissions.Object.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.campaigns.views.campaigns_listing' %}">Campaigns</a>
       <a href id="new-campaign" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-campaign" persona="new" title="New Campaign"></a>
     </li>
+    {% endif %}
+    {% if permissions.Certificate.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.certificates.views.certificates_listing' %}">Certificates</a>
       <a href id="new-certificate" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-certificate" persona="new" title="New Certificate"></a>
     </li>
+    {% endif %}
+    {% if permissions.Domain.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.domains.views.domains_listing' %}">Domains</a>
       <a href id="new-domain" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-domain" persona="new" title="New Domain"></a>
@@ -441,6 +450,8 @@
         </li>
       </ul>
     </li>
+    {% endif %}
+    {% if permissions.Email.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.emails.views.emails_listing' %}">Emails</a>
       <a href id="new-email-fields" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-email-fields" persona="new" title="New Email"></a>
@@ -459,14 +470,20 @@
         </li>
       </ul>
     </li>
+    {% endif %}
+    {% if permissions.Event.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.events.views.events_listing' %}">Events</a>
       <a href id="new-event" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-event" persona="new" title="New Event"></a>
     </li>
+    {% endif %}
+    {% if permissions.Exploit.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.exploits.views.exploits_listing' %}">Exploits</a>
       <a href id="new-exploit" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-exploit" persona="new" title="New Exploit"></a>
     </li>
+    {% endif %}
+    {% if permissions.Indicator.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.indicators.views.indicators_listing' %}">Indicators</a>
       <a href id="new-indicator" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-indicator"  persona="new" title="New Indicator"></a>
@@ -479,6 +496,8 @@
         </li>
       </ul>
     </li>
+    {% endif %}
+    {% if permissions.IP.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.ips.views.ips_listing' %}">IPs</a>
       <a href id="new-ip" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-ip" persona="new" title="New IP"></a>
@@ -488,10 +507,14 @@
         </li>
       </ul>
     </li>
+    {% endif %}
+    {% if permissions.PCAP.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.pcaps.views.pcaps_listing' %}">PCAPs</a>
       <a href id="new-pcap" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-pcap" persona="new" title="New PCAP"></a>
     </li>
+    {% endif %}
+    {% if permissions.RawData.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.raw_data.views.raw_data_listing' %}">Raw Data</a>
       <a href id="new-raw-data" class="ui-icon ui-icon-plusthick add
@@ -502,6 +525,8 @@
         </li>
       </ul>
     </li>
+    {% endif %}
+    {% if permissions.Sample.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.samples.views.samples_listing' %}">Samples</a>
       <a href id="new-sample" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-sample" persona="new" title="New Sample"></a>
@@ -519,9 +544,13 @@
         </li>
       </ul>
     </li>
+    {% endif %}
+    {% if permissions.Sample.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.screenshots.views.screenshots_listing' %}">Screenshots</a>
     </li>
+    {% endif %}
+    {% if permissions.control_panel_services_read %}
     <li class='nav_services mmenu_item'>
       <a href class="noclick">Services</a>
       <ul class='sub-mmenu'>
@@ -533,15 +562,20 @@
         {% endfor %}
       </ul>
     </li>
+    {% endif %}
+    {% if permissions.Signature.read %}
      <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.signatures.views.signatures_listing' %}">Signatures</a>
       <a href id="new-signature" class="ui-icon ui-icon-plusthick add
           dialogClick" dialog="new-signature" persona="new" title="New Signature"></a>
     </li>
+    {% endif %}
+    {% if permissions.Target.read %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.targets.views.targets_listing' %}">Targets</a>
       <a href id="new-target" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-target" persona="new" title="New Target"></a>
     </li>
+    {% endif %}
     <li class='nav_timelines mmenu_item'>
       <a href class="noclick">Timelines</a>
       <ul class='sub-mmenu'>

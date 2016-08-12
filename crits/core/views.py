@@ -1212,6 +1212,8 @@ def base_context(request):
     base_context['service_tab_templates'] = settings.SERVICE_TAB_TEMPLATES
     if request.user.is_authenticated():
         user = request.user.username
+        permissions = get_user_permissions(user)
+        base_context['permissions'] = permissions
         # Forms that don't require a user
         base_context['add_new_action'] = NewActionForm()
         base_context['add_target'] = TargetInfoForm()

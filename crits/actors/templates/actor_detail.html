@@ -68,6 +68,7 @@
                         <td class="key">Modified</td>
                         <td>{{actor.modified}}</td>
                     </tr>
+                    {% if permissions.Actor.status_read %}
                     <tr>
                         <td class="key">Status
                             <span style="float: right;" class="object_status_response"></span>
@@ -76,6 +77,7 @@
                             <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{actor.status}}</span>
                         </td>
                     </tr>
+                    {% endif %}
                     {% include "actor_tags_widget.html" %}
                     {% with tlp=actor.tlp %}
                         {% include "tlp_widget.html" %}
