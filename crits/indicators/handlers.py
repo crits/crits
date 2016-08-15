@@ -30,7 +30,7 @@ from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import datetime_parser
 from crits.core.user_tools import user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
-from crits.core.user_tools import get_user_permissions
+from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.domains.domain import Domain
 from crits.domains.handlers import upsert_domain, get_valid_root_domain
 from crits.events.event import Event
@@ -186,11 +186,19 @@ def get_indicator_details(indicator_id, user):
     :type user: str
     :returns: template (str), arguments (dict)
     """
+    import logging
+    logger = logging.getLogger('crits')
+    logger.warning('DEBUGGING')
 
     template = None
     users_sources = user_sources(user)
+
     indicator = Indicator.objects(id=indicator_id,
                                   source__name__in=users_sources).first()
+
+    if not get_user_source_tlp(user, indicator):
+        indicator = None
+        
     if not indicator:
         error = ("Either this indicator does not exist or you do "
                  "not have permission to view it.")

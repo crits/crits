@@ -140,6 +140,21 @@ def user_can_view_data(user):
     else:
         return False
 
+def get_user_source_tlp(username, object):
+    users_sources = get_user_permissions(username)['sources']
+    user_source_names = user_sources(username)
+    obj_sources = object.source
+    for source in obj_sources:
+        if source.name in user_source_names:
+            for instance in source.instances:
+                if instance.tlp == "red" and [True for usource in users_sources if usource.name == source.name and usource.tlp_red]:
+                    return True
+                elif instance.tlp == "amber" and [True for usource in users_sources if usource.name == source.name and usource.tlp_amber]:
+                    return True
+                elif instance.tlp == "green" and [True for usource in users_sources if usource.name == source.name and usource.tlp_green]:
+                    return True
+    return False
+
 def get_user_list():
     """
     Get a list of users. Sort the list alphabetically and do not include
