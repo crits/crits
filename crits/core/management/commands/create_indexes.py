@@ -77,6 +77,10 @@ def create_indexes():
     analysis_results.ensure_index("service_name", background=True)
     analysis_results.ensure_index("object_type", background=True)
     analysis_results.ensure_index("object_id", background=True)
+    analysis_results.ensure_index("start_date", background=True)
+    analysis_results.ensure_index("finish_date", background=True)
+    analysis_results.ensure_index("version", background=True)
+    analysis_results.ensure_index("analysis_id", background=True)
 
     bucket_lists = mongo_connector(settings.COL_BUCKET_LISTS)
     bucket_lists.ensure_index("name", background=True)
@@ -107,6 +111,12 @@ def create_indexes():
     emails.ensure_index("relationships.value", background=True)
     emails.ensure_index("campaign.name", background=True)
     emails.ensure_index("bucket_list", background=True)
+    emails.ensure_index("favorite", background=True)
+    emails.ensure_index("from", background=True)
+    emails.ensure_index("source.name", background=True)
+    emails.ensure_index("status", background=True)
+    emails.ensure_index("subject", background=True)
+    emails.ensure_index("isodate", background=True)
 
     events = mongo_connector(settings.COL_EVENTS)
     events.ensure_index("objects.value", background=True)
@@ -197,6 +207,10 @@ def create_indexes():
     samples.ensure_index("analysis.results.result", background=True)
     samples.ensure_index("analysis.results.md5", background=True)
     samples.ensure_index("bucket_list", background=True)
+    samples.ensure_index("created", background=True)
+    samples.ensure_index("modified", background=True)
+    samples.ensure_index("favorite", background=True)
+    samples.ensure_index("status", background=True)
 
     if settings.FILE_DB == settings.GRIDFS:
         samples_files = mongo_connector('%s.files' % settings.COL_SAMPLES)
