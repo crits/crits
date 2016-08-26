@@ -395,8 +395,10 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind['lower'] = (d.get('Indicator') or '').lower().strip()
         ind['description'] = (d.get('Description') or '').strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
-        ind['threat_types'] = d.get('Threat Types', '').split(',')
-        ind['attack_types'] = d.get('Attack Types', '').split(',')
+        ind['threat_types'] = d.get('Threat Type',
+                                    IndicatorThreatTypes.UNKNOWN).split(',')
+        ind['attack_types'] = d.get('Attack Type',
+                                    IndicatorAttackTypes.UNKNOWN).split(',')
 
         if not ind['threat_types']:
             ind['threat_types'] = [IndicatorThreatTypes.UNKNOWN]
