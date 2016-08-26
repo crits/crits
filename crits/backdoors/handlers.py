@@ -14,7 +14,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list
 from crits.core.handlers import jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
-from crits.core.user_tools import is_user_favorite, get_user_permissions
+from crits.core.user_tools import is_user_favorite, get_user_permissions, get_user_source_tlp
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
 
@@ -115,6 +115,10 @@ def get_backdoor_details(id_, user):
     backdoor = Backdoor.objects(id=id_, source__name__in=allowed_sources).first()
     template = None
     args = {}
+
+    if not get_user_source_tlp(user, backdoor):
+        backdoor = None
+
     if not backdoor:
         template = "error.html"
         error = ('Either no data exists for this Backdoor or you do not have'

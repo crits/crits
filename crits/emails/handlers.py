@@ -34,7 +34,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_permissions
+from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.domains.handlers import get_valid_root_domain
 from crits.emails.email import Email
 from crits.events.event import Event
@@ -154,6 +154,10 @@ def get_email_detail(email_id, analyst):
     sources = user_sources(analyst)
     permissions = get_user_permissions(analyst)
     email = Email.objects(id=email_id, source__name__in=sources).first()
+
+    if not get_user_source_tlp(analyst, email):
+        email = None
+
     if not email:
         template = "error.html"
         args = {'error': "ID does not exist or insufficient privs for source"}

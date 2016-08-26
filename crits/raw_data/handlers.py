@@ -19,7 +19,7 @@ from crits.core.class_mapper import class_from_id
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_permissions
+from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.notifications.handlers import remove_user_from_notification
 from crits.raw_data.raw_data import RawData, RawDataType
 from crits.services.handlers import run_triage, get_supported_services
@@ -73,6 +73,10 @@ def get_raw_data_details(_id, analyst):
         raw_data = None
     else:
         raw_data = RawData.objects(id=_id, source__name__in=sources).first()
+
+    if not get_user_source_tlp(analyst, raw_data):
+        raw_data = None
+
     if not raw_data:
         template = "error.html"
         args = {'error': 'raw_data not yet available or you do not have access to view it.'}
@@ -369,7 +373,7 @@ def handle_raw_data_file(data, source_name, user=None,
             'message':  'Data length <= 0'
         }
         return status
-    
+
     if isinstance(data, unicode):
         data=data.encode('utf-8')
     # generate md5 and timestamp

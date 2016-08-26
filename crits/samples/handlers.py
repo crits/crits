@@ -35,7 +35,7 @@ from crits.core.handlers import csv_export
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
 from crits.core.source_access import SourceAccess
 from crits.core.user_tools import user_sources, get_user_organization, get_user_permissions
-from crits.core.user_tools import is_user_subscribed, is_user_favorite
+from crits.core.user_tools import is_user_subscribed, is_user_favorite, get_user_source_tlp
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
 from crits.objects.handlers import validate_and_add_new_handler_object
@@ -81,6 +81,10 @@ def get_sample_details(sample_md5, analyst, format_=None):
     sources = user_sources(analyst)
     sample = Sample.objects(md5=sample_md5,
                             source__name__in=sources).first()
+
+    if not get_user_source_tlp(analyst, sample):
+        sample = None
+
     if not sample:
         return ('error.html', {'error': "File not yet available or you do not have access to view it."})
     sample.sanitize_sources(username=analyst)

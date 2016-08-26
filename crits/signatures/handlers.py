@@ -18,7 +18,7 @@ from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_permissions
+from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.notifications.handlers import remove_user_from_notification
 from crits.signatures.signature import Signature, SignatureType, SignatureDependency
 from crits.services.handlers import run_triage, get_supported_services
@@ -73,6 +73,10 @@ def get_signature_details(_id, analyst):
         signature = None
     else:
         signature = Signature.objects(id=_id, source__name__in=sources).first()
+
+    if not get_user_source_tlp(user, signature):
+        signature = None
+
     if not signature:
         template = "error.html"
         args = {'error': 'signature not yet available or you do not have access to view it.'}

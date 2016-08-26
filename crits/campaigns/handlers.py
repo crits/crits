@@ -56,6 +56,8 @@ def get_campaign_details(campaign_name, analyst):
     template = None
     sources = user_sources(analyst)
     campaign_detail = Campaign.objects(name=campaign_name).first()
+
+
     if not campaign_detail:
         template = "error.html"
         args = {"error": 'No data exists for this campaign.'}

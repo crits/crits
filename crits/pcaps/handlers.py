@@ -15,7 +15,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_permissions
+from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.notifications.handlers import remove_user_from_notification
 from crits.pcaps.pcap import PCAP
 from crits.services.handlers import run_triage, get_supported_services
@@ -49,6 +49,10 @@ def get_pcap_details(md5, analyst):
     template = None
     sources = user_sources(analyst)
     pcap = PCAP.objects(md5=md5, source__name__in=sources).first()
+
+    if not get_user_source_tlp(analyst, pcap):
+        pcap = None
+
     if not pcap:
         template = "error.html"
         args = {'error': 'PCAP not yet available or you do not have access to view it.'}

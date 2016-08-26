@@ -21,7 +21,7 @@ from crits.core.data_tools import convert_string_to_bool
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_permissions
+from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.domains.domain import Domain, TLD
 from crits.domains.forms import AddDomainForm
 from crits.ips.ip import IP
@@ -77,6 +77,10 @@ def get_domain_details(domain, analyst):
     allowed_sources = user_sources(analyst)
     dmain = Domain.objects(domain=domain,
                            source__name__in=allowed_sources).first()
+
+    if not get_user_source_tlp(analyst, dmain):
+        dmain = None
+
     if not dmain:
         error = ("Either no data exists for this domain"
                  " or you do not have permission to view it.")

@@ -186,9 +186,6 @@ def get_indicator_details(indicator_id, user):
     :type user: str
     :returns: template (str), arguments (dict)
     """
-    import logging
-    logger = logging.getLogger('crits')
-    logger.warning('DEBUGGING')
 
     template = None
     users_sources = user_sources(user)
@@ -198,7 +195,7 @@ def get_indicator_details(indicator_id, user):
 
     if not get_user_source_tlp(user, indicator):
         indicator = None
-        
+
     if not indicator:
         error = ("Either this indicator does not exist or you do "
                  "not have permission to view it.")

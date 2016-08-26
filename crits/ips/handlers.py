@@ -18,7 +18,7 @@ from crits.core.data_tools import convert_string_to_bool
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
-from crits.core.user_tools import get_user_permissions
+from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.ips.forms import AddIPForm
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
@@ -158,6 +158,10 @@ def get_ip_details(ip, analyst):
     ip = IP.objects(ip=ip, source__name__in=allowed_sources).first()
     template = None
     args = {}
+
+    if not get_user_source_tlp(analyst, ip):
+        ip = None
+
     if not ip:
         template = "error.html"
         error = ('Either no data exists for this IP or you do not have'
