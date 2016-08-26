@@ -2004,9 +2004,14 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
             docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
                                     order_by(*sort).skip(skip).limit(limit).\
                                     only(*projection)
+
+            # Sanitize results for Source TLP
+            docs = docs.sanitize_source_tlps(user)
+            
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
                 doc.sanitize_sources(username="%s" % user, sources=sourcefilt)
+
     except Exception, e:
         results['msg'] = "ERROR: %s. Sort performed on: %s" % (e,
                                                                ', '.join(sort))

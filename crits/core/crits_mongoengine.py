@@ -20,7 +20,7 @@ from mongoengine import QuerySet as QS
 
 from pprint import pformat
 
-from crits.core.user_tools import user_sources, get_user_info, get_user_role, get_user_permissions
+from crits.core.user_tools import user_sources, get_user_info, get_user_role, get_user_permissions, get_user_source_tlp
 from crits.core.fields import CritsDateTimeField
 from crits.core.class_mapper import class_from_id, class_from_type
 from crits.vocabulary.relationships import RelationshipTypes
@@ -196,6 +196,27 @@ class CritsQuerySet(QS):
             doc.sanitize_sources(username, sources)
             final_list.append(doc)
         return final_list
+
+    def sanitize_source_tlps(self, username=None):
+        """
+        Sanitize the results of a query so that the user is only shown results
+        that they have the source and TLP permission to view.
+
+        :param username: The user which requested the data.
+        :type username: str
+        :returns: CritsQuerySet
+        """
+
+        if not username:
+            return self
+
+        filterlist=[]
+        for doc in self:
+            # do stuff here
+            if get_user_source_tlp(username,doc):
+                filterlist.append(doc.id)
+
+        return self.filter(id__in=filterlist)
 
 
 class CritsDocumentFormatter(object):
