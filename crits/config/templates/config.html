@@ -136,6 +136,45 @@
                 $("#node_users span:first").empty();
                 $("#node_services span:first").empty();
                 $("#node_audit_log span:first").empty();
+
+                //remove features from the UI if the user does not have permission to view them.
+                "{% if not permissions.control_panel_system_read or not permissions.control_panel_general_read%}"
+                $("#node_generalTab").hide();
+                "{% endif %}"
+                "{% if not permissions.control_panel_system_read or not permissions.control_panel_crits_read%}"
+                $("#node_CRITsTab").hide();
+                "{% endif %}"
+                "{% if not permissions.control_panel_system_read or not permissions.control_panel_ldap_read%}"
+                $("#node_LDAP").hide();
+                "{% endif %}"
+                "{% if not permissions.control_panel_system_read or not permissions.control_panel_security_read%}"
+                $("#node_securityTab").hide();
+                "{% endif %}"
+                "{% if not permissions.control_panel_system_read or not permissions.control_panel_downloading_read%}"
+                $("#node_downloadTab").hide();
+                "{% endif %}"
+                "{% if not permissions.control_panel_system_read or not permissions.control_panel_system_services_read%}"
+                $("#node_servicesTab").hide();
+                "{% endif %}"
+                "{% if not permissions.control_panel_system_read or not permissions.control_panel_logging_read%}"
+                $("#node_loggingTab").hide();
+                "{% endif %}"
+                "{% if not permissions.control_panel_items_read %}"
+                $("#node_items").hide();
+                "{% endif %}"
+                "{% if not permissions.control_panel_roles_read %}"
+                $("#node_roles").hide();
+                "{% endif %}"
+                "{% if not permissions.control_panel_users_read %}"
+                $("#node_users").hide();
+                "{% endif %}"
+                "{% if not permissions.control_panel_services_read %}"
+                $("#node_services").hide();
+                "{% endif %}"
+                "{% if not permissions.control_panel_audit_log_read %}"
+                $("#node_audit_log").hide();
+                "{% endif %}"
+                
                 //call to get the content for the items tab
                 $("#node_items").click(function() {
                     getRightContent(itemsObject);
