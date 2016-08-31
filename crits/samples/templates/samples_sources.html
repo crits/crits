@@ -5,11 +5,13 @@
 
 {% block content %}
 
-<span class="horizontal_menu">
-    <ul class="hmenu">
-    <li class="right"><a href="{% url 'crits.samples.views.sources' %}?refresh=yes">Refresh DB</a></li>
-    </ul>
-</span>
+<div class='content_box'>
+    <span class="horizontal_menu">
+        <ul class="hmenu">
+        <li class="right"><a href="{% url 'crits.samples.views.sources' %}?refresh=yes">Refresh DB</a></li>
+        </ul>
+    </span>
+</div>
 
 {% if sources %}
 <div class="content_box" style="width: 100%;">

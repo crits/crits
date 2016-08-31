@@ -12,7 +12,6 @@ git+https://github.com/wishtack/django-tastypie-mongoengine.git
 kombu
 lxml
 m2crypto
---allow-external mongoengine
 mongoengine==0.10.6
 git+https://github.com/MongoEngine/django-mongoengine.git
 pydeep==0.2
