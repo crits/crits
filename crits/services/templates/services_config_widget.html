@@ -7,11 +7,13 @@
     <div style="margin-top: -10px;">
     <br />
         {% if admin %}
-        <span class="horizontal_menu">
-            <ul class="hmenu">
-                <li><a href="{% url 'crits.services.views.edit_config' service.name %}" style="display: inline">Edit</a></li>
-            </ul>
-        </span>
+        <div class='content_box'>
+            <span class="horizontal_menu">
+                <ul class="hmenu">
+                    <li><a href="{% url 'crits.services.views.edit_config' service.name %}" style="display: inline">Edit</a></li>
+                </ul>
+            </span>
+        </div>
         {% endif %}
         <table class='vertical' width="100%">
             <tbody>
