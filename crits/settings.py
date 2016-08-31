@@ -51,11 +51,9 @@ django_version = django.get_version()
 #Check mongoengine version (we got it from import)
 if StrictVersion(mongoengine_version) < StrictVersion('0.10.0'):
     old_mongoengine = True
+    raise Exception("Mongoengine versions prior to 0.10 are no longer supported! Please see UPDATING!")
 else:
     old_mongoengine = False
-
-if old_mongoengine and StrictVersion(pymongo_version) >= StrictVersion('2.8.0'):
-    raise Exception("For Mongoengine prior to 0.10 you need PyMongo < 2.8")
 
 # Set to DENY|SAMEORIGIN|ALLOW-FROM uri
 # Default: SAMEORIGIN
