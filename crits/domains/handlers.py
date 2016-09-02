@@ -21,7 +21,6 @@ from crits.core.data_tools import convert_string_to_bool
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.domains.domain import Domain, TLD
 from crits.domains.forms import AddDomainForm
 from crits.ips.ip import IP
@@ -32,6 +31,7 @@ from crits.relationships.handlers import forge_relationship
 from crits.services.handlers import run_triage, get_supported_services
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import DomainACL
 
 def get_valid_root_domain(domain):
     """
@@ -62,23 +62,23 @@ def get_valid_root_domain(domain):
 
     return (root, fqdn, error)
 
-def get_domain_details(domain, analyst):
+def get_domain_details(domain, user):
     """
     Generate the data to render the Domain details template.
 
     :param domain: The name of the Domain to get details for.
     :type domain: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: str
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    allowed_sources = user_sources(analyst)
+    allowed_sources = user_sources(user)
     dmain = Domain.objects(domain=domain,
                            source__name__in=allowed_sources).first()
 
-    if not get_user_source_tlp(analyst, dmain):
+    if not user.check_source_tlp(dmain):
         dmain = None
 
     if not dmain:
@@ -88,19 +88,18 @@ def get_domain_details(domain, analyst):
         args = {'error': error}
         return template, args
 
-    dmain.sanitize(username="%s" % analyst,
+    dmain.sanitize(username="%s" % user,
                            sources=allowed_sources)
 
-    permissions = get_user_permissions(analyst)
 
     # remove pending notifications for user
-    remove_user_from_notification("%s" % analyst, dmain.id, 'Domain')
+    remove_user_from_notification("%s" % user, dmain.id, 'Domain')
 
     # subscription
     subscription = {
             'type': 'Domain',
             'id': dmain.id,
-            'subscribed': is_user_subscribed("%s" % analyst,
+            'subscribed': is_user_subscribed("%s" % user,
                                              'Domain',
                                              dmain.id),
     }
@@ -109,7 +108,7 @@ def get_domain_details(domain, analyst):
     objects = dmain.sort_objects()
 
     #relationships
-    relationships = dmain.sort_relationships("%s" % analyst, meta=True)
+    relationships = dmain.sort_relationships("%s" % user, meta=True)
 
     # relationship
     relationship = {
@@ -118,30 +117,20 @@ def get_domain_details(domain, analyst):
     }
 
     #comments
-    if permissions['Domain']['comments_read']:
-        comments = {'comments': dmain.get_comments(),
-                    'url_key':dmain.domain}
-    else:
-        comments = None
+    comments = {'comments': dmain.get_comments(),
+                'url_key':dmain.domain}
 
     #screenshots
-    if permissions['Domain']['screenshots_read']:
-        screenshots = dmain.get_screenshots(analyst)
-    else:
-        screenshots = None
+    screenshots = dmain.get_screenshots(user)
 
     # favorites
-    favorite = is_user_favorite("%s" % analyst, 'Domain', dmain.id)
+    favorite = is_user_favorite("%s" % user, 'Domain', dmain.id)
 
     # services
-    if permissions['Domain']['services_read']:
-        service_list = get_supported_services('Domain')
+    service_list = get_supported_services('Domain')
 
-        # analysis results
-        service_results = dmain.get_analysis_results()
-    else:
-        service_list = None
-        service_results = None
+    # analysis results
+    service_results = dmain.get_analysis_results()
 
     args = {'objects': objects,
             'relationships': relationships,
@@ -153,7 +142,7 @@ def get_domain_details(domain, analyst):
             'domain': dmain,
             'service_list': service_list,
             'service_results': service_results,
-            'permissions': permissions}
+            'DomainACL': DomainACL}
 
     return template, args
 

@@ -7,13 +7,15 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from crits.core import form_consts
-from crits.core.user_tools import user_can_view_data, get_user_permissions
+from crits.core.user_tools import user_can_view_data
 from crits.core.data_tools import json_handler
 
 from crits.certificates.forms import UploadCertificateForm
 from crits.certificates.handlers import handle_cert_file
 from crits.certificates.handlers import delete_cert, get_certificate_details
 from crits.certificates.handlers import generate_cert_jtable, generate_cert_csv
+
+from crits.vocabulary.acls import CertificateACL
 
 @user_passes_test(user_can_view_data)
 def certificates_listing(request,option=None):
@@ -26,10 +28,12 @@ def certificates_listing(request,option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
-    if get_user_permissions(request.user.username, 'Certificate')['read']:
+    request.user._setup()
+    user = request.user
+    if user.has_access_to(CertificateACL.READ):
         if option == "csv":
             return generate_cert_csv(request)
-        elif option== "jtdelete" and not get_user_permissions(request.user.username, 'Certificate')['delete']:
+        elif option== "jtdelete" and not user.has_access_to(CertificateACL.DELETE):
             result = {'sucess':False,
                       'message':'User does not have permission to delete Certificate.'}
             return HttpResponse(json.dumps(result,
@@ -53,11 +57,12 @@ def certificate_details(request, md5):
     :type md5: str
     :returns: :class:`django.http.HttpResponse`
     """
+    request.user._setup()
 
     template = 'certificate_details.html'
-    analyst = request.user.username
-    if get_user_permissions(analyst, 'Certificate')['read']:
-        (new_template, args) = get_certificate_details(md5, analyst)
+    user = request.user
+    if user.has_access_to(CertificateACL.READ):
+        (new_template, args) = get_certificate_details(md5, user)
         if new_template:
             template = new_template
         return render_to_response(template,
@@ -77,16 +82,16 @@ def upload_certificate(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
     if request.method == 'POST':
-        form = UploadCertificateForm(request.user, request.POST, request.FILES)
+        form = UploadCertificateForm(user, request.POST, request.FILES)
         if form.is_valid():
-            if get_user_permissions(request.user.username, 'Certificate')['write']:
+            if user.has_access_to(CertificateACL.WRITE):
                 filedata = request.FILES['filedata']
                 filename = filedata.name
                 data = filedata.read() # XXX: Should be using chunks here.
                 source = form.cleaned_data.get('source_name')
-                user = request.user.username
                 description = form.cleaned_data.get('description', '')
                 related = form.cleaned_data.get('related_id', '')
                 related_type = form.cleaned_data.get('related_type', '')
@@ -138,8 +143,9 @@ def remove_certificate(request, md5):
     :type md5: str
     :returns: :class:`django.http.HttpResponse`
     """
-    if get_user_permissions(request.user.username, 'Certificate')['delete']:
-        result = delete_cert(md5, '%s' % request.user.username)
+    user = request.user
+    if user.has_access_to(CertificateACL.DELETE):
+        result = delete_cert(md5, '%s' % user)
     else:
         result = {'success':False,
                   'message':'User does not have permission to delete certificate.'}

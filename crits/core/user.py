@@ -890,6 +890,28 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         self.get_access_list(update=True)
         return [s.name for s in self._meta['cached_acl'].sources]
 
+    def check_source_tlp(self, object):
+        """
+        """
+
+        user_source_names = self.get_sources_list()
+        user_source_objects = self._meta['cached_acl'].sources
+
+        object_sources = object.source
+
+        for source in object_sources:
+            if source.name in user_source_names:
+                for instance in source.instances:
+                    if instance.tlp == "white":
+                        return True
+                    elif instance.tlp == "red" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_red]:
+                        return True
+                    elif instance.tlp == "amber" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_amber]:
+                        return True
+                    elif instance.tlp == "green" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_green]:
+                        return True
+        return False
+
     def get_access_list(self, update=False):
         """
         Generate a single new Role object based off of a combination of all of
@@ -907,8 +929,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         if self._meta['cached_acl'] and not update:
             return self._meta['cached_acl']
 
-        acl = Role()
+        acl=None
         roles = Role.objects(name__in=self.roles)
+        acl = roles.first()
 
         # for each role, modify the acl object to reflect all of the attributes
         # the user should be granted access to.
@@ -931,7 +954,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                         for src in acl.sources:
                             if s.name == src.name:
                                 for x,y in s._data.iteritems():
-                                    if not getattr(acl.sources[c], x, False):
+                                    if not getattr(acl.sources[c], x, True):
                                         setattr(acl.sources[c], x, y)
                                 found = True
                                 break
@@ -1012,14 +1035,17 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         """
 
         if self._meta['cached_acl'] is None:
-            self.get_access_list()
+            self.get_access_list(update=True)
+
         attrs = attribute.split('.')
         attr = self._meta['cached_acl']
+
         for a in attrs:
             try:
                 attr = getattr(attr, a, False)
             except:
                 return False
+        self._meta['cached_acl'] = None
         return attr
 
 class AuthenticationMiddleware(object):

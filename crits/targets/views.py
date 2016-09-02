@@ -8,13 +8,13 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from crits.core.user_tools import user_can_view_data
-from crits.core.user_tools import get_user_permissions
 from crits.core.class_mapper import class_from_value
 from crits.targets.forms import TargetInfoForm
 from crits.targets.handlers import upsert_target, get_target_details
 from crits.targets.handlers import remove_target
 from crits.targets.handlers import generate_target_jtable, generate_target_csv
 from crits.targets.handlers import generate_division_jtable
+from crits.vocabulary.acls import TargetACL
 
 @user_passes_test(user_can_view_data)
 def targets_listing(request,option=None):
@@ -28,7 +28,9 @@ def targets_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if get_user_permissions(request.user.username, 'Target')['read']:
+    user = request.user
+
+    if user.has_access_to(TargetACL.READ):
         if option == "csv":
             return generate_target_csv(request)
         return generate_target_jtable(request, option)
@@ -78,10 +80,10 @@ def target_info(request, email_address):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
-    if get_user_permissions(analyst, 'Target')['read']:
+    user = request.user
+    if user.has_access_to(TargetACL.READ):
         template = "target.html"
-        (new_template, args) = get_target_details(email_address, analyst)
+        (new_template, args) = get_target_details(email_address, user)
         if new_template:
             template = new_template
         return render_to_response(template, args, RequestContext(request))

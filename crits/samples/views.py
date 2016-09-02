@@ -17,7 +17,6 @@ from crits.core.handsontable_tools import form_to_dict
 from crits.core.user_tools import user_can_view_data
 from crits.core.class_mapper import class_from_id
 from crits.core.user_tools import get_user_organization
-from crits.core.user_tools import get_user_permissions
 from crits.objects.forms import AddObjectForm
 from crits.samples.forms import UploadFileForm, XORSearchForm
 from crits.samples.forms import UnzipSampleForm
@@ -32,6 +31,7 @@ from crits.samples.handlers import update_sample_filename, modify_sample_filenam
 from crits.samples.sample import Sample
 from crits.stats.handlers import generate_sources
 
+from crits.vocabulary.acls import SampleACL
 
 @user_passes_test(user_can_view_data)
 def detail(request, sample_md5):
@@ -45,11 +45,13 @@ def detail(request, sample_md5):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if get_user_permissions(request.user.username, 'Sample')['read']:
+    user = request.user
+
+    if user.has_access_to(SampleACL.READ):
         format_ = request.GET.get('format', None)
         template = "samples_detail.html"
         (new_template, args) = get_sample_details(sample_md5,
-                                                  request.user.username,
+                                                  user,
                                                   format_)
         if new_template:
             template = new_template
@@ -77,8 +79,9 @@ def samples_listing(request,option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
-    if get_user_permissions(request.user.username, 'Sample')['read']:
+    if user.has_access_to(SampleACL.READ):
         if option == "csv":
             return generate_sample_csv(request)
         return generate_sample_jtable(request, option)

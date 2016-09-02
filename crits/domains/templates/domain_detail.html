@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load filters %}
 
 {% block title %}Domain Details{% endblock %}
 
@@ -16,7 +16,7 @@
 <div id="tabnav" class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    {% if permissions.Domain.services_read %}
+    {% if DomainACL.SERVICES_READ|has_access_to:user %}
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     {% endif %}
@@ -40,7 +40,7 @@
                 <td class="key">Created</td>
                 <td>{{domain.created}}</td>
             </tr>
-            {% if permissions.Domain.description_read %}
+            {% if DomainACL.DESCRIPTION_READ|has_access_to:user %}
             <tr>
                 {% with description=domain.description %}
                     {% include 'description_widget.html' %}
@@ -51,7 +51,7 @@
                 <td class="key">DNSMon Enabled</td>
                 <td>{{domain.watchlistEnabled|default:"False"}}</td>
             </tr>
-            {% if permissions.Domain.status_read %}
+            {% if DomainACL.STATUS_READ|has_access_to:user %}
             <tr>
                 <td class="key">Status
                     <span style="float: right;" class="object_status_response"></span>
@@ -64,19 +64,19 @@
             {% with tlp=domain.tlp %}
                         {% include "tlp_widget.html" %}
             {% endwith %}
-            {% if permissions.Domain.sectors_read %}
+            {% if DomainACL.SECTORS_READ|has_access_to:user %}
             {% with sectors=domain.sectors %}
                 {% include "sector_widget.html" %}
             {% endwith %}
             {% endif %}
-            {% if permissions.Domain.sources_read %}
+            {% if DomainACL.SOURCES_READ|has_access_to:user %}
             <tr>
                 {% with sources=domain.source obj_id=domain.id obj_type=subscription.type %}
                     {% include "sources_listing_widget.html" %}
                 {% endwith %}
             </tr>
             {% endif %}
-            {% if permissions.Domain.releasability_read %}
+            {% if DomainACL.RELEASABILITY_READ|has_access_to:user %}
             <tr>
                 {% with releasability=domain.releasability %}
                     {% include "releasability_list_widget.html" %}
@@ -89,7 +89,7 @@
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% if permissions.Domain.bucketlist_read %}
+        {% if DomainACL.BUCKETLIST_READ|has_access_to:user %}
         {% with bucket_list=domain.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
@@ -97,57 +97,57 @@
         {% include 'add_related_widget.html' %}
 
     </div>
-    {% if permissions.Domain.actions_read %}
+    {% if DomainACL.ACTIONS_READ|has_access_to:user %}
     <div class="content_box">
         {% with obj=domain obj_type="Domain" %}
             {% include 'action_listing_widget.html' %}
         {% endwith %}
     </div>
     {% endif %}
-    {% if permissions.Domain.tickets_read %}
+    {% if DomainACL.TICKETS_READ|has_access_to:user %}
     <div>
       {% with obj=domain obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
     </div>
     {% endif %}
-    {% if permissions.Domain.campaigns_read and permissions.Campaign.read%}
+    {% if DomainACL.CAMPAIGNS_READ|has_access_to:user and DomainACL.CAMPAIGN_READ|has_access_to:user %}
     <div>
         {% with hit=domain col=COL_DOMAINS %}
             {% include "campaigns_display_widget.html" %}
         {% endwith %}
     </div>
     {% endif %}
-    {% if permissions.Domain.locations_read %}
+    {% if DomainACL.LOCATIONS_READ|has_access_to:user %}
     <div>
         {% with hit=domain col=COL_DOMAINS %}
             {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
     {% endif %}
-    {% if permissions.Domain.relationships_read %}
+    {% if DomainACL.RELATIONSHIPS_READ|has_access_to:user %}
     <div>
        {% include 'relationships_listing_widget.html' %}
     </div>
     {% endif %}
-    {% if permissions.Domain.objects_read %}
+    {% if DomainACL.OBJECTS_READ|has_access_to:user %}
     <div>
        {% include 'objects_listing_widget.html' %}
     </div>
     {% endif %}
-    {% if permissions.Domain.screenshots_read %}
+    {% if DomainACL.SCREENSHOTS_READ|has_access_to:user %}
     <div>
     {% include 'screenshot_widget.html' %}
     </div>
     {% endif %}
-    {% if permissions.Domain.comments_read %}
+    {% if DomainACL.COMMENTS_READ|has_access_to:user %}
     <div>
        {% include "comments_listing_widget.html" %}
     </div>
     {% endif %}
     </div> <!-- details_section -->
 
-    {% if permissions.Domain.services_read %}
+    {% if DomainACL.SERVICES_READ|has_access_to:user %}
     {% with item=domain %}
         {% include "services_analysis_section.html" with crits_type="Domain" identifier=domain.id %}
     {% endwith %}

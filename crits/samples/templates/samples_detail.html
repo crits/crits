@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load filters %}
 
 {% block title %}Sample Detail{% endblock %}
 
@@ -22,7 +22,7 @@
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    {% if permissions.Sample.services_read %}
+    {% if SampleACL.SERVICES_READ|has_access_to:user %}
       <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
       <li><a href="#tools_section" id="tools_button"><span>Tools</span></a></li>
       {% include 'services_tab_list_widget.html' %}
@@ -31,17 +31,17 @@
 <div id="details_section">
     <span class="horizontal_menu">
     <ul class="hmenu">
-        {% if permissions.Sample.download %}
+        {% if SampleACL.DOWNLOAD|has_access_to:user %}
           <li><a href="#" class="dialogClick" dialog="download-sample">Download Sample</a></li>
         {% endif %}
-        {% if permissions.Sample.text_view %}
+        {% if SampleACL.TEXT_VIEW|has_access_to:user %}
           <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=text">Text</a></li>
         {% endif %}
-        {% if permissions.Sample.yaml_view %}
+        {% if SampleACL.YAML_VIEW|has_access_to:user %}
           <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=yaml">YAML</a></li>
         {% endif %}
         <li><a href="#" class="dialogClick" dialog="unzip-sample">Un7zip</a></li>
-        {% if permissions.Sample.delete %}
+        {% if SampleACL.DELETE|has_access_to:user %}
           <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="sample" action='{% url "crits.samples.views.remove_sample" sample.md5 %}'>Delete Sample</a></li>
         {% endif %}
     </ul>
@@ -58,7 +58,7 @@
                 <td class="key">ID</td>
                 <td>{{ sample.id }}</td>
             </tr>
-            {% if permissions.Sample.description_read %}
+            {% if SampleACL.DESCRIPTION_READ|has_access_to:user %}
               <tr>
                   {% with description=sample.description %}
                       {% include 'description_widget.html' %}
@@ -117,7 +117,7 @@
                 <td class="key">SSDeep</td>
                 <td>{{ sample.ssdeep }}</td>
             </tr>
-            {% if permissions.Sample.status_read %}
+            {% if SampleACL.STATUS_READ|has_access_to:user %}
               <tr>
                   <td class="key">Status
                       <span style="float: right;" class="object_status_response"></span>
@@ -130,19 +130,19 @@
             {% with tlp=sample.tlp %}
                 {% include "tlp_widget.html" %}
             {% endwith %}
-            {% if permissions.Sample.sectors_read %}
+            {% if SampleACL.SECTORS_READ|has_access_to:user %}
               {% with sectors=sample.sectors %}
                   {% include "sector_widget.html" %}
               {% endwith %}
             {% endif %}
-            {% if permissions.Sample.sources_read %}
+            {% if SampleACL.SOURCES_READ|has_access_to:user %}
               <tr>
               {% with sources=sample.source obj_id=sample.id obj_type=subscription.type %}
                   {% include "sources_listing_widget.html" %}
               {% endwith %}
               </tr>
             {% endif %}
-            {% if permissions.Sample.releasability_read %}
+            {% if SampleACL.RELEASABILITY_READ|has_access_to:user %}
               <tr>
               {% with releasability=sample.releasability %}
                   {% include 'releasability_list_widget.html' %}
@@ -154,7 +154,7 @@
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% if permissions.Sample.bucketlist_read %}
+        {% if SampleACL.BUCKETLIST_READ|has_access_to:user %}
           {% with bucket_list=sample.bucket_list %}
               {% include 'bucket_list_widget.html' %}
           {% endwith %}
@@ -162,56 +162,56 @@
         {% include 'add_related_widget.html' %}
 
     </div>
-    {% if permissions.Sample.actions_read %}
+    {% if SampleACL.ACTIONS_READ|has_access_to:user %}
       <div class="content_box">
           {% with obj=sample obj_type="Sample" %}
               {% include 'action_listing_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Sample.tickets_read %}
+    {% if SampleACL.TICKETS_READ|has_access_to:user %}
       <div>
           {% with obj=sample obj_type=subscription.type %}
                    {% include 'tickets_listing_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Sample.campaigns_read and permissions.Campaign.read %}
+    {% if SampleACL.CAMPAIGNS_READ|has_access_to:user and SampleACL.CAMPAIGN_READ %}
       <div>
           {% with hit=sample col=COL_SAMPLES %}
               {% include 'campaigns_display_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Sample.locations_read %}
+    {% if SampleACL.LOCATIONS_READ|has_access_to:user %}
       <div>
           {% with hit=sample col=COL_SAMPLES %}
               {% include 'locations_display_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Sample.relationships_read %}
+    {% if SampleACL.RELATIONSHIPS_READ|has_access_to:user %}
       <div>
           {% include 'relationships_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.Sample.objects_read %}
+    {% if SampleACL.OBJECTS_READ|has_access_to:user %}
       <div>
           {% include 'objects_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.Sample.screenshots_read %}
+    {% if SampleACL.SCREENSHOTS_READ|has_access_to:user %}
       <div>
       {% include 'screenshot_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.Sample.comments_read %}
+    {% if SampleACL.COMMENTS_READ|has_access_to:user %}
       <div>
           {% include "comments_listing_widget.html" %}
       </div>
     {% endif %}
 </div>
-{% if permissions.Sample.services_read %}
+{% if SampleACL.SERVICES_READ|has_access_to:user %}
   {% with item=sample %}
       {% include "services_analysis_section.html" with crits_type="Sample" identifier=sample.md5 %}
   {% endwith %}
@@ -223,7 +223,7 @@
 
 <div style="display: none;">
 
-{% if permissions.Sample.download %}
+{% if SampleACL.DOWNLOAD|has_access_to:user %}
   <div id="dialog-download-sample" title="Download Sample">
       <form id="form-download-sample" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
       <table class="form">{{download_form.as_table}}</table>

@@ -22,8 +22,9 @@ from crits.actors.handlers import set_actor_name
 from crits.actors.handlers import update_actor_aliases
 from crits.core import form_consts
 from crits.core.data_tools import json_handler
-from crits.core.user_tools import user_can_view_data, get_user_permissions
+from crits.core.user_tools import user_can_view_data
 
+from crits.vocabulary.acls import ActorACL
 
 @user_passes_test(user_can_view_data)
 def actor_identifiers_listing(request,option=None):
@@ -55,7 +56,9 @@ def actors_listing(request,option=None):
     """
 
     request.user._setup()
-    if get_user_permissions(request.user.username, 'Actor')['read']:
+    user = request.user
+
+    if user.has_access_to(ActorACL.READ):
         if option == "csv":
             return generate_actor_csv(request)
         return generate_actor_jtable(request, option)
@@ -93,14 +96,18 @@ def actor_detail(request, id_):
 
     template = "actor_detail.html"
     request.user._setup()
-    if get_user_permissions(request.user.username, 'Actor')['read']:
+    user = request.user
+
+    if user.has_access_to(ActorACL.READ):
         (new_template, args) = get_actor_details(id_,
                                                  request.user)
         if new_template:
             template = new_template
+
         return render_to_response(template,
                                   args,
                                   RequestContext(request))
+
     else:
         return render_to_response("error.html",
                                   {'error': 'User does not have permission to view actor details.'},
@@ -118,10 +125,11 @@ def add_actor(request):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
+        user = request.user
         data = request.POST
         form = AddActorForm(request.user.username, data)
         if form.is_valid():
-            if get_user_permissions(request.user.username, 'Actor')['write']:
+            if user.has_access_to(ActorACL.WRITE):
                 cleaned_data = form.cleaned_data
                 name = cleaned_data['name']
                 aliases = cleaned_data['aliases']
@@ -148,7 +156,7 @@ def add_actor(request):
                                        source_tlp=tlp,
                                        campaign=campaign,
                                        confidence=confidence,
-                                       user=request.user,
+                                       user=user,
                                        bucket_list=bucket_list,
                                        ticket=ticket,
                                        related_id=related_id,
@@ -181,8 +189,9 @@ def remove_actor(request, id_):
     """
 
     request.user._setup()
+    user = request.user
     if request.method == "POST":
-        if get_user_permissions(request.user.username, 'Actor')['delete']:
+        if user.has_access_to(ActorACL.DELETE):
             actor_remove(id_, request.user)
             return HttpResponseRedirect(reverse('crits.actors.views.actors_listing'))
         else:
@@ -248,13 +257,14 @@ def new_actor_identifier_type(request):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
+        user = request.user
         identifier_type = request.POST.get('identifier_type', None)
 
         if not identifier_type:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
                                 mimetype="application/json")
-        if get_user_permissions(request.user.username)['add_new_actor_identifier_type']:
+        if user.has_access_to(ActorACL.ADD_NEW_ACTOR_IDENTIFIER_TYPE):
             result = create_actor_identifier_type(identifier_type, request.user)
         else:
             result = {'message': 'User does not have permission to add actor identifier',
@@ -279,6 +289,9 @@ def actor_tags_modify(request):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
+        user = request.user
+
+
         tag_type = request.POST.get('tag_type', None)
         id_ = request.POST.get('oid', None)
         tags = request.POST.get('tags', None)
@@ -289,15 +302,15 @@ def actor_tags_modify(request):
 
         # Get the appropriate permission to look up
         if tag_type=='ActorMotivation':
-            perm_needed='motivations_edit'
+            perm_needed=ActorACL.MOTIVATIONS_EDIT
         elif tag_type=='ActorIntendedEffect':
-            perm_needed='intended_effects_edit'
+            perm_needed=ActorACL.INTENDED_EFFECTS_EDIT
         elif tag_type=='ActorSophistication':
-            perm_needed='sophistications_edit'
+            perm_needed=ActorACL.SOPHISTICATIONS_EDIT
         elif tag_type=='ActorThreatType':
-            perm_needed='threat_types_edit'
+            perm_needed=ActorACL.THREAT_TYPES_EDIT
 
-        if get_user_permissions(request.user.username, 'Actor')[perm_needed]:
+        if user.has_access_to(perm_needed):
             result = update_actor_tags(id_, tag_type, tags, request.user)
         else:
             result = {'success':False,
@@ -347,6 +360,7 @@ def add_identifier(request):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
+        user = request.user
         form = AddActorIdentifierForm(request.user.username, request.POST)
         if form.is_valid():
             identifier_type = request.POST.get('identifier_type', None)
@@ -359,7 +373,7 @@ def add_identifier(request):
                 return HttpResponse(json.dumps({'success': False,
                                                 'message': 'Need a name.'}),
                                     content_type="application/json")
-            if get_user_permissions(request.user.username,'Actor')['actor_identifiers_add']:
+            if user.has_access_to(ActorACL.ACTOR_IDENTIFIERS_ADD):
                 result = add_new_actor_identifier(identifier_type,
                                                   identifier,
                                                   source,
@@ -394,7 +408,9 @@ def attribute_identifier(request):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
-        if get_user_permissions(request.user.username, 'Actor')['actor_identifiers_add']:
+        user = request.user
+
+        if user.has_access_to(ActorACL.ACTOR_IDENTIFIERS_ADD):
             id_ = request.POST.get('id', None)
             identifier_type = request.POST.get('identifier_type', None)
             identifier = request.POST.get('identifier', None)
@@ -431,6 +447,7 @@ def edit_attributed_identifier(request):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
+        user = request.user
         id_ = request.POST.get('id', None)
         identifier = request.POST.get('identifier_id', None)
         confidence = request.POST.get('confidence', 'low')
@@ -438,7 +455,7 @@ def edit_attributed_identifier(request):
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
                                 content_type="application/json")
-        if get_user_permissions(request.user.username,'Actor')['actor_identifiers_edit']:
+        if user.has_access_to(ActorACL.ACTOR_IDENTIFIERS_EDIT):
             result = set_identifier_confidence(id_,
                                                identifier,
                                                confidence,
@@ -466,13 +483,15 @@ def remove_attributed_identifier(request):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
+        user = request.user
+
         id_ = request.POST.get('object_type', None)
         identifier = request.POST.get('key', None)
         if not identifier:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
                                 content_type="application/json")
-        if get_user_permissions(request.user.username, 'Actor')['actor_identifiers_delete']:
+        if user.has_access_to(ActorACL.ACTOR_IDENTIFIERS_DELETE):
             result = remove_attribution(id_,
                                         identifier,
                                         request.user)
@@ -501,7 +520,8 @@ def edit_actor_name(request, id_):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
-        if get_user_permissions(request.user.username, 'Actor')['name_edit']:
+        user = request.user
+        if user.has_access_to(ActorACL.NAME_EDIT):
             name = request.POST.get('name', None)
             if not name:
                 return HttpResponse(json.dumps({'success': False,
@@ -533,10 +553,10 @@ def edit_actor_aliases(request):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
+        user = request.user
         aliases = request.POST.get('aliases', None)
         id_ = request.POST.get('oid', None)
-        permissions = get_user_permissions(request.user.username, 'Actor')
-        if permissions['aliases_edit']:
+        if user.has_access_to(ActorACL.ALIASES_EDIT):
             result = update_actor_aliases(id_, aliases, request.user)
             return HttpResponse(json.dumps(result),
                                 content_type="application/json")

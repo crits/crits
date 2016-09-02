@@ -18,7 +18,7 @@ from crits.core.handlers import jtable_ajax_list, build_jtable
 from crits.core.handlers import csv_export, get_item_names
 from crits.core.mongo_tools import mongo_connector
 from crits.core.user_tools import user_sources, is_user_subscribed
-from crits.core.user_tools import is_user_favorite, get_user_permissions
+from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.stats.handlers import generate_campaign_stats
 
@@ -36,6 +36,7 @@ from crits.targets.handlers import get_campaign_targets
 from crits.targets.target import Target
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import CampaignACL
 
 # Functions for top level Campaigns.
 def get_campaign_names_list(active):
@@ -67,8 +68,6 @@ def get_campaign_details(campaign_name, analyst):
 
     ttp_form = TTPForm()
 
-    permissions = get_user_permissions(analyst)
-
     # remove pending notifications for user
     remove_user_from_notification("%s" % analyst, campaign_detail.id, 'Campaign')
 
@@ -96,10 +95,8 @@ def get_campaign_details(campaign_name, analyst):
                 'url_key': campaign_name}
 
     #screenshots
-    if permissions['Campaign']['screenshots_read']:
-        screenshots = campaign_detail.get_screenshots(analyst)
-    else:
-        screenshots = None
+    screenshots = campaign_detail.get_screenshots(analyst)
+
 
     # Get item counts
     formatted_query = {'campaign.name': campaign_name}
@@ -129,7 +126,7 @@ def get_campaign_details(campaign_name, analyst):
             "screenshots": screenshots,
             'service_results': service_results,
             "ttp_form": ttp_form,
-            'permissions': permissions}
+            "CampaignACL": CampaignACL}
 
     return template, args
 

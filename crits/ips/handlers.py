@@ -31,6 +31,7 @@ from crits.vocabulary.indicators import (
     IndicatorThreatTypes
 )
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import IPACL
 
 
 def generate_ip_csv(request):
@@ -143,23 +144,23 @@ def generate_ip_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
 
-def get_ip_details(ip, analyst):
+def get_ip_details(ip, user):
     """
     Generate the data to render the IP details template.
 
     :param ip: The IP to get details for.
     :type ip: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: CRITsUser
     :returns: template (str), arguments (dict)
     """
 
-    allowed_sources = user_sources(analyst)
+    allowed_sources = user_sources(user)
     ip = IP.objects(ip=ip, source__name__in=allowed_sources).first()
     template = None
     args = {}
 
-    if not get_user_source_tlp(analyst, ip):
+    if not user.check_source_tlp(ip):
         ip = None
 
     if not ip:
@@ -168,31 +169,23 @@ def get_ip_details(ip, analyst):
                  ' permission to view it.')
         args = {'error': error}
     else:
-        ip.sanitize("%s" % analyst)
-
-        permissions = get_user_permissions(analyst)
+        ip.sanitize("%s" % user)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, ip.id, 'IP')
+        remove_user_from_notification("%s" % user, ip.id, 'IP')
 
         # subscription
         subscription = {
                 'type': 'IP',
                 'id': ip.id,
-                'subscribed': is_user_subscribed("%s" % analyst, 'IP', ip.id),
+                'subscribed': is_user_subscribed("%s" % user, 'IP', ip.id),
         }
 
         #objects
-        if permissions['IP']['objects_read']:
-            objects = ip.sort_objects()
-        else:
-            objects = None
+        objects = ip.sort_objects()
 
         #relationships
-        if permissions['IP']['relationships_read']:
-            relationships = ip.sort_relationships("%s" % analyst, meta=True)
-        else:
-            relationships = None
+        relationships = ip.sort_relationships("%s" % user, meta=True)
 
         # relationship
         relationship = {
@@ -205,10 +198,10 @@ def get_ip_details(ip, analyst):
                     'url_key':ip.ip}
 
         #screenshots
-        screenshots = ip.get_screenshots(analyst)
+        screenshots = ip.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'IP', ip.id)
+        favorite = is_user_favorite("%s" % user, 'IP', ip.id)
 
         # services
         service_list = get_supported_services('IP')
@@ -226,7 +219,7 @@ def get_ip_details(ip, analyst):
                 'screenshots': screenshots,
                 'ip': ip,
                 'comments':comments,
-                'permissions': permissions}
+                'IPACL': IPACL}
     return template, args
 
 def get_ip(allowed_sources, ip_address):

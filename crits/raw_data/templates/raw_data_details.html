@@ -28,20 +28,20 @@
     <li><a href="#highlights_section" id="highlights_button"><span>Highlights</span></a></li>
     <li><a href="#raw_section" id="raw_button"><span>Raw Data</span></a></li>
     <li><a href="#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
-    {% if permissions.RawData.services_read %}
+    {% if RawDataACL.SERVICES_READ|has_access_to:user %}
       <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
       {% include 'services_tab_list_widget.html' %}
     {% endif %}
 </ul>
 
 <div id="details_section">
-    {% if permissions.RawData.upload_new_version or permissions.RawData.delete %}
+    {% if RawDataACL.UPLOAD_NEW_VERSION|has_access_to:user or RawDataACL.DELETE|has_access_to:user %}
       <span class="horizontal_menu">
       <ul class="hmenu">
-        {% if permissions.RawData.upload_new_version %}
+        {% if RawDataACL.UPLOAD_NEW_VERSION|has_access_to:user %}
           <li><a href="#" id="upload-new-version" class="dialogClick" dialog="upload-new-version" data-action="{% url 'crits.raw_data.views.upload_raw_data' raw_data.link_id|stringformat:"s" %}">Upload New Version</a></li>
         {% endif %}
-        {% if permissions.RawData.delete %}
+        {% if RawDataACL.DELETE|has_access_to:user %}
           <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="raw_data" action='{% url "crits.raw_data.views.remove_raw_data" raw_data.id %}'>Delete Raw Data</a></li>
         {% endif %}
       </ul>
@@ -107,14 +107,14 @@
                 </select>
             </td>
             </tr>
-            {% if permissions.RawData.description_read %}
+            {% if RawDataACL.DESCRIPTION_READ|has_access_to:user %}
               <tr>
                   {% with description=raw_data.description %}
                       {% include 'description_widget.html' %}
                   {% endwith %}
               </tr>
             {% endif %}
-            {% if permissions.RawData.status_read %}
+            {% if RawDataACL.STATUS_READ|has_access_to:user %}
               <tr>
                   <td class="key">Status
                       <span style="float: right;" class="object_status_response"></span>
@@ -125,19 +125,19 @@
               </tr>
             {% endif %}
 
-            {% if permissions.RawData.sectors_read %}
+            {% if RawDataACL.SECTORS_READ|has_access_to:user %}
               {% with sectors=raw_data.sectors %}
                   {% include "sector_widget.html" %}
               {% endwith %}
             {% endif %}
-            {% if permissions.RawData.sources_read %}
+            {% if RawDataACL.SOURCES_READ|has_access_to:user %}
               <tr>
               {% with sources=raw_data.source obj_id=raw_data.id obj_type=subscription.type %}
                   {% include "sources_listing_widget.html" %}
               {% endwith %}
               </tr>
             {% endif %}
-            {% if permissions.RawData.releasability_read %}
+            {% if RawDataACL.RELEASABILITY_READ|has_access_to:user %}
               <tr>
                   {% with releasability=raw_data.releasability %}
                       {% include 'releasability_list_widget.html' %}
@@ -149,7 +149,7 @@
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% if permissions.RawData.bucketlist_read %}
+        {% if RawDataACL.BUCKETLIST_READ|has_access_to:user %}
           {% with bucket_list=raw_data.bucket_list %}
               {% include 'bucket_list_widget.html' %}
           {% endwith %}
@@ -160,50 +160,50 @@
     <div>
         {% include 'raw_data_data.html' %}
     </div>
-    {% if permissions.RawData.actions_read %}
+    {% if RawDataACL.ACTIONS_READ|has_access_to:user %}
       <div class="content_box">
           {% with obj=raw_data obj_type="RawData" %}
               {% include 'action_listing_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.RawData.tickets_read %}
+    {% if RawDataACL.TICKETS_READ|has_access_to:user %}
       <div>
         {% with obj=raw_data obj_type=subscription.type %}
            {% include 'tickets_listing_widget.html' %}
         {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.RawData.campaigns_read and permissions.Campaign.read %}
+    {% if RawDataACL.CAMPAIGNS_READ|has_access_to:user and RawDataACL.CAMPAIGN_READ %}
       <div>
           {% with hit=raw_data col=COL_RAW_DATA %}
               {% include "campaigns_display_widget.html" %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.RawData.locations_read %}
+    {% if RawDataACL.LOCATIONS_READ|has_access_to:user %}
       <div>
           {% with hit=raw_data col=COL_RAW_DATA %}
               {% include "locations_display_widget.html" %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.RawData.relationships_view %}
+    {% if RawDataACL.RELATIONSHIPS_READ|has_access_to:user %}
       <div>
           {% include 'relationships_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.RawData.objects_read %}
+    {% if RawDataACL.OBJECTS_READ|has_access_to:user %}
       <div>
           {% include 'objects_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.RawData.screenshots_read %}
+    {% if RawDataACL.SCREENSHOTS_READ|has_access_to:user %}
       <div>
         {% include 'screenshot_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.RawData.comments_read %}
+    {% if RawDataACL.COMMENTS_READ|has_access_to:user %}
       <div>
           {% include "comments_listing_widget.html" %}
       </div>
@@ -223,7 +223,7 @@
     </div>
 </div>
 {% include 'raw_data_versions.html' %}
-{% if permissions.RawData.services_read %}
+{% if RawDataACL.SERVICES_READ|has_access_to:user %}
   {% with item=raw_data %}
       {% include "services_analysis_section.html" with crits_type="RawData" identifier=raw_data.id %}
   {% endwith %}

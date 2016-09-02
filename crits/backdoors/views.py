@@ -14,8 +14,11 @@ from crits.backdoors.handlers import set_backdoor_version
 from crits.backdoors.handlers import generate_backdoor_csv
 from crits.backdoors.handlers import generate_backdoor_jtable
 from crits.core import form_consts
+from crits.core.user import CRITsUser
 from crits.core.data_tools import json_handler
-from crits.core.user_tools import user_can_view_data, get_user_permissions
+from crits.core.user_tools import user_can_view_data
+
+from crits.vocabulary.acls import BackdoorACL
 
 
 @user_passes_test(user_can_view_data)
@@ -30,10 +33,13 @@ def backdoors_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if get_user_permissions(request.user.username, 'Backdoor')['read']:
+    request.user._setup()
+    user = request.user
+
+    if user.has_access_to(BackdoorACL.READ):
         if option == "csv":
             return generate_backdoor_csv(request)
-        elif option== "jtdelete" and not get_user_permissions(request.user.username, 'Backdoor')['delete']:
+        elif option== "jtdelete" and not user.has_access_to(BackdoorACL.DELETE):
             result = {'sucess':False,
                       'message':'User does not have permission to delete Backdoor.'}
             return HttpResponse(json.dumps(result,
@@ -59,10 +65,16 @@ def backdoor_detail(request, id_):
     """
 
     template = "backdoor_detail.html"
-    user = request.user.username
+    request.user._setup()
+    user = request.user
+    user.get_access_list(update=True)
+
     (new_template, args) = get_backdoor_details(id_, user)
     if new_template:
         template = new_template
+
+    args['BackdoorACL'] = BackdoorACL
+
     return render_to_response(template,
                               args,
                               RequestContext(request))
@@ -79,10 +91,11 @@ def add_backdoor(request):
 
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
+        user = request.user
         data = request.POST
         form = AddBackdoorForm(request.user, data)
         if form.is_valid():
-            if get_user_permissions(request.user.username, 'Backdoor')['write']:
+            if user.has_access_to(BackdoorACL.WRITE):
                 cleaned_data = form.cleaned_data
                 name = cleaned_data['name']
                 aliases = cleaned_data['aliases']
@@ -141,8 +154,10 @@ def remove_backdoor(request, id_):
     """
 
     if request.method == "POST":
-        if get_user_permissions(request.user.username, 'Backdoor')['delete']:
-            backdoor_remove(id_, request.user.username)
+        request.user._setup()
+        user = request.user
+        if user.has_access_to(BackdoorACL.DELETE):
+            backdoor_remove(id_, user.username)
         return HttpResponseRedirect(reverse('crits.backdoors.views.backdoors_listing'))
     return render_to_response('error.html',
                               {'error':'Expected AJAX/POST'},
@@ -191,8 +206,9 @@ def edit_backdoor_aliases(request):
     if request.method == "POST" and request.is_ajax():
         aliases = request.POST.get('aliases', None)
         id_ = request.POST.get('oid', None)
-        user = request.user.username
-        if get_user_permissions(user, 'Backdoor')['aliases_edit']:
+        request.user._setup()
+        user = request.user
+        if user.has_access_to(BackdoorACL.ALIASES_EDIT):
             result = update_backdoor_aliases(id_, aliases, user)
         else:
             result = {'success':False,
@@ -219,14 +235,15 @@ def edit_backdoor_version(request, id_):
     """
 
     if request.method == "POST" and request.is_ajax():
-        user = request.user.username
+        request.user._setup()
+        user = request.user
         version = request.POST.get('version', None)
         if version == None:
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Not all info provided.'}),
                                 content_type="application/json")
 
-        if get_user_permissions(user, 'Backdoor')['version_edit']:
+        if user.has_access_to(BackdoorACL.VERSION_EDIT):
             result = set_backdoor_version(id_, version, user)
             return HttpResponse(json.dumps(result), content_type="application/json")
 

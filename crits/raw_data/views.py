@@ -27,6 +27,8 @@ from crits.raw_data.handlers import delete_highlight
 from crits.raw_data.handlers import update_raw_data_highlight_date
 from crits.raw_data.raw_data import RawDataType
 
+from crits.vocabulary.acls import RawDataACL
+
 @user_passes_test(user_can_view_data)
 def raw_data_listing(request,option=None):
     """
@@ -39,7 +41,9 @@ def raw_data_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if get_user_permissions(request.user.username, 'RawData')['read']:
+    user = request.user
+
+    if user.has_access_to(RawDataACL.READ):
         if option == "csv":
             return generate_raw_data_csv(request)
         return generate_raw_data_jtable(request, option)
@@ -312,9 +316,10 @@ def raw_data_details(request, _id):
     """
 
     template = 'raw_data_details.html'
-    analyst = request.user.username
-    if get_user_permissions(analyst, 'RawData')['read']:
-        (new_template, args) = get_raw_data_details(_id, analyst)
+    user = request.user
+
+    if user.has_access_to(RawDataACL.READ):
+        (new_template, args) = get_raw_data_details(_id, user)
         if new_template:
             template = new_template
         return render_to_response(template,
@@ -462,11 +467,11 @@ def new_raw_data_type(request):
 
     if request.method == 'POST' and request.is_ajax():
         form = NewRawDataTypeForm(request.POST)
-        analyst = request.user.username
+        user = request.user
         if form.is_valid():
-            if get_user_permissions(analyst)['add_new_raw_data_type']:
+            if user.has_access_to(RawDataACL.ADD_NEW_RAW_DATA_TYPE):
                 result = add_new_raw_data_type(form.cleaned_data['data_type'],
-                                               analyst)
+                                               user)
                 if result:
                     message = {'message': '<div>Raw Data Type added successfully!</div>',
                                'success': True}

@@ -14,7 +14,7 @@ from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
-from crits.core.user_tools import is_user_favorite, get_user_permissions, get_user_source_tlp
+from crits.core.user_tools import is_user_favorite, get_user_source_tlp
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
 
@@ -25,6 +25,7 @@ from crits.vocabulary.actors import (
     IntendedEffects
 )
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import ActorACL
 
 
 def generate_actor_identifier_csv(request):
@@ -143,6 +144,9 @@ def generate_actor_jtable(request, option):
     :returns: :class:`django.http.HttpResponse`
     """
 
+    request.user._setup()
+    user = request.user
+
     obj_type = Actor
     type_ = "actor"
     mapper = obj_type._meta['jtable_opts']
@@ -160,7 +164,7 @@ def generate_actor_jtable(request, option):
                                        default=json_handler),
                             content_type="application/json")
     if option == "jtdelete":
-        if get_user_permissions(request.user.username, 'Actor')['delete']:
+        if user.has_access_to(ActorACL.DELETE):
             if jtable_ajax_delete(obj_type, request):
                 response = {"Result": "OK"}
             else:
@@ -239,12 +243,8 @@ def get_actor_details(id_, user):
         download_form = DownloadFileForm(initial={"obj_type": 'Actor',
                                                   "obj_id": actor.id})
 
-        permissions = get_user_permissions(username)
         # generate identifiers
-        if permissions['Actor']['actor_identifiers_read']:
-            actor_identifiers = actor.generate_identifiers_list(username)
-        else:
-            actor_identifiers = None
+        actor_identifiers = actor.generate_identifiers_list(username)
 
         # subscription
         subscription = {
@@ -254,10 +254,7 @@ def get_actor_details(id_, user):
         }
 
         #objects
-        if permissions['Actor']['objects_read']:
-            objects = actor.sort_objects()
-        else:
-            objects = None
+        objects = actor.sort_objects()
 
         #relationships
         relationships = actor.sort_relationships("%s" % username, meta=True)
@@ -269,32 +266,20 @@ def get_actor_details(id_, user):
         }
 
         #comments
-        if permissions['Actor']['comments_read']:
-            comments = {'comments': actor.get_comments(),
-                        'url_key': actor.id}
-        else:
-            comments = None
+        comments = {'comments': actor.get_comments(),
+                    'url_key': actor.id}
 
         #screenshots
-        if permissions['Actor']['screenshots_read']:
-            screenshots = actor.get_screenshots(username)
-        else:
-            screenshots = None
+        screenshots = actor.get_screenshots(username)
 
         # favorites
         favorite = is_user_favorite("%s" % username, 'Actor', actor.id)
 
         # services
-        if permissions['Actor']['services_read']:
-            service_list = get_supported_services('Actor')
-        else:
-            service_list = None
+        service_list = get_supported_services('Actor')
 
         # analysis results
-        if permissions['Actor']['services_read']:
-            service_results = actor.get_analysis_results()
-        else:
-            service_results = None
+        service_results = actor.get_analysis_results()
 
         args = {'actor_identifiers': actor_identifiers,
                 'objects': objects,
@@ -309,7 +294,7 @@ def get_actor_details(id_, user):
                 'actor': actor,
                 'actor_id': id_,
                 'comments': comments,
-                'permissions': permissions,}
+                'ActorACL': ActorACL}
     return template, args
 
 def get_actor_by_name(allowed_sources, actor):

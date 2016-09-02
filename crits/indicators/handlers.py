@@ -30,7 +30,6 @@ from crits.core.handlers import jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import datetime_parser
 from crits.core.user_tools import user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
-from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.domains.domain import Domain
 from crits.domains.handlers import upsert_domain, get_valid_root_domain
 from crits.events.event import Event
@@ -51,6 +50,7 @@ from crits.vocabulary.indicators import (
 from crits.vocabulary.ips import IPTypes
 from crits.vocabulary.relationships import RelationshipTypes
 from crits.vocabulary.status import Status
+from crits.vocabulary.acls import IndicatorACL
 
 logger = logging.getLogger(__name__)
 
@@ -193,7 +193,7 @@ def get_indicator_details(indicator_id, user):
     indicator = Indicator.objects(id=indicator_id,
                                   source__name__in=users_sources).first()
 
-    if not get_user_source_tlp(user, indicator):
+    if not user.check_source_tlp(indicator):
         indicator = None
 
     if not indicator:
@@ -214,7 +214,6 @@ def get_indicator_details(indicator_id, user):
 
     # remove pending notifications for user
     remove_user_from_notification("%s" % user, indicator_id, 'Indicator')
-    permissions = get_user_permissions(user)
 
     # subscription
     subscription = {
@@ -266,7 +265,7 @@ def get_indicator_details(indicator_id, user):
             'service_results': service_results,
             'favorite': favorite,
             'rt_url': settings.RT_URL,
-            'permissions': permissions}
+            'IndicatorACL': IndicatorACL}
 
     return template, args
 

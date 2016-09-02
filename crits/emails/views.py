@@ -23,6 +23,7 @@ from crits.emails.handlers import create_email_attachment, get_email_formatted
 from crits.emails.handlers import create_indicator_from_header_field
 from crits.samples.forms import UploadFileForm
 
+from crits.vocabulary.acls import EmailACL
 
 @user_passes_test(user_can_view_data)
 def emails_listing(request,option=None):

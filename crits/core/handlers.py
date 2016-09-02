@@ -2007,7 +2007,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
 
             # Sanitize results for Source TLP
             docs = docs.sanitize_source_tlps(user)
-            
+
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
                 doc.sanitize_sources(username="%s" % user, sources=sourcefilt)
@@ -2315,7 +2315,12 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     doc[key] = "|||".join(camps)
                 elif key == "source":
                     srcs = []
-                    if permissions[col_obj._meta['crits_type']]['sources_read']:
+                    if col_obj._meta['crits_type'] == 'ActorIdentifier':
+                        if permissions['Actor']['sources_read']:
+                            for srcdict in doc[key]:
+                                if srcdict['name'] in users_sources:
+                                    srcs.append(srcdict['name'])
+                    elif permissions[col_obj._meta['crits_type']]['sources_read']:
                         for srcdict in doc[key]:
                             if srcdict['name'] in users_sources:
                                 srcs.append(srcdict['name'])

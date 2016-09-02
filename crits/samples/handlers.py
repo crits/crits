@@ -34,7 +34,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
 from crits.core.source_access import SourceAccess
-from crits.core.user_tools import user_sources, get_user_organization, get_user_permissions
+from crits.core.user_tools import user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite, get_user_source_tlp
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
@@ -47,6 +47,7 @@ from crits.services.handlers import run_triage, get_supported_services
 from crits.stats.handlers import generate_yara_hits
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import SampleACL
 
 logger = logging.getLogger(__name__)
 
@@ -64,31 +65,31 @@ def generate_sample_csv(request):
     return response
 
 
-def get_sample_details(sample_md5, analyst, format_=None):
+def get_sample_details(sample_md5, user, format_=None):
     """
     Generate the data to render the Sample details template.
 
     :param sample_md5: The MD5 of the Sample to get details for.
     :type sample_md5: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: CRITsUser
     :param format_: The format of the details page.
     :type format_: str
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    sources = user_sources(analyst)
+    sources = user_sources(user)
     sample = Sample.objects(md5=sample_md5,
                             source__name__in=sources).first()
 
-    if not get_user_source_tlp(analyst, sample):
+    if not user.check_source_tlp(sample):
         sample = None
 
     if not sample:
         return ('error.html', {'error': "File not yet available or you do not have access to view it."})
-    sample.sanitize_sources(username=analyst)
-    permissions = get_user_permissions(analyst)
+    sample.sanitize_sources(username=user)
+
     if format_:
         exclude = [
                     "source",
@@ -134,28 +135,25 @@ def get_sample_details(sample_md5, analyst, format_=None):
         else:
             binary_exists = 0
 
-        sample.sanitize("%s" % analyst)
+        sample.sanitize("%s" % user )
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, sample.id, 'Sample')
+        remove_user_from_notification("%s" % user, sample.id, 'Sample')
 
         # subscription
         subscription = {
                 'type': 'Sample',
                 'id': sample.id,
-                'subscribed': is_user_subscribed("%s" % analyst,
+                'subscribed': is_user_subscribed("%s" % user,
                                                 'Sample',
                                                 sample.id),
         }
 
         #objects
-        if permissions['Sample']['objects_read']:
-            objects = sample.sort_objects()
-        else:
-            objects = None
+        objects = sample.sort_objects()
 
         #relationships
-        relationships = sample.sort_relationships("%s" % analyst,
+        relationships = sample.sort_relationships("%s" % user,
                                                 meta=True)
 
         # relationship
@@ -165,26 +163,17 @@ def get_sample_details(sample_md5, analyst, format_=None):
         }
 
         #comments
-        if permissions['Sample']['comments_read']:
-            comments = {'comments': sample.get_comments(),
+        comments = {'comments': sample.get_comments(),
                         'url_key': sample_md5}
-        else:
-            comments = None
 
         #screenshots
-        if permissions['Sample']['screenshots_read']:
-            screenshots = sample.get_screenshots(analyst)
-        else:
-            screenshots = None
+        screenshots = sample.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'Sample', sample.id)
+        favorite = is_user_favorite("%s" % user, 'Sample', sample.id)
 
         # services
-        if permissions['Sample']['services_read']:
-            service_list = get_supported_services('Sample')
-        else:
-            service_list = None
+        service_list = get_supported_services('Sample')
 
         # analysis results
         service_results = sample.get_analysis_results()
@@ -217,7 +206,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'screenshots': screenshots,
                 'service_list': service_list,
                 'service_results': service_results,
-                'permissions': permissions}
+                'SampleACL': SampleACL}
 
     return template, args
 

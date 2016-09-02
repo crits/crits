@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load filters %}
 
 {% block title %} Event Detail {% endblock %}
 {% block content %}
@@ -15,23 +15,23 @@
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    {% if permissions.Event.services_read %}
+    {% if EventACL.SERVICES_READ|has_access_to:user %}
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     {% endif %}
 </ul>
 
 <div id="details_section">
-    {% if permissions.Event.add_sample or permissions.Event.download or permissions.Event.delete %}
+    {% if EventACL.ADD_SAMPLE|has_access_to:user or EventACL.DOWNLOAD|has_access_to:user or EventACL.DELETE|has_access_to:user %}
     <span class="horizontal_menu">
         <ul class="hmenu">
-            {% if permissions.Event.add_sample %}
+            {% if EventACL.ADD_SAMPLE|has_access_to:user %}
               <li><li><a href="#" class="dialogClick" dialog="new-sample" persona="related">Add Sample</a></li>
             {% endif %}
-            {% if permissions.Event.download %}
+            {% if EventACL.DOWNLOAD|has_access_to:user %}
               <li><a href="#" class="dialogClick" dialog="download-event">Download Event</a></li>
             {% endif %}
-            {% if permissions.Event.delete %}
+            {% if EventACL.DELETE|has_access_to:user %}
               <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="event" action='{% url "crits.events.views.remove_event" event.id %}'>Delete Event</a></li>
             {% endif %}
         </ul>
@@ -68,14 +68,14 @@
                         <td class='key'>Created</td>
                         <td>{{ event.created }}</td>
                     </tr>
-                    {% if permissions.Event.description_read %}
+                    {% if EventACL.DESCRIPTION_READ|has_access_to:user %}
                       <tr>
                           {% with description=event.description %}
                               {% include 'description_widget.html' %}
                           {% endwith %}
                       </tr>
                     {% endif %}
-                    {% if permissions.Event.status_read %}
+                    {% if EventACL.STATUS_READ|has_access_to:user %}
                       <tr>
                           <td class="key">Status
                               <span style="float: right;" class="object_status_response"></span>
@@ -88,19 +88,19 @@
                     {% with tlp=event.tlp %}
                         {% include "tlp_widget.html" %}
                     {% endwith %}
-                    {% if permissions.Event.sectors_read %}
+                    {% if EventACL.SECTORS_READ|has_access_to:user %}
                       {% with sectors=event.sectors %}
                           {% include "sector_widget.html" %}
                       {% endwith %}
                     {% endif %}
-                    {% if permissions.Event.sources_read %}
+                    {% if EventACL.SOURCES_READ|has_access_to:user %}
                       <tr>
                       {% with sources=event.source obj_id=event.id obj_type=subscription.type %}
                           {% include "sources_listing_widget.html" %}
                       {% endwith %}
                       </tr>
                     {% endif %}
-                    {% if permissions.Event.releasability_read %}
+                    {% if EventACL.RELEASABILITY_READ|has_access_to:user %}
                       <tr>
                       {% with releasability=event.releasability %}
                           {% include 'releasability_list_widget.html' %}
@@ -113,7 +113,7 @@
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% if permissions.Event.bucketlist_read %}
+        {% if EventACL.BUCKETLIST_READ|has_access_to:user %}
           {% with bucket_list=event.bucket_list %}
               {% include 'bucket_list_widget.html' %}
           {% endwith %}
@@ -121,56 +121,56 @@
         {% include 'add_related_widget.html' %}
 
     </div>
-    {% if permissions.Event.actions_read %}
+    {% if EventACL.ACTIONS_READ|has_access_to:user %}
       <div class="content_box">
           {% with obj=event obj_type="Event" %}
               {% include 'action_listing_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Event.tickets_read %}
+    {% if EventACL.TICKETS_READ|has_access_to:user %}
       <div>
     	{% with obj=event obj_type=subscription.type %}
                  {% include 'tickets_listing_widget.html' %}
     	{% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Event.campaigns_read and permissions.Campaign.read %}
+    {% if EventACL.CAMPAIGNS_READ|has_access_to:user and EventACL.CAMPAIGN_READ|has_access_to:user %}
       <div>
           {% with hit=event col=COL_EVENTS %}
                {% include 'campaigns_display_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Event.locations_read %}
+    {% if EventACL.LOCATIONS_READ|has_access_to:user %}
       <div>
           {% with hit=event col=COL_EVENTS %}
                {% include 'locations_display_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Event.relationships_read %}
+    {% if EventACL.RELATIONSHIPS_READ|has_access_to:user %}
       <div>
           {% include 'relationships_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.Event.objects_read %}
+    {% if EventACL.OBJECTS_READ|has_access_to:user %}
       <div>
           {% include 'objects_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.Event.screenshots_read %}
+    {% if EventACL.SCREENSHOTS_READ|has_access_to:user %}
       <div>
       {% include 'screenshot_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.Event.comments_read %}
+    {% if EventACL.COMMENTS_READ|has_access_to:user %}
       <div>
           {% include "comments_listing_widget.html" %}
       </div>
     {% endif %}
 </div>
-{% if permissions.Event.services_read %}
+{% if EventACL.SERVICES_READ|has_access_to:user %}
   {% with item=event %}
       {% include "services_analysis_section.html" with crits_type="Event" identifier=event.id %}
   {% endwith %}

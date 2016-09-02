@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load filters %}
 
 {% block title %} Backdoor Detail {% endblock %}
 
@@ -14,7 +15,7 @@
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    {%if permissions.Backdoor.services_read %}
+    {%if BackdoorACL.SERVICES_READ|has_access_to:user %}
       <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     {% endif %}
@@ -46,15 +47,17 @@
                             <span class="edit_underline" id="edit_backdoor_name">{{backdoor.name}}</span>
                         </td>
                     </tr>
-                    {% if permissions.Backdoor.version_read %}
                     <tr>
                         <td class="key">Version</td>
                         <td>
+                          {% if BackdoorACL.VERSION_EDIT|has_access_to:user %}
                             <span class="edit_underline" id="edit_backdoor_version">{{backdoor.version}}</span>
+                          {% else %}
+                          {{backdoor.version}}
+                          {% endif %}
                         </td>
                     </tr>
-                    {% endif %}
-                    {% if permissions.Backdoor.aliases_read %}
+                    {% if BackdoorACL.ALIASES_READ|has_access_to:user %}
                     <tr>
                         <td class="key">Aliases</td>
                         <td>
@@ -65,7 +68,7 @@
                         </td>
                     </tr>
                     {% endif %}
-                    {% if permissions.Backdoor.description_read %}
+                    {% if BackdoorACL.DESCRIPTION_READ|has_access_to:user %}
                     <tr>
                         {% with description=backdoor.description %}
                             {% include 'description_widget.html' %}
@@ -80,7 +83,7 @@
                         <td class="key">Modified</td>
                         <td>{{backdoor.modified}}</td>
                     </tr>
-                    {% if permissions.Backdoor.status_read %}
+                    {% if BackdoorACL.STATUS_READ|has_access_to:user %}
                     <tr>
                         <td class="key">Status
                             <span style="float: right;" class="object_status_response"></span>
@@ -93,19 +96,19 @@
                     {% with tlp=backdoor.tlp %}
                         {% include "tlp_widget.html" %}
                     {% endwith %}
-                    {% if permissions.Backdoor.sectors_read %}
+                    {% if "Backdoor.sectors_read"|has_access_to:user %}
                     {% with sectors=backdoor.sectors %}
                         {% include "sector_widget.html" %}
                     {% endwith %}
                     {% endif %}
-                    {% if permissions.Backdoor.sources_read %}
+                    {% if BackdoorACL.SOURCES_READ|has_access_to:user %}
                     <tr>
                         {% with sources=backdoor.source obj_id=backdoor.id obj_type=subscription.type %}
                             {% include "sources_listing_widget.html" %}
                         {% endwith %}
                     </tr>
                     {%endif%}
-                    {% if permissions.Backdoor.releasability_read %}
+                    {% if BackdoorACL.RELEASABILITY_READ|has_access_to:user %}
                     <tr>
                         {% with releasability=backdoor.releasability %}
                             {% include "releasability_list_widget.html" %}
@@ -118,7 +121,7 @@
      </div> <!-- content_box -->
      <div id="detail_floaters">
          {% include 'details_options_widget.html' %}
-         {% if permissions.Backdoor.bucketlist_read %}
+         {% if BackdoorACL.BUCKETLIST_READ|has_access_to:user %}
          {% with bucket_list=backdoor.bucket_list %}
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
@@ -126,60 +129,60 @@
          {% include 'add_related_widget.html' %}
      </div>
     <div class="content_box">
-      {% if permissions.Backdoor.actions_read %}
+      {% if BackdoorACL.ACTIONS_READ|has_access_to:user %}
         {% with obj=backdoor obj_type="Backdoor" %}
             {% include 'action_listing_widget.html' %}
         {% endwith %}
       {% endif %}
     </div>
     <div>
-      {% if permissions.Backdoor.tickets_read %}
+      {% if BackdoorACL.TICKETS_READ|has_access_to:user %}
 	    {% with obj=backdoor obj_type=subscription.type %}
                 {% include 'tickets_listing_widget.html' %}
 	    {% endwith %}
       {% endif %}
     </div>
     <div>
-      {% if permissions.Backdoor.campaigns_read %}
+      {% if BackdoorACL.CAMPAIGNS_READ|has_access_to:user and BackdoorACL.CAMPAIGN_READ|has_access_to:user %}
         {% with hit=backdoor col=COL_BACKDOORS %}
             {% include "campaigns_display_widget.html" %}
         {% endwith %}
       {% endif %}
     </div>
     <div>
-      {% if permissions.Backdoor.relationships_read %}
+      {% if BackdoorACL.RELATIONSHIPS_READ|has_access_to:user %}
         {% include 'relationships_listing_widget.html' %}
       {% endif %}
     </div>
     <div>
-      {% if permissions.Backdoor.objects_read %}
+      {% if BackdoorACL.OBJECTS_READ|has_access_to:user %}
         {% include 'objects_listing_widget.html' %}
       {% endif %}
     </div>
     <div>
-      {% if permissions.Backdoor.screenshots_read %}
+      {% if BackdoorACL.SCREENSHOTS_READ|has_access_to:user %}
         {% include 'screenshot_widget.html' %}
       {% endif %}
     </div>
     <div>
-      {% if permissions.Backdoor.comments_read %}
+      {% if BackdoorACL.COMMENTS_READ|has_access_to:user %}
         {% include "comments_listing_widget.html" %}
       {% endif %}
     </div>
 </div> <!-- details_section -->
 
-{% if permissions.Backdoor.services_read %}
+{% if BackdoorACL.SERVICES_READ|has_access_to:user %}
 {% with item=backdoor %}
     {% include "services_analysis_section.html" with crits_type="Backdoor" identifier=backdoor.id %}
 {% endwith %}
 {% endif %}
 
-{% if permissions.Backdoor.services_read %}
+{% if BackdoorACL.SERVICES_READ|has_access_to:user %}
   {% include 'services_tab_tabs_widget.html' %}
 {% endif %}
 </div>
 
-{% if permissions.Backdoor.aliases_read %}
+{% if BackdoorACL.ALIASES_READ|has_access_to:user %}
 <script type="text/javascript">
     $(document).bind('enable_backdoor_aliases', function(){
         window.add_backdoor_aliases = true;

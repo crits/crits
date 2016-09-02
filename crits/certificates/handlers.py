@@ -15,13 +15,14 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_permissions, get_user_source_tlp
+from crits.core.user_tools import get_user_source_tlp
 from crits.certificates.certificate import Certificate
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import run_triage, get_supported_services
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import CertificateACL
 
 
 def generate_cert_csv(request):
@@ -36,22 +37,22 @@ def generate_cert_csv(request):
     response = csv_export(request,Certificate)
     return response
 
-def get_certificate_details(md5, analyst):
+def get_certificate_details(md5, user):
     """
     Generate the data to render the Certificate details template.
 
     :param md5: The MD5 of the Certificate to get details for.
     :type md5: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: str
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    sources = user_sources(analyst)
+    sources = user_sources(user.username)
     cert = Certificate.objects(md5=md5, source__name__in=sources).first()
 
-    if not get_user_source_tlp(analyst, cert):
+    if not user.check_source_tlp(cert):
         cert = None
 
     if not cert:
@@ -59,29 +60,24 @@ def get_certificate_details(md5, analyst):
         args = {'error': 'Certificate not yet available or you do not have access to view it.'}
     else:
 
-        cert.sanitize("%s" % analyst)
-
-        permissions = get_user_permissions(analyst)
+        cert.sanitize("%s" % user.username)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, cert.id, 'Certificate')
+        remove_user_from_notification("%s" % user.username, cert.id, 'Certificate')
 
         # subscription
         subscription = {
                 'type': 'Certificate',
                 'id': cert.id,
-                'subscribed': is_user_subscribed("%s" % analyst,
+                'subscribed': is_user_subscribed("%s" % user.username,
                                                  'Certificate', cert.id),
         }
 
         #objects
-        if permissions['Certificate']['objects_read']:
-            objects = cert.sort_objects()
-        else:
-            objects = None
+        objects = cert.sort_objects()
 
         #relationships
-        relationships = cert.sort_relationships("%s" % analyst, meta=True)
+        relationships = cert.sort_relationships("%s" % user.username, meta=True)
 
         # relationship
         relationship = {
@@ -90,29 +86,17 @@ def get_certificate_details(md5, analyst):
         }
 
         #comments
-        if permissions['Certificate']['comments_read']:
-            comments = {'comments': cert.get_comments(),
+        comments = {'comments': cert.get_comments(),
                         'url_key': md5}
-        else:
-            comments = None
 
         #screenshots
-        if permissions['Certificate']['screenshots_read']:
-            screenshots = cert.get_screenshots(analyst)
-
-        else:
-            screenshots = None
+        screenshots = cert.get_screenshots(user.username)
 
         # services
-        if permissions['Certificate']['services_read']:
-            service_list = get_supported_services('Certificate')
+        service_list = get_supported_services('Certificate')
 
-            # analysis results
-            service_results = cert.get_analysis_results()
-        else:
-            service_list = None
-
-            service_results = None
+        # analysis results
+        service_results = cert.get_analysis_results()
 
         args = {'service_list': service_list,
                 'objects': objects,
@@ -123,7 +107,7 @@ def get_certificate_details(md5, analyst):
                 "screenshots": screenshots,
                 'service_results': service_results,
                 "cert": cert,
-                "permissions": permissions}
+                "CertificateACL": CertificateACL,}
 
     return template, args
 

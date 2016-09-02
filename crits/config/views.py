@@ -66,21 +66,27 @@ def modify_config(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
+    from django.forms.util import ErrorList
 
     # Get the current configuration, set as default unless user has permission to edit.
     crits_config = CRITsConfig.objects().first()
     config_data = crits_config.__dict__.get('_data')
-    permissions = get_user_permissions(request.user.username)
+    analyst = request.user.username
+    errors = []
+    permission_error = False
+    permissions = get_user_permissions(analyst)
 
     if request.method == "POST" and request.is_ajax():
         if permissions['control_panel_general_edit']:
             config_general_form = ConfigGeneralForm(request.POST)
         else:
             config_general_form = ConfigGeneralForm(config_data)
+            permission_error = True
         if permissions['control_panel_ldap_edit']:
             config_LDAP_form = ConfigLDAPForm(request.POST)
         else:
             config_LDAP_form = ConfigLDAPForm(config_data)
+            permission_error = True
         if permissions['control_panel_security_edit']:
             config_security_form = ConfigSecurityForm(request.POST)
         else:
@@ -91,10 +97,12 @@ def modify_config(request):
 
 
             config_security_form = ConfigSecurityForm(config_data)
+            permission_error = True
         if permissions['control_panel_logging_edit']:
             config_logging_form = ConfigLoggingForm(request.POST)
         else:
             config_logging_form = ConfigLoggingForm(config_data)
+            permission_error = True
         if permissions['control_panel_system_services_edit']:
             config_services_form = ConfigServicesForm(request.POST)
         else:
@@ -104,14 +112,17 @@ def modify_config(request):
             config_data['service_dirs'] = ','.join(new_service_dirs)
 
             config_services_form = ConfigServicesForm(config_data)
+            permission_error = True
         if permissions['control_panel_downloading_edit']:
             config_download_form = ConfigDownloadForm(request.POST)
         else:
             config_download_form = ConfigDownloadForm(config_data)
+            permission_error = True
         if permissions['control_panel_crits_edit']:
             config_CRITs_form = ConfigCritsForm(request.POST)
         else:
             config_CRITs_form = ConfigCritsForm(config_data)
+            permission_error = True
 
         forms = [config_general_form,
                  config_LDAP_form,
@@ -131,8 +142,6 @@ def modify_config(request):
             "ConfigCritsForm": "CRITs",
         }
 
-        analyst = request.user.username
-        errors = []
         #iterate over all the forms, checking if they're valid
         #if the form is valid, remove it from the errorStringDict
         for form in forms:
@@ -143,9 +152,11 @@ def modify_config(request):
                 errors.extend(form.errors)
 
         #submit if the errorStringDict is empty
-        if not errorStringDict:
+        if not errorStringDict and not permission_error:
             result = modify_configuration(forms, analyst)
             message = result['message']
+        elif permission_error:
+            message = "User does not have permission to edit form."
         elif len(errorStringDict) == 2:
             formsWithErrors = " and ".join(errorStringDict.values())
             message = "Invalid Form: The " + formsWithErrors + " tabs have errors."

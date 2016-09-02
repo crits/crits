@@ -19,11 +19,11 @@ from crits.core.class_mapper import class_from_id
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.notifications.handlers import remove_user_from_notification
 from crits.raw_data.raw_data import RawData, RawDataType
 from crits.services.handlers import run_triage, get_supported_services
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import RawDataACL
 
 
 
@@ -56,25 +56,25 @@ def get_id_from_link_and_version(link, version):
     else:
         return raw_data.id
 
-def get_raw_data_details(_id, analyst):
+def get_raw_data_details(_id, user):
     """
     Generate the data to render the RawData details template.
 
     :param _id: The ObjectId of the RawData to get details for.
     :type _id: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: str
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    sources = user_sources(analyst)
+    sources = user_sources(user)
     if not _id:
         raw_data = None
     else:
         raw_data = RawData.objects(id=_id, source__name__in=sources).first()
 
-    if not get_user_source_tlp(analyst, raw_data):
+    if not user.check_source_tlp(raw_data):
         raw_data = None
 
     if not raw_data:
@@ -82,18 +82,16 @@ def get_raw_data_details(_id, analyst):
         args = {'error': 'raw_data not yet available or you do not have access to view it.'}
     else:
 
-        raw_data.sanitize("%s" % analyst)
-
-        permissions = get_user_permissions(analyst)
+        raw_data.sanitize("%s" % user)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, raw_data.id, 'RawData')
+        remove_user_from_notification("%s" % user, raw_data.id, 'RawData')
 
         # subscription
         subscription = {
                 'type': 'RawData',
                 'id': raw_data.id,
-                'subscribed': is_user_subscribed("%s" % analyst,
+                'subscribed': is_user_subscribed("%s" % user,
                                                  'RawData', raw_data.id),
         }
 
@@ -101,7 +99,7 @@ def get_raw_data_details(_id, analyst):
         objects = raw_data.sort_objects()
 
         #relationships
-        relationships = raw_data.sort_relationships("%s" % analyst, meta=True)
+        relationships = raw_data.sort_relationships("%s" % user, meta=True)
 
         # relationship
         relationship = {
@@ -116,10 +114,10 @@ def get_raw_data_details(_id, analyst):
                     'url_key': _id}
 
         #screenshots
-        screenshots = raw_data.get_screenshots(analyst)
+        screenshots = raw_data.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'RawData', raw_data.id)
+        favorite = is_user_favorite("%s" % user, 'RawData', raw_data.id)
 
         # services
         service_list = get_supported_services('RawData')
@@ -138,7 +136,7 @@ def get_raw_data_details(_id, analyst):
                 "versions": versions,
                 "service_results": service_results,
                 "raw_data": raw_data,
-                "permissions": permissions}
+                "RawDataACL": RawDataACL}
 
     return template, args
 

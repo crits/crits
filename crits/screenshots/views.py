@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from crits.core.user_tools import user_can_view_data, get_user_permissions
+from crits.core.user_tools import user_can_view_data
 from crits.screenshots.handlers import get_screenshots_for_id, get_screenshot
 from crits.screenshots.handlers import add_screenshot, generate_screenshot_jtable
 from crits.screenshots.handlers import delete_screenshot_from_object
@@ -102,7 +102,7 @@ def add_new_screenshot(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
+    user = request.user
     description = request.POST.get('description', None)
     reference = request.POST.get('source_reference', None)
     method = request.POST.get('source_method', None)
@@ -114,9 +114,9 @@ def add_new_screenshot(request):
     screenshot_ids = request.POST.get('screenshot_ids', None)
     screenshot = request.FILES.get('screenshot', None)
 
-    if get_user_permissions(analyst, otype)['screenshots_add']:
+    if user.has_access_to(str(otype + ScreenshotACL.SCREENSHOT_ADD)):
         result = add_screenshot(description, tags, source, method, reference, tlp,
-                                analyst, screenshot, screenshot_ids, oid, otype)
+                                user, screenshot, screenshot_ids, oid, otype)
     else:
         result = {"success":False,
                   "message":"User does not have permission to add screenshots."}
@@ -134,12 +134,12 @@ def remove_screenshot_from_object(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
+    user = request.user
     obj = request.POST.get('obj', None)
     oid = request.POST.get('oid', None)
     sid = request.POST.get('sid', None)
 
-    if get_user_permissions(analyst, obj)['screenshots_delete']:
+    if user.has_access_to(str(obj + ScreenshotACL.SCREENSHOT_DELETE )):
         result = delete_screenshot_from_object(obj, oid, sid, analyst)
     else:
         result = {"success":False,

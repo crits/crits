@@ -24,6 +24,9 @@ from crits.signatures.handlers import add_new_signature_dependency
 from crits.signatures.signature import SignatureType
 from crits.signatures.signature import SignatureDependency
 
+from crits.vocabulary.acls import SignatureACL
+
+
 @user_passes_test(user_can_view_data)
 def signatures_listing(request,option=None):
     """
@@ -35,10 +38,17 @@ def signatures_listing(request,option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
-    if option == "csv":
-        return generate_signature_csv(request)
-    return generate_signature_jtable(request, option)
+    if user.has_access_to(SignatureACL.READ):
+        if option == "csv":
+            return generate_signature_csv(request)
+        return generate_signature_jtable(request, option)
+
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Signature listing.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def set_signature_type(request, id_):
@@ -99,14 +109,20 @@ def signature_detail(request, _id):
     :type _id: str
     :returns: :class:`django.http.HttpResponse`
     """
+    request.user._setup()
+    user = request.user
 
-    template = 'signature_detail.html'
-    analyst = request.user.username
-    (new_template, args) = get_signature_details(_id, analyst)
-    if new_template:
-        template = new_template
+    if user.has_access_to(SignatureACL.READ):
+        template = 'signature_detail.html'
+        (new_template, args) = get_signature_details(_id, user)
+        if new_template:
+            template = new_template
 
-    return render(request, template, args)
+        return render(request, template, args)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Signature Details.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def details_by_link(request, link):

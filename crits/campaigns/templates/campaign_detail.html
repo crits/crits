@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load filters %}
 
 {% block title %} Campaign Detail {% endblock %}
 
@@ -13,40 +14,40 @@
 <div id="tabnav" class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_tab"><span>Details</span></a></li>
-    {% if permissions.Actor.read %}
+    {%if CampaignACL.ACTOR_READ|has_access_to:user %}
       <li><a href="{% url 'crits.actors.views.actors_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="actors_tab"><span>Actors ({{ counts.Actor }})</span></a></li>
     {% endif %}
-    {% if permissions.Backdoor.read %}
+    {% if CampaignACL.BACKDOOR_READ|has_access_to:user%}
       <li><a href="{% url 'crits.backdoors.views.backdoors_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="backdoors_tab"><span>Backdoors ({{ counts.Backdoor }})</span></a></li>
     {% endif %}
-    {% if permissions.Domain.read %}
+    {% if CampaignACL.DOMAIN_READ|has_access_to:user%}
       <li><a href="{% url 'crits.domains.views.domains_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="domains_tab"><span>Domains ({{ counts.Domain }})</span></a></li>
     {% endif %}
-    {% if permissions.Email.read %}
+    {% if CampaignACL.EMAIL_READ|has_access_to:user%}
       <li><a href="{% url 'crits.emails.views.emails_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="emails_tab"><span>Emails ({{ counts.Email }})</span></a></li>
     {% endif %}
-    {% if permissions.Event.read %}
+    {% if CampaignACL.EVENT_READ|has_access_to:user%}
       <li><a href="{% url 'crits.events.views.events_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="events_tab"><span>Events ({{ counts.Event }})</span></a></li>
     {% endif %}
-    {% if permissions.Exploit.read %}
+    {% if CampaignACL.EXPLOIT_READ|has_access_to:user%}
       <li><a href="{% url 'crits.exploits.views.exploits_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="exploits_tab"><span>Exploits ({{ counts.Exploit }})</span></a></li>
     {% endif %}
-    {% if permissions.Indicator.read %}
+    {% if CampaignACL.INDICATOR_READ|has_access_to:user%}
       <li><a href="{% url 'crits.indicators.views.indicators_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="indicators_tab"><span>Indicators ({{ counts.Indicator }})</span></a></li>
     {% endif %}
-    {% if permissions.IP.read %}
+    {% if CampaignACL.IP_READ|has_access_to:user%}
       <li><a href="{% url 'crits.ips.views.ips_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="ips_tab"><span>IPs ({{ counts.IP }})</span></a></li>
     {% endif %}
-    {% if permissions.PCAP.read %}
+    {% if CampaignACL.PCAP_READ|has_access_to:user%}
       <li><a href="{% url 'crits.pcaps.views.pcaps_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="pcaps_tab"><span>PCAPs ({{ counts.PCAP }})</span></a></li>
     {% endif %}
-    {% if permissions.Sample.read %}
+    {% if CampaignACL.SAMPLE_READ|has_access_to:user%}
       <li><a href="{% url 'crits.samples.views.samples_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="samples_tab"><span>Samples ({{ counts.Sample }})</span></a></li>
     {% endif %}
-    {% if permissions.Target.read %}
+    {% if CampaignACL.TARGET_READ|has_access_to:user%}
       <li><a href="{% url 'crits.targets.views.targets_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="targets_tab"><span>Targets ({{ counts.Target }})</span></a></li>
     {% endif %}
-    {% if permissions.Campaign.services_read %}
+    {% if CampaignACL.SERVICES_READ|has_access_to:user %}
       {% include 'services_tab_list_widget.html' %}
     {% endif %}
     </ul>
@@ -67,7 +68,7 @@
                     {{ campaign_detail.id }}
                 </td>
               </tr>
-            {% if permissions.Campaign.aliases_read %}
+            {% if CampaignACL.ALIASES_READ|has_access_to:user %}
             <tr>
                 <td class="key">Aliases</td>
                 <td>
@@ -79,19 +80,19 @@
                 </td>
             </tr>
             {% endif %}
-            {% if permissions.Campaign.description_read %}
+            {% if CampaignACL.DESCRIPTION_READ|has_access_to:user %}
             <tr>
             {% with description=campaign_detail.description %}
                 {% include 'description_widget.html' %}
             {% endwith %}
             </tr>
             {% endif %}
-            {% if permissions.Campaign.ttps_read %}
+            {% if CampaignACL.TTPS_READ|has_access_to:user %}
             <tr id="ttps_container">
                 {% include 'campaign_ttps_list_widget.html' %}
             </tr>
             {% endif %}
-            {% if permissions.Campaign.status_read %}
+            {% if CampaignACL.STATUS_READ|has_access_to:user %}
             <tr>
                 <td class="key">Status
                     <span style="float: right;" class="object_status_response"></span>
@@ -101,12 +102,12 @@
                 </td>
             </tr>
             {% endif %}
-            {% if permissions.Campaign.sectors_read %}
+            {% if CampaignACL.SECTORS_READ|has_access_to:user %}
             {% with sectors=campaign_detail.sectors %}
                 {% include "sector_widget.html" %}
             {% endwith %}
             {% endif %}
-            {% if permissions.Campaign.releasability_read %}
+            {% if CampaignACL.RELEASABILITY_READ|has_access_to:user %}
             <tr>
                 {% with releasability=campaign_detail.releasability %}
                     {% include "releasability_list_widget.html" %}
@@ -119,14 +120,14 @@
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% if permissions.Campaign.bucketlist_read %}
+        {% if CampaignACL.BUCKETLIST_READ|has_access_to:user %}
         {% with bucket_list=campaign_detail.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
         {% endif %}
         {% include 'add_related_widget.html' %}
     </div>
-    {% if permissions.Campaign.actions_read %}
+    {% if CampaignACL.ACTIONS_READ|has_access_to:user %}
     <div class="content_box">
         {% with obj=campaign_detail obj_type="Campaign" %}
             {% include 'action_listing_widget.html' %}
@@ -143,36 +144,36 @@
         {% endwith %}
       </div>
     </div>
-    {% if permissions.Campaign.locations_read %}
+    {% if CampaignACL.LOCATIONS_READ|has_access_to:user %}
     <div>
         {% with hit=campaign_detail col=COL_CAMPAIGNS obj=campaign_detail %}
             {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
     {% endif %}
-    {% if permissions.Campaign.tickets_read %}
+    {% if CampaignACL.TICKETS_READ|has_access_to:user %}
     <div>
       {% with obj=campaign_detail obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
     </div>
     {% endif %}
-    {% if permissions.Campaign.relationships_read %}
+    {% if CampaignACL.RELATIONSHIPS_READ|has_access_to:user %}
     <div>
         {% include 'relationships_listing_widget.html' %}
     </div>
     {% endif %}
-    {% if permissions.Campaign.objects_read %}
+    {% if CampaignACL.OBJECTS_READ|has_access_to:user %}
     <div>
         {% include 'objects_listing_widget.html' %}
     </div>
     {% endif %}
-    {% if permissions.Campaign.screenshots_read %}
+    {% if CampaignACL.SCREENSHOTS_READ|has_access_to:user %}
     <div>
     {% include 'screenshot_widget.html' %}
     </div>
     {% endif %}
-    {% if permissions.Campaign.comments_read %}
+    {% if CampaignACL.COMMENTS_READ|has_access_to:user %}
     <div>
         {% include "comments_listing_widget.html" %}
     </div>
@@ -180,7 +181,7 @@
 
 </div>
 
-{% if permissions.Campaign.services_read %}
+{% if CampaignACL.SERVICES_READ|has_access_to:user %}
 {% include 'services_tab_tabs_widget.html' %}
 {% endif %}
 <div style="display: none;">

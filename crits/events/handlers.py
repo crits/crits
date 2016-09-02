@@ -25,14 +25,13 @@ from crits.core.handlers import jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.events.event import Event
 from crits.notifications.handlers import remove_user_from_notification
 from crits.samples.handlers import handle_uploaded_file, mail_sample
 from crits.services.handlers import run_triage, get_supported_services
 
 from crits.vocabulary.relationships import RelationshipTypes
-
+from crits.vocabulary.acls import EventACL
 
 
 def generate_event_csv(request):
@@ -47,22 +46,22 @@ def generate_event_csv(request):
     response = csv_export(request,Event)
     return response
 
-def get_event_details(event_id, analyst):
+def get_event_details(event_id, user):
     """
     Generate the data to render the Event details template.
 
     :param event_id: The ObjectId of the Event to get details for.
     :type event_id: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: str
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    sources = user_sources(analyst)
+    sources = user_sources(user)
     event = Event.objects(id=event_id, source__name__in=sources).first()
 
-    if not get_user_source_tlp(analyst, event):
+    if not user.check_source_tlp(event):
         event = None
 
     if not event:
@@ -70,36 +69,28 @@ def get_event_details(event_id, analyst):
         args = {'error': "ID does not exist or insufficient privs for source"}
         return template, args
 
-    event.sanitize("%s" % analyst)
-
-    permissions = get_user_permissions(analyst)
+    event.sanitize("%s" % user)
 
     campaign_form = CampaignForm()
     download_form = DownloadFileForm(initial={"obj_type": 'Event',
                                               "obj_id": event_id})
 
     # remove pending notifications for user
-    remove_user_from_notification("%s" % analyst, event.id, 'Event')
+    remove_user_from_notification("%s" % user, event.id, 'Event')
 
     # subscription
     subscription = {
             'type': 'Event',
             'id': event.id,
-            'subscribed': is_user_subscribed("%s" % analyst,
+            'subscribed': is_user_subscribed("%s" % user,
                                              'Event', event.id),
     }
 
     #objects
-    if permissions['Event']['objects_read']:
-        objects = event.sort_objects()
-    else:
-        objects = None
+    objects = event.sort_objects()
 
     #relationships
-    if permissions['Event']['relationships_read']:
-        relationships = event.sort_relationships("%s" % analyst, meta=True)
-    else:
-        relationships = None
+    relationships = event.sort_relationships("%s" % user, meta=True)
 
     # Get count of related Events for each related Indicator
     for ind in relationships.get('Indicator', []):
@@ -123,10 +114,10 @@ def get_event_details(event_id, analyst):
     comments = {'comments': event.get_comments(), 'url_key': event.id}
 
     #screenshots
-    screenshots = event.get_screenshots(analyst)
+    screenshots = event.get_screenshots(user)
 
     # favorites
-    favorite = is_user_favorite("%s" % analyst, 'Event', event.id)
+    favorite = is_user_favorite("%s" % user, 'Event', event.id)
 
     # services
     service_list = get_supported_services('Event')
@@ -146,7 +137,7 @@ def get_event_details(event_id, analyst):
             'campaign_form': campaign_form,
             'service_results': service_results,
             'download_form': download_form,
-            'permissions': permissions}
+            'EventACL': EventACL}
 
     return template, args
 

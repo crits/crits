@@ -18,11 +18,12 @@ from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.notifications.handlers import remove_user_from_notification
 from crits.signatures.signature import Signature, SignatureType, SignatureDependency
 from crits.services.handlers import run_triage, get_supported_services
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import SignatureACL
+
 
 
 def generate_signature_csv(request):
@@ -56,25 +57,25 @@ def get_id_from_link_and_version(link, version):
         return signature.id
 
 
-def get_signature_details(_id, analyst):
+def get_signature_details(_id, user):
     """
     Generate the data to render the Signature details template.
 
     :param _id: The ObjectId of the Signature to get details for.
     :type _id: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: CRITsUser
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    sources = user_sources(analyst)
+    sources = user_sources(user)
     if not _id:
         signature = None
     else:
         signature = Signature.objects(id=_id, source__name__in=sources).first()
 
-    if not get_user_source_tlp(user, signature):
+    if not user.check_source_tlp(signature):
         signature = None
 
     if not signature:
@@ -82,16 +83,16 @@ def get_signature_details(_id, analyst):
         args = {'error': 'signature not yet available or you do not have access to view it.'}
     else:
 
-        signature.sanitize("%s" % analyst)
+        signature.sanitize("%s" % user)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, signature.id, 'Signature')
+        remove_user_from_notification("%s" % user, signature.id, 'Signature')
 
         # subscription
         subscription = {
                 'type': 'Signature',
                 'id': signature.id,
-                'subscribed': is_user_subscribed("%s" % analyst,
+                'subscribed': is_user_subscribed("%s" % user,
                                                  'Signature', signature.id),
         }
 
@@ -99,7 +100,7 @@ def get_signature_details(_id, analyst):
         objects = signature.sort_objects()
 
         #relationships
-        relationships = signature.sort_relationships("%s" % analyst, meta=True)
+        relationships = signature.sort_relationships("%s" % user, meta=True)
 
         # relationship
         relationship = {
@@ -114,10 +115,10 @@ def get_signature_details(_id, analyst):
                     'url_key': _id}
 
         #screenshots
-        screenshots = signature.get_screenshots(analyst)
+        screenshots = signature.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'Signature', signature.id)
+        favorite = is_user_favorite("%s" % user, 'Signature', signature.id)
 
         # services
         service_list = get_supported_services('Signature')
@@ -136,7 +137,7 @@ def get_signature_details(_id, analyst):
                 "versions": versions,
                 "service_results": service_results,
                 "signature": signature,
-                'permissions': get_user_permissions(analyst)}
+                'SignatureACL': SignatureACL}
 
     return template, args
 

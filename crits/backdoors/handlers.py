@@ -14,7 +14,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list
 from crits.core.handlers import jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
-from crits.core.user_tools import is_user_favorite, get_user_permissions, get_user_source_tlp
+from crits.core.user_tools import is_user_favorite, get_user_source_tlp
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
 
@@ -116,7 +116,7 @@ def get_backdoor_details(id_, user):
     template = None
     args = {}
 
-    if not get_user_source_tlp(user, backdoor):
+    if not user.check_source_tlp(backdoor):
         backdoor = None
 
     if not backdoor:
@@ -125,7 +125,7 @@ def get_backdoor_details(id_, user):
                  ' permission to view it.')
         args = {'error': error}
     else:
-        backdoor.sanitize("%s" % user)
+        backdoor.sanitize("%s" % user.username)
 
         # remove pending notifications for user
         remove_user_from_notification("%s" % user, backdoor.id, 'Backdoor')
@@ -139,18 +139,11 @@ def get_backdoor_details(id_, user):
                                              backdoor.id),
         }
 
-        permissions = get_user_permissions(user)
         #objects
-        if permissions['Backdoor']['objects_read']:
-            objects = backdoor.sort_objects()
-        else:
-            objects = None
+        objects = backdoor.sort_objects()
 
         #relationships
-        if permissions['Backdoor']['relationships_read']:
-            relationships = backdoor.sort_relationships("%s" % user, meta=True)
-        else:
-            relationships = None
+        relationships = backdoor.sort_relationships("%s" % user, meta=True)
 
         # relationship
         relationship = {
@@ -159,32 +152,20 @@ def get_backdoor_details(id_, user):
         }
 
         #comments
-        if permissions['Backdoor']['comments_read']:
-            comments = {'comments': backdoor.get_comments(),
+        comments = {'comments': backdoor.get_comments(),
                         'url_key': backdoor.id}
-        else:
-            comments = None
 
         #screenshots
-        if permissions['Backdoor']['screenshots_read']:
-            screenshots = backdoor.get_screenshots(user)
-        else:
-            screenshots = None
+        screenshots = backdoor.get_screenshots(user)
 
         # favorites
         favorite = is_user_favorite("%s" % user, 'Backdoor', backdoor.id)
 
         # services
-        if permissions['Backdoor']['services_read']:
-            service_list = get_supported_services('Backdoor')
-        else:
-            service_list = None
+        service_list = get_supported_services('Backdoor')
 
         # analysis results
-        if permissions['Backdoor']['services_read']:
-            service_results = backdoor.get_analysis_results()
-        else:
-            service_results = None
+        service_results = backdoor.get_analysis_results()
 
         args = {'objects': objects,
                 'relationships': relationships,
@@ -196,8 +177,7 @@ def get_backdoor_details(id_, user):
                 'screenshots': screenshots,
                 'backdoor': backdoor,
                 'backdoor_id': id_,
-                'comments': comments,
-                'permissions': permissions}
+                'comments': comments}
     return template, args
 
 def add_new_backdoor(name, version=None, aliases=None, description=None,
@@ -383,11 +363,8 @@ def backdoor_remove(id_, username):
 
     backdoor = Backdoor.objects(id=id_).first()
     if backdoor:
-        if get_user_permissions(username, 'Backdoor')['delete']:
-            backdoor.delete(username=username)
-            return {'success': True}
-        else:
-            return {'success': False, 'message': 'User does not have permission to remove Backoor.'}
+        backdoor.delete(username=username)
+        return {'success': True}
     else:
         return {'success': False, 'message': 'Could not find Backdoor.'}
 

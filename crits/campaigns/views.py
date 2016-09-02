@@ -19,8 +19,10 @@ from crits.campaigns.handlers import add_ttp, edit_ttp, remove_ttp
 from crits.campaigns.handlers import modify_campaign_aliases
 from crits.campaigns.handlers import generate_campaign_jtable, generate_campaign_csv
 from crits.campaigns.handlers import get_campaign_names_list
-from crits.core.user_tools import user_can_view_data, get_user_permissions
+from crits.core.user_tools import user_can_view_data
 from crits.stats.handlers import campaign_date_stats
+
+from crits.vocabulary.acls import CampaignACL
 
 
 @user_passes_test(user_can_view_data)
@@ -63,7 +65,9 @@ def campaigns_listing(request, option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
-    if get_user_permissions(request.user.username, 'Campaign')['read']:
+    request.user_setup()
+    user = request.user
+    if user.has_access_to("Campaign.read"):
         if option == "csv":
             return generate_campaign_csv(request)
         return generate_campaign_jtable(request, option)
@@ -118,11 +122,13 @@ def add_campaign(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
+    request.user_setup()
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
         campaign_form = AddCampaignForm(request.POST)
         if campaign_form.is_valid():
-            if get_user_permissions(request.user.username, 'Campaign')['write']:
+            if user.has_access_to(CampaignACL.WRITE):
                 data = campaign_form.cleaned_data
                 campaign_name = data['campaign']
                 campaign_aliases = data.get('aliases', None)
@@ -171,14 +177,13 @@ def campaign_add(request, ctype, objectid):
     :type objectid: str
     :returns: :class:`django.http.HttpResponse`
     """
-    import logging
-    logger = logging.getLogger('crits')
-    logger.error(ctype)
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
         form = CampaignForm(request.POST)
         result = {}
-        if get_user_permissions(request.user.username, ctype)['campaigns_add']:
+
+        if user.has_access_to(str(ctype + CampaignACL.CAMPAIGNS_ADD)):
             if form.is_valid():
                 data = form.cleaned_data
                 campaign = data['name']
@@ -224,10 +229,11 @@ def edit_campaign(request, ctype, objectid):
     :type objectid: str
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
         form = CampaignForm(request.POST)
-        if get_user_permissions(request.user.username, ctype)['campaigns_edit']:
+        if user.has_access_to(str(ctype + CampaignACL.CAMPAIGNS_EDIT)):
             if form.is_valid():
                 data = form.cleaned_data
                 campaign = data['name']
@@ -282,10 +288,11 @@ def remove_campaign(request, ctype, objectid):
     :type objectid: str
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
         data = request.POST
-        if get_user_permissions(request.user.username, ctype)['campaigns_delete']:
+        if user.has_access_to(str(ctype + CampaignACL.CAMPAIGNS_DELETE)):
             result = campaign_remove(ctype,
                                      objectid,
                                      campaign=data.get('key'),
@@ -347,9 +354,10 @@ def campaign_aliases(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
-        if get_user_permissions(request.user.username, 'Campaign')['aliases_edit']:
+        if user.has_access_to(CampaignACL.ALIASES_EDIT):
             tags = request.POST.get('tags', "").split(",")
             name = request.POST.get('name', None)
             return HttpResponse(json.dumps(modify_campaign_aliases(name,

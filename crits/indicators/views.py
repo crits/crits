@@ -12,7 +12,6 @@ from django.template.loader import render_to_string
 
 from crits.core.crits_mongoengine import json_handler
 from crits.core.user_tools import user_can_view_data
-from crits.core.user_tools import get_user_permissions
 from crits.core import form_consts
 from crits.indicators.forms import UploadIndicatorCSVForm
 from crits.indicators.forms import UploadIndicatorForm, UploadIndicatorTextForm
@@ -41,6 +40,8 @@ from crits.vocabulary.indicators import (
     IndicatorThreatTypes
 )
 
+from crits.vocabulary.acls import IndicatorACL
+
 @user_passes_test(user_can_view_data)
 def indicator(request, indicator_id):
     """
@@ -53,8 +54,9 @@ def indicator(request, indicator_id):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    user = request.user.username
-    if get_user_permissions(user, 'Indicator')['read']:
+    user = request.user
+
+    if user.has_access_to(IndicatorACL.READ):
         template = "indicator_detail.html"
         (new_template, args) = get_indicator_details(indicator_id,
                                                      user)
@@ -81,7 +83,9 @@ def indicators_listing(request, option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if get_user_permissions(request.user.username, 'Indicator')['read']:
+    user = request.user
+
+    if user.has_access_to(IndicatorACL.READ):
         if option == "csv":
             return generate_indicator_csv(request)
         return generate_indicator_jtable(request, option)

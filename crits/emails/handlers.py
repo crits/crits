@@ -34,7 +34,6 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_permissions, get_user_source_tlp
 from crits.domains.handlers import get_valid_root_domain
 from crits.emails.email import Email
 from crits.events.event import Event
@@ -51,6 +50,8 @@ from crits.vocabulary.indicators import (
     IndicatorAttackTypes,
     IndicatorThreatTypes
 )
+
+from crits.vocabulary.acls import EmailACL
 
 def create_email_field_dict(field_name,
                             field_type,
@@ -139,43 +140,42 @@ def get_email_formatted(email_id, analyst, data_format):
         data = {"email_yaml": {}}
     return HttpResponse(json.dumps(data), content_type="application/json")
 
-def get_email_detail(email_id, analyst):
+def get_email_detail(email_id, user):
     """
     Generate the email details page.
 
     :param email_id: The ObjectId of the email.
     :type email_id: str
-    :param analyst: The user requesting the data.
-    :type analyst: str
+    :param user: The user requesting the data.
+    :type user: str
     :returns: tuple
     """
 
     template = None
-    sources = user_sources(analyst)
-    permissions = get_user_permissions(analyst)
+    sources = user_sources(user)
     email = Email.objects(id=email_id, source__name__in=sources).first()
 
-    if not get_user_source_tlp(analyst, email):
+    if not user.check_source_tlp(email):
         email = None
 
     if not email:
         template = "error.html"
         args = {'error': "ID does not exist or insufficient privs for source"}
     else:
-        email.sanitize(username="%s" % analyst, sources=sources)
-        update_data_form = EmailYAMLForm(analyst)
+        email.sanitize(username="%s" % user, sources=sources)
+        update_data_form = EmailYAMLForm(user)
         campaign_form = CampaignForm()
         download_form = DownloadFileForm(initial={"obj_type": 'Email',
                                                   "obj_id":email_id})
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, email.id, 'Email')
+        remove_user_from_notification("%s" % user, email.id, 'Email')
 
         # subscription
         subscription = {
                 'type': 'Email',
                 'id': email.id,
-                'subscribed': is_user_subscribed("%s" % analyst, 'Email',
+                'subscribed': is_user_subscribed("%s" % user, 'Email',
                                                  email.id),
         }
 
@@ -183,7 +183,7 @@ def get_email_detail(email_id, analyst):
         objects = email.sort_objects()
 
         # relationships
-        relationships = email.sort_relationships("%s" % analyst, meta=True)
+        relationships = email.sort_relationships("%s" % user, meta=True)
 
         # Get count of related Events for each related Indicator
         for ind in relationships.get('Indicator', []):
@@ -208,10 +208,10 @@ def get_email_detail(email_id, analyst):
                     'url_key': email.id}
 
         #screenshots
-        screenshots = email.get_screenshots(analyst)
+        screenshots = email.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'Email', email.id)
+        favorite = is_user_favorite("%s" % user, 'Email', email.id)
 
         email_fields = []
         email_fields.append(create_email_field_dict(
@@ -349,7 +349,7 @@ def get_email_detail(email_id, analyst):
                 'update_data_form': update_data_form,
                 'service_results': service_results,
                 'rt_url': settings.RT_URL,
-                'permissions': permissions,}
+                'EmailACL': EmailACL,}
     return template, args
 
 def generate_email_jtable(request, option):

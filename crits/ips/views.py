@@ -12,12 +12,13 @@ from crits.core import form_consts
 from crits.core.data_tools import json_handler
 from crits.core.handsontable_tools import form_to_dict
 from crits.core.user_tools import user_can_view_data
-from crits.core.user_tools import get_user_permissions
 from crits.ips.forms import AddIPForm
 from crits.ips.handlers import ip_add_update, ip_remove
 from crits.ips.handlers import generate_ip_jtable, get_ip_details
 from crits.ips.handlers import generate_ip_csv
 from crits.ips.handlers import process_bulk_add_ip
+
+from crits.vocabulary.acls import IPACL
 
 
 @user_passes_test(user_can_view_data)
@@ -32,7 +33,9 @@ def ips_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if get_user_permissions(request.user.username, 'IP')['read']:
+    user = request.user
+
+    if user.has_access_to(IPACL.READ):
         if option == "csv":
             return generate_ip_csv(request)
         return generate_ip_jtable(request, option)
@@ -70,11 +73,11 @@ def ip_detail(request, ip):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
-    if get_user_permissions(analyst, 'IP')['read']:
+    user = request.user
+    if user.has_access_to(IPACL.READ):
         template = "ip_detail.html"
         (new_template, args) = get_ip_details(ip,
-                                              analyst)
+                                              user)
         if new_template:
             template = new_template
         return render_to_response(template,

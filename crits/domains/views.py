@@ -11,13 +11,15 @@ from django.forms.utils import ErrorList
 from crits.core import form_consts
 from crits.core.data_tools import json_handler
 from crits.core.handsontable_tools import form_to_dict
-from crits.core.user_tools import user_can_view_data, get_user_permissions
+from crits.core.user_tools import user_can_view_data
 from crits.domains.forms import TLDUpdateForm, AddDomainForm
 from crits.domains.handlers import edit_domain_name
 from crits.domains.handlers import add_new_domain, get_domain_details
 from crits.domains.handlers import update_tlds, generate_domain_jtable
 from crits.domains.handlers import generate_domain_csv, process_bulk_add_domain
 from crits.objects.forms import AddObjectForm
+
+from crits.vocabulary.acls import DomainACL
 
 
 @user_passes_test(user_can_view_data)
@@ -31,10 +33,14 @@ def domain_detail(request, domain):
     :type domain: str
     :returns: :class:`django.http.HttpResponse`
     """
-    if get_user_permissions(request.user.username, 'Domain')['read']:
+
+    request.user._setup()
+
+    user = request.user
+    if user.has_access_to(DomainACL.READ):
         template = "domain_detail.html"
         (new_template, args) = get_domain_details(domain,
-                                                  request.user.username)
+                                                  user)
         if new_template:
             template = new_template
         return render_to_response(template,
@@ -96,10 +102,12 @@ def domains_listing(request,option=None):
     :type option: str of either 'jtlist', 'jtdelete', 'csv', or 'inline'.
     :returns: :class:`django.http.HttpResponse`
     """
-    if get_user_permissions(request.user.username, 'Domain')['read']:
+    user = request.user
+
+    if user.has_access_to(DomainACL.READ):
         if option == "csv":
             return generate_domain_csv(request)
-        elif option== "jtdelete" and not get_user_permissions(request.user.username, 'Domain')['delete']:
+        elif option== "jtdelete" and not user.has_access_to(DomainACL.DELETE):
             result = {'sucess':False,
                       'message':'User does not have permission to delete Domain.'}
             return HttpResponse(json.dumps(result,
@@ -126,10 +134,11 @@ def add_domain(request):
         result = False
         retVal = {}
         errors = []
+        user = request.user
         if add_form.is_valid():
             errors = []
             data = add_form.cleaned_data
-            if get_user_permissions(request.user.username, 'Domain')['write']:
+            if user.has_access_to(DomainACL.WRITE):
                 (result, errors, retVal) = add_new_domain(data,
                                                         request,
                                                         errors)

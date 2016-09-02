@@ -9,7 +9,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from crits.core import form_consts
-from crits.core.user_tools import user_can_view_data, get_user_permissions
+from crits.core.user_tools import user_can_view_data
 from crits.events.forms import EventForm
 from crits.events.handlers import event_remove
 from crits.events.handlers import update_event_title, update_event_type
@@ -19,6 +19,7 @@ from crits.events.handlers import generate_event_csv, add_new_event
 from crits.samples.forms import UploadFileForm
 
 from crits.vocabulary.events import EventTypes
+from crits.vocabulary.acls import EventACL
 
 
 @user_passes_test(user_can_view_data)
@@ -32,7 +33,9 @@ def events_listing(request, option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
-    if get_user_permissions(request.user.username, 'Event')['read']:
+    user = request.user
+
+    if user.has_access_to(EventACL.READ):
         if option == "csv":
             return generate_event_csv(request)
         return generate_event_jtable(request, option)
@@ -113,10 +116,12 @@ def view_event(request, eventid):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if get_user_permissions(request.user.username, 'Event')['read']:
-        analyst = request.user.username
+    request.user._setup()
+    user = request.user
+
+    if user.has_access_to(EventACL.READ):
         template = 'event_detail.html'
-        (new_template, args) = get_event_details(eventid, analyst)
+        (new_template, args) = get_event_details(eventid, user)
         if new_template:
             template = new_template
         return render_to_response(template,
