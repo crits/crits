@@ -400,7 +400,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind['attack_types'] = d.get('Attack Type',
                                     IndicatorAttackTypes.UNKNOWN).split(',')
 
-        if not ind['threat_types']:
+        if not ind['threat_types'] or ind['threat_types'][0] == '':
             ind['threat_types'] = [IndicatorThreatTypes.UNKNOWN]
         for t in ind['threat_types']:
             if t not in IndicatorThreatTypes.values():
@@ -408,7 +408,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                 result_message += msg % (processed + 1, "Invalid Threat Type: %s" % t)
                 continue
 
-        if not ind['attack_types']:
+        if not ind['attack_types'] or ind['attack_types'][0] == '':
             ind['attack_types'] = [IndicatorAttackTypes.UNKNOWN]
         for a in ind['attack_types']:
             if a not in IndicatorAttackTypes.values():
