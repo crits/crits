@@ -37,6 +37,13 @@ def emails_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
+    user = request.user
+
+    if not user.has_access_to(EMAIL.READ):
+        return render_to_response('error.html',
+                                  {'error':'User does not have permission to delete email.'},
+                                  RequestContext(request))
+
     if option == "csv":
         return generate_email_csv(request)
     return generate_email_jtable(request, option)
@@ -71,8 +78,13 @@ def email_del(request, email_id):
     :type email_id: str
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
     email = Email.objects(id=email_id).first()
+    if not user.has_access_to(EMAIL.DELETE):
+        return render_to_response('error.html',
+                                  {'error':'User does not have permission to delete email.'},
+                                  RequestContext(request))
     if not email:
         return render_to_response('error.html',
                                   {'error': "Could not delete email."},
@@ -95,6 +107,8 @@ def upload_attach(request, email_id):
     """
 
     redirect = reverse('crits.emails.views.email_detail', args=[email_id])
+    user = request.user
+
     if request.method != 'POST':
         return HttpResponseRedirect(redirect)
 
@@ -108,14 +122,21 @@ def upload_attach(request, email_id):
                                   {'response': json.dumps(json_reply)},
                                   RequestContext(request))
 
-    #form_data = file_form.cleaned_data
-    print form_data
+    if not user.has_access_to(EmailACL.ADD_ATTACHMENT):
+        json_reply['message'] = "User does not have permission to upload attachment."
+        return render_to_response('file_upload_response.html',
+                                  {'response': json.dumps(json_reply)},
+                                  RequestContext(request))
+
+
     analyst = request.user.username
     users_sources = user_sources(analyst)
     method = file_form.cleaned_data['method'] or "Add to Email"
     bucket_list = file_form.cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     ticket = file_form.cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
     email_addr = None
+
+
     if request.POST.get('email'):
         email_addr = request.user.email
     email = Email.objects(id=email_id,
@@ -161,6 +182,7 @@ def email_fields_add(request):
     """
 
     fields_form = EmailUploadForm(request.user, request.POST)
+    user = request.user
     json_reply = {
                    'form': fields_form.as_table(),
                    'success': False
@@ -171,8 +193,10 @@ def email_fields_add(request):
     else:
         if not fields_form.is_valid():
             message = "Form is invalid."
+        elif not user.has_access_to(EmailACL.WRITE):
+            message = "User does not have permission to add email."
         else:
-            file_form.cleaned_data = fields_form.cleaned_data
+            form_data= fields_form.cleaned_data
             result = handle_email_fields(form_data,
                                          request.user.username,
                                          "Fields Upload",
@@ -217,6 +241,7 @@ def email_yaml_add(request, email_id=None):
     """
 
     yaml_form = EmailYAMLForm(request.user, request.POST)
+    user = request.user
     json_reply = {
                    'form': yaml_form.as_table(),
                    'success': False
@@ -227,6 +252,8 @@ def email_yaml_add(request, email_id=None):
     else:
         if not yaml_form.is_valid():
             message = "Form is invalid."
+        elif not user.has_access_to(EmailACL.WRITE):
+            message = "User does not have permission to add email."
         else:
             form_data = yaml_form.cleaned_data
             method = "YAML Upload"
@@ -283,6 +310,8 @@ def email_raw_add(request):
     """
 
     raw_form = EmailRawUploadForm(request.user, request.POST)
+    user = request.user
+
     json_reply = {
                    'form': raw_form.as_table(),
                    'success': False
@@ -293,6 +322,8 @@ def email_raw_add(request):
     else:
         if not raw_form.is_valid():
             message = "Form is invalid."
+        elif not user.has_access_to(EmailACL.WRITE):
+            message = "User does not have permission to add email."
         else:
             form_data = raw_form.cleaned_data
             method = "Raw Upload"
@@ -349,6 +380,8 @@ def email_eml_add(request):
     """
 
     eml_form = EmailEMLForm(request.user, request.POST, request.FILES)
+    user = request.user
+
     json_reply = {
                    'form': eml_form.as_table(),
                    'success': False
@@ -359,6 +392,9 @@ def email_eml_add(request):
     else:
         if not eml_form.is_valid():
             message = "Form is invalid."
+        elif not user.has_access_to(EMAIL.WRITE):
+            message = "User does not have permission to add email."
+
         else:
             form_data = eml_form.cleaned_data
             data = ''
@@ -413,6 +449,7 @@ def email_outlook_add(request):
     """
 
     outlook_form = EmailOutlookForm(request.user, request.POST, request.FILES)
+    user = request.user
     json_reply = {
         'form': outlook_form.as_table(),
         'success': False
@@ -423,6 +460,8 @@ def email_outlook_add(request):
     else:
         if not outlook_form.is_valid():
             message = "Form is invalid."
+        elif not user.has_access_to(EmailACL.WRITE):
+            message = "User does not have permission to add email."
         else:
             form_data = outlook_form.cleaned_data
             method = "Outlook MSG Upload"
@@ -475,12 +514,16 @@ def email_detail(request, email_id):
     """
 
     template = 'email_detail.html'
-    analyst = request.user.username
+    user = request.user
+    if not user.has_access_to(EMAIL.READ):
+        return render_to_response('error.html',
+                                  {'error':'User does not have permission to view email.'},
+                                  RequestContext(request))
     if request.method == "GET" and request.is_ajax():
         return get_email_formatted(email_id,
-                                   analyst,
+                                   user.username,
                                    request.GET.get("format", "json"))
-    (new_template, args) = get_email_detail(email_id, analyst)
+    (new_template, args) = get_email_detail(email_id, user)
     if new_template:
         template = new_template
     return render_to_response(template,

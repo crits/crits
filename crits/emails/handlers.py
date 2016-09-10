@@ -816,6 +816,8 @@ def handle_msg(data, sourcename, reference, method, tlp, analyst, password='',
     :type sourcename: str
     :param reference: The reference to the data from the source.
     :type reference: str
+    :param TLP: The TLP to the data from the source.
+    :type TLP: str
     :param analyst: The user creating this email object.
     :type analyst: str
     :param method: The method of acquiring this email.

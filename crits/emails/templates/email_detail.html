@@ -19,23 +19,23 @@
     <li><a href="#raw_section" id="raw_button"><span>Raw Email</span></a></li>
     <li><a href="#json_section" id="json_button"><span>JSON View</span></a></li>
     <li><a href="#yaml_section" id="yaml_button"><span>YAML View</span></a></li>
-    {% if permissions.Email.services_read %}
+    {% if EmailACL.SERVICES_READ|has_access_to:user %}
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
       {% include 'services_tab_list_widget.html' %}
     {% endif %}
     </ul>
 
 <div id="details_section">
-  {% if permissions.Email.add_attachment or permissions.Email.download or permissions.Email.delete %}
+  {% if EmailACL.ADD_ATTACHMENT|has_access_to:user or EmailACL.DOWNLOAD|has_access_to:user or EmailACL.DELETE|has_access_to:user %}
     <span class="horizontal_menu">
     <ul class="hmenu">
-        {% if permissions.Email.add_attachment %}
+        {% if EmailACL.ADD_ATTACHMENT|has_access_to:user %}
           <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.emails.views.upload_attach' email.id %}">Add Attachment</a></li>
         {% endif %}
-        {% if permissions.Email.download %}
+        {% if EmailACL.DOWNLOAD|has_access_to:user %}
           <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
         {% endif %}
-        {% if permissions.Email.delete %}
+        {% if EmailACL.DELETE|has_access_to:user %}
           <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
         {% endif %}
     </ul>
@@ -61,7 +61,7 @@
                 {{ email.id }}
             </td>
         </tr>
-        {% if permissions.Email.description_read %}
+        {% if EmailACL.DESCRIPTION_READ|has_access_to:user %}
           <tr>
               {% with description=email.description %}
                   {% include 'description_widget.html' %}
@@ -110,7 +110,7 @@
             </td>
         </tr>
         {% endfor %}
-        {% if permissions.Email.status_read %}
+        {% if EmailACL.STATUS_READ|has_access_to:user %}
           <tr>
               <td class="key">Status
                   <span style="float: right;" class="object_status_response"></span>
@@ -123,19 +123,19 @@
         {% with tlp=email.tlp %}
             {% include "tlp_widget.html" %}
         {% endwith %}
-        {% if permissions.Email.sectors_read %}
+        {% if EmailACL.SECTORS_READ|has_access_to:user %}
           {% with sectors=email.sectors %}
               {% include "sector_widget.html" %}
           {% endwith %}
         {% endif %}
-        {% if permissions.Email.sources_read %}
+        {% if EmailACL.SOURCES_READ|has_access_to:user %}
           <tr>
           {% with sources=email.source obj_id=email.id obj_type=subscription.type %}
               {% include "sources_listing_widget.html" %}
           {% endwith %}
           </tr>
         {% endif %}
-        {% if permissions.Email.releasability_read %}
+        {% if EmailACL.RELEASABILITY_READ|has_access_to:user %}
         <tr>
           {% with releasability=email.releasability %}
                {% include 'releasability_list_widget.html' %}
@@ -147,7 +147,7 @@
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% if permissions.Email.bucketlist_read %}
+        {% if EmailACL.BUCKETLIST_READ|has_access_to:user %}
           {% with bucket_list=email.bucket_list %}
               {% include 'bucket_list_widget.html' %}
           {% endwith %}
@@ -155,50 +155,50 @@
         {% include 'add_related_widget.html' %}
 
     </div>
-    {% if permissions.Email.actions_read %}
+    {% if EmailACL.ACTIONS_READ|has_access_to:user %}
       <div class="content_box">
           {% with obj=email obj_type="Email" %}
               {% include 'action_listing_widget.html' %}
           {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Email.tickets_read %}
+    {% if EmailACL.TICKETS_READ|has_access_to:user %}
       <div>
         {% with obj=email obj_type=subscription.type %}
            {% include 'tickets_listing_widget.html' %}
         {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Email.campaigns_read and permissions.Campaign.read %}
+    {% if EmailACL.CAMPAIGNS_READ|has_access_to:user and EmailACL.CAMPAIGN_READ|has_access_to:user %}
       <div>
       {% with hit=email col=COL_EMAIL %}
           {% include 'campaigns_display_widget.html' %}
       {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Email.locations_read %}
+    {% if EmailACL.LOCATIONS_READ|has_access_to:user %}
       <div>
       {% with hit=email col=COL_EMAIL %}
           {% include 'locations_display_widget.html' %}
       {% endwith %}
       </div>
     {% endif %}
-    {% if permissions.Email.relationships_read %}
+    {% if EmailACL.RELATIONSHIPS_READ|has_access_to:user %}
       <div id="relationships_div_container">
           {% include 'relationships_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.Email.objects_read %}
+    {% if EmailACL.OBJECTS_READ|has_access_to:user %}
       <div>
           {% include 'objects_listing_widget.html' %}
       </div>
     {% endif %}
-    {% if permissions.Email.screenshots_read %}
+    {% if EmailACL.SCREENSHOTS_READ|has_access_to:user %}
       <div>
           {% include "screenshot_widget.html" %}
       </div>
     {% endif %}
-    {% if permissions.Email.comments_read %}
+    {% if EmailACL.COMMENTS_READ|has_access_to:user %}
       <div>
           {% include "comments_listing_widget.html" %}
       </div>
@@ -249,7 +249,7 @@
     <textarea id="yaml_display" cols="150" rows="40"></textarea>
 </div>
 
-{% if permissions.Email.services_read %}
+{% if EmailACL.SERVICES_READ|has_access_to:user %}
 {% with item=email %}
     {% include "services_analysis_section.html" with crits_type="Email" identifier=email.id %}
 {% endwith %}
@@ -261,7 +261,7 @@
 
 <div style="display: none;">
 
-{% if permissions.Email.download %}
+{% if EmailACL.DOWNLOAD|has_access_to:user %}
 <div id="dialog-download-email">
     <form id="form-download-email" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
     <table class="form">{{download_form.as_table}}</table>

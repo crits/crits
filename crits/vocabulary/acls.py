@@ -409,8 +409,10 @@ class EmailACL(vocab):
     Vocabulary for Email ACLs
     """
     EMAIL = "Email."
+    ADD_ATTACHMENT = EMAIL +  "add_attachment"
 
     CAMPAIGN_READ = Common.CAMPAIGN_READ
+
 
 
     READ = EMAIL + Common.READ
