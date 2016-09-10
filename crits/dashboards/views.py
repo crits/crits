@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
+from crits.config.views import crits_config
 from crits.core.user_tools import user_can_view_data
 from crits.core.handlers import generate_global_search
 from crits.dashboards.dashboard import Dashboard

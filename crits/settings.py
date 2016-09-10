@@ -395,6 +395,7 @@ STATICFILES_DIRS = (
 )
 
 INSTALLED_APPS = (
+    #'crits.config',
     'crits.core',
     'crits.dashboards',
     'django.contrib.auth',

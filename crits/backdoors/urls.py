@@ -1,12 +1,14 @@
 from django.conf.urls import url
 
+from . import views
+
 urlpatterns = [
-    url(r'^add/$', 'add_backdoor', prefix='crits.backdoors.views'),
-    url(r'^edit/aliases/$', 'edit_backdoor_aliases', prefix='crits.backdoors.views'),
-    url(r'^edit/name/(?P<id_>\S+)/$', 'edit_backdoor_name', prefix='crits.backdoors.views'),
-    url(r'^edit/version/(?P<id_>\S+)/$', 'edit_backdoor_version', prefix='crits.backdoors.views'),
-    url(r'^details/(?P<id_>\S+)/$', 'backdoor_detail', prefix='crits.backdoors.views'),
-    url(r'^remove/(?P<id_>\S+)/$', 'remove_backdoor', prefix='crits.backdoors.views'),
-    url(r'^list/$', 'backdoors_listing', prefix='crits.backdoors.views'),
-    url(r'^list/(?P<option>\S+)/$', 'backdoors_listing', prefix='crits.backdoors.views'),
+    url(r'^add/$', views.add_backdoor),
+    url(r'^edit/aliases/$', views.edit_backdoor_aliases),
+    url(r'^edit/name/(?P<id_>\S+)/$', views.edit_backdoor_name),
+    url(r'^edit/version/(?P<id_>\S+)/$', views.edit_backdoor_version),
+    url(r'^details/(?P<id_>\S+)/$', views.backdoor_detail),
+    url(r'^remove/(?P<id_>\S+)/$', views.remove_backdoor),
+    url(r'^list/$', views.backdoors_listing),
+    url(r'^list/(?P<option>\S+)/$', views.backdoors_listing),
 ]

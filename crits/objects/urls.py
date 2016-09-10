@@ -1,12 +1,14 @@
 from django.conf.urls import url
 
+from . import views
+
 urlpatterns = [
-    url(r'^add/$', 'add_new_object', prefix='crits.objects.views'),
-    url(r'^delete/$', 'delete_this_object', prefix='crits.objects.views'),
-    url(r'^get_dropdown/$', 'get_object_type_dropdown', prefix='crits.objects.views'),
-    url(r'^update_objects_value/$', 'update_objects_value', prefix='crits.objects.views'),
-    url(r'^update_objects_source/$', 'update_objects_source', prefix='crits.objects.views'),
-    url(r'^create_indicator/$', 'indicator_from_object', prefix='crits.objects.views'),
-    url(r'^bulkadd/$', 'bulk_add_object', prefix='crits.objects.views'),
-    url(r'^bulkaddinline/$', 'bulk_add_object_inline', prefix='crits.objects.views'),
+    url(r'^add/$', views.add_new_object),
+    url(r'^delete/$', views.delete_this_object),
+    url(r'^get_dropdown/$', views.get_object_type_dropdown),
+    url(r'^update_objects_value/$', views.update_objects_value),
+    url(r'^update_objects_source/$', views.update_objects_source),
+    url(r'^create_indicator/$', views.indicator_from_object),
+    url(r'^bulkadd/$', views.bulk_add_object),
+    url(r'^bulkaddinline/$', views.bulk_add_object_inline),
 ]

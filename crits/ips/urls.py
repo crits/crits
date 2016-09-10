@@ -1,12 +1,14 @@
 from django.conf.urls import url
 
+from . import views
+
 urlpatterns = [
-    url(r'^search/$', 'ip_search', prefix='crits.ips.views'),
-    url(r'^search/(?P<ip_str>\S+)/$', 'ip_search', prefix='crits.ips.views'),
-    url(r'^details/(?P<ip>\S+)/$', 'ip_detail', prefix='crits.ips.views'),
-    url(r'^remove/$', 'remove_ip', prefix='crits.ips.views'),
-    url(r'^list/$', 'ips_listing', prefix='crits.ips.views'),
-    url(r'^list/(?P<option>\S+)/$', 'ips_listing', prefix='crits.ips.views'),
-    url(r'^bulkadd/$', 'bulk_add_ip', prefix='crits.ips.views'),
-    url(r'^(?P<method>\S+)/$', 'add_update_ip', prefix='crits.ips.views'),
+    url(r'^search/$', views.ip_search),
+    url(r'^search/(?P<ip_str>\S+)/$', views.ip_search),
+    url(r'^details/(?P<ip>\S+)/$', views.ip_detail),
+    url(r'^remove/$', views.remove_ip),
+    url(r'^list/$', views.ips_listing),
+    url(r'^list/(?P<option>\S+)/$', views.ips_listing),
+    url(r'^bulkadd/$', views.bulk_add_ip),
+    url(r'^(?P<method>\S+)/$', views.add_update_ip),
 ]
