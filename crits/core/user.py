@@ -394,10 +394,10 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         full_name = u'%s %s' % (self.first_name or '', self.last_name or '')
         return full_name.strip()
 
-    #def is_anonymous(self):
-    #    """
-    #    We do not allow anonymous users.
-    #    """
+    def is_anonymous(self):
+        """
+        We do not allow anonymous users.
+        """
 
         return False
 
