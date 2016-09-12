@@ -1,7 +1,7 @@
 from django.test import SimpleTestCase
 from django.test.client import RequestFactory
 
-import crits.signatures.views as views
+from . import views
 import crits.signatures.handlers as handlers
 from crits.core.user import CRITsUser
 from crits.core.handlers import add_new_source

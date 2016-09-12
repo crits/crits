@@ -8,17 +8,17 @@
 
 <script>
     var raw_data_id = "{{ raw_data.id }}";
-    var add_highlight = "{% url 'crits.raw_data.views.add_highlight' raw_data.id %}";
-    var remove_highlight = "{% url 'crits.raw_data.views.remove_highlight' raw_data.id %}";
-    var details_by_link = "{% url 'crits.raw_data.views.details_by_link' raw_data.link_id|stringformat:"s" %}"
-    var update_raw_data_tool_details = "{% url 'crits.raw_data.views.set_raw_data_tool_details' raw_data.id %}";
-    var update_raw_data_tool_name = "{% url 'crits.raw_data.views.set_raw_data_tool_name' raw_data.id %}";
-    var update_raw_data_type = "{% url 'crits.raw_data.views.set_raw_data_type' raw_data.id %}";
-    var update_raw_data_highlight_comment = "{% url 'crits.raw_data.views.set_raw_data_highlight_comment' raw_data.id %}";
-    var update_raw_data_highlight_date = "{% url 'crits.raw_data.views.set_raw_data_highlight_date' raw_data.id %}";
-    var get_raw_data_type_dropdown = "{% url 'crits.raw_data.views.get_raw_data_type_dropdown' %}";
-    var get_inline_comments = "{% url 'crits.raw_data.views.get_inline_comments' raw_data.id|stringformat:"s" %}";
-    var get_raw_data_versions = "{% url 'crits.raw_data.views.get_raw_data_versions' raw_data.id|stringformat:"s" %}";
+    var add_highlight = "{% url 'crits-raw_data-views-add_highlight' raw_data.id %}";
+    var remove_highlight = "{% url 'crits-raw_data-views-remove_highlight' raw_data.id %}";
+    var details_by_link = "{% url 'crits-raw_data-views-details_by_link' raw_data.link_id|stringformat:"s" %}"
+    var update_raw_data_tool_details = "{% url 'crits-raw_data-views-set_raw_data_tool_details' raw_data.id %}";
+    var update_raw_data_tool_name = "{% url 'crits-raw_data-views-set_raw_data_tool_name' raw_data.id %}";
+    var update_raw_data_type = "{% url 'crits-raw_data-views-set_raw_data_type' raw_data.id %}";
+    var update_raw_data_highlight_comment = "{% url 'crits-raw_data-views-set_raw_data_highlight_comment' raw_data.id %}";
+    var update_raw_data_highlight_date = "{% url 'crits-raw_data-views-set_raw_data_highlight_date' raw_data.id %}";
+    var get_raw_data_type_dropdown = "{% url 'crits-raw_data-views-get_raw_data_type_dropdown' %}";
+    var get_inline_comments = "{% url 'crits-raw_data-views-get_inline_comments' raw_data.id|stringformat:"s" %}";
+    var get_raw_data_versions = "{% url 'crits-raw_data-views-get_raw_data_versions' raw_data.id|stringformat:"s" %}";
 </script>
 
 {% if raw_data %}
@@ -36,7 +36,7 @@
     <div class='content_box'>
         <span class="horizontal_menu">
         <ul class="hmenu">
-            <li><a href="#" id="upload-new-version" class="dialogClick" dialog="upload-new-version" data-action="{% url 'crits.raw_data.views.upload_raw_data' raw_data.link_id|stringformat:"s" %}">Upload New Version</a></li>
+            <li><a href="#" id="upload-new-version" class="dialogClick" dialog="upload-new-version" data-action="{% url 'crits-raw_data-views-upload_raw_data' raw_data.link_id|stringformat:"s" %}">Upload New Version</a></li>
             {% if admin %}
                 <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="raw_data" action='{% url "crits.raw_data.views.remove_raw_data" raw_data.id %}'>Delete Raw Data</a></li>
             {% endif %}
@@ -93,7 +93,7 @@
                     <span style="float: right;" class="object_status_response"></span>
                 </td>
                 <td>
-                    <span class="edit" id="raw_data_type" action="{% url 'crits.raw_data.views.set_raw_data_type' subscription.id %}">{{raw_data.data_type}}</span>
+                    <span class="edit" id="raw_data_type" action="{% url 'crits-raw_data-views-set_raw_data_type' subscription.id %}">{{raw_data.data_type}}</span>
                 </td>
             </tr>
             <tr>
@@ -114,7 +114,7 @@
                     <span style="float: right;" class="object_status_response"></span>
                 </td>
                 <td>
-                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{raw_data.status}}</span>
+                    <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{raw_data.status}}</span>
                 </td>
             </tr>
             {% with sectors=raw_data.sectors %}
@@ -203,7 +203,7 @@
 {% endif %}
 
 <a href="#" id="add_inline_comment" title="Add Comment" class="ui-icon
-ui-icon-comment dialogClick" dialog="comments" persona="new" action="{% url 'crits.raw_data.views.add_inline_comment' raw_data.id|stringformat:"s" %}"></a>
+ui-icon-comment dialogClick" dialog="comments" persona="new" action="{% url 'crits-raw_data-views-add_inline_comment' raw_data.id|stringformat:"s" %}"></a>
 
 {% endblock %}
 

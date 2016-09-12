@@ -2,9 +2,9 @@
 <div class="content_box">
     <span class="horizontal_menu">
     <ul class="hmenu">
-    <li><a id="refresh_services" data-url="{% url 'crits.services.views.refresh_services' relationship.type relationship.value %}" href="#">Refresh Services</a></li>
+    <li><a id="refresh_services" data-url="{% url 'crits-services-views-refresh_services' relationship.type relationship.value %}" href="#">Refresh Services</a></li>
     {% for service in service_list %}
-    <li><a class="service_run_button" data-url="{% url 'crits.services.views.get_form' service relationship.type relationship.value %}" href="#">{{ service }}</a></li>
+    <li><a class="service_run_button" data-url="{% url 'crits-services-views-get_form' service relationship.type relationship.value %}" href="#">{{ service }}</a></li>
     {% empty %}
         <li>No services enabled.</li>
     {% endfor %} </ul>

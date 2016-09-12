@@ -22,7 +22,7 @@
     <div class='content_box'>
         <span class="horizontal_menu">
         <ul class="hmenu">
-            <li><a href="{% url 'crits.core.views.download_file' cert.md5 %}?type=cert">Download Certificate</a></li>
+            <li><a href="{% url 'crits-core-views-download_file' cert.md5 %}?type=cert">Download Certificate</a></li>
             {% if admin %}
                 <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="certifcate" action='{% url "crits.certificates.views.remove_certificate" cert.md5 %}'>Delete Certificate</a></li>
             {% endif %}
@@ -44,7 +44,7 @@
             </tr>
             <tr>
             <td class='key'>Filename</td>
-            <td>{{ cert.filename }}<a href="{% url 'crits.core.views.download_file' cert.md5 %}?type=cert"><div class="ui-icon ui-icon-disk download_file"></div></a></td>
+            <td>{{ cert.filename }}<a href="{% url 'crits-core-views-download_file' cert.md5 %}?type=cert"><div class="ui-icon ui-icon-disk download_file"></div></a></td>
             </tr>
             <tr>
             <td class='key'>Filetype</td>
@@ -72,7 +72,7 @@
                     <span style="float: right;" class="object_status_response"></span>
                 </td>
                 <td>
-                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{cert.status}}</span>
+                    <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{cert.status}}</span>
                 </td>
             </tr>
             {% with sectors=cert.sectors %}

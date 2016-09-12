@@ -6,13 +6,13 @@
 
 {% block content %}
 <script>
-    var source_subscription = "{% url 'crits.core.views.source_subscription' %}";
-    var change_password = "{% url 'crits.core.views.change_password' %}";
-    var change_totp_pin = "{% url 'crits.core.views.change_totp_pin' %}";
-    var create_api_key = "{% url 'crits.core.views.create_api_key' %}";
-    var make_default_api_key = "{% url 'crits.core.views.make_default_api_key' %}";
-    var revoke_api_key = "{% url 'crits.core.views.revoke_api_key' %}";
-    var get_api_key = "{% url 'crits.core.views.get_api_key' %}";
+    var source_subscription = "{% url 'crits-core-views-source_subscription' %}";
+    var change_password = "{% url 'crits-core-views-change_password' %}";
+    var change_totp_pin = "{% url 'crits-core-views-change_totp_pin' %}";
+    var create_api_key = "{% url 'crits-core-views-create_api_key' %}";
+    var make_default_api_key = "{% url 'crits-core-views-make_default_api_key' %}";
+    var revoke_api_key = "{% url 'crits-core-views-revoke_api_key' %}";
+    var get_api_key = "{% url 'crits-core-views-get_api_key' %}";
     $(document).ready(function() {
         $(".chart").tablesorter();
         $(".tabnav").tabs({
@@ -323,12 +323,12 @@
             <tbody>
             {% for sample in subscriptions.Sample %}
                 <tr>
-                    <td><a href="{% url 'crits.samples.views.detail' sample.md5 %}">{{ sample.filename }}</a></td>
+                    <td><a href="{% url 'crits-samples-views-detail' sample.md5 %}">{{ sample.filename }}</a></td>
                     <td>{{ sample.md5 }}</td>
                     <td>{{ sample.date }}</td>
                     <td>
                         <span class="ui-state-default ui-corner-all" style="border: 0px;">
-                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Sample' sample.id %}">
+                        <a href="#" class="subscription_button" action="{% url 'crits-core-views-change_subscription' 'Sample' sample.id %}">
                         <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
                         </a>
                         </span>
@@ -363,12 +363,12 @@
             <tbody>
             {% for pcap in subscriptions.PCAP %}
                 <tr>
-                    <td><a href="{% url 'crits.pcaps.views.pcap_details' pcap.md5 %}">{{ pcap.filename }}</a></td>
+                    <td><a href="{% url 'crits-pcaps-views-pcap_details' pcap.md5 %}">{{ pcap.filename }}</a></td>
                     <td>{{ pcap.md5 }}</td>
                     <td>{{ pcap.date }}</td>
                     <td>
                         <span class="ui-state-default ui-corner-all" style="border: 0px;">
-                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'PCAP' pcap.id %}">
+                        <a href="#" class="subscription_button" action="{% url 'crits-core-views-change_subscription' 'PCAP' pcap.id %}">
                         <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
                         </a>
                         </span>
@@ -405,14 +405,14 @@
             <tbody>
             {% for email in subscriptions.Email %}
                 <tr>
-                    <td><a href="{% url 'crits.emails.views.email_detail' email.id %}">{{ email.id }}</a></td>
+                    <td><a href="{% url 'crits-emails-views-email_detail' email.id %}">{{ email.id }}</a></td>
                     <td>{{ email.from }}</td>
                     <td>{{ email.sender }}</td>
                     <td>{{ email.subject }}</td>
                     <td>{{ email.date }}</td>
                     <td>
                         <span class="ui-state-default ui-corner-all" style="border: 0px;">
-                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Email' email.id %}">
+                        <a href="#" class="subscription_button" action="{% url 'crits-core-views-change_subscription' 'Email' email.id %}">
                         <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
                         </a>
                         </span>
@@ -447,12 +447,12 @@
             <tbody>
             {% for indicator in subscriptions.Indicator %}
                 <tr>
-                    <td><a href="{% url 'crits.indicators.views.indicator' indicator.id %}">{{ indicator.value }}</a></td>
+                    <td><a href="{% url 'crits-indicators-views-indicator' indicator.id %}">{{ indicator.value }}</a></td>
                     <td>{{ indicator.type }}</td>
                     <td>{{ indicator.date }}</td>
                     <td>
                         <span class="ui-state-default ui-corner-all" style="border: 0px;">
-                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Indicator' indicator.id %}">
+                        <a href="#" class="subscription_button" action="{% url 'crits-core-views-change_subscription' 'Indicator' indicator.id %}">
                         <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
                         </a>
                         </span>
@@ -487,12 +487,12 @@
             <tbody>
             {% for event in subscriptions.Event %}
                 <tr>
-                    <td><a href="{% url 'crits.events.views.view_event' event.id %}">{{ event.title }}</a></td>
+                    <td><a href="{% url 'crits-events-views-view_event' event.id %}">{{ event.title }}</a></td>
                     <td>{{ event.description|truncatechars:100 }}</td>
                     <td>{{ event.date }}</td>
                     <td>
                         <span class="ui-state-default ui-corner-all" style="border: 0px;">
-                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Event' event.id %}">
+                        <a href="#" class="subscription_button" action="{% url 'crits-core-views-change_subscription' 'Event' event.id %}">
                         <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
                         </a>
                         </span>
@@ -526,11 +526,11 @@
             <tbody>
             {% for domain in subscriptions.Domain %}
                 <tr>
-                    <td><a href="{% url 'crits.domains.views.domain_detail' domain.domain %}">{{ domain.domain }}</a></td>
+                    <td><a href="{% url 'crits-domains-views-domain_detail' domain.domain %}">{{ domain.domain }}</a></td>
                     <td>{{ domain.date }}</td>
                     <td>
                         <span class="ui-state-default ui-corner-all" style="border: 0px;">
-                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Domain' domain.id %}">
+                        <a href="#" class="subscription_button" action="{% url 'crits-core-views-change_subscription' 'Domain' domain.id %}">
                         <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
                         </a>
                         </span>
@@ -564,11 +564,11 @@
             <tbody>
             {% for ip in subscriptions.IP %}
                 <tr>
-                    <td><a href="{% url 'crits.ips.views.ip_detail' ip.ip %}">{{ ip.ip }}</a></td>
+                    <td><a href="{% url 'crits-ips-views-ip_detail' ip.ip %}">{{ ip.ip }}</a></td>
                     <td>{{ ip.date }}</td>
                     <td>
                         <span class="ui-state-default ui-corner-all" style="border: 0px;">
-                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'IP' ip.id %}">
+                        <a href="#" class="subscription_button" action="{% url 'crits-core-views-change_subscription' 'IP' ip.id %}">
                         <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
                         </a>
                         </span>
@@ -602,11 +602,11 @@
             <tbody>
             {% for campaign in subscriptions.Campaign %}
                 <tr>
-                    <td><a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">{{ campaign.name }}</a></td>
+                    <td><a href="{% url 'crits-campaigns-views-campaign_details' campaign.name %}">{{ campaign.name }}</a></td>
                     <td>{{ campaign.date }}</td>
                     <td>
                         <span class="ui-state-default ui-corner-all" style="border: 0px;">
-                        <a href="#" class="subscription_button" action="{% url 'crits.core.views.change_subscription' 'Campaign' campaign.id %}">
+                        <a href="#" class="subscription_button" action="{% url 'crits-core-views-change_subscription' 'Campaign' campaign.id %}">
                         <span class="ui-icon ui-icon-close subscription_link_enable" title="Unsubscribe"></span>
                         </a>
                         </span>
@@ -720,7 +720,7 @@
     <div class='content_box'>
         <span class="horizontal_menu">
         <ul class="hmenu">
-        <li><a href="{% url 'crits.core.views.clear_user_notifications' %}">Clear Notifications</a></li>
+        <li><a href="{% url 'crits-core-views-clear_user_notifications' %}">Clear Notifications</a></li>
         </ul>
         </span>
     </div>
@@ -750,7 +750,7 @@
                 {% endif %}
 
                 {% if notification.obj_type and notification.obj_id %}
-                    <td><a href="{% url 'crits.core.views.details' notification.obj_type notification.obj_id %}">View {{ notification.obj_type }}</a></td>
+                    <td><a href="{% url 'crits-core-views-details' notification.obj_type notification.obj_id %}">View {{ notification.obj_type }}</a></td>
                 {% else %}
                     <td></td>
                 {% endif %}
@@ -764,7 +764,7 @@
                 {% endif %}
 
                 <td>{{ notification.created }}</td>
-                <td><span class="delete_notification ui-icon ui-icon-close" action="{% url 'crits.core.views.delete_user_notification' notification.obj_type notification.obj_id %}"></span></td>
+                <td><span class="delete_notification ui-icon ui-icon-close" action="{% url 'crits-core-views-delete_user_notification' notification.obj_type notification.obj_id %}"></span></td>
                 </tr>
             {% endfor %}
             </tbody>
