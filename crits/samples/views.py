@@ -507,7 +507,7 @@ def unzip_sample(request, md5):
         if form.is_valid():
             pwd = form.cleaned_data['password']
             try:
-                handle_unzip_file(md5, user=request.user.username, password=pwd)
+                handle_unzip_file(md5, user=request.user, password=pwd)
             except ZipFileError, zfe:
                 return render_to_response('error.html',
                                           {'error' : zfe.value},

@@ -108,7 +108,7 @@ def bulk_add_ip(request):
             also contain helpful status messages about each operation.
     """
 
-    formdict = form_to_dict(AddIPForm(request.user.username, None))
+    formdict = form_to_dict(AddIPForm(request.user, None))
 
     if request.method == "POST" and request.is_ajax():
         response = process_bulk_add_ip(request, formdict)
@@ -138,7 +138,7 @@ def add_update_ip(request, method):
     if request.method == "POST" and request.is_ajax():
         request.user._setup()
         data = request.POST
-        form = AddIPForm(request.user.username, None, data)
+        form = AddIPForm(request.user, None, data)
 
         if form.is_valid():
             cleaned_data = form.cleaned_data

@@ -1,3 +1,4 @@
+{% load filters %}
 <div class="content_box" id="add_related_box">
     <div id="add_related" hidden></div>
     <h3 class='titleheader'>
@@ -7,56 +8,56 @@
         <form id="add_related_form" method="post"> {% csrf_token %}
             <select id="add_related_options" onchange="populateList()">
                 <option>Choose TLO</option>
-                {% if permissions.Actor.read %}
+                {% if acl.ACTOR_WRITE|has_access_to:user %}
                   <option value='new-actor'>Actor</option>
                 {% endif %}
-                {% if permissions.Backdoor.read %}
+                {% if acl.BACKDOOR_WRITE|has_access_to:user %}
                   <option value='new-backdoor'>Backdoor</option>
                 {% endif %}
-                {% if permissions.Campaign.read %}
+                {% if acl.CAMPAIGN_WRITE|has_access_to:user %}
                   <option value='new-campaign'>Campaign</option>
                 {% endif %}
-                {% if permissions.Certificate.read %}
+                {% if acl.CERTIFICATE_WRITE|has_access_to:user %}
                   <option value='new-certificate'>Certificate</option>
                 {% endif %}
-                {% if permissions.Domain.read %}
+                {% if acl.DOMAIN_WRITE|has_access_to:user %}
                   <option value='new-domain'>Domain</option>
                 {% endif %}
-                {% if permissions.Email.read %}
+                {% if acl.EMAIL_WRITE|has_access_to:user %}
                   <option value='new-email-fields'>Email</option>
                   <option value='new-email-eml'>Email (eml)</option>
                   <option value='new-email-raw'>Email (raw)</option>
                   <option value='new-email-yaml'>Email (YAML)</option>
                   <option value='new-email-outlook'>Email (Outlook)</option>
                 {% endif %}
-                {% if permissions.Event.read %}
+                {% if acl.EVENT_WRITE|has_access_to:user %}
                   <option value='new-event'>Event</option>
                 {% endif %}
-                {% if permissions.Exploit.read %}
+                {% if acl.EXPLOIT_WRITE|has_access_to:user %}
                   <option value='new-exploit'>Exploit</option>
                 {% endif %}
-                {% if permissions.Indicator.read %}
+                {% if acl.INDICATOR_WRITE|has_access_to:user %}
                   <option value='new-indicator'>Indicator</option>
                   <option value='new-indicator-csv'>Indicator (csv)</option>
                   <option value='indicator-blob'>Indicator (blob)</option>
                 {% endif %}
-                {% if permissions.IP.read %}
+                {% if acl.IP_WRITE|has_access_to:user %}
                   <option value='new-ip'>IP</option>
                 {% endif %}
-                {% if permissions.PCAP.read %}
+                {% if acl.PCAP_WRITE|has_access_to:user %}
                   <option value='new-pcap'>PCAP</option>
                 {% endif %}
-                {% if permissions.RawData.read %}
+                {% if acl.RAWDATA_WRITE|has_access_to:user %}
                   <option value='new-raw-data'>Raw Data</option>
                   <option value='new-raw-data-file'>Raw Data File</option>
                 {% endif %}
-                {% if permissions.Sample.read %}
+                {% if acl.SAMPLE_WRITE|has_access_to:user %}
                   <option value='new-sample'>Sample</option>
                 {% endif %}
-                {% if permissions.Signature.read %}
+                {% if acl.SIGNATURE_WRITE|has_access_to:user %}
                   <option value='new-signature'>Signature</option>
                 {% endif %}
-                {% if permissions.Target.read %}
+                {% if acl.TARGET_WRITE|has_access_to:user %}
                   <option value='new-target'>Target</option>
                 {% endif %}
             </select>

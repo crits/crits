@@ -126,7 +126,7 @@ def add_actor(request):
         request.user._setup()
         user = request.user
         data = request.POST
-        form = AddActorForm(request.user.username, data)
+        form = AddActorForm(request.user, data)
         if form.is_valid():
             if user.has_access_to(ActorACL.WRITE):
                 cleaned_data = form.cleaned_data

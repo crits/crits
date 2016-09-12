@@ -74,11 +74,11 @@ def add_update_comment(request, method, obj_type, obj_id):
             cleaned_data = form.cleaned_data
             subscr = cleaned_data.get('subscribable', False)
             user = request.user
-            acl = get_acl_object
+            acl = get_acl_object(obj_type)
             if method == "update":
                 if user.has_access_to(acl.COMMENTS_EDIT):
                     return comment_update(cleaned_data, obj_type, obj_id,
-                                          subscr, user)
+                                          subscr, user.username)
                 else:
                     result = {"success":False,
                               "message":"User does not have permission to edit comments."}
@@ -87,7 +87,7 @@ def add_update_comment(request, method, obj_type, obj_id):
             else:
                 if user.has_access_to(acl.COMMENTS_ADD):
                     return comment_add(cleaned_data, obj_type, obj_id, method,
-                                       subscr, user)
+                                       subscr, user.username)
                 else:
                     result = {"success":False,
                               "message":"User does not have permission to add comments."}
@@ -119,7 +119,7 @@ def remove_comment(request, obj_type, obj_id):
                                           settings.PY_DATETIME_FORMAT)
         acl = get_acl_object(obj_type)
         if user.has_access_to(acl.COMMENTS_DELETE):
-            result = comment_remove(obj_id, user, date)
+            result = comment_remove(obj_id, user.username, date)
         else:
             result = {"success":False,
                       "message":"User does not have permission to remove comments."}
@@ -182,6 +182,7 @@ def activity(request, atype=None, value=None):
     """
 
     user = request.user
+    analyst = user.username
     if not user.has_access_to(GeneralACL.RECENT_ACTIVITY_READ):
         return render_to_response("error.html", {'error':'User does not have permission to view Recent Activity.'})
     if request.method == "POST" and request.is_ajax():

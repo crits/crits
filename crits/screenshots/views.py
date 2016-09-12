@@ -5,10 +5,11 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_acl_object
 from crits.screenshots.handlers import get_screenshots_for_id, get_screenshot
 from crits.screenshots.handlers import add_screenshot, generate_screenshot_jtable
 from crits.screenshots.handlers import delete_screenshot_from_object
+
 
 @user_passes_test(user_can_view_data)
 def screenshots_listing(request,option=None):
@@ -114,9 +115,11 @@ def add_new_screenshot(request):
     screenshot_ids = request.POST.get('screenshot_ids', None)
     screenshot = request.FILES.get('screenshot', None)
 
-    if user.has_access_to(str(otype + ScreenshotACL.SCREENSHOT_ADD)):
+    acl = get_acl_object(otype)
+
+    if user.has_access_to(acl.SCREENSHOTS_ADD):
         result = add_screenshot(description, tags, source, method, reference, tlp,
-                                user, screenshot, screenshot_ids, oid, otype)
+                                user.username, screenshot, screenshot_ids, oid, otype)
     else:
         result = {"success":False,
                   "message":"User does not have permission to add screenshots."}

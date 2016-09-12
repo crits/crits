@@ -65,12 +65,17 @@ def set_signature_type(request, id_):
     if request.method == 'POST':
         data_type = request.POST['data_type']
         type_ = request.POST['type']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_signature_type(type_,
-                                                             id_,
-                                                            data_type,
-                                                            analyst)),
-                            content_type="application/json")
+        analyst = request.user
+        if user.has_access_to(SignatureACL.DATA_TYPE_EDIT):
+            return HttpResponse(json.dumps(update_signature_type(type_,
+                                                                 id_,
+                                                                data_type,
+                                                                user)),
+                                content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({'success':False,
+                                            'message': 'User does not have permission to edit data type.'}),
+                                content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -154,54 +159,60 @@ def upload_signature(request, link_id=None):
 
     if request.method == 'POST':
         form = UploadSignatureForm(request.user, request.POST)
-        if form.is_valid():
-            analyst = request.user.username
-            data = request.POST.get('data', None)
-            source = form.cleaned_data.get('source_name')
-            user = request.user.username
-            description = form.cleaned_data.get('description', '')
-            title = form.cleaned_data.get('title', None)
-            data_type = form.cleaned_data.get('data_type', None)
-            data_type_min_version = form.cleaned_data.get('data_type_min_version', None)
-            data_type_max_version = form.cleaned_data.get('data_type_max_version', None)
-            related_id=form.cleaned_data.get('related_id', '')
-            related_type = form.cleaned_data.get('related_type', '')
-            relationship_type = form.cleaned_data.get('relationship_type', '')
+        user = request.user
 
-            ''' Parse out dependencies and add any new ones '''
-            depend_string = form.cleaned_data.get('data_type_dependency', None)
-            new_list = depend_string.split(',')
-            data_type_dependency = []
+        if user.has_access_to(SignatureACL.WRITE):
+            if form.is_valid():
+                analyst = request.user.username
+                data = request.POST.get('data', None)
+                source = form.cleaned_data.get('source_name')
+                user = request.user.username
+                description = form.cleaned_data.get('description', '')
+                title = form.cleaned_data.get('title', None)
+                data_type = form.cleaned_data.get('data_type', None)
+                data_type_min_version = form.cleaned_data.get('data_type_min_version', None)
+                data_type_max_version = form.cleaned_data.get('data_type_max_version', None)
+                related_id=form.cleaned_data.get('related_id', '')
+                related_type = form.cleaned_data.get('related_type', '')
+                relationship_type = form.cleaned_data.get('relationship_type', '')
 
-            for dtd in new_list:
-                dtd = dtd.strip()
-                dtd = str(dtd)
-                if dtd:
-                    data_type_dependency.append(dtd)
-                    add_new_signature_dependency(dtd,analyst)
+                ''' Parse out dependencies and add any new ones '''
+                depend_string = form.cleaned_data.get('data_type_dependency', None)
+                new_list = depend_string.split(',')
+                data_type_dependency = []
 
-            copy_rels = request.POST.get('copy_relationships', False)
-            link_id = link_id
-            bucket_list = form.cleaned_data.get('bucket_list')
-            ticket = form.cleaned_data.get('ticket')
-            source_method = form.cleaned_data.get('source_method', '') or 'Upload'
-            source_reference = form.cleaned_data.get('source_reference', '')
-            source_tlp = form.cleaned_data.get('source_tlp', '')
+                for dtd in new_list:
+                    dtd = dtd.strip()
+                    dtd = str(dtd)
+                    if dtd:
+                        data_type_dependency.append(dtd)
+                        add_new_signature_dependency(dtd,analyst)
 
-            status = handle_signature_file(data, source, user,
-                                          description, title, data_type,
-                                          data_type_min_version,
-                                          data_type_max_version,
-                                          data_type_dependency, link_id,
-                                          source_method=source_method,
-                                          source_reference=source_reference,
-                                          source_tlp=source_tlp,
-                                          copy_rels=copy_rels,
-                                          bucket_list=bucket_list,
-                                          ticket=ticket,
-                                          related_id=related_id,
-                                          related_type=related_type,
-                                          relationship_type=relationship_type)
+                copy_rels = request.POST.get('copy_relationships', False)
+                link_id = link_id
+                bucket_list = form.cleaned_data.get('bucket_list')
+                ticket = form.cleaned_data.get('ticket')
+                source_method = form.cleaned_data.get('source_method', '') or 'Upload'
+                source_reference = form.cleaned_data.get('source_reference', '')
+                source_tlp = form.cleaned_data.get('source_tlp', '')
+
+                status = handle_signature_file(data, source, user,
+                                              description, title, data_type,
+                                              data_type_min_version,
+                                              data_type_max_version,
+                                              data_type_dependency, link_id,
+                                              source_method=source_method,
+                                              source_reference=source_reference,
+                                              source_tlp=source_tlp,
+                                              copy_rels=copy_rels,
+                                              bucket_list=bucket_list,
+                                              ticket=ticket,
+                                              related_id=related_id,
+                                              related_type=related_type,
+                                              relationship_type=relationship_type)
+            else:
+                status['success'] = False
+                status['message'] = "User does not have permission to add signature."
             if status['success']:
                 jdump = json.dumps({
                     'message': 'signature uploaded successfully! <a href="%s">View signature</a>'
@@ -239,12 +250,17 @@ def update_data_type_dependency(request):
         type_ = request.POST['type']
         id_ = request.POST['id']
         data_deps = request.POST['data_type_dependency']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_dependency(type_,
-                                                          id_,
-                                                          data_deps,
-                                                          analyst)),
-                            content_type="application/json")
+        user = request.user
+        if user.has_access_to(SignatureACL.DEPENDENCIES_EDIT):
+            return HttpResponse(json.dumps(update_dependency(type_,
+                                                              id_,
+                                                              data_deps,
+                                                              user)),
+                                content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({'success':False,
+                                            'message': 'User does not have permission to edit data dependencies.'}),
+                                content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -264,12 +280,17 @@ def update_data_type_min_version(request):
         type_ = request.POST['type']
         id_ = request.POST['id']
         data_type_min_version = request.POST['data_type_min_version']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_min_version(type_,
-                                                          id_,
-                                                          data_type_min_version,
-                                                          analyst)),
-                            content_type="application/json")
+        user = request.user
+        if user.has_access_to(SignatureACL.DATA_TYPE_MIN_VERSION_EDIT):
+            return HttpResponse(json.dumps(update_min_version(type_,
+                                                              id_,
+                                                              data_type_min_version,
+                                                              user)),
+                                content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({'success':False,
+                                            'message': 'User does not have permission to edit min version.'}),
+                                content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -289,12 +310,17 @@ def update_data_type_max_version(request):
         type_ = request.POST['type']
         id_ = request.POST['id']
         data_type_max_version = request.POST['data_type_max_version']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_max_version(type_,
-                                                          id_,
-                                                          data_type_max_version,
-                                                          analyst)),
-                            content_type="application/json")
+        user = request.user
+        if user.has_access_to(SignatureACL.DATA_TYPE_MAX_VERSION_EDIT):
+            return HttpResponse(json.dumps(update_max_version(type_,
+                                                              id_,
+                                                              data_type_max_version,
+                                                              user)),
+                                content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({'success':False,
+                                            'message': 'User does not have permission to edit max version.'}),
+                                content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error" : 'Expected AJAX POST.'},
@@ -340,7 +366,11 @@ def remove_signature(request, _id):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    result = delete_signature(_id, '%s' % request.user.username)
+    user = request.user
+    if user.has_access_to(SignatureACL.DELETE):
+        result = delete_signature(_id, '%s' % user)
+    else:
+        result = None
     if result:
         return HttpResponseRedirect(reverse('crits.signatures.views.signatures_listing'))
     else:

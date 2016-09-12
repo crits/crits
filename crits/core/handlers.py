@@ -106,7 +106,7 @@ def action_add(type_, id_, tlo_action, user=None, **kwargs):
                 'message': 'Could not find TLO'}
     try:
         tlo_action = datetime_parser(tlo_action)
-        tlo_action['analyst'] = user
+        tlo_action['analyst'] = user.username
         obj.add_action(tlo_action['action_type'],
                        tlo_action['active'],
                        tlo_action['analyst'],
@@ -4042,7 +4042,7 @@ def ticket_add(type_, id_, ticket, user, **kwargs):
         return {'success': False, 'message': 'Could not find object.'}
     try:
         ticket = datetime_parser(ticket)
-        ticket['analyst'] = user
+        ticket['analyst'] = user.username
         obj.add_ticket(ticket['ticket_number'],
                              ticket['analyst'],
                              ticket['date'])

@@ -37,7 +37,7 @@ def add_new_object(request):
         my_type = request.POST['otype']
         acl = get_acl_object(my_type)
         if user.has_access_to(acl.OBJECTS_ADD):
-            form = AddObjectForm(analyst,
+            form = AddObjectForm(user,
                                  request.POST,
                                  request.FILES)
             if not form.is_valid() and 'value' not in request.FILES:
@@ -71,7 +71,7 @@ def add_new_object(request):
                                  source,
                                  method,
                                  reference,
-                                 analyst,
+                                 user.username,
                                  value=value,
                                  file_=data,
                                  add_indicator=add_indicator,

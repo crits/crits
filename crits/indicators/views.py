@@ -144,7 +144,7 @@ def upload_indicator(request):
     """
 
     if request.method == "POST":
-        user = request.user.username
+        user = request.user
         failed_msg = ''
         result = None
 

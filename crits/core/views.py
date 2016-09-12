@@ -1221,6 +1221,7 @@ def base_context(request):
     if request.user.is_authenticated():
         user = request.user
         base_context['acl'] = ReadACL
+        base_context['GeneralACL'] = GeneralACL
         # Forms that don't require a user
         base_context['add_new_action'] = NewActionForm()
         base_context['campaign_add'] = AddCampaignForm()
@@ -2189,6 +2190,10 @@ def add_update_ticket(request, method, type_=None, id_=None):
 
     acl = get_acl_object(type_)
 
+    import logging
+    logger = logging.getLogger('crits')
+    logger.error(user.has_access_to(acl.TICKETS_ADD))
+
 
     if method =="remove" and request.method == "POST" and request.is_ajax():
         date = datetime.datetime.strptime(request.POST['key'],
@@ -2213,6 +2218,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
                 add['date'] = datetime.datetime.now()
                 if user.has_access_to(acl.TICKETS_ADD):
                     result = ticket_add(type_, id_, add, user)
+                    logger.error(result)
                 else:
                     result = {"success":False,
                               "message":"User does not have permission to add tickets."}
