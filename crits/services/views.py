@@ -10,7 +10,7 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 
 from crits.core.class_mapper import class_from_type
-from crits.core.user_tools import user_can_view_data, get_user_permissions
+from crits.core.user_tools import user_can_view_data, get_acl_object
 from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import do_edit_config, generate_analysis_results_csv
 from crits.services.handlers import generate_analysis_results_jtable
@@ -267,7 +267,10 @@ def service_run(request, name, crits_type, identifier):
         # Run with no config...
         custom_config = {}
 
-    if get_user_permissions(request.user.username, crits_type)['services_execute']:
+    user = request.user
+    acl = get_acl_object(crits_type)
+
+    if user.has_access_to(acl.SERVICES_EXECUTE):
         result = run_service(name,
                              crits_type,
                              identifier,

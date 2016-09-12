@@ -14,7 +14,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list
 from crits.core.handlers import jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
-from crits.core.user_tools import is_user_favorite, get_user_source_tlp
+from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
 

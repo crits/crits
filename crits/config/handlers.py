@@ -1,7 +1,6 @@
 from django.conf import settings
 
 from crits.config.config import CRITsConfig
-from crits.core.user_tools import get_user_permissions
 
 
 def modify_configuration(forms, analyst):
@@ -14,7 +13,7 @@ def modify_configuration(forms, analyst):
     :type analyst: str
     :returns: dict with key "message"
     """
-    
+
     config = CRITsConfig.objects().first()
     if not config:
         config = CRITsConfig()

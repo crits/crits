@@ -12,7 +12,7 @@ from crits.locations.handlers import (
     get_location_names_list,
     location_edit
 )
-from crits.core.user_tools import user_can_view_data, get_user_permissions
+from crits.core.user_tools import user_can_view_data, get_acl_object
 
 
 @user_passes_test(user_can_view_data)
@@ -54,8 +54,10 @@ def add_location(request, type_, id_):
             description = data['description']
             latitude = data['latitude']
             longitude = data['longitude']
-            user = request.user.username
-            if get_user_permissions(user, type_)['locations_add']:
+            user = request.user
+            acl = get_acl_object(type_)
+
+            if user.has_access_to(acl.LOCATIONS_ADD):
                 result = location_add(id_,
                                       type_,
                                       location_type,
@@ -99,7 +101,10 @@ def remove_location(request, type_, id_):
         location_name = data.get('key').split('|')[0]
         location_type = data.get('key').split('|')[1]
         date = data.get('key').split('|')[2]
-        if get_user_permissions(user, type_)['locations_delete']:
+        user = request.user
+        acl = get_acl_object(type_)
+
+        if user.has_access_to(acl.LOCATIONS_DELETE):
             result = location_remove(id_,
                                      type_,
                                      location_name=location_name,
@@ -133,8 +138,10 @@ def edit_location(request, type_, id_):
         description = request.POST.get('description', None)
         latitude = request.POST.get('latitude', None)
         longitude = request.POST.get('longitude', None)
-        user = request.user.username
-        if get_user_permissions(user, type_)['locations_edit']:
+        user = request.user
+        acl = get_acl_object(type_)
+
+        if user.has_access_to(acl.LOCATIONS_EDIT):
             return HttpResponse(json.dumps(location_edit(type_,
                                                          id_,
                                                          location_name,

@@ -35,7 +35,7 @@ from crits.core.handlers import csv_export
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
 from crits.core.source_access import SourceAccess
 from crits.core.user_tools import user_sources
-from crits.core.user_tools import is_user_subscribed, is_user_favorite, get_user_source_tlp
+from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
 from crits.objects.handlers import validate_and_add_new_handler_object

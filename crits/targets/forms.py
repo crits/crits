@@ -5,8 +5,8 @@ from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.handlers import get_item_names
-from crits.core.user_tools import get_user_permissions
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import Common, TargetACL
 
 
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
@@ -46,7 +46,7 @@ class TargetInfoForm(forms.Form):
 
     def __init__(self, username, *args, **kwargs):
         super(TargetInfoForm, self).__init__( *args, **kwargs)
-        if get_user_permissions(username, 'Campaign')['read']:
+        if username.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['camp_conf'].choices = [('',''),

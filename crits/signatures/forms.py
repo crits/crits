@@ -4,9 +4,9 @@ from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceInForm
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
-from crits.core.user_tools import get_user_permissions
 from crits.signatures.signature import SignatureType, SignatureDependency
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import Common, SignatureACL
 
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
@@ -46,6 +46,7 @@ class UploadSignatureForm(SourceInForm):
 
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
+        
 
 
 class NewSignatureTypeForm(forms.Form):

@@ -48,7 +48,8 @@ from crits.core.user import EmbeddedLoginAttempt
 from crits.core.user_tools import user_sources
 from crits.core.user_tools import save_user_secret
 from crits.core.user_tools import get_user_email_notification
-from crits.core.user_tools import get_user_permissions
+from crits.core.user_tools import get_acl_object
+
 
 from crits.actors.actor import Actor
 from crits.backdoors.backdoor import Backdoor
@@ -70,6 +71,8 @@ from crits.targets.target import Target
 from crits.indicators.indicator import Indicator
 
 from crits.core.totp import valid_totp
+
+from crits.vocabulary.acls import *
 
 
 logger = logging.getLogger(__name__)
@@ -881,9 +884,6 @@ def get_item_names(obj, active=None, user=None):
 
     # Don't use this to get sources.
     if isinstance(obj, SourceAccess):
-        return []
-
-    if user and not get_user_permissions(obj, user)['read']:
         return []
 
     if active is None:
@@ -2242,6 +2242,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
 
     response = {"Result": "ERROR"}
     users_sources = user_sources(request.user.username)
+
+    user = request.user
     if request.is_ajax():
         pageSize = request.user.get_preference('ui','table_page_size',25)
 
@@ -2298,7 +2300,6 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         response['TotalRecordCount'] = response.pop('count')
         response['Result'] = response.pop('result')
 
-        permissions = get_user_permissions(request.user.username)
         for doc in response['Records']:
             for key, value in doc.items():
                 # all dates should look the same
@@ -2309,18 +2310,18 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     doc['password_reset'] = None
                 if key == "campaign":
                     camps = []
-                    if permissions['Campaign']['read'] and permissions[col_obj._meta['crits_type']]['campaigns_read']:
+                    if user.has_access_to(Common.CAMPAIGN_READ) and user.has_access_to(get_acl_object(col_obj._meta['crits_type']).CAMPAIGNS_READ):
                         for campdict in value:
                             camps.append(campdict['name'])
                     doc[key] = "|||".join(camps)
                 elif key == "source":
                     srcs = []
                     if col_obj._meta['crits_type'] == 'ActorIdentifier':
-                        if permissions['Actor']['sources_read']:
+                        if user.has_access_to(ActorACL.SOURCES_READ):
                             for srcdict in doc[key]:
                                 if srcdict['name'] in users_sources:
                                     srcs.append(srcdict['name'])
-                    elif permissions[col_obj._meta['crits_type']]['sources_read']:
+                    elif user.has_access_to(col_obj._meta['crits_type'] + 'ACL.SOURCES_READ'):
                         for srcdict in doc[key]:
                             if srcdict['name'] in users_sources:
                                 srcs.append(srcdict['name'])

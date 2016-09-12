@@ -10,6 +10,8 @@ from crits.core.totp import gen_user_secret
 from django.conf import settings
 from django.contrib.auth.views import logout_then_login
 
+from crits.vocabulary.acls import GeneralACL
+
 
 def is_user_favorite(analyst, type_, id_):
     """
@@ -64,28 +66,41 @@ def get_user_role(username):
     roles = Role.objects(name=user.roles[0])
     return roles
 
-def get_user_permissions(username, crits_type=None):
-    from crits.core.role import Role
+def get_acl_object(crits_type):
+    from crits.vocabulary.acls import *
+    if crits_type == 'Actor':
+        return ActorACL
+    elif crits_type == 'Backdoor':
+        return BackdoorACL
+    elif crits_type == 'Campaign':
+        return CampaignACL
+    elif crits_type == 'Certificate':
+        return CertificateACL
+    elif crits_type == 'Domain':
+        return DomainACL
+    elif crits_type == 'Email':
+        return EmailACL
+    elif crits_type == 'Event':
+        return EventACL
+    elif crits_type == 'Exploit':
+        return ExploitACL
+    elif crits_type == 'Indicator':
+        return IndicatorACL
+    elif crits_type == 'IP':
+        return IPACL
+    elif crits_type == 'PCAP':
+        return PCAPACL
+    elif crits_type == 'RawData':
+        return RawDataACL
+    elif crits_type == 'Sample':
+        return SampleACL
+    elif crits_type == 'Screenshot':
+        return ScreenshotACL
+    elif crits_type == 'Signature':
+        return SignatureACL
+    elif crits_type == 'Target':
+        return TargetACL
 
-    ### So here we need to do something to get a master permissions dictionary
-    ### that will take into account all permissions from all of that user's roles
-    user = get_user_info(username)
-    master_permissions = {}
-    for name in user.roles:
-        role = Role.objects(name=name)[0]
-        if crits_type:
-            permissions = role[crits_type]
-        else:
-            permissions = role
-
-        for permission in permissions:
-            if permission in master_permissions:
-                if not master_permissions[permission]:
-                    master_permissions[permission] = permissions[permission]
-            else:
-                master_permissions[permission] = permissions[permission]
-
-    return master_permissions
 
 def sanitize_sources(username, items):
     """
@@ -133,27 +148,12 @@ def user_can_view_data(user):
     :returns: True, False
     """
     if user.is_active:
-        if get_user_permissions(user)['web_interface']:
+        if user.has_access_to(GeneralACL.WEB_INTERFACE):
             return user.is_authenticated()
         else:
             return False
     else:
         return False
-
-def get_user_source_tlp(username, object):
-    users_sources = get_user_permissions(username)['sources']
-    user_source_names = user_sources(username)
-    obj_sources = object.source
-    for source in obj_sources:
-        if source.name in user_source_names:
-            for instance in source.instances:
-                if instance.tlp == "red" and [True for usource in users_sources if usource.name == source.name and usource.tlp_red]:
-                    return True
-                elif instance.tlp == "amber" and [True for usource in users_sources if usource.name == source.name and usource.tlp_amber]:
-                    return True
-                elif instance.tlp == "green" and [True for usource in users_sources if usource.name == source.name and usource.tlp_green]:
-                    return True
-    return False
 
 def get_user_list():
     """

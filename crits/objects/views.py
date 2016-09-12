@@ -15,7 +15,7 @@ from crits.objects.handlers import create_indicator_from_object
 from crits.objects.handlers import parse_row_to_bound_object_form, add_new_handler_object_via_bulk
 from crits.objects.forms import AddObjectForm
 from crits.core.handsontable_tools import form_to_dict, parse_bulk_upload, get_field_from_label
-from crits.core.user_tools import user_can_view_data, get_user_permissions
+from crits.core.user_tools import user_can_view_data, get_acl_object
 
 from crits.vocabulary.objects import ObjectTypes
 
@@ -31,10 +31,12 @@ def add_new_object(request):
 
     if request.method == 'POST':
         analyst = "%s" % request.user
+        user = request.user
         result = ""
         message = ""
         my_type = request.POST['otype']
-        if get_user_permissions(analyst, my_type)['objects_add']:
+        acl = get_acl_object(my_type)
+        if user.has_access_to(acl.OBJECTS_ADD):
             form = AddObjectForm(analyst,
                                  request.POST,
                                  request.FILES)
@@ -142,7 +144,9 @@ def bulk_add_object(request):
     formdict = form_to_dict(AddObjectForm(request.user))
 
     if request.method == "POST" and request.is_ajax():
-        if get_user_permissions(request.user.username, request.POST['otype'])['objects_add']:
+        acl = get_acl_object(request.POST['otype'])
+        user = request.user
+        if user.has_access_to(acl.OBJECTS_ADD):
             response = parse_bulk_upload(
                 request,
                 parse_row_to_bound_object_form,
@@ -175,7 +179,10 @@ def bulk_add_object_inline(request):
     formdict = form_to_dict(AddObjectForm(request.user))
 
     if request.method == "POST" and request.is_ajax():
-        if get_user_permissions(request.user.username, request.POST['otype'])['objects_add']:
+        user = request.user
+        acl = get_acl_object(request.POST['otype'])
+
+        if user.has_access_to(acl.OBJECTS_ADD):
             response = parse_bulk_upload(
                 request,
                 parse_row_to_bound_object_form,
@@ -273,14 +280,15 @@ def update_objects_value(request):
         object_type = request.POST.get('type')
         value = request.POST['value']
         new_value = request.POST['new_value']
-        analyst = "%s" % request.user.username
-        if get_user_permissions(analyst, type_)['objects_edit']:
+        user = request.user
+        acl = get_acl_object(type_)
+        if user.has_access_to(acl.OBJECTS_EDIT):
             results = update_object_value(type_,
                                           oid,
                                           object_type,
                                           value,
                                           new_value,
-                                          analyst)
+                                          user)
         else:
             results = {'success':False,
                        'message':'User does not have permission to modify object.'}
@@ -377,12 +385,14 @@ def delete_this_object(request):
         if request.is_ajax():
             type_ = request.POST['coll']
             oid = request.POST['oid']
-            analyst = "%s" % request.user
+            user = request.user
             result = ""
             message = ""
             object_type = request.POST.get('object_type')
             value = request.POST['value']
-            if get_user_permissions(analyst,type_)['objects_delete']:
+            acl = get_acl_object(type_)
+
+            if user.has_access_to(acl.OBJECTS_DELETE):
                 results = delete_object(type_,
                                         oid,
                                         object_type,

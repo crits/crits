@@ -8,7 +8,6 @@ from django.template import RequestContext
 
 from crits.core.handlers import get_item_names
 from crits.core.user_tools import user_can_view_data
-from crits.core.user_tools import get_user_permissions
 from crits.raw_data.forms import UploadRawDataFileForm, UploadRawDataForm
 from crits.raw_data.forms import NewRawDataTypeForm
 from crits.raw_data.handlers import update_raw_data_tool_details

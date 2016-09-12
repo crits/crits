@@ -7,11 +7,11 @@ from crits.core import form_consts
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceInForm
 from crits.core.widgets import CalWidget
 from crits.core.user_tools import get_user_organization
-from crits.core.user_tools import get_user_permissions
 
 from crits.core.handlers import get_source_names, get_item_names
 from datetime import datetime
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import Common, EmailACL
 
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
@@ -35,7 +35,7 @@ class EmailOutlookForm(SourceInForm):
     def __init__(self, username, *args, **kwargs):
         super(EmailOutlookForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        if get_user_permissions(username, 'Campaign')['read']:
+        if username.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
@@ -68,7 +68,7 @@ class EmailYAMLForm(SourceInForm):
     def __init__(self, username, *args, **kwargs):
         super(EmailYAMLForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        if get_user_permissions(username, 'Campaign')['read']:
+        if username.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
@@ -99,7 +99,7 @@ class EmailEMLForm(SourceInForm):
     def __init__(self, username, *args, **kwargs):
         super(EmailEMLForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        if get_user_permissions(username, 'Campaign')['read']:
+        if username.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
@@ -131,7 +131,7 @@ class EmailRawUploadForm(SourceInForm):
     def __init__(self, username, *args, **kwargs):
         super(EmailRawUploadForm, self).__init__(username, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        if get_user_permissions(username, 'Campaign')['read']:
+        if username.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
@@ -180,7 +180,7 @@ class EmailUploadForm(SourceInForm):
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
         self.fields['campaign'].choices = [("","")]
-        if get_user_permissions(username, 'Campaign')['read']:
+        if username.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),

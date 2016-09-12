@@ -20,7 +20,7 @@ from mongoengine import QuerySet as QS
 
 from pprint import pformat
 
-from crits.core.user_tools import user_sources, get_user_info, get_user_role, get_user_permissions, get_user_source_tlp
+from crits.core.user_tools import user_sources, get_user_info, get_user_role
 from crits.core.fields import CritsDateTimeField
 from crits.core.class_mapper import class_from_id, class_from_type
 from crits.vocabulary.relationships import RelationshipTypes
@@ -213,7 +213,7 @@ class CritsQuerySet(QS):
         filterlist=[]
         for doc in self:
             # do stuff here
-            if get_user_source_tlp(username,doc):
+            if True: #if get_user_source_tlp(username,doc):
                 filterlist.append(doc.id)
 
         return self.filter(id__in=filterlist)
@@ -2492,105 +2492,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             # the source already will reflect the changes as well
             self.releasability[:] = [r for r in self.releasability if r.name in sources]
 
-    def sanitize_tlo(self, username=None, permissions=None):
-        if not permissions['actions_read']:
-            self.actions = None
-        if not permissions['bucketlist_read']:
-            self.bucket_list = None
-        if not permissions['sectors_read']:
-            self.sectors = None
-        if not permissions['campaigns_read']:
-            self.campaign = None
-        if not permissions['locations_read']:
-            self.locations = None
-        if not permissions['objects_read']:
-            self.objects = None
-        if not permissions['relationships_read']:
-            self.relationships = None
-        if not permissions['releasability_read']:
-            self.releasability = None
-        if not permissions['screenshots_read']:
-            self.screenshots = None
-        if not permissions['services_read']:
-            self.services = None
-        if not permissions['sources_read']:
-            self.sources = None
-        if not permissions['status_read']:
-            self.status = None
-        if not permissions['tickets_read']:
-            self.tickets = None
-
-    def sanitize_actor(self, username=None, permissions=None):
-        if not permissions['description_read']:
-            self.description = None
-        if not permissions['aliases_read']:
-            self.alias = None
-        if not permissions['intended_effects_read']:
-            self.intended_effects = None
-        if not permissions['motivations_read']:
-            self.motivations = None
-        if not permissions['sophistications_read']:
-            self.sophistications = None
-        if not permissions['threat_types_read']:
-            self.threat_types = None
-        if not permissions['actor_identifiers_read']:
-            self.actor_identifiers = None
-
-    def sanitize_backdoor(self, username=None, permissions=None):
-        if not permissions['aliases_read']:
-            self.aliases = None
-        if not permissions['description_read']:
-            self.description = None
-
-    def sanitize_campaign(self, username=None, permissions=None):
-        if not permissions['aliases_read']:
-            self.aliases = None
-        if not permissions['ttps_read']:
-            self.ttps = None
-        if not permissions['description_read']:
-            self.description = None
-
-    def sanitize_certificate(self, username=None, permissions=None):
-        if not permissions['description_read']:
-            self.description = None
-        return
-
-    def sanitize_domain(self, username=None, permissions=None):
-        if not permissions['description_read']:
-            self.description = None
-        return
-
-    def sanitize_email(self, username=None, permissions=None):
-        if not permissions['description_read']:
-            self.description = None
-        return
-
-    def sanitize_event(self, username=None, permissions=None):
-        return
-
-    def sanitize_exploit(self, username=None, permissions=None):
-        return
-
-    def sanitize_indicator(self, username=None, permissions=None):
-        return
-
-    def sanitize_ip(self, username=None, permissions=None):
-        return
-
-    def sanitize_pcap(self, username=None, permissions=None):
-        return
-
-    def sanitize_raw_data(self, username=None, permissions=None):
-        return
-
-    def sanitize_sample(self, username=None, permissions=None):
-        return
-
-    def sanitize_signature(self, username=None, permissions=None):
-        return
-
-    def sanitize_target(self, username=None, permissions=None):
-        return
 
     def sanitize(self, username=None, sources=None, rels=True):
         """
@@ -2616,38 +2517,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 if hasattr(self, 'relationships'):
                     self.sanitize_relationships(username, sources)
 
-            permissions = get_user_permissions(username, self._meta['crits_type'])
-            self.sanitize_tlo(username, permissions=permissions)
-            if self._meta['crits_type'] == 'Actor':
-                self.sanitize_actor(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Backdoor':
-                self.sanitize_backdoor(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Campaign':
-                self.sanitize_campaign(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Certificate':
-                self.sanitize_certificate(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Domain':
-                self.sanitize_domain(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Email':
-                self.sanitize_email(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Event':
-                self.sanitize_event(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Exploit':
-                self.sanitize_exploit(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Indicator':
-                self.sanitize_indicator(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'IP':
-                self.sanitize_ip(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'PCAP':
-                self.sanitize_pcap(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Raw Data':
-                self.sanitize_raw_data(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Sample':
-                self.sanitize_sample(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Signature':
-                self.sanitize_signature(username, permissions=permissions)
-            elif self._meta['crits_type'] == 'Target':
-                self.sanitize_target(username, permissions=permissions)
 
     def get_campaign_names(self):
         """

@@ -10,12 +10,12 @@ from crits.core.widgets import CalWidget
 from crits.core.handlers import get_item_names
 from crits.core.handlers import get_source_names
 from crits.core.user_tools import get_user_organization
-from crits.core.user_tools import get_user_permissions
 from crits.vocabulary.indicators import (
     IndicatorTypes,
     IndicatorThreatTypes,
     IndicatorAttackTypes
 )
+from crits.vocabulary.acls import Common, IndicatorACL
 
 from crits.vocabulary.relationships import RelationshipTypes
 
@@ -131,7 +131,7 @@ class UploadIndicatorForm(SourceInForm):
         ]
         self.fields['attack_type'].initial = IndicatorAttackTypes.UNKNOWN
         self.fields['indicator_type'].widget.attrs = {'class': 'object-types'}
-        if get_user_permissions(username, 'Campaign')['read']:
+        if username.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [

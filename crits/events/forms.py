@@ -7,10 +7,10 @@ from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceI
 from crits.core.widgets import CalWidget
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
-from crits.core.user_tools import get_user_permissions
 
 from crits.vocabulary.events import EventTypes
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import Common, EventACL
 
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
@@ -49,7 +49,7 @@ class EventForm(SourceInForm):
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
         self.fields['campaign'].choices = [("", "")]
-        if get_user_permissions(username, 'Campaign')['read']:
+        if username.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [

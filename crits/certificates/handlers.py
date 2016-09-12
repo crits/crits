@@ -15,7 +15,6 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.user_tools import user_sources
 from crits.core.user_tools import is_user_subscribed
-from crits.core.user_tools import get_user_source_tlp
 from crits.certificates.certificate import Certificate
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.analysis_result import AnalysisResult

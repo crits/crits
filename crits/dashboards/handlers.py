@@ -7,7 +7,7 @@ names cannot be changed.
 """
 from crits.dashboards.dashboard import SavedSearch, Dashboard
 from crits.core.crits_mongoengine import json_handler
-from crits.core.user_tools import get_user_permissions
+from crits.core.user_tools import get_acl_object
 from mongoengine import Q
 from django.core.urlresolvers import reverse
 from crits.campaigns.campaign import Campaign
@@ -21,6 +21,8 @@ import cgi
 import datetime
 from django.http import HttpRequest
 from crits.dashboards.utilities import getHREFLink, get_obj_name_from_title, get_obj_type_from_string
+
+from crits.vocabulary.acls import EmailACL, SampleACL, IndicatorACL, CampaignACL
 import HTMLParser
 
 def get_dashboard(user,dashId=None):
@@ -85,7 +87,7 @@ def createTableObject(user, title="", table=None):
     for each table
     """
     if table.isDefaultOnDashboard:
-        records = getRecordsForDefaultDashboardTable(user.username, table.name)
+        records = getRecordsForDefaultDashboardTable(user, table.name)
     else:  #the only time table does not exist is if its a default table
         response = get_table_data(obj=table.objType, user=user,
                                   searchTerm=table.searchTerm, search_type="global",
@@ -97,7 +99,7 @@ def createTableObject(user, title="", table=None):
                 record["thumb"] = "<img class='screenshotImg' src='"+record["url"]+"thumb/' />"
     return constructSavedTable(table, records)
 
-def getRecordsForDefaultDashboardTable(username, tableName):
+def getRecordsForDefaultDashboardTable(user, tableName):
     """
     Called by createTableObject to retrieve the proper records from the
     database for the default dashboard tables. These queries are different then
@@ -109,20 +111,18 @@ def getRecordsForDefaultDashboardTable(username, tableName):
     """
     from crits.core.handlers import data_query, generate_counts_jtable
 
-    permissions = get_user_permissions(username)
-
-    if tableName == "Recent_Samples" or tableName == "Recent Samples" and permissions['Sample']['read']:
+    if tableName == "Recent_Samples" or tableName == "Recent Samples" and user.has_access_to(SampleACL.READ):
         obj_type = "Sample"
-        response = data_query(Sample, username, query={}, sort=["-created"], limit=5)
-    elif tableName == "Recent_Emails" or tableName == "Recent Emails" and permissions['Email']['read']:
+        response = data_query(Sample, user, query={}, sort=["-created"], limit=5)
+    elif tableName == "Recent_Emails" or tableName == "Recent Emails" and user.has_access_to(EmailACL.READ):
         obj_type = "Email"
-        response = data_query(Email, username, query={}, sort=["-isodate"], limit=5)
-    elif tableName == "Recent_Indicators" or tableName == "Recent Indicators" and permissions['Indicator']['read']:
+        response = data_query(Email, user, query={}, sort=["-isodate"], limit=5)
+    elif tableName == "Recent_Indicators" or tableName == "Recent Indicators" and user.has_access_to(IndicatorACL.READ):
         obj_type = "Indicator"
-        response = data_query(Indicator, username, query={}, sort=["-created"], limit=5)
-    elif tableName == "Top_Campaigns" or tableName == "Top Campaigns" and permissions['Campaign']['read']:
+        response = data_query(Indicator, user, query={}, sort=["-created"], limit=5)
+    elif tableName == "Top_Campaigns" or tableName == "Top Campaigns" and user.has_access_to(CampaignACL.READ):
         obj_type = "Campaign"
-        response = data_query(Campaign, username, query={}, limit=5)
+        response = data_query(Campaign, user, query={}, limit=5)
     elif tableName == "Counts":
         response = generate_counts_jtable(None, "jtlist")
         records = json.loads(response.content)["Records"]
@@ -434,16 +434,15 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
     from crits.core.handlers import get_query, data_query
     response = {"Result": "ERROR"}
     obj_type = get_obj_type_from_string(obj)
-    if user:
-        permissions = get_user_permissions(user.username)
 
-    else:
-        permissions = get_user_permissions(request.user.username)
+    acl = get_acl_object(obj)
+    if not user:
+        user = request.user
 
     # Build the query
     term = ""
     #if its being called from saved_search.html
-    if not permissions[obj]['read']:
+    if not user.has_access_to(acl.READ):
         resp = {}
         resp['Result'] = "ERROR"
         resp['msg'] = "User does not have permission to view object."
@@ -452,7 +451,7 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
         resp = get_query(obj_type, request)
     #if its calling to get data for the dashbaord
     elif user and search_type:
-        resp = get_query_without_request(obj_type, user.username, searchTerm, search_type)
+        resp = get_query_without_request(obj_type, user, searchTerm, search_type)
     else:
         return HttpResponse(json.dumps(response, default=json_handler),
                              content_type="application/json")
@@ -468,10 +467,10 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
             sortBy.append("-"+sort['field'])
     skip = (int(pageNumber)-1)*25
     if request:
-        response = data_query(obj_type, user=request.user.username, query=query,
+        response = data_query(obj_type, user=request.user, query=query,
                           projection=includes, limit=int(maxRows), sort=sortBy, skip=skip)
     else:
-        response = data_query(obj_type, user=user.username, query=query,
+        response = data_query(obj_type, user=user, query=query,
                           projection=includes, limit=maxRows, sort=sortBy,skip=skip)
     if response['result'] == "ERROR":
         return {'Result': "ERROR", 'Message': response['msg']}
@@ -537,12 +536,12 @@ def generate_search_for_saved_table(user, id=None,request=None):
     url = ""
     if not savedSearch.isDefaultOnDashboard:
         objType = get_obj_type_from_string(savedSearch.objType)
-        resp = get_query_without_request(objType, user.username, savedSearch.searchTerm, "global")
+        resp = get_query_without_request(objType, user, savedSearch.searchTerm, "global")
         if resp['Result'] == "ERROR":
             return resp
         formatted_query = resp['query']
         term = resp['term']
-        resp = data_query(objType, user.username, query=formatted_query, count=True)
+        resp = data_query(objType, user, query=formatted_query, count=True)
         results.append({'count': resp['count'],
                                       'name': savedSearch.objType})
     else:

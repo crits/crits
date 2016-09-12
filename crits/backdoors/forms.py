@@ -5,11 +5,11 @@ from crits.campaigns.campaign import Campaign
 from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceInForm
 from crits.core.handlers import get_item_names, get_source_names
 from crits.core.user_tools import get_user_organization
-from crits.core.user_tools import get_user_permissions
 
 from crits.core import form_consts
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import Common, BackdoorACL
 
 
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
@@ -45,7 +45,7 @@ class AddBackdoorForm(SourceInForm):
     def __init__(self, username, *args, **kwargs):
         super(AddBackdoorForm, self).__init__(username, *args, **kwargs)
 
-        if get_user_permissions(username, 'Campaign')['read']:
+        if username.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['confidence'].choices = [

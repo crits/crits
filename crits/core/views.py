@@ -61,7 +61,7 @@ from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, user_sources
 from crits.core.user_tools import get_user_list, get_nav_template
-from crits.core.user_tools import get_user_permissions
+from crits.core.user_tools import get_acl_object
 from crits.core.user_tools import get_user_email_notification
 from crits.core.user_tools import get_user_info, get_user_organization
 from crits.core.user_tools import is_user_subscribed, unsubscribe_user
@@ -100,6 +100,7 @@ from crits.signatures.signature import SignatureDependency
 from crits.targets.forms import TargetInfoForm
 
 from crits.vocabulary.sectors import Sectors
+from crits.vocabulary.acls import *
 
 logger = logging.getLogger(__name__)
 
@@ -114,13 +115,13 @@ def update_object_description(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
+    user = request.user
+
     if request.method == "POST" and request.is_ajax():
         type_ = request.POST['type']
         id_ = request.POST['id']
         description = request.POST['description']
-        analyst = request.user.username
-        permissions = get_user_permissions(analyst, type_)
-        if permissions['description_edit']:
+        if user.has_access_to(str(type_) + 'ACL.DESCRIPTION_EDIT'):
             return HttpResponse(json.dumps(description_update(type_,
                                                           id_,
                                                           description,
@@ -148,11 +149,11 @@ def update_object_data(request):
         type_ = request.POST['type']
         id_ = request.POST['id']
         data = request.POST['data']
-        analyst = request.user.username
+        user = request.user
         return HttpResponse(json.dumps(data_update(type_,
                                                           id_,
                                                           data,
-                                                          analyst)),
+                                                          user)),
                             content_type="application/json")
     else:
         return render_to_response("error.html",
@@ -172,10 +173,10 @@ def toggle_favorite(request):
     if request.method == "POST" and request.is_ajax():
         type_ = request.POST['type']
         id_ = request.POST['id']
-        analyst = request.user.username
+        user = request.user
         return HttpResponse(json.dumps(favorite_update(type_,
                                                        id_,
-                                                       analyst)),
+                                                       user)),
                             content_type="application/json")
     else:
         return render_to_response("error.html",
@@ -193,8 +194,8 @@ def favorites(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        analyst = request.user.username
-        return HttpResponse(json.dumps(get_favorites(analyst)),
+        user = request.user
+        return HttpResponse(json.dumps(get_favorites(user)),
                             content_type="application/json")
     else:
         return render_to_response("error.html",
@@ -250,14 +251,13 @@ def update_status(request, type_, id_):
 
     if request.method == "POST" and request.is_ajax():
         value = request.POST['value']
-        analyst = request.user.username
+        user = request.user
 
-        permissions = get_user_permissions(analyst, type_)
-        if permissions['status_edit']:
+        if user.has_access_to(get_acl_object(type_).STATUS_EDIT):
             return HttpResponse(json.dumps(status_update(type_,
                                                      id_,
                                                      value,
-                                                     analyst)),
+                                                     user)),
                             content_type="application/json")
         else:
             return HttpResponse(json.dumps({"success":False,
@@ -366,9 +366,10 @@ def login(request):
     remote_addr = request.META.get('REMOTE_ADDR', '')
     accept_language = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
     next_url = request.GET.get('next', request.POST.get('next', None))
+    user = request.user
 
     # Is the user already authenticated?
-    if request.user.is_authenticated() and get_user_permissions(request.user.username)['web_interface']:
+    if request.user.is_authenticated() and user.has_access_to(GeneralACL.WEB_INTERFACE):
         resp = validate_next(next_url)
         if not resp['success']:
             return render_to_response('error.html',
@@ -478,14 +479,14 @@ def reset_password(request):
         submitted_rcode = request.POST.get('reset_code', None)
         new_p = request.POST.get('new_p', None)
         new_p_c = request.POST.get('new_p_c', None)
-        analyst = request.user.username
+        user = request.user
         return reset_user_password(username=username,
                                    action=action,
                                    email=email,
                                    submitted_rcode=submitted_rcode,
                                    new_p=new_p,
                                    new_p_c=new_p_c,
-                                   analyst=analyst)
+                                   analyst=user)
 
     return render_to_response('login.html',
                               {'reset': True},
@@ -506,7 +507,7 @@ def profile(request, user=None):
     if user:
         username = user
     else:
-        username = request.user.username
+        username = request.user
     args = generate_user_profile(username,request)
     if 'status'in args and args['status'] == "ERROR":
         return render_to_response('error.html',
@@ -560,10 +561,11 @@ def source_releasability(request):
         note = request.POST.get('note', None)
         action = request.POST.get('action', None)
         date = request.POST.get('date', datetime.datetime.now())
+        user = request.user
         if not isinstance(date, datetime.datetime):
             date = parse(date, fuzzy=True)
-        user = str(request.user.username)
-        permissions = get_user_permissions(user, type_)
+
+        acl = get_acl_object(type_)
 
         if not type_ or not id_ or not name or not action:
             error = "Modifying releasability requires a type, id, source, and action"
@@ -571,26 +573,26 @@ def source_releasability(request):
                                       {"error" : error },
                                       RequestContext(request))
         if action  == "add":
-            if permissions['releasability_add']:
+            if user.has_access_to(acl.RELEASABILITY_ADD):
                 result = add_releasability(type_, id_, name, user)
             else:
                 result = {'success':False,
                           'message':'User does not have permission to add releasability.'}
         elif action  == "add_instance":
-            if permissions['releasability_add']:
+            if user.has_access_to(acl.RELEASABILITY_ADD):
                 result = add_releasability_instance(type_, id_, name, user,
                                                     note=note)
             else:
                 result = {'success':False,
                           'message':'User does not have permission to add releasability.'}
         elif action == "remove":
-            if permissions['releasability_delete']:
+            if user.has_access_to(acl.RELEASABILITY_DELETE):
                 result = remove_releasability(type_, id_, name, user)
             else:
                 result = {'success':False,
                           'message':'User does not have permission to remove releasability.'}
         elif action == "remove_instance":
-            if permissions['releasability_delete']:
+            if user.has_access_to(acl.RELEASABILITY_DELETE):
                 result = remove_releasability_instance(type_, id_, name, date, user)
             else:
                 result = {'success':False,
@@ -664,11 +666,11 @@ def source_add(request):
 
     if request.method == "POST" and request.is_ajax():
         source_form = AddSourceForm(request.POST)
-        analyst = request.user.username
+        user = request.user
         if source_form.is_valid():
-            if get_user_permissions(analyst)['add_new_source']:
+            if user.has_access_to(GeneralACL.ADD_NEW_SOURCE):
                 result = add_new_source(source_form.cleaned_data['source'],
-                                        analyst)
+                                        user)
                 if result:
                     msg = ('<div>Source added successfully! Add this source to '
                            'users to utilize it.</div>')
@@ -701,16 +703,16 @@ def role_add(request):
 
     if request.method == "POST" and request.is_ajax():
         role_form = AddRoleForm(request.POST)
-        analyst = request.user.username
+        user = request.user
         if role_form.is_valid():
-            if get_user_permissions(analyst)['add_new_user_role']:
+            if user.has_access_to(GeneralACL.ADD_NEW_USER_ROLE):
                 name = role_form.cleaned_data['name']
                 description = role_form.cleaned_data['description']
                 copy_from = role_form.cleaned_data['copy_from']
                 result = add_new_role(name,
                                       copy_from,
                                       description,
-                                      analyst)
+                                      user)
                 if result['success']:
                     url = reverse('crits.core.views.role_details',
                                   args=[result['id']])
@@ -783,13 +785,13 @@ def add_update_source(request, method, obj_type, obj_id):
         form = SourceForm(request.user.username, request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            user = request.user.username
-            permissions = get_user_permissions(user, obj_type)
+            user = request.user
+            acl = get_acl_object(obj_type)
             # check to see that this user can already see the object
             if (data['name'] in user_sources(user)):
                 if method == "add":
                     date = datetime.datetime.now()
-                    if permissions['sources_add']:
+                    if user.has_access_to(acl.SOURCES_ADD):
                         result = source_add_update(obj_type,
                                                    obj_id,
                                                    method,
@@ -805,7 +807,7 @@ def add_update_source(request, method, obj_type, obj_id):
                 else:
                     date = datetime.datetime.strptime(data['date'],
                                                       settings.PY_DATETIME_FORMAT)
-                    if permissions['sources_edit']:
+                    if user.has_access_to(acl.SOURCES_EDIT):
                         result = source_add_update(obj_type,
                                                    obj_id,
                                                    method,
@@ -867,12 +869,15 @@ def remove_source(request, obj_type, obj_id):
                                             settings.PY_DATETIME_FORMAT)
         name = request.POST['name']
 
-        if get_user_permissions(request.user.username, obj_type)['sources_delete']:
+        user = request.user
+        acl = get_acl_object(obj_type)
+
+        if user.has_access_to(acl.SOURCES_DELETE):
             result = source_remove(obj_type,
                                     obj_id,
                                     name,
                                     date,
-                                    '%s' % request.user.username)
+                                    '%s' % user.username)
         else:
             result = {"success":False,
                       "message":"User does not have permission to remove sources."}
@@ -948,7 +953,9 @@ def bucket_modify(request):
         tags = request.POST['tags'].split(",")
         oid = request.POST['oid']
         itype = request.POST['itype']
-        if get_user_permissions(request.user.username,itype)['bucketlist_edit']:
+        user = request.user
+        acl = get_acl_object(itype)
+        if user.has_access_to(acl.ACL.BUCKETLIST_EDIT):
             modify_bucket_list(itype, oid, tags, request.user.username)
     return HttpResponse({})
 
@@ -998,6 +1005,9 @@ def download_object(request):
         total_max = getattr(crits_config, 'total_max', settings.TOTAL_MAX)
         depth_max = getattr(crits_config, 'depth_max', settings.DEPTH_MAX)
         rel_max = getattr(crits_config, 'rel_max', settings.REL_MAX)
+        user = request.user
+
+        acl = get_acl_object(obj_type)
 
         try:
             total_limit = int(total_limit)
@@ -1025,7 +1035,7 @@ def download_object(request):
                                       {"error" : "No matching data."},
                                       RequestContext(request))
 
-        if get_user_permissions(request.user.username, obj_type)['download']:
+        if user.has_access_to(acl.DOWNLOAD):
             result = download_object_handler(total_limit,
                                              depth_limit,
                                              rel_limit,
@@ -1067,9 +1077,8 @@ def timeline(request, data_type="dns"):
     """
 
     format = request.GET.get("format", "none")
-    analyst = request.user.username
-    sources = user_sources(analyst)
-    permissions = get_user_permissions(analyst)
+    user = request.user
+    sources = user_sources(user)
     query = {}
     params = {}
     if request.GET.get("campaign"):
@@ -1091,20 +1100,20 @@ def timeline(request, data_type="dns"):
 
         # DNS data
 
-        if data_type == "dns" and permissions['dns_timeline_read']:
+        if data_type == "dns" and user.has_access_to(GeneralACL.DNS_TIMELINE_READ):
             tline['title'] = "DNS"
-            events = dns_timeline(query, analyst, sources)
+            events = dns_timeline(query, user, sources)
         # Email data
 
-        elif data_type == "email" and permissions['emails_timeline_read']:
+        elif data_type == "email" and user.has_access_to(GeneralACL.EMAILS_TIMELINE_READ):
                 tline['title'] = "Emails"
-                events = email_timeline(query, analyst, sources)
+                events = email_timeline(query, user, sources)
             # Indicator data
 
-        elif data_type == "indicator" and permissions['indicators_timeline_read']:
+        elif data_type == "indicator" and user.has_access_to(GeneralACL.indicators_timeline_read):
                 tline['title'] = "Indicators"
                 tline['initial_zoom'] = "14"
-                events = indicator_timeline(query, analyst, sources)
+                events = indicator_timeline(query, user, sources)
 
         if events:
             tline['events'] = events
@@ -1117,21 +1126,21 @@ def timeline(request, data_type="dns"):
                                             'message': "User does not have permission to view timeline."}),
                                 content_type="application/json")
     else:
-        if permissions['dns_timeline_read'] and data_type=="dns":
+        if user.has_access_to(GeneralACL.DNS_TIMELINE_READ) and data_type=="dns":
             return render_to_response('timeline.html',
                                       {'data_type': data_type,
                                        'params': json.dumps(params),
                                        'page_title': page_title},
                                       RequestContext(request))
 
-        elif permissions['emails_timeline_read'] and data_type=="email":
+        elif user.has_access_to(GeneralACL.EMAILS_TIMELINE_READ) and data_type=="email":
             return render_to_response('timeline.html',
                                       {'data_type': data_type,
                                        'params': json.dumps(params),
                                        'page_title': page_title},
                                       RequestContext(request))
 
-        elif permissions['indicators_timeline_read'] and data_type=="indicator":
+        elif user.has_access_to(GeneralACL.indicators_timeline_read) and data_type=="indicator":
             return render_to_response('timeline.html',
                                       {'data_type': data_type,
                                        'params': json.dumps(params),
@@ -1210,9 +1219,8 @@ def base_context(request):
     base_context['service_cp_templates'] = settings.SERVICE_CP_TEMPLATES
     base_context['service_tab_templates'] = settings.SERVICE_TAB_TEMPLATES
     if request.user.is_authenticated():
-        user = request.user.username
-        permissions = get_user_permissions(user)
-        base_context['permissions'] = permissions
+        user = request.user
+        base_context['acl'] = ReadACL
         # Forms that don't require a user
         base_context['add_new_action'] = NewActionForm()
         base_context['campaign_add'] = AddCampaignForm()
@@ -1351,11 +1359,11 @@ def base_context(request):
         except Exception, e:
             logger.warning("Base Context get_user_list Error: %s" % e)
         try:
-            base_context['email_notifications'] = get_user_email_notification(user)
+            base_context['email_notifications'] = get_user_email_notification(user.username)
         except Exception, e:
             logger.warning("Base Context get_user_email_notification Error: %s" % e)
         try:
-            base_context['user_notifications'] = get_user_notifications(user,
+            base_context['user_notifications'] = get_user_notifications(user.username,
                                                                         count=True)
         except Exception, e:
             logger.warning("Base Context get_user_notifications Error: %s" % e)
@@ -1910,7 +1918,9 @@ def audit_listing(request, option=None):
     :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
     :returns: :class:`django.http.HttpResponse`
     """
-    if get_user_permissions(request.user.username)['control_panel_audit_log_read']:
+
+    user = request.user
+    if user.has_access_to(GeneralACL.CONTROL_PANEL_AUDIT_LOG_READ):
         return generate_audit_jtable(request, option)
     else:
         error = "User does not have permission to view audit listing."
@@ -2114,7 +2124,10 @@ def download_file(request, sample_md5):
         tlo_type = 'Certificate'
     else:
         tlo_type = dtype
-    if get_user_permissions(request.user.username, tlo_type)['download']:
+
+    user = request.user
+    acl = get_acl_object(tlo_type)
+    if user.has_access_to(acl.DOWNLOAD):
         if dtype in ('object', 'pcap', 'cert'):
             return download_grid_file(request, dtype, sample_md5)
         else:
@@ -2172,15 +2185,16 @@ def add_update_ticket(request, method, type_=None, id_=None):
     :type id_: str
     :returns: :class:`django.http.HttpResponseRedirect`
     """
-    user = request.user.username
-    permissions = get_user_permissions(user, type_)
+    user = request.user
+
+    acl = get_acl_object(type_)
 
 
     if method =="remove" and request.method == "POST" and request.is_ajax():
         date = datetime.datetime.strptime(request.POST['key'],
                                             settings.PY_DATETIME_FORMAT)
         date = date.replace(microsecond=date.microsecond/1000*1000)
-        if permissions['tickets_delete']:
+        if user.has_access_to(acl.TICKETS_DELETE):
             result = ticket_remove(type_, id_, date, user)
         else:
             result = {"success":False,
@@ -2197,7 +2211,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
             }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                if permissions['tickets_add']:
+                if user.has_access_to(acl.TICKETS_ADD):
                     result = ticket_add(type_, id_, add, user)
                 else:
                     result = {"success":False,
@@ -2207,7 +2221,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
                                                          settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                if permissions['tickets_edit']:
+                if user.has_access_to(acl.TICKETS_EDIT):
                     result = ticket_update(type_, id_, add, user)
                 else:
                     result = {"success":False,
@@ -2371,7 +2385,9 @@ def sector_modify(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        if get_user_permissions(request.user.username, request.POST['itype'])['sectors_edit']:
+        user = request.user
+        acl = get_acl_object(request.POST['itype'])
+        if user.has_access_to(acl.SECTORS_EDIT):
             sectors = request.POST['sectors'].split(",")
             oid = request.POST['oid']
             itype = request.POST['itype']
@@ -2490,13 +2506,13 @@ def new_action(request):
 
     if request.method == 'POST' and request.is_ajax():
         form = NewActionForm(request.POST)
-        analyst = request.user.username
+        user = request.user
         if form.is_valid():
-            if get_user_permissions(analyst)['add_new_indicator_action']:
+            if user.has_access_to(GeneralACL.ADD_NEW_INDICATOR_ACTION):
                 result = add_new_action(form.cleaned_data['action'],
                                         form.cleaned_data['object_types'],
                                         form.cleaned_data['preferred'],
-                                        analyst)
+                                        user)
                 if result:
                     message = {'message': '<div>Action added successfully!</div>',
                                'success': True}
@@ -2530,8 +2546,8 @@ def add_update_action(request, method, obj_type, obj_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        username = request.user.username
-        permissions = get_user_permissions(username, obj_type)
+        user = request.user
+        acl = get_acl_object(obj_type)
         form = ActionsForm(request.POST)
         form.is_valid()
         data = form.cleaned_data
@@ -2546,8 +2562,8 @@ def add_update_action(request, method, obj_type, obj_id):
         }
         if method == "add":
             add['date'] = datetime.datetime.now()
-            if permissions['actions_add']:
-                result = action_add(obj_type, obj_id, add, username)
+            if user.has_access_to(acl.ACTIONS_ADD):
+                result = action_add(obj_type, obj_id, add, user)
             else:
                 result = {"success":False,
                           "message":"User does not have permission to add action."}
@@ -2556,8 +2572,8 @@ def add_update_action(request, method, obj_type, obj_id):
                                                 settings.PY_DATETIME_FORMAT)
             date = date.replace(microsecond=date.microsecond/1000*1000)
             add['date'] = date
-            if permissions['actions_edit']:
-                result = action_update(obj_type, obj_id, add, username)
+            if user.has_access_to(acl.ACTIONS_EDIT):
+                result = action_update(obj_type, obj_id, add, user)
             else:
                 result = {"success":False,
                           "message":"User does not have permission to edit action."}
@@ -2590,12 +2606,13 @@ def remove_action(request, obj_type, obj_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        analyst = request.user.username
+        user = request.user
         date = datetime.datetime.strptime(request.POST['key'],
                                             settings.PY_DATETIME_FORMAT)
         date = date.replace(microsecond=date.microsecond/1000*1000)
-        if get_user_permissions(analyst, obj_type)['actions_delete']:
-            result = action_remove(obj_type, obj_id, date, analyst)
+        acl = get_acl_object(obj_type)
+        if user.has_access_to(acl.ACTIONS_DELETE):
+            result = action_remove(obj_type, obj_id, date, user)
         else:
             result = {"success":False,
                       "message":"User does not have permission to delete action."}

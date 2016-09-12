@@ -80,6 +80,49 @@ class GeneralACL(vocab):
     Vocabulary for General ACLs
     """
 
+    API_INTERFACE = "api_interface"
+    SCRIPT_INTERFACE = "script_interface"
+    WEB_INTERFACE = "web_interface"
+
+    ADD_NEW_ACTOR_IDENTIFIER_TYPE = "add_new_actor_identifier_type"
+    ADD_NEW_INDICATOR_ACTION = "add_new_indicator_action"
+    ADD_NEW_RAW_DATA_TYPE = "add_new_raw_data_type"
+    ADD_NEW_SOURCE = "add_new_source"
+    ADD_NEW_USER_ROLE = "add_new_user_role"
+    ADD_NEW_TLDS = "add_new_tlds"
+
+    CONTROL_PANEL_READ = "control_panel_read"
+    CONTROL_PANEL_SYSTEM_READ = "control_panel_system_read"
+    CONTROL_PANEL_GENERAL_READ = "control_panel_general_read"
+    CONTROL_PANEL_GENERAL_EDIT = "control_panel_general_edit"
+    CONTROL_PANEL_CRITS_READ = "control_panel_crits_read"
+    CONTROL_PANEL_CRITS_EDIT = "control_panel_crits_edit"
+    CONTROL_PANEL_LDAP_READ = "control_panel_ldap_read"
+    CONTROL_PANEL_LDAP_EDIT = "control_panel_ldap_edit"
+    CONTROL_PANEL_SECURITY_READ = "control_panel_security_read"
+    CONTROL_PANEL_SECURITY_EDIT = "control_panel_security_edit"
+    CONTROL_PANEL_DOWNLOADING_READ = "control_panel_downloading_read"
+    CONTROL_PANEL_DOWNLOADING_EDIT = "control_panel_downloading_edit"
+    CONTROL_PANEL_SYSTEM_SERVICES_READ = "control_panel_system_services_read"
+    CONTROL_PANEL_SYSTEM_SERVICES_EDIT = "control_panel_system_services_edit"
+    CONTROL_PANEL_LOGGING_READ = "control_panel_logging_read"
+    CONTROL_PANEL_LOGGING_EDIT = "control_panel_logging_edit"
+    CONTROL_PANEL_ITEMS_READ = "control_panel_items_read"
+    CONTROL_PANEL_USERS_READ = "control_panel_users_read"
+    CONTROL_PANEL_USERS_ADD = "control_panel_users_add"
+    CONTROL_PANEL_USERS_EDIT = "control_panel_users_edit"
+    CONTROL_PANEL_USERS_ACTIVE = "control_panel_users_active"
+    CONTROL_PANEL_ROLES_READ = "control_panel_roles_read"
+    CONTROL_PANEL_ROLES_EDIT = "control_panel_roles_edit"
+    CONTROL_PANEL_SERVICES_READ = "control_panel_services_read"
+    CONTROL_PANEL_SERVICES_EDIT = "control_panel_services_edit"
+    CONTROL_PANEL_AUDIT_LOG_READ = "control_panel_audit_log_read"
+    RECENT_ACTIVITY_READ = "recent_activity_read"
+    STIX_IMPORT_ADD = "stix_import_add"
+    DNS_TIMELINE_READ = "dns_timeline_read"
+    EMAILS_TIMELINE_READ = "emails_timeline_read"
+    INDICATORS_TIMELINE_READ = "indicators_timeline_read"
+
 class ActorACL(vocab):
     """
     Vocabulary for Actor ACLs.
@@ -1335,3 +1378,26 @@ class CampaignACL(vocab):
     TICKETS_ADD = CAMPAIGN + Common.TICKETS_ADD
     TICKETS_EDIT = CAMPAIGN + Common.TICKETS_EDIT
     TICKETS_DELETE = CAMPAIGN + Common.TICKETS_DELETE
+
+class ReadACL(vocab):
+    """
+    This is to pass into base.html to see the current status of all of the
+    TLOs that we want to read
+    """
+    ACTOR_READ = ActorACL.READ
+    ACTOR_IDENTIFIERS_ADD = ActorACL.ACTOR_IDENTIFIERS_ADD
+    BACKDOOR_READ = BackdoorACL.READ
+    CAMPAIGN_READ = CampaignACL.READ
+    CERTIFICATE_READ = CertificateACL.READ
+    CONTROL_PANEL_SERVICES_READ = GeneralACL.CONTROL_PANEL_SERVICES_READ
+    DOMAIN_READ = DomainACL.READ
+    EMAIL_READ = EmailACL.READ
+    EVENT_READ = EventACL.READ
+    EXPLOIT_READ = ExploitACL.READ
+    INDICATOR_READ = IndicatorACL.READ
+    IP_READ = IPACL.READ
+    PCAP_READ = PCAPACL.READ
+    RAWDATA_READ = RawDataACL.READ
+    SAMPLE_READ = SampleACL.READ
+    SIGNATURE_READ = SignatureACL.READ
+    TARGET_READ = TargetACL.READ

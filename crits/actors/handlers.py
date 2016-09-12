@@ -14,7 +14,7 @@ from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
-from crits.core.user_tools import is_user_favorite, get_user_source_tlp
+from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
 
@@ -226,7 +226,7 @@ def get_actor_details(id_, user):
     template = None
     args = {}
 
-    if not get_user_source_tlp(user, actor):
+    if not user.check_source_tlp(actor):
         actor = None
 
     if not actor:

@@ -6,7 +6,7 @@ from django.shortcuts import render_to_response
 from django.template.loader import render_to_string
 from django.template import RequestContext
 
-from crits.core.user_tools import user_can_view_data, get_user_permissions
+from crits.core.user_tools import user_can_view_data
 from crits.relationships.forms import ForgeRelationshipForm
 from crits.relationships.handlers import forge_relationship, update_relationship_dates, update_relationship_confidences
 from crits.relationships.handlers import update_relationship_types, delete_relationship, update_relationship_reasons
@@ -25,14 +25,16 @@ def add_new_relationship(request):
 
     if request.method == 'POST' and request.is_ajax():
         form = ForgeRelationshipForm(request.POST)
+        user = request.user
         choices = [(c,c) for c in RelationshipTypes.values(sort=True)]
         form.fields['forward_relationship'].choices = choices
         if form.is_valid():
             cleaned_data = form.cleaned_data
             # Get user permission to verify the user can forge relationships...
             # Should we check permission on both the forward and reverse TLO for this?
+            acl = get_acl_object(cleaned_data.get('forward_type'))
 
-            if get_user_permissions(request.user.username, cleaned_data.get('forward_type'))['relationships_add']:
+            if user.has_access_to(acl.RELATIONSHIPS_ADD):
                 results = forge_relationship(type_=cleaned_data.get('forward_type'),
                                              id_=cleaned_data.get('forward_value'),
                                              right_type=cleaned_data.get('reverse_type'),
@@ -80,7 +82,9 @@ def update_relationship_type(request):
     """
 
     if request.method == 'POST' and request.is_ajax():
-        if get_user_permissions(request.user.username, request.POST['my_type'])['relationships_edit']:
+        user = request.user
+        acl = get_acl_object(request.POST['my_type'])
+        if user.has_access_to(acl.RELATIONSHIPS_EDIT):
             results = update_relationship_types(left_type=request.POST['my_type'],
                                                 left_id=request.POST['my_value'],
                                                 right_type=request.POST['reverse_type'],
@@ -116,11 +120,15 @@ def update_relationship_confidence(request):
     """
     if request.method == 'POST' and request.is_ajax():
         new_confidence = request.POST['new_confidence']
+        acls = get_acl_object(request.POST['my_type'])
+        user = request.user
+
         if new_confidence not in ('unknown', 'low', 'medium', 'high'):
             result = {'success': False,
                       'message': 'Unknown confidence level.'}
             return HttpResponse(json.dumps(result), content_type="application/json")
-        elif not get_user_permissions(request.user.username, request.POST['my_type'])['relationships_edit']:
+
+        elif not user.has_access_to(acl.RELATIONSHIPS_EDIT):
             result = {'success': False,
                       'message': 'User does not have permission to edit relationship.'}
         else:
@@ -220,7 +228,9 @@ def break_relationship(request):
     """
 
     if request.method == 'POST' and request.is_ajax():
-        if get_user_permissions(request.user.username, request.POST['my_type'])['relationships_delete']:
+        acl = get_acl_object(request.POST['my_type'])
+        user = request.user
+        if user.has_access_to(acl.RELATIONSHIPS_DELETE):
             results = delete_relationship(left_type=request.POST['my_type'],
                                           left_id=request.POST['my_value'],
                                           right_type=request.POST['reverse_type'],

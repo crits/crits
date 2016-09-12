@@ -65,7 +65,7 @@ def campaigns_listing(request, option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
-    request.user_setup()
+    request.user._setup()
     user = request.user
     if user.has_access_to("Campaign.read"):
         if option == "csv":
@@ -122,7 +122,7 @@ def add_campaign(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-    request.user_setup()
+    request.user._setup()
     user = request.user
 
     if request.method == "POST" and request.is_ajax():

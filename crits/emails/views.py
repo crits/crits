@@ -39,7 +39,7 @@ def emails_listing(request,option=None):
 
     user = request.user
 
-    if not user.has_access_to(EMAIL.READ):
+    if not user.has_access_to(EmailACL.READ):
         return render_to_response('error.html',
                                   {'error':'User does not have permission to delete email.'},
                                   RequestContext(request))
@@ -515,7 +515,7 @@ def email_detail(request, email_id):
 
     template = 'email_detail.html'
     user = request.user
-    if not user.has_access_to(EMAIL.READ):
+    if not user.has_access_to(EmailACL.READ):
         return render_to_response('error.html',
                                   {'error':'User does not have permission to view email.'},
                                   RequestContext(request))

@@ -4,12 +4,13 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from crits.core.user_tools import get_user_permissions
 from crits.config.config import CRITsConfig
 from crits.config.forms import ConfigGeneralForm, ConfigLDAPForm, ConfigSecurityForm, ConfigCritsForm
 from crits.config.forms import ConfigLoggingForm, ConfigServicesForm, ConfigDownloadForm
 from crits.config.handlers import modify_configuration
 from crits.core.user_tools import user_can_view_data
+
+from crits.vocabulary.acls import GeneralACL
 
 @user_passes_test(user_can_view_data)
 def crits_config(request):
@@ -22,8 +23,9 @@ def crits_config(request):
     """
 
     crits_config = CRITsConfig.objects().first()
-    permissions = get_user_permissions(request.user.username)
-    if permissions['control_panel_read']:
+    user = request.user
+
+    if user.has_access_to(GeneralACL.CONTROL_PANEL_READ):
         if crits_config:
             crits_config = crits_config.to_dict()
             crits_config['allowed_hosts'] = ", ".join(crits_config['allowed_hosts'])
@@ -50,8 +52,7 @@ def crits_config(request):
                                    'config_logging_form': config_logging_form,
                                    'config_services_form': config_services_form,
                                    'config_download_form': config_download_form,
-                                   'config_CRITs_form': config_CRITs_form,
-                                   'permissions': permissions},
+                                   'config_CRITs_form': config_CRITs_form,},
                                   RequestContext(request))
     else:
         return render_to_response('error.html',
@@ -74,36 +75,36 @@ def modify_config(request):
     analyst = request.user.username
     errors = []
     permission_error = False
-    permissions = get_user_permissions(analyst)
 
     if request.method == "POST" and request.is_ajax():
-        if permissions['control_panel_general_edit']:
+        if user.has_access_to(GeneralACL.CONTROL_PANEL_GENERAL_EDIT):
             config_general_form = ConfigGeneralForm(request.POST)
         else:
             config_general_form = ConfigGeneralForm(config_data)
             permission_error = True
-        if permissions['control_panel_ldap_edit']:
+        if user.has_access_to(GeneralACL.CONTROL_PANEL_LDAP_EDIT):
             config_LDAP_form = ConfigLDAPForm(request.POST)
         else:
             config_LDAP_form = ConfigLDAPForm(config_data)
             permission_error = True
-        if permissions['control_panel_security_edit']:
+        if user.has_access_to(GeneralACL.CONTROL_PANEL_SECURITY_EDIT):
             config_security_form = ConfigSecurityForm(request.POST)
         else:
             new_allowed_hosts = []
             for host in config_data['allowed_hosts']:
                 new_allowed_hosts.append(str(host))
+
             config_data['allowed_hosts'] = ','.join(new_allowed_hosts)
 
 
             config_security_form = ConfigSecurityForm(config_data)
             permission_error = True
-        if permissions['control_panel_logging_edit']:
+        if user.has_access_to(GeneralACL.CONTROL_PANEL_LOGGING_EDIT):
             config_logging_form = ConfigLoggingForm(request.POST)
         else:
             config_logging_form = ConfigLoggingForm(config_data)
             permission_error = True
-        if permissions['control_panel_system_services_edit']:
+        if user.has_access_to(GeneralACL.CONTROL_PANEL_SYSTEM_SERVICES_EDIT):
             config_services_form = ConfigServicesForm(request.POST)
         else:
             new_service_dirs = []
@@ -113,12 +114,12 @@ def modify_config(request):
 
             config_services_form = ConfigServicesForm(config_data)
             permission_error = True
-        if permissions['control_panel_downloading_edit']:
+        if user.has_access_to(GeneralACL.CONTROL_PANEL_DOWNLOADING_EDIT):
             config_download_form = ConfigDownloadForm(request.POST)
         else:
             config_download_form = ConfigDownloadForm(config_data)
             permission_error = True
-        if permissions['control_panel_crits_edit']:
+        if user.has_access_to(GeneralACL.CONTROL_PANEL_CRITS_EDIT):
             config_CRITs_form = ConfigCritsForm(request.POST)
         else:
             config_CRITs_form = ConfigCritsForm(config_data)

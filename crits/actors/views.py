@@ -93,7 +93,6 @@ def actor_detail(request, id_):
     :type id_: str
     :returns: :class:`django.http.HttpResponse`
     """
-
     template = "actor_detail.html"
     request.user._setup()
     user = request.user
