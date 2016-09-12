@@ -24,7 +24,7 @@
 
                      $.ajax({
                         type: 'POST',
-                        url: "{% url 'crits.signatures.views.dependency_autocomplete' %}",
+                        url: "{% url 'crits-signatures-views-dependency_autocomplete' %}",
                         data: data,
                         datatype: 'json',
                         success: function(data) {

@@ -8,7 +8,7 @@
 <div class='content_box'>
     <span class="horizontal_menu">
         <ul class="hmenu">
-        <li class="right"><a href="{% url 'crits.samples.views.sources' %}?refresh=yes">Refresh DB</a></li>
+        <li class="right"><a href="{% url 'crits-samples-views-sources' %}?refresh=yes">Refresh DB</a></li>
         </ul>
     </span>
 </div>
@@ -28,7 +28,7 @@
     <tbody>
         {% for source in sources %}
         <tr>
-            <td><a href="{% url 'crits.samples.views.samples_listing' %}?source={{ source.name|urlencode }}">{{ source.name }}</a></td>
+            <td><a href="{% url 'crits-samples-views-samples_listing' %}?source={{ source.name|urlencode }}">{{ source.name }}</a></td>
             <td>{{ source.sample_count|floatformat }}</td>
         </tr>
         {% endfor %}

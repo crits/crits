@@ -53,7 +53,7 @@ function addObjectsHandler(table, selectedArray, isRefreshWhileDialogOpen) {
         $('#validate-' + tableName + '-inline-table').click(function() {
             for(var rowCounter = startRow; rowCounter <= endRow; rowCounter++) {
                 rowTableName = objectRowName + rowCounter;
-                uploadTable(rowTableName, null, true, {}, "{% url 'crits.objects.views.bulk_add_object_inline' %}");
+                uploadTable(rowTableName, null, true, {}, "{% url 'crits-objects-views-bulk_add_object_inline' %}");
             }
         });
     }
@@ -68,7 +68,7 @@ function addObjectsHandler(table, selectedArray, isRefreshWhileDialogOpen) {
         });
 
         $('#handsontable_object').on('dialogopen', function(event, ui) {
-            $(this).load("{% url 'crits.objects.views.bulk_add_object_inline' %}?" + $.param({'isPreventInitialTable': true}),
+            $(this).load("{% url 'crits-objects-views-bulk_add_object_inline' %}?" + $.param({'isPreventInitialTable': true}),
                 function() {
                     var objectsColumnIndex = getColumnIndexFromName(table, objectsColumnName);
 
@@ -110,7 +110,7 @@ function addObjectsHandler(table, selectedArray, isRefreshWhileDialogOpen) {
                     $('#validate-' + tableName + '-inline-table').click(function() {
                         for(var rowCounter = startRow; rowCounter <= endRow; rowCounter++) {
                             rowTableName = objectRowName + rowCounter;
-                            uploadTable(rowTableName, null, true, {}, "{% url 'crits.objects.views.bulk_add_object_inline' %}");
+                            uploadTable(rowTableName, null, true, {}, "{% url 'crits-objects-views-bulk_add_object_inline' %}");
                         }
                     });
                 }

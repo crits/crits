@@ -1,6 +1,6 @@
 
 
-<form class="ajaxPost" action="{% url 'crits.core.views.user_preference_update' pref.section %}" 
+<form class="ajaxPost" action="{% url 'crits-core-views-user_preference_update' pref.section %}" 
       method='POST' enctype="multipart/form-data" data-key="ui">{% csrf_token %}
   <table class="vertical" width="auto">
     <thead><H3>{{ pref.title }}</H3></thead>
@@ -19,7 +19,7 @@
           {{ pref.name }}:
         </th>
         <td>
-	  <a href="" class="preference_toggle" action="{% url 'crits.core.views.user_preference_toggle' pref.section pref.toggle %}">
+	  <a href="" class="preference_toggle" action="{% url 'crits-core-views-user_preference_toggle' pref.section pref.toggle %}">
             {% if pref.enabled %}
 	    <span title="Click to disable" class="toggle">Enabled</span>
 	    {% else %}

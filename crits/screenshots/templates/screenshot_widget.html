@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="{{ STATIC_URL }}css/screenshots.css">
 
 <script>
-    var remove_screenshot_url = "{% url 'crits.screenshots.views.remove_screenshot_from_object' %}";
+    var remove_screenshot_url = "{% url 'crits-screenshots-views-remove_screenshot_from_object' %}";
 </script>
 
 <div class="content_box screenshots" id="screenshots_container">
@@ -19,11 +19,11 @@
         <div id="links">
         {% if screenshots%}
             {% for screenshot in screenshots %}
-            <a href="{% url 'crits.screenshots.views.render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %} (submitted by {{ screenshot.analyst }})" data-id="{{ screenshot.id }}" data-dialog>
+            <a href="{% url 'crits-screenshots-views-render_screenshot' screenshot.id %}" title="{{ screenshot.description }}: {% for t in screenshot.tags %}{% if forloop.last %}{{ t }}{% else %}{{ t }},{% endif %}{% endfor %} (submitted by {{ screenshot.analyst }})" data-id="{{ screenshot.id }}" data-dialog>
                     {% if screenshot.unsupported_attrs.bucket %}
-                        <img class="ss_bucket" src="{% url 'crits.screenshots.views.render_screenshot' screenshot.id 'thumb' %}">
+                        <img class="ss_bucket" src="{% url 'crits-screenshots-views-render_screenshot' screenshot.id 'thumb' %}">
                     {% else %}
-                        <img class="ss_no_bucket" src="{% url 'crits.screenshots.views.render_screenshot' screenshot.id 'thumb' %}">
+                        <img class="ss_no_bucket" src="{% url 'crits-screenshots-views-render_screenshot' screenshot.id 'thumb' %}">
                         <span class="remove_screenshot ui-icon ui-icon-trash" data-id="{{ screenshot.id }}" data-obj="{{ subscription.id }}" data-type="{{ subscription.type }}" title="Remove from {{ subscription.type }}"></span>
                     {% endif %}
                         <span class="copy_ss_id ui-icon ui-icon-radio-on" data-id="{{ screenshot.id }}" title="Copy ID to clipboard"></span>

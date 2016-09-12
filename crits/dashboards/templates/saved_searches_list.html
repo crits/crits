@@ -62,7 +62,7 @@
         	var id = $('#dashboard-settings-dropdown').attr('dash');
         	$.ajax({
                 type:"GET",
-                url: "{% url 'crits.dashboards.views.set_default_dashboard'%}",
+                url: "{% url 'crits-dashboards-views-set_default_dashboard'%}",
                 data: {
                     id:id
                 },
@@ -88,7 +88,7 @@
         	var $this = $(this);
             $.ajax({
                 type:"GET",
-                url: "{% url 'crits.dashboards.views.set_dashboard_public'%}",
+                url: "{% url 'crits-dashboards-views-set_dashboard_public'%}",
                 data: {
                     id:id,
                     makePublic: makePublic
@@ -215,7 +215,7 @@
                     var id = $(this).data('element').closest('.editWrapper').attr('tableId');
                     $.ajax({
                         type:"GET",
-                        url: "{% url 'crits.dashboards.views.delete_save_search'%}",
+                        url: "{% url 'crits-dashboards-views-delete_save_search'%}",
                         data: {
                         	id:id
                         },
@@ -262,7 +262,7 @@
                 	}
                     $.ajax({
                         type:"GET",
-                        url: "{% url 'crits.dashboards.views.rename_dashboard'%}",
+                        url: "{% url 'crits-dashboards-views-rename_dashboard'%}",
                         data: {
                         	id:dashboard,
                             newName:newName
@@ -297,7 +297,7 @@
                     var newTheme = $('.selectedTheme').attr('theme');
                     $.ajax({
                         type:"GET",
-                        url: "{% url 'crits.dashboards.views.change_theme'%}",
+                        url: "{% url 'crits-dashboards-views-change_theme'%}",
                         data: {
                             id:dashboard,
                             newTheme:newTheme
@@ -339,7 +339,7 @@
                 	var id = $('#dashboard-settings-dropdown').attr('dash');
                     $.ajax({
                         type:"GET",
-                        url: "{% url 'crits.dashboards.views.delete_dashboard'%}",
+                        url: "{% url 'crits-dashboards-views-delete_dashboard'%}",
                         data: {
                             id:id,
                         },
@@ -386,7 +386,7 @@
                     	else {
                     		$.ajax({
                                 type:"GET",
-                                url: "{% url 'crits.dashboards.views.create_blank_dashboard'%}",
+                                url: "{% url 'crits-dashboards-views-create_blank_dashboard'%}",
                                 data: {
                                     name:blankDashName,
                                 },

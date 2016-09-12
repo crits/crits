@@ -5,7 +5,7 @@
 </a></td>
     <td>
     {% if admin %}
-    <a href="#" class="delete_all_source_button ui-icon ui-icon-trash deleteClick" title="Delete Source" action="{% url 'crits.core.views.remove_all_source' obj_type obj_id %}" key="{{source.name}}" type="source"  data-intro="Delete Source" data-position="right"></a>
+    <a href="#" class="delete_all_source_button ui-icon ui-icon-trash deleteClick" title="Delete Source" action="{% url 'crits-core-views-remove_all_source' obj_type obj_id %}" key="{{source.name}}" type="source"  data-intro="Delete Source" data-position="right"></a>
     {% endif %}
     </td>
 </tr>

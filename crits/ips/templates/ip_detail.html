@@ -51,7 +51,7 @@
                             <span style="float: right;" class="object_status_response"></span>
                         </td>
                         <td>
-                            <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{ip.status}}</span>
+                            <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{ip.status}}</span>
                         </td>
                     </tr>
                     {% with sectors=ip.sectors %}

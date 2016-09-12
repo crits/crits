@@ -47,7 +47,7 @@
 		                Update: function() {  //if the parent still exists, give the option to update
 		                	$.ajax({
 		                        type:"GET",
-		                        url: "{% url 'crits.dashboards.views.delete_dashboard'%}",
+		                        url: "{% url 'crits-dashboards-views-delete_dashboard'%}",
 		                        data: {
 		                            id:'{{currentDash}}',
 		                        },

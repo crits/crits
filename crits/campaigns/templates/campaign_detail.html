@@ -7,7 +7,7 @@
 {% block content %}
 
 <script>
-    var update_campaign_aliases = "{% url 'crits.campaigns.views.campaign_aliases' %}";
+    var update_campaign_aliases = "{% url 'crits-campaigns-views-campaign_aliases' %}";
     var campaign_name = "{{ campaign_detail.name|safe }}";
     var is_admin = "{{ admin }}";
     var campaign_id = "{{campaign.id | escapejs}}"
@@ -16,17 +16,17 @@
 <div id="tabnav" class="tabnav" style="font-size: 90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_tab"><span>Details</span></a></li>
-    <li><a href="{% url 'crits.actors.views.actors_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="actors_tab"><span>Actors ({{ counts.Actor }})</span></a></li>
-    <li><a href="{% url 'crits.backdoors.views.backdoors_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="backdoors_tab"><span>Backdoors ({{ counts.Backdoor }})</span></a></li>
-    <li><a href="{% url 'crits.domains.views.domains_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="domains_tab"><span>Domains ({{ counts.Domain }})</span></a></li>
-    <li><a href="{% url 'crits.emails.views.emails_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="emails_tab"><span>Emails ({{ counts.Email }})</span></a></li>
-    <li><a href="{% url 'crits.events.views.events_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="events_tab"><span>Events ({{ counts.Event }})</span></a></li>
-    <li><a href="{% url 'crits.exploits.views.exploits_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="exploits_tab"><span>Exploits ({{ counts.Exploit }})</span></a></li>
-    <li><a href="{% url 'crits.indicators.views.indicators_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="indicators_tab"><span>Indicators ({{ counts.Indicator }})</span></a></li>
-    <li><a href="{% url 'crits.ips.views.ips_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="ips_tab"><span>IPs ({{ counts.IP }})</span></a></li>
-    <li><a href="{% url 'crits.pcaps.views.pcaps_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="pcaps_tab"><span>PCAPs ({{ counts.PCAP }})</span></a></li>
-    <li><a href="{% url 'crits.samples.views.samples_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="samples_tab"><span>Samples ({{ counts.Sample }})</span></a></li>
-    <li><a href="{% url 'crits.targets.views.targets_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="targets_tab"><span>Targets ({{ counts.Target }})</span></a></li>
+    <li><a href="{% url 'crits-actors-views-actors_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="actors_tab"><span>Actors ({{ counts.Actor }})</span></a></li>
+    <li><a href="{% url 'crits-backdoors-views-backdoors_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="backdoors_tab"><span>Backdoors ({{ counts.Backdoor }})</span></a></li>
+    <li><a href="{% url 'crits-domains-views-domains_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="domains_tab"><span>Domains ({{ counts.Domain }})</span></a></li>
+    <li><a href="{% url 'crits-emails-views-emails_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="emails_tab"><span>Emails ({{ counts.Email }})</span></a></li>
+    <li><a href="{% url 'crits-events-views-events_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="events_tab"><span>Events ({{ counts.Event }})</span></a></li>
+    <li><a href="{% url 'crits-exploits-views-exploits_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="exploits_tab"><span>Exploits ({{ counts.Exploit }})</span></a></li>
+    <li><a href="{% url 'crits-indicators-views-indicators_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="indicators_tab"><span>Indicators ({{ counts.Indicator }})</span></a></li>
+    <li><a href="{% url 'crits-ips-views-ips_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="ips_tab"><span>IPs ({{ counts.IP }})</span></a></li>
+    <li><a href="{% url 'crits-pcaps-views-pcaps_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="pcaps_tab"><span>PCAPs ({{ counts.PCAP }})</span></a></li>
+    <li><a href="{% url 'crits-samples-views-samples_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="samples_tab"><span>Samples ({{ counts.Sample }})</span></a></li>
+    <li><a href="{% url 'crits-targets-views-targets_listing' 'inline' %}?campaign={{ campaign_detail.name|urlencode }}" id="targets_tab"><span>Targets ({{ counts.Target }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     </ul>
 
@@ -68,7 +68,7 @@
                     <span style="float: right;" class="object_status_response"></span>
                 </td>
                 <td>
-                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{campaign_detail.status}}</span>
+                    <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{campaign_detail.status}}</span>
                 </td>
             </tr>
             {% with sectors=campaign_detail.sectors %}

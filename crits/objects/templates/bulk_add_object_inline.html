@@ -45,12 +45,12 @@
 
                 $("#update-" + defaultInlineTableName + "-inline-table").click(function() {
                     $(this).button({disabled: true});
-                    uploadTable(defaultInlineTableName, null, false, {Otype: my_type, Oid: my_id}, "{% url 'crits.objects.views.bulk_add_object_inline' %}");
+                    uploadTable(defaultInlineTableName, null, false, {Otype: my_type, Oid: my_id}, "{% url 'crits-objects-views-bulk_add_object_inline' %}");
                 });
 
                 $("#validate-" + defaultInlineTableName + "-inline-table").click(function() {
                     $(this).button({disabled: true});
-                    uploadTable(defaultInlineTableName, null, true, {Otype: my_type, Oid: my_id}, "{% url 'crits.objects.views.bulk_add_object_inline' %}");
+                    uploadTable(defaultInlineTableName, null, true, {Otype: my_type, Oid: my_id}, "{% url 'crits-objects-views-bulk_add_object_inline' %}");
                 });
             {% endif %}
         });
@@ -64,12 +64,12 @@
 
             $("#update-" + defaultInlineTableName + "-inline-table").click(function() {
                 $(this).button({disabled: true});
-                uploadTable(defaultInlineTableName, null, false, {Otype: my_type, Oid: my_id}, "{% url 'crits.objects.views.bulk_add_object_inline' %}");
+                uploadTable(defaultInlineTableName, null, false, {Otype: my_type, Oid: my_id}, "{% url 'crits-objects-views-bulk_add_object_inline' %}");
             });
 
             $("#validate-" + defaultInlineTableName + "-inline-table").click(function() {
                 $(this).button({disabled: true});
-                uploadTable(defaultInlineTableName, null, true, {Otype: my_type, Oid: my_id}, "{% url 'crits.objects.views.bulk_add_object_inline' %}");
+                uploadTable(defaultInlineTableName, null, true, {Otype: my_type, Oid: my_id}, "{% url 'crits-objects-views-bulk_add_object_inline' %}");
             });
         {% endif %}
     }

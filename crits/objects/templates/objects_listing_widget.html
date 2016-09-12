@@ -2,10 +2,10 @@
 <script type="text/javascript">
     var my_id = "{{ subscription.id }}";
     var my_type = "{{ subscription.type }}";
-    var update_objects_value = "{% url 'crits.objects.views.update_objects_value' %}";
-    var update_objects_source = "{% url 'crits.objects.views.update_objects_source' %}";
-    var get_user_source_list = "{% url 'crits.core.views.get_user_source_list' %}";
-    var indicator_from_object = "{% url 'crits.objects.views.indicator_from_object' %}";
+    var update_objects_value = "{% url 'crits-objects-views-update_objects_value' %}";
+    var update_objects_source = "{% url 'crits-objects-views-update_objects_source' %}";
+    var get_user_source_list = "{% url 'crits-core-views-get_user_source_list' %}";
+    var indicator_from_object = "{% url 'crits-objects-views-indicator_from_object' %}";
     var relationship_value = "{{ relationship.value|escapejs }}";
 </script>
     <div class="content_box object_box" id="object_box_container">
@@ -111,7 +111,7 @@
             })
 
             $('#handsontable_object').on('dialogopen', function(event, ui) {
-                $(this).load("{% url 'crits.objects.views.bulk_add_object_inline' %}?" + $.param({'useItemSource': false, 'otype': my_type, 'oid': my_id}));
+                $(this).load("{% url 'crits-objects-views-bulk_add_object_inline' %}?" + $.param({'useItemSource': false, 'otype': my_type, 'oid': my_id}));
             })
 
             $('#handsontable_object').dialog('option', 'title', "Bulk Add Objects For (" + my_type + ": " + my_id + ")")
