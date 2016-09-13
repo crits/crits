@@ -73,6 +73,7 @@ def modify_config(request):
     crits_config = CRITsConfig.objects().first()
     config_data = crits_config.__dict__.get('_data')
     analyst = request.user.username
+    user = request.user
     errors = []
     permission_error = False
 

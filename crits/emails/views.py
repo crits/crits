@@ -81,7 +81,7 @@ def email_del(request, email_id):
     user = request.user
 
     email = Email.objects(id=email_id).first()
-    if not user.has_access_to(EMAIL.DELETE):
+    if not user.has_access_to(EmailACL.DELETE):
         return render_to_response('error.html',
                                   {'error':'User does not have permission to delete email.'},
                                   RequestContext(request))
@@ -392,7 +392,7 @@ def email_eml_add(request):
     else:
         if not eml_form.is_valid():
             message = "Form is invalid."
-        elif not user.has_access_to(EMAIL.WRITE):
+        elif not user.has_access_to(EmailACL.WRITE):
             message = "User does not have permission to add email."
 
         else:

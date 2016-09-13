@@ -505,9 +505,9 @@ def profile(request, user=None):
     """
 
     if user:
-        username = user
+        username = user.username
     else:
-        username = request.user
+        username = request.user.username
     args = generate_user_profile(username,request)
     if 'status'in args and args['status'] == "ERROR":
         return render_to_response('error.html',
