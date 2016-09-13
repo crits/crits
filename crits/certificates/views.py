@@ -45,7 +45,6 @@ def certificates_listing(request,option=None):
                                   {'error': 'User does not have permission to view Certificate listing.'},
                                   RequestContext(request))
 
-
 @user_passes_test(user_can_view_data)
 def certificate_details(request, md5):
     """

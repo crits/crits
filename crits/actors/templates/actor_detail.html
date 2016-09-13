@@ -59,6 +59,7 @@
                                 {% for alias in actor.aliases %}
                                     <li>{{ alias }}</li>
                                 {% endfor %}
+                            </ul>
                         </td>
                     </tr>
                     {% endif %}
@@ -96,19 +97,23 @@
                           {% include "sector_widget.html" %}
                       {% endwith %}
                     {% endif %}
+                    {% if ActorACL.SOURCES_READ|has_access_to:user %}
                     <tr>
-                        {% if ActorACL.SOURCES_READ|has_access_to:user %}
                         {% with sources=actor.source obj_id=actor.id obj_type=subscription.type %}
                             {% include "sources_listing_widget.html" %}
                         {% endwith %}
-                        {% endif %}
                     </tr>
+                    {% endif %}
                     {% if ActorACL.RELEASABILITY_READ|has_access_to:user %}
-                    <tr>
-                        {% with releasability=actor.releasability %}
-                            {% include "releasability_list_widget.html" %}
-                        {% endwith %}
-                    </tr>
+                      <tr>
+                          {% with releasability=actor.releasability %}
+                              {% include "releasability_list_widget.html" %}
+                          {% endwith %}
+                      </tr>
+                    {% else %}
+                      {% with releasability=None %}
+                        {% include "releasability_list_widget.html" %}
+                      {% endwith %}
                     {% endif %}
                 </tbody>
             </table>
@@ -117,66 +122,65 @@
      <div id="detail_floaters">
          {% include 'details_options_widget.html' %}
          {% if ActorACL.BUCKETLIST_READ|has_access_to:user %}
-         {% with bucket_list=actor.bucket_list %}
-             {% include 'bucket_list_widget.html' %}
-         {% endwith %}
+           {% with bucket_list=actor.bucket_list %}
+               {% include 'bucket_list_widget.html' %}
+           {% endwith %}
          {% endif %}
          {% include 'add_related_widget.html' %}
      </div>
-    <div class="content_box">
-      {% if ActorACL.ACTIONS_READ|has_access_to:user %}
+     {% if ActorACL.ACTIONS_READ|has_access_to:user %}
+     <div class="content_box">
         {% with obj=actor obj_type="Actor" %}
             {% include 'action_listing_widget.html' %}
         {% endwith %}
-      {% endif %}
-    </div>
-     <div id="actor_identifier_widget_container">
-       {% if ActorACL.ACTOR_IDENTIFIERS_READ|has_access_to:user %}
-         {% include "actor_identifiers_widget.html" %}
-        {% endif %}
      </div>
+     {% endif %}
+     {% if ActorACL.ACTOR_IDENTIFIERS_READ|has_access_to:user %}
+     <div id="actor_identifier_widget_container">
+       {% include "actor_identifiers_widget.html" %}
+     </div>
+     {% endif %}
+     {% if ActorACL.TICKETS_READ|has_access_to:user %}
      <div>
-      {%if ActorACL.TICKETS_READ|has_access_to:user %}
 	    {% with obj=actor obj_type=subscription.type %}
-                {% include 'tickets_listing_widget.html' %}
+        {% include 'tickets_listing_widget.html' %}
 	    {% endwith %}
-      {%endif%}
     </div>
+    {% endif %}
+    {% if ActorACL.CAMPAIGNS_READ|has_access_to:user and "Campaign.read"|has_access_to:user %}
     <div>
-      {% if ActorACL.CAMPAIGNS_READ|has_access_to:user and "Campaign.read"|has_access_to:user %}
-        {% with hit=actor col=COL_ACTORS %}
-            {% include "campaigns_display_widget.html" %}
-        {% endwith %}
-      {%endif%}
+    {% with hit=actor col=COL_ACTORS %}
+        {% include "campaigns_display_widget.html" %}
+    {% endwith %}
     </div>
+    {% endif %}
+    {% if ActorACL.LOCATIONS_READ|has_access_to:user %}
     <div>
-      {% if ActorACL.LOCATIONS_READ|has_access_to:user %}
         {% with hit=actor col=COL_ACTORS %}
             {% include "locations_display_widget.html" %}
         {% endwith %}
-      {% endif %}
     </div>
-    <div>
-      {% if ActorACL.RELATIONSHIPS_READ|has_access_to:user %}
-        {% include 'relationships_listing_widget.html' %}
-      {% endif %}
-
-    </div>
-    <div>
-      {% if ActorACL.OBJECTS_READ|has_access_to:user %}
-        {% include 'objects_listing_widget.html' %}
-      {% endif %}
-    </div>
-    <div>
-    {% if ActorACL.SCREENSHOTS_READ|has_access_to:user %}
-      {% include 'screenshot_widget.html' %}
     {% endif %}
-    </div>
+    {% if ActorACL.RELATIONSHIPS_READ|has_access_to:user %}
     <div>
-      {% if ActorACL.COMMENTS_READ|has_access_to:user %}
-        {% include "comments_listing_widget.html" %}
-      {% endif %}
+        {% include 'relationships_listing_widget.html' %}
     </div>
+    {% endif %}
+    {% if ActorACL.OBJECTS_READ|has_access_to:user %}
+    <div>
+        {% include 'objects_listing_widget.html' %}
+    </div>
+    {% endif %}
+    {% if ActorACL.SCREENSHOTS_READ|has_access_to:user %}
+    <div>
+      {% include 'screenshot_widget.html' %}
+    </div>
+    {% endif %}
+    {% if ActorACL.COMMENTS_READ|has_access_to:user %}
+    <div>
+        {% include "comments_listing_widget.html" %}
+    </div>
+    {% endif %}
 </div> <!-- details_section -->
 
 {% with item=actor %}

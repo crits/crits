@@ -203,7 +203,7 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
 
         sources = SourceAccess.objects()
         for s in sources:
-            self.add_source(s.name)
+            self.add_source(s.name,read=True,write=True,tlp_red=True,tlp_amber=True,tlp_green=True)
 
     def add_source(self, source, read=False, write=False,
                    tlp_red=False, tlp_amber=False, tlp_green=False):

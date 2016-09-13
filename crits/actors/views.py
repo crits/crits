@@ -39,9 +39,16 @@ def actor_identifiers_listing(request,option=None):
     """
 
     request.user._setup()
-    if option == "csv":
-        return generate_actor_identifier_csv(request)
-    return generate_actor_identifier_jtable(request, option)
+    user = request.user
+
+    if user.has_access_to(ActorACL.ACTOR_IDENTIFIERS_READ):
+        if option == "csv":
+            return generate_actor_identifier_csv(request)
+        return generate_actor_identifier_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view actor identifier listing.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def actors_listing(request,option=None):
@@ -212,10 +219,16 @@ def get_actor_identifier_types(request):
     :returns: :class:`django.http.HttpResponseRedirect`
     """
 
+    user = request.user
+
     if request.method == "POST" and request.is_ajax():
-        result = actor_identifier_types(True)
+        if user.has_access_to(ActorACL.ACTOR_IDENTIFIERS_READ):
+            result = actor_identifier_types(True)
+        else:
+            result = {'success':False,
+                      'message':'User does not have permission to view actor identifiers.'}
         return HttpResponse(json.dumps(result),
-                            content_type="application/json")
+                                content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",
@@ -560,9 +573,9 @@ def edit_actor_aliases(request):
             return HttpResponse(json.dumps(result),
                                 content_type="application/json")
         else:
-            return render_to_response("error.html",
-                                      {"error" : 'User does not have permission to edit alias.'},
-                                      RequestContext(request))
+            return HttpResponse(json.dumps({"success":False,
+                                            "message":"User does not have permission to edit alias."}),
+                                content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",

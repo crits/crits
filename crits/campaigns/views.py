@@ -19,7 +19,7 @@ from crits.campaigns.handlers import add_ttp, edit_ttp, remove_ttp
 from crits.campaigns.handlers import modify_campaign_aliases
 from crits.campaigns.handlers import generate_campaign_jtable, generate_campaign_csv
 from crits.campaigns.handlers import get_campaign_names_list
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_acl_object
 from crits.stats.handlers import campaign_date_stats
 
 from crits.vocabulary.acls import CampaignACL
@@ -67,7 +67,7 @@ def campaigns_listing(request, option=None):
     """
     request.user._setup()
     user = request.user
-    if user.has_access_to("Campaign.read"):
+    if user.has_access_to(CampaignACL.READ):
         if option == "csv":
             return generate_campaign_csv(request)
         return generate_campaign_jtable(request, option)
@@ -89,7 +89,13 @@ def campaign_names(request, active_only=True):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    campaign_list = get_campaign_names_list(active_only)
+    user = request.user
+
+    if user.has_access_to(CampaignACL.READ):
+        campaign_list = get_campaign_names_list(active_only)
+    else:
+        campaign_list = None
+
     return HttpResponse(json.dumps(campaign_list), content_type="application/json")
 
 @user_passes_test(user_can_view_data)
@@ -104,14 +110,19 @@ def campaign_details(request, campaign_name):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    template = "campaign_detail.html"
-    (new_template, args) = get_campaign_details(campaign_name,
-                                                request.user.username)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    if user.has_access_to(CampaignACL.READ):
+        template = "campaign_detail.html"
+        (new_template, args) = get_campaign_details(campaign_name,
+                                                    request.user.username)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Campaign.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def add_campaign(request):
@@ -182,15 +193,16 @@ def campaign_add(request, ctype, objectid):
     if request.method == "POST" and request.is_ajax():
         form = CampaignForm(request.POST)
         result = {}
+        acl = get_acl_object(ctype)
 
-        if user.has_access_to(str(ctype + CampaignACL.CAMPAIGNS_ADD)):
+        if user.has_access_to(acl.CAMPAIGNS_ADD):
             if form.is_valid():
                 data = form.cleaned_data
                 campaign = data['name']
                 confidence = data['confidence']
                 description = data['description']
                 related = data['related']
-                analyst = request.user.username
+                analyst= request.user.username
                 result = campaign_addh(campaign,
                                        confidence,
                                        description,
@@ -233,7 +245,8 @@ def edit_campaign(request, ctype, objectid):
 
     if request.method == "POST" and request.is_ajax():
         form = CampaignForm(request.POST)
-        if user.has_access_to(str(ctype + CampaignACL.CAMPAIGNS_EDIT)):
+        acl = get_acl_object(ctype)
+        if user.has_access_to(acl.CAMPAIGNS_EDIT):
             if form.is_valid():
                 data = form.cleaned_data
                 campaign = data['name']
@@ -292,7 +305,8 @@ def remove_campaign(request, ctype, objectid):
 
     if request.method == "POST" and request.is_ajax():
         data = request.POST
-        if user.has_access_to(str(ctype + CampaignACL.CAMPAIGNS_DELETE)):
+        acl = get_acl_object(ctype)
+        if user.has_access_to(acl.CAMPAIGNS_DELETE):
             result = campaign_remove(ctype,
                                      objectid,
                                      campaign=data.get('key'),
@@ -320,16 +334,29 @@ def campaign_ttp(request, cid):
 
     if request.method == "POST" and request.is_ajax():
         action = request.POST['action']
-        analyst = request.user.username
+        user = request.user
         if action == "add":
-            result = add_ttp(cid, request.POST['ttp'], analyst)
+            if user.has_access_to(CampaignACL.TTPS_ADD):
+                result = add_ttp(cid, request.POST['ttp'], user.username)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to add TTPs."}
         elif action == "edit":
-            result = edit_ttp(cid, request.POST['old_ttp'],
-                              request.POST['new_ttp'],
-                              analyst)
+            if user.has_access_to(CampaignACL.TTPS_EDIT):
+                result = edit_ttp(cid, request.POST['old_ttp'],
+                                request.POST['new_ttp'],
+                                user.username)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to modify TTPs."}
+
         elif action == "remove":
-            result = remove_ttp(cid, request.POST['ttp'],
-                                analyst)
+            if user.has_access_to(CampaignACL.TTPS_DELETE):
+                result = remove_ttp(cid, request.POST['ttp'],
+                                    user.username)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to remove TTPs."}
         else:
             result = {'success': False, 'message': "Invalid action."}
         if 'campaign' in result:

@@ -71,25 +71,37 @@ def bulk_add_domain(request):
     """
 
     formdict = form_to_dict(AddDomainForm(request.user))
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
-        response = process_bulk_add_domain(request, formdict);
+        if user.has_access_to(DomainACL.WRITE):
+            response = process_bulk_add_domain(request, formdict)
+        else:
+            response = {"success":False,
+                        "message":"User does not have permission to add domains."}
+
 
         return HttpResponse(json.dumps(response,
                             default=json_handler),
                             content_type="application/json")
     else:
-        objectformdict = form_to_dict(AddObjectForm(request.user))
-
-        return render_to_response('bulk_add_default.html',
-                                 {'formdict': formdict,
-                                  'objectformdict': objectformdict,
-                                  'title': "Bulk Add Domains",
-                                  'table_name': 'domain',
-                                  'local_validate_columns': [form_consts.Domain.DOMAIN_NAME],
-                                  'custom_js': "domain_handsontable.js",
-                                  'is_bulk_add_objects': True},
-                                  RequestContext(request));
+        if user.has_access_to(DomainACL.WRITE):
+            objectformdict = form_to_dict(AddObjectForm(request.user))
+            return render_to_response('bulk_add_default.html',
+                                     {'formdict': formdict,
+                                      'objectformdict': objectformdict,
+                                      'title': "Bulk Add Domains",
+                                      'table_name': 'domain',
+                                      'local_validate_columns': [form_consts.Domain.DOMAIN_NAME],
+                                      'custom_js': "domain_handsontable.js",
+                                      'is_bulk_add_objects': True},
+                                      RequestContext(request));
+        else:
+            response = {"success":False,
+                        "message":"User does not have permission to add domains."}
+            return HttpResponse(json.dumps(response,
+                                default=json_handler),
+                                content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def domains_listing(request,option=None):
