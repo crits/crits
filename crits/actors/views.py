@@ -4,8 +4,7 @@ import urllib
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.actors.forms import AddActorForm, AddActorIdentifierForm
 from crits.actors.handlers import generate_actor_csv, generate_actor_jtable
@@ -69,7 +68,7 @@ def actor_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
-    return HttpResponseRedirect(reverse('crits.actors.views.actors_listing')
+    return HttpResponseRedirect(reverse('crits-actors-views-actors_listing')
                                 + "?%s" % urllib.urlencode(query))
 
 @user_passes_test(user_can_view_data)
@@ -90,9 +89,7 @@ def actor_detail(request, id_):
                                              analyst)
     if new_template:
         template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    return render(request, template, args)
 
 @user_passes_test(user_can_view_data)
 def add_actor(request):
@@ -144,9 +141,7 @@ def add_actor(request):
         return HttpResponse(json.dumps({'success': False,
                                         'form':form.as_table()}),
                             content_type="application/json")
-    return render_to_response("error.html",
-                              {'error': 'Expected AJAX/POST'},
-                              RequestContext(request))
+    return render(request, "error.html", {'error': 'Expected AJAX/POST'})
 
 @user_passes_test(user_can_view_data)
 def remove_actor(request, id_):
@@ -163,14 +158,10 @@ def remove_actor(request, id_):
     if request.method == "POST":
         if is_admin(request.user):
             actor_remove(id_, request.user.username)
-            return HttpResponseRedirect(reverse('crits.actors.views.actors_listing'))
+            return HttpResponseRedirect(reverse('crits-actors-views-actors_listing'))
         error = 'You do not have permission to remove this item.'
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
-    return render_to_response('error.html',
-                              {'error':'Expected AJAX/POST'},
-                              RequestContext(request))
+        return render(request, "error.html", {'error': error})
+    return render(request, 'error.html', {'error':'Expected AJAX/POST'})
 
 @user_passes_test(user_can_view_data)
 def get_actor_identifier_types(request):
@@ -188,9 +179,7 @@ def get_actor_identifier_types(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def get_actor_identifier_type_values(request):
@@ -210,9 +199,7 @@ def get_actor_identifier_type_values(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def new_actor_identifier_type(request):
@@ -236,9 +223,7 @@ def new_actor_identifier_type(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def actor_tags_modify(request):
@@ -264,9 +249,7 @@ def actor_tags_modify(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def get_actor_tags(request):
@@ -289,9 +272,7 @@ def get_actor_tags(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def add_identifier(request):
@@ -330,9 +311,7 @@ def add_identifier(request):
                                 content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def attribute_identifier(request):
@@ -363,9 +342,7 @@ def attribute_identifier(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def edit_attributed_identifier(request):
@@ -394,9 +371,7 @@ def edit_attributed_identifier(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def remove_attributed_identifier(request):
@@ -423,9 +398,7 @@ def remove_attributed_identifier(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def edit_actor_name(request, id_):
@@ -453,9 +426,7 @@ def edit_actor_name(request, id_):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def edit_actor_aliases(request):
@@ -476,6 +447,4 @@ def edit_actor_aliases(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })

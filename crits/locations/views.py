@@ -1,7 +1,6 @@
 import json
 
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.http import HttpResponse
 from django.contrib.auth.decorators import user_passes_test
 
@@ -102,9 +101,7 @@ def remove_location(request, type_, id_):
                                  user=request.user.username)
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error": 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": 'Expected AJAX POST.'})
 
 @user_passes_test(user_can_view_data)
 def edit_location(request, type_, id_):
@@ -136,6 +133,4 @@ def edit_location(request, type_, id_):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error": error},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": error})

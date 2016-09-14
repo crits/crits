@@ -2,9 +2,8 @@ import json
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.template.loader import render_to_string
-from django.template import RequestContext
 
 from crits.core.form_consts import get_source_field_for_class
 from crits.core.class_mapper import class_from_id
@@ -46,9 +45,8 @@ def add_new_object(request):
             if request.is_ajax():
                 return HttpResponse(response, content_type="application/json")
             else:
-                return render_to_response("file_upload_response.html",
-                                          {'response':response},
-                                          RequestContext(request))
+                return render(request, "file_upload_response.html",
+                                          {'response':response})
         source = request.POST['source']
         oid = request.POST['oid']
         object_type = request.POST['object_type']
@@ -88,7 +86,7 @@ def add_new_object(request):
                                         {'objects': results['objects'],
                                          'relationships': relationships,
                                          'subscription': subscription},
-                                        RequestContext(request))
+                                         request=request)
                 result = {'success': True,
                           'html': html,
                           'message': results['message']}
@@ -97,14 +95,14 @@ def add_new_object(request):
                                             {'relationship': relationship,
                                              'nohide': True,
                                              'relationships': relationships},
-                                            RequestContext(request))
+                                             request=request)
                 result['rel_made'] = True
                 result['rel_msg'] = rel_msg
             else:
                 html = render_to_string('objects_listing_widget.html',
                                         {'objects': results['objects'],
                                          'subscription': subscription},
-                                        RequestContext(request))
+                                         request=request)
                 result = {'success': True,
                           'html': html,
                           'message': results['message']}
@@ -115,14 +113,12 @@ def add_new_object(request):
             return HttpResponse(json.dumps(result),
                                 content_type="application/json")
         else:
-            return render_to_response("file_upload_response.html",
-                                      {'response': json.dumps(result)},
-                                      RequestContext(request))
+            return render(request, "file_upload_response.html",
+                                      {'response': json.dumps(result)})
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def bulk_add_object(request):
@@ -147,11 +143,10 @@ def bulk_add_object(request):
                             default=json_handler),
                             content_type="application/json")
     else:
-        return render_to_response('bulk_add_default.html',
+        return render(request, 'bulk_add_default.html',
                                   {'formdict': formdict,
                                   'title': "Bulk Add Objects",
-                                  'table_name': 'object'},
-                                  RequestContext(request))
+                                  'table_name': 'object'})
 
 @user_passes_test(user_can_view_data)
 def bulk_add_object_inline(request):
@@ -186,7 +181,7 @@ def bulk_add_object_inline(request):
             object_listing_html = render_to_string('objects_listing_widget.html',
                                                    {'objects': class_type.sort_objects(),
                                                     'subscription': subscription},
-                                                   RequestContext(request))
+                                                    request=request)
 
             response['html'] = object_listing_html
 
@@ -200,7 +195,7 @@ def bulk_add_object_inline(request):
                 rel_html = render_to_string('relationships_listing_widget.html',
                                             {'relationship': subscription,
                                              'relationships': class_type.sort_relationships(request.user, meta=True)},
-                                            RequestContext(request))
+                                             request=request)
 
                 response['rel_msg'] = rel_html
                 response['rel_made'] = True
@@ -240,12 +235,11 @@ def bulk_add_object_inline(request):
                         if earliest_source:
                             source_field['initial'] = earliest_source.name
 
-        return render_to_response('bulk_add_object_inline.html',
+        return render(request, 'bulk_add_object_inline.html',
                                   {'formdict': formdict,
                                    'title': "Bulk Add Objects",
                                    'is_prevent_initial_table': is_prevent_initial_table,
-                                   'table_name': 'object_inline'},
-                                  RequestContext(request))
+                                   'table_name': 'object_inline'})
 
 @user_passes_test(user_can_view_data)
 def update_objects_value(request):
@@ -279,9 +273,8 @@ def update_objects_value(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def update_objects_source(request):
@@ -320,9 +313,8 @@ def update_objects_source(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def get_object_type_dropdown(request):
@@ -344,9 +336,8 @@ def get_object_type_dropdown(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def delete_this_object(request):
@@ -385,9 +376,8 @@ def delete_this_object(request):
             error = "Expected AJAX"
     else:
         error = "Expected POST"
-    return render_to_response("error.html",
-                              {"error" : error },
-                              RequestContext(request))
+    return render(request, "error.html",
+                              {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def indicator_from_object(request):
@@ -421,6 +411,5 @@ def indicator_from_object(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })

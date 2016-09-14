@@ -3,8 +3,7 @@ import json
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render, render
 
 from crits.core.user_tools import user_can_view_data
 from crits.core.handlers import generate_global_search
@@ -37,7 +36,7 @@ def saved_searches_list(request):
     Renders the saved_searches_list html
     """
     args = get_saved_searches_list(request.user)
-    return render('saved_searches_list.html',  args, request)
+    return renderz('saved_searches_list.html',  args, request)
 
 @user_passes_test(user_can_view_data)
 def dashboard(request, dashId=None):
@@ -47,7 +46,7 @@ def dashboard(request, dashId=None):
     args = get_dashboard(request.user,dashId)
     if not args["success"]:
         return respondWithError(args['message'], request=request)
-    return render('dashboard.html',  args, request)
+    return renderz('dashboard.html',  args, request)
 
 @user_passes_test(user_can_view_data)
 def new_save_search(request):
@@ -59,7 +58,7 @@ def new_save_search(request):
     if 'Result' in args and args['Result'] == "ERROR":
         return respondWithError(args['Message'], request=request)
     args['dashboards'] = getDashboardsForUser(request.user)
-    return render("save_search.html", args, request)
+    return renderz("save_search.html", args, request)
 
 @user_passes_test(user_can_view_data)
 def edit_save_search(request, id):
@@ -73,7 +72,7 @@ def edit_save_search(request, id):
 
     args['dashboards'] = getDashboardsForUser(request.user)
 
-    return render("save_search.html", args, request)
+    return renderz("save_search.html", args, request)
 
 @user_passes_test(user_can_view_data)
 def delete_save_search(request):
@@ -157,7 +156,7 @@ def save_search(request):
         response["newDashId"] = str(newDash.id)
         response["newDashName"] = newDash.name
         response["isClone"] = clone
-        response["newDashUrl"] = reverse("crits.dashboards.views.dashboard",
+        response["newDashUrl"] = reverse("crits-dashboards-views-dashboard",
                                           kwargs={"dashId":newDash.id})
     return httpResponse(response)
 
@@ -355,7 +354,7 @@ def respondWithError(message, isAjax=False, request=None):
     if isAjax:
         return HttpResponse(json.dumps({'success': False, 'message': message}),
                                     content_type="application/json")
-    return render("error.html", {"error": message}, request)
+    return renderz("error.html", {"error": message}, request)
 
 def respondWithSuccess(message):
     """
@@ -364,11 +363,11 @@ def respondWithSuccess(message):
     return HttpResponse(json.dumps({'success': True, 'message': message}),
                          content_type="application/json")
 
-def render(html, args, request):
+def renderz(html, args, request):
     """
     Quicker way to render pages. Not necessary but neater
     """
-    return render_to_response(html, args, RequestContext(request))
+    return render(request, html, args)
 
 def httpResponse(response):
     """

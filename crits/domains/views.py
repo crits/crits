@@ -4,8 +4,7 @@ import json
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.forms.utils import ErrorList
 
 from crits.core import form_consts
@@ -37,9 +36,7 @@ def domain_detail(request, domain):
                                               request.user.username)
     if new_template:
         template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    return render(request, template, args)
 
 @user_passes_test(user_can_view_data)
 def bulk_add_domain(request):
@@ -71,7 +68,7 @@ def bulk_add_domain(request):
     else:
         objectformdict = form_to_dict(AddObjectForm(request.user))
 
-        return render_to_response('bulk_add_default.html',
+        return render(request, 'bulk_add_default.html',
                                  {'formdict': formdict,
                                   'objectformdict': objectformdict,
                                   'title': "Bulk Add Domains",
@@ -79,7 +76,7 @@ def bulk_add_domain(request):
                                   'local_validate_columns': [form_consts.Domain.DOMAIN_NAME],
                                   'custom_js': "domain_handsontable.js",
                                   'is_bulk_add_objects': True},
-                                  RequestContext(request));
+                                  );
 
 @user_passes_test(user_can_view_data)
 def domains_listing(request,option=None):
@@ -140,9 +137,7 @@ def add_domain(request):
                                        default=json_handler),
                             content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected POST' },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected POST' })
 
 @user_passes_test(user_can_view_data)
 def edit_domain(request, domain):
@@ -164,9 +159,7 @@ def edit_domain(request, domain):
         else:
             return HttpResponse(domain)
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST' },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST' })
 
 @user_passes_test(user_can_view_data)
 def domain_search(request):
@@ -180,8 +173,8 @@ def domain_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
-    #return render_to_response('error.html', {'error': query})
-    return HttpResponseRedirect(reverse('crits.domains.views.domains_listing')
+    #return render(request, 'error.html', {'error': query})
+    return HttpResponseRedirect(reverse('crits-domains-views-domains_listing')
                                 + "?%s" % urllib.urlencode(query))
 
 @user_passes_test(user_can_view_data)
@@ -202,15 +195,11 @@ def tld_update(request):
             if result['success']:
                 response = {'success': True,
                             'message': 'Success! <a href="%s">Go to Domains.</a>'
-                            % reverse('crits.domains.views.domains_listing')}
+                            % reverse('crits-domains-views-domains_listing')}
             else:
                 response = {'success': False, 'form': form.as_table()}
         else:
             response = {'success': False, 'form': form.as_table()}
-        return render_to_response('file_upload_response.html',
-                                  {'response': json.dumps(response)},
-            RequestContext(request))
+        return render(request, 'file_upload_response.html', {'response': json.dumps(response)})
     else:
-        return render_to_response('error.html',
-                                  {'error': 'Expected POST'},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': 'Expected POST'})

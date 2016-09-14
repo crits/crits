@@ -2,8 +2,7 @@ import json
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.backdoors.backdoor import Backdoor
 from crits.core.class_mapper import class_from_id
@@ -69,9 +68,9 @@ def generate_backdoor_jtable(request, option):
     jtopts = {
         'title': "Backdoors",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' %
+        'listurl': reverse('crits-%ss-views-%ss_listing' %
                            (type_, type_), args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' %
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' %
                              (type_, type_), args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -89,16 +88,16 @@ def generate_backdoor_jtable(request, option):
         },
     ]
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button': '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )
 
 def get_backdoor_details(id_, user):
     """
@@ -311,7 +310,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         # Because family objects are put in the list first we will always
         # return a link to the most specific object created. If there is only
         # one item in the list it will be the family object.
-        resp_url = reverse('crits.backdoors.views.backdoor_detail',
+        resp_url = reverse('crits-backdoors-views-backdoor_detail',
                            args=[backdoor.id])
         retVal['message'] = 'Success: <a href="%s">%s</a>' % (resp_url,
                                                               backdoor.name)

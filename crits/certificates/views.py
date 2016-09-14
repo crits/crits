@@ -3,8 +3,7 @@ import json
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
@@ -47,9 +46,7 @@ def certificate_details(request, md5):
     (new_template, args) = get_certificate_details(md5, analyst)
     if new_template:
         template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    return render(request, template, args)
 
 @user_passes_test(user_can_view_data)
 def upload_certificate(request):
@@ -82,26 +79,18 @@ def upload_certificate(request):
                                       relationship_type=relationship_type, method=method,
                                       reference=reference, bucket_list=bucket_list, ticket=ticket)
             if status['success']:
-                return render_to_response('file_upload_response.html',
+                return render(request, 'file_upload_response.html',
                                           {'response': json.dumps({
                     'message': 'Certificate uploaded successfully! <a href="%s">View Certificate</a>'
-                        % reverse('crits.certificates.views.certificate_details',
+                        % reverse('crits-certificates-views-certificate_details',
                                   args=[status['md5']]), 'success': True})},
-                                          RequestContext(request))
+                                          )
             else:
-                return render_to_response('file_upload_response.html',
-                                          {'response': json.dumps({ 'success': False,
-                                                                   'message': status['message']})}
-                                          , RequestContext(request))
+                return render(request, 'file_upload_response.html', {'response': json.dumps({ 'success': False})})
         else:
-            return render_to_response('file_upload_response.html',
-                                      {'response': json.dumps({'success': False,
-                                                               'form': form.as_table()})},
-                RequestContext(request))
+            return render(request, 'file_upload_response.html', {'response': json.dumps({'success': False})})
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected POST."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected POST."})
 
 @user_passes_test(user_is_admin)
 def remove_certificate(request, md5):
@@ -117,7 +106,7 @@ def remove_certificate(request, md5):
 
     result = delete_cert(md5, '%s' % request.user.username)
     if result:
-        return HttpResponseRedirect(reverse('crits.certificates.views.certificates_listing'))
+        return HttpResponseRedirect(reverse('crits-certificates-views-certificates_listing'))
     else:
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                                   {'error': "Could not delete certificate"})

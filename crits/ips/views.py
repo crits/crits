@@ -4,8 +4,7 @@ import urllib
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core import form_consts
 from crits.core.data_tools import json_handler
@@ -46,8 +45,8 @@ def ip_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
-    #return render_to_response('error.html', {'error': query})
-    return HttpResponseRedirect(reverse('crits.ips.views.ips_listing')
+    #return render(request, 'error.html', {'error': query})
+    return HttpResponseRedirect(reverse('crits-ips-views-ips_listing')
                                 + "?%s" % urllib.urlencode(query))
 
 @user_passes_test(user_can_view_data)
@@ -68,9 +67,7 @@ def ip_detail(request, ip):
                                           analyst)
     if new_template:
         template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    return render(request, template, args)
 
 @user_passes_test(user_can_view_data)
 def bulk_add_ip(request):
@@ -100,11 +97,11 @@ def bulk_add_ip(request):
                             default=json_handler),
                             content_type="application/json")
     else:
-        return render_to_response('bulk_add_default.html', {'formdict': formdict,
+        return render(request, 'bulk_add_default.html', {'formdict': formdict,
                                                             'title': "Bulk Add IPs",
                                                             'table_name': 'ip',
                                                             'local_validate_columns': [form_consts.IP.IP_ADDRESS],
-                                                            'is_bulk_add_objects': True}, RequestContext(request))
+                                                            'is_bulk_add_objects': True}, )
 
 @user_passes_test(user_can_view_data)
 def add_update_ip(request, method):
@@ -163,7 +160,7 @@ def add_update_ip(request, method):
                 result['message'] = []
                 message = ('<div>Success! Click here to view the new IP: <a '
                            'href="%s">%s</a></div>'
-                           % (reverse('crits.ips.views.ip_detail',
+                           % (reverse('crits-ips-views-ip_detail',
                                       args=[ip]),
                               ip))
                 result['message'].insert(0, message)
@@ -174,9 +171,7 @@ def add_update_ip(request, method):
         return HttpResponse(json.dumps({'success': False,
                                         'form':form.as_table()}),
                             content_type="application/json")
-    return render_to_response("error.html",
-                              {'error': 'Expected AJAX/POST'},
-                              RequestContext(request))
+    return render(request, "error.html", {'error': 'Expected AJAX/POST'})
 
 @user_passes_test(user_can_view_data)
 def remove_ip(request):
@@ -195,9 +190,5 @@ def remove_ip(request):
             return HttpResponse(json.dumps(result),
                                 content_type="application/json")
         error = 'You do not have permission to remove this item.'
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
-    return render_to_response('error.html',
-                              {'error':'Expected AJAX/POST'},
-                              RequestContext(request))
+        return render(request, "error.html", {'error': error})
+    return render(request, 'error.html', {'error':'Expected AJAX/POST'})

@@ -4,8 +4,7 @@ import urllib
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core.class_mapper import class_from_value
 from crits.core.user_tools import user_can_view_data, user_is_admin
@@ -57,7 +56,7 @@ def target_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
-    return HttpResponseRedirect(reverse('crits.emails.views.emails_listing') +
+    return HttpResponseRedirect(reverse('crits-emails-views-emails_listing') +
                                 "?%s" % urllib.urlencode(query))
 
 @user_passes_test(user_can_view_data)
@@ -77,7 +76,7 @@ def target_info(request, email_address):
     (new_template, args) = get_target_details(email_address, analyst)
     if new_template:
         template = new_template
-    return render_to_response(template, args, RequestContext(request))
+    return render(request, template, args, )
 
 @user_passes_test(user_can_view_data)
 def add_update_target(request):
@@ -99,7 +98,7 @@ def add_update_target(request):
             results = upsert_target(data, analyst)
             if results['success']:
                 message = '<div>Click here to view the new target: <a href='
-                message += '"%s">%s</a></div>' % (reverse('crits.targets.views.target_info',
+                message += '"%s">%s</a></div>' % (reverse('crits-targets-views-target_info',
                                                           args=[new_email]),
                                                   new_email)
                 result = {'message': message}
@@ -112,12 +111,10 @@ def add_update_target(request):
         if request.is_ajax():
             return HttpResponse(json.dumps(result), content_type="application/json")
         else:
-            return HttpResponseRedirect(reverse('crits.targets.views.target_info',
+            return HttpResponseRedirect(reverse('crits-targets-views-target_info',
                                                 args=[email]))
     else:
-        return render_to_response("error.html",
-                                  {"error" : "Expected AJAX POST" },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : "Expected AJAX POST" })
 
 @user_passes_test(user_is_admin)
 def delete_target(request, email_address=None):
@@ -136,14 +133,10 @@ def delete_target(request, email_address=None):
         results = remove_target(email_address, analyst)
         if not results['success']:
             error = "Error removing target: %s" % results['message']
-            return render_to_response("error.html",
-                                      {"error" : error },
-                                      RequestContext(request))
-        return HttpResponseRedirect(reverse('crits.targets.views.target_details'))
+            return render(request, "error.html", {"error" : error })
+        return HttpResponseRedirect(reverse('crits-targets-views-target_details'))
     else:
-        return render_to_response("error.html",
-                                  {"error" : "Expected POST" },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : "Expected POST" })
 
 @user_passes_test(user_can_view_data)
 def target_details(request, email_address=None):
@@ -165,6 +158,4 @@ def target_details(request, email_address=None):
             form = TargetInfoForm(initial={'email_address': email_address})
         else:
             form = TargetInfoForm(initial=target.to_dict())
-    return render_to_response('target_form.html',
-                              {'form': form},
-                              RequestContext(request))
+    return render(request, 'target_form.html', {'form': form})

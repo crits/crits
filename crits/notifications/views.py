@@ -3,8 +3,7 @@ import json
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core.user_tools import user_can_view_data
 from crits.notifications.handlers import remove_user_from_notification_id, get_notification_details
@@ -38,9 +37,7 @@ def poll(request):
                 return HttpResponse(status=403)
         else:
             error = "Expected AJAX POST"
-            return render_to_response("error.html",
-                                      {"error" : error },
-                                      RequestContext(request))
+            return render(request, "error.html", {"error" : error })
     else:
         # toast notifications are not enabled for this user, return an error
         return HttpResponse(status=403)
@@ -65,9 +62,7 @@ def acknowledge(request):
                                 content_type="application/json")
         else:
             error = "Expected AJAX POST"
-            return render_to_response("error.html",
-                                      {"error" : error },
-                                      RequestContext(request))
+            return render(request, "error.html", {"error" : error })
     else:
         # toast notifications are not enabled for this user, return an error
         return HttpResponse(status=403)

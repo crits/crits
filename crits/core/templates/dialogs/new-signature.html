@@ -51,7 +51,7 @@
    });
    </script>
     <form id="form-{{ request.GET.dialog }}"
-	  action='{% url "crits.signatures.views.upload_signature" %}'
+	  action='{% url "crits-signatures-views-upload_signature" %}'
       method='POST' enctype="multipart/form-data"
 	  item-type="new-signature">
       <table class="form">{{ upload_signature.as_table }}</table>

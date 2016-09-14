@@ -258,7 +258,7 @@
         </div>
         <div id="itemsContainer" class='rightContent forceInvisible'>
             <div id="add-new-action-form" title="Add/Edit Action">
-                <form id="form-add-new-action" action='{% url "crits.core.views.new_action" %}' method='POST' enctype="multipart/form-data">
+                <form id="form-add-new-action" action='{% url "crits-core-views-new_action" %}' method='POST' enctype="multipart/form-data">
                     <table class="form">{{ add_new_action.as_table }}</table>
                     <div id="form-add-new-action-results" class="form_results"></div>
                 </form>
@@ -273,7 +273,7 @@
                 </select>
                 <br />
                 <br />
-                <form id="form-add-new-user" action='{% url "crits.core.views.source_access" %}' method='POST' enctype="multipart/form-data">
+                <form id="form-add-new-user" action='{% url "crits-core-views-source_access" %}' method='POST' enctype="multipart/form-data">
                     <table class="form">{{ source_access.as_table }}</table>
                     <div id="form-add-new-user-results" class="form_results"></div>
                 </form>

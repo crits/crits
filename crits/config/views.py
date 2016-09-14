@@ -2,8 +2,7 @@ import json
 import re
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.config.config import CRITsConfig
 from crits.config.forms import ConfigGeneralForm, ConfigLDAPForm, ConfigSecurityForm, ConfigCritsForm
@@ -41,7 +40,7 @@ def crits_config(request):
         config_services_form = ConfigServicesForm()
         config_download_form = ConfigDownloadForm()
         config_CRITs_form = ConfigCritsForm()
-    return render_to_response('config.html',
+    return render(request, 'config.html',
                               {'config_general_form': config_general_form,
                                'config_LDAP_form': config_LDAP_form,
                                'config_security_form': config_security_form,
@@ -49,7 +48,7 @@ def crits_config(request):
                                'config_services_form': config_services_form,
                                'config_download_form': config_download_form,
                                'config_CRITs_form': config_CRITs_form},
-                              RequestContext(request))
+                              )
 
 @user_passes_test(user_is_admin)
 def modify_config(request):
@@ -119,6 +118,4 @@ def modify_config(request):
                    'errors': errors}
         return HttpResponse(json.dumps(message), content_type="application/json")
     else:
-        return render_to_response('error.html',
-                                  {'error': 'Expected AJAX POST'},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': 'Expected AJAX POST'})

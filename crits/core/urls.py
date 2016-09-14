@@ -3,8 +3,9 @@ from django.contrib.auth.views import logout_then_login
 
 from . import views
 
-from crits.config.views import crits_config, modify_config
-from crits.dashboards.views import dashboard
+from crits.config import views as cviews
+# crits_config, modify_config
+from crits.dashboards import views as dviews
 
 urlpatterns = [
 
@@ -37,8 +38,8 @@ urlpatterns = [
 
 
     # CRITs Configuration
-    url(r'^config/$', crits_config, name='crits-core-views-crits_config'),
-    url(r'^modify_config/$', modify_config, name='crits-core-views-modify_config'),
+    url(r'^config/$', cviews.crits_config, name='crits-config-views-crits_config'),
+    url(r'^modify_config/$', cviews.modify_config, name='crits-config-views-modify_config'),
     url(r'^audit/list/$', views.audit_listing, name='crits-core-views-audit_listing'),
     url(r'^audit/list/(?P<option>\S+)/$', views.audit_listing, name='crits-core-views-audit_listing'),
     url(r'^items/editor/$', views.item_editor, name='crits-core-views-item_editor'),
@@ -52,7 +53,7 @@ urlpatterns = [
     url(r'^add_action/$', views.new_action, name='crits-core-views-new_action'),
 
     # Default landing page
-    url(r'^$', dashboard, name='crits-core-views-dashboard'),
+    url(r'^$', dviews.dashboard, name='crits-dashboards-views-dashboard'),
     url(r'^counts/list/$', views.counts_listing, name='crits-core-views-counts_listing'),
     url(r'^counts/list/(?P<option>\S+)/$', views.counts_listing, name='crits-core-views-counts_listing'),
 

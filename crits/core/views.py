@@ -10,8 +10,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response, redirect
-from django.template import RequestContext
+from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 
 from crits.actors.actor import ActorThreatIdentifier
@@ -122,9 +121,7 @@ def update_object_description(request):
                                                           analyst)),
                             content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
 @user_passes_test(user_can_view_data)
 def update_object_data(request):
     """
@@ -146,9 +143,7 @@ def update_object_data(request):
                                                           analyst)),
                             content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
 
 @user_passes_test(user_can_view_data)
 def toggle_favorite(request):
@@ -169,9 +164,7 @@ def toggle_favorite(request):
                                                        analyst)),
                             content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
 
 @user_passes_test(user_can_view_data)
 def favorites(request):
@@ -188,9 +181,7 @@ def favorites(request):
         return HttpResponse(json.dumps(get_favorites(analyst)),
                             content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
 
 
 @user_passes_test(user_can_view_data)
@@ -218,9 +209,7 @@ def get_dialog(request):
 
     dialog = request.GET.get('dialog', '')
     # Regex in urls.py doesn't seem to be working, should sanity check dialog
-    return render_to_response(dialog + ".html",
-                              {"error" : 'Dialog not found'},
-                              RequestContext(request))
+    return render(request, dialog + ".html", {"error" : 'Dialog not found'})
 
 @user_passes_test(user_can_view_data)
 def update_status(request, type_, id_):
@@ -245,9 +234,7 @@ def update_status(request, type_, id_):
                                                      analyst)),
                             content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
 
 @user_passes_test(user_can_view_data)
 def get_item_data(request):
@@ -285,9 +272,7 @@ def global_search_listing(request):
 
     # For object searches
     if 'q' not in request.GET:
-        return render_to_response("error.html",
-                                  {"error" : 'No valid search criteria'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'No valid search criteria'})
     args = generate_global_search(request)
 
     # If we matched a single ObjectID
@@ -296,13 +281,9 @@ def global_search_listing(request):
 
     # For all other searches
     if 'Result' in args and args['Result'] == "ERROR":
-        return render_to_response("error.html",
-                                  {"error": args['Message']},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": args['Message']})
 
-    return render_to_response("search_listing.html",
-                              args,
-                              RequestContext(request))
+    return render(request, "search_listing.html", args)
 
 def about(request):
     """
@@ -313,9 +294,7 @@ def about(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    return render_to_response('about.html',
-                              {},
-                              RequestContext(request))
+    return render(request, 'about.html', {})
 
 def help(request):
     """
@@ -326,9 +305,7 @@ def help(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    return render_to_response('help.html',
-                              {},
-                              RequestContext(request))
+    return render(request, 'help.html', {})
 
 # Mongo Auth
 def login(request):
@@ -352,10 +329,10 @@ def login(request):
     if request.user.is_authenticated():
         resp = validate_next(next_url)
         if not resp['success']:
-            return render_to_response('error.html',
+            return render(request, 'error.html',
                                       {'data': resp,
                                     'error': resp['message']},
-                                    RequestContext(request))
+                                    )
         else:
             return HttpResponseRedirect(resp['message'])
 
@@ -389,14 +366,14 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
         else:
             logger.warn("REMOTE_USER enabled, but no user passed.")
             message = 'REMOTE_USER not provided. Please notify an admin.'
-            return render_to_response('login.html',
+            return render(request, 'login.html',
                                       {'next': url,
                                        'theme': 'default',
                                        'login': False,
                                        'show_auth': False,
                                        'message': message,
                                        'token_message': token_message},
-                                      RequestContext(request))
+                                      )
 
     # Attempt authentication
     if request.method == 'POST' and request.is_ajax():
@@ -434,14 +411,14 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
     # Display template for authentication
-    return render_to_response('login.html',
+    return render(request, 'login.html',
                               {'next': url,
                                'theme': 'default',
                                'login': login,
                                'show_auth': show_auth,
                                'message': message,
                                'token_message': token_message},
-                              RequestContext(request))
+                              )
 
 def reset_password(request):
     """
@@ -468,9 +445,7 @@ def reset_password(request):
                                    new_p_c=new_p_c,
                                    analyst=analyst)
 
-    return render_to_response('login.html',
-                              {'reset': True},
-                              RequestContext(request))
+    return render(request, 'login.html', {'reset': True})
 
 @user_passes_test(user_can_view_data)
 def profile(request, user=None):
@@ -490,13 +465,11 @@ def profile(request, user=None):
         username = request.user.username
     args = generate_user_profile(username,request)
     if 'status'in args and args['status'] == "ERROR":
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                                   {'data': request,
                                    'error': "Invalid request"},
-                                  RequestContext(request))
-    return render_to_response('profile.html',
-                              args,
-                              RequestContext(request))
+                                  )
+    return render(request, 'profile.html', args)
 
 @user_passes_test(user_can_view_data)
 def dashboard(request):
@@ -546,9 +519,7 @@ def source_releasability(request):
         user = str(request.user.username)
         if not type_ or not id_ or not name or not action:
             error = "Modifying releasability requires a type, id, source, and action"
-            return render_to_response("error.html",
-                                      {"error" : error },
-                                      RequestContext(request))
+            return render(request, "error.html", {"error" : error })
         if action  == "add":
             result = add_releasability(type_, id_, name, user)
         elif action  == "add_instance":
@@ -560,9 +531,7 @@ def source_releasability(request):
             result = remove_releasability_instance(type_, id_, name, date, user)
         else:
             error = "Unknown releasability action: %s" % action
-            return render_to_response("error.html",
-                                      {"error" : error },
-                                      RequestContext(request))
+            return render(request, "error.html", {"error" : error })
         if result['success']:
             subscription = {
                 'type': type_,
@@ -572,7 +541,7 @@ def source_releasability(request):
             html = render_to_string('releasability_header_widget.html',
                                     {'releasability': result['obj'],
                                      'subscription': subscription},
-                                    RequestContext(request))
+                                    request=request)
             response = {'success': result['success'],
                         'html': html}
         else:
@@ -582,9 +551,7 @@ def source_releasability(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST!"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 def source_access(request):
     """
@@ -597,9 +564,7 @@ def source_access(request):
 
     if not is_admin(request.user.username):
         error = "You do not have permission to use this feature!"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
     if request.method == 'POST' and request.is_ajax():
         form = SourceAccessForm(request.POST)
         if form.is_valid():
@@ -616,9 +581,7 @@ def source_access(request):
                                 content_type="application/json")
     else:
         error = "Expected AJAX POST!"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_is_admin)
 def source_add(request):
@@ -650,9 +613,7 @@ def source_add(request):
                        'form': source_form.as_table()}
         return HttpResponse(json.dumps(message),
                             content_type="application/json")
-    return render_to_response("error.html",
-                              {"error" : 'Expected AJAX POST' },
-                              RequestContext(request))
+    return render(request, "error.html", {"error" : 'Expected AJAX POST' })
 
 @user_passes_test(user_is_admin)
 def user_role_add(request):
@@ -681,9 +642,7 @@ def user_role_add(request):
                        'form': role_form.as_table()}
         return HttpResponse(json.dumps(message),
                             content_type="application/json")
-    return render_to_response("error.html",
-                              {"error" : 'Expected AJAX POST'},
-                              RequestContext(request))
+    return render(request, "error.html", {"error" : 'Expected AJAX POST'})
 
 @user_passes_test(user_can_view_data)
 def add_update_source(request, method, obj_type, obj_id):
@@ -729,14 +688,14 @@ def add_update_source(request, method, obj_type, obj_id):
                                                           {'source': result['object'],
                                                            'obj_type': obj_type,
                                                            'obj_id': obj_id},
-                                                          RequestContext(request))
+                                                          request=request)
                     else:
                         result['html'] = render_to_string('sources_row_widget.html',
                                                           {'source': result['object'],
                                                            'instance': result['instance'],
                                                            'obj_type': obj_type,
                                                            'obj_id': obj_id},
-                                                          RequestContext(request))
+                                                          request=request)
                 return HttpResponse(json.dumps(result,
                                                default=json_handler),
                                     content_type="application/json")
@@ -778,9 +737,7 @@ def remove_source(request, obj_type, obj_id):
                                 content_type="application/json")
         else:
             error = "You do not have permission to remove this item"
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+            return render(request, "error.html", {'error': error})
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -808,9 +765,7 @@ def remove_all_source(request, obj_type, obj_id):
                                 content_type="application/json")
         else:
             error = "You do not have permission to remove this item"
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+            return render(request, "error.html", {'error': error})
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
@@ -825,9 +780,7 @@ def bucket_promote(request):
 
     bucket = request.GET.get("name", None)
     if not bucket:
-        return render_to_response("error.html",
-                                  {'error': 'Need a bucket.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {'error': 'Need a bucket.'})
     form = CampaignForm(request.POST)
     if form.is_valid():
         analyst = request.user.username
@@ -887,9 +840,7 @@ def download_object(request):
     """
 
     if request.method != "POST":
-        return render_to_response("error.html",
-                                  {"error" : "Expecting POST."},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : "Expecting POST."})
 
     form = DownloadFileForm(request.POST)
     if form.is_valid():
@@ -914,9 +865,7 @@ def download_object(request):
             if total_limit < 0 or depth_limit < 0 or rel_limit < 0:
                 raise
         except:
-            return render_to_response("error.html",
-                                      {"error" : "Limits must be positive integers."},
-                                      RequestContext(request))
+            return render(request, "error.html", {"error" : "Limits must be positive integers."})
 
         # Don't exceed the configured maximums. This is done in the view
         # so that scripts can enforce their own limmits.
@@ -929,9 +878,7 @@ def download_object(request):
 
         sources = user_sources(request.user.username)
         if not sources:
-            return render_to_response("error.html",
-                                      {"error" : "No matching data."},
-                                      RequestContext(request))
+            return render(request, "error.html", {"error" : "No matching data."})
 
         result = download_object_handler(total_limit,
                                          depth_limit,
@@ -943,9 +890,7 @@ def download_object(request):
                                          sources)
 
         if not result['success']:
-            return render_to_response("error.html",
-                                      {"error" : "No matching data."},
-                                      RequestContext(request))
+            return render(request, "error.html", {"error" : "No matching data."})
 
         response = HttpResponse()
         response['mimetype'] = result['mimetype']
@@ -953,9 +898,7 @@ def download_object(request):
         response.write(result['data'])
         return response
     else:
-        return render_to_response("error.html",
-                                  {"error" : "Invalid form."},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : "Invalid form."})
 
 @user_passes_test(user_can_view_data)
 def timeline(request, data_type="dns"):
@@ -1014,11 +957,7 @@ def timeline(request, data_type="dns"):
                                        default=json_util.default),
                             content_type="application/json")
     else:
-        return render_to_response('timeline.html',
-                                  {'data_type': data_type,
-                                   'params': json.dumps(params),
-                                   'page_title': page_title},
-                                  RequestContext(request))
+        return render(request, 'timeline.html', {'data_type': data_type, 'page_title': page_title})
 
 def base_context(request):
     """
@@ -1338,9 +1277,7 @@ def get_user_source_list(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_is_admin)
 def user_source_access(request, username=None):
@@ -1373,9 +1310,7 @@ def user_source_access(request, username=None):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def user_preference_toggle(request, section, setting):
@@ -1395,9 +1330,7 @@ def user_preference_toggle(request, section, setting):
         pref = generate_user_preference(request, section, 'toggle', setting)
         if not pref or 'toggle' not in pref:
             error = "Unexpected Preference Toggle Received in AJAX POST"
-            return render_to_response("error.html",
-                                      {"error" : error },
-                                      RequestContext(request))
+            return render(request, "error.html", {"error" : error })
 
         result = toggle_user_preference(request.user.username, section, setting, is_enabled=pref.get('enabled'))
 
@@ -1417,9 +1350,7 @@ def user_preference_toggle(request, section, setting):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def user_preference_update(request, section):
@@ -1440,9 +1371,7 @@ def user_preference_update(request, section):
 
         if not pref or 'formclass' not in pref or not callable(pref['formclass']):
             error = "Unexpected Form Received in AJAX POST"
-            return render_to_response("error.html",
-                                      {"error" : error },
-                                      RequestContext(request))
+            return render(request, "error.html", {"error" : error })
 
         form = (pref['formclass'])(request, request.POST)
 
@@ -1466,15 +1395,13 @@ def user_preference_update(request, section):
             pref['form'] = form  # Inject our form instance with validation results
             result['html'] = render_to_string("preferences_widget.html",
                                               {'pref': pref},
-                                              RequestContext(request))
+                                              request=request)
 
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def clear_user_notifications(request):
@@ -1487,7 +1414,7 @@ def clear_user_notifications(request):
     """
 
     remove_user_notifications("%s" % request.user.username)
-    return HttpResponseRedirect(reverse('crits.core.views.profile') + '#notifications_button')
+    return HttpResponseRedirect(reverse('crits-core-views-profile') + '#notifications_button')
 
 @user_passes_test(user_can_view_data)
 def delete_user_notification(request, type_, oid):
@@ -1513,9 +1440,7 @@ def delete_user_notification(request, type_, oid):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def change_subscription(request, stype, oid):
@@ -1549,9 +1474,7 @@ def change_subscription(request, stype, oid):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def source_subscription(request):
@@ -1569,9 +1492,7 @@ def source_subscription(request):
         source = request.POST['source']
         if source not in user_source_access:
             error = "You do not have access to that source."
-            return render_to_response("error.html",
-                                        {"error" : error },
-                                        RequestContext(request))
+            return render(request, "error.html", {"error" : error })
         message = ""
         if is_user_subscribed_to_source(username, source):
             unsubscribe_from_source(username, source)
@@ -1584,9 +1505,7 @@ def source_subscription(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 def collections(request):
     """
@@ -1636,9 +1555,7 @@ def change_password(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def change_totp_pin(request):
@@ -1669,9 +1586,7 @@ def change_totp_pin(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_is_admin)
 def control_panel(request):
@@ -1683,9 +1598,7 @@ def control_panel(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    return render_to_response("control_panel.html",
-                                {},
-                                RequestContext(request))
+    return render(request, "control_panel.html", {})
 
 @user_passes_test(user_is_admin)
 def users_listing(request, option=None):
@@ -1723,9 +1636,7 @@ def toggle_user_active(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_is_admin)
 def item_editor(request):
@@ -1748,9 +1659,7 @@ def item_editor(request):
                 UserRole]
     for col_obj in obj_list:
         counts[col_obj._meta['crits_type']] = col_obj.objects().count()
-    return render_to_response("item_editor.html",
-                              {'counts': counts},
-                              RequestContext(request))
+    return render(request, "item_editor.html", {'counts': counts})
 
 @user_passes_test(user_is_admin)
 def items_listing(request, itype, option=None):
@@ -1803,9 +1712,7 @@ def toggle_item_active(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def add_preferred_actions(request):
@@ -1832,7 +1739,8 @@ def add_preferred_actions(request):
                                                        {'action': obj,
                                                         'admin': is_admin(username),
                                                         'obj_type':obj_type,
-                                                        'obj_id':obj_id})
+                                                        'obj_id':obj_id},
+                                                        request=request)
     else:
         result = {'success': False, 'message': "Expected AJAX POST"}
     return HttpResponse(json.dumps(result, default=json_handler),
@@ -1856,10 +1764,10 @@ def download_file(request, sample_md5):
     if dtype in ('object', 'pcap', 'cert'):
         return download_grid_file(request, dtype, sample_md5)
     else:
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                                   {'data': request,
                                    'error': "Unknown Type: %s" % dtype},
-                                  RequestContext(request))
+                                  )
 
 @user_passes_test(user_can_view_data)
 def details(request, type_=None, id_=None):
@@ -1878,16 +1786,12 @@ def details(request, type_=None, id_=None):
     """
 
     if not type_ or not id_:
-        return render_to_response('error.html',
-                                  {'error': "Need a type and id to redirect to."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Need a type and id to redirect to."})
     redir = details_from_id(type_, id_)
     if redir:
         return HttpResponseRedirect(redir)
     else:
-        return render_to_response('error.html',
-                                  {'error': "No details page exists for type %s" % type_},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "No details page exists for type %s" % type_})
 
 
 @user_passes_test(user_can_view_data)
@@ -1917,9 +1821,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
                                 content_type="application/json")
         else:
             error = "You do not have permission to remove this item."
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+            return render(request, "error.html", {'error': error})
 
     if request.method == "POST" and request.is_ajax():
         form = TicketForm(request.POST)
@@ -1946,7 +1848,8 @@ def add_update_ticket(request, method, type_=None, id_=None):
                                                    'admin': is_admin(request.user),
                                                    'crits_config': crits_config,
                                                    'obj_type': type_,
-                                                   'obj': class_from_id(type_, id_)})
+                                                   'obj': class_from_id(type_, id_)},
+                                                   request=request)
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
                                 content_type="application/json")
@@ -1999,9 +1902,7 @@ def get_api_key(request):
                                 content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def create_api_key(request):
@@ -2025,9 +1926,7 @@ def create_api_key(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def make_default_api_key(request):
@@ -2051,9 +1950,7 @@ def make_default_api_key(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def revoke_api_key(request):
@@ -2077,9 +1974,7 @@ def revoke_api_key(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def sector_modify(request):
@@ -2175,7 +2070,7 @@ def new_action(request):
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),
                             content_type="application/json")
-    return render_to_response('error.html',
+    return render(request, 'error.html',
                               {'error': 'Expected AJAX POST'})
 
 @user_passes_test(user_can_view_data)
@@ -2228,7 +2123,8 @@ def add_update_action(request, method, obj_type, obj_id):
                                                   {'action': result['object'],
                                                    'admin': is_admin(username),
                                                    'obj_type':obj_type,
-                                                   'obj_id':obj_id})
+                                                   'obj_id':obj_id},
+                                                   request=request)
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
                                 content_type="application/json")
@@ -2263,9 +2159,7 @@ def remove_action(request, obj_type, obj_id):
                                 content_type="application/json")
         else:
             error = "You do not have permission to remove this item."
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+            return render(request, "error.html", {'error': error})
     return HttpResponse({})
 
 @user_passes_test(user_can_view_data)

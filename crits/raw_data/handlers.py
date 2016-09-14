@@ -5,9 +5,9 @@ import json
 from dateutil.parser import parse
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.template.loader import render_to_string
+
 try:
     from mongoengine.base import ValidationError
 except ImportError:
@@ -177,7 +177,7 @@ def generate_raw_data_versions(_id):
                                                              'version',
                                                              'data')
         for rv in rvs:
-            link = reverse('crits.raw_data.views.raw_data_details',
+            link = reverse('crits-raw_data-views-raw_data_details',
                            args=(rv.id,))
             versions.append({'title': rv.title,
                             'version': rv.version,
@@ -222,10 +222,10 @@ def generate_raw_data_jtable(request, option):
     jtopts = {
         'title': "Raw Data",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%s.views.%s_listing' % (type_,
+        'listurl': reverse('crits-%s-views-%s_listing' % (type_,
                                                             type_),
                            args=('jtlist',)),
-        'deleteurl': reverse('crits.%s.views.%s_listing' % (type_,
+        'deleteurl': reverse('crits-%s-views-%s_listing' % (type_,
                                                               type_),
                              args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
@@ -275,16 +275,14 @@ def generate_raw_data_jtable(request, option):
     ]
 
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
-                                   'button' : '%s_tab' % type_},
-                                  RequestContext(request))
+                                   'button' : '%s_tab' % type_})
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
-                                   'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                   'jtid': '%s_listing' % type_})
 
 def handle_raw_data_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,

@@ -3,8 +3,7 @@ import json
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response, render
-from django.template import RequestContext
+from django.shortcuts import render, render
 
 from crits.core.handlers import get_item_names
 from crits.core.user_tools import user_can_view_data
@@ -64,9 +63,7 @@ def set_signature_type(request, id_):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def get_signature_versions(request, _id):
@@ -85,9 +82,7 @@ def get_signature_versions(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def signature_detail(request, _id):
@@ -187,7 +182,7 @@ def upload_signature(request, link_id=None):
             if status['success']:
                 jdump = json.dumps({
                     'message': 'signature uploaded successfully! <a href="%s">View signature</a>'
-                    % reverse('crits.signatures.views.signature_detail',
+                    % reverse('crits-signatures-views-signature_detail',
                               args=[status['_id']]), 'success': True})
                 return HttpResponse(jdump, content_type="application/json")
 
@@ -202,9 +197,7 @@ def upload_signature(request, link_id=None):
             return HttpResponse(jdump, content_type="application/json")
 
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected POST."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected POST."})
 
 
 @user_passes_test(user_can_view_data)
@@ -228,9 +221,7 @@ def update_data_type_dependency(request):
                                                           analyst)),
                             content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
 
 @user_passes_test(user_can_view_data)
 def update_data_type_min_version(request):
@@ -253,9 +244,7 @@ def update_data_type_min_version(request):
                                                           analyst)),
                             content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
 
 @user_passes_test(user_can_view_data)
 def update_data_type_max_version(request):
@@ -278,9 +267,7 @@ def update_data_type_max_version(request):
                                                           analyst)),
                             content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
 
 
 @user_passes_test(user_is_admin)
@@ -305,9 +292,7 @@ def remove_signature_dependency(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 
 @user_passes_test(user_is_admin)
@@ -324,9 +309,9 @@ def remove_signature(request, _id):
 
     result = delete_signature(_id, '%s' % request.user.username)
     if result:
-        return HttpResponseRedirect(reverse('crits.signatures.views.signatures_listing'))
+        return HttpResponseRedirect(reverse('crits-signatures-views-signatures_listing'))
     else:
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                                   {'error': "Could not delete signature"})
 
 
@@ -359,7 +344,7 @@ def new_signature_dependency(request):
         return HttpResponse(json.dumps(message),
                             content_type="application/json")
     else:
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                               {'error':'Expected AJAX POST'})
 
 
@@ -389,7 +374,7 @@ def new_signature_type(request):
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),
                             content_type="application/json")
-    return render_to_response('error.html',
+    return render(request, 'error.html',
                               {'error':'Expected AJAX POST'})
 
 
@@ -413,9 +398,7 @@ def get_signature_dependency_dropdown(request):
             return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
+        return render(request, "error.html", {'error': error})
 
 
 @user_passes_test(user_can_view_data)
@@ -438,9 +421,7 @@ def get_signature_type_dropdown(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
+        return render(request, "error.html", {'error': error})
 
 
 @user_passes_test(user_can_view_data)

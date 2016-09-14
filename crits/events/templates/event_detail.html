@@ -26,7 +26,7 @@
                 <li><a href="#" class="dialogClick" dialog="new-sample" persona="related">Add Sample</a></li>
                 <li><a href="#" class="dialogClick" dialog="download-event">Download Event</a></li>
                 {% if admin %}
-                    <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="event" action='{% url "crits.events.views.remove_event" event.id %}'>Delete Event</a></li>
+                    <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="event" action='{% url "crits-events-views-remove_event" event.id %}'>Delete Event</a></li>
                 {% endif %}
             </ul>
         </span>

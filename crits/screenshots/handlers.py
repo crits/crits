@@ -4,8 +4,7 @@ import json
 from PIL import Image
 
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.core.urlresolvers import reverse
 
 from crits.core.class_mapper import class_from_id
@@ -204,11 +203,11 @@ def create_screenshot_html(s, oid, otype):
         description = s.md5
     description += " (submitted by %s)" % s.analyst
     html = '<a href="%s" title="%s" data-id="%s" data-dialog><img class="ss_no_bucket" src="%s">' % \
-            (reverse('crits.screenshots.views.render_screenshot',
+            (reverse('crits-screenshots-views-render_screenshot',
                     args=[s.id]),
             description,
             str(s.id),
-            reverse('crits.screenshots.views.render_screenshot',
+            reverse('crits-screenshots-views-render_screenshot',
                     args=[s.id, 'thumb']))
     html += '<span class="remove_screenshot ui-icon ui-icon-trash" data-id="'
     html += '%s" data-obj="%s" data-type="%s" title="Remove from %s">' % (str(s.id),
@@ -287,10 +286,10 @@ def generate_screenshot_jtable(request, option):
     jtopts = {
         'title': "Screenshots",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                             type_),
                            args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                               type_),
                              args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
@@ -303,13 +302,13 @@ def generate_screenshot_jtable(request, option):
     jtable = build_jtable(jtopts,request)
     jtable['toolbar'] = []
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button' : '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )

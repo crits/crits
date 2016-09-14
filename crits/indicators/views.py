@@ -6,8 +6,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.template.loader import render_to_string
 
 from crits.core.crits_mongoengine import json_handler
@@ -58,9 +57,7 @@ def indicator(request, indicator_id):
                                                  analyst)
     if new_template:
         template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    return render(request, template, args)
 
 @user_passes_test(user_can_view_data)
 def indicators_listing(request, option=None):
@@ -94,9 +91,9 @@ def remove_indicator(request, _id):
     result = indicator_remove(_id,
                               '%s' % request.user.username)
     if result['success']:
-        return HttpResponseRedirect(reverse('crits.indicators.views.indicators_listing'))
+        return HttpResponseRedirect(reverse('crits-indicators-views-indicators_listing'))
     else:
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                                   {'error': result['message']})
 
 @user_passes_test(user_can_view_data)
@@ -111,8 +108,8 @@ def indicator_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')] = request.GET.get('q', '').strip()
-    #return render_to_response('error.html', {'error': query})
-    return HttpResponseRedirect(reverse('crits.indicators.views.indicators_listing')
+    #return render(request, 'error.html', {'error': query})
+    return HttpResponseRedirect(reverse('crits-indicators-views-indicators_listing')
                                 + "?%s" % urllib.urlencode(query))
 
 @user_passes_test(user_can_view_data)
@@ -150,7 +147,7 @@ def upload_indicator(request):
                     message = {'message': ('<div>%s <a href="%s">Go to all'
                                            ' indicators</a></div>' %
                                            (result['message'],
-                                            reverse('crits.indicators.views.indicators_listing')))}
+                                            reverse('crits-indicators-views-indicators_listing')))}
                 else:
                     failed_msg = '<div>%s</div>' % result['message']
 
@@ -171,7 +168,7 @@ def upload_indicator(request):
                     message = {'message': ('<div>%s <a href="%s">Go to all'
                                            ' indicators</a></div>' %
                                            (result['message'],
-                                            reverse('crits.indicators.views.indicators_listing')))}
+                                            reverse('crits-indicators-views-indicators_listing')))}
                 else:
                     failed_msg = '<div>%s</div>' % result['message']
 
@@ -203,9 +200,9 @@ def upload_indicator(request):
                     indicator_link = ((' - <a href=\"%s\">Go to this '
                                        'indicator</a> or <a href="%s">all '
                                        'indicators</a>.</div>') %
-                                      (reverse('crits.indicators.views.indicator',
+                                      (reverse('crits-indicators-views-indicator',
                                                args=[result['objectid']]),
-                                       reverse('crits.indicators.views.indicators_listing')))
+                                       reverse('crits-indicators-views-indicators_listing')))
 
                     if result.get('is_new_indicator', False) == False:
                         message = {'message': ('<div>Warning: Updated existing'
@@ -218,7 +215,7 @@ def upload_indicator(request):
 
         if result == None or not result['success']:
             failed_msg += ('<a href="%s"> Go to all indicators</a></div>'
-                           % reverse('crits.indicators.views.indicators_listing'))
+                           % reverse('crits-indicators-views-indicators_listing'))
             message = {'message': failed_msg, 'form': form.as_table()}
         elif result != None:
             message['success'] = result['success']
@@ -227,9 +224,7 @@ def upload_indicator(request):
             return HttpResponse(json.dumps(message),
                                 content_type="application/json")
         else: #file upload
-            return render_to_response('file_upload_response.html',
-                                      {'response': json.dumps(message)},
-                                      RequestContext(request))
+            return render(request, 'file_upload_response.html', {'response': json.dumps(message)})
 
 @user_passes_test(user_can_view_data)
 def add_update_activity(request, method, indicator_id):
@@ -268,7 +263,8 @@ def add_update_activity(request, method, indicator_id):
                 result['html'] = render_to_string('indicators_activity_row_widget.html',
                                                   {'activity': result['object'],
                                                    'admin': is_admin(username),
-                                                   'indicator_id': indicator_id})
+                                                   'indicator_id': indicator_id},
+                                                   request=request)
             return HttpResponse(json.dumps(result, default=json_handler),
                                 content_type="application/json")
         else: #invalid form
@@ -300,9 +296,7 @@ def remove_activity(request, indicator_id):
                                 content_type="application/json")
         else:
             error = "You do not have permission to remove this item."
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+            return render(request, "error.html", {'error': error})
 
 @user_passes_test(user_can_view_data)
 def update_ci(request, indicator_id, ci_type):
@@ -361,7 +355,7 @@ def indicator_and_ip(request):
                 message = render_to_string('relationships_listing_widget.html',
                                            {'relationships': result['message'],
                                             'relationship': relationship},
-                                           RequestContext(request))
+                                           request=request)
                 result = {'success': True, 'message': message}
             else:
                 result = {
@@ -409,7 +403,7 @@ def indicator_from_tlo(request):
                 message = render_to_string('relationships_listing_widget.html',
                                            {'relationships': result['message'],
                                             'relationship': relationship},
-                                           RequestContext(request))
+                                           )
                 result = {'success': True, 'message': message}
             else:
                 result = {
@@ -451,14 +445,10 @@ def get_indicator_type_dropdown(request):
             return HttpResponse(json.dumps(result), content_type="application/json")
         else:
             error = "Expected AJAX"
-            return render_to_response("error.html",
-                                      {"error" : error },
-                                      RequestContext(request))
+            return render(request, "error.html", {"error" : error })
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def update_indicator_type(request, indicator_id):
@@ -487,9 +477,7 @@ def update_indicator_type(request, indicator_id):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error": error},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": error})
 
 @user_passes_test(user_can_view_data)
 def threat_type_modify(request, indicator_id):
@@ -511,9 +499,7 @@ def threat_type_modify(request, indicator_id):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error": error},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": error})
 
 @user_passes_test(user_can_view_data)
 def attack_type_modify(request, indicator_id):
@@ -535,9 +521,7 @@ def attack_type_modify(request, indicator_id):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error": error},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": error})
 
 @user_passes_test(user_can_view_data)
 def get_available_threat_types(request):

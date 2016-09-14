@@ -30,7 +30,7 @@
         <ul class="hmenu">
             <li><a href="#" class="dialogClick" dialog="download-indicator">Download Indicator</a></li>
             {% if admin %}
-            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="indicator" action='{% url "crits.indicators.views.remove_indicator" indicator.id %}'>Delete Indicator</a></li>
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="indicator" action='{% url "crits-indicators-views-remove_indicator" indicator.id %}'>Delete Indicator</a></li>
             {% endif %}
         </ul>
         </span>
@@ -86,7 +86,7 @@
             Value
         </td>
         <td>
-            <a href='{% url "crits.domains.views.domain_detail" indicator.value %}'>{{ indicator.value }}</a>
+            <a href='{% url "crits-domains-views-domain_detail" indicator.value %}'>{{ indicator.value }}</a>
     {% elif indicator.type == 'Email Address' or indicator.type == 'Email Address From' or indicator.type == 'Email Reply-To' or indicator.type == 'Email Address Sender' %}
         <tr>
         <td class='key'>
@@ -267,7 +267,7 @@
 <div style="display: none;">
 
 <div id="dialog-download-indicator" title="Download Indicator">
-    <form id="form-download-indicator" action='{% url "crits.core.views.download_object" %}' method="POST" enctype="multipart/form-data">{% csrf_token %}
+    <form id="form-download-indicator" action='{% url "crits-core-views-download_object" %}' method="POST" enctype="multipart/form-data">{% csrf_token %}
     <table class="form">{{forms.download_form.as_table}}</table>
     </form>
 </div>

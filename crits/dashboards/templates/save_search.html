@@ -568,7 +568,7 @@
            //ajax call to save the table/search
             $.ajax({
                 type:"GET",
-                url: "{% url 'crits-dashboards-views-save_search'%}",
+                url: "{% url 'crits-dashboards-views-save_search' %}",
                 data: data,
                 datatype: 'json',
                 success: function(data) {

@@ -164,7 +164,7 @@
             var isVisible = $(parent).attr('isVisible')
             $.ajax({
                 type:'GET',
-                url: '{% url "crits.dashboards.views.toggle_table_visibility" %}',
+                url: '{% url "crits-dashboards-views-toggle_table_visibility" %}',
                 data: {
                     tableId: id,
                     isVisible:  isVisible
@@ -436,7 +436,7 @@
         	//constructs the variables need for each dashboard table
         	{% for dash in dashboards %}
 	            var name = ''+
-	            '<a id="{{dash.id}}Title" href=\'{% url "crits.dashboards.views.dashboard" dash.id %}\'>'+
+	            '<a id="{{dash.id}}Title" href=\'{% url "crits-dashboards-views-dashboard" dash.id %}\'>'+
 	                 '{{dash.name}}'+
 	            '</a>' +
 	            '<i dash="{{dash.id}}" class="fa fa-caret-square-o-down dashboard-settings"></i>';
@@ -450,7 +450,7 @@
                         {% else %}
                             '<i title="Hidden" class="fa fa-ban visibilityIcon"></i>' +
                         {% endif %}
-	                    '<a class="black" href=\'{% url "crits.dashboards.views.edit_save_search" table.id %}\'>' +
+	                    '<a class="black" href=\'{% url "crits-dashboards-views-edit_save_search" table.id %}\'>' +
 	                        '<i title="Edit" class="fa fa-cog"></i>'+
 	                    '</a>'+
 	                    '<i title="Delete" class="fa fa-trash removeFromDashboard {%if table.isDefaultOnDashboard %}default{% endif %}"></i>' +
@@ -496,7 +496,7 @@
                         var search = ui.helper.attr('recid');
                         $.ajax({
                             type:'GET',
-                            url: '{% url "crits.dashboards.views.switch_dashboard" %}',
+                            url: '{% url "crits-dashboards-views-switch_dashboard" %}',
                             data: {
                                 id: search,
                                 dashboard: newDash

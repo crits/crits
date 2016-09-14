@@ -4,6 +4,19 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: apolkosnik
+Date:   2016-09-14
+
+    Added support for Django 1.10 and mongoengine (0.10.x), in essence everything should
+    continue to work.
+
+    If you want to go with mongoengine 0.10.x, you'll need to upgrade via pip.
+
+        pip install -U 'mongoengine>0.9'
+        pip install -U git+https://github.com/MongoEngine/django-mongoengine.git
+        pip install -U git+https://github.com/frbapolkosnik/django-tastypie-mongoengine.git 
+
+
+Author: apolkosnik
 Date:   2016-07-13
 
     Support for Impfuzzy has been added, see:

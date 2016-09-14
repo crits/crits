@@ -200,7 +200,7 @@
     <div class="bottom">
     {% endif %}
       <span class="right">
-        <b>CRITs&trade;</b> Copyright &copy; 2015 The MITRE Corporation. All Rights Reserved.
+        <b>CRITs&trade;</b> Copyright &copy; {% now "Y" %} The MITRE Corporation. All Rights Reserved.
       </span>
       {% if request.user.is_authenticated %}
       <span class="right" data-intro="Data Classification" data-position="top">
@@ -396,7 +396,7 @@
              <ul class='dashboard-nav-submenu' class='sub-mmenu'>
                  {% for dash in user.getDashboards %}
                      <li class='mmenu_item'>
-                         <a href='{% url "crits.dashboards.views.dashboard" dash.id %}'>{{dash.name}}</a>
+                         <a href='{% url "crits-dashboards-views-dashboard" dash.id %}'>{{dash.name}}</a>
                      </li>
                  {% endfor %}
              </ul>
@@ -680,7 +680,7 @@
       <a href class="dialogClick" persona="new" dialog="shortcut_help" id="shortcut-keys">Shortcut Keys Help</a>
     </li>
     <li class='nav_main mmenu_item'>
-      <a id="logout" href="{% url 'django.contrib.auth.views.logout_then_login' %}">Log Out</a>
+      <a id="logout" href="{% url 'crits-core-views-logout_then_login' %}">Log Out</a>
     </li>
   </ul>
 </nav>

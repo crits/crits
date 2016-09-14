@@ -1,8 +1,7 @@
 import json
 
 from django.conf import settings
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.http import HttpResponse
 from django.core.urlresolvers import reverse
 try:
@@ -213,7 +212,7 @@ def generate_campaign_jtable(request, option):
     jtopts = {
         'title': "Campaigns",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_, type_),
+        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_, type_),
                            args=('jtlist',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -255,7 +254,7 @@ def generate_campaign_jtable(request, option):
         {
             'tooltip': "'Refresh campaign stats'",
             'text': "'Refresh Stats'",
-            'click': "function () {$.get('" + reverse('crits.%ss.views.%ss_listing' % (type_, type_)) + "', {'refresh': 'yes'}, function () { $('#campaign_listing').jtable('reload');});}"
+            'click': "function () {$.get('" + reverse('crits-%ss-views-%ss_listing' % (type_, type_)) + "', {'refresh': 'yes'}, function () { $('#campaign_listing').jtable('reload');});}"
         },
         {
             'tooltip': "'Add Campaign'",
@@ -267,7 +266,7 @@ def generate_campaign_jtable(request, option):
     # Make count fields clickable to search those listings
     for ctype in ["actor", "backdoor", "exploit", "indicator", "email",
                   "domain", "sample", "event", "ip", "pcap"]:
-        url = reverse('crits.%ss.views.%ss_listing' % (ctype, ctype))
+        url = reverse('crits-%ss-views-%ss_listing' % (ctype, ctype))
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
                 field['display'] = """ function (data) {
@@ -275,16 +274,16 @@ def generate_campaign_jtable(request, option):
             }
             """ % (url, ctype)
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button': '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )
 
 def add_campaign(name, description, aliases, analyst, 
                  bucket_list=None, ticket=None, related_id=None, 

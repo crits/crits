@@ -2,8 +2,7 @@ import json
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core.user_tools import user_can_view_data
 from crits.screenshots.handlers import get_screenshots_for_id, get_screenshot
@@ -44,9 +43,7 @@ def get_screenshots(request):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def find_screenshot(request):
@@ -70,9 +67,7 @@ def find_screenshot(request):
                             content_type="application/json")
     else:
         error = "Could not get screenshot."
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def render_screenshot(request, _id, thumb=None):

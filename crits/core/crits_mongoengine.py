@@ -6,7 +6,10 @@ import csv
 from bson import json_util, ObjectId
 from dateutil.parser import parse
 from django.conf import settings
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
 from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
@@ -322,6 +325,7 @@ class CritsDocument(BaseDocument):
             #.delete() is normally defined on a Document, not BaseDocument, so
             #   we'll have to monkey patch to call our delete.
             self.delete = self._custom_delete
+        self._meta['strict'] = False
         super(CritsDocument, self).__init__(**values)
 
     def _custom_save(self, force_insert=False, validate=True, clean=False,

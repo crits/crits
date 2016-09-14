@@ -5,8 +5,7 @@ from django import forms
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data, user_is_admin
@@ -75,9 +74,7 @@ def add_event(request):
                                             'success': False}),
                                 content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error": "Expected AJAX POST"},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": "Expected AJAX POST"})
 
 
 @user_passes_test(user_can_view_data)
@@ -92,7 +89,7 @@ def event_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')] = request.GET.get('q', '').strip()
-    return HttpResponseRedirect(reverse('crits.events.views.events_listing') +
+    return HttpResponseRedirect(reverse('crits-events-views-events_listing') +
                                 "?%s" % urllib.urlencode(query))
 
 
@@ -113,9 +110,7 @@ def view_event(request, eventid):
     (new_template, args) = get_event_details(eventid, analyst)
     if new_template:
         template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    return render(request, template, args)
 
 
 @user_passes_test(user_is_admin)
@@ -133,12 +128,10 @@ def remove_event(request, _id):
     result = event_remove(_id, '%s' % request.user.username)
     if result['success']:
         return HttpResponseRedirect(
-            reverse('crits.events.views.events_listing')
+            reverse('crits-events-views-events_listing')
         )
     else:
-        return render_to_response('error.html',
-                                  {'error': result['message']},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': result['message']})
 
 
 @user_passes_test(user_can_view_data)
@@ -162,9 +155,7 @@ def set_event_title(request, event_id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error": error},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": error})
 
 
 @user_passes_test(user_can_view_data)
@@ -188,9 +179,7 @@ def set_event_type(request, event_id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error": error},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": error})
 
 
 @user_passes_test(user_can_view_data)
@@ -210,6 +199,4 @@ def get_event_type_dropdown(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX"
-        return render_to_response("error.html",
-                                    {"error": error},
-                                    RequestContext(request))
+        return render(request, "error.html", {"error": error})

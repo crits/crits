@@ -33,7 +33,7 @@
         <ul class="hmenu">
             <li><a href="#" id="upload-new-signature-version" class="dialogClick" dialog="upload-new-signature-version" data-action="{% url 'crits-signatures-views-upload_signature' signature.link_id|stringformat:"s" %}">Upload New Version</a></li>
             {% if admin %}
-                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="signature" action='{% url "crits.signatures.views.remove_signature" signature.id %}'>Delete Signature</a></li>
+                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="signature" action='{% url "crits-signatures-views-remove_signature" signature.id %}'>Delete Signature</a></li>
             {% endif %}
         </ul>
         </span>

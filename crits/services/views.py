@@ -5,8 +5,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.template.loader import render_to_string
 
 from crits.core.class_mapper import class_from_type
@@ -50,8 +49,7 @@ def list(request):
     if all_services:
         all_services = sorted(all_services, key=lambda item: item.name.lower())
 
-    return render_to_response('services_list.html', {'services': all_services},
-                              RequestContext(request))
+    return render(request, 'services_list.html', {'services': all_services})
 
 
 @user_passes_test(user_can_view_data)
@@ -69,10 +67,10 @@ def analysis_result(request, analysis_id):
 
     ar = AnalysisResult.objects(id=analysis_id).first()
     if ar:
-        return HttpResponseRedirect(reverse('crits.core.views.details',
+        return HttpResponseRedirect(reverse('crits-core-views-details',
                                             args=(ar.object_type,ar.object_id)))
     else:
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                                   {'error': "No TLO found to redirect to."})
 
 
@@ -84,14 +82,12 @@ def detail(request, name):
 
     results = get_service_config(name)
     if results['success']:
-        return render_to_response('services_detail.html',
+        return render(request, 'services_detail.html',
                                   {'service': results['service'],
                                    'config': results['config'],
-                                   'config_error': results['config_error']},
-                                  RequestContext(request))
+                                   'config_error': results['config_error']})
     else:
-        return render_to_response('error.html', {'error': results['error']},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': results['error']})
 
 
 @user_passes_test(user_is_admin)
@@ -148,20 +144,17 @@ def edit_config(request, name):
         return HttpResponse(json.dumps(results), content_type="application/json")
     elif request.method == "POST" and not request.is_ajax():
         error = results['config_error']
-        return render_to_response('error.html',
-                                  {'error': "Expected AJAX POST."},
-                                  RequestContext(request))
+        return render(request, 'error.html',
+                                  {'error': "Expected AJAX POST."})
     else:
         results = do_edit_config(name, analyst)
         if results['success'] == True:
-            return render_to_response('services_edit_config.html',
+            return render(request, 'services_edit_config.html',
                                       {'form': results['form'],
-                                       'service': results['service']},
-                                      RequestContext(request))
+                                       'service': results['service']})
         else:
             error = results['config_error']
-            return render_to_response('error.html', {'error': error},
-                                      RequestContext(request))
+            return render(request, 'error.html', {'error': error})
 
 
 @user_passes_test(user_can_view_data)
@@ -243,7 +236,7 @@ def refresh_services(request, crits_type, identifier):
                                          'crits_type': crits_type,
                                          'identifier': identifier,
                                          'service_list': service_list},
-                                        RequestContext(request))
+                                         request=request)
 
     return HttpResponse(json.dumps(response), content_type="application/json")
 

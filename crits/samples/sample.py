@@ -42,10 +42,10 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
             'filedata': 'The ObjectId of the file in GridFS'
         },
         "jtable_opts": {
-                         'details_url': 'crits.samples.views.detail',
+                         'details_url': 'crits-samples-views-detail',
                          'details_url_key': 'md5',
                          'default_sort': "created DESC",
-                         'searchurl': 'crits.samples.views.samples_listing',
+                         'searchurl': 'crits-samples-views-samples_listing',
                          'fields': [ "filename", "size", "filetype",
                                      "created", "modified", "campaign",
                                      "source", "md5", "id", "status"],
