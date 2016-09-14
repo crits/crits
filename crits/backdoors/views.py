@@ -35,7 +35,6 @@ def backdoors_listing(request,option=None):
 
     request.user._setup()
     user = request.user
-
     if user.has_access_to(BackdoorACL.READ):
         if option == "csv":
             return generate_backdoor_csv(request)
@@ -68,16 +67,21 @@ def backdoor_detail(request, id_):
     request.user._setup()
     user = request.user
     user.get_access_list(update=True)
+    if user.has_access_to(BackdoorACL.READ):
+        (new_template, args) = get_backdoor_details(id_, user)
+        if new_template:
+            template = new_template
 
-    (new_template, args) = get_backdoor_details(id_, user)
-    if new_template:
-        template = new_template
+        args['BackdoorACL'] = BackdoorACL
 
-    args['BackdoorACL'] = BackdoorACL
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view backdoor listing.'},
+                                  RequestContext(request))
 
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def add_backdoor(request):

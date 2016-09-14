@@ -4,7 +4,7 @@
     var actor_tags_modify = "{% url 'crits.actors.views.actor_tags_modify' %}";
     var actor_tags_list = "{% url 'crits.actors.views.get_actor_tags' %}";
 </script>
-{% if "Actor.intended_effects_read"|has_access_to:user %}
+{% if ActorACL.INTENDED_EFFECTS_READ|has_access_to:user %}
 <tr>
     <td class="key">Intended Effects</td>
     <td>
@@ -16,7 +16,7 @@
     </td>
 </tr>
 {% endif %}
-{% if "Actor.motivations_read"|has_access_to:user %}
+{% if ActorACL.MOTIVATIONS_READ|has_access_to:user %}
 <tr>
     <td class="key">Motivations</td>
     <td>
@@ -28,7 +28,7 @@
     </td>
 </tr>
 {% endif %}
-{% if "Actor.sophistications_read"|has_access_to:user %}
+{% if ActorACL.SOPHISTICATIONS_READ|has_access_to:user %}
 <tr>
     <td class="key">Sophistication</td>
     <td>
@@ -40,7 +40,7 @@
     </td>
 </tr>
 {% endif %}
-{% if "Actor.threat_types_read"|has_access_to:user %}
+{% if ActorACL.THREAT_TYPES_READ|has_access_to:user %}
 <tr>
     <td class="key">Threat Types</td>
     <td>

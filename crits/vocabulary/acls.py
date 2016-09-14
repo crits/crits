@@ -143,10 +143,10 @@ class ActorACL(vocab):
     THREAT_TYPES_READ = ACTOR + "threat_types_read"
     THREAT_TYPES_EDIT = ACTOR + "threat_types_edit"
 
-    ACTOR_IDENTIFIERS_READ = ACTOR + "actor_identifiers_read"
-    ACTOR_IDENTIFIERS_EDIT = ACTOR + "actor_identifiers_edit"
-    ACTOR_IDENTIFIERS_ADD = ACTOR + "actor_identifiers_add"
-    ACTOR_IDENTIFIERS_DELETE = ACTOR + "actor_identifiers_delete"
+    ACTOR_IDENTIFIERS_READ =     ACTOR + "actor_identifiers_read"
+    ACTOR_IDENTIFIERS_EDIT =     ACTOR + "actor_identifiers_edit"
+    ACTOR_IDENTIFIERS_ADD =      ACTOR + "actor_identifiers_add"
+    ACTOR_IDENTIFIERS_DELETE =   ACTOR + "actor_identifiers_delete"
 
     # Basics
     READ = ACTOR + Common.READ

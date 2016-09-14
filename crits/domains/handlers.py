@@ -810,9 +810,10 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
     domain_name = rowData.get(form_consts.Domain.DOMAIN_NAME, "").strip();
     campaign = rowData.get(form_consts.Domain.CAMPAIGN, "")
     confidence = rowData.get(form_consts.Domain.CAMPAIGN_CONFIDENCE, "")
-    domain_source = rowData.get(form_consts.Domain.DOMAIN_SOURCE, "")
-    domain_method = rowData.get(form_consts.Domain.DOMAIN_METHOD, "")
-    domain_reference = rowData.get(form_consts.Domain.DOMAIN_REFERENCE, "")
+    source = rowData.get(form_consts.Domain.DOMAIN_SOURCE, "")
+    method = rowData.get(form_consts.Domain.DOMAIN_METHOD, "")
+    reference = rowData.get(form_consts.Domain.DOMAIN_REFERENCE, "")
+    tlp = rowData.get(form_consts.Common.SOURCE_TLP, "")
     #is_add_ip = convert_string_to_bool(rowData.get(form_consts.Domain.ADD_IP_ADDRESS, ""))
     is_add_ip = False
 
@@ -824,21 +825,23 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
     ip_source = rowData.get(form_consts.Domain.IP_SOURCE, "")
     ip_method = rowData.get(form_consts.Domain.IP_METHOD, "")
     ip_reference = rowData.get(form_consts.Domain.IP_REFERENCE, "")
+    ip_tlp = rowData.get(form_consts.Domain.IP_TLP, "")
     is_add_indicators = convert_string_to_bool(rowData.get(form_consts.Domain.ADD_INDICATORS, "False"))
 
     bucket_list = rowData.get(form_consts.Common.BUCKET_LIST, "")
     ticket = rowData.get(form_consts.Common.TICKET, "")
 
-    if(ip or created or ip_source or ip_method or ip_reference):
+    if(ip or created or ip_source or ip_method or ip_reference or ip_tlp):
         is_add_ip = True
 
     if is_add_ip == True:
         data = {'domain': domain_name,
                 'campaign': campaign,
                 'confidence': confidence,
-                'domain_source': domain_source,
-                'domain_method': domain_method,
-                'domain_reference': domain_reference,
+                'source_name': source,
+                'source_method': method,
+                'source_reference': reference,
+                'source_tlp': tlp,
                 'add_ip': is_add_ip,
                 'ip': ip,
                 'ip_type': ip_type,
@@ -847,6 +850,7 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
                 'ip_source': ip_source,
                 'ip_method': ip_method,
                 'ip_reference': ip_reference,
+                'ip_tlp': ip_tlp,
                 'add_indicators': is_add_indicators,
                 'bucket_list': bucket_list,
                 'ticket': ticket}
@@ -862,9 +866,10 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
         data = {'domain': domain_name,
                 'campaign': campaign,
                 'confidence': confidence,
-                'domain_source': domain_source,
-                'domain_method': domain_method,
-                'domain_reference': domain_reference,
+                'source_name': source,
+                'source_method': method,
+                'source_reference': reference,
+                'source_tlp': tlp,
                 'add_ip': is_add_ip,
                 'bucket_list': bucket_list,
                 'ticket': ticket}

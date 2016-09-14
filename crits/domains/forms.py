@@ -70,7 +70,7 @@ class AddDomainForm(SourceInForm):
                                    label=form_consts.Domain.IP_REFERENCE)
     ip_tlp = forms.ChoiceField(widget=forms.Select(attrs={'class':'togglewithipsource togglewithip bulkrequired bulknoinitial'}),
                                label=form_consts.Domain.IP_TLP,
-                               required=True)
+                               required=False)
     add_indicators = forms.BooleanField(required=False,
                                         widget=forms.CheckboxInput(attrs={'class':'bulkskip'}),
                                         label=form_consts.Domain.ADD_INDICATORS)
