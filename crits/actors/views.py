@@ -24,7 +24,7 @@ from crits.core import form_consts
 from crits.core.data_tools import json_handler
 from crits.core.user_tools import user_can_view_data
 
-from crits.vocabulary.acls import ActorACL
+from crits.vocabulary.acls import ActorACL, GeneralACL
 
 @user_passes_test(user_can_view_data)
 def actor_identifiers_listing(request,option=None):
@@ -263,7 +263,7 @@ def new_actor_identifier_type(request):
             return HttpResponse(json.dumps({'success': False,
                                             'message': 'Need a name.'}),
                                 mimetype="application/json")
-        if user.has_access_to(ActorACL.ADD_NEW_ACTOR_IDENTIFIER_TYPE):
+        if user.has_access_to(GeneralACL.ADD_NEW_ACTOR_IDENTIFIER_TYPE):
             result = create_actor_identifier_type(identifier_type, request.user)
         else:
             result = {'message': 'User does not have permission to add actor identifier',

@@ -121,11 +121,12 @@ def update_object_description(request):
         type_ = request.POST['type']
         id_ = request.POST['id']
         description = request.POST['description']
-        if user.has_access_to(str(type_) + 'ACL.DESCRIPTION_EDIT'):
+        acl = get_acl_object(type_)
+        if user.has_access_to(acl.DESCRIPTION_EDIT):
             return HttpResponse(json.dumps(description_update(type_,
                                                           id_,
                                                           description,
-                                                          analyst)),
+                                                          user.username)),
                             content_type="application/json")
         else:
             return HttpResponse(json.dumps({'success':False,
@@ -955,7 +956,7 @@ def bucket_modify(request):
         itype = request.POST['itype']
         user = request.user
         acl = get_acl_object(itype)
-        if user.has_access_to(acl.ACL.BUCKETLIST_EDIT):
+        if user.has_access_to(acl.BUCKETLIST_EDIT):
             modify_bucket_list(itype, oid, tags, request.user.username)
     return HttpResponse({})
 
@@ -2579,7 +2580,7 @@ def add_update_action(request, method, obj_type, obj_id):
             date = date.replace(microsecond=date.microsecond/1000*1000)
             add['date'] = date
             if user.has_access_to(acl.ACTIONS_EDIT):
-                result = action_update(obj_type, obj_id, add, user)
+                result = action_update(obj_type, obj_id, add, user.username)
             else:
                 result = {"success":False,
                           "message":"User does not have permission to edit action."}

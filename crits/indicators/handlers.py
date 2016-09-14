@@ -705,9 +705,9 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
             indicator.description += "\n" + ind.get('description', '') + add_desc
         else:
             indicator.description += add_desc
-        indicator.add_threat_type_list(ind.get('threat_types'), analyst,
+        indicator.add_threat_type_list(ind.get('threat_types'), user,
                                        append=True)
-        indicator.add_attack_type_list(ind.get('attack_types'), analyst,
+        indicator.add_attack_type_list(ind.get('attack_types'), user,
                                        append=True)
 
     if 'campaign' in ind:
@@ -747,10 +747,10 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
 
     # generate new source information and add to indicator
     if isinstance(source, basestring) and source:
-        indicator.add_source(source=source_name, method=source_method,
+        indicator.add_source(source=source, method=source_method,
                              reference=source_reference, analyst=user, tlp=source_tlp)
     elif isinstance(source, EmbeddedSource):
-        indicator.add_source(source=source_name, method=source_method,
+        indicator.add_source(source=source, method=source_method,
                              reference=source_reference, analyst=user, tlp=source_tlp)
     elif isinstance(source, list):
         for s in source:

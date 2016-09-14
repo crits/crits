@@ -52,11 +52,13 @@ def add_new_object(request):
                     return render_to_response("file_upload_response.html",
                                               {'response':response},
                                               RequestContext(request))
-            source = request.POST['source']
+            source = request.POST['source_name']
             oid = request.POST['oid']
             object_type = request.POST['object_type']
-            method = request.POST['method']
-            reference = request.POST['reference']
+            method = request.POST['source_method']
+            reference = request.POST['source_reference']
+            tlp = request.POST['source_tlp']
+
             add_indicator = request.POST.get('add_indicator', None)
             data = None
             # if it was a file upload, handle the file appropriately
@@ -71,6 +73,7 @@ def add_new_object(request):
                                  source,
                                  method,
                                  reference,
+                                 tlp,
                                  user.username,
                                  value=value,
                                  file_=data,
@@ -397,7 +400,7 @@ def delete_this_object(request):
                                         oid,
                                         object_type,
                                         value,
-                                        analyst)
+                                        user.username)
             else:
                 results = {'success': False,
                            'message':'User does not have permission to delete objects.'}
@@ -435,7 +438,9 @@ def indicator_from_object(request):
         source = request.POST.get('source', None)
         method = request.POST.get('method', None)
         reference = request.POST.get('reference', None)
-        analyst = "%s" % request.user.username
+        tlp = request.POST.get('tlp', None)
+        analyst = request.user.username
+
         result = create_indicator_from_object(rel_type,
                                               rel_id,
                                               ind_type,
@@ -443,6 +448,7 @@ def indicator_from_object(request):
                                               source,
                                               method,
                                               reference,
+                                              tlp,
                                               analyst,
                                               request)
         return HttpResponse(json.dumps(result),
