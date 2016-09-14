@@ -1,8 +1,9 @@
 import pymongo
+import argparse
 from django.core.management.base import BaseCommand
 
 from django.conf import settings
-from optparse import make_option
+
 
 from crits.core.mongo_tools import mongo_connector
 
@@ -11,14 +12,15 @@ class Command(BaseCommand):
     Script Class.
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option('--remove-indexes',
+    parser = argparse.ArgumentParser(description='create_indexes')
+
+    parser.add_argument('--remove-indexes',
                     '-r',
                     action='store_true',
                     dest='remove',
                     default=False,
-                    help='Remove all indexes. Does NOT create.'),
-    )
+                    help='Remove all indexes. Does NOT create.')
+    
     help = 'Creates indexes for MongoDB.'
 
     def handle(self, *args, **options):

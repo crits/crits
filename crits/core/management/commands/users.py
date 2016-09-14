@@ -1,8 +1,8 @@
 import string
 import re
+import argparse
 
 from django.core.management.base import BaseCommand, CommandError
-from optparse import make_option
 from random import choice
 
 from crits.core.user import CRITsUser
@@ -14,93 +14,93 @@ class Command(BaseCommand):
     Script Class.
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option('--adduser',
+    parser = argparse.ArgumentParser(description='users')
+
+    parser.add_argument('--adduser',
                     '-a',
                     dest='adduser',
                     action='store_true',
                     default=False,
-                    help='Add a new user to CRITs.'),
-        make_option('--administrator',
+                    help='Add a new user to CRITs.')
+    parser.add_argument('--administrator',
                     '-A',
                     dest='admin',
                     action='store_true',
                     default=False,
-                    help='Make this user an administrator.'),
-        make_option('--clearsecret',
+                    help='Make this user an administrator.')
+    parser.add_argument('--clearsecret',
                     '-c',
                     dest='clearsecret',
                     action='store_true',
                     default=False,
-                    help="Clear a user's secret."),
-        make_option('--deactivateuser',
+                    help="Clear a user's secret.")
+    parser.add_argument('--deactivateuser',
                     '-d',
                     dest='deactivate',
                     action='store_true',
                     default=False,
-                    help='Deactivate a user account.'),
-        make_option('--email',
+                    help='Deactivate a user account.')
+    parser.add_argument('--email',
                     '-e',
                     dest='email',
                     default=None,
-                    help='Email address of new user.'),
-        make_option('--sendemail',
+                    help='Email address of new user.')
+    parser.add_argument('--sendemail',
                     '-E',
                     dest='sendemail',
                     action='store_true',
                     default=False,
-                    help='Email new user their temporary password.'),
-        make_option('--firstname',
+                    help='Email new user their temporary password.')
+    parser.add_argument('--firstname',
                     '-f',
                     dest='firstname',
                     default='',
-                    help='First name of new user.'),
-        make_option('--invalidreset',
+                    help='First name of new user.')
+    parser.add_argument('--invalidreset',
                     '-i',
                     dest='invalidreset',
                     action='store_true',
                     default=False,
-                    help="Reset a user's invalid login attempts to 0."),
-        make_option('--lastname',
+                    help="Reset a user's invalid login attempts to 0.")
+    parser.add_argument('--lastname',
                     '-l',
                     dest='lastname',
                     default='',
-                    help='Last name of new user.'),
-        make_option('--organization',
+                    help='Last name of new user.')
+    parser.add_argument('--organization',
                     '-o',
                     dest='organization',
                     default='',
-                    help='Assign user to an organization/source.'),
-        make_option('--reset',
+                    help='Assign user to an organization/source.')
+    parser.add_argument('--reset',
                     '-r',
                     dest='reset',
                     action='store_true',
                     default=False,
-                    help='Assign a new temporary password to a user.'),
-        make_option('--setactive',
+                    help='Assign a new temporary password to a user.')
+    parser.add_argument('--setactive',
                     '-s',
                     dest='setactive',
                     action='store_true',
                     default=False,
-                    help='Set a user account to active.'),
-        make_option('--enabletotp',
+                    help='Set a user account to active.')
+    parser.add_argument('--enabletotp',
                     '-t',
                     dest='enabletotp',
                     action='store_true',
                     default=False,
-                    help='Enable TOTP for a user.'),
-        make_option('--disabletotp',
+                    help='Enable TOTP for a user.')
+    parser.add_argument('--disabletotp',
                     '-T',
                     dest='disabletotp',
                     action='store_true',
                     default=False,
-                    help='Disable TOTP for a user.'),
-        make_option('--username',
+                    help='Disable TOTP for a user.')
+    parser.add_argument('--username',
                     '-u',
                     dest='username',
                     default=None,
-                    help='Username for new user.'),
-    )
+                    help='Username for new user.')
     help = 'Add and edit a CRITs user. If "-a" is not used, we will try to edit.'
 
     def handle(self, *args, **options):

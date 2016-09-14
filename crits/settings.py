@@ -48,7 +48,17 @@ TEST_RUN = False
 # Get Django version
 django_version = django.get_version()
 
-INTERNAL_IPS = ('127.0.0.1',)
+#Check mongoengine version (we got it from import)
+if StrictVersion(mongoengine_version) < StrictVersion('0.10.0'):
+    old_mongoengine = True
+    #raise Exception("Mongoengine versions prior to 0.10 are no longer supported! Please see UPDATING!")
+else:
+    old_mongoengine = False
+
+
+#DEBUG_TOOLBAR_PATCH_SETTINGS = False
+
+#INTERNAL_IPS = ('127.0.0.1')
 
 #DEBUG_TOOLBAR_PANELS = [
 #    'debug_toolbar.panels.versions.VersionsPanel',
@@ -64,13 +74,6 @@ INTERNAL_IPS = ('127.0.0.1',)
 #    'debug_toolbar.panels.logging.LoggingPanel',
 #    'debug_toolbar.panels.redirects.RedirectsPanel',
 #]
-
-#Check mongoengine version (we got it from import)
-if StrictVersion(mongoengine_version) < StrictVersion('0.10.0'):
-    old_mongoengine = True
-    #raise Exception("Mongoengine versions prior to 0.10 are no longer supported! Please see UPDATING!")
-else:
-    old_mongoengine = False
 
 # Set to DENY|SAMEORIGIN|ALLOW-FROM uri
 # Default: SAMEORIGIN
@@ -432,7 +435,6 @@ if old_mongoengine:
         'django.contrib.sessions',
         'django.contrib.sites',
         'django.contrib.staticfiles',
-        #'debug_toolbar',
         'crits.actors',
         'crits.campaigns',
         'crits.certificates',
@@ -455,10 +457,10 @@ if old_mongoengine:
         'tastypie',
         'tastypie_mongoengine',
         'mongoengine.django.mongo_auth',
+        #'debug_toolbar',
     )
 
     MIDDLEWARE_CLASSES = (
-    #'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -468,6 +470,7 @@ if old_mongoengine:
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Only needed for mongoengine<0.10
     'crits.core.user.AuthenticationMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
 
     SESSION_ENGINE = 'mongoengine.django.sessions'
@@ -488,7 +491,6 @@ else:
         'django.contrib.sessions',
         'django.contrib.sites',
         'django.contrib.staticfiles',
-        #'debug_toolbar',
         'crits.actors',
         'crits.campaigns',
         'crits.certificates',
@@ -512,10 +514,10 @@ else:
         'tastypie_mongoengine',
         'django_mongoengine',
         'django_mongoengine.mongo_auth',
+        #'debug_toolbar',
         )
 
     MIDDLEWARE_CLASSES = (
-        #'debug_toolbar.middleware.DebugToolbarMiddleware',
         'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
         'django.middleware.common.CommonMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
@@ -523,6 +525,7 @@ else:
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        #'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
     SESSION_ENGINE = 'django_mongoengine.sessions'
 
@@ -547,6 +550,7 @@ if REMOTE_USER:
             'django.middleware.csrf.CsrfViewMiddleware',
             'crits.core.user.AuthenticationMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
+            #'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
     else:
         MIDDLEWARE_CLASSES = (
@@ -557,6 +561,7 @@ if REMOTE_USER:
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
+            #'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
 
 MONGODB_DATABASES = {

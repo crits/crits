@@ -1,7 +1,7 @@
 import copy
 import os
+import argparse
 
-from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError as CE
 
 from crits.config.config import CRITsConfig
@@ -14,9 +14,9 @@ class Command(BaseCommand):
     """
     Script Class.
     """
+    parser = argparse.ArgumentParser(description='setconfig')
 
-    option_list = (
-        make_option("--" + RESET_CONFIG_VARIABLE,
+    parser.add_argument("--" + RESET_CONFIG_VARIABLE,
                     action='store_true',
                     dest=RESET_CONFIG_VARIABLE,
                     default=False,
@@ -25,7 +25,7 @@ class Command(BaseCommand):
                             'and then setting the to default values in the ' +
                             'target DB instance. This has the highest ' +
                             'precedence over other options.'),
-        make_option("--" + CREATE_CONFIG_VARIABLE,
+    parser.add_argument("--" + CREATE_CONFIG_VARIABLE,
                     action='store_true',
                     dest=CREATE_CONFIG_VARIABLE,
                     default=False,
@@ -33,7 +33,7 @@ class Command(BaseCommand):
                             'is no default configuration in the target ' +
                             'DB instance. This has the second highest ' +
                             'precedence over other options.'),
-        make_option("--" + REINSERT_CONFIG_VARIABLE,
+    parser.add_argument("--" + REINSERT_CONFIG_VARIABLE,
                     action='store_true',
                     dest=REINSERT_CONFIG_VARIABLE,
                     default=False,
@@ -48,7 +48,6 @@ class Command(BaseCommand):
                     'database, even though defaults specified by the ' +
                     'document in Python is correct. This has the third ' +
                     'highest precedence over other options.'),
-    ) + BaseCommand.option_list
 
     args = """<configuration option> <value>
 
