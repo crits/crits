@@ -639,7 +639,10 @@ def add_new_source(source, analyst):
         if r:
             r.add_source(source,
                          read=True,
-                         write=True)
+                         write=True,
+                         tlp_green=True,
+                         tlp_red=True,
+                         tlp_amber=True)
             r.save()
         return True
     except ValidationError:
