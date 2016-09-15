@@ -110,6 +110,6 @@ if settings.DEVEL_INSTANCE:
 from django.conf import settings
 from django.conf.urls import include, url
 
-if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns.append( url(r'^__debug__/', include(debug_toolbar.urls)))
+#if settings.DEBUG:
+#    import debug_toolbar
+#    urlpatterns.append( url(r'^__debug__/', include(debug_toolbar.urls)))
