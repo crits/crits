@@ -2004,6 +2004,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
             if count:
                 results['result'] = "OK"
                 return results
+
             docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
                                     order_by(*sort).skip(skip).limit(limit).\
                                     only(*projection)
@@ -2289,7 +2290,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
             query = resp['query']
             term = resp['term']
 
-        response = data_query(col_obj, user=request.user.username, limit=pageSize,
+        response = data_query(col_obj, user=request.user, limit=pageSize,
                               skip=skip, sort=multisort, query=query,
                               projection=includes)
         if response['result'] == "ERROR":
@@ -2324,7 +2325,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                             for srcdict in doc[key]:
                                 if srcdict['name'] in users_sources:
                                     srcs.append(srcdict['name'])
-                    elif user.has_access_to(col_obj._meta['crits_type'] + 'ACL.SOURCES_READ'):
+                    elif user.has_access_to(get_acl_object(col_obj._meta['crits_type']).SOURCES_READ):
                         for srcdict in doc[key]:
                             if srcdict['name'] in users_sources:
                                 srcs.append(srcdict['name'])
@@ -3731,7 +3732,7 @@ def generate_global_search(request):
             term = resp['term']
             urlparams = resp['urlparams']
 
-            resp = data_query(col_obj, request.user.username, query=formatted_query, count=True)
+            resp = data_query(col_obj, request.user, query=formatted_query, count=True)
             results.append({'count': resp['count'],
                             'url': url,
                             'name': ctype})

@@ -197,7 +197,7 @@ class CritsQuerySet(QS):
             final_list.append(doc)
         return final_list
 
-    def sanitize_source_tlps(self, username=None):
+    def sanitize_source_tlps(self, user=None):
         """
         Sanitize the results of a query so that the user is only shown results
         that they have the source and TLP permission to view.
@@ -207,16 +207,15 @@ class CritsQuerySet(QS):
         :returns: CritsQuerySet
         """
 
-        if not username:
+        if not user:
             return self
 
         filterlist=[]
         for doc in self:
-            # do stuff here
-            if True: #if get_user_source_tlp(username,doc):
-                filterlist.append(doc.id)
+            if not user.check_source_tlp(doc):
+                self.remove(doc)
 
-        return self.filter(id__in=filterlist)
+        return self
 
 
 class CritsDocumentFormatter(object):

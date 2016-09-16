@@ -205,6 +205,7 @@ def parseDocObjectsToStrings(records, obj_type):
     for doc in records:
         for key, value in doc.items():
             # all dates should look the same
+
             if isinstance(value, datetime.datetime):
                 doc[key] = datetime.datetime.strftime(value,
                                                       "%Y-%m-%d %H:%M:%S")
@@ -436,6 +437,7 @@ def get_table_data(request=None,obj=None,user=None,searchTerm="",
     obj_type = get_obj_type_from_string(obj)
 
     acl = get_acl_object(obj)
+
     if not user:
         user = request.user
 
