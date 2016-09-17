@@ -1,6 +1,5 @@
 from django.conf import settings
 from django import forms
-from django.forms.widgets import RadioSelect
 
 from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
@@ -15,6 +14,7 @@ from crits.vocabulary.indicators import (
 )
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.status import Status
 
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
@@ -135,6 +135,7 @@ class UploadIndicatorForm(forms.Form):
     description = forms.CharField(
         widget=forms.TextInput(attrs={'size': '50'}),
         required=False)
+    status = forms.ChoiceField(widget=forms.Select, required=False)
     confidence = forms.ChoiceField(widget=forms.Select, required=True)
     impact = forms.ChoiceField(widget=forms.Select, required=True)
     campaign = forms.ChoiceField(widget=forms.Select, required=False)
@@ -162,6 +163,9 @@ class UploadIndicatorForm(forms.Form):
         self.fields['source'].choices = [
             (c.name, c.name) for c in get_source_names(True, True, username)]
         self.fields['source'].initial = get_user_organization(username)
+        self.fields['status'].choices = [
+            (c,c) for c in Status.values()
+        ]
         self.fields['indicator_type'].choices = [
             (c,c) for c in IndicatorTypes.values(sort=True)
         ]
