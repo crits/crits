@@ -55,10 +55,12 @@ if StrictVersion(mongoengine_version) < StrictVersion('0.10.0'):
 else:
     old_mongoengine = False
 
+# Some security settings
 # Set to DENY|SAMEORIGIN|ALLOW-FROM uri
 # Default: SAMEORIGIN
 # More details: https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options
-#X_FRAME_OPTIONS = 'ALLOW-FROM https://www.example.com'
+X_FRAME_OPTIONS = 'DENY'
+
 
 # Setup for runserver or Apache
 if 'runserver' in sys.argv:
@@ -80,6 +82,12 @@ else:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     LOGIN_URL = "/login/"
+    CSRF_COOKIE_HTTPONLY = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 1
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 DATABASES = {
     'default': {
@@ -440,13 +448,14 @@ if old_mongoengine:
     )
 
     MIDDLEWARE_CLASSES = (
-    #'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     # Only needed for mongoengine<0.10
     'crits.core.user.AuthenticationMiddleware',
     )
@@ -495,13 +504,14 @@ else:
         )
 
     MIDDLEWARE_CLASSES = (
-        #'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
         'django.middleware.common.CommonMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'django.middleware.security.SecurityMiddleware',
     )
     SESSION_ENGINE = 'django_mongoengine.sessions'
 
@@ -521,9 +531,11 @@ if REMOTE_USER:
             'django.middleware.common.CommonMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
+            'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
             'django.contrib.messages.middleware.MessageMiddleware',
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
+            'django.middleware.security.SecurityMiddleware',
             'crits.core.user.AuthenticationMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
         )
@@ -532,9 +544,11 @@ if REMOTE_USER:
             'django.middleware.common.CommonMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
+            'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
             'django.contrib.messages.middleware.MessageMiddleware',
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
+            'django.middleware.security.SecurityMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
         )
 
