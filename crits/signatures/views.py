@@ -3,7 +3,7 @@ import json
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, render
+from django.shortcuts import render
 
 from crits.core.handlers import get_item_names
 from crits.core.user_tools import user_can_view_data

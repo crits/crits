@@ -2,7 +2,7 @@ import json
 import urllib
 
 from django import forms
-from django.shortcuts import render, render
+from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
