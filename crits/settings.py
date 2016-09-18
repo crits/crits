@@ -55,26 +55,6 @@ if StrictVersion(mongoengine_version) < StrictVersion('0.10.0'):
 else:
     old_mongoengine = False
 
-
-#DEBUG_TOOLBAR_PATCH_SETTINGS = False
-
-#INTERNAL_IPS = ('127.0.0.1')
-
-#DEBUG_TOOLBAR_PANELS = [
-#    'debug_toolbar.panels.versions.VersionsPanel',
-#    'debug_toolbar.panels.timer.TimerPanel',
-#    'debug_toolbar.panels.settings.SettingsPanel',
-#    'debug_toolbar.panels.headers.HeadersPanel',
-#    'debug_toolbar.panels.request.RequestPanel',
-#    'debug_toolbar.panels.sql.SQLPanel',
-#    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
-#    'debug_toolbar.panels.templates.TemplatesPanel',
-#    'debug_toolbar.panels.cache.CachePanel',
-#    'debug_toolbar.panels.signals.SignalsPanel',
-#    'debug_toolbar.panels.logging.LoggingPanel',
-#    'debug_toolbar.panels.redirects.RedirectsPanel',
-#]
-
 # Set to DENY|SAMEORIGIN|ALLOW-FROM uri
 # Default: SAMEORIGIN
 # More details: https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options
@@ -457,11 +437,10 @@ if old_mongoengine:
         'tastypie',
         'tastypie_mongoengine',
         'mongoengine.django.mongo_auth',
-        #'debug_toolbar',
     )
 
     MIDDLEWARE_CLASSES = (
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    #'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -470,7 +449,6 @@ if old_mongoengine:
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Only needed for mongoengine<0.10
     'crits.core.user.AuthenticationMiddleware',
-    #'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
 
     SESSION_ENGINE = 'mongoengine.django.sessions'
@@ -514,18 +492,16 @@ else:
         'tastypie_mongoengine',
         'django_mongoengine',
         'django_mongoengine.mongo_auth',
-        #'debug_toolbar',
         )
 
     MIDDLEWARE_CLASSES = (
-        'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+        #'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
         'django.middleware.common.CommonMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        #'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
     SESSION_ENGINE = 'django_mongoengine.sessions'
 
@@ -550,7 +526,6 @@ if REMOTE_USER:
             'django.middleware.csrf.CsrfViewMiddleware',
             'crits.core.user.AuthenticationMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
-            #'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
     else:
         MIDDLEWARE_CLASSES = (
@@ -561,7 +536,6 @@ if REMOTE_USER:
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
-            #'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
 
 MONGODB_DATABASES = {
@@ -701,7 +675,6 @@ TEMPLATES = [
         'DIRS': _TEMPLATE_DIRS,
 
         'OPTIONS': {
-
             #'dirs' : #_TEMPLATE_DIRS,
             'context_processors' : _TEMPLATE_CONTEXT_PROCESSORS,
             'debug' : _TEMPLATE_DEBUG,
