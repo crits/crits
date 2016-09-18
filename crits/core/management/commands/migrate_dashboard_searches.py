@@ -6,6 +6,7 @@ class Command(BaseCommand):
     """
     Script Class.
     """
+    
     help = 'Creates the default dashboard.'
 
     def handle(self, *args, **options):

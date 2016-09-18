@@ -1,5 +1,4 @@
 import os
-import argparse
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -21,14 +20,14 @@ class Command(BaseCommand):
     Script Class.
     """
 
-    parser = argparse.ArgumentParser(description='create_default_collections')
+    def add_arguments(self, parser):
 
-    parser.add_argument('--drop',
-                    '-d',
-                    dest='drop',
-                    action="store_true",
-                    default=False,
-                    help='Drop existing content before adding.')
+        parser.add_argument('--drop',
+                        '-d',
+                        dest='drop',
+                        action="store_true",
+                        default=False,
+                        help='Drop existing content before adding.')
     help = 'Creates default CRITs collections in MongoDB.'
 
     def handle(self, *args, **options):

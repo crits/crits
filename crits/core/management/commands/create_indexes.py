@@ -1,5 +1,4 @@
 import pymongo
-import argparse
 from django.core.management.base import BaseCommand
 
 from django.conf import settings
@@ -12,14 +11,14 @@ class Command(BaseCommand):
     Script Class.
     """
 
-    parser = argparse.ArgumentParser(description='create_indexes')
+    def add_arguments(self, parser):
 
-    parser.add_argument('--remove-indexes',
-                    '-r',
-                    action='store_true',
-                    dest='remove',
-                    default=False,
-                    help='Remove all indexes. Does NOT create.')
+        parser.add_argument('--remove-indexes',
+                        '-r',
+                        action='store_true',
+                        dest='remove',
+                        default=False,
+                        help='Remove all indexes. Does NOT create.')
     
     help = 'Creates indexes for MongoDB.'
 

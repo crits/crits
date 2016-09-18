@@ -2713,7 +2713,7 @@ def generate_items_jtable(request, itype, option):
                 """ % itype
 
     if option == "inline":
-        return render(request, "jtable.html", {'jtable': jtable, 'button': '%ss_tab' % itype.lower()})
+        return render(request, "jtable.html", {'jtable': jtable, 'jtid': '%ss_listing' % itype.lower(), 'button': '%ss_tab' % itype.lower()})
     else:
         return render(request, "item_editor.html",
                                   {'jtable': jtable,
@@ -2779,13 +2779,11 @@ def generate_users_jtable(request, option):
     if option == "inline":
         return render(request, "jtable.html",
                                   {'jtable': jtable,
-                                   'jtid': 'users_listing'},
-                                  )
+                                   'jtid': 'users_listing'})
     else:
         return render(request, "user_editor.html",
                                   {'jtable': jtable,
-                                   'jtid': 'users_listing'},
-                                  )
+                                   'jtid': 'users_listing'})
 
 def generate_dashboard(request):
     """
@@ -3210,13 +3208,11 @@ def generate_favorites_jtable(request, type_, option):
         return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
-                                   'button' : '%ss_tab' % type_},
-                                  )
+                                   'button' : '%ss_tab' % type_})
     else:
         return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
-                                   'jtid': '%s_listing' % type_},
-                                  )
+                                   'jtid': '%s_listing' % type_})
 
 def generate_user_preference(request,section=None,key=None,name=None):
     """
@@ -3373,7 +3369,7 @@ def user_login(request, user):
     SESSION_KEY = '_auth_user_id'
     BACKEND_SESSION_KEY = '_auth_user_backend'
     HASH_SESSION_KEY = '_auth_user_hash'
-    REDIRECT_FIELD_NAME = 'next'
+    #REDIRECT_FIELD_NAME = 'next'
     session_auth_hash = ''
     if user is None:
         user = request.user

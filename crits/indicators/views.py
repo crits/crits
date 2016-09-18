@@ -403,7 +403,7 @@ def indicator_from_tlo(request):
                 message = render_to_string('relationships_listing_widget.html',
                                            {'relationships': result['message'],
                                             'relationship': relationship},
-                                           )
+                                           request=request)
                 result = {'success': True, 'message': message}
             else:
                 result = {

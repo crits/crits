@@ -2123,8 +2123,7 @@ def add_update_action(request, method, obj_type, obj_id):
                                                   {'action': result['object'],
                                                    'admin': is_admin(username),
                                                    'obj_type':obj_type,
-                                                   'obj_id':obj_id},
-                                                   request=request)
+                                                   'obj_id':obj_id})
             return HttpResponse(json.dumps(result,
                                            default=json_handler),
                                 content_type="application/json")
