@@ -217,7 +217,7 @@ def break_relationship(request):
                                        {'relationship': relationship,
                                         'nohide': True,
                                         'relationships': results['relationships']},
-                                        request=request)
+                                       request=request)
             result = {'success': True, 'message': message}
         else:
             message = "Error deleting relationship: %s" % results['message']

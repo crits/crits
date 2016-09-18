@@ -86,7 +86,7 @@ def add_new_object(request):
                                         {'objects': results['objects'],
                                          'relationships': relationships,
                                          'subscription': subscription},
-                                         request=request)
+                                        request=request)
                 result = {'success': True,
                           'html': html,
                           'message': results['message']}
@@ -95,14 +95,14 @@ def add_new_object(request):
                                             {'relationship': relationship,
                                              'nohide': True,
                                              'relationships': relationships},
-                                             request=request)
+                                            request=request)
                 result['rel_made'] = True
                 result['rel_msg'] = rel_msg
             else:
                 html = render_to_string('objects_listing_widget.html',
                                         {'objects': results['objects'],
                                          'subscription': subscription},
-                                         request=request)
+                                        request=request)
                 result = {'success': True,
                           'html': html,
                           'message': results['message']}

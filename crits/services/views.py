@@ -236,7 +236,7 @@ def refresh_services(request, crits_type, identifier):
                                          'crits_type': crits_type,
                                          'identifier': identifier,
                                          'service_list': service_list},
-                                         request=request)
+                                        request=request)
 
     return HttpResponse(json.dumps(response), content_type="application/json")
 
