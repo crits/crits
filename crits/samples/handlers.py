@@ -1198,9 +1198,10 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     password = data.get('password')
     #is_email_results = data.get('email')
     related_md5 = data.get('related_md5')
-    source = data.get('source')
-    method = data.get('method', '')
-    reference = data.get('reference')
+    source = data.get('source_name')
+    method = data.get('source_method', '')
+    reference = data.get('source_reference', '')
+    tlp = data.get('source_tlp', '')
     bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
     description = data.get('description', '')
@@ -1208,7 +1209,7 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     related_type=data.get('related_type')
     relationship_type=data.get('relationship_type')
 
-    samples = handle_uploaded_file(files, source, method, reference,
+    samples = handle_uploaded_file(files, source, method, reference, tlp,
                                    file_format=fileformat,
                                    password=password,
                                    user=username,
@@ -1343,6 +1344,7 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
     source = rowData.get(form_consts.Sample.SOURCE, "")
     method = rowData.get(form_consts.Sample.SOURCE_METHOD, "")
     reference = rowData.get(form_consts.Sample.SOURCE_REFERENCE, "")
+    tlp = rowData.get(form_consts.Sample.SOURCE_TLP, "")
     bucket_list = rowData.get(form_consts.Sample.BUCKET_LIST, "")
     ticket = rowData.get(form_consts.Common.TICKET, "")
     description = rowData.get(form_consts.Sample.DESCRIPTION, "")
@@ -1365,9 +1367,10 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         'password': password,
         'email': is_email_results,
         'related_md5': related_md5,
-        'source': source,
-        'method': method,
-        'reference': reference,
+        'source_name': source,
+        'source_method': method,
+        'source_tlp': tlp,
+        'source_reference': reference,
         'bucket_list': bucket_list,
         'ticket': ticket,
         'description': description,

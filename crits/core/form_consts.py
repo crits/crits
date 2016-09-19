@@ -285,6 +285,7 @@ class Sample():
     SOURCE = Common.SOURCE
     SOURCE_METHOD = Common.SOURCE_METHOD
     SOURCE_REFERENCE = Common.SOURCE_REFERENCE
+    SOURCE_TLP = Common.SOURCE_TLP
     UPLOAD_TYPE = "Upload Type"
     DESCRIPTION = "Description"
 

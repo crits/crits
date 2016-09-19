@@ -400,6 +400,8 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
     if not source:
         return {"success" : False, "message" : "Missing source information."}
 
+    source_name = source
+
     (ip_address, error) = validate_and_normalize_ip(ip_address, ip_type)
     if error:
         return {"success": False, "message": error}
@@ -429,7 +431,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
     elif ip_object.description != description:
         ip_object.description += "\n" + (description or '')
 
-    if isinstance(source, basestring):
+    if isinstance(source_name, basestring):
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
@@ -491,14 +493,15 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
 
     if is_add_indicator:
         from crits.indicators.handlers import handle_indicator_ind
-        handle_indicator_ind(ip_address,
-                             source,
+        result = handle_indicator_ind(ip_address,
+                             source_name,
                              ip_type,
                              IndicatorThreatTypes.UNKNOWN,
                              IndicatorAttackTypes.UNKNOWN,
                              user,
                              source_method,
-                             indicator_reference,
+                             source_reference = indicator_reference,
+                             source_tlp = source_tlp,
                              add_domain=False,
                              add_relationship=True,
                              bucket_list=bucket_list,
