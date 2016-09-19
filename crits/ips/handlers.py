@@ -290,7 +290,7 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
             source_tlp=source_tlp,
             campaign=campaign,
             confidence=confidence,
-            user=user,
+            user=user.username,
             is_add_indicator=is_add_indicator,
             indicator_reference=indicator_reference,
             bucket_list=bucket_list,
@@ -567,7 +567,7 @@ def parse_row_to_bound_ip_form(request, rowData, cache):
     source_name = rowData.get(form_consts.IP.SOURCE, "")
     source_method = rowData.get(form_consts.IP.SOURCE_METHOD, "")
     source_reference = rowData.get(form_consts.IP.SOURCE_REFERENCE, "")
-    source_tlp = rowData.get(form_consts.Common.SOURCE_TLP,"")
+    source_tlp = rowData.get(form_consts.IP.SOURCE_TLP, "")
     is_add_indicator = convert_string_to_bool(rowData.get(form_consts.IP.ADD_INDICATOR, "False"))
     indicator_reference = rowData.get(form_consts.IP.INDICATOR_REFERENCE, "")
     bucket_list = rowData.get(form_consts.Common.BUCKET_LIST, "")
@@ -590,7 +590,7 @@ def parse_row_to_bound_ip_form(request, rowData, cache):
     bound_form = cache.get('ip_form')
 
     if bound_form == None:
-        bound_form = AddIPForm(request.user.username, None, data)
+        bound_form = AddIPForm(request.user, None, data)
         cache['ip_form'] = bound_form
     else:
         bound_form.data = data
