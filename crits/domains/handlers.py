@@ -565,10 +565,7 @@ def upsert_domain(domain, source, username=None, campaign=None,
               "is_domain_new" (boolean)
     """
 
-    import logging
-    logger = logging.getLogger('crits')
-
-
+    
     # validate domain and grab root domain
     (root, domain, error) = get_valid_root_domain(domain)
     if error:
