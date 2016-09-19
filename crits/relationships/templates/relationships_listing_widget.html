@@ -1,4 +1,4 @@
-
+{% load filters %}
     <div class="content_box relationship_box" id="relationship_box_container">
         <h3 class="titleheader">
                     {% if relationships %}
@@ -22,77 +22,77 @@
                 </tr>
           </thead>
             <tbody>
-                    {% if relationships.Actor and permissions.Actor.read %}
+                    {% if relationships.Actor and acl.ACTOR_READ|has_access_to:user %}
                         {% with rel_list=relationships.Actor rel_type='Actor' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.Backdoor and permissions.Backdoor.read %}
+                    {% if relationships.Backdoor and acl.BACKDOOR_READ|has_access_to:user %}
                         {% with rel_list=relationships.Backdoor rel_type='Backdoor' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.Campaign and permissions.Campaign.read %}
+                    {% if relationships.Campaign and acl.CAMPAIGN_READ|has_access_to:user %}
                         {% with rel_list=relationships.Campaign rel_type='Campaign' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.Certificate and permissions.Certificate.read %}
+                    {% if relationships.Certificate and acl.CERTIFICATE_READ|has_access_to:user %}
                         {% with rel_list=relationships.Certificate rel_type='Certificate' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.Domain and permissions.Domain.read %}
+                    {% if relationships.Domain and acl.DOMAIN_READ|has_access_to:user %}
                         {% with rel_list=relationships.Domain rel_type='Domain' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.Email and permissions.Email.read %}
+                    {% if relationships.Email and acl.EMAIL_READ|has_access_to:user %}
                         {% with rel_list=relationships.Email rel_type='Email' %}
                             {% include 'email_listing_mini_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.Target and permissions.Target.read %}
+                    {% if relationships.Target and acl.TARGET_READ|has_access_to:user %}
                         {% with rel_list=relationships.Target rel_type='Target' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.Event and permissions.Event.read %}
+                    {% if relationships.Event and acl.EVENT_READ|has_access_to:user %}
                         {% with rel_list=relationships.Event rel_type='Event' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.Exploit and permissions.Exploit.read %}
+                    {% if relationships.Exploit and acl.EXPLOIT_READ|has_access_to:user %}
                         {% with rel_list=relationships.Exploit rel_type='Exploit' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.Indicator and permissions.Indicator.read %}
+                    {% if relationships.Indicator and acl.INDICATOR_READ|has_access_to:user %}
                         {% with rel_list=relationships.Indicator rel_type='Indicator' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.IP and permissions.IP.read %}
+                    {% if relationships.IP and acl.IP_READ|has_access_to:user %}
                         {% with rel_list=relationships.IP rel_type='IP' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.PCAP and permissions.PCAP.read %}
+                    {% if relationships.PCAP and acl.PCAP_READ|has_access_to:user %}
                         {% with rel_list=relationships.PCAP rel_type='PCAP' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.RawData and permissions.RawData.read %}
+                    {% if relationships.RawData and acl.RAWDATA_READ|has_access_to:user %}
                         {% with rel_list=relationships.RawData rel_type='RawData' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.Sample and permissions.Sample.read %}
+                    {% if relationships.Sample and acl.SAMPLE_READ|has_access_to:user %}
                         {% with rel_list=relationships.Sample rel_type='Sample' %}
                             {% include 'samples_malware_mini_widget.html' %}
                         {% endwith %}
                     {% endif %}
-                    {% if relationships.Signature and permissions.Signature.read %}
+                    {% if relationships.Signature and acl.SIGNATURE_READ|has_access_to:user %}
                         {% with rel_list=relationships.Signature rel_type='Signature' %}
                             {% include 'relationships_listing_row_widget.html' %}
                         {% endwith %}

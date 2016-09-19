@@ -155,12 +155,12 @@ def upload_indicator(request):
                 request.FILES)
             if form.is_valid():
                 result = handle_indicator_csv(request.FILES['filedata'],
-                                              request.POST['source_name'],
+                                              ctype="file",
+                                              source=request.POST['source_name'],
                                               source_method=request.POST['source_method'],
                                               source_reference=request.POST['source_reference'],
                                               source_tlp=request.POST['source_tlp'],
-                                              ctype="file",
-                                              user=user,
+                                              user=user.username,
                                               add_domain=True,
                                               related_id=request.POST['related_id'],
                                               related_type=request.POST['related_type'],
@@ -177,12 +177,12 @@ def upload_indicator(request):
             form = UploadIndicatorTextForm(user, request.POST)
             if form.is_valid():
                 result = handle_indicator_csv(request.POST['data'],
-                                              request.POST['source_name'],
+                                              ctype="ti",
+                                              source=request.POST['source_name'],
                                               source_method=request.POST['source_method'],
                                               source_reference=request.POST['source_reference'],
                                               source_tlp=request.POST['source_tlp'],
-                                              ctype="ti",
-                                              user=user,
+                                              user=user.username,
                                               add_domain=True,
                                               related_id=request.POST['related_id'],
                                               related_type=request.POST['related_type'],
@@ -205,7 +205,7 @@ def upload_indicator(request):
                     ctype=request.POST['indicator_type'],
                     threat_type=request.POST['threat_type'],
                     attack_type=request.POST['attack_type'],
-                    user=user,
+                    user=user.username,
                     source_method=request.POST['source_method'],
                     source_reference=request.POST['source_reference'],
                     source_tlp=request.POST['source_tlp'],
@@ -220,6 +220,8 @@ def upload_indicator(request):
                     related_id=request.POST['related_id'],
                     related_type=request.POST['related_type'],
                     relationship_type=request.POST['relationship_type'])
+
+
                 if result['success']:
                     indicator_link = ((' - <a href=\"%s\">Go to this '
                                        'indicator</a> or <a href="%s">all '

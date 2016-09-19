@@ -234,7 +234,7 @@ def get_indicator_details(indicator_id, user):
     objects = indicator.sort_objects()
 
     #relationships
-    relationships = indicator.sort_relationships("%s" % user, meta=True)
+    relationships = indicator.sort_relationships("%s" % user.username, meta=True)
 
     #comments
     comments = {'comments': indicator.get_comments(),
@@ -367,6 +367,7 @@ def handle_indicator_csv(csv_data, ctype, user, source, source_method=None,
     :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
+
     if ctype == "file":
         cdata = csv_data.read()
     else:
@@ -404,8 +405,14 @@ def handle_indicator_csv(csv_data, ctype, user, source, source_method=None,
         ind['lower'] = (d.get('Indicator') or '').lower().strip()
         ind['description'] = (d.get('Description') or '').strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
-        ind['threat_types'] = d.get('Threat Types').split(',')
-        ind['attack_types'] = d.get('Attack Types').split(',')
+        try:
+            ind['threat_types'] = d.get('Threat Types').split(',')
+        except:
+            ind['threat_types'] = None
+        try:
+            ind['attack_types'] = d.get('Attack Types').split(',')
+        except:
+            ind['attack_types'] = None
 
         if not ind['threat_types']:
             ind['threat_types'] = [IndicatorThreatTypes.UNKNOWN]
@@ -647,7 +654,6 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
               "is_new_indicator" (boolean) if successful.
     """
 
-
     if ind['type'] not in IndicatorTypes.values():
         return {'success': False,
                 'message': "Not a valid Indicator Type: %s" % ind['type']}
@@ -661,6 +667,7 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
                     'message': "Not a valid Indicator Attack Type: " % a}
 
     (ind['value'], error) = validate_indicator_value(ind['value'], ind['type'])
+
     if error:
         return {"success": False, "message": error}
 
@@ -740,6 +747,7 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
             indicator.add_bucket_list(bucket_list, user)
 
     ticket = None
+
     if form_consts.Common.TICKET_VARIABLE_NAME in ind:
         ticket = ind[form_consts.Common.TICKET_VARIABLE_NAME]
         if ticket:

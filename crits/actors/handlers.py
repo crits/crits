@@ -417,9 +417,9 @@ def add_new_actor(name, aliases=None, description=None, source=None,
             relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
             actor.add_relationship(related_obj,
                                   relationship_type,
-                                  analyst=analyst,
+                                  analyst=username,
                                   get_rels=False)
-            actor.save(username=analyst)
+            actor.save(username=username)
             actor.reload()
 
     # run actor triage

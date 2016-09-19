@@ -140,6 +140,10 @@ def add_domain(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
+    import logging
+    logger = logging.getLogger('crits')
+
+    logger.error('wat')
 
     if request.is_ajax() and request.method == "POST":
         add_form = AddDomainForm(request.user, request.POST)

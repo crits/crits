@@ -1,3 +1,4 @@
+{% load filters %}
 <tr>
     <td colspan="2" class="relationship_spacer"></td>
 </tr>
@@ -158,7 +159,7 @@
                         {% endif %}
                         {% if rel_type in "RawDataSignaturePCAPCertificateIndicatorEventActorExploitBackdoor" %}
                             <td class='campaignWidth'>
-                                {% if permissions.Campaign.read %}
+                                {% if acl.CAMPAIGN_READ|has_access_to:user %}
                                   {% for campaign in rel.campaign %}
                                       <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
                                           {% if campaign.confidence == 'low' %}
