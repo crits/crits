@@ -1,4 +1,5 @@
-from mongoengine import Document, IntField, StringField
+from django_mongoengine import Document
+from mongoengine import IntField, StringField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument

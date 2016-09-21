@@ -53,8 +53,8 @@
 		                        },
 		                        success: function(data) {
 		                            showResults(data.message, !data.success);
-		                            if (data.success) 
-                                        window.location = '{% url "crits-dashboards-views-dashboard" parent %}';
+		                            if (data.success)
+                                                window.location = '{% url "crits-dashboards-views-dashboard" parent %}';
 		                        },
 		                        error: function(data) {
 		                            throwUnexpectedError();

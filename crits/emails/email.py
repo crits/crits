@@ -1,7 +1,8 @@
 import datetime
 
 from dateutil.parser import parse as date_parser
-from mongoengine import Document, StringField, ListField
+from django_mongoengine import Document
+from mongoengine import StringField, ListField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument

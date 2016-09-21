@@ -3,7 +3,8 @@ import re
 from django.test import SimpleTestCase
 from django.test.client import RequestFactory, Client
 
-from mongoengine import Document, StringField
+from django_mongoengine import Document
+from mongoengine import StringField
 
 from crits.config.config import CRITsConfig
 from crits.core.user import CRITsUser

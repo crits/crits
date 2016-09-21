@@ -1,6 +1,7 @@
 import os
 
-from mongoengine import Document, StringField, ListField
+from django_mongoengine import Document
+from mongoengine import StringField, ListField
 from mongoengine import BooleanField, IntField
 
 from crits.core.crits_mongoengine import CritsDocument

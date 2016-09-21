@@ -38,8 +38,8 @@ import time
 import uuid
 
 from hashlib import sha1
-from mongoengine import Document, EmbeddedDocument
-from mongoengine import StringField, DateTimeField, ListField
+from django_mongoengine import Document
+from mongoengine import EmbeddedDocument, StringField, DateTimeField, ListField
 from mongoengine import BooleanField, ObjectIdField, EmailField
 from mongoengine import EmbeddedDocumentField, IntField
 from mongoengine import DictField, DynamicEmbeddedDocument

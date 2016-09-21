@@ -12,13 +12,18 @@ except ImportError:
     from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
-from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
+from django_mongoengine import Document
+from mongoengine import EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
 from mongoengine import IntField, DateTimeField, ObjectIdField
 from mongoengine.base import BaseDocument, ValidationError
 
 # Determine if we should be caching queries or not.
-from mongoengine import QuerySet as QS
+if settings.QUERY_CACHING:
+    from mongoengine import QuerySet as QS
+    #from django_mongoengine import QuerySet as QS
+else:
+    from mongoengine import QuerySetNoCache as QS
 
 from pprint import pformat
 
@@ -68,9 +73,10 @@ class CritsQuerySet(QS):
 
         if self._len is not None:
             return self._len
-        if self._has_more:
-            # populate the cache
-            list(self._iter_results())
+        if settings.QUERY_CACHING:
+            if self._has_more:
+                # populate the cache
+                list(self._iter_results())
             self._len = len(self._result_cache)
         else:
             self._len = self.count()
@@ -1921,7 +1927,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 if new_rev_type is None:
                     return {'success': False,
                             'message': 'Could not find reverse relationship type'}
-            for c, r in enumerate(self.relationships):
+        
+            for c, r in enumerate(self.relationships, 0):
                 if rel_date:
                     if (r.object_id == rel_item.id
                         and r.relationship == rel_type
@@ -1951,6 +1958,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                             self.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
                             del self.relationships[c]
+
             for c, r in enumerate(rel_item.relationships):
                 if rel_date:
                     if (r.object_id == self.id

@@ -2,7 +2,8 @@ import datetime
 import re
 
 from bson.objectid import ObjectId
-from mongoengine import Document, EmbeddedDocument
+from django_mongoengine import Document
+from mongoengine import EmbeddedDocument
 from mongoengine import ObjectIdField, StringField, ListField, EmbeddedDocumentField
 from django.conf import settings
 from django.core.urlresolvers import reverse

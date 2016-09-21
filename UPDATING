@@ -4,9 +4,18 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: apolkosnik
-Date:   2016-09-14
+Date:   2016-09-21
 
-    Added support for Django 1.10, it should only work with mongoengine 0.10
+    Added support for Django 1.10, it should only work with Mongoengine 0.10.x.
+    CRITs doesn't support Django versions prior to 1.8.
+    For a good measure, when upgrading please try to remove any remnants of
+    the older versions of: 
+        django
+        mongoengine
+        tastypie, 
+        django-tastypie-mongoengine
+        pymongo
+        django-mongoengine
 
 Author: apolkosnik
 Date:   2016-08-06

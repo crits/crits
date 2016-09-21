@@ -142,7 +142,7 @@ def add_campaign(request):
             return HttpResponse(json.dumps(message), content_type="application/json")
         else:
             return HttpResponse(json.dumps({'form': campaign_form.as_table(), 'success': False, 'message': "Please correct form errors."}), content_type="application/json")
-    return render(request, "error.html", {"error": 'Expected AJAX POST'}, )
+    return render(request, "error.html", {"error": 'Expected AJAX POST'})
 
 @user_passes_test(user_can_view_data)
 def campaign_add(request, ctype, objectid):
@@ -320,4 +320,4 @@ def campaign_aliases(request):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render(request, "error.html", {"error": error}, )
+        return render(request, "error.html", {"error": error})

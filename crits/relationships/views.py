@@ -225,9 +225,8 @@ def break_relationship(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_string("error.html",
-                                  {"error" : error },
-                                  request=request)
+        return render(request, "error.html",
+                                  {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def get_relationship_type_dropdown(request):

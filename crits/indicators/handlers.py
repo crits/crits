@@ -1001,7 +1001,7 @@ def modify_attack_types(id_, attack_types, user, **kwargs):
     except ValidationError:
         return {'success': False}
 
-def indicator_remove(_id, username):
+def indicator_remove(_id, username=None):
     """
     Remove an Indicator from CRITs.
 

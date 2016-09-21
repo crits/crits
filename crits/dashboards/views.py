@@ -36,7 +36,7 @@ def saved_searches_list(request):
     Renders the saved_searches_list html
     """
     args = get_saved_searches_list(request.user)
-    return renderz('saved_searches_list.html',  args, request)
+    return render(request, 'saved_searches_list.html', args)
 
 @user_passes_test(user_can_view_data)
 def dashboard(request, dashId=None):
@@ -46,7 +46,7 @@ def dashboard(request, dashId=None):
     args = get_dashboard(request.user,dashId)
     if not args["success"]:
         return respondWithError(args['message'], request=request)
-    return renderz('dashboard.html',  args, request)
+    return render(request, 'dashboard.html', args)
 
 @user_passes_test(user_can_view_data)
 def new_save_search(request):
@@ -58,7 +58,7 @@ def new_save_search(request):
     if 'Result' in args and args['Result'] == "ERROR":
         return respondWithError(args['Message'], request=request)
     args['dashboards'] = getDashboardsForUser(request.user)
-    return renderz("save_search.html", args, request)
+    return render(request, "save_search.html", args)
 
 @user_passes_test(user_can_view_data)
 def edit_save_search(request, id):
@@ -72,7 +72,7 @@ def edit_save_search(request, id):
 
     args['dashboards'] = getDashboardsForUser(request.user)
 
-    return renderz("save_search.html", args, request)
+    return render(request, "save_search.html", args)
 
 @user_passes_test(user_can_view_data)
 def delete_save_search(request):
@@ -354,7 +354,7 @@ def respondWithError(message, isAjax=False, request=None):
     if isAjax:
         return HttpResponse(json.dumps({'success': False, 'message': message}),
                                     content_type="application/json")
-    return renderz("error.html", {"error": message}, request)
+    return render(request, "error.html", {"error": message})
 
 def respondWithSuccess(message):
     """
@@ -363,11 +363,11 @@ def respondWithSuccess(message):
     return HttpResponse(json.dumps({'success': True, 'message': message}),
                          content_type="application/json")
 
-def renderz(html, args, request):
-    """
-    Quicker way to render pages. Not necessary but neater
-    """
-    return render(request, html, args)
+#def renderz(html, args, request):
+#    """
+#    Quicker way to render pages. Not necessary but neater
+#    """
+#    return render(request, html, args)
 
 def httpResponse(response):
     """

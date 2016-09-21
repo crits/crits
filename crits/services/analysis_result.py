@@ -1,5 +1,6 @@
 from django.conf import settings
-from mongoengine import Document, StringField, ListField, EmbeddedDocument
+from django_mongoengine import Document
+from mongoengine import StringField, ListField, EmbeddedDocument
 from mongoengine import DynamicEmbeddedDocument, DynamicField, UUIDField
 from mongoengine import DictField, EmbeddedDocumentField, BooleanField
 

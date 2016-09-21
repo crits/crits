@@ -331,8 +331,7 @@ def login(request):
         if not resp['success']:
             return render(request, 'error.html',
                                       {'data': resp,
-                                    'error': resp['message']},
-                                    )
+                                    'error': resp['message']})
         else:
             return HttpResponseRedirect(resp['message'])
 
@@ -372,8 +371,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
                                        'login': False,
                                        'show_auth': False,
                                        'message': message,
-                                       'token_message': token_message},
-                                      )
+                                       'token_message': token_message})
 
     # Attempt authentication
     if request.method == 'POST' and request.is_ajax():
@@ -417,8 +415,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
                                'login': login,
                                'show_auth': show_auth,
                                'message': message,
-                               'token_message': token_message},
-                              )
+                               'token_message': token_message})
 
 def reset_password(request):
     """
@@ -982,6 +979,7 @@ def base_context(request):
                            'company_name',
                            settings.COMPANY_NAME)
     crits_version = settings.CRITS_VERSION
+    django_version = settings.DJANGO_VERSION
     enable_toasts = getattr(crits_config,
                             'enable_toasts',
                             settings.ENABLE_TOASTS)
@@ -1013,6 +1011,7 @@ def base_context(request):
     base_context['instance_name'] = instance_name
     base_context['company_name'] = company_name
     base_context['crits_version'] = crits_version
+    base_context['django_version'] = django_version
     base_context['enable_toasts'] = enable_toasts
     if git_repo_url:
         base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long+"'>"+git_branch+':'+git_hash+"</a>"
@@ -1027,6 +1026,7 @@ def base_context(request):
     base_context['service_tab_templates'] = settings.SERVICE_TAB_TEMPLATES
     if request.user.is_authenticated():
         user = request.user.username
+        base_context['user'] = request.user
         # Forms that don't require a user
         base_context['add_new_action'] = NewActionForm()
         base_context['add_target'] = TargetInfoForm()

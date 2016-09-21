@@ -13,6 +13,7 @@ from bson.objectid import ObjectId
 from django.conf import settings
 
 from django.contrib.auth.signals import user_logged_in
+from django.contrib.auth import login as user_login
 from django.middleware.csrf import rotate_token
 from django.contrib.auth import authenticate
 # we implement django.contrib.auth.login as user_login in here to accomodate mongoengine
@@ -1070,8 +1071,7 @@ def generate_bucket_jtable(request, option):
                     """ % (url, ctype)
     return render(request, 'bucket_lists.html',
                               {'jtable': jtable,
-                               'jtid': 'bucket_lists'},
-                              )
+                               'jtid': 'bucket_lists'})
 
 def modify_bucket_list(itype, oid, tags, analyst):
     """
@@ -2794,7 +2794,7 @@ def generate_dashboard(request):
     """
     from crits.dashboards.handlers import get_dashboard
     args = get_dashboard(request.user)
-    return render(request, 'dashboard.html', args, )
+    return render(request, 'dashboard.html', args)
 
 def dns_timeline(query, analyst, sources):
     """
@@ -3354,53 +3354,6 @@ reset code expires.\n\nThank you!
                                         default=json_handler),
                             content_type="application/json")
 
-def user_login(request, user):
-    """
-    Persist a user id and a backend in the request. This way a user doesn't
-    have to reauthenticate on every request. Note that data set during
-    the anonymous session is retained when the user logs in.
-
-    This is basically same as django.contrib.auth.login from Django 1.7
-    Django 1.8+ uses user._meta.pk.value_to_string(user) instead of user.pk
-    once mongoengine is fixed, we'll be able to just import
-    django.contrib.auth.login as user_login
-    """
-
-    SESSION_KEY = '_auth_user_id'
-    BACKEND_SESSION_KEY = '_auth_user_backend'
-    HASH_SESSION_KEY = '_auth_user_hash'
-    #REDIRECT_FIELD_NAME = 'next'
-    session_auth_hash = ''
-    if user is None:
-        user = request.user
-    if hasattr(user, 'get_session_auth_hash'):
-        session_auth_hash = user.get_session_auth_hash()
-
-    if SESSION_KEY in request.session:
-        boo = request.session[SESSION_KEY]
-        if boo != user.pk or (
-                session_auth_hash and
-                request.session.get(HASH_SESSION_KEY) != session_auth_hash):
-            # To avoid reusing another user's session, create a new, empty
-            # session if the existing session corresponds to a different
-            # authenticated user.
-            request.session.flush()
-    else:
-        request.session.cycle_key()
-    try:
-        # try the new way
-        request.session[SESSION_KEY] = user._meta.pk.value_to_string(user)
-    except Exception:
-        #if it doesn't work, do what Django 1.7 does
-        request.session[SESSION_KEY] = user.pk
-    request.session[BACKEND_SESSION_KEY] = user.backend
-    request.session[HASH_SESSION_KEY] = session_auth_hash
-    if hasattr(request, 'user'):
-        request.user = user
-    rotate_token(request)
-    user_logged_in.send(sender=user.__class__, request=request, user=user)
-
-
 def login_user(username, password, next_url=None, user_agent=None,
                remote_addr=None, accept_language=None, request=None,
                totp_pass=None):
@@ -3677,8 +3630,7 @@ def download_grid_file(request, dtype, sample_md5):
         if not pcap:
             return render(request, 'error.html',
                                       {'data': request,
-                                       'error': "File not found."},
-                                      )
+                                       'error': "File not found."})
         data = [(pcap['filename'], get_file(sample_md5, "pcaps"))]
         zip_data = create_zip(data, False)
         response = HttpResponse(zip_data, content_type="application/octet-stream")
@@ -3690,8 +3642,7 @@ def download_grid_file(request, dtype, sample_md5):
         if not cert:
             return render(request, 'error.html',
                                       {'data': request,
-                                       'error': "File not found."},
-                                      )
+                                       'error': "File not found."})
         data = [(cert['filename'], get_file(sample_md5, "certificates"))]
         zip_data = create_zip(data, False)
         response = HttpResponse(zip_data, content_type="application/octet-stream")
@@ -3730,8 +3681,7 @@ def generate_counts_jtable(request, option):
     else:
         return render(request, 'error.html',
                                   {'data': request,
-                                   'error': "Invalid request"},
-                                  )
+                                   'error': "Invalid request"})
 
 
 def generate_audit_jtable(request, option):
@@ -3783,13 +3733,11 @@ def generate_audit_jtable(request, option):
         return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
-                                   'button': '%ss_tab' % type_},
-                                  )
+                                   'button': '%ss_tab' % type_})
     else:
         return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
-                                   'jtid': '%s_listing' % type_},
-                                  )
+                                   'jtid': '%s_listing' % type_})
 
 
 def details_from_id(type_, id_):
@@ -4176,8 +4124,7 @@ def generate_sector_jtable(request, option):
                     """ % (url, ctype)
     return render(request, 'sector_lists.html',
                               {'jtable': jtable,
-                               'jtid': 'sector_lists'},
-                              )
+                               'jtid': 'sector_lists'})
 
 def modify_sector_list(itype, oid, sectors, analyst):
     """

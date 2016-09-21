@@ -200,7 +200,7 @@
     <div class="bottom">
     {% endif %}
       <span class="right">
-        <b>CRITs&trade;</b> Copyright &copy; {% now "Y" %} The MITRE Corporation. All Rights Reserved.
+        <b>CRITs&trade;</b> &copy; {% now "Y" %} The MITRE Corporation. All Rights Reserved.
       </span>
       {% if request.user.is_authenticated %}
       <span class="right" data-intro="Data Classification" data-position="top">
@@ -215,6 +215,11 @@
       <span class="left" data-intro="Instance Information" data-position="top">
         <b>{{ instance_name }} Instance</b> (DB: {{mongo_database }})
       </span>
+      {% if crits_config.debug %}
+      <span class="left" data-intro="Django Version" data-position="top">
+        <b>Django:</b> {{ django_version }}
+      </span>
+      {% endif %}
       {% if user_role %}
       <span class='left'>
         <b>Last login:</b> {{ user.last_login|date }}

@@ -253,13 +253,11 @@ def generate_signature_jtable(request, option):
         return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
-                                   'button' : '%s_tab' % type_},
-                                  )
+                                   'button' : '%s_tab' % type_})
     else:
         return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
-                                   'jtid': '%s_listing' % type_},
-                                  )
+                                   'jtid': '%s_listing' % type_})
 
 
 def handle_signature_file(data, source_name, user=None,

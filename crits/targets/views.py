@@ -76,7 +76,7 @@ def target_info(request, email_address):
     (new_template, args) = get_target_details(email_address, analyst)
     if new_template:
         template = new_template
-    return render(request, template, args, )
+    return render(request, template, args)
 
 @user_passes_test(user_can_view_data)
 def add_update_target(request):

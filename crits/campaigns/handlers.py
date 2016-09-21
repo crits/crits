@@ -277,13 +277,11 @@ def generate_campaign_jtable(request, option):
         return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
-                                   'button': '%ss_tab' % type_},
-                                  )
+                                   'button': '%ss_tab' % type_})
     else:
         return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
-                                   'jtid': '%s_listing' % type_},
-                                  )
+                                   'jtid': '%s_listing' % type_})
 
 def add_campaign(name, description, aliases, analyst, 
                  bucket_list=None, ticket=None, related_id=None, 

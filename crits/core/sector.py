@@ -1,6 +1,6 @@
 import logging
 
-from mongoengine import Document
+from django_mongoengine import Document
 from mongoengine import StringField, IntField
 
 from django.conf import settings

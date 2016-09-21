@@ -1,6 +1,7 @@
 import uuid
 
-from mongoengine import Document, StringField, IntField, ListField
+from django_mongoengine import Document
+from mongoengine import StringField, IntField, ListField
 from mongoengine import UUIDField
 from django.conf import settings
 

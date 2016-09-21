@@ -46,7 +46,7 @@ APPEND_SLASH = True
 TEST_RUN = False
 
 # Get Django version
-django_version = django.get_version()
+DJANGO_VERSION = django.get_version()
 
 #Check mongoengine version (we got it from import)
 if StrictVersion(mongoengine_version) < StrictVersion('0.10.0'):
@@ -86,7 +86,7 @@ else:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 1
+    SECURE_HSTS_SECONDS = 0 #change this to non-zero for more security
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 DATABASES = {
@@ -316,9 +316,6 @@ _TEMPLATE_LOADERS = [
     #'django.template.loaders.eggs.load_template_source',
 ]
 
-#DEBUG_TOOLBAR_PATCH_SETTINGS = False
-
-
 #CACHES = {
 #    'default': {
 #        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
@@ -331,15 +328,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-_TEMPLATE_CONTEXT_PROCESSORS = [
-    'django.template.context_processors.request',
-    'django.template.context_processors.static',
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-    'crits.core.views.base_context',
-    'crits.core.views.collections',
-    'crits.core.views.user_context',
-]
+
 
 ROOT_URLCONF = 'crits.urls'
 
@@ -513,12 +502,23 @@ else:
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
         'django.middleware.security.SecurityMiddleware',
     )
+    _TEMPLATE_CONTEXT_PROCESSORS = [
+        #'django.template.context_processors.debug',
+        'django.template.context_processors.request',
+        'django.template.context_processors.static',
+        #'django.contrib.auth.context_processors.auth',
+        'django.contrib.messages.context_processors.messages',
+        'crits.core.views.base_context',
+        'crits.core.views.collections',
+        'crits.core.views.user_context',
+    ]
+
     SESSION_ENGINE = 'django_mongoengine.sessions'
 
     SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
 
     AUTHENTICATION_BACKENDS = (
-        'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
+        #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'crits.core.user.CRITsAuthBackend',
     )
 
@@ -698,10 +698,8 @@ TEMPLATES = [
     },
 ]
 
-if StrictVersion(django_version) < StrictVersion('1.8.0'):
-    TEMPLATE_DEBUG = _TEMPLATE_DEBUG
-    TEMPLATE_DIRS = _TEMPLATE_DIRS
-    TEMPLATE_CONTEXT_PROCESSORS = _TEMPLATE_CONTEXT_PROCESSORS
+if StrictVersion(DJANGO_VERSION) < StrictVersion('1.8.0'):
+    raise Exception("Django versions prior to 1.8 are not supported! Please upgrade to at least 1.8!")
 
 # Import custom settings if it exists
 csfile = os.path.join(SITE_ROOT, 'config/overrides.py')

@@ -1,6 +1,7 @@
 import uuid
 
-from mongoengine import Document, StringField, UUIDField
+from django_mongoengine import Document
+from mongoengine import StringField, UUIDField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
