@@ -13,6 +13,8 @@
     <ul style="font-size: 125%;">
     <li><a href="#about_section" id="about_button"><span>About</span></a></li>
     <li><a href="#license_section" id="license_button"><span>License</span></a></li>
+    <li><a href="#environment_section" id="environment_button"><span>Environment</span></a></li>
+     </ul>
      </ul>
     <div id="about_section">
 <pre>
@@ -23,7 +25,7 @@ CRITs (Collaborative Research Into Threats) is an open source malware and threat
 <pre>
 The MIT License (MIT)
 
-Copyright (c) 2015, The MITRE Corporation. All rights reserved.
+Copyright &copy; {% now "Y" %}, The MITRE Corporation. All rights reserved.
 
 Approved for Public Release; Distribution Unlimited 14-1511
 
@@ -44,6 +46,13 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+</pre>
+    </div>
+    <div id="environment_section">
+<pre>
+<b><h2>Loaded modules:</h2></b>{% for mod_name, mod_ver in loaded_mods %}<b>{{ mod_name }}:</b> {{mod_ver}}
+{% endfor %}
+
 </pre>
     </div>
 </div>

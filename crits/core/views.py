@@ -1,3 +1,4 @@
+import sys
 import datetime
 import json
 import logging
@@ -98,7 +99,6 @@ from crits.targets.forms import TargetInfoForm
 from crits.vocabulary.sectors import Sectors
 
 logger = logging.getLogger(__name__)
-
 
 @user_passes_test(user_can_view_data)
 def update_object_description(request):
@@ -969,6 +969,11 @@ def base_context(request):
 
     crits_config = CRITsConfig.objects().first()
     base_context = {}
+    # All loaded modules
+    mods = [(m.__name__, m.__version__) if hasattr(m, '__version__') else (m.__name__, '') for m in sys.modules.values() if m] 
+    # Only the ones that have '__version__'
+    #mods = [(m.__name__, m.__version__) for m in sys.modules.values() if hasattr(m, '__version__')]
+    mods.sort()
     classification = getattr(crits_config,
                              'classification',
                              settings.CLASSIFICATION)
@@ -980,6 +985,7 @@ def base_context(request):
                            settings.COMPANY_NAME)
     crits_version = settings.CRITS_VERSION
     django_version = settings.DJANGO_VERSION
+    mongoengine_version = settings.MONGOENGINE_VERSION
     enable_toasts = getattr(crits_config,
                             'enable_toasts',
                             settings.ENABLE_TOASTS)
@@ -1012,6 +1018,8 @@ def base_context(request):
     base_context['company_name'] = company_name
     base_context['crits_version'] = crits_version
     base_context['django_version'] = django_version
+    base_context['mongoengine_version'] = mongoengine_version
+    base_context['loaded_mods'] = mods
     base_context['enable_toasts'] = enable_toasts
     if git_repo_url:
         base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long+"'>"+git_branch+':'+git_hash+"</a>"

@@ -47,7 +47,7 @@ TEST_RUN = False
 
 # Get Django version
 DJANGO_VERSION = django.get_version()
-
+MONGOENGINE_VERSION = mongoengine_version
 #Check mongoengine version (we got it from import)
 if StrictVersion(mongoengine_version) < StrictVersion('0.10.0'):
     old_mongoengine = True
