@@ -50,9 +50,10 @@ SOFTWARE.
     </div>
     <div id="environment_section">
 <pre>
-<b><h2>Loaded modules:</h2></b>{% for mod_name, mod_ver in loaded_mods %}<b>{{ mod_name }}:</b> {{mod_ver}}
+<b><h2>Loaded modules:</h2></b>{% for mod_name, mod_ver, mod_path in loaded_mods %}
+<b>{{ mod_name }}:</b> {{mod_ver}}
+    {{mod_path}} 
 {% endfor %}
-
 </pre>
     </div>
 </div>

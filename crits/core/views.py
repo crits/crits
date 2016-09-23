@@ -969,11 +969,9 @@ def base_context(request):
 
     crits_config = CRITsConfig.objects().first()
     base_context = {}
-    # All loaded modules
-    mods = [(m.__name__, m.__version__) if hasattr(m, '__version__') else (m.__name__, '') for m in sys.modules.values() if m] 
-    # Only the ones that have '__version__'
-    #mods = [(m.__name__, m.__version__) for m in sys.modules.values() if hasattr(m, '__version__')]
-    mods.sort()
+    # All loaded modules without dot in the name, with __path__, and with __version__
+    mods = [(m.__name__.lower(), getattr(m, '__version__', ''), m.__path__[0]) for m in sys.modules.values() if getattr(m, '__path__', '') and getattr(m, '__version__', '') and not '.' in m.__name__]
+    mods=sorted(mods)
     classification = getattr(crits_config,
                              'classification',
                              settings.CLASSIFICATION)
