@@ -982,8 +982,6 @@ def base_context(request):
                            'company_name',
                            settings.COMPANY_NAME)
     crits_version = settings.CRITS_VERSION
-    django_version = settings.DJANGO_VERSION
-    mongoengine_version = settings.MONGOENGINE_VERSION
     enable_toasts = getattr(crits_config,
                             'enable_toasts',
                             settings.ENABLE_TOASTS)
@@ -1015,8 +1013,6 @@ def base_context(request):
     base_context['instance_name'] = instance_name
     base_context['company_name'] = company_name
     base_context['crits_version'] = crits_version
-    base_context['django_version'] = django_version
-    base_context['mongoengine_version'] = mongoengine_version
     base_context['loaded_mods'] = mods
     base_context['enable_toasts'] = enable_toasts
     if git_repo_url:

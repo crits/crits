@@ -215,11 +215,6 @@
       <span class="left" data-intro="Instance Information" data-position="top">
         <b>{{ instance_name }} Instance</b> (DB: {{mongo_database }})
       </span>
-      {% if crits_config.debug %}
-      <span class="left" data-intro="Django Version" data-position="top">
-        <b>Django:</b> {{ django_version }}
-      </span>
-      {% endif %}
       {% if user_role %}
       <span class='left'>
         <b>Last login:</b> {{ user.last_login|date }}
