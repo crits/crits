@@ -1,7 +1,10 @@
 import json
 
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.core.validators import validate_ipv4_address, validate_ipv6_address
 from django.http import HttpResponse
 from django.shortcuts import render

@@ -5,7 +5,10 @@ from PIL import Image
 
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 
 from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import json_handler

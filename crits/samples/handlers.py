@@ -9,7 +9,10 @@ import time
 
 from bson.objectid import ObjectId
 from django.core.mail import send_mail
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
 from hashlib import md5

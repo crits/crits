@@ -3,7 +3,10 @@ import json
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.shortcuts import render
 from django.forms.utils import ErrorList
 

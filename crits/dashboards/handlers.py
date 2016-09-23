@@ -8,7 +8,10 @@ names cannot be changed.
 from crits.dashboards.dashboard import SavedSearch, Dashboard
 from crits.core.crits_mongoengine import json_handler
 from mongoengine import Q
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from crits.campaigns.campaign import Campaign
 from crits.indicators.indicator import Indicator
 from crits.emails.email import Email
@@ -606,7 +609,7 @@ def deleteDashboardIfEmpty(dashId):
     Checks if a dashboard has saved searches. Deletes it if it doesn't.
     """
     if not SavedSearch.objects(dashboard=dashId):
-        Dashboard.objects(id=dashId).delete()
+        Dashboard.objects(id=dashId).delete_one()
     
 def createNewDashboard(userId, name):
     """
@@ -690,12 +693,12 @@ def setPublic(id, makePublic):
         if makePublic and Dashboard.objects(name=dashboard.name, isPublic=True):
             return "There already exists a public dashboard with that name. "\
                 "You must rename your dashboard before making it public."
-        Dashboard.objects(id=id).update(set__isPublic=makePublic)
+        Dashboard.objects(id=id).update_one(set__isPublic=makePublic)
         #if making a dashboard private, clear all parent-child relationships
         if not makePublic:
             updateChildren(id, deletingParent=True)
         else:#if making public, remove parent
-            Dashboard.objects(id=id).update(unset__parent=1)
+            Dashboard.objects(id=id).update_one(unset__parent=1)
     except Exception as e:
         print e
         return "An error occured while updating table. Please try again later."
@@ -707,9 +710,9 @@ def updateChildren(parentId, deletingParent=False):
     the changing dashboard.
     If the dashboard is being deleted(or private) then it unsets the parent field.
     """
-    Dashboard.objects(parent=parentId).update(set__hasParentChanged=True)
+    Dashboard.objects(parent=parentId).update_one(set__hasParentChanged=True)
     if deletingParent:
-        Dashboard.objects(parent=parentId).update(unset__parent=1)
+        Dashboard.objects(parent=parentId).update_one(unset__parent=1)
 
 def deleteDashboard(id):
     """
@@ -721,8 +724,8 @@ def deleteDashboard(id):
         name = dashboard.name
         if dashboard.isPublic:
             updateChildren(id, deletingParent=True)
-        SavedSearch.objects(dashboard=id).delete()
-        Dashboard.objects(id=id).delete()
+        SavedSearch.objects(dashboard=id).delete_one()
+        Dashboard.objects(id=id).delete_one()
     except Exception as e:
         print e
         return False
@@ -736,7 +739,7 @@ def renameDashboard(id, name, userId):
         return "You must give a name to the dashboard."
     if Dashboard.objects(name=name, analystId=userId):
         return "You already have a dashboard with that name."
-    Dashboard.objects(id=id).update(set__name=name)
+    Dashboard.objects(id=id).update_one(set__name=name)
     return True
 
 def changeTheme(id, theme):
@@ -745,7 +748,7 @@ def changeTheme(id, theme):
     CURRENTLY UNUSED.
     """
     try:
-        Dashboard.objects(id=id).update(set__theme=theme)
+        Dashboard.objects(id=id).update_one(set__theme=theme)
     except Exception as e:
         print e
         return False
@@ -763,7 +766,7 @@ def add_existing_search_to_dashboard(id, dashboard, user):
                 "newSearch": createTableObject(user, table=search)}
 
 def switch_existing_search_to_dashboard(id, dashboard):
-    if SavedSearch.objects(id=id).update(set__dashboard=dashboard) == 1:
+    if SavedSearch.objects(id=id).update_one(set__dashboard=dashboard) == 1:
         return {"success":True,
                 "message": "Search Switched Sucessfully"}
     return {"success":False,

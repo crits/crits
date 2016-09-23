@@ -15,7 +15,10 @@ except ImportError:
 
 from multiprocessing.pool import Pool, ThreadPool
 
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render
 

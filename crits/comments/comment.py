@@ -6,7 +6,10 @@ from django_mongoengine import Document
 from mongoengine import EmbeddedDocument
 from mongoengine import ObjectIdField, StringField, ListField, EmbeddedDocumentField
 from django.conf import settings
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 
 from crits.core.user import CRITsUser
 from crits.core.fields import CritsDateTimeField

@@ -1,7 +1,10 @@
 import json
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
 
@@ -273,7 +276,7 @@ def ignore_parent(request, id):
     Called from dashboard.html
     """
     try:
-        Dashboard.objects(id=id).update(set__hasParentChanged=False)
+        Dashboard.objects(id=id).update_one(set__hasParentChanged=False)
     except:
         return respondWithError("An error occured while updating dashboard. Please try again later.", True)
     return respondWithSuccess("success")

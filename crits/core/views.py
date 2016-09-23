@@ -9,7 +9,10 @@ from time import gmtime, strftime
 
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string

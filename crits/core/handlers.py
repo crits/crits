@@ -17,7 +17,10 @@ from django.contrib.auth import login as user_login
 from django.middleware.csrf import rotate_token
 from django.contrib.auth import authenticate
 # we implement django.contrib.auth.login as user_login in here to accomodate mongoengine
-from django.core.urlresolvers import reverse, resolve, get_script_prefix
+try:
+    from django.urls import reverse, resolve, get_script_prefix
+except ImportError:
+    from django.core.urlresolvers import reverse, resolve, get_script_prefix
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.html import escape as html_escape

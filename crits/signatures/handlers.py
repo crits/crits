@@ -3,7 +3,10 @@ import hashlib
 import json
 import HTMLParser
 
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
 try:
