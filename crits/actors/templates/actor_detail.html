@@ -9,6 +9,7 @@
     var edit_actor_name = "{% url 'crits.actors.views.edit_actor_name' actor.id|urlencode %}";
     var update_actor_aliases = "{% url 'crits.actors.views.edit_actor_aliases' %}";
     var actor_id = "{{ actor.id | escapejs }}"
+    var id = actor_id
 </script>
 
 <div id="tabnav" class="tabnav" style="font-size:90%">
@@ -110,10 +111,6 @@
                               {% include "releasability_list_widget.html" %}
                           {% endwith %}
                       </tr>
-                    {% else %}
-                      {% with releasability=None %}
-                        {% include "releasability_list_widget.html" %}
-                      {% endwith %}
                     {% endif %}
                 </tbody>
             </table>

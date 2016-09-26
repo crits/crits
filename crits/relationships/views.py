@@ -6,7 +6,7 @@ from django.shortcuts import render_to_response
 from django.template.loader import render_to_string
 from django.template import RequestContext
 
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_acl_object
 from crits.relationships.forms import ForgeRelationshipForm
 from crits.relationships.handlers import forge_relationship, update_relationship_dates, update_relationship_confidences
 from crits.relationships.handlers import update_relationship_types, delete_relationship, update_relationship_reasons

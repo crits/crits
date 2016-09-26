@@ -495,7 +495,7 @@ class SourceForm(forms.Form):
     tlp = forms.ChoiceField(required=True,
                             widget=forms.Select,
                             label=form_consts.Common.TLP)
-    analyst = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    analyst = forms.CharField(widget=forms.HiddenInput(attrs={'readonly': 'readonly'}))
 
     def __init__(self, username, *args, **kwargs):
         super(SourceForm, self).__init__(*args, **kwargs)

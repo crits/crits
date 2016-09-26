@@ -567,6 +567,10 @@ def source_releasability(request):
             date = parse(date, fuzzy=True)
 
         acl = get_acl_object(type_)
+        import logging
+        logger = logging.getLogger('crits')
+        logger.error(acl)
+        logger.error(type_)
 
         if not type_ or not id_ or not name or not action:
             error = "Modifying releasability requires a type, id, source, and action"
@@ -575,26 +579,26 @@ def source_releasability(request):
                                       RequestContext(request))
         if action  == "add":
             if user.has_access_to(acl.RELEASABILITY_ADD):
-                result = add_releasability(type_, id_, name, user)
+                result = add_releasability(type_, id_, name, user.username)
             else:
                 result = {'success':False,
                           'message':'User does not have permission to add releasability.'}
         elif action  == "add_instance":
             if user.has_access_to(acl.RELEASABILITY_ADD):
-                result = add_releasability_instance(type_, id_, name, user,
+                result = add_releasability_instance(type_, id_, name, user.username,
                                                     note=note)
             else:
                 result = {'success':False,
                           'message':'User does not have permission to add releasability.'}
         elif action == "remove":
             if user.has_access_to(acl.RELEASABILITY_DELETE):
-                result = remove_releasability(type_, id_, name, user)
+                result = remove_releasability(type_, id_, name, user.username)
             else:
                 result = {'success':False,
                           'message':'User does not have permission to remove releasability.'}
         elif action == "remove_instance":
             if user.has_access_to(acl.RELEASABILITY_DELETE):
-                result = remove_releasability_instance(type_, id_, name, date, user)
+                result = remove_releasability_instance(type_, id_, name, date, user.username)
             else:
                 result = {'success':False,
                           'message':'User does not have permission to delete releasability.'}
@@ -783,7 +787,7 @@ def add_update_source(request, method, obj_type, obj_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        form = SourceForm(request.user.username, request.POST)
+        form = SourceForm(request.user, request.POST)
         if form.is_valid():
             data = form.cleaned_data
             user = request.user
@@ -801,7 +805,7 @@ def add_update_source(request, method, obj_type, obj_id):
                                                    reference=data['reference'],
                                                    tlp=data['tlp'],
                                                    date=date,
-                                                   user=user)
+                                                   user=user.username)
                     else:
                         result = {"success":False,
                                   "message":"User does not have permission to add sources to object."}
