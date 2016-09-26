@@ -226,10 +226,7 @@ def get_dialog(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-    import logging
-    logger = logging.getLogger('crits')
     dialog = str(request.GET.get('dialog', ''))
-    logger.error(dialog)
 
     # Regex in urls.py doesn't seem to be working, should sanity check dialog
     return render_to_response(dialog + ".html",
@@ -567,10 +564,6 @@ def source_releasability(request):
             date = parse(date, fuzzy=True)
 
         acl = get_acl_object(type_)
-        import logging
-        logger = logging.getLogger('crits')
-        logger.error(acl)
-        logger.error(type_)
 
         if not type_ or not id_ or not name or not action:
             error = "Modifying releasability requires a type, id, source, and action"
@@ -2195,11 +2188,6 @@ def add_update_ticket(request, method, type_=None, id_=None):
 
     acl = get_acl_object(type_)
 
-    import logging
-    logger = logging.getLogger('crits')
-    logger.error(user.has_access_to(acl.TICKETS_ADD))
-
-
     if method =="remove" and request.method == "POST" and request.is_ajax():
         date = datetime.datetime.strptime(request.POST['key'],
                                             settings.PY_DATETIME_FORMAT)
@@ -2223,7 +2211,6 @@ def add_update_ticket(request, method, type_=None, id_=None):
                 add['date'] = datetime.datetime.now()
                 if user.has_access_to(acl.TICKETS_ADD):
                     result = ticket_add(type_, id_, add, user)
-                    logger.error(result)
                 else:
                     result = {"success":False,
                               "message":"User does not have permission to add tickets."}
