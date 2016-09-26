@@ -722,7 +722,20 @@ def update_analysis_results(task):
         new_dict = {}
         for k in tdict.iterkeys():
             new_dict['set__%s' % k] = tdict[k]
-        AnalysisResult.objects(id=ar.id).update_one(**new_dict)
+        try:
+            AnalysisResult.objects(id=ar.id).update_one(**new_dict)
+        except Exception as e: # assume bad data in 'results'
+            task.status = 'error'
+            new_dict['set__results'] = []
+            le = EmbeddedAnalysisResultLog()
+            le.message = 'DB Update Failed: %s' % e
+            le.level = 'error'
+            le.datetime = str(datetime.datetime.now())
+            new_dict['set__log'].append(le)
+            try:
+                AnalysisResult.objects(id=ar.id).update_one(**new_dict)
+            except: # don't know what's wrong, try writing basic log only
+                AnalysisResult.objects(id=ar.id).update_one(set__log=[le])
 
 # The service pools need to be defined down here because the functions
 # that are used by the services must already be defined.
