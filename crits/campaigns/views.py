@@ -109,6 +109,7 @@ def campaign_details(request, campaign_name):
     :type campaign_name: str
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
     if user.has_access_to(CampaignACL.READ):
         template = "campaign_detail.html"

@@ -98,9 +98,12 @@ def action_add(type_, id_, tlo_action, user=None, **kwargs):
         return {'success': False,
                 'message': 'Not a valid type: %s' % type_}
 
-    sources = user_sources(user)
-    obj = obj_class.objects(id=id_,
-                            source__name__in=sources).first()
+    if type_ != "Campaign":
+        sources = user_sources(user)
+        obj = obj_class.objects(id=id_,
+                                source__name__in=sources).first()
+    else:
+        obj = obj_class.objects(id=id_).first()
     if not obj:
         return {'success': False,
                 'message': 'Could not find TLO'}
@@ -140,9 +143,12 @@ def action_remove(type_, id_, date, user, **kwargs):
         return {'success': False,
                 'message': 'Not a valid type: %s' % type_}
 
-    sources = user_sources(user)
-    obj = obj_class.objects(id=id_,
-                            source__name__in=sources).first()
+    if type_ != "Campaign":
+        sources = user_sources(user)
+        obj = obj_class.objects(id=id_,
+                                source__name__in=sources).first()
+    else:
+        obj = obj_class.objects(id=id_).first()
 
     if not obj:
         return {'success': False,
@@ -176,9 +182,12 @@ def action_update(type_, id_, tlo_action, user=None, **kwargs):
         return {'success': False,
                 'message': 'Not a valid type: %s' % type_}
 
-    sources = user_sources(user)
-    obj = obj_class.objects(id=id_,
-                            source__name__in=sources).first()
+    if type_ != "Campaign":
+        sources = user_sources(user)
+        obj = obj_class.objects(id=id_,
+                                source__name__in=sources).first()
+    else:
+        obj = obj_class.objects(id=id_).first()
 
     if not obj:
         return {'success': False,
