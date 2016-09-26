@@ -157,7 +157,7 @@ class SourceTests(SimpleTestCase):
 
     def DelSource(self):
         self.assertTrue(SourceAccess.objects(name=TSRC).first())
-        SourceAccess.objects(name=TSRC).first().delete_one()
+        SourceAccess.objects(name=TSRC).first().delete()
         self.assertFalse(SourceAccess.objects(name=TSRC).first())
 
     def testSourceAddDel(self):
