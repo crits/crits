@@ -480,7 +480,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     return result
 
 def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
-                         analyst, method='', reference='',
+                         analyst, status=None, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
                          campaign_confidence=None, confidence=None,
                          description=None, impact=None,
@@ -547,6 +547,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         attack_type = IndicatorAttackTypes.UNKNOWN
     if description is None:
         description = ''
+    if status is None:
+        status = Status.NEW
 
     if value == None or value.strip() == "":
         result = {'success': False,
@@ -562,6 +564,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         ind['value'] = value.strip()
         ind['lower'] = value.lower().strip()
         ind['description'] = description.strip()
+        ind['status'] = status
 
         if campaign:
             ind['campaign'] = campaign
