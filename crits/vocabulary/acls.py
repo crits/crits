@@ -204,6 +204,9 @@ class ActorACL(vocab):
     SECTORS_READ = ACTOR + Common.SECTORS_READ
     SECTORS_EDIT = ACTOR + Common.SECTORS_EDIT
 
+    SERVICES_READ = ACTOR + Common.SERVICES_READ
+    SERVICES_EXECUTE = ACTOR + Common.SERVICES_EXECUTE
+
     SOURCES_READ = ACTOR + Common.SOURCES_READ
     SOURCES_ADD = ACTOR + Common.SOURCES_ADD
     SOURCES_EDIT = ACTOR + Common.SOURCES_EDIT
@@ -226,6 +229,8 @@ class BackdoorACL(vocab):
     ALIASES_READ = BACKDOOR + "aliases_read"
     ALIASES_EDIT = BACKDOOR + "aliases_edit"
     VERSION_EDIT = BACKDOOR + "version_edit"
+
+    NAME_EDIT = BACKDOOR + "name_edit"
 
     CAMPAIGN_READ = Common.CAMPAIGN_READ
 
@@ -1201,8 +1206,8 @@ class ScreenshotACL(vocab):
     Vocabulary for Screenshot ACLs
     """
 
-    SCREENSHOT_ADD = ".screenshot_add"
-    SCREENSHOT_DELETE = ".screenshot_delete"
+    SCREENSHOT_ADD = ".screenshots_add"
+    SCREENSHOT_DELETE = ".screenshots_delete"
 
 class TargetACL(vocab):
     """

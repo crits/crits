@@ -15,19 +15,20 @@
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+    {% if ActorACL.SERVICES_READ %}
+      <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
     </ul>
-
 <div id="details_section">
     {% if ActorACL.DOWNLOAD|has_access_to:user or ActorACL.DELETE|has_access_to:user %}
     <span class="horizontal_menu">
     <ul class="hmenu">
         {% if ActorACL.DOWNLOAD|has_access_to:user %}
-        <li><a href="#" class="dialogClick" dialog="download-actor">Download Actor</a></li>
+          <li><a href="#" class="dialogClick" dialog="download-actor">Download Actor</a></li>
         {% endif %}
         {% if ActorACL.DELETE|has_access_to:user %}
-        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="actor" action='{% url "crits.actors.views.remove_actor" actor.id %}'>Delete Actor</a></li>
+          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="actor" action='{% url "crits.actors.views.remove_actor" actor.id %}'>Delete Actor</a></li>
         {% endif %}
     </ul>
     </span>
@@ -180,11 +181,13 @@
     {% endif %}
 </div> <!-- details_section -->
 
+{% if ActorACL.SERVICES_READ %}
 {% with item=actor %}
     {% include "services_analysis_section.html" with crits_type="Actor" identifier=actor.id %}
 {% endwith %}
 
 {% include 'services_tab_tabs_widget.html' %}
+{% endif %}
 </div>
 
 <div style="display: none;">

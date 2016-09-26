@@ -77,5 +77,5 @@ class BackdoorAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
     """
     aliases_read = BooleanField(default=False)
     aliases_edit = BooleanField(default=False)
-    description_edit = BooleanField(default=False)
+    name_edit = BooleanField(default=False)
     version_edit = BooleanField(default=False)

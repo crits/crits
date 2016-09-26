@@ -814,7 +814,7 @@ def add_update_source(request, method, obj_type, obj_id):
                                                    reference=data['reference'],
                                                    tlp=data['tlp'],
                                                    date=date,
-                                                   user=user)
+                                                   user=user.username)
                     else:
                         result = {"success":False,
                                   "message":"User does not have permission to edit sources."}
@@ -2220,7 +2220,7 @@ def add_update_ticket(request, method, type_=None, id_=None):
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
                 if user.has_access_to(acl.TICKETS_EDIT):
-                    result = ticket_update(type_, id_, add, user)
+                    result = ticket_update(type_, id_, add, user.username)
                 else:
                     result = {"success":False,
                               "message":"User does not have permission to modify tickets."}

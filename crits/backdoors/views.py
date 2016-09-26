@@ -180,17 +180,22 @@ def edit_backdoor_name(request, id_):
     """
 
     if request.method == "POST" and request.is_ajax():
-        user = request.user.username
+        user = request.user
         name = request.POST.get('name', None)
-        if not name:
-            return HttpResponse(json.dumps({'success': False,
-                                            'message': 'Not all info provided.'}),
+        if user.has_access_to(BackdoorACL.NAME_EDIT):
+            if not name:
+                return HttpResponse(json.dumps({'success': False,
+                                                'message': 'Not all info provided.'}),
+                                    content_type="application/json")
+            result = set_backdoor_name(id_,
+                                       name,
+                                       user)
+            return HttpResponse(json.dumps(result),
                                 content_type="application/json")
-        result = set_backdoor_name(id_,
-                                   name,
-                                   user)
-        return HttpResponse(json.dumps(result),
-                            content_type="application/json")
+        else:
+            return HttpResponse(json.dumps({'success': False,
+                                            'message': 'User does not have permission to edit name.'}),
+                                content_type="application/json")
     else:
         error = "Expected AJAX POST"
         return render_to_response("error.html",

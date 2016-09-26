@@ -2330,6 +2330,12 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                             if srcdict['name'] in users_sources:
                                 srcs.append(srcdict['name'])
                     doc[key] = "|||".join(srcs)
+                elif key == "status":
+                    if not user.has_access_to(get_acl_object(col_obj._meta['crits_type']).STATUS_READ):
+                        doc[key] = None
+                elif key == "description":
+                    if not user.has_access_to(get_acl_object(col_obj._meta['crits_type']).DESCRIPTION_READ):
+                        doc[key] = ""
                 elif key == "tags":
                     tags = []
                     for tag in doc[key]:

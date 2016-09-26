@@ -10,6 +10,8 @@ from crits.screenshots.handlers import get_screenshots_for_id, get_screenshot
 from crits.screenshots.handlers import add_screenshot, generate_screenshot_jtable
 from crits.screenshots.handlers import delete_screenshot_from_object
 
+from crits.vocabulary.acls import ScreenshotACL
+
 
 @user_passes_test(user_can_view_data)
 def screenshots_listing(request,option=None):
@@ -143,7 +145,7 @@ def remove_screenshot_from_object(request):
     sid = request.POST.get('sid', None)
 
     if user.has_access_to(str(obj + ScreenshotACL.SCREENSHOT_DELETE )):
-        result = delete_screenshot_from_object(obj, oid, sid, analyst)
+        result = delete_screenshot_from_object(obj, oid, sid, user)
     else:
         result = {"success":False,
                   "message":"User does not have permission to remove screenshots."}

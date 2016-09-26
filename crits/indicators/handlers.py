@@ -713,11 +713,11 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
             indicator.description += add_desc
         indicator.add_threat_type_list(ind.get('threat_types',
                                                IndicatorThreatTypes.UNKNOWN),
-                                       user.username,
+                                       user,
                                        append=True)
         indicator.add_attack_type_list(ind.get('attack_types',
                                                IndicatorAttackTypes.UNKNOWN),
-                                       user.username,
+                                       user,
                                        append=True)
 
     if 'campaign' in ind:
