@@ -22,12 +22,13 @@
     </ul>
 
 <div id="details_section">
+{% if BackdoorACL.DELETE|has_access_to:user %}
     <span class="horizontal_menu">
     <ul class="hmenu">
         <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="backdoor" action='{% url "crits.backdoors.views.remove_backdoor" backdoor.id %}'>Delete Backdoor</a></li>
     </ul>
     </span>
-
+{% endif %}
     <div class="content_box content_details">
         <h3 class="titleheader">
             <span>Details for {{backdoor.name}}</span>

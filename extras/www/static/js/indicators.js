@@ -173,18 +173,20 @@ $(document).ready(function() {
                 return false;
             }
         },
-        beforeTagRemoved: function(event, ui) {
-            var my_threat_types = $("#threat_type_list").tagit("assignedTags");
-            if (my_threat_types.length <= 1) {
-                return false;
-            }
-        },
         afterTagAdded: function(event, ui) {
-            var my_threat_types = $("#threat_type_list").tagit("assignedTags");
-            update_threat_types(my_threat_types);
+            var my_threats = $("#threat_type_list").tagit("assignedTags");
+            if (my_threats.length > 1 && my_threats.indexOf("Unknown") > -1) {
+                $("#threat_type_list").tagit("removeTagByLabel", "Unknown");
+            }
+            else {
+                update_threat_types(my_threats);
+            }
         },
         afterTagRemoved: function(event, ui) {
             var my_threat_types = $("#threat_type_list").tagit("assignedTags");
+            if (my_threat_types.length < 1) {
+                $("#threat_type_list").tagit("createTag", "Unknown");
+            }
             update_threat_types(my_threat_types);
         },
         onTagClicked: function(event, ui) {
@@ -200,7 +202,10 @@ $(document).ready(function() {
                 data: {},
                 datatype: 'json',
                 success: function(data) {
-                    available_threat_types = tmp = data;
+                    available_threat_types = data;
+                    tmp = data.filter(function(i) {
+	                    return i != "Unknown"
+                    });
                 }
             });
             return tmp;
@@ -223,18 +228,20 @@ $(document).ready(function() {
                 return false;
             }
         },
-        beforeTagRemoved: function(event, ui) {
-            var my_attack_types = $("#attack_type_list").tagit("assignedTags");
-            if (my_attack_types.length <= 1) {
-                return false;
-            }
-        },
         afterTagAdded: function(event, ui) {
-            var my_attack_types = $("#attack_type_list").tagit("assignedTags");
-            update_attack_types(my_attack_types);
+            var my_attacks = $("#attack_type_list").tagit("assignedTags");
+            if (my_attacks.length > 1 && my_attacks.indexOf("Unknown") > -1) {
+                $("#attack_type_list").tagit("removeTagByLabel", "Unknown");
+            }
+            else {
+                update_attack_types(my_attacks);
+            }
         },
         afterTagRemoved: function(event, ui) {
             var my_attack_types = $("#attack_type_list").tagit("assignedTags");
+            if (my_attack_types.length < 1) {
+                $("#attack_type_list").tagit("createTag", "Unknown");
+            }
             update_attack_types(my_attack_types);
         },
         onTagClicked: function(event, ui) {
@@ -250,7 +257,10 @@ $(document).ready(function() {
                 data: {},
                 datatype: 'json',
                 success: function(data) {
-                    available_attack_types = tmp = data;
+                    available_attack_types = data;
+                    tmp = data.filter(function(i) {
+	                    return i != "Unknown"
+                    });
                 }
             });
             return tmp;

@@ -405,16 +405,13 @@ def handle_indicator_csv(csv_data, ctype, user, source, source_method=None,
         ind['lower'] = (d.get('Indicator') or '').lower().strip()
         ind['description'] = (d.get('Description') or '').strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
-        try:
-            ind['threat_types'] = d.get('Threat Types').split(',')
-        except:
-            ind['threat_types'] = None
-        try:
-            ind['attack_types'] = d.get('Attack Types').split(',')
-        except:
-            ind['attack_types'] = None
 
-        if not ind['threat_types']:
+        ind['threat_types'] = d.get('Threat Type',
+                                    IndicatorThreatTypes.UNKNOWN).split(',')
+        ind['attack_types'] = d.get('Attack Type',
+                                    IndicatorAttackTypes.UNKNOWN).split(',')
+
+        if not ind['threat_types'] or ind['threat_types'][0] == '':
             ind['threat_types'] = [IndicatorThreatTypes.UNKNOWN]
         for t in ind['threat_types']:
             if t not in IndicatorThreatTypes.values():
@@ -422,7 +419,7 @@ def handle_indicator_csv(csv_data, ctype, user, source, source_method=None,
                 result_message += msg % (processed + 1, "Invalid Threat Type: %s" % t)
                 continue
 
-        if not ind['attack_types']:
+        if not ind['attack_types'] or ind['attack_types'][0] == '':
             ind['attack_types'] = [IndicatorAttackTypes.UNKNOWN]
         for a in ind['attack_types']:
             if a not in IndicatorAttackTypes.values():
@@ -691,8 +688,10 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
     if not indicator:
         indicator = Indicator()
         indicator.ind_type = ind.get('type')
-        indicator.threat_types = ind.get('threat_types')
-        indicator.attack_types = ind.get('attack_types')
+        indicator.threat_types = ind.get('threat_types',
+                                         IndicatorThreatTypes.UNKNOWN)
+        indicator.attack_types = ind.get('attack_types',
+                                         IndicatorAttackTypes.UNKNOWN)
         indicator.value = ind.get('value')
         indicator.lower = ind.get('lower')
         indicator.description = ind.get('description', '')
@@ -712,9 +711,13 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
             indicator.description += "\n" + ind.get('description', '') + add_desc
         else:
             indicator.description += add_desc
-        indicator.add_threat_type_list(ind.get('threat_types'), user,
+        indicator.add_threat_type_list(ind.get('threat_types',
+                                               IndicatorThreatTypes.UNKNOWN),
+                                       user.username,
                                        append=True)
-        indicator.add_attack_type_list(ind.get('attack_types'), user,
+        indicator.add_attack_type_list(ind.get('attack_types',
+                                               IndicatorAttackTypes.UNKNOWN),
+                                       user.username,
                                        append=True)
 
     if 'campaign' in ind:

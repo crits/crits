@@ -261,15 +261,21 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
 
         parsed_threat_types = [s.strip() for s in parsed_threat_types]
 
-        if IndicatorThreatTypes.UNKNOWN in self.threat_types:
-            self.threat_types.remove(IndicatorThreatTypes.UNKNOWN)
+        unknown = IndicatorThreatTypes.UNKNOWN
+        if len(self.threat_types) and unknown in parsed_threat_types and append:
+            parsed_threat_types.remove(unknown)
+        if unknown in self.threat_types:
+            self.threat_types.remove(unknown)
 
         if append:
             for t in parsed_threat_types:
                 if t not in self.sectors:
                     self.threat_types.append(t)
-        else:
+        elif len(parsed_threat_types):
             self.threat_types = parsed_threat_types
+
+        if len(self.threat_types) == 0:
+            self.threat_types = [unknown]
 
     def get_threat_types_list_string(self):
         """
@@ -303,15 +309,21 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
 
         parsed_attack_types = [s.strip() for s in parsed_attack_types]
 
-        if IndicatorAttackTypes.UNKNOWN in self.attack_types:
-            self.attack_types.remove(IndicatorThreatTypes.UNKNOWN)
+        unknown = IndicatorAttackTypes.UNKNOWN
+        if len(self.attack_types) and unknown in parsed_attack_types and append:
+            parsed_attack_types.remove(unknown)
+        if unknown in self.attack_types:
+            self.attack_types.remove(unknown)
 
         if append:
             for t in parsed_attack_types:
                 if t not in self.sectors:
                     self.attack_types.append(t)
-        else:
+        elif len(parsed_attack_types):
             self.attack_types = parsed_attack_types
+
+        if len(self.attack_types) == 0:
+            self.attack_types = [unknown]
 
     def get_attack_types_list_string(self):
         """

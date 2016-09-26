@@ -12,7 +12,6 @@ django-tastypie-mongoengine==0.4.6
 kombu
 lxml
 m2crypto
---allow-external mongoengine
 mongoengine==0.8.8
 pydeep==0.2
 pymongo==2.7.2
@@ -30,3 +29,4 @@ six
 ushlex
 wsgiref
 olefile
+pyimpfuzzy

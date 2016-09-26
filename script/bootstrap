@@ -98,8 +98,12 @@ depend_crits()
          CFLAGS=-I$(brew --prefix openssl)/include \
          SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include" \
          ${PIP} install -U -r requirements.txt
-    else
-         sudo -E ${PIP} install -U -r requirements.txt
+    else 
+        sudo -E env LDFLAGS=-L/opt/local/lib \
+                    CFLAGS=-I/opt/local/include \
+                    SWIG_FEATURES=-cpperraswarn -includeall -I/opt/local/include \
+                    ${PIP} install M2Crypto
+        sudo -E ${PIP} install -U -r requirements.txt
     fi
     if [ $? -ne 0 ]
     then
@@ -149,7 +153,7 @@ server_setup()
     if [ ! -f crits/config/database.py ]; then
         echo "Creating default database configuration file"
         cp crits/config/database_example.py crits/config/database.py
-        SC=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(-_=+)' | fold -w 50 | head -n 1)
+        SC=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(\-_=+)' | fold -w 50 | head -n 1)
         # This is going to escape the '&' character that is a special character in sed 
         SE=$(echo ${SC} | sed -e 's/\\/\\\\/g' | sed -e 's/\//\\\//g' | sed -e 's/&/\\\&/g')
         sed -i -e "s/^\(SECRET_KEY = \).*$/\1\'${SE}\'/1" crits/config/database.py
@@ -377,7 +381,7 @@ do
     case $STEP in
         1)
             verify
-            if [ "$OS" = 'ubuntu' ]
+            if [ "$OS" = 'ubuntu' ] || [ "$OS" = 'linuxmint' ]
             then
                 printf "${PASS}ubuntu is Supported!${END}\n"
                 ubuntu_install || exit_restart $STEP
