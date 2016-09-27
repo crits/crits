@@ -8,13 +8,13 @@ celery
 defusedxml
 django-celery
 django-tastypie==0.13.3
-django-tastypie-mongoengine==0.4.6
+git+https://github.com/frbapolkosnik/django-tastypie-mongoengine.git
 kombu
 lxml
-m2crypto
-mongoengine==0.8.8
+mongoengine==0.10.6
+git+https://github.com/MongoEngine/django-mongoengine.git
 pydeep==0.2
-pymongo==2.7.2
+pymongo==3.2.2
 pyparsing
 python-dateutil
 python-ldap
@@ -30,3 +30,4 @@ ushlex
 wsgiref
 olefile
 pyimpfuzzy
+m2crypto

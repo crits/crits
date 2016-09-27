@@ -563,6 +563,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         attack_type = IndicatorAttackTypes.UNKNOWN
     if description is None:
         description = ''
+    if status is None:
+        status = Status.NEW
 
     if value == None or value.strip() == "":
         result = {'success': False,
@@ -578,6 +580,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         ind['value'] = value.strip()
         ind['lower'] = value.lower().strip()
         ind['description'] = description.strip()
+        ind['status'] = status
 
         if campaign:
             ind['campaign'] = campaign

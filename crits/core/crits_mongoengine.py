@@ -343,6 +343,7 @@ class CritsDocument(BaseDocument):
             #.delete() is normally defined on a Document, not BaseDocument, so
             #   we'll have to monkey patch to call our delete.
             self.delete = self._custom_delete
+        self._meta['strict'] = False
         super(CritsDocument, self).__init__(**values)
 
     def _custom_save(self, force_insert=False, validate=True, clean=False,

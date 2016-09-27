@@ -18,6 +18,7 @@ from crits.vocabulary.indicators import (
 from crits.vocabulary.acls import Common, IndicatorACL
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.status import Status
 
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
@@ -107,6 +108,7 @@ class UploadIndicatorForm(SourceInForm):
     description = forms.CharField(
         widget=forms.TextInput(attrs={'size': '50'}),
         required=False)
+    status = forms.ChoiceField(widget=forms.Select, required=False)
     confidence = forms.ChoiceField(widget=forms.Select, required=True)
     impact = forms.ChoiceField(widget=forms.Select, required=True)
     campaign = forms.ChoiceField(widget=forms.Select, required=False)
