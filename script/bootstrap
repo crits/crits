@@ -229,7 +229,7 @@ add_admin()
         read -p "Email address: " EMAIL
         read -p "Organization name: " ORG
 
-        ${PYTH} manage.py users -a -A -e "${EMAIL}" -f "${FIRSTNAME}" -l "${LASTNAME}" -o "${ORG}" -u "${USERNAME}"
+        ${PYTH} manage.py users -a -R UberAdmin -e "${EMAIL}" -f "${FIRSTNAME}" -l "${LASTNAME}" -o "${ORG}" -u "${USERNAME}"
         if [ $? -ne 0 ]
         then
             printf "${FAIL}Failed to add an admin user${END}\n"
