@@ -55,6 +55,7 @@ class IndicatorResource(CRITsAPIResource):
         threat_type = bundle.data.get('threat_type', None)
         attack_type = bundle.data.get('attack_type', None)
         source = bundle.data.get('source', None)
+        status = bundle.data.get('status', None)
         reference = bundle.data.get('reference', None)
         method = bundle.data.get('method', None)
         add_domain = bundle.data.get('add_domain', False)
@@ -73,17 +74,18 @@ class IndicatorResource(CRITsAPIResource):
                                        threat_type,
                                        attack_type,
                                        analyst,
-                                       method,
-                                       reference,
-                                       add_domain,
-                                       add_relationship,
-                                       campaign,
-                                       campaign_confidence,
-                                       confidence,
-                                       description,
-                                       impact,
-                                       bucket_list,
-                                       ticket)
+                                       status=status,
+                                       method=method,
+                                       reference=reference,
+                                       add_domain=add_domain,
+                                       add_relationship=add_relationship,
+                                       campaign=campaign,
+                                       campaign_confidence=campaign_confidence,
+                                       confidence=confidence,
+                                       description=description,
+                                       impact=impact,
+                                       bucket_list=bucket_list,
+                                       ticket=ticket)
 
         content = {'return_code': 0,
                    'type': 'Indicator'}

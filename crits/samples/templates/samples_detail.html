@@ -28,17 +28,19 @@
     {% include 'services_tab_list_widget.html' %}
      </ul>
 <div id="details_section">
-    <span class="horizontal_menu">
-    <ul class="hmenu">
-        <li><a href="#" class="dialogClick" dialog="download-sample">Download Sample</a></li>
-        <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=text">Text</a></li>
-        <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=yaml">YAML</a></li>
-        <li><a href="#" class="dialogClick" dialog="unzip-sample">Un7zip</a></li>
-        {% if admin %}
-            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="sample" action='{% url "crits.samples.views.remove_sample" sample.md5 %}'>Delete Sample</a></li>
-        {% endif %}
-    </ul>
-    </span>
+    <div class='content_box'>
+        <span class="horizontal_menu">
+        <ul class="hmenu">
+            <li><a href="#" class="dialogClick" dialog="download-sample">Download Sample</a></li>
+            <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=text">Text</a></li>
+            <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=yaml">YAML</a></li>
+            <li><a href="#" class="dialogClick" dialog="unzip-sample">Un7zip</a></li>
+            {% if admin %}
+                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="sample" action='{% url "crits.samples.views.remove_sample" sample.md5 %}'>Delete Sample</a></li>
+            {% endif %}
+        </ul>
+        </span>
+    </div>
     <div class='content_box content_details'>
         <h3 class='titleheader'>
             <span>File Details</span>

@@ -395,10 +395,12 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
         ind['lower'] = (d.get('Indicator') or '').lower().strip()
         ind['description'] = (d.get('Description') or '').strip()
         ind['type'] = get_verified_field(d, valid_ind_types, 'Type')
-        ind['threat_types'] = d.get('Threat Types').split(',')
-        ind['attack_types'] = d.get('Attack Types').split(',')
+        ind['threat_types'] = d.get('Threat Type',
+                                    IndicatorThreatTypes.UNKNOWN).split(',')
+        ind['attack_types'] = d.get('Attack Type',
+                                    IndicatorAttackTypes.UNKNOWN).split(',')
 
-        if not ind['threat_types']:
+        if not ind['threat_types'] or ind['threat_types'][0] == '':
             ind['threat_types'] = [IndicatorThreatTypes.UNKNOWN]
         for t in ind['threat_types']:
             if t not in IndicatorThreatTypes.values():
@@ -406,7 +408,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                 result_message += msg % (processed + 1, "Invalid Threat Type: %s" % t)
                 continue
 
-        if not ind['attack_types']:
+        if not ind['attack_types'] or ind['attack_types'][0] == '':
             ind['attack_types'] = [IndicatorAttackTypes.UNKNOWN]
         for a in ind['attack_types']:
             if a not in IndicatorAttackTypes.values():
@@ -478,7 +480,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
     return result
 
 def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
-                         analyst, method='', reference='',
+                         analyst, status=None, method='', reference='',
                          add_domain=False, add_relationship=False, campaign=None,
                          campaign_confidence=None, confidence=None,
                          description=None, impact=None,
@@ -545,6 +547,8 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         attack_type = IndicatorAttackTypes.UNKNOWN
     if description is None:
         description = ''
+    if status is None:
+        status = Status.NEW
 
     if value == None or value.strip() == "":
         result = {'success': False,
@@ -560,6 +564,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
         ind['value'] = value.strip()
         ind['lower'] = value.lower().strip()
         ind['description'] = description.strip()
+        ind['status'] = status
 
         if campaign:
             ind['campaign'] = campaign
@@ -665,8 +670,10 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
     if not indicator:
         indicator = Indicator()
         indicator.ind_type = ind.get('type')
-        indicator.threat_types = ind.get('threat_types')
-        indicator.attack_types = ind.get('attack_types')
+        indicator.threat_types = ind.get('threat_types',
+                                         IndicatorThreatTypes.UNKNOWN)
+        indicator.attack_types = ind.get('attack_types',
+                                         IndicatorAttackTypes.UNKNOWN)
         indicator.value = ind.get('value')
         indicator.lower = ind.get('lower')
         indicator.description = ind.get('description', '')
@@ -686,9 +693,13 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
             indicator.description += "\n" + ind.get('description', '') + add_desc
         else:
             indicator.description += add_desc
-        indicator.add_threat_type_list(ind.get('threat_types'), analyst,
+        indicator.add_threat_type_list(ind.get('threat_types',
+                                               IndicatorThreatTypes.UNKNOWN),
+                                       analyst,
                                        append=True)
-        indicator.add_attack_type_list(ind.get('attack_types'), analyst,
+        indicator.add_attack_type_list(ind.get('attack_types',
+                                               IndicatorAttackTypes.UNKNOWN),
+                                       analyst,
                                        append=True)
 
     if 'campaign' in ind:

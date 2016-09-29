@@ -44,7 +44,7 @@ Provides: yaml
 django<1.9
 Provides: django
 
-pymongo==2.7.2
+pymongo==3.2.2
 Provides: bson, gridfs, pymongo
 
 python-magic==0.4.6
@@ -71,9 +71,13 @@ python-dateutil
 Requires: six
 Provides: dateutil
 
-mongoengine==0.8.8
+mongoengine==0.10.6
 Requires: pymongo>=2.5
 Provides: mongoengine
+
+django-mongoengine=0.2.1
+Requires: mongoengine>=0.10
+Provides: django-mongoengine
 
 django-tastypie==0.13.3
 Requires: python-mimeparse>=0.1.4, python-dateutil>=2.1

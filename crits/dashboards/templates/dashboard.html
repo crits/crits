@@ -334,7 +334,7 @@
 	                {% for record in table.records %}
 	                    {
 	                        {% for k,v in record.items  %}
-	                            {% if k in table.colNames or k = 'recid' %}
+	                            {% if k in table.colNames or k == 'recid' %}
 	                                {{k}}:"{{v|safe}}",
 	                            {% endif %}
 	                        {% endfor %}

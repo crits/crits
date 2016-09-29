@@ -1,5 +1,5 @@
 
-
+<div class="content_box">
     <span class="horizontal_menu">
     <ul class="hmenu">
     <li><a id="refresh_services" data-url="{% url 'crits.services.views.refresh_services' relationship.type relationship.value %}" href="#">Refresh Services</a></li>
@@ -9,6 +9,7 @@
         <li>No services enabled.</li>
     {% endfor %} </ul>
     </span>
+</div>
 
     {% for analysis in service_results %}
         {% if analysis.analysis_id %}

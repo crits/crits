@@ -20,15 +20,18 @@
 </ul>
 
 <div id="details_section">
-    <span class="horizontal_menu">
-        <ul class="hmenu">
-            <li><a href="#" class="dialogClick" dialog="new-sample" persona="related">Add Sample</a></li>
-            <li><a href="#" class="dialogClick" dialog="download-event">Download Event</a></li>
-            {% if admin %}
-                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="event" action='{% url "crits.events.views.remove_event" event.id %}'>Delete Event</a></li>
-            {% endif %}
-        </ul>
-    </span>
+    <div class='content_box'>
+        <span class="horizontal_menu">
+            <ul class="hmenu">
+                <li><a href="#" class="dialogClick" dialog="new-sample" persona="related">Add Sample</a></li>
+                <li><a href="#" class="dialogClick" dialog="download-event">Download Event</a></li>
+                {% if admin %}
+                    <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="event" action='{% url "crits.events.views.remove_event" event.id %}'>Delete Event</a></li>
+                {% endif %}
+            </ul>
+        </span>
+    </div>
+
     <div class="content_box content_details">
         <h3 class="titleheader">
             <span>Event Details: {{ event.event_id }}</span>
