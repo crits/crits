@@ -16,6 +16,11 @@ class Command(BaseCommand):
         """
 
         add_uber_admin_role(True)
+        add_readonly_role()
+        add_analyst_role()
+
+        migrate_roles()
+
 
 def add_uber_admin_role(drop=False):
     """
@@ -136,3 +141,29 @@ def add_analyst_role():
                 setattr(role, p, False)
 
     role.save()
+
+def migrate_roles():
+    """
+    Migrate legacy role objects to new RBAC Role objects
+    
+    """
+    import pymongo
+    database = settings.MONGO_DATABASE
+
+    client = pymongo.MongoClient()
+    db = client.database
+
+    collection = db.users.find()
+    for user in collection:
+        roles = []
+        role = user['role']
+        if role == 'Administrator':
+            roles.append('UberAdmin')
+        elif role:
+            roles.append(role)
+
+
+        result = db.users.update_one(
+           {"_id": user['_id']},
+           {"$set": {"roles": roles}}
+        )
