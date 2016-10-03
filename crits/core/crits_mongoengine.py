@@ -858,6 +858,7 @@ class CritsSourceDocument(BaseDocument):
         """
 
         s = None
+
         if source and analyst:
             if not date:
                 date = datetime.datetime.now()

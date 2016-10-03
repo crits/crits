@@ -26,7 +26,6 @@
     <div class='content_box'>
         <span class="horizontal_menu">
         <ul class="hmenu">
-            <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.emails.views.upload_attach' email.id %}">Add Attachment</a></li>
             <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
             {% if admin %}
             <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
@@ -68,7 +67,7 @@
                         <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator: Warning: Indicator might already exist" style="float: right;" class="ui-icon ui-icon-circle-plus create-indicator"></span>
                     {% else %}
                         {% if not email_field.field_value or email_field.field_value.strip == "" %}
-                            <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator: Warning: A value should be supplied first" style="float: right;" class="ui-icon ui-icon-alert create-indicator"></span> 
+                            <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator: Warning: A value should be supplied first" style="float: right;" class="ui-icon ui-icon-alert create-indicator"></span>
                         {% elif email_field.field_value %}
                             <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator" style="float: right;" class="ui-icon ui-icon-plusthick create-indicator">"{{email_field.field_value}}"</span>
                         {% endif %}
@@ -122,7 +121,7 @@
              {% include 'releasability_list_widget.html' %}
         {% endwith %}
         </tr>
-        </tbody> 
+        </tbody>
     </table>
     </div>
     <div id="detail_floaters">
@@ -235,4 +234,3 @@
 {% block javascript_includes %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/emails.js"></script>
 {% endblock %}
-

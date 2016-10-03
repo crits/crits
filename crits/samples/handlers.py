@@ -890,11 +890,11 @@ def handle_file(filename, data, source, method='Generic', reference='',
 
     #add copy of inherited source(s) to Sample
     if isinstance(inherited_source, EmbeddedSource):
-        sample.add_source(copy.copy(inherited_source))
+        sample.add_source(inherited_source)
     elif isinstance(inherited_source, list) and len(inherited_source) > 0:
         for s in inherited_source:
             if isinstance(s, EmbeddedSource):
-                sample.add_source(copy.copy(s))
+                sample.add_source(s)
 
     # generate new source information and add to sample
     if isinstance(source, basestring) and len(source) > 0:
