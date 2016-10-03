@@ -220,7 +220,6 @@ def upload_file(request, related_md5=None):
                     if form.cleaned_data['inherit_sources']:
                         inherited_source = related_obj.source
 
-
             backdoor_name = None
             backdoor_version = None
             if backdoor:
