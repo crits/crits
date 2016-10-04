@@ -342,6 +342,10 @@ def login(request):
 
     # Gather basic request information
     crits_config = CRITsConfig.objects().first()
+    #This will create a CRITsConfig Object if there are no objects in the DB
+    if not crits_config:
+        crits_config = CRITsConfig(crits_message="Please Login to Proceed") #All the other fields will have default values as defined in crits.config.config.CRITsConfig
+        crits_config.save()
     url = request.GET.get('next')
     user_agent = request.META.get('HTTP_USER_AGENT', '')
     remote_addr = request.META.get('REMOTE_ADDR', '')
