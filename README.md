@@ -32,7 +32,14 @@ Just run the following:
     sh script/bootstrap
 ```
 
-Once you've run bootstrap once, do not use it again to get the runserver going, you'll be going through the install process again. Instead use the server script:
+Once you've run bootstrap once, do not use it again to get the runserver going, you'll be going through the install process again.
+
+Run the management command to set the basic config ('*' to allow all the hosts):
+````
+	python manage.py setconfig allowed_hosts "*"
+````
+
+Use the server script to run the local server:
 
 ```bash
 
