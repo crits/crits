@@ -18,6 +18,10 @@ class Command(BaseCommand):
                     dest="analyst",
                     default=False,
                     help="Create Analyst Role."),
+        make_option("-d", "--drop", action="store_true",
+                    dest="drop",
+                    default=False,
+                    help="Drop all existing roles."),
         make_option("-m", "--migrate", action="store_true",
                     dest="migrate",
                     default=False,
@@ -40,18 +44,22 @@ class Command(BaseCommand):
         """
         mall = options.get('mall')
         analyst = options.get('analyst')
+        drop = options.get('drop')
         migrate = options.get('migrate')
         readonly = options.get('readonly')
         uberadmin = options.get('uberadmin')
 
 
         if mall or uberadmin:
-            add_uber_admin_role(True)
+            add_uber_admin_role(drop)
         if mall or readonly:
+            print("Creating Read Only Role")
             add_readonly_role()
         if mall or analyst:
+            print("Creating Analyst Role")
             add_analyst_role()
         if mall or migrate:
+            print("Migrating Legacy Roles.")
             migrate_roles()
 
         else:
@@ -184,24 +192,25 @@ def migrate_roles():
 
     """
     from pymongo import MongoClient
+    database = settings.MONGO_DATABASE
 
-    c = MongoClient(settings.MONGO_HOST, settings.MONGO_PORT, ssl=settings.MONGO_SSL)
-    db = c[settings.MONGO_DATABASE]
-    if settings.MONGO_USER:
-        db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
-    coll = db[settings.COL_USERS].find()
+    client = MongoClient()
+    db = client[database]
 
-    for user in coll:
+    collection = db.users.find()
+    for user in collection:
+        roles = []
         try:
-            role = user['role']
+            if 'role' in user:
+                role = user['role']
+            elif 'unsupported_attrs' in user and 'role' in user['unsupported_attrs']:
+                role = user['unsupported_attrs']['role']
+            else:
+                print "Error migrating legacy roles."
         except:
-            role = user['unsupported_attrs']['role']
+            print "Error migrating legacy roles."
 
-        try:
-            roles = user['roles']
-        except:
-            roles = []
-            
+
         if role == 'Administrator':
             roles.append('UberAdmin')
         elif role:
