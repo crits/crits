@@ -49,9 +49,11 @@ class Command(BaseCommand):
         readonly = options.get('readonly')
         uberadmin = options.get('uberadmin')
 
-
+        if mall or drop:
+            print "Drop protection disabled. Dropping all Roles!"
+            Role.drop_collection()
         if mall or uberadmin:
-            add_uber_admin_role(drop)
+            add_uber_admin_role()
         if mall or readonly:
             print("Creating Read Only Role")
             add_readonly_role()
