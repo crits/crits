@@ -2255,10 +2255,11 @@ def remove_action(request, obj_type, obj_id):
     if request.method == "POST" and request.is_ajax():
         analyst = request.user.username
         if is_admin(analyst):
-            date = datetime.datetime.strptime(request.POST['key'],
+            key = request.POST['key'].split(',')
+            date = datetime.datetime.strptime(key[0],
                                               settings.PY_DATETIME_FORMAT)
             date = date.replace(microsecond=date.microsecond/1000*1000)
-            result = action_remove(obj_type, obj_id, date, analyst)
+            result = action_remove(obj_type, obj_id, date, key[1], analyst)
             return HttpResponse(json.dumps(result),
                                 content_type="application/json")
         else:
