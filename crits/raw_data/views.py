@@ -26,7 +26,7 @@ from crits.raw_data.handlers import delete_highlight
 from crits.raw_data.handlers import update_raw_data_highlight_date
 from crits.raw_data.raw_data import RawDataType
 
-from crits.vocabulary.acls import RawDataACL
+from crits.vocabulary.acls import RawDataACL, GeneralACL
 
 @user_passes_test(user_can_view_data)
 def raw_data_listing(request,option=None):
@@ -468,7 +468,7 @@ def new_raw_data_type(request):
         form = NewRawDataTypeForm(request.POST)
         user = request.user
         if form.is_valid():
-            if user.has_access_to(RawDataACL.ADD_NEW_RAW_DATA_TYPE):
+            if user.has_access_to(GeneralACL.ADD_NEW_RAW_DATA_TYPE):
                 result = add_new_raw_data_type(form.cleaned_data['data_type'],
                                                user)
                 if result:

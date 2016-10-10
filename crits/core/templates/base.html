@@ -414,7 +414,9 @@
       {% if acl.ACTOR_READ|has_access_to:user %}
       <li class='nav_objects mmenu_item'>
           <a href="{% url 'crits.actors.views.actors_listing' %}">Actors</a>
-          <a href id="new-actor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor" persona="new" title="New Actor"></a>
+          {% if acl.ACTOR_WRITE|has_access_to:user %}
+            <a href id="new-actor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor" persona="new" title="New Actor"></a>
+          {% endif %}
           {% if acl.ACTOR_IDENTIFIERS_ADD|has_access_to:user %}
         <ul class='sub-mmenu'>
           <li class='mmenu_item'>
@@ -428,111 +430,135 @@
       {% if acl.BACKDOOR_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.backdoors.views.backdoors_listing' %}">Backdoors</a>
-      <a href id="new-backdoor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-backdoor" persona="new" title="New Backdoor"></a>
+      {% if acl.BACKDOOR_WRITE|has_access_to:user %}
+        <a href id="new-backdoor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-backdoor" persona="new" title="New Backdoor"></a>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.CAMPAIGN_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.campaigns.views.campaigns_listing' %}">Campaigns</a>
-      <a href id="new-campaign" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-campaign" persona="new" title="New Campaign"></a>
+      {% if acl.CAMPAIGN_WRITE|has_access_to:user %}
+        <a href id="new-campaign" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-campaign" persona="new" title="New Campaign"></a>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.CERTIFICATE_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.certificates.views.certificates_listing' %}">Certificates</a>
-      <a href id="new-certificate" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-certificate" persona="new" title="New Certificate"></a>
+      {% if acl.CERTIFICATE_WRITE|has_access_to:user %}
+        <a href id="new-certificate" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-certificate" persona="new" title="New Certificate"></a>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.DOMAIN_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.domains.views.domains_listing' %}">Domains</a>
-      <a href id="new-domain" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-domain" persona="new" title="New Domain"></a>
-      <ul class='sub-mmenu'>
-        <li class='mmenu_item'>
-          <a href="{% url 'crits.domains.views.bulk_add_domain' %}" id="bulk_upload_domain">Bulk Upload Domains</a>
-        </li>
-      </ul>
+      {% if acl.DOMAIN_WRITE|has_access_to:user %}
+        <a href id="new-domain" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-domain" persona="new" title="New Domain"></a>
+        <ul class='sub-mmenu'>
+          <li class='mmenu_item'>
+            <a href="{% url 'crits.domains.views.bulk_add_domain' %}" id="bulk_upload_domain">Bulk Upload Domains</a>
+          </li>
+        </ul>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.EMAIL_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.emails.views.emails_listing' %}">Emails</a>
-      <a href id="new-email-fields" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-email-fields" persona="new" title="New Email"></a>
-      <ul class='sub-mmenu'>
-        <li class='mmenu_item'>
-          <a href id="new-email-outlook" class="dialogClick" dialog="new-email-outlook" persona="new">New Email (Outlook)</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href id="new-email-yaml" class="dialogClick" dialog="new-email-yaml" persona="new">New Email (YAML)</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href id="new-email-eml" class="dialogClick" dialog="new-email-eml" persona="new">New Email (EML)</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href id="new-email-raw" class="dialogClick" dialog="new-email-raw" persona="new">New Email (Raw)</a>
-        </li>
-      </ul>
+      {% if acl.EMAIL_WRITE|has_access_to:user %}
+        <a href id="new-email-fields" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-email-fields" persona="new" title="New Email"></a>
+        <ul class='sub-mmenu'>
+          <li class='mmenu_item'>
+            <a href id="new-email-outlook" class="dialogClick" dialog="new-email-outlook" persona="new">New Email (Outlook)</a>
+          </li>
+          <li class='mmenu_item'>
+            <a href id="new-email-yaml" class="dialogClick" dialog="new-email-yaml" persona="new">New Email (YAML)</a>
+          </li>
+          <li class='mmenu_item'>
+            <a href id="new-email-eml" class="dialogClick" dialog="new-email-eml" persona="new">New Email (EML)</a>
+          </li>
+          <li class='mmenu_item'>
+            <a href id="new-email-raw" class="dialogClick" dialog="new-email-raw" persona="new">New Email (Raw)</a>
+          </li>
+        </ul>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.EVENT_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.events.views.events_listing' %}">Events</a>
-      <a href id="new-event" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-event" persona="new" title="New Event"></a>
+      {% if acl.EVENT_WRITE|has_access_to:user %}
+        <a href id="new-event" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-event" persona="new" title="New Event"></a>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.EXPLOIT_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.exploits.views.exploits_listing' %}">Exploits</a>
-      <a href id="new-exploit" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-exploit" persona="new" title="New Exploit"></a>
+      {% if acl.EXPLOIT_WRITE|has_access_to:user %}
+        <a href id="new-exploit" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-exploit" persona="new" title="New Exploit"></a>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.INDICATOR_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.indicators.views.indicators_listing' %}">Indicators</a>
-      <a href id="new-indicator" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-indicator"  persona="new" title="New Indicator"></a>
-      <ul class='sub-mmenu'>
-        <li class='mmenu_item'>
-          <a href id="indicator-blob" class="dialogClick" dialog="indicator-blob" persona="new">New Indicator Blob</a>
-        </li>
-    <li class='mmenu_item'>
-          <a href id="new-indicator-csv" class="dialogClick" dialog="new-indicator-csv" persona="new">New Indicator CSV</a>
-        </li>
-      </ul>
+      {% if acl.INDICATOR_WRITE|has_access_to:user %}
+        <a href id="new-indicator" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-indicator"  persona="new" title="New Indicator"></a>
+        <ul class='sub-mmenu'>
+          <li class='mmenu_item'>
+            <a href id="indicator-blob" class="dialogClick" dialog="indicator-blob" persona="new">New Indicator Blob</a>
+          </li>
+      <li class='mmenu_item'>
+            <a href id="new-indicator-csv" class="dialogClick" dialog="new-indicator-csv" persona="new">New Indicator CSV</a>
+          </li>
+        </ul>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.IP_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.ips.views.ips_listing' %}">IPs</a>
-      <a href id="new-ip" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-ip" persona="new" title="New IP"></a>
-      <ul class='sub-mmenu'>
-        <li class='mmenu_item'>
-          <a href="{% url 'crits.ips.views.bulk_add_ip' %}" id="bulk_upload_ip">Bulk Upload IPs</a>
-        </li>
-      </ul>
+      {% if acl.IP_WRITE|has_access_to:user %}
+        <a href id="new-ip" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-ip" persona="new" title="New IP"></a>
+        <ul class='sub-mmenu'>
+          <li class='mmenu_item'>
+            <a href="{% url 'crits.ips.views.bulk_add_ip' %}" id="bulk_upload_ip">Bulk Upload IPs</a>
+          </li>
+        </ul>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.PCAP_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.pcaps.views.pcaps_listing' %}">PCAPs</a>
-      <a href id="new-pcap" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-pcap" persona="new" title="New PCAP"></a>
+      {% if acl.PCAP_WRITE|has_access_to:user %}
+        <a href id="new-pcap" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-pcap" persona="new" title="New PCAP"></a>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.RAWDATA_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.raw_data.views.raw_data_listing' %}">Raw Data</a>
-      <a href id="new-raw-data" class="ui-icon ui-icon-plusthick add
-          dialogClick" dialog="new-raw-data" persona="new" title="New Raw Data"></a>
-      <ul class='sub-mmenu'>
-        <li class='mmenu_item'>
-          <a href id="new-raw-data-file" class="dialogClick" dialog="new-raw-data-file" persona="new">New Raw Data File</a>
-        </li>
-      </ul>
+      {% if acl.RAWDATA_WRITE|has_access_to:user %}
+        <a href id="new-raw-data" class="ui-icon ui-icon-plusthick add
+            dialogClick" dialog="new-raw-data" persona="new" title="New Raw Data"></a>
+        <ul class='sub-mmenu'>
+          <li class='mmenu_item'>
+            <a href id="new-raw-data-file" class="dialogClick" dialog="new-raw-data-file" persona="new">New Raw Data File</a>
+          </li>
+        </ul>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.SAMPLE_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.samples.views.samples_listing' %}">Samples</a>
-      <a href id="new-sample" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-sample" persona="new" title="New Sample"></a>
+      {% if acl.SAMPLE_WRITE|has_access_to:user %}
+        <a href id="new-sample" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-sample" persona="new" title="New Sample"></a>
+      {% endif %}
       <ul class='sub-mmenu'>
         {% if user_organization %}
         <li class='mmenu_item'>
@@ -542,9 +568,11 @@
         <li class='mmenu_item'>
           <a href="{% url 'crits.samples.views.sources' %}">Source Samples</a>
         </li>
-        <li class='mmenu_item'>
-          <a href="{% url 'crits.samples.views.bulk_add_md5_sample' %}" id="bulk_upload_md5_sample">Bulk Upload MD5 Samples</a>
-        </li>
+        {% if acl.SAMPLE_WRITE|has_access_to:user %}
+          <li class='mmenu_item'>
+            <a href="{% url 'crits.samples.views.bulk_add_md5_sample' %}" id="bulk_upload_md5_sample">Bulk Upload MD5 Samples</a>
+          </li>
+        {% endif %}
       </ul>
     </li>
     {% endif %}
@@ -569,14 +597,18 @@
       {% if acl.SIGNATURE_READ|has_access_to:user %}
      <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.signatures.views.signatures_listing' %}">Signatures</a>
-      <a href id="new-signature" class="ui-icon ui-icon-plusthick add
-          dialogClick" dialog="new-signature" persona="new" title="New Signature"></a>
+      {% if acl.SIGNATURE_WRITE|has_access_to:user %}
+        <a href id="new-signature" class="ui-icon ui-icon-plusthick add
+            dialogClick" dialog="new-signature" persona="new" title="New Signature"></a>
+      {% endif %}
     </li>
     {% endif %}
       {% if acl.TARGET_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
       <a href="{% url 'crits.targets.views.targets_listing' %}">Targets</a>
-      <a href id="new-target" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-target" persona="new" title="New Target"></a>
+      {% if acl.TARGET_WRITE|has_access_to:user %}
+        <a href id="new-target" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-target" persona="new" title="New Target"></a>
+      {% endif %}
     </li>
     {% endif %}
     <li class='nav_timelines mmenu_item'>
@@ -599,28 +631,46 @@
     <li class='nav_admin mmenu_item'>
       <a href class="noclick">Add New Item</a>
       <ul class='sub-mmenu'>
+        {% if acl.ADD_NEW_ACTOR_IDENTIFIER_TYPE|has_access_to:user %}
         <li class='mmenu_item'>
           <a href class="dialogClick" persona="new" dialog="actor_identifier_type_add" id="actor_identifier_type_add">Actor Identifier Type</a>
         </li>
-        <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="action_add" id="action_add">Action</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="raw_data_type_add" id="raw_data_type_add">Raw Data Type</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href id="new-role" class="dialogClick" dialog="new-role" persona="new" title="Add Role">Role</a>
-          <a href class="dialogClick" persona="new" dialog="signature_type_add" id="signature_type_add">Signature Type</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="signature_dependency_add" id="signature_dependency_add">Signature Dependency</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="source_create" id="source_create">Source</a>
-        </li>
-        <li class='mmenu_item'>
-          <a href class="dialogClick" persona="new" dialog="upload_tlds" id="upload_tlds">TLDs</a>
-        </li>
+        {% endif %}
+        {% if acl.ADD_NEW_INDICATOR_ACTION|has_access_to:user %}
+          <li class='mmenu_item'>
+            <a href class="dialogClick" persona="new" dialog="action_add" id="action_add">Action</a>
+          </li>
+        {% endif %}
+        {% if acl.ADD_NEW_RAW_DATA_TYPE|has_access_to:user %}
+          <li class='mmenu_item'>
+            <a href class="dialogClick" persona="new" dialog="raw_data_type_add" id="raw_data_type_add">Raw Data Type</a>
+          </li>
+        {% endif %}
+        {% if acl.ADD_NEW_USER_ROLE|has_access_to:user %}
+          <li class='mmenu_item'>
+            <a href id="new-role" class="dialogClick" dialog="new-role" persona="new" title="Add Role">Role</a>
+          </li>
+        {% endif %}
+        {% if acl.ADD_NEW_SIGNATURE_TYPE|has_access_to:user %}
+          <li class='mmenu_item'>
+            <a href class="dialogClick" persona="new" dialog="signature_type_add" id="signature_type_add">Signature Type</a>
+          </li>
+        {% endif %}
+        {% if acl.ADD_NEW_SIGNATURE_DEPENDENCY|has_access_to:user %}
+          <li class='mmenu_item'>
+            <a href class="dialogClick" persona="new" dialog="signature_dependency_add" id="signature_dependency_add">Signature Dependency</a>
+          </li>
+        {% endif %}
+        {% if acl.ADD_NEW_SOURCE|has_access_to:user %}
+          <li class='mmenu_item'>
+            <a href class="dialogClick" persona="new" dialog="source_create" id="source_create">Source</a>
+          </li>
+        {% endif %}
+        {% if acl.ADD_NEW_TLDS|has_access_to:user %}
+          <li class='mmenu_item'>
+            <a href class="dialogClick" persona="new" dialog="upload_tlds" id="upload_tlds">TLDs</a>
+          </li>
+        {% endif %}
       </ul>
     </li>
     <li class='nav_admin mmenu_item'>

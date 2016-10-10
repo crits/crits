@@ -545,7 +545,6 @@ def add_new_signature_dependency(data_type, analyst):
 
     data_type = str(data_type).strip();
 
-
     try:
         signature_dependency = SignatureDependency.objects(name=data_type).first()
         if signature_dependency:

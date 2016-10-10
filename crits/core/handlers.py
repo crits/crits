@@ -2861,7 +2861,7 @@ def generate_users_jtable(request, option):
         details_url_key = 'username'
         fields = ['username', 'first_name', 'last_name', 'email',
                    'last_login', 'organization', 'is_active',
-                   'id']
+                   'id', 'roles']
         excludes = ['login_attempts']
         response = jtable_ajax_list(obj_type, details_url, details_url_key,
                                     request, includes=fields,
@@ -2876,7 +2876,7 @@ def generate_users_jtable(request, option):
         'searchurl': None,
         'fields': ['username', 'first_name', 'last_name', 'email',
                    'last_login', 'organization', 'is_active',
-                   'id'],
+                   'id', 'roles'],
         'hidden_fields': ['id'],
         'linked_fields': []
     }

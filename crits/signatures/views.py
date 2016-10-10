@@ -24,7 +24,7 @@ from crits.signatures.handlers import add_new_signature_dependency
 from crits.signatures.signature import SignatureType
 from crits.signatures.signature import SignatureDependency
 
-from crits.vocabulary.acls import SignatureACL
+from crits.vocabulary.acls import SignatureACL, GeneralACL
 
 
 @user_passes_test(user_can_view_data)
@@ -391,17 +391,20 @@ def new_signature_dependency(request):
 
     if request.method == 'POST' and request.is_ajax():
         form = NewSignatureDependencyForm(request.POST)
-        analyst = request.user.username
+        user = request.user
         if form.is_valid():
-
-            result = add_new_signature_dependency(form.cleaned_data['data_type_dependency'],
-                                           analyst)
-            if result:
-                message = {'message': '<div>Signature Dependency added successfully!</div>',
-                           'success': True}
+            if user.has_access_to(GeneralACL.ADD_NEW_SIGNATURE_DEPENDENCY):
+                result = add_new_signature_dependency(form.cleaned_data['data_type_dependency'],
+                                               user.username)
+                if result:
+                    message = {'message': '<div>Signature Dependency added successfully!</div>',
+                               'success': True}
+                else:
+                    message = {'message': '<div>Signature Dependency addition failed!</div>',
+                               'success': False}
             else:
-                message = {'message': '<div>Signature Dependency addition failed!</div>',
-                           'success': False}
+                message = {'message': '<div>User does not have permission to add signature dependency.</div>',
+                            'success': False}
         else:
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),
@@ -423,16 +426,21 @@ def new_signature_type(request):
 
     if request.method == 'POST' and request.is_ajax():
         form = NewSignatureTypeForm(request.POST)
-        analyst = request.user.username
+        user = request.user
         if form.is_valid():
-            result = add_new_signature_type(form.cleaned_data['data_type'],
-                                           analyst)
-            if result:
-                message = {'message': '<div>Signature Type added successfully!</div>',
-                           'success': True}
+            if user.has_access_to(GeneralACL.ADD_NEW_SIGNATURE_TYPE):
+                result = add_new_signature_type(form.cleaned_data['data_type'],
+                                               user.username)
+                if result:
+                    message = {'message': '<div>Signature Type added successfully!</div>',
+                            'success': True}
+                else:
+                    message = {'message': '<div>Signature Type addition failed!</div>',
+                               'success': False}
             else:
-                message = {'message': '<div>Signature Type addition failed!</div>',
+                message = {'message': '<div>User does not have permission to add signature type!</div>',
                            'success': False}
+            
         else:
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),
