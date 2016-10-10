@@ -200,6 +200,7 @@ def migrate_roles():
 
     for user in users:
         roles = []
+        role = None
         try:
             if 'role' in user:
                 role = user['role']
