@@ -208,10 +208,10 @@ def migrate_roles():
             elif 'unsupported_attrs' in user and 'role' in user['unsupported_attrs']:
                 role = user['unsupported_attrs']['role']
             else:
-                print "Error migrating legacy roles."
+                print "Error migrating legacy roles for user %s. No legacy role found to migrate." % user
                 sys.exit()
         except:
-            print "Error migrating legacy roles."
+            print "Error migrating legacy roles for user %s. No legacy role found to migrate." % user
             sys.exit()
 
 
