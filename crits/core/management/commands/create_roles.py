@@ -194,6 +194,7 @@ def migrate_roles():
 
     """
     from crits.core.mongo_tools import mongo_connector
+    import sys
 
     collection = mongo_connector(settings.COL_USERS)
     users = collection.find()
@@ -208,8 +209,10 @@ def migrate_roles():
                 role = user['unsupported_attrs']['role']
             else:
                 print "Error migrating legacy roles."
+                sys.exit()
         except:
             print "Error migrating legacy roles."
+            sys.exit()
 
 
         if role == 'Administrator':
