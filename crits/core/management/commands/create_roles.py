@@ -193,17 +193,12 @@ def migrate_roles():
     Migrate legacy role objects to new RBAC Role objects
 
     """
-    from pymongo import MongoClient
-    database = settings.MONGO_DATABASE
+    from crits.core.mongo_tools import mongo_connector
 
-    client = MongoClient("%s" % settings.MONGO_HOST,
-                                settings.MONGO_PORT,
-                                read_preference=preference,
-                                ssl=settings.MONGO_SSL)
-    db = client[database]
+    collection = mongo_connector(settings.COL_USERS)
+    users = collection.find()
 
-    collection = db.users.find()
-    for user in collection:
+    for user in users:
         roles = []
         try:
             if 'role' in user:
@@ -222,7 +217,7 @@ def migrate_roles():
             roles.append(role)
 
 
-        result = db.users.update_one(
+        result = collection.users.update_one(
            {"_id": user['_id']},
            {"$set": {"roles": roles}}
         )
