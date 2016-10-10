@@ -29,7 +29,7 @@ class Command(BaseCommand):
         make_option("-r", "--readonly", action="store_true",
                     dest="readonly",
                     default=False,
-                    help="Create Rea Only Role."),
+                    help="Create Read Only Role."),
         make_option("-u", "--UberAdmin", action="store_true",
                     dest="uberadmin",
                     default=False,
@@ -196,7 +196,10 @@ def migrate_roles():
     from pymongo import MongoClient
     database = settings.MONGO_DATABASE
 
-    client = MongoClient()
+    client = MongoClient("%s" % settings.MONGO_HOST,
+                                settings.MONGO_PORT,
+                                read_preference=preference,
+                                ssl=settings.MONGO_SSL)
     db = client[database]
 
     collection = db.users.find()
