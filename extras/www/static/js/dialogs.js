@@ -691,10 +691,9 @@ function addEditSubmit(e) {
     }
     var form = dialog.find("form");
 
-    // Find special for forms that want unique actions.
-    var special = form.attr('data-special');
-    if (special == 'combinator') {
-        form.submit();
+    var sel = form.find('#id_action_type');
+    if (typeof sel !== "undefined") {
+        sel.attr('disabled', false);
     }
 
     var type = form.attr('item-type');
@@ -923,6 +922,7 @@ function update_dialog(e) {
                         sel.append($('<option></option>').val(y).html(y));
                     });
                     sel.find('option[value="' + sel_val + '"]').attr('selected', true);
+                    sel.attr('disabled', true);
                 }
             });
         }

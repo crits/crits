@@ -2605,12 +2605,15 @@ def remove_action(request, obj_type, obj_id):
 
     if request.method == "POST" and request.is_ajax():
         user = request.user
-        date = datetime.datetime.strptime(request.POST['key'],
-                                            settings.PY_DATETIME_FORMAT)
-        date = date.replace(microsecond=date.microsecond/1000*1000)
-        acl = get_acl_object(obj_type)
         if user.has_access_to(acl.ACTIONS_DELETE):
-            result = action_remove(obj_type, obj_id, date, user)
+            key = request.POST['key'].split(',')
+            date = datetime.datetime.strptime(key[0],
+                                              settings.PY_DATETIME_FORMAT)
+            date = date.replace(microsecond=date.microsecond/1000*1000)
+            result = action_remove(obj_type, obj_id, date, key[1], user)
+
+            return HttpResponse(json.dumps(result),
+                                content_type="application/json")
         else:
             result = {"success":False,
                       "message":"User does not have permission to delete action."}

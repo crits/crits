@@ -26,7 +26,6 @@
     </ul>
 
 <div id="details_section">
-  {% if EmailACL.ADD_ATTACHMENT|has_access_to:user or EmailACL.DOWNLOAD|has_access_to:user or EmailACL.DELETE|has_access_to:user %}
     <span class="horizontal_menu">
     <ul class="hmenu">
         {% if EmailACL.ADD_ATTACHMENT|has_access_to:user %}

@@ -33,8 +33,8 @@ $('#object_data').editable(function(value, settings) {
     },
     {
         type: 'textarea',
-        height: "50px",
-        width: "400px",
+        height: "200px",
+        width: "800px",
         tooltip: "",
         cancel: "Cancel",
         submit: "Ok",
