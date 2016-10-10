@@ -210,13 +210,13 @@ class CritsQuerySet(QS):
         if not user:
             return self
 
-        filterlist=[]
+        filterlist = []
+
         for doc in self:
-            if not user.check_source_tlp(doc):
-                self.remove(doc)
+            if user.check_source_tlp(doc):
+                filterlist.append(doc.id)
 
-        return self
-
+        return self.filter(id__in=filterlist)
 
 class CritsDocumentFormatter(object):
     """

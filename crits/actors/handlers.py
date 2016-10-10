@@ -150,6 +150,7 @@ def generate_actor_jtable(request, option):
     obj_type = Actor
     type_ = "actor"
     mapper = obj_type._meta['jtable_opts']
+    
     if option == "jtlist":
         # Sets display url
         details_url = mapper['details_url']
