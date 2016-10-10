@@ -893,11 +893,11 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                 for instance in source.instances:
                     if instance.tlp == "white":
                         return True
-                    elif instance.tlp == "red" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_red]:
+                    elif instance.tlp == "red" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_red and usource.read]:
                         return True
-                    elif instance.tlp == "amber" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_amber]:
+                    elif instance.tlp == "amber" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_amber and usource.read]:
                         return True
-                    elif instance.tlp == "green" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_green]:
+                    elif instance.tlp == "green" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_green and usource.read]:
                         return True
         return False
 
