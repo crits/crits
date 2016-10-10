@@ -402,6 +402,28 @@ STATICFILES_DIRS = (
 AUTH_USER_MODEL = 'mongo_auth.MongoUser'
 MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
 
+if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
+    _TEMPLATE_CONTEXT_PROCESSORS = [
+        #'django.template.context_processors.debug',
+        'django.template.context_processors.request',
+        'django.template.context_processors.static',
+        #'django.contrib.auth.context_processors.auth',
+        'django.contrib.messages.context_processors.messages',
+        'crits.core.views.base_context',
+        'crits.core.views.collections',
+        'crits.core.views.user_context',
+    ]
+else:
+    _TEMPLATE_CONTEXT_PROCESSORS = (
+        'django.core.context_processors.request',
+        'django.core.context_processors.static',
+        'django.contrib.auth.context_processors.auth',
+        'django.contrib.messages.context_processors.messages',
+        'crits.core.views.base_context',
+        'crits.core.views.collections',
+        'crits.core.views.user_context',
+    )
+
 if old_mongoengine:
     INSTALLED_APPS = (
         'crits.core',
@@ -436,7 +458,7 @@ if old_mongoengine:
         'mongoengine.django.mongo_auth',
     )
 
-    MIDDLEWARE_CLASSES = (
+    _MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -444,10 +466,14 @@ if old_mongoengine:
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    # Only needed for mongoengine<0.10
-    'crits.core.user.AuthenticationMiddleware',
+
     )
+    if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
+        _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
+    # Only needed for mongoengine<0.10
+    _MIDDLEWARE += ('crits.core.user.AuthenticationMiddleware',)
+
+
 
     SESSION_ENGINE = 'mongoengine.django.sessions'
 
@@ -492,7 +518,7 @@ else:
         'django_mongoengine.mongo_auth',
         )
 
-    MIDDLEWARE_CLASSES = (
+    _MIDDLEWARE = (
         'django.middleware.common.CommonMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -500,18 +526,10 @@ else:
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        'django.middleware.security.SecurityMiddleware',
     )
-    _TEMPLATE_CONTEXT_PROCESSORS = [
-        #'django.template.context_processors.debug',
-        'django.template.context_processors.request',
-        'django.template.context_processors.static',
-        #'django.contrib.auth.context_processors.auth',
-        'django.contrib.messages.context_processors.messages',
-        'crits.core.views.base_context',
-        'crits.core.views.collections',
-        'crits.core.views.user_context',
-    ]
+
+    if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
+        _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
 
     SESSION_ENGINE = 'django_mongoengine.sessions'
 
@@ -527,7 +545,7 @@ if REMOTE_USER:
         'crits.core.user.CRITsRemoteUserBackend',
     )
     if old_mongoengine:
-        MIDDLEWARE_CLASSES = (
+        _MIDDLEWARE = (
             'django.middleware.common.CommonMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -535,12 +553,16 @@ if REMOTE_USER:
             'django.contrib.messages.middleware.MessageMiddleware',
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
-            'django.middleware.security.SecurityMiddleware',
+        )
+        if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
+            _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
+
+        _MIDDLEWARE += (
             'crits.core.user.AuthenticationMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
         )
     else:
-        MIDDLEWARE_CLASSES = (
+        _MIDDLEWARE = (
             'django.middleware.common.CommonMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -548,9 +570,11 @@ if REMOTE_USER:
             'django.contrib.messages.middleware.MessageMiddleware',
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
-            'django.middleware.security.SecurityMiddleware',
-            'django.contrib.auth.middleware.RemoteUserMiddleware',
         )
+        if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
+            _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
+
+        _MIDDLEWARE += ('django.contrib.auth.middleware.RemoteUserMiddleware',)
 
 MONGODB_DATABASES = {
     "default": {
@@ -682,24 +706,34 @@ REMOTE_USER_META = 'REMOTE_USER'
 #
 # REMOTE_USER_META = 'HTTP_REMOTE_USER'
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        #'APP_DIRS': False,'
-        'DIRS': _TEMPLATE_DIRS,
 
-        'OPTIONS': {
-            #'dirs' : #_TEMPLATE_DIRS,
-            'context_processors' : _TEMPLATE_CONTEXT_PROCESSORS,
-            'debug' : _TEMPLATE_DEBUG,
-            'loaders' : _TEMPLATE_LOADERS,
 
-        },
-    },
-]
+if StrictVersion(DJANGO_VERSION) < StrictVersion('1.10.0'):
+    MIDDLEWARE_CLASSES = _MIDDLEWARE
+else:
+    MIDDLEWARE = _MIDDLEWARE
 
 if StrictVersion(DJANGO_VERSION) < StrictVersion('1.8.0'):
-    raise Exception("Django versions prior to 1.8 are not supported! Please upgrade to at least 1.8!")
+    #    raise Exception("Django versions prior to 1.8 are not supported! Please upgrade to at least 1.8!")
+    TEMPLATE_DEBUG = _TEMPLATE_DEBUG
+    TEMPLATE_DIRS = _TEMPLATE_DIRS
+    TEMPLATE_CONTEXT_PROCESSORS = _TEMPLATE_CONTEXT_PROCESSORS
+else:
+    TEMPLATES = [
+        {
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+            #'APP_DIRS': False,'
+            'DIRS': _TEMPLATE_DIRS,
+            'OPTIONS': {
+                #'dirs' : #_TEMPLATE_DIRS,
+                'context_processors' : _TEMPLATE_CONTEXT_PROCESSORS,
+                'debug' : _TEMPLATE_DEBUG,
+                'loaders' : _TEMPLATE_LOADERS,
+
+            },
+        },
+    ]
+
 
 # Import custom settings if it exists
 csfile = os.path.join(SITE_ROOT, 'config/overrides.py')
