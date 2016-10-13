@@ -20,7 +20,7 @@
             {% for key, value in config.items %}
                 <tr>
                     <td class="key">{{ key }}</td>
-                    <td>{{ value|linebreaksbr }}</td>
+                    <td>{% if key != 'Password' %}{{ value|linebreaksbr }}{% else %}********{% endif %}</td>
                 </tr>
             {% endfor %}
             </tbody>
