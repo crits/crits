@@ -2013,25 +2013,28 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                     docs = col_obj.objects(__raw__=query).order_by(*sort).\
                                     skip(skip).limit(limit)
         # Else, all other objects that have sources associated with them
-        # need to be filtered appropriately
+        # need to be filtered appropriately for source access and TLP access
         else:
-            results['count'] = col_obj.objects(source__name__in=sourcefilt,
-                                               __raw__=query).count()
+            filterlist = []
+            docs = col_obj.objects(__raw__=query)
+            for doc in docs:
+                if user.check_source_tlp(doc):
+                    filterlist.append(doc.id)
+
+            results['count'] = len(filterlist)
             if count:
                 results['result'] = "OK"
                 return results
 
             if projection:
-                docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
+                docs = docs.filter(id__in=filterlist).\
                                     order_by(*sort).skip(skip).limit(limit).\
                                     only(*projection)
             else:
                 # Hack to fix Dashboard
-                docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
+                docs = docs.filter(id__in=filterlist).\
                                     order_by(*sort).skip(skip).limit(limit)
 
-            # Sanitize results for Source TLP
-            docs = docs.sanitize_source_tlps(user)
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
                 doc.sanitize_sources(username="%s" % user, sources=sourcefilt)

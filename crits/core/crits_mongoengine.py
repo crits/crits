@@ -197,27 +197,6 @@ class CritsQuerySet(QS):
             final_list.append(doc)
         return final_list
 
-    def sanitize_source_tlps(self, user=None):
-        """
-        Sanitize the results of a query so that the user is only shown results
-        that they have the source and TLP permission to view.
-
-        :param username: The user which requested the data.
-        :type username: str
-        :returns: CritsQuerySet
-        """
-
-        if not user:
-            return self
-
-        filterlist = []
-
-        for doc in self:
-            if user.check_source_tlp(doc):
-                filterlist.append(doc.id)
-
-        return self.filter(id__in=filterlist)
-
 class CritsDocumentFormatter(object):
     """
     Class to inherit from to gain the ability to convert a top-level object
