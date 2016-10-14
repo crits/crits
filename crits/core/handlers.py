@@ -2839,12 +2839,12 @@ def generate_roles_jtable(request, option):
     if option == "inline":
         return render_to_response("jtable.html",
                                   {'jtable': jtable,
-                                   'jtid': 'users_listing'},
+                                   'jtid': 'roles_listing'},
                                   RequestContext(request))
     else:
         return render_to_response("user_editor.html",
                                   {'jtable': jtable,
-                                   'jtid': 'users_listing'},
+                                   'jtid': 'roles_listing'},
                                   RequestContext(request))
 
 def generate_users_jtable(request, option):
@@ -2871,6 +2871,7 @@ def generate_users_jtable(request, option):
                                     excludes=excludes)
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type="application/json")
+
     jtopts = {
         'title': "Users",
         'default_sort': 'last_login DESC',
@@ -2910,6 +2911,7 @@ def generate_users_jtable(request, option):
                                    'jtid': 'users_listing'},
                                   RequestContext(request))
     else:
+        logger.error(jtable)
         return render_to_response("user_editor.html",
                                   {'jtable': jtable,
                                    'jtid': 'users_listing'},
