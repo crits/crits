@@ -121,6 +121,9 @@ class UploadIndicatorForm(SourceInForm):
 
     def __init__(self, username, *args, **kwargs):
         super(UploadIndicatorForm, self).__init__(username, *args, **kwargs)
+        self.fields['status'].choices = [
+            (c,c) for c in Status.values()
+        ]
         self.fields['indicator_type'].choices = [
             (c,c) for c in IndicatorTypes.values(sort=True)
         ]
@@ -136,6 +139,7 @@ class UploadIndicatorForm(SourceInForm):
         if username.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
+
         self.fields['campaign_confidence'].choices = [
             ("", ""),
             ("low", "low"),

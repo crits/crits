@@ -290,7 +290,7 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
             source_tlp=source_tlp,
             campaign=campaign,
             confidence=confidence,
-            user=user.username,
+            user=user,
             is_add_indicator=is_add_indicator,
             indicator_reference=indicator_reference,
             bucket_list=bucket_list,
@@ -432,14 +432,19 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
         ip_object.description += "\n" + (description or '')
 
     if isinstance(source_name, basestring):
-        source = [create_embedded_source(source,
-                                         reference=source_reference,
-                                         method=source_method,
-                                         tlp=source_tlp,
-                                         analyst=user)]
+        if user.check_source_write(source):
+            source = [create_embedded_source(source,
+                                             reference=source_reference,
+                                             method=source_method,
+                                             tlp=source_tlp,
+                                             analyst=user.username)]
+        else:
+            return {"success":False,
+                    "message": "User does not have permission to add object \
+                                using source %s." % source}
 
     if isinstance(campaign, basestring):
-        c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user)
+        c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user.username)
         campaign = [c]
 
     if campaign:
@@ -470,7 +475,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
 
 
     if is_validate_only == False:
-        ip_object.save(analyst=user)
+        ip_object.save(analyst=user.username)
 
         #set the URL for viewing the new data
         if is_item_new == True:
@@ -512,9 +517,9 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         ip_object.add_relationship(related_obj,
                               relationship_type,
-                              analyst=user,
+                              analyst=user.username,
                               get_rels=False)
-        ip_object.save(username=user)
+        ip_object.save(username=user.username)
 
     # run ip triage
     if is_item_new and is_validate_only == False:

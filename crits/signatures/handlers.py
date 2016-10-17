@@ -378,14 +378,18 @@ def handle_signature_file(data, source_name, user=None,
 
     # generate new source information and add to sample
     if isinstance(source_name, basestring) and len(source_name) > 0:
-        source = create_embedded_source(source_name,
-                                   date=timestamp,
-                                   method=source_method,
-                                   reference=source_reference,
-                                   tlp=source_tlp,
-                                   analyst=user)
-        # this will handle adding a new source, or an instance automatically
-        signature.add_source(source)
+        if user.check_source_write(source_name):
+            source = create_embedded_source(source_name,
+                                       date=timestamp,
+                                       method=source_method,
+                                       reference=source_reference,
+                                       tlp=source_tlp,
+                                       analyst=user.username)
+            # this will handle adding a new source, or an instance automatically
+            signature.add_source(source)
+        else:
+            return {"success":False,
+                    "message": "User does not have permission to add object using source %s." % source_name}
     elif isinstance(source_name, EmbeddedSource):
         signature.add_source(source_name, method=source_method, reference=source_reference, tlp=source_tlp)
     elif isinstance(source_name, list) and len(source_name) > 0:
@@ -401,7 +405,7 @@ def handle_signature_file(data, source_name, user=None,
             rd2 = Signature.objects(link_id=link_id).first()
             if rd2:
                 if len(rd2.relationships):
-                    signature.save(username=user)
+                    signature.save(username=user.username)
                     signature.reload()
                     for rel in rd2.relationships:
                         # Get object to relate to.
@@ -410,7 +414,7 @@ def handle_signature_file(data, source_name, user=None,
                             signature.add_relationship(rel_item,
                                                       rel.relationship,
                                                       rel_date=rel.relationship_date,
-                                                      analyst=user)
+                                                      analyst=user.username)
 
     if bucket_list:
         signature.add_bucket_list(bucket_list, user)
@@ -426,21 +430,21 @@ def handle_signature_file(data, source_name, user=None,
             retVal['message'] = 'Related Object not found.'
             return retVal
 
-    signature.save(username=user)
+    signature.save(username=user.username)
 
     if related_obj and signature and relationship_type:
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         signature.add_relationship(related_obj,
                                    relationship_type,
-                                   analyst=user,
+                                   analyst=user.username,
                                    get_rels=False)
-        signature.save(username=user)
+        signature.save(username=user.username)
         signature.reload()
 
 
 
     # save signature
-    signature.save(username=user)
+    signature.save(username=user.username)
     signature.reload()
 
     status = {
@@ -487,7 +491,7 @@ def update_signature_type(type_, id_, data_type, user, **kwargs):
     else:
         signature.data_type = data_type.name
         try:
-            signature.save(username=user)
+            signature.save(username=user.username)
             return {'success': True}
         except ValidationError, e:
             return {'success': False, 'message': str(e)}
@@ -502,7 +506,7 @@ def delete_signature_dependency(_id, username=None):
     """
     signature_dependency = SignatureDependency.objects(id=_id).first()
     if signature_dependency:
-        signature_dependency.delete(username=username)
+        signature_dependency.delete(username=user.usernamename)
         return {'success': True}
     else:
         return {'success': False}
@@ -522,7 +526,7 @@ def delete_signature(_id, username=None):
 
     signature = Signature.objects(id=_id).first()
     if signature:
-        signature.delete(username=username)
+        signature.delete(username=user.usernamename)
         return True
     else:
         return False
@@ -626,7 +630,7 @@ def update_dependency(type_, id_, dep, user, append=False, **kwargs):
                 add_new_signature_dependency(item, user)
                 obj.data_type_dependency.append(item)
 
-        obj.save(username=user)
+        obj.save(username=user.username)
         return {'success': True, 'message': "Data type dependency set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -666,7 +670,7 @@ def update_min_version(type_, id_, data_type_min_version, user, **kwargs):
     data_type_min_version = h.unescape(data_type_min_version)
     try:
         obj.data_type_min_version = data_type_min_version
-        obj.save(username=user)
+        obj.save(username=user.username)
         return {'success': True, 'message': "Data type min version set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -705,7 +709,7 @@ def update_max_version(type_, id_, data_type_max_version, user, **kwargs):
     data_type_max_version = h.unescape(data_type_max_version)
     try:
         obj.data_type_max_version = data_type_max_version
-        obj.save(username=user)
+        obj.save(username=user.username)
         return {'success': True, 'message': "Data type max version set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -757,7 +761,7 @@ def update_signature_data(type_, id_, data, user, **kwargs):
     data = h.unescape(data)
     try:
         obj.data = data
-        obj.save(username=user)
+        obj.save(username=user.username)
         return {'success': True, 'message': "Signature value updated."}
     except ValidationError, e:
         return {'success': False, 'message': e}

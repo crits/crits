@@ -86,7 +86,7 @@ def upload_pcap(request):
             data = filedata.read() # XXX: Should be using chunks here.
             source = cleaned_data.get('source_name')
             tlp = cleaned_data.get('source_tlp')
-            user = request.user.username
+            user = request.user
             description = cleaned_data.get('description', '')
             related = cleaned_data.get('related_id', '')
             related_type = cleaned_data.get('related_type', '')

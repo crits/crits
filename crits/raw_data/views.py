@@ -372,7 +372,7 @@ def upload_raw_data(request, link_id=None):
             has_file = False
         if form.is_valid():
             source = form.cleaned_data.get('source_name')
-            user = request.user.username
+            user = request.user
             description = form.cleaned_data.get('description', '')
             title = form.cleaned_data.get('title', None)
             tool_name = form.cleaned_data.get('tool_name', '')

@@ -150,7 +150,7 @@ def generate_actor_jtable(request, option):
     obj_type = Actor
     type_ = "actor"
     mapper = obj_type._meta['jtable_opts']
-    
+
     if option == "jtlist":
         # Sets display url
         details_url = mapper['details_url']
@@ -369,11 +369,16 @@ def add_new_actor(name, aliases=None, description=None, source=None,
         is_item_new = True
 
     if isinstance(source, basestring):
-        source = [create_embedded_source(source,
-                                         reference=source_reference,
-                                         method=source_method,
-                                         tlp=source_tlp,
-                                         analyst=username)]
+        if user.check_source_write(source):
+            source = [create_embedded_source(source,
+                                             reference=source_reference,
+                                             method=source_method,
+                                             tlp=source_tlp,
+                                             analyst=username)]
+        else:
+            return {"success": False,
+                    "message": "User does not have permission to add objects \
+                    using source %s." % str(source)}
 
     if isinstance(campaign, basestring):
         c = EmbeddedCampaign(name=campaign,

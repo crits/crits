@@ -313,12 +313,17 @@ def add_new_event(title, description, event_type, source_name, source_method,
     event.description = description
     event.set_event_type(event_type)
 
-    s = create_embedded_source(source_name,
-                               reference=source_reference,
-                               method=source_method,
-                               tlp=source_tlp,
-                               analyst=user.username,
-                               date=date)
+    if user.check_source_write(source_name):
+        s = create_embedded_source(source_name,
+                                   reference=source_reference,
+                                   method=source_method,
+                                   tlp=source_tlp,
+                                   analyst=user.username,
+                                   date=date)
+    else:
+        return {"success": False,
+                "message": "User does not have permission to add object \
+                            using source %s." % source_name}
     event.add_source(s)
 
     valid_campaign_confidence = {

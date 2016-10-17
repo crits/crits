@@ -168,7 +168,7 @@ def add_update_ip(request, method):
                                    source_tlp=source_tlp,
                                    campaign=campaign,
                                    confidence=confidence,
-                                   user=request.user.username,
+                                   user=request.user,
                                    bucket_list=bucket_list,
                                    ticket=ticket,
                                    is_add_indicator=add_indicator,

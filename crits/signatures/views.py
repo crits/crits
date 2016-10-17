@@ -166,7 +166,7 @@ def upload_signature(request, link_id=None):
                 analyst = request.user.username
                 data = request.POST.get('data', None)
                 source = form.cleaned_data.get('source_name')
-                user = request.user.username
+                user = request.user
                 description = form.cleaned_data.get('description', '')
                 title = form.cleaned_data.get('title', None)
                 data_type = form.cleaned_data.get('data_type', None)
@@ -210,9 +210,12 @@ def upload_signature(request, link_id=None):
                                               related_id=related_id,
                                               related_type=related_type,
                                               relationship_type=relationship_type)
+
             else:
-                status['success'] = False
-                status['message'] = "User does not have permission to add signature."
+                jdump = json.dumps({'success': False,
+                                    'form': form.as_table()})
+                return HttpResponse(jdump, content_type="application/json")
+
             if status['success']:
                 jdump = json.dumps({
                     'message': 'signature uploaded successfully! <a href="%s">View signature</a>'
@@ -226,9 +229,8 @@ def upload_signature(request, link_id=None):
                 return HttpResponse(jdump, content_type="application/json")
 
         else:
-            jdump = json.dumps({'success': False,
-                                'form': form.as_table()})
-            return HttpResponse(jdump, content_type="application/json")
+            status['success'] = False
+            status['message'] = "User does not have permission to add signature."
 
     else:
         return render_to_response('error.html',
@@ -440,7 +442,7 @@ def new_signature_type(request):
             else:
                 message = {'message': '<div>User does not have permission to add signature type!</div>',
                            'success': False}
-            
+
         else:
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),

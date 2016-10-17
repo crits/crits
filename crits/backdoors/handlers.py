@@ -229,11 +229,17 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
     username = user.username
 
     if isinstance(source, basestring):
-        source = [create_embedded_source(source,
-                                         reference=source_reference,
-                                         method=source_method,
-                                         tlp=source_tlp,
-                                         analyst=username)]
+        if user.check_source_write(source):
+            source = [create_embedded_source(source,
+                                             reference=source_reference,
+                                             method=source_method,
+                                             tlp=source_tlp,
+                                             analyst=username)]
+        else:
+            return {"success": False,
+                    "message": "User does not have permission to add objects \
+                    using source %s." % str(source)}
+
     elif isinstance(source, EmbeddedSource):
         source = [source]
 

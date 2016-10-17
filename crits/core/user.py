@@ -901,6 +901,18 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                         return True
         return False
 
+    def check_source_write(self, source):
+        """
+        """
+        user_source_names = self.get_sources_list()
+        user_source_objects = self._meta['cached_acl'].sources
+
+        for usource in user_source_objects:
+            if usource.name == source:
+                return usource.write
+
+        return False
+
     def get_access_list(self, update=False):
         """
         Generate a single new Role object based off of a combination of all of

@@ -911,13 +911,17 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
 
     # generate new source information and add to sample
     if isinstance(source, basestring) and len(source) > 0:
-        s = create_embedded_source(source,
-                                   method=source_method,
-                                   reference=source_reference,
-                                   tlp=source_tlp,
-                                   analyst=user)
+        if user.check_source_write(source):
+            s = create_embedded_source(source,
+                                       method=source_method,
+                                       reference=source_reference,
+                                       tlp=source_tlp,
+                                       analyst=user.username)
+            sample.add_source(s)
+        else:
+            return {"success":False,
+                    "message": "User does not have permission to add object using source %s." % source}
         # this will handle adding a new source, or an instance automatically
-        sample.add_source(s)
     elif isinstance(source, EmbeddedSource):
         sample.add_source(source, method=source_method, reference=source_reference, tlp=source_tlp)
     elif isinstance(source, list) and len(source) > 0:
@@ -942,7 +946,7 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
             campaign_array = campaign
 
             if isinstance(campaign, basestring):
-                campaign_array = [EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user)]
+                campaign_array = [EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user.username)]
 
             for campaign_item in campaign_array:
                 sample.add_campaign(campaign_item)
@@ -964,7 +968,7 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
                             relationship = RelationshipTypes.RELATED_TO
                 sample.add_relationship(related_obj,
                                         relationship,
-                                        analyst=user,
+                                        analyst=user.username,
                                         get_rels=False)
                 sample.save(username=user)
 
@@ -975,7 +979,7 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
             if backdoor:
                 backdoor.add_relationship(sample,
                                           RelationshipTypes.RELATED_TO,
-                                          analyst=user)
+                                          analyst=user.username)
                 backdoor.save()
             # Also relate to the specific instance backdoor.
             if backdoor_version:
@@ -985,7 +989,7 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
                 if backdoor:
                     backdoor.add_relationship(sample,
                                               RelationshipTypes.RELATED_TO,
-                                              analyst=user)
+                                              analyst=user.username)
                     backdoor.save()
 
         # reloading clears the _changed_fields of the sample object. this prevents

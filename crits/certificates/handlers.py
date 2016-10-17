@@ -307,11 +307,17 @@ def handle_cert_file(filename, data, source_name, user=None,
 
     # generate source information and add to certificate
     if isinstance(source_name, basestring) and len(source_name) > 0:
-        s = create_embedded_source(source_name,
-                                   method=method,
-                                   reference=reference,
-                                   tlp=tlp,
-                                   analyst=user)
+        if user.check_source_write(source_name):
+            s = create_embedded_source(source_name,
+                                             reference=reference,
+                                             method=method,
+                                             tlp=tlp,
+                                             analyst=user.username)
+        else:
+            return {"success": False,
+                    "message": "User does not have permission to add objects \
+                    using source %s." % str(source_name)}
+
         cert.add_source(s)
     elif isinstance(source_name, EmbeddedSource):
         cert.add_source(source_name, method=method, reference=reference,

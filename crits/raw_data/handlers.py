@@ -397,12 +397,16 @@ def handle_raw_data_file(data, source_name, user=None,
 
     # generate new source information and add to sample
     if isinstance(source_name, basestring) and len(source_name) > 0:
-        source = create_embedded_source(source_name,
-                                   date=timestamp,
-                                   method=method,
-                                   reference=reference,
-                                   tlp=tlp,
-                                   analyst=user)
+        if user.check_source_write(source_name):
+            source = create_embedded_source(source_name,
+                                       date=timestamp,
+                                       method=method,
+                                       reference=reference,
+                                       tlp=tlp,
+                                       analyst=user.username)
+        else:
+            return {"success":False,
+                    "message": "User does not have permission to add object using source %s." % source_name}
         # this will handle adding a new source, or an instance automatically
         raw_data.add_source(source)
     elif isinstance(source_name, EmbeddedSource):

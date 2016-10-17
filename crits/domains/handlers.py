@@ -360,14 +360,24 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
         source_name = data.get('source_name')
         method = data.get('source_method')
         tlp = data.get('source_tlp')
-        source = [create_embedded_source(source_name, reference=reference,
-                                         method=method, tlp=tlp, analyst=user.username)]
         bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
         ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
         related_id = data.get('related_id')
         related_type = data.get('related_type')
         relationship_type = data.get('relationship_type')
 
+        if user.check_source_write(source_name):
+            source = [create_embedded_source(source_name, reference=reference,
+                                             method=method, tlp=tlp, analyst=user.username)]
+        else:
+            message = "User does not have permission to add object using source \
+            %s. " % source_name
+
+            result =  {"success": False,
+                    "message": "User does not have permission to add objects \
+                    using source %s." % str(source_name)}
+
+            return False, False, result
         if data.get('campaign') and data.get('confidence'):
             campaign = [EmbeddedCampaign(name=data.get('campaign'),
                                          confidence=data.get('confidence'),
@@ -404,7 +414,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                                           source_reference=ip_reference,
                                           source_tlp=ip_tlp,
                                           campaign=campaign,
-                                          user=user.username,
+                                          user=user,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
                                           cache=cache)
@@ -440,7 +450,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     ip = ip_result['object']
                     result = create_indicator_from_tlo('IP',
                                                        ip,
-                                                       user.username,
+                                                       user,
                                                        ip_source,
                                                        source_tlp=ip_tlp,
                                                        add_domain=False)
@@ -451,7 +461,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                 # Add an indicator for the domain.
                 result = create_indicator_from_tlo('Domain',
                                                    new_domain,
-                                                   user.username,
+                                                   user,
                                                    source_name,
                                                    source_tlp=tlp,
                                                    add_domain=False)
@@ -565,7 +575,7 @@ def upsert_domain(domain, source, username=None, campaign=None,
               "is_domain_new" (boolean)
     """
 
-    
+
     # validate domain and grab root domain
     (root, domain, error) = get_valid_root_domain(domain)
     if error:
