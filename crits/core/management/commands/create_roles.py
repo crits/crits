@@ -5,6 +5,8 @@ from optparse import make_option
 import sys
 
 from crits.core.role import Role
+from crits.core.user import CRITsUser
+
 
 class Command(BaseCommand):
     """
@@ -217,11 +219,11 @@ def migrate_roles():
 
         if role == 'Administrator':
             roles.append('UberAdmin')
-        elif role:
-            roles.append(role)
+        elif role == 'Analyst':
+            roles.append('Analyst')
+        elif role == 'Read Only':
+            roles.append('Read Only')
 
-
-        result = collection.users.update_one(
-           {"_id": user['_id']},
-           {"$set": {"roles": roles}}
-        )
+        user = CRITsUser.objects(username=user['username']).first()
+        user.roles = roles
+        user.save()
