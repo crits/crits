@@ -673,9 +673,11 @@
         {% endif %}
       </ul>
     </li>
+    {% if GeneralACL.CONTROL_PANEL_READ|has_access_to:user %}
     <li class='nav_admin mmenu_item'>
         <a href="{% url 'crits.config.views.crits_config' %}">CRITs Control Panel</a>
         <ul class='sub-mmenu'>
+            {% if GeneralACL.CONTROL_PANEL_SYSTEM_READ|has_access_to:user %}
             <li class='mmenu_item'>
                 <a href="{% url 'crits.config.views.crits_config' %}">System</a>
                 <ul class='sub-mmenu'>
@@ -702,6 +704,8 @@
                     </li>
                 </ul>
             </li>
+            {% endif %}
+            {% if GeneralACL.CONTROL_PANEL_READ|has_access_to:user %}
             <li class='mmenu_item'>
                <a class='controlPanelNav' sub_node='actor_threat_identifiers_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_threat_identifiers_button">Items</a>
                <ul class='sub-mmenu'>
@@ -722,6 +726,8 @@
                     </li>
                </ul>
             </li>
+            {% endif %}
+            {% if GeneralACL.CONTROL_PANEL_ROLES_READ|has_access_to:user %}
             <li class='mmenu_item'>
                 <a class='controlPanelNav' node='node_roles' href="{% url 'crits.config.views.crits_config' %}#roles">Roles</a>
             </li>
@@ -731,17 +737,25 @@
             <li class='mmenu_item'>
               <a href class="dialogClick" persona="new" dialog="role_combine_preview" id="role_combine_preview">Role Combinator</a>
             </li>
+            {% endif %}
+            {% if GeneralACL.CONTROL_PANEL_USERS_READ|has_access_to:user %}
             <li class='mmenu_item'>
                 <a class='controlPanelNav' node='node_users' href="{% url 'crits.config.views.crits_config' %}#users">Users</a>
             </li>
+            {% endif %}
+            {% if GeneralACL.CONTROL_PANEL_SERVICES_READ|has_access_to:user %}
             <li class='mmenu_item'>
                 <a class='controlPanelNav' node='node_services' href="{% url 'crits.config.views.crits_config' %}#services">Services</a>
             </li>
+            {% endif %}
+            {% if GeneralACL.CONTROL_PANEL_AUDIT_LOG_READ|has_access_to:user %}
             <li class='mmenu_item'>
                 <a class='controlPanelNav' node='node_audit_log' href="{% url 'crits.config.views.crits_config' %}#auditLog">Audit Log</a>
             </li>
+            {% endif %}
         </ul>
     </li>
+    {% endif %}
     <li class='nav_help mmenu_item'>
       <a href="{% url 'crits.core.views.about' %}">About CRITs</a>
     </li>
