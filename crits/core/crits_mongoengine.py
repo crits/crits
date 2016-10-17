@@ -825,7 +825,7 @@ class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
         date = CritsDateTimeField(default=datetime.datetime.now)
         method = StringField()
         reference = StringField()
-        tlp = StringField(default='red', choices=('white', 'green', 'amber', 'red'))
+        tlp = StringField(default='amber', choices=('white', 'green', 'amber', 'red'))
 
         def __eq__(self, other):
             """
