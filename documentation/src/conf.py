@@ -52,7 +52,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'CRITs'
-copyright = u'2015, MITRE Corporation'
+copyright = u'2016, MITRE Corporation'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

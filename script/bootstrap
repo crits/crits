@@ -1,5 +1,5 @@
 #!/bin/sh
-# (c) 2015, The MITRE Corporation. All rights reserved.
+# (c) 2016, The MITRE Corporation. All rights reserved.
 # Source code distributed pursuant to license agreement.
 #
 # Usage: script/bootstrap
@@ -35,12 +35,15 @@ verify()
         OS=$(cat /etc/redhat-release | sed 's/ [Enterprise|release|Linux release].*//')
         VER=$(cat /etc/redhat-release | sed 's/.*release //;s/ .*$//')
         #Redhat/CentOS release version
-        REL=$(echo $VER | sed 's/.[0-9].[0-9]*//;s/.[0-9]$//')
-        if [ $REL -lt 7 ];
+        if [ $OS != 'Fedora' ]
         then
-            #change for RHEL/CentOS < Release 7 
-            PIP='pip2.7'
-        fi
+            REL=$(echo $VER | sed 's/.[0-9].[0-9]*//;s/.[0-9]$//')
+            if [ $REL -lt 7 ];
+            then
+                #change for RHEL/CentOS < Release 7 
+                PIP='pip2.7'
+            fi
+         fi
     elif command -v lsb_release >/dev/null 2>&1
     then
         OS=$(lsb_release -i| sed 's/Distributor ID:\t//')
@@ -61,11 +64,11 @@ install_mongo()
         printf "${PASS}Mongo already installed${END}\n"  
     else
         printf "${INFO}Installing MongoDB${END}\n"
-        curl http://downloads.mongodb.org/linux/mongodb-linux-x86_64-2.6.4.tgz > mongodb-linux-x86_64-2.6.4.tgz
-        tar -zxvf mongodb-linux-x86_64-2.6.4.tgz
-        sudo cp ./mongodb-linux-x86_64-2.6.4/bin/* /usr/local/bin/
-        rm  mongodb-linux-x86_64-2.6.4.tgz
-        rm -r mongodb-linux-x86_64-2.6.4
+        curl http://downloads.mongodb.org/linux/mongodb-linux-x86_64-2.6.12.tgz > mongodb-linux-x86_64-2.6.12.tgz
+        tar -zxvf mongodb-linux-x86_64-2.6.12.tgz
+        sudo cp ./mongodb-linux-x86_64-2.6.12/bin/* /usr/local/bin/
+        rm  mongodb-linux-x86_64-2.6.12.tgz
+        rm -r mongodb-linux-x86_64-2.6.12
         if [ ! -f /usr/local/bin/mongod ];
         then
             printf "${FAIL}MongoDB Installation Failed${END}\n"
@@ -101,7 +104,7 @@ depend_crits()
     else 
         sudo -E env LDFLAGS=-L/opt/local/lib \
                     CFLAGS=-I/opt/local/include \
-                    SWIG_FEATURES=-cpperraswarn -includeall -I/opt/local/include \
+                    SWIG_FEATURES=-cpperraswarn -I/opt/local/include \
                     ${PIP} install M2Crypto
         sudo -E ${PIP} install -U -r requirements.txt
     fi
@@ -300,7 +303,7 @@ red_hat_install()
     if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
     then
         printf "${INFO}Installing RPMForge repo${END}\n"
-        sudo -E rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+        sudo -E rpm --import http://dag.wiee.rs/RPM-GPG-KEY.dag.txt
         sudo -E rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
     fi
     if [ ! -f /etc/yum.repos.d/epel.repo ];
@@ -335,7 +338,7 @@ centos_install()
     if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
     then
         printf "${INFO}Installing RPMForge repo${END}\n"
-        sudo -E rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+        sudo -E rpm --import http://dag.wiee.rs/RPM-GPG-KEY.dag.txt
         sudo -E rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
     fi
     if [ ! -f /etc/yum.repos.d/epel.repo ];
@@ -361,6 +364,26 @@ centos_install()
     sudo -E yum -y install p7zip p7zip-plugins
     sudo -E yum -y install libffi-devel
     sudo -E yum -y install libyaml
+    sudo -E yum -y install upx
+
+    printf "${INFO}Dependency Install Complete${END}\n"
+}
+
+fedora_install()
+{
+    printf "${HEAD}Installing CRITs Dependencies${END}\n"
+    if [ ! -f /etc/yum.repos.d/epel.repo ];
+    then
+        printf "${INFO}Installing EPEL repo${END}\n"
+        sudo -E yum -y install epel-release
+    fi
+
+    printf "${INFO}Installing Packages${END}\n"
+    sudo -E yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel libjpeg-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
+    sudo -E yum -y install p7zip p7zip-plugins
+    sudo -E yum -y install libffi-devel
+    sudo -E yum -y install libyaml
+    sudo -E yum -y install redhat-rpm-config
     sudo -E yum -y install upx
 
     printf "${INFO}Dependency Install Complete${END}\n"
@@ -400,6 +423,11 @@ do
             then
                 printf "${PASS}CentOS is Supported!${END}\n"
                 centos_install || exit_restart $STEP
+                depend_crits ||exit_restart $STEP
+            elif [ "$OS" = "fedora" ]
+            then
+                printf "${PASS}Fedora is Supported!${END}\n"
+                fedora_install || exit_restart $STEP
                 depend_crits ||exit_restart $STEP
             elif [ "$OS" = "red hat" ]
             then

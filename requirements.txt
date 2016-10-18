@@ -9,10 +9,12 @@ defusedxml
 django-celery
 django-tastypie==0.13.3
 git+https://github.com/frbapolkosnik/django-tastypie-mongoengine.git
+future
 kombu
 lxml
 mongoengine==0.10.6
 git+https://github.com/MongoEngine/django-mongoengine.git
+pip>=8.1.2
 pydeep==0.2
 pymongo==3.2.2
 pyparsing
@@ -23,7 +25,7 @@ python-mimeparse
 pytz
 pyyaml
 requests
-setuptools
+setuptools>=28.3.0
 simplejson
 six
 ushlex
