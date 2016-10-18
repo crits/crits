@@ -2911,7 +2911,6 @@ def generate_users_jtable(request, option):
                                    'jtid': 'users_listing'},
                                   RequestContext(request))
     else:
-        logger.error(jtable)
         return render_to_response("user_editor.html",
                                   {'jtable': jtable,
                                    'jtid': 'users_listing'},
