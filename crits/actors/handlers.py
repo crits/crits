@@ -370,11 +370,11 @@ def add_new_actor(name, aliases=None, description=None, source=None,
 
     if isinstance(source, basestring):
         if user.check_source_write(source):
-            source = [create_embedded_source(source,
+            source = create_embedded_source(source,
                                              reference=source_reference,
                                              method=source_method,
                                              tlp=source_tlp,
-                                             analyst=username)]
+                                             analyst=username)
         else:
             return {"success": False,
                     "message": "User does not have permission to add objects \

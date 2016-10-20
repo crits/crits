@@ -7,6 +7,8 @@ from crits.campaigns.handlers import add_campaign
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import CampaignACL
+
 
 class CampaignResource(CRITsAPIResource):
     """
@@ -47,7 +49,7 @@ class CampaignResource(CRITsAPIResource):
         :returns: HttpResponse.
 
         """
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         name = bundle.data.get('name', None)
         description = bundle.data.get('description', None)
         aliases = bundle.data.get('aliases', None)
@@ -60,12 +62,17 @@ class CampaignResource(CRITsAPIResource):
             content['message'] = 'Need a Campaign name.'
             self.crits_response(content)
 
-        result = add_campaign(name,
-                              description,
-                              aliases,
-                              analyst,
-                              bucket_list,
-                              ticket)
+        if user.has_access_to(CampaignACL.WRITE):
+            result = add_campaign(name,
+                                  description,
+                                  aliases,
+                                  user,
+                                  bucket_list,
+                                  ticket)
+        else:
+            result = {'success':False,
+                      'message':'User does not have permission to create Object.'}
+
         if result.get('id'):
             url = reverse('api_dispatch_detail',
                           kwargs={'resource_name': 'campaigns',

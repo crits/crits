@@ -370,9 +370,6 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
             source = [create_embedded_source(source_name, reference=reference,
                                              method=method, tlp=tlp, analyst=user.username)]
         else:
-            message = "User does not have permission to add object using source \
-            %s. " % source_name
-
             result =  {"success": False,
                     "message": "User does not have permission to add objects \
                     using source %s." % str(source_name)}

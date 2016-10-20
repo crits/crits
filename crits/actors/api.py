@@ -7,6 +7,8 @@ from crits.actors.handlers import add_new_actor, add_new_actor_identifier
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import ActorACL
+
 
 class ActorResource(CRITsAPIResource):
     """
@@ -47,7 +49,6 @@ class ActorResource(CRITsAPIResource):
         """
 
         user = bundle.request.user
-        user._setup()
         data = bundle.data
         name = data.get('name', None)
         aliases = data.get('aliases', '')
@@ -55,24 +56,29 @@ class ActorResource(CRITsAPIResource):
         source = data.get('source', None)
         reference = data.get('reference', None)
         method = data.get('method', None)
-        tlp = data.get('tlp', None)
+        tlp = data.get('tlp', "amber")
         campaign = data.get('campaign', None)
         confidence = data.get('confidence', None)
         bucket_list = data.get('bucket_list', None)
         ticket = data.get('ticket', None)
 
-        result = add_new_actor(name,
-                               aliases,
-                               description=description,
-                               source=source,
-                               source_method=method,
-                               source_reference=reference,
-                               source_tlp=tlp,
-                               campaign=campaign,
-                               confidence=confidence,
-                               user=user,
-                               bucket_list=bucket_list,
-                               ticket=ticket)
+        if user.has_access_to(ActorACL.WRITE):
+            result = add_new_actor(name,
+                                   aliases,
+                                   description=description,
+                                   source=source,
+                                   source_method=method,
+                                   source_reference=reference,
+                                   source_tlp=tlp,
+                                   campaign=campaign,
+                                   confidence=confidence,
+                                   user=user,
+                                   bucket_list=bucket_list,
+                                   ticket=ticket)
+        else:
+            result = {'success':False,
+                      'message':'User does not have permission to create Object.'}
+
 
         content = {'return_code': 0,
                    'type': 'Actor',
@@ -114,9 +120,14 @@ class ActorIdentifierResource(CRITsAPIResource):
         :returns: Resulting objects in the specified format (JSON by default).
 
         """
+        user = request.user
 
-        return super(ActorIdentifierResource, self).get_object_list(request,
-                                                                    ActorIdentifier)
+        if user.has_access_to(ActorACL.ACTOR_IDENTIFIERS_READ):
+            return super(ActorIdentifierResource, self).get_object_list(request,
+                                                                        ActorIdentifier)
+
+        else:
+            raise NotImplementedError('User does not have permission to view object.')
 
     def obj_create(self, bundle, **kwargs):
         """
@@ -129,7 +140,6 @@ class ActorIdentifierResource(CRITsAPIResource):
         """
 
         user = bundle.request.user
-        user._setup()
         data = bundle.data
         identifier_type = data.get('identifier_type', None)
         identifier = data.get('identifier', None)
@@ -138,13 +148,18 @@ class ActorIdentifierResource(CRITsAPIResource):
         method = data.get('method', None)
         tlp = data.get('tlp', None)
 
-        result = add_new_actor_identifier(identifier_type,
-                                          identifier,
-                                          source=source,
-                                          source_method=method,
-                                          source_reference=reference,
-                                          source_tlp=tlp,
-                                          user=user)
+        if user.has_access_to(ActorACL.ACTOR_IDENTIFIERS_ADD):
+            result = add_new_actor_identifier(identifier_type,
+                                              identifier,
+                                              source=source,
+                                              source_method=method,
+                                              source_reference=reference,
+                                              source_tlp=tlp,
+                                              user=user)
+
+        else:
+            result = {'success':False,
+                      'message':'User does not have permission to create Object.'}
 
         content = {'return_code': 0,
                    'type': 'ActorIdentifier',

@@ -7,6 +7,7 @@ from crits.certificates.handlers import handle_cert_file
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import CertificateACL
 
 class CertificateResource(CRITsAPIResource):
     """
@@ -50,7 +51,7 @@ class CertificateResource(CRITsAPIResource):
 
         content = {'return_code': 1,
                    'type': 'Certificate'}
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         file_ = bundle.data.get('filedata', None)
         if not file_:
             content['message'] = "Upload type of 'file' but no file uploaded."
@@ -62,7 +63,7 @@ class CertificateResource(CRITsAPIResource):
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', None)
         reference = bundle.data.get('reference', None)
-        tlp = bundle.data.get('tlp', None)
+        tlp = bundle.data.get('tlp', 'amber')
         description = bundle.data.get('reference', None)
         relationship = bundle.data.get('relationship', None)
         related_id = bundle.data.get('related_id', None)
@@ -71,20 +72,25 @@ class CertificateResource(CRITsAPIResource):
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
-        result = handle_cert_file(filename,
-                                  filedata,
-                                  source,
-                                  analyst,
-                                  description,
-                                  related_id=related_id,
-                                  related_md5=related_md5,
-                                  related_type = related_type,
-                                  method=method,
-                                  reference=reference,
-                                  tlp=tlp,
-                                  relationship=relationship,
-                                  bucket_list=bucket_list,
-                                  ticket=ticket)
+        if user.has_access_to(CertificateACL.WRITE):
+            result = handle_cert_file(filename,
+                                      filedata,
+                                      source,
+                                      user,
+                                      description,
+                                      related_id=related_id,
+                                      related_md5=related_md5,
+                                      related_type = related_type,
+                                      method=method,
+                                      reference=reference,
+                                      tlp=tlp,
+                                      relationship=relationship,
+                                      bucket_list=bucket_list,
+                                      ticket=ticket)
+        else:
+            result = {'success':False,
+                      'message':'User does not have permission to create Object.'}
+
 
         if result.get('id'):
             url = reverse('api_dispatch_detail',

@@ -7,6 +7,8 @@ from crits.raw_data.handlers import handle_raw_data_file
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import RawDataACL
+
 
 class RawDataResource(CRITsAPIResource):
     """
@@ -47,7 +49,7 @@ class RawDataResource(CRITsAPIResource):
 
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         type_ = bundle.data.get('upload_type', None)
 
         content = {'return_code': 1,
@@ -80,6 +82,7 @@ class RawDataResource(CRITsAPIResource):
         copy_rels = bundle.data.get('copy_relationships', False)
         method = bundle.data.get('method', None) or 'Upload'
         reference = bundle.data.get('reference', None)
+        tlp = bundle.data.get('tlp', 'amber')
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
@@ -90,12 +93,17 @@ class RawDataResource(CRITsAPIResource):
             content['message'] = "Must provide a data type."
             self.crits_response(content)
 
-        result = handle_raw_data_file(data, source, analyst,
+        if not user.has_access_to(RawDataACL.WRITE):
+            content['message'] = 'User does not have permission to create Object.'
+            self.crits_response(content)
+
+        result = handle_raw_data_file(data, source, user,
                                       description, title, data_type,
                                       tool_name, tool_version, tool_details,
                                       link_id,
                                       method=method,
                                       reference=reference,
+                                      tlp=tlp,
                                       copy_rels=copy_rels,
                                       bucket_list=bucket_list,
                                       ticket=ticket)

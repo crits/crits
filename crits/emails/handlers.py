@@ -501,7 +501,7 @@ def handle_email_fields(data, user, method, related_id=None,
         del data['source_reference']
     except:
         pass
-    tlp = data.get('source_tlp', None)
+    tlp = data.get('source_tlp', 'amber')
     try:
         del data['source_tlp']
     except:

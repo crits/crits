@@ -386,7 +386,7 @@ def handle_raw_data_file(data, source_name, user=None,
         raw_data.created = timestamp
         raw_data.description = description
         raw_data.md5 = md5
-        #raw_data.source = [source]
+        # raw_data.source = [source_name]
         raw_data.data = data
         raw_data.title = title
         raw_data.data_type = data_type
@@ -399,22 +399,23 @@ def handle_raw_data_file(data, source_name, user=None,
     if isinstance(source_name, basestring) and len(source_name) > 0:
         if user.check_source_write(source_name):
             source = create_embedded_source(source_name,
-                                       date=timestamp,
                                        method=method,
                                        reference=reference,
                                        tlp=tlp,
                                        analyst=user.username)
+            raw_data.add_source(source)
+
         else:
             return {"success":False,
                     "message": "User does not have permission to add object using source %s." % source_name}
         # this will handle adding a new source, or an instance automatically
-        raw_data.add_source(source)
+
     elif isinstance(source_name, EmbeddedSource):
-        raw_data.add_source(source_name, method=method, reference=reference, tlp=tlp)
+        raw_data.add_source(source_name, method=method, reference=reference, tlp=tlp, analyst=user.usrname)
     elif isinstance(source_name, list) and len(source_name) > 0:
         for s in source_name:
             if isinstance(s, EmbeddedSource):
-                raw_data.add_source(s, method=method, reference=reference, tlp=tlp)
+                raw_data.add_source(s, method=method, reference=reference, tlp=tlp, analyst=user.username)
 
     #XXX: need to validate this is a UUID
     if link_id:
@@ -432,7 +433,7 @@ def handle_raw_data_file(data, source_name, user=None,
                             raw_data.add_relationship(rel_item,
                                                       rel.relationship,
                                                       rel_date=rel.relationship_date,
-                                                      analyst=user)
+                                                      analyst=user.username)
 
 
     raw_data.version = len(RawData.objects(link_id=link_id)) + 1
@@ -451,19 +452,19 @@ def handle_raw_data_file(data, source_name, user=None,
             retVal['message'] = 'Related Object not found.'
             return retVal
 
-    raw_data.save(username=user)
+    raw_data.save(username=user.username)
 
     if related_obj and relationship_type and raw_data:
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         raw_data.add_relationship(related_obj,
                               relationship_type,
-                              analyst=user,
+                              analyst=user.username,
                               get_rels=False)
-        raw_data.save(username=user)
+        raw_data.save(username=user.username)
         raw_data.reload()
 
     # save raw_data
-    raw_data.save(username=user)
+    raw_data.save(username=user.username)
 
     # run raw_data triage
     if is_rawdata_new:

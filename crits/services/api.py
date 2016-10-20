@@ -49,7 +49,6 @@ class ServiceResource(CRITsAPIResource):
 
         """
         user = bundle.request.user
-        user._setup()
         object_type = bundle.data.get('object_type', None)
         object_id = bundle.data.get('object_id', None)
         analysis_id = bundle.data.get('analysis_id', None)
