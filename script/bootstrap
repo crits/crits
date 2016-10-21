@@ -226,13 +226,13 @@ server_setup()
 add_admin()
 {
         printf "${HEAD}Add admin user:${END}\n"
-        read -p "Username: " USERNAME
-        read -p "First name: " FIRSTNAME
-        read -p "Last name: " LASTNAME
-        read -p "Email address: " EMAIL
-        read -p "Organization name: " ORG
+        read -p "Username: " AUSERNAME
+        read -p "First name: " AFIRSTNAME
+        read -p "Last name: " ALASTNAME
+        read -p "Email address: " AEMAIL
+        read -p "Organization name: " AORG
 
-        ${PYTH} manage.py users -a -A -e "${EMAIL}" -f "${FIRSTNAME}" -l "${LASTNAME}" -o "${ORG}" -u "${USERNAME}"
+        ${PYTH} manage.py users -u "${AUSERNAME}" -s -i -a -A -e "${AEMAIL}" -f "${AFIRSTNAME}" -l "${ALASTNAME}" -o "${AORG}" 
         if [ $? -ne 0 ]
         then
             printf "${FAIL}Failed to add an admin user${END}\n"
@@ -244,11 +244,11 @@ add_admin()
 reset_pass()
 {
         printf "${HEAD}Reset password:${END}\n"
-        read -p "Username: " USERNAME
-        ${PYTH} manage.py users -r -u "${USERNAME}"
+        read -p "Username: " AUSERNAME
+        ${PYTH} manage.py users -r -u "${AUSERNAME}"
         if [ $? -ne 0 ]
         then
-            printf "${FAIL}Failed to reset password for ${USERNAME}${END}\n"
+            printf "${FAIL}Failed to reset password for ${AUSERNAME}${END}\n"
         fi
 }
 
