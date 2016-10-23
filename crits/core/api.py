@@ -547,7 +547,7 @@ class CRITsAPIResource(MongoEngineResource):
         # Final scrub to remove results the user does not have access to
         id_list = []
 
-        if klass._meta['crits_type'] == 'Campaign':
+        if not klass._meta['crits_type']:
             return results
 
         for result in results:
@@ -566,7 +566,7 @@ class CRITsAPIResource(MongoEngineResource):
 
         acl = get_acl_object(bundle.obj._meta['crits_type'])
 
-        if acl and bundle.obj._meta['crits_type'] == 'Screenshot' or user.has_access_to(acl.READ):
+        if not acl or (bundle.obj._meta['crits_type'] == 'Screenshot' or user.has_access_to(acl.READ)):
             return super(CRITsAPIResource, self).obj_get_list(bundle=bundle, **kwargs)
         else:
             raise NotImplementedError('You do not have access to this object.')
