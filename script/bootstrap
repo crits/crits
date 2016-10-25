@@ -40,7 +40,7 @@ verify()
             REL=$(echo $VER | sed 's/.[0-9].[0-9]*//;s/.[0-9]$//')
             if [ $REL -lt 7 ];
             then
-                #change for RHEL/CentOS < Release 7 
+                #change for RHEL/CentOS < Release 7
                 PIP='pip2.7'
             fi
          fi
@@ -61,7 +61,7 @@ install_mongo()
     # Check if Mongo is Installed
     if command -v mongo >/dev/null 2>&1
     then
-        printf "${PASS}Mongo already installed${END}\n"  
+        printf "${PASS}Mongo already installed${END}\n"
     else
         printf "${INFO}Installing MongoDB${END}\n"
         curl http://downloads.mongodb.org/linux/mongodb-linux-x86_64-2.6.12.tgz > mongodb-linux-x86_64-2.6.12.tgz
@@ -101,7 +101,7 @@ depend_crits()
          CFLAGS=-I$(brew --prefix openssl)/include \
          SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include" \
          ${PIP} install -U -r requirements.txt
-    else 
+    else
         sudo -E env LDFLAGS=-L/opt/local/lib \
                     CFLAGS=-I/opt/local/include \
                     SWIG_FEATURES=-cpperraswarn -I/opt/local/include \
@@ -111,7 +111,7 @@ depend_crits()
     if [ $? -ne 0 ]
     then
         printf "${FAIL}Dependency installation failed!${END}\n
-        If M2Crypto failed to install, you might try to install the 
+        If M2Crypto failed to install, you might try to install the
         OS-provided package with the package manager (apt-get/yum/brew)
         or try to adjust the CFLAGS, LDFLAGS, and SWIG_FEATURES
         with the right path to openssl headers and libs:
@@ -157,7 +157,7 @@ server_setup()
         echo "Creating default database configuration file"
         cp crits/config/database_example.py crits/config/database.py
         SC=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(\-_=+)' | fold -w 50 | head -n 1)
-        # This is going to escape the '&' character that is a special character in sed 
+        # This is going to escape the '&' character that is a special character in sed
         SE=$(echo ${SC} | sed -e 's/\\/\\\\/g' | sed -e 's/\//\\\//g' | sed -e 's/&/\\\&/g')
         sed -i -e "s/^\(SECRET_KEY = \).*$/\1\'${SE}\'/1" crits/config/database.py
     else
@@ -226,13 +226,14 @@ server_setup()
 add_admin()
 {
         printf "${HEAD}Add admin user:${END}\n"
-        read -p "Username: " USERNAME
-        read -p "First name: " FIRSTNAME
-        read -p "Last name: " LASTNAME
-        read -p "Email address: " EMAIL
-        read -p "Organization name: " ORG
+        read -p "Username: " AUSERNAME
+        read -p "First name: " AFIRSTNAME
+        read -p "Last name: " ALASTNAME
+        read -p "Email address: " AEMAIL
+        read -p "Organization name: " AORG
 
-        ${PYTH} manage.py users -a -R UberAdmin -e "${EMAIL}" -f "${FIRSTNAME}" -l "${LASTNAME}" -o "${ORG}" -u "${USERNAME}"
+        ${PYTH} manage.py users -R UberAdmin -u "${AUSERNAME}" -s -i -a -e "${AEMAIL}" -f "${AFIRSTNAME}" -l "${ALASTNAME}" -o "${AORG}"
+
         if [ $? -ne 0 ]
         then
             printf "${FAIL}Failed to add an admin user${END}\n"
@@ -244,11 +245,11 @@ add_admin()
 reset_pass()
 {
         printf "${HEAD}Reset password:${END}\n"
-        read -p "Username: " USERNAME
-        ${PYTH} manage.py users -r -u "${USERNAME}"
+        read -p "Username: " AUSERNAME
+        ${PYTH} manage.py users -r -u "${AUSERNAME}"
         if [ $? -ne 0 ]
         then
-            printf "${FAIL}Failed to reset password for ${USERNAME}${END}\n"
+            printf "${FAIL}Failed to reset password for ${AUSERNAME}${END}\n"
         fi
 }
 
@@ -321,7 +322,7 @@ red_hat_install()
         fi
         sudo -E yum -y install python27 python27-devel python27-pip
     fi
-    
+
     printf "${INFO}Installing Packages${END}\n"
     sudo -E yum -y install make gcc gcc-c++ kernel-devel git openldap-devel pcre pcre-devel libjpeg-devel curl libpcap-devel python-devel python-pip libxml2-devel libxslt-devel libyaml-devel numactl ssdeep ssdeep-devel openssl-devel zip unzip gzip bzip2 swig
     sudo -E yum -y install p7zip p7zip-plugins
@@ -354,7 +355,7 @@ centos_install()
             printf "${INFO}Installing IUS repo${END}\n"
             # python27 comes from here
             sudo -E rpm -i http://dl.iuscommunity.org/pub/ius/stable/CentOS/${REL}/x86_64/ius-release-1.0-14.ius.centos${REL}.noarch.rpm
-            
+
         fi
         sudo -E yum -y install python27 python27-devel python27-pip
     fi

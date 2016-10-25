@@ -97,6 +97,7 @@ MONGO_DATABASE = 'crits'                          # database name to connect to
 MONGO_SSL = False                                 # whether MongoD has SSL enabled
 MONGO_USER = ''                                   # username used to authenticate to mongo (normally empty)
 MONGO_PASSWORD = ''                               # password for the mongo user
+MONGO_REPLICASET = None                           # Name of RS, if mongod in replicaset
 
 # File storage backends
 S3 = "S3"
@@ -185,9 +186,10 @@ COL_YARAHITS = "yarahits"                                 # yara hit counts for 
 # MongoDB connection pool
 if MONGO_USER:
     connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL,
-            username=MONGO_USER, password=MONGO_PASSWORD)
+            replicaset=MONGO_REPLICASET, username=MONGO_USER, password=MONGO_PASSWORD)
 else:
-    connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL)
+    connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL,
+            replicaset=MONGO_REPLICASET)
 
 # Get config from DB
 c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL)
