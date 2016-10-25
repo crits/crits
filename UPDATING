@@ -8,7 +8,7 @@ Date:   2016-10-14
 
     Added support for Role Based Access Control (RBAC). This is a major change
     with how CRITs provides access to objects. Instead of providing access
-    soley based on a Source, it provides access based on the permissions
+    solely based on a Source, it provides access based on the permissions
     defined in the Role object assigned to a user. Role objects then have
     sources that they have access to. When migrating from an existing CRITs
     Instance, you will need to take the following steps:
@@ -20,6 +20,9 @@ Date:   2016-10-14
 
     Then, log in using an Administrator (now called UberAdmin) user to add
     appropriate SourceAccess to the new Role objects.
+
+    Moving forward, SourceAccess objects need to be added to Role objects
+    for users to have access to data from that source. 
 
 
 Author: apolkosnik
