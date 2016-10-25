@@ -31,5 +31,6 @@ six
 ushlex
 wsgiref
 olefile
+pycrypto
 pyimpfuzzy
-m2crypto
+qrcode
