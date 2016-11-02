@@ -659,7 +659,7 @@ def get_supported_services(crits_type):
     """
 
     services = CRITsService.objects(enabled=True)
-    for s in services:
+    for s in sorted(services, key=lambda s: s.name.lower()):
         if s.supported_types == 'all' or crits_type in s.supported_types:
             yield s.name
 
