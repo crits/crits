@@ -255,8 +255,9 @@ def target_user_stats():
                 targs[0].email_address = result.key.strip().lower()
 
             for targ in targs:
-                targ.email_count = result.value['count']
-                targ.save()
+                if targ.email_count != result.value['count']:
+                    targ.email_count = result.value['count']
+                    targ.save()
         except:
             pass
     mapcode = """
@@ -274,8 +275,9 @@ def target_user_stats():
             if not div:
                 div = Division()
                 div.division = result.key
-            div.email_count = result.value['count']
-            div.save()
+            if div.email_count != result.value['count']:
+                div.email_count = result.value['count']
+                div.save()
     except:
         raise
 

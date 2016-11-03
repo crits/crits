@@ -183,7 +183,6 @@ def delete_relationship(left_class=None, right_class=None,
                                     rel_type=rel_type,
                                     rel_date=rel_date,
                                     analyst=analyst)
-        right_class.save(username=analyst)
     else:
         if right_type and right_id:
             results = left_class.delete_relationship(type_=right_type,

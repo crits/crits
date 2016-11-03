@@ -1945,7 +1945,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                         elif modification == "reason":
                             self.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
-                            del self.relationships[c]
+                            self.relationships.remove(r)
+                            break
                 else:
                     if (r.object_id == rel_item.id
                         and r.relationship == rel_type
@@ -1959,8 +1960,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                         elif modification == "reason":
                             self.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
-                            del self.relationships[c]
-
+                            self.relationships.remove(r)
+                            break
             for c, r in enumerate(rel_item.relationships):
                 if rel_date:
                     if (r.object_id == self.id
@@ -1976,7 +1977,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                         elif modification == "reason":
                             rel_item.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
-                            del rel_item.relationships[c]
+                            rel_item.relationships.remove(r)
+                            break
                 else:
                     if (r.object_id == self.id
                         and r.relationship == rev_type
@@ -1990,7 +1992,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                         elif modification == "reason":
                             rel_item.relationships[c].rel_reason = new_reason
                         elif modification == "delete":
-                            del rel_item.relationships[c]
+                            rel_item.relationships.remove(r)
+                            break
             if not got_rel:
                 rel_item.save(username=analyst)
             if modification == "delete":

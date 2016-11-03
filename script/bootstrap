@@ -102,10 +102,10 @@ depend_crits()
          SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include" \
          ${PIP} install -U -r requirements.txt
     else 
-        sudo -E env LDFLAGS=-L/opt/local/lib \
-                    CFLAGS=-I/opt/local/include \
-                    SWIG_FEATURES=-cpperraswarn -I/opt/local/include \
-                    ${PIP} install M2Crypto
+        sudo -E env LDFLAGS=-L/usr/local/lib \
+        CFLAGS=-I/usr/local/include \
+        SWIG_FEATURES="-cpperraswarn -includeall -I/usr/local/include" \
+        ${PIP} install M2Crypto
         sudo -E ${PIP} install -U -r requirements.txt
     fi
     if [ $? -ne 0 ]
@@ -226,13 +226,13 @@ server_setup()
 add_admin()
 {
         printf "${HEAD}Add admin user:${END}\n"
-        read -p "Username: " USERNAME
-        read -p "First name: " FIRSTNAME
-        read -p "Last name: " LASTNAME
-        read -p "Email address: " EMAIL
-        read -p "Organization name: " ORG
+        read -p "Username: " AUSERNAME
+        read -p "First name: " AFIRSTNAME
+        read -p "Last name: " ALASTNAME
+        read -p "Email address: " AEMAIL
+        read -p "Organization name: " AORG
 
-        ${PYTH} manage.py users -a -A -e "${EMAIL}" -f "${FIRSTNAME}" -l "${LASTNAME}" -o "${ORG}" -u "${USERNAME}"
+        ${PYTH} manage.py users -u "${AUSERNAME}" -s -i -a -A -e "${AEMAIL}" -f "${AFIRSTNAME}" -l "${ALASTNAME}" -o "${AORG}" 
         if [ $? -ne 0 ]
         then
             printf "${FAIL}Failed to add an admin user${END}\n"
@@ -244,11 +244,11 @@ add_admin()
 reset_pass()
 {
         printf "${HEAD}Reset password:${END}\n"
-        read -p "Username: " USERNAME
-        ${PYTH} manage.py users -r -u "${USERNAME}"
+        read -p "Username: " AUSERNAME
+        ${PYTH} manage.py users -r -u "${AUSERNAME}"
         if [ $? -ne 0 ]
         then
-            printf "${FAIL}Failed to reset password for ${USERNAME}${END}\n"
+            printf "${FAIL}Failed to reset password for ${AUSERNAME}${END}\n"
         fi
 }
 
@@ -300,12 +300,6 @@ freebsd_install()
 red_hat_install()
 {
     printf "${HEAD}Installing CRITs Dependencies${END}\n"
-    if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
-    then
-        printf "${INFO}Installing RPMForge repo${END}\n"
-        sudo -E rpm --import http://dag.wiee.rs/RPM-GPG-KEY.dag.txt
-        sudo -E rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
-    fi
     if [ ! -f /etc/yum.repos.d/epel.repo ];
     then
         printf "${INFO}Installing EPEL repo${END}\n"

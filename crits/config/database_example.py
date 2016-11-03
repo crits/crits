@@ -13,6 +13,7 @@ MONGO_DATABASE = 'crits'      # database name to connect to
 MONGO_SSL = False             # whether MongoD has SSL enabled
 MONGO_USER = ''               # mongo user with "readWrite" role in the database
 MONGO_PASSWORD = ''           # password for the mongo user
+MONGO_REPLICASET = None       # name of RS, if mongod in Replicaset
 
 # Set this to a sufficiently long random string. We recommend running
 # the following code from a python shell to generate the string and pasting
