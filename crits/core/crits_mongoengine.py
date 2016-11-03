@@ -1930,7 +1930,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                     return {'success': False,
                             'message': 'Could not find reverse relationship type'}
         
-            for c, r in enumerate(self.relationships, 0):
+            for c, r in enumerate(self.relationships):
                 if rel_date:
                     if (r.object_id == rel_item.id
                         and r.relationship == rel_type
