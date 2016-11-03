@@ -111,8 +111,8 @@ class ServiceManager(object):
             supported_types = service_class.supported_types
             compatability_mode = service_class.compatability_mode
 
-            logger.debug("Found service subclass: %s version %s" %
-                            (service_name, service_version))
+            #logger.debug("Found service subclass: %s version %s" %
+            #                (service_name, service_version))
 
             try:
                 StrictVersion(service_version)
@@ -125,7 +125,7 @@ class ServiceManager(object):
                 continue
             else:
                 # Only register the service if it is valid.
-                logger.debug("Registering Service %s" % service_name)
+                #logger.debug("Registering Service %s" % service_name)
                 svc_obj = CRITsService.objects(name=service_class.name).first()
                 service = service_class()
                 if not svc_obj:
@@ -441,7 +441,7 @@ class Service(object):
         self.config = config
         self.ensure_current_task()
         self._info("Starting Analysis")
-
+        t_start = datetime.now()
         # Do it!
         try:
             self.run(self.current_task.obj, config)
@@ -473,7 +473,7 @@ class Service(object):
                               self.current_task.task_id,
                               status,
                               self.current_task.username)
-                logger.debug("Finished analysis %s" % self.current_task.task_id)
+                logger.debug("Finished analysis %s, %s, runtime: %s" % (self.current_task.task_id, self.name, str(datetime.now() - t_start)))
             # Reset current_task so another task can be assigned.
             self.current_task = None
 

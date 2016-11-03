@@ -19,14 +19,17 @@
 </ul>
 
 <div id="details_section">
-    <span class="horizontal_menu">
-    <ul class="hmenu">
-        <li><a href="{% url 'crits.core.views.download_file' cert.md5 %}?type=cert">Download Certificate</a></li>
-        {% if admin %}
-            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="certifcate" action='{% url "crits.certificates.views.remove_certificate" cert.md5 %}'>Delete Certificate</a></li>
-        {% endif %}
-    </ul>
-    </span>
+    <div class='content_box'>
+        <span class="horizontal_menu">
+        <ul class="hmenu">
+            <li><a href="{% url 'crits.core.views.download_file' cert.md5 %}?type=cert">Download Certificate</a></li>
+            {% if admin %}
+                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="certifcate" action='{% url "crits.certificates.views.remove_certificate" cert.md5 %}'>Delete Certificate</a></li>
+            {% endif %}
+        </ul>
+        </span>
+    </div>
+
     <div class="content_box content_details">
         <h3 class="titleheader">
         <span>Certificate Details<span>

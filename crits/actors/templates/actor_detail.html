@@ -18,14 +18,16 @@
     </ul>
 
 <div id="details_section">
-    <span class="horizontal_menu">
-    <ul class="hmenu">
-        <li><a href="#" class="dialogClick" dialog="download-actor">Download Actor</a></li>
-        {% if admin %}
-        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="actor" action='{% url "crits.actors.views.remove_actor" actor.id %}'>Delete Actor</a></li>
-        {% endif %}
-    </ul>
-    </span>
+    <div class='content_box'>
+        <span class="horizontal_menu">
+        <ul class="hmenu">
+            <li><a href="#" class="dialogClick" dialog="download-actor">Download Actor</a></li>
+            {% if admin %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="actor" action='{% url "crits.actors.views.remove_actor" actor.id %}'>Delete Actor</a></li>
+            {% endif %}
+        </ul>
+        </span>
+    </div>
 
     <div class="content_box content_details">
         <h3 class="titleheader">

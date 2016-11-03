@@ -28,14 +28,17 @@
 </ul>
 
 <div id="details_section">
-    <span class="horizontal_menu">
-    <ul class="hmenu">
-        <li><a href="#" id="upload-new-signature-version" class="dialogClick" dialog="upload-new-signature-version" data-action="{% url 'crits.signatures.views.upload_signature' signature.link_id|stringformat:"s" %}">Upload New Version</a></li>
-        {% if admin %}
-            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="signature" action='{% url "crits.signatures.views.remove_signature" signature.id %}'>Delete Signature</a></li>
-        {% endif %}
-    </ul>
-    </span>
+    <div class='content_box'>
+        <span class="horizontal_menu">
+        <ul class="hmenu">
+            <li><a href="#" id="upload-new-signature-version" class="dialogClick" dialog="upload-new-signature-version" data-action="{% url 'crits.signatures.views.upload_signature' signature.link_id|stringformat:"s" %}">Upload New Version</a></li>
+            {% if admin %}
+                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="signature" action='{% url "crits.signatures.views.remove_signature" signature.id %}'>Delete Signature</a></li>
+            {% endif %}
+        </ul>
+        </span>
+    </div>
+
     <div class="content_box content_details">
         <h3 class="titleheader">
             <span id="signature_title" title="Copy to clipboard" data-title="{{ signature.title }}">"{{ signature.title }}" Details<span>

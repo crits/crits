@@ -19,13 +19,15 @@
     </ul>
 
 <div id="details_section">
-    <span class="horizontal_menu">
-    <ul class="hmenu">
-        {% if admin %}
-        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="backdoor" action='{% url "crits.backdoors.views.remove_backdoor" backdoor.id %}'>Delete Backdoor</a></li>
-        {% endif %}
-    </ul>
-    </span>
+    <div class='content_box'>
+        <span class="horizontal_menu">
+        <ul class="hmenu">
+            {% if admin %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="backdoor" action='{% url "crits.backdoors.views.remove_backdoor" backdoor.id %}'>Delete Backdoor</a></li>
+            {% endif %}
+        </ul>
+        </span>
+    </div>
 
     <div class="content_box content_details">
         <h3 class="titleheader">

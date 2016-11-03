@@ -298,7 +298,8 @@ def run_triage(obj, user):
                         obj.id,
                         user,
                         obj=obj,
-                        execute=settings.SERVICE_MODEL)
+                        execute=settings.SERVICE_MODEL,
+                        custom_config={})
         except:
             pass
     return
@@ -660,7 +661,7 @@ def get_supported_services(crits_type):
     """
 
     services = CRITsService.objects(enabled=True)
-    for s in services:
+    for s in sorted(services, key=lambda s: s.name.lower()):
         if s.supported_types == 'all' or crits_type in s.supported_types:
             yield s.name
 
@@ -723,7 +724,20 @@ def update_analysis_results(task):
         new_dict = {}
         for k in tdict.keys():
             new_dict['set__%s' % k] = tdict[k]
-        AnalysisResult.objects(id=ar.id).update_one(**new_dict)
+        try:
+            AnalysisResult.objects(id=ar.id).update_one(**new_dict)
+        except Exception as e: # assume bad data in 'results'
+            task.status = 'error'
+            new_dict['set__results'] = []
+            le = EmbeddedAnalysisResultLog()
+            le.message = 'DB Update Failed: %s' % e
+            le.level = 'error'
+            le.datetime = str(datetime.datetime.now())
+            new_dict['set__log'].append(le)
+            try:
+                AnalysisResult.objects(id=ar.id).update_one(**new_dict)
+            except: # don't know what's wrong, try writing basic log only
+                AnalysisResult.objects(id=ar.id).update_one(set__log=[le])
 
 # The service pools need to be defined down here because the functions
 # that are used by the services must already be defined.

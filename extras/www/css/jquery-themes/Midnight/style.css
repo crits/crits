@@ -586,17 +586,18 @@ div.content a {
 
 span.horizontal_menu {
     margin: 10px auto;
-    display: table;
-    width: auto;
+    width: 100%;
 }
 
 span.horizontal_menu ul.hmenu {
     margin: 0px;
     padding: 0px;
     border: 1px solid #dfdfdf;
-    display: inline-block;
-    height: 20px;
-    width: auto;
+    display: block;
+    height: auto;
+    width: 100%;
+    overflow: auto;
+    white-space: nowrap;
 }
 
 span.horizontal_menu ul.hmenu li.right {
@@ -604,14 +605,14 @@ span.horizontal_menu ul.hmenu li.right {
 }
 
 span.horizontal_menu ul.hmenu li {
-    display: inline;
+    margin-left: 0px;
+    display: inline-block;
     list-style: none;
-    float: left;
     border-right: 1px solid #dfdfdf;
     padding-left: 5px;
     padding-right: 5px;
-    padding-top: 3px;
-    height: 17px;
+    padding-top: 5px;
+    height: 22px;
     vertical-align: middle;
     text-align: center;
     background-color: #f1f1f1;

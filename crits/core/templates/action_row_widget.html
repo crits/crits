@@ -10,7 +10,7 @@
     <td data-field="analyst">{{action.analyst}}</td>
     <td>
     {% if admin %}
-    <a href="#" title="Delete Action" class="ui-icon ui-icon-close deleteClick" type="action" action="{% url 'crits.core.views.remove_action' obj_type=obj_type obj_id=obj_id %}" key="{{action.date}}"></a>
+    <a href="#" title="Delete Action" class="ui-icon ui-icon-close deleteClick" type="action" action="{% url 'crits.core.views.remove_action' obj_type=obj_type obj_id=obj_id %}" key="{{action.date}},{{action.action_type}}"></a>
     {% endif %}
     <a href="#" title="Edit Action" class="edit_action_button ui-icon ui-icon-pencil dialogClick" dialog="add-action" persona="update" action="{% url 'crits.core.views.add_update_action' 'update' obj_type obj_id %}"></a>
     </td>

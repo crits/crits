@@ -19,14 +19,17 @@
 </ul>
 
 <div id="details_section">
-    <span class="horizontal_menu">
-    <ul class="hmenu">
-        <li><a href="{% url 'crits.core.views.download_file' pcap.md5 %}?type=pcap">Download PCAP</a></li>
-        {% if admin %}
-            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="pcap" title="Delete PCAP" action='{% url "crits.pcaps.views.remove_pcap" pcap.md5 %}'>Delete PCAP</a></li>
-        {% endif %}
-    </ul>
-    </span>
+    <div class='content_box'>
+        <span class="horizontal_menu">
+        <ul class="hmenu">
+            <li><a href="{% url 'crits.core.views.download_file' pcap.md5 %}?type=pcap">Download PCAP</a></li>
+            {% if admin %}
+                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="pcap" title="Delete PCAP" action='{% url "crits.pcaps.views.remove_pcap" pcap.md5 %}'>Delete PCAP</a></li>
+            {% endif %}
+        </ul>
+        </span>
+    </div>
+
     <div class="content_box content_details">
         <h3 class="titleheader">
         <span>PCAP Details<span>

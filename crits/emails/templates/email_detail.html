@@ -23,15 +23,16 @@
     {% include 'services_tab_list_widget.html' %}
     </ul>
 <div id="details_section">
-    <span class="horizontal_menu">
-    <ul class="hmenu">
-        <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.emails.views.upload_attach' email.id %}">Add Attachment</a></li>
-        <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
-        {% if admin %}
-        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
-        {% endif %}
-    </ul>
-    </span>
+    <div class='content_box'>
+        <span class="horizontal_menu">
+        <ul class="hmenu">
+            <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
+            {% if admin %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
+            {% endif %}
+        </ul>
+        </span>
+    </div>
 
 {% if email %}
     <div class='content_box content_details'>

@@ -7,18 +7,20 @@
     <div style="margin-top: -10px;">
     <br />
         {% if admin %}
-        <span class="horizontal_menu">
-            <ul class="hmenu">
-                <li><a href="{% url 'crits.services.views.edit_config' service.name %}" style="display: inline">Edit</a></li>
-            </ul>
-        </span>
+        <div class='content_box'>
+            <span class="horizontal_menu">
+                <ul class="hmenu">
+                    <li><a href="{% url 'crits.services.views.edit_config' service.name %}" style="display: inline">Edit</a></li>
+                </ul>
+            </span>
+        </div>
         {% endif %}
         <table class='vertical' width="100%">
             <tbody>
             {% for key, value in config.items %}
                 <tr>
                     <td class="key">{{ key }}</td>
-                    <td>{{ value|linebreaksbr }}</td>
+                    <td>{% if key != 'Password' %}{{ value|linebreaksbr }}{% else %}********{% endif %}</td>
                 </tr>
             {% endfor %}
             </tbody>
