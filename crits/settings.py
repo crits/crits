@@ -410,22 +410,23 @@ MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
 # http://django-debug-toolbar.readthedocs.org/en/latest/configuration.html#debug-toolbar-panels
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
+    'vcs_info_panel.panels.GitInfoPanel',
     'debug_toolbar.panels.timer.TimerPanel',
     'debug_toolbar.panels.settings.SettingsPanel',
     'debug_toolbar.panels.headers.HeadersPanel',
     'debug_toolbar.panels.request.RequestPanel',
-    'debug_toolbar.panels.sql.SQLPanel',
+    'template_timings_panel.panels.TemplateTimings.TemplateTimings',
+    'template_profiler_panel.panels.template.TemplateProfilerPanel',
+    'debug_toolbar_mongo.panel.MongoDebugPanel',
     'debug_toolbar.panels.staticfiles.StaticFilesPanel',
     'debug_toolbar.panels.templates.TemplatesPanel',
     'debug_toolbar.panels.cache.CachePanel',
     'debug_toolbar.panels.signals.SignalsPanel',
     'debug_toolbar.panels.logging.LoggingPanel',
     'debug_toolbar.panels.redirects.RedirectsPanel',
-    'template_timings_panel.panels.TemplateTimings.TemplateTimings',
-    'debug_toolbar_mongo.panel.MongoDebugPanel',
+    'debug_toolbar.panels.sql.SQLPanel',
 ]
 INTERNAL_IPS = '127.0.0.1'
-
 
 if old_mongoengine:
     INSTALLED_APPS = (
@@ -460,7 +461,9 @@ if old_mongoengine:
         'tastypie_mongoengine',
         'mongoengine.django.mongo_auth',
         'template_timings_panel',
+        'template_profiler_panel',
         'debug_toolbar_mongo',
+        'vcs_info_panel',
         'debug_toolbar',
     )
 
@@ -518,7 +521,9 @@ else:
         'django_mongoengine',
         'django_mongoengine.mongo_auth',
         'template_timings_panel',
+        'template_profiler_panel',
         'debug_toolbar_mongo',
+        'vcs_info_panel',
         'debug_toolbar',
         )
 
