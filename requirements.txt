@@ -7,6 +7,9 @@ biplist
 celery
 defusedxml
 django-celery
+django-debug-toolbar
+django-debug-toolbar-mongo
+django-debug-toolbar-template-timings
 django-tastypie==0.13.3
 git+https://github.com/frbapolkosnik/django-tastypie-mongoengine.git
 future

@@ -3,6 +3,16 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+
+Author: apolkosnik
+Date:   2016-11-03
+
+    Debug_toolbar added
+    In order to upgrade you'll need to install the following via pip:
+        django-debug-toolbar
+        django-debug-toolbar-mongo
+        django-debug-toolbar-template-timings
+
 Author: apolkosnik
 Date:   2016-08-06
 
