@@ -4,7 +4,7 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: robertsjw
-Date:   2016-10-14
+Date:   2016-11-07
 
     Added support for Role Based Access Control (RBAC). This is a major change
     with how CRITs provides access to objects. Instead of providing access
@@ -24,6 +24,17 @@ Date:   2016-10-14
     Moving forward, SourceAccess objects need to be added to Role objects
     for users to have access to data from that source. 
 
+
+Author: apolkosnik
+Date:   2016-11-03
+
+    Debug_toolbar added
+    In order to upgrade you'll need to install the following via pip:
+        django-debug-toolbar
+        git+https://github.com/brianz/django-debug-toolbar-mongo
+        django-debug-toolbar-template-profiler
+        django-debug-toolbar-template-timings
+        django-debug-toolbar-vcs-info
 
 Author: apolkosnik
 Date:   2016-08-06
