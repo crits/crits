@@ -15,7 +15,7 @@ class Target(CritsBaseAttributes, CritsActionsDocument, Document):
     meta = {
         "collection": settings.COL_TARGETS,
         "crits_type": 'Target',
-        "latest_schema_version": 3,
+        "latest_schema_version": 4,
         "schema_doc": {
             'department': 'Target department name',
             'division': 'Target division',

@@ -16,7 +16,7 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     meta = {
         "collection": settings.COL_PCAPS,
         "crits_type": 'PCAP',
-        "latest_schema_version": 3,
+        "latest_schema_version": 4,
         "shard_key": ('md5',),
         "schema_doc": {
             'filename': 'The filename of the PCAP',

@@ -13,7 +13,7 @@ class Backdoor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     meta = {
         "collection": settings.COL_BACKDOORS,
         "crits_type": 'Backdoor',
-        "latest_schema_version": 1,
+        "latest_schema_version": 2,
         "schema_doc": {
         },
         "jtable_opts": {

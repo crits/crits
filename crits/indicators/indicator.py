@@ -53,7 +53,7 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
     meta = {
         "collection": settings.COL_INDICATORS,
         "crits_type": 'Indicator',
-        "latest_schema_version": 5,
+        "latest_schema_version": 6,
         "schema_doc": {
             'type': 'The type of this indicator.',
             'threat_types': 'The threat types of this indicator.',

@@ -56,7 +56,7 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     meta = {
         "collection": settings.COL_SIGNATURES,
         "crits_type": 'Signature',
-        "latest_schema_version": 1,
+        "latest_schema_version": 2,
         "schema_doc": {
         },
         "jtable_opts": {
