@@ -321,8 +321,9 @@ def add_object(type_, id_, object_type, source, method, reference, user,
                 results['message'] = msg % ind_res.get('message')
 
         if is_sort_relationships == True:
-            results['relationships'] = tlo.sort_relationships(user, meta=True)
-
+            results['relationships'] = tlo.get_relationships(username=user, 
+                                                             sorted=True, 
+                                                             meta=True)
         if get_objects:
             results['objects'] = tlo.sort_objects()
 

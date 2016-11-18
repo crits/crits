@@ -177,8 +177,9 @@ def get_email_detail(email_id, analyst):
         objects = email.sort_objects()
 
         # relationships
-        relationships = email.sort_relationships("%s" % analyst, meta=True)
-
+        relationships = email.get_relationships(username=analyst, 
+                                                sorted=True, 
+                                                meta=True)
         # Get count of related Events for each related Indicator
         for ind in relationships.get('Indicator', []):
             count = Event.objects(relationships__object_id=ind['id'],

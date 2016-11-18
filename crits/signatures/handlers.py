@@ -94,8 +94,9 @@ def get_signature_details(_id, analyst):
         objects = signature.sort_objects()
 
         #relationships
-        relationships = signature.sort_relationships("%s" % analyst, meta=True)
-
+        relationships = signature.get_relationships(username=analyst, 
+                                                    sorted=True, 
+                                                    meta=True)
         # relationship
         relationship = {
                 'type': 'Signature',

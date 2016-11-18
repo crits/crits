@@ -71,8 +71,9 @@ def get_certificate_details(md5, analyst):
         objects = cert.sort_objects()
 
         #relationships
-        relationships = cert.sort_relationships("%s" % analyst, meta=True)
-
+        relationships = cert.get_relationships(username=analyst, 
+                                               sorted=True, 
+                                               meta=True)
         # relationship
         relationship = {
                 'type': 'Certificate',

@@ -40,6 +40,7 @@ from crits.ips.handlers import ip_add_update, validate_and_normalize_ip
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
+from crits.relationships.handlers import get_relationships
 
 from crits.vocabulary.indicators import (
     IndicatorTypes,
@@ -228,7 +229,9 @@ def get_indicator_details(indicator_id, analyst):
     objects = indicator.sort_objects()
 
     #relationships
-    relationships = indicator.sort_relationships("%s" % analyst, meta=True)
+    relationships = indicator.get_relationships(username=analyst, 
+                                                sorted=True, 
+                                                meta=True)
 
     #comments
     comments = {'comments': indicator.get_comments(),

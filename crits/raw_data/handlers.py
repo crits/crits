@@ -94,8 +94,9 @@ def get_raw_data_details(_id, analyst):
         objects = raw_data.sort_objects()
 
         #relationships
-        relationships = raw_data.sort_relationships("%s" % analyst, meta=True)
-
+        relationships = raw_data.get_relationships(username=analyst, 
+                                                   sorted=True, 
+                                                   meta=True)
         # relationship
         relationship = {
                 'type': 'RawData',

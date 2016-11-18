@@ -458,7 +458,7 @@ def delete_relationship(left_class=None, right_class=None,
     if results['success']:
         left_class.save(username=analyst)
         if get_rels:
-            results['relationships'] = left_class.sort_relationships("%s" % analyst, meta=True)
+            results['relationships'] = get_relationships(obj=left_class,username=analyst,sorted=True, meta=True)
     return results
 
 def update_relationship_types(left_class=None, right_class=None,

@@ -79,8 +79,9 @@ def get_campaign_details(campaign_name, analyst):
     objects = campaign_detail.sort_objects()
 
     #relationships
-    relationships = campaign_detail.sort_relationships("%s" % analyst,
-                                                       meta=True)
+    relationships = campaign_detail.get_relationships(username=analyst, 
+                                                      sorted=True, 
+                                                      meta=True)
 
     # relationship
     relationship = {'type': 'Campaign', 'value': campaign_detail.id}
