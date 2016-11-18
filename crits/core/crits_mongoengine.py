@@ -22,7 +22,6 @@ from pprint import pformat
 from crits.core.user_tools import user_sources, is_admin
 from crits.core.fields import CritsDateTimeField
 from crits.core.class_mapper import class_from_id, class_from_type
-from crits.vocabulary.relationships import RelationshipTypes
 from crits.vocabulary.objects import ObjectTypes
 
 # Hack to fix an issue with non-cached querysets and django-tastypie-mongoengine
@@ -1190,20 +1189,20 @@ class EmbeddedObject(EmbeddedDocument, CritsDocumentFormatter):
     object_type = StringField(required=True, db_field="type")
     value = StringField(required=True)
 
-
-class EmbeddedRelationship(EmbeddedDocument, CritsDocumentFormatter):
-    """
-    Embedded Relationship Class.
-    """
-
-    relationship = StringField(required=True)
-    relationship_date = CritsDateTimeField()
-    object_id = ObjectIdField(required=True, db_field="value")
-    date = CritsDateTimeField(default=datetime.datetime.now)
-    rel_type = StringField(db_field="type", required=True)
-    analyst = StringField()
-    rel_reason = StringField()
-    rel_confidence = StringField(default='unknown', required=True)
+# 
+# class EmbeddedRelationship(EmbeddedDocument, CritsDocumentFormatter):
+#     """
+#     Embedded Relationship Class.
+#     """
+# 
+#     relationship = StringField(required=True)
+#     relationship_date = CritsDateTimeField()
+#     object_id = ObjectIdField(required=True, db_field="value")
+#     date = CritsDateTimeField(default=datetime.datetime.now)
+#     rel_type = StringField(db_field="type", required=True)
+#     analyst = StringField()
+#     rel_reason = StringField()
+#     rel_confidence = StringField(default='unknown', required=True)
 
 class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                           CritsSchemaDocument, CritsStatusDocument, EmbeddedTickets):
@@ -1219,11 +1218,10 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     locations = ListField(EmbeddedDocumentField(EmbeddedLocation))
     description = StringField()
     obj = ListField(EmbeddedDocumentField(EmbeddedObject), db_field="objects")
-    relationships = ListField(EmbeddedDocumentField(EmbeddedRelationship))
     releasability = ListField(EmbeddedDocumentField(Releasability))
     screenshots = ListField(StringField())
     sectors = ListField(StringField())
-
+    
     def add_campaign(self, campaign_item=None, update=True):
         """
         Add a campaign to this top-level object.
@@ -1504,6 +1502,26 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             return screenshots['screenshots']
         else:
             return []
+        
+    def get_relationships(self,username=None,sorted=True, meta=False):
+        """
+        Get relationships for a top-level object.  
+        
+        :param username: The user requesting the relationships.
+        :type username: str
+        :param sorted: The way the relationships are returned.
+        :type sorted: bool
+        :param meta: Return metadata of related TLOs.
+        :type meta: bool
+        :returns: dict or list
+        """
+        from crits.relationships.handlers import get_relationships
+        relationships = get_relationships(obj=self, 
+                                          type_=self._meta['crits_type'],
+                                          username=username,
+                                          sorted=sorted,
+                                          meta=meta)
+        return relationships
 
     def add_object(self, object_type, value, source, method, reference,
                    analyst, object_item=None):
@@ -1730,415 +1748,13 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                   "success" (boolean)
                   "message" (str if failed, else dict or EmbeddedRelationship)
         """
-
-        # Prevent class from having a relationship to itself
-        if self == rel_item:
-            return {'success': False,
-                    'message': 'Cannot forge relationship to oneself'}
-
-        # get reverse relationship
-        rev_type = RelationshipTypes.inverse(rel_type)
-        if rev_type is None:
-            return {'success': False,
-                    'message': 'Could not find relationship type'}
-
-        date = datetime.datetime.now()
-
-        # setup the relationship for me
-        my_rel = EmbeddedRelationship()
-        my_rel.relationship = rel_type
-        my_rel.rel_type = rel_item._meta['crits_type']
-        my_rel.analyst = analyst
-        my_rel.date = date
-        my_rel.relationship_date = rel_date
-        my_rel.object_id = rel_item.id
-        my_rel.rel_confidence = rel_confidence
-        my_rel.rel_reason = rel_reason
-
-        # setup the relationship for them
-        their_rel = EmbeddedRelationship()
-        their_rel.relationship = rev_type
-        their_rel.rel_type = self._meta['crits_type']
-        their_rel.analyst = analyst
-        their_rel.date = date
-        their_rel.relationship_date = rel_date
-        their_rel.object_id = self.id
-        their_rel.rel_confidence = rel_confidence
-        their_rel.rel_reason = rel_reason
-
-        # variables for detecting if an existing relationship exists
-        my_existing_rel = None
-        their_existing_rel = None
-
-        # check for existing relationship before blindly adding
-        for r in self.relationships:
-            if (r.object_id == my_rel.object_id
-                and r.relationship == my_rel.relationship
-                and (not rel_date or r.relationship_date == rel_date)
-                and r.rel_type == my_rel.rel_type):
-                my_existing_rel = r
-                break # If relationship already exists then exit loop
-        for r in rel_item.relationships:
-            if (r.object_id == their_rel.object_id
-                and r.relationship == their_rel.relationship
-                and (not rel_date or r.relationship_date == rel_date)
-                and r.rel_type == their_rel.rel_type):
-                their_existing_rel = r
-                break # If relationship already exists then exit loop
-
-        # If the relationship already exists on both sides then do nothing
-        if my_existing_rel and their_existing_rel:
-            return {'success': False,
-                    'message': 'Relationship already exists'}
-
-        # Repair unreciprocated relationships
-        if not my_existing_rel: # If my rel does not exist then add it
-            if their_existing_rel: # If their rel exists then use its data
-                my_rel.analyst = their_existing_rel.analyst
-                my_rel.date = their_existing_rel.date
-                my_rel.relationship_date = their_existing_rel.relationship_date
-                my_rel.rel_confidence = their_existing_rel.rel_confidence
-                my_rel.rel_reason = their_existing_rel.rel_reason
-            self.relationships.append(my_rel) # add my new relationship
-        if not their_existing_rel: # If their rel does not exist then add it
-            if my_existing_rel: # If my rel exists then use its data
-                their_rel.analyst = my_existing_rel.analyst
-                their_rel.date = my_existing_rel.date
-                their_rel.relationship_date = my_existing_rel.relationship_date
-                their_rel.rel_confidence = my_existing_rel.rel_confidence
-                their_rel.rel_reason = my_existing_rel.rel_reason
-            rel_item.relationships.append(their_rel) # add to passed rel_item
-
-            # updating DB this way can be much faster than saving entire TLO
-            rel_item.update(add_to_set__relationships=their_rel)
-
-        if get_rels:
-            results = {'success': True,
-                       'message': self.sort_relationships(analyst, meta=True)}
-        else:
-            results = {'success': True,
-                       'message': my_rel}
-
-        # In case of relating to a versioned backdoor we also want to relate to
-        # the family backdoor.
-        self_type = self._meta['crits_type']
-        rel_item_type = rel_item._meta['crits_type']
-
-        # If both are not backdoors, just return
-        if self_type != 'Backdoor' and rel_item_type != 'Backdoor':
-            return results
-
-        # If either object is a family backdoor, don't go further.
-        if ((self_type == 'Backdoor' and self.version == '') or
-            (rel_item_type == 'Backdoor' and rel_item.version == '')):
-            return results
-
-        # If one is a versioned backdoor and the other is a family backdoor,
-        # don't go further.
-        if ((self_type == 'Backdoor' and self.version != '' and
-             rel_item_type == 'Backdoor' and rel_item.version == '') or
-            (rel_item_type == 'Backdoor' and rel_item.version != '' and
-             self_type == 'Backdoor' and self.version == '')):
-           return results
-
-        # Figure out which is the backdoor object.
-        if self_type == 'Backdoor':
-            bd = self
-            other = rel_item
-        else:
-            bd = rel_item
-            other = self
-
-        # Find corresponding family backdoor object.
-        klass = class_from_type('Backdoor')
-        family = klass.objects(name=bd.name, version='').first()
-        if family:
-            other.add_relationship(family,
-                                   rel_type,
-                                   rel_date=rel_date,
-                                   analyst=analyst,
-                                   rel_confidence=rel_confidence,
-                                   rel_reason=rel_reason,
-                                   get_rels=get_rels)
-            other.save(user=analyst)
-
+        
+        from crits.relationships.handlers import forge_relationship
+        results = forge_relationship(class_=self, right_class=rel_item,
+                       rel_type=rel_type, rel_date=rel_date,
+                       user=analyst, rel_reason=rel_reason,
+                       rel_confidence=rel_confidence, get_rels=get_rels)
         return results
-
-    def _modify_relationship(self, rel_item=None, rel_id=None, type_=None,
-                             rel_type=None, rel_date=None, new_type=None,
-                             new_date=None, new_confidence='unknown',
-                             new_reason="N/A", modification=None, analyst=None):
-        """
-        Modify a relationship to this top-level object. If rel_item is provided it
-        will be used, otherwise rel_id and type_ must be provided.
-
-        :param rel_item: The top-level object to relate to.
-        :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-        :param rel_id: The ObjectId of the top-level object to relate to.
-        :type rel_id: str
-        :param type_: The type of top-level object to relate to.
-        :type type_: str
-        :param rel_type: The type of relationship.
-        :type rel_type: str
-        :param rel_date: The date this relationship applies.
-        :type rel_date: datetime.datetime
-        :param new_type: The new relationship type.
-        :type new_type: str
-        :param new_date: The new relationship date.
-        :type new_date: datetime.datetime
-        :param new_confidence: The new confidence.
-        :type new_confidence: str
-        :param new_reason: The new reason.
-        :type new_reason: str
-        :param modification: What type of modification this is ("type",
-                             "delete", "date", "confidence").
-        :type modification: str
-        :param analyst: The user forging this relationship.
-        :type analyst: str
-        :returns: dict with keys "success" (boolean) and "message" (str)
-        """
-        got_rel = True
-        if not rel_item:
-            got_rel = False
-            if isinstance(rel_id, basestring) and isinstance(type_, basestring):
-                rel_item = class_from_id(type_, rel_id)
-            else:
-                return {'success': False,
-                        'message': 'Could not find object'}
-        if isinstance(new_date, basestring):
-            new_date = parse(new_date, fuzzy=True)
-        if rel_item and rel_type and modification:
-            # get reverse relationship
-            rev_type = RelationshipTypes.inverse(rel_type)
-            if rev_type is None:
-                return {'success': False,
-                        'message': 'Could not find relationship type'}
-            if modification == "type":
-                # get new reverse relationship
-                new_rev_type = RelationshipTypes.inverse(new_type)
-                if new_rev_type is None:
-                    return {'success': False,
-                            'message': 'Could not find reverse relationship type'}
-            for c, r in enumerate(self.relationships):
-                if rel_date:
-                    if (r.object_id == rel_item.id
-                        and r.relationship == rel_type
-                        and r.relationship_date == rel_date
-                        and r.rel_type == rel_item._meta['crits_type']):
-                        if modification == "type":
-                            self.relationships[c].relationship = new_type
-                        elif modification == "date":
-                            self.relationships[c].relationship_date = new_date
-                        elif modification == "confidence":
-                            self.relationships[c].rel_confidence = new_confidence
-                        elif modification == "reason":
-                            self.relationships[c].rel_reason = new_reason
-                        elif modification == "delete":
-                            del self.relationships[c]
-                else:
-                    if (r.object_id == rel_item.id
-                        and r.relationship == rel_type
-                        and r.rel_type == rel_item._meta['crits_type']):
-                        if modification == "type":
-                            self.relationships[c].relationship = new_type
-                        elif modification == "date":
-                            self.relationships[c].relationship_date = new_date
-                        elif modification == "confidence":
-                            self.relationships[c].rel_confidence = new_confidence
-                        elif modification == "reason":
-                            self.relationships[c].rel_reason = new_reason
-                        elif modification == "delete":
-                            del self.relationships[c]
-            for c, r in enumerate(rel_item.relationships):
-                if rel_date:
-                    if (r.object_id == self.id
-                        and r.relationship == rev_type
-                        and r.relationship_date == rel_date
-                        and r.rel_type == self._meta['crits_type']):
-                        if modification == "type":
-                            rel_item.relationships[c].relationship = new_rev_type
-                        elif modification == "date":
-                            rel_item.relationships[c].relationship_date = new_date
-                        elif modification == "confidence":
-                            rel_item.relationships[c].rel_confidence = new_confidence
-                        elif modification == "reason":
-                            rel_item.relationships[c].rel_reason = new_reason
-                        elif modification == "delete":
-                            del rel_item.relationships[c]
-                else:
-                    if (r.object_id == self.id
-                        and r.relationship == rev_type
-                        and r.rel_type == self._meta['crits_type']):
-                        if modification == "type":
-                            rel_item.relationships[c].relationship = new_rev_type
-                        elif modification == "date":
-                            rel_item.relationships[c].relationship_date = new_date
-                        elif modification == "confidence":
-                            rel_item.relationships[c].rel_confidence = new_confidence
-                        elif modification == "reason":
-                            rel_item.relationships[c].rel_reason = new_reason
-                        elif modification == "delete":
-                            del rel_item.relationships[c]
-            if not got_rel:
-                rel_item.save(username=analyst)
-            if modification == "delete":
-                return {'success': True,
-                        'message': 'Relationship deleted'}
-            else:
-                return {'success': True,
-                        'message': 'Relationship modified'}
-        else:
-            return {'success': False,
-                    'message': 'Need valid object and relationship type'}
-
-    def edit_relationship_date(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                               rel_date=None, new_date=None, analyst=None):
-        """
-        Modify a relationship date for a relationship to this top-level object.
-        If rel_item is provided it will be used, otherwise rel_id and type_ must
-        be provided.
-
-        :param rel_item: The top-level object to relate to.
-        :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-        :param rel_id: The ObjectId of the top-level object to relate to.
-        :type rel_id: str
-        :param type_: The type of top-level object to relate to.
-        :type type_: str
-        :param rel_type: The type of relationship.
-        :type rel_type: str
-        :param rel_date: The date this relationship applies.
-        :type rel_date: datetime.datetime
-        :param new_date: The new relationship date.
-        :type new_date: datetime.datetime
-        :param analyst: The user editing this relationship.
-        :type analyst: str
-        :returns: dict with keys "success" (boolean) and "message" (str)
-        """
-
-        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
-                             type_=type_, rel_type=rel_type,
-                             rel_date=rel_date, new_date=new_date,
-                             modification="date", analyst=analyst)
-
-    def edit_relationship_type(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                               rel_date=None, new_type=None, analyst=None):
-        """
-        Modify a relationship type for a relationship to this top-level object.
-        If rel_item is provided it will be used, otherwise rel_id and type_ must
-        be provided.
-
-        :param rel_item: The top-level object to relate to.
-        :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-        :param rel_id: The ObjectId of the top-level object to relate to.
-        :type rel_id: str
-        :param type_: The type of top-level object to relate to.
-        :type type_: str
-        :param rel_type: The type of relationship.
-        :type rel_type: str
-        :param rel_date: The date this relationship applies.
-        :type rel_date: datetime.datetime
-        :param new_type: The new relationship type.
-        :type new_type: str
-        :param analyst: The user editing this relationship.
-        :type analyst: str
-        :returns: dict with keys "success" (boolean) and "message" (str)
-        """
-
-        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
-                             type_=type_, rel_type=rel_type,
-                             rel_date=rel_date, new_type=new_type,
-                             modification="type", analyst=analyst)
-
-    def edit_relationship_confidence(self, rel_item=None, rel_id=None,
-                                     type_=None, rel_type=None, rel_date=None,
-                                     new_confidence='unknown', analyst=None):
-        """
-        Modify a relationship type for a relationship to this top-level object.
-        If rel_item is provided it will be used, otherwise rel_id and type_ must
-        be provided.
-
-        :param rel_item: The top-level object to relate to.
-        :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-        :param rel_id: The ObjectId of the top-level object to relate to.
-        :type rel_id: str
-        :param type_: The type of top-level object to relate to.
-        :type type_: str
-        :param rel_type: The type of relationship.
-        :type rel_type: str
-        :param rel_date: The date this relationship applies.
-        :type rel_date: datetime.datetime
-        :param new_confidence: The new confidence of the relationship.
-        :type new_confidence: str
-        :param analyst: The user editing this relationship.
-        :type analyst: str
-        :returns: dict with keys "success" (boolean) and "message" (str)
-        """
-        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
-                             type_=type_, rel_type=rel_type,
-                             rel_date=rel_date, new_confidence=new_confidence,
-                             modification="confidence", analyst=analyst)
-
-    def edit_relationship_reason(self, rel_item=None, rel_id=None, type_=None,
-                                 rel_type=None, rel_date=None, new_reason="N/A",
-                                 analyst=None):
-        """
-        Modify a relationship type for a relationship to this top-level object.
-        If rel_item is provided it will be used, otherwise rel_id and type_ must
-        be provided.
-
-        :param rel_item: The top-level object to relate to.
-        :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-        :param rel_id: The ObjectId of the top-level object to relate to.
-        :type rel_id: str
-        :param type_: The type of top-level object to relate to.
-        :type type_: str
-        :param rel_type: The type of relationship.
-        :type rel_type: str
-        :param rel_date: The date this relationship applies.
-        :type rel_date: datetime.datetime
-        :param new_confidence: The new confidence of the relationship.
-        :type new_confidence: int
-        :param analyst: The user editing this relationship.
-        :type analyst: str
-        :returns: dict with keys "success" (boolean) and "message" (str)
-        """
-        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
-                             type_=type_, rel_type=rel_type,
-                             rel_date=rel_date, new_reason=new_reason,
-                             modification="reason", analyst=analyst)
-
-    def delete_relationship(self, rel_item=None, rel_id=None, type_=None, rel_type=None,
-                            rel_date=None, analyst=None, *args, **kwargs):
-        """
-        Delete a relationship from a relationship to this top-level object.
-        If rel_item is provided it will be used, otherwise rel_id and type_ must
-        be provided.
-
-        :param rel_item: The top-level object to remove relationship to.
-        :type rel_item: class which inherits from
-                        :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-        :param rel_id: The ObjectId of the top-level object to relate to.
-        :type rel_id: str
-        :param type_: The type of top-level object to relate to.
-        :type type_: str
-        :param rel_type: The type of relationship.
-        :type rel_type: str
-        :param rel_date: The date this relationship applies.
-        :type rel_date: datetime.datetime
-        :param analyst: The user removing this relationship.
-        :type analyst: str
-        :returns: dict with keys "success" (boolean) and "message" (str)
-        """
-
-        return self._modify_relationship(rel_item=rel_item, rel_id=rel_id,
-                             type_=type_, rel_type=rel_type,
-                             rel_date=rel_date, analyst=analyst,
-                             modification="delete")
 
     def delete_all_relationships(self, username=None):
         """
@@ -2147,99 +1763,11 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :param username: The user deleting all of the relationships.
         :type username: str
         """
-
-        for r in self.relationships[:]:
-            if r.relationship_date:
-                self.delete_relationship(rel_id=str(r.object_id),
-                                         type_=r.rel_type,
-                                         rel_type=r.relationship,
-                                         rel_date=r.relationship_date,
-                                         analyst=username)
-            else:
-                self.delete_relationship(rel_id=str(r.object_id),
-                                         type_=r.rel_type,
-                                         rel_type=r.relationship,
-                                         analyst=username)
-
-    def sort_relationships(self, username=None, meta=False):
-        """
-        Sort the relationships for inclusion in a template.
-
-        :param username: The user requesting the relationships.
-        :type username: str
-        :param meta: Limit the results to only a subset of metadata.
-        :type meta: boolean
-        :returns: dict
-        """
-
-        if len(self.relationships) < 1:
-            return {}
-        rel_dict = dict((r.rel_type,[]) for r in self.relationships)
-        query_dict = {
-            'Actor': ('id', 'name', 'campaign'),
-            'Backdoor': ('id', 'name', 'version', 'campaign'),
-            'Campaign': ('id', 'name'),
-            'Certificate': ('id', 'md5', 'filename', 'description', 'campaign'),
-            'Domain': ('id', 'domain'),
-            'Email': ('id', 'from_address', 'sender', 'subject', 'campaign'),
-            'Event': ('id', 'title', 'event_type', 'description', 'campaign'),
-            'Exploit': ('id', 'name', 'cve', 'campaign'),
-            'Indicator': ('id', 'ind_type', 'value', 'campaign', 'actions'),
-            'IP': ('id', 'ip', 'campaign'),
-            'PCAP': ('id', 'md5', 'filename', 'description', 'campaign'),
-            'RawData': ('id', 'title', 'data_type', 'tool', 'description',
-                        'version', 'campaign'),
-            'Sample': ('id',
-                       'md5',
-                       'filename',
-                       'mimetype',
-                       'size',
-                       'campaign'),
-            'Signature': ('id', 'title', 'data_type', 'description',
-                        'version', 'campaign'),
-            'Target': ('id', 'firstname', 'lastname', 'email_address', 'email_count'),
-        }
-        rel_dict['Other'] = 0
-        rel_dict['Count'] = len(self.relationships)
-        if not meta:
-            for r in self.relationships:
-                rd = r.to_dict()
-                rel_dict[rd['type']].append(rd)
-            return rel_dict
-        elif username:
-            user_source_access = user_sources(username)
-            for r in self.relationships:
-                rd = r.to_dict()
-                obj_class = class_from_type(rd['type'])
-                # TODO: these should be limited to the fields above, or at
-                # least exclude larger fields that we don't need.
-                fields = query_dict.get(rd['type'])
-                if r.rel_type not in ["Campaign", "Target"]:
-                    obj = obj_class.objects(id=rd['value'],
-                            source__name__in=user_source_access).only(*fields).first()
-                else:
-                    obj = obj_class.objects(id=rd['value']).only(*fields).first()
-                if obj:
-                    # we can't add and remove attributes on the class
-                    # so convert it to a dict that we can manipulate.
-                    result = obj.to_dict()
-                    if "_id" in result:
-                        result["id"] = result["_id"]
-                    if "type" in result:
-                        result["ind_type"] = result["type"]
-                        del result["type"]
-                    if "value" in result:
-                        result["ind_value"] = result["value"]
-                        del result["value"]
-                    # turn this relationship into a dict so we can update
-                    # it with the object information
-                    rd.update(result)
-                    rel_dict[rd['type']].append(rd)
-                else:
-                    rel_dict['Other'] += 1
-            return rel_dict
-        else:
-            return {}
+        from crits.relationships.relationship import Relationship
+        relationships = self.get_relationships()
+        for r in relationships:
+            rel_obj = Relationship.objects(id=r['_id']).first()
+            rel_obj.delete(username=username)
 
     def get_relationship_objects(self, username=None, sources=None):
         """
@@ -2252,23 +1780,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :returns: list
         """
 
+        # This function needs to be redone.  
         results = []
-        if not username:
-            return results
-        if not hasattr(self, 'relationships'):
-            return results
-        if not sources:
-            sources = user_sources(username)
-        for r in self.relationships:
-            rd = r.to_dict()
-            obj_class = class_from_type(rd['type'])
-            if r.rel_type not in ["Campaign", "Target"]:
-                obj = obj_class.objects(id=rd['value'],
-                        source__name__in=sources).first()
-            else:
-                obj = obj_class.objects(id=rd['value']).first()
-            if obj:
-                results.append(obj)
         return results
 
     def add_releasability(self, source_item=None, analyst=None, *args, **kwargs):
@@ -2359,33 +1872,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                     if ri.date == date:
                         r.instances.remove(ri)
 
-    def sanitize_relationships(self, username=None, sources=None):
-        """
-        Sanitize the relationships list down to only what the user can see based
-        on source access.
-
-        :param username: The user to sanitize for.
-        :type username: str
-        :param source: The user's source list.
-        :type source: list
-        """
-
-        if username:
-            if not sources:
-                sources = user_sources(username)
-            final_rels = []
-            for r in self.relationships:
-                rd = r.to_dict()
-                obj_class = class_from_type(rd['type'])
-                if r.rel_type not in ["Campaign", "Target"]:
-                    obj = obj_class.objects(id=rd['value'],
-                            source__name__in=sources).only('id').first()
-                else:
-                    obj = obj_class.objects(id=rd['value']).only('id').first()
-                if obj:
-                    final_rels.append(r)
-            self.relationships = final_rels
-
     def sanitize_releasability(self, username=None, sources=None):
         """
         Sanitize releasability list down to only what the user can see based
@@ -2404,7 +1890,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             # the source already will reflect the changes as well
             self.releasability[:] = [r for r in self.releasability if r.name in sources]
 
-    def sanitize(self, username=None, sources=None, rels=True):
+    def sanitize(self, username=None, sources=None):
         """
         Sanitize this top-level object down to only what the user can see based
         on source access.
@@ -2413,8 +1899,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type username: str
         :param source: The user's source list.
         :type source: list
-        :param rels: Whether or not to sanitize relationships.
-        :type rels: boolean
         """
 
         if username:
@@ -2424,9 +1908,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 self.sanitize_sources(username, sources)
             if hasattr(self, 'releasability'):
                 self.sanitize_releasability(username, sources)
-            if rels:
-                if hasattr(self, 'relationships'):
-                    self.sanitize_relationships(username, sources)
 
     def get_campaign_names(self):
         """

@@ -166,6 +166,7 @@ COL_OBJECT_TYPES = "object_types"                         # types of objects tha
 COL_PCAPS = "pcaps"                                       # main pcaps collection
 COL_RAW_DATA = "raw_data"                                 # main raw data collection
 COL_RAW_DATA_TYPES = "raw_data_types"                     # list of available raw data types
+COL_RELATIONSHIPS = "relationships"                       # main relationships collection
 COL_RELATIONSHIP_TYPES = "relationship_types"             # list of available relationship types
 COL_SAMPLES = "sample"                                    # main samples collection
 COL_SCREENSHOTS = "screenshots"                           # main screenshots collection
@@ -616,6 +617,7 @@ CRITS_TYPES = {
     'Notification': COL_NOTIFICATIONS,
     'PCAP': COL_PCAPS,
     'RawData': COL_RAW_DATA,
+    'Relationship' : COL_RELATIONSHIPS,
     'Sample': COL_SAMPLES,
     'Screenshot': COL_SCREENSHOTS,
     'Signature': COL_SIGNATURES,

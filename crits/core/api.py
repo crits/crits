@@ -207,7 +207,7 @@ class CRITsSerializer(Serializer):
         # which handles the Embedded MongoEngine classes.
         if hasattr(data, 'obj'):
             if data.obj._has_method('sanitize'):
-                data.obj.sanitize(username=username, rels=True)
+                data.obj.sanitize(username=username)
             return data.obj.to_json()
 
         data = self._convert_mongoengine(data, options)
@@ -253,7 +253,7 @@ class CRITsSerializer(Serializer):
         # which handles the Embedded MongoEngine classes.
         if hasattr(data, 'obj'):
             if data.obj._has_method('sanitize'):
-                data.obj.sanitize(username=username, rels=True)
+                data.obj.sanitize(username=username)
             return data.obj.to_yaml()
 
         data = self._convert_mongoengine(data, options)
@@ -280,7 +280,7 @@ class CRITsSerializer(Serializer):
             data['objects'] = []
             for obj_ in objs:
                 if obj_.obj._has_method('sanitize'):
-                    obj_.obj.sanitize(username=username, rels=True)
+                    obj_.obj.sanitize(username=username)
                 data['objects'].append(json.loads(obj_.obj.to_json()))
         data = self.to_simple(data, options)
         return data
