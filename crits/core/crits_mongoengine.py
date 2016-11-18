@@ -1189,21 +1189,6 @@ class EmbeddedObject(EmbeddedDocument, CritsDocumentFormatter):
     object_type = StringField(required=True, db_field="type")
     value = StringField(required=True)
 
-# 
-# class EmbeddedRelationship(EmbeddedDocument, CritsDocumentFormatter):
-#     """
-#     Embedded Relationship Class.
-#     """
-# 
-#     relationship = StringField(required=True)
-#     relationship_date = CritsDateTimeField()
-#     object_id = ObjectIdField(required=True, db_field="value")
-#     date = CritsDateTimeField(default=datetime.datetime.now)
-#     rel_type = StringField(db_field="type", required=True)
-#     analyst = StringField()
-#     rel_reason = StringField()
-#     rel_confidence = StringField(default='unknown', required=True)
-
 class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                           CritsSchemaDocument, CritsStatusDocument, EmbeddedTickets):
     """
