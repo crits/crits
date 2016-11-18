@@ -899,11 +899,11 @@ def handle_msg(data, sourcename, reference, analyst, method, password='',
             return retVal
 
         email.reload()
-        for rel in email.relationships:
-            if rel.rel_type == 'Sample':
+        for rel in email.get_relationships(sorted=True,meta=False)['Sample']:
+
                 forge_relationship(class_=related_obj,
-                                   right_type=rel.rel_type,
-                                   right_id=rel.object_id,
+                                   right_type=rel['other_obj']['obj_type'],
+                                   right_id=rel['other_obj']['obj_id'],
                                    rel_type=RelationshipTypes.RELATED_TO,
                                    user=analyst)
 

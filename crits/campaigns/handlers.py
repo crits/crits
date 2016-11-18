@@ -549,18 +549,19 @@ def campaign_addto_related(crits_object, campaign, analyst):
     :type analyst: str
     """
 
-    for r in crits_object.relationships:
-        klass = class_from_type(r.rel_type)
+    for tlo_type,rels in crits_object.get_relationships(sorted=True,meta=False).iteritems():
+        klass = class_from_type(tlo_type)
         if not klass:
             continue
-        robj = klass.objects(id=str(r.object_id)).first()
-        if not robj:
-            continue
-        robj.add_campaign(campaign)
-        try:
-            robj.save(username=analyst)
-        except ValidationError:
-            pass
+        for rel in rels:
+            robj = klass.objects(id=str(rel['other_obj']['obj_id'])).first()
+            if not robj:
+                continue
+            robj.add_campaign(campaign)
+            try:
+                robj.save(username=analyst)
+            except ValidationError:
+                pass
 
 # Functions for campaign attribution.
 def campaign_add(campaign_name, confidence, description, related,

@@ -1282,18 +1282,18 @@ def collect_objects(obj_type, obj_id, depth_limit, total_limit, rel_limit,
             return objects
 
         new_objs = []
-        for r in obj.relationships:
+        for tlo_type,r in obj.get_relationships(sorted=True,meta=False).iteritems():
             # Don't touch objects we have already seen.
-            if r.object_id in seen_objects:
+            if r['other_obj']['obj_id'] in seen_objects:
                 continue
 
-            seen_objects[r.object_id] = True
+            seen_objects[r['other_obj']['obj_id']] = True
 
-            new_class = class_from_type(r.rel_type)
+            new_class = class_from_type(tlo_type)
             if not new_class:
                 continue
 
-            new_obj = new_class.objects(id=str(r.object_id),
+            new_obj = new_class.objects(id=str(r['other_obj']['obj_id']),
                                         source__name__in=sources).first()
             if not new_obj:
                 continue
@@ -1301,15 +1301,15 @@ def collect_objects(obj_type, obj_id, depth_limit, total_limit, rel_limit,
             # Don't go down this branch if there are too many relationships.
             # This most often happens when a common resource is extracted
             # from many samples.
-            if len(new_obj.relationships) > rel_limit:
+            if len(new_obj.get_relationships(sorted=False,meta=False)) > rel_limit:
                 continue
 
             # Save the objects so we can recurse into them later.
-            new_objs.append((r.rel_type, new_obj))
+            new_objs.append((tlo_type, new_obj))
 
             # Try to collect the new object, but don't handle relationships.
             # Do this by setting depth_limit to 0.
-            inner_collect(r.rel_type, new_obj, sources, depth, 0, total_limit,
+            inner_collect(tlo_type, new_obj, sources, depth, 0, total_limit,
                           object_types, need_filedata)
 
         # Each of the new objects become a new starting point for traverse.
@@ -2835,12 +2835,12 @@ def dns_timeline(query, analyst, sources):
                            sources=sources)
         domain = d.domain
         state = "off"
-        ip_list = [r for r in d.relationships if r.rel_type == 'IP']
+        ip_list = d.get_relationships(sorted=True,meta=False)['IP']
         ip_list = sorted(ip_list, key=itemgetter('relationship_date'), reverse=False)
         description = ""
         e = {}
         for ipl in ip_list:
-            ip = IP.objects(ip=ipl.object_id,
+            ip = IP.objects(ip=ipl['other_obj']['obj_id'],
                             source__name__in=sources).first()
             if ipl['relationship_date'] is None:
                 continue

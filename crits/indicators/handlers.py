@@ -1226,7 +1226,7 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
             ip_class.save(username=analyst)
             ind_class.save(username=analyst)
             if message['success']:
-                rels = obj_class.sort_relationships("%s" % analyst, meta=True)
+                rels = obj_class.get_relationships(username=analyst, sorted=True, meta=True)
                 return {'success': True, 'message': rels, 'value': obj_class.id}
             else:
                 return {'success': False, 'message': message['message']}
@@ -1328,17 +1328,16 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
                                  RelationshipTypes.RELATED_TO,
                                  analyst=analyst)
             tlo.save(username=analyst)
-            for rel in tlo.relationships:
-                if rel.rel_type == "Event":
-                    # Get event object to pass in.
-                    rel_item = Event.objects(id=rel.object_id).first()
-                    if rel_item:
-                        ind.add_relationship(rel_item,
-                                             RelationshipTypes.RELATED_TO,
-                                             analyst=analyst)
+            for rel in tlo.get_relationships(sorted=True,meta=False)['Event']:
+                # Get event object to pass in.
+                rel_item = Event.objects(id=rel['other_obj']['obj_id']).first()
+                if rel_item:
+                    ind.add_relationship(rel_item,
+                                         RelationshipTypes.RELATED_TO,
+                                         analyst=analyst)
             ind.save(username=analyst)
             tlo.reload()
-            rels = tlo.sort_relationships("%s" % analyst, meta=True)
+            rels = tlo.get_relationships(username=analyst,sorted=True, meta=True)
             return {'success': True, 'message': rels,
                     'value': tlo.id, 'indicator': ind}
         else:
