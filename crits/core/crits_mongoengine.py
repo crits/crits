@@ -1751,7 +1751,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type username: str
         """
         from crits.relationships.relationship import Relationship
-        relationships = self.get_relationships()
+        relationships = self.get_relationships(sorted=False,meta=False)
         for r in relationships:
             rel_obj = Relationship.objects(id=r['_id']).first()
             rel_obj.delete(username=username)
