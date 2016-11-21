@@ -96,11 +96,11 @@ class Relationship(CritsDocument, CritsSchemaDocument, Document):
                         'message': 'Could not find reverse relationship type'}
             if (self.left_obj.obj_id == left_obj.id and 
                 self.left_obj.obj_type == left_obj._meta['crits_type']):
-                self.right_obj.rel_type = new_type
-                self.left_obj.rel_type = new_rev_type
-            else:
                 self.right_obj.rel_type = new_rev_type
                 self.left_obj.rel_type = new_type
+            else:
+                self.right_obj.rel_type = new_type
+                self.left_obj.rel_type = new_rev_type
         elif modification == "date":
             if isinstance(new_date, basestring):
                 new_date = parse(new_date, fuzzy=True)

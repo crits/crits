@@ -67,11 +67,13 @@ def get_relationships(obj=None, type_=None, id_=None, username=None, sorted=True
         sorted_relationships = {}
         for rel in relationships:
             if rel['left_obj']['obj_id'] == tlo.id and rel['left_obj']['obj_type'] == tlo._meta['crits_type']:
-                del rel['left_obj']
                 rel['other_obj'] = rel.pop("right_obj")
+                rel['other_obj']['rel_type'] = rel['left_obj']['rel_type']
+                del rel['left_obj']
             elif rel['right_obj']['obj_id'] == tlo.id and rel['right_obj']['obj_type'] == tlo._meta['crits_type']:
-                del rel['right_obj']
                 rel['other_obj'] = rel.pop("left_obj")
+                rel['other_obj']['rel_type'] = rel['right_obj']['rel_type']
+                del rel['right_obj']
             else:
                 continue
             sorted_relationships.setdefault(rel['other_obj']['obj_type'],[]).append(rel)
@@ -180,7 +182,7 @@ def forge_relationship(type_=None, id_=None,
                        class_=None, right_type=None,
                        right_id=None, right_class=None,
                        rel_type=None, rel_date=None,
-                       user=None, rel_reason="",
+                       date=None, user=None, rel_reason="",
                        rel_confidence='unknown', get_rels=False, **kwargs):
     """
     Forge a relationship between two top-level objects.
@@ -200,6 +202,8 @@ def forge_relationship(type_=None, id_=None,
     :param rel_type: The type of relationship.
     :type rel_type: str
     :param rel_date: The date this relationship applies.
+    :type rel_date: datetime.datetime
+    :param rel_date: The date this relationship was created.
     :type rel_date: datetime.datetime
     :param user: The user forging this relationship.
     :type user: str
@@ -221,6 +225,13 @@ def forge_relationship(type_=None, id_=None,
         rel_date = parse(rel_date, fuzzy=True)
     elif not isinstance(rel_date, datetime.datetime):
         rel_date = None
+
+    if date == 'None':
+        date = None
+    elif isinstance(date, basestring) and date != '':
+        date = parse(date, fuzzy=True)
+    elif not isinstance(date, datetime.datetime):
+        date = None
 
     if not class_:
         if type_ and id_:
@@ -256,6 +267,7 @@ def forge_relationship(type_=None, id_=None,
     new_relationship.left_obj = left_obj
     new_relationship.right_obj = right_obj
     new_relationship.relationship_date = rel_date
+    new_relationship.date = date
     new_relationship.rel_reason = rel_reason
     new_relationship.rel_confidence = rel_confidence
     new_relationship.analyst = user 
@@ -264,7 +276,7 @@ def forge_relationship(type_=None, id_=None,
     duplicate = find_existing_relationship(left_obj,right_obj,rel_date=rel_date,get_rels=False)
     
     if duplicate['success']:
-         return {'success': False, 'message': 'Relationship already exists'}
+         return {'success': False, 'message': 'Relationship already exists.'}
     try:
         new_relationship.save()
         if left_obj.obj_type == "Backdoor" or right_obj.obj_type == "Backdoor":
@@ -439,12 +451,12 @@ def delete_relationship(left_class=None, right_class=None,
     left_obj = EmbeddedRelationship()
     left_obj.obj_type = left_class._meta['crits_type']
     left_obj.obj_id = left_class.id
-    left_obj.rel_type = rev_type
+    left_obj.rel_type = rel_type
 
     right_obj = EmbeddedRelationship()
     right_obj.obj_type = right_class._meta['crits_type']
     right_obj.obj_id = right_class.id
-    right_obj.rel_type = rel_type
+    right_obj.rel_type = rev_type
     existing_rels = find_existing_relationship(left_obj,right_obj,rel_date=rel_date,get_rels=True)
     
     if not existing_rels['success']:
@@ -522,12 +534,12 @@ def update_relationship_types(left_class=None, right_class=None,
     left_obj = EmbeddedRelationship()
     left_obj.obj_type = left_class._meta['crits_type']
     left_obj.obj_id = left_class.id
-    left_obj.rel_type = rev_type
+    left_obj.rel_type = rel_type
 
     right_obj = EmbeddedRelationship()
     right_obj.obj_type = right_class._meta['crits_type']
     right_obj.obj_id = right_class.id
-    right_obj.rel_type = rel_type
+    right_obj.rel_type = rev_type
     existing_rels = find_existing_relationship(left_obj,right_obj,rel_date=rel_date,get_rels=True)
     
     if not existing_rels['success']:
@@ -603,12 +615,12 @@ def update_relationship_confidences(left_class=None, right_class=None,
     left_obj = EmbeddedRelationship()
     left_obj.obj_type = left_class._meta['crits_type']
     left_obj.obj_id = left_class.id
-    left_obj.rel_type = rev_type
+    left_obj.rel_type = rel_type
 
     right_obj = EmbeddedRelationship()
     right_obj.obj_type = right_class._meta['crits_type']
     right_obj.obj_id = right_class.id
-    right_obj.rel_type = rel_type
+    right_obj.rel_type = rev_type
     existing_rels = find_existing_relationship(left_obj,right_obj,rel_date=rel_date,get_rels=True)
     
     if not existing_rels['success']:
@@ -680,12 +692,12 @@ def update_relationship_reasons(left_class=None, right_class=None,
     left_obj = EmbeddedRelationship()
     left_obj.obj_type = left_class._meta['crits_type']
     left_obj.obj_id = left_class.id
-    left_obj.rel_type = rev_type
+    left_obj.rel_type = rel_type
 
     right_obj = EmbeddedRelationship()
     right_obj.obj_type = right_class._meta['crits_type']
     right_obj.obj_id = right_class.id
-    right_obj.rel_type = rel_type
+    right_obj.rel_type = rev_type
     existing_rels = find_existing_relationship(left_obj,right_obj,rel_date=rel_date,get_rels=True)
     
     if not existing_rels['success']:
@@ -760,12 +772,12 @@ def update_relationship_dates(left_class=None, right_class=None,
     left_obj = EmbeddedRelationship()
     left_obj.obj_type = left_class._meta['crits_type']
     left_obj.obj_id = left_class.id
-    left_obj.rel_type = rev_type
+    left_obj.rel_type = rel_type
 
     right_obj = EmbeddedRelationship()
     right_obj.obj_type = right_class._meta['crits_type']
     right_obj.obj_id = right_class.id
-    right_obj.rel_type = rel_type
+    right_obj.rel_type = rev_type
     existing_rels = find_existing_relationship(left_obj,right_obj,rel_date=rel_date,get_rels=True)
     
     if not existing_rels['success']:

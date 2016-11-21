@@ -1706,8 +1706,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             o_dict[o.object_type].append(o.to_dict())
         return o_dict
 
-    def add_relationship(self, rel_item, rel_type, rel_date=None,
-                         analyst=None, rel_confidence='unknown',
+    def add_relationship(self, rel_item, rel_type, rel_date=None, 
+                         date=None, analyst=None, rel_confidence='unknown',
                          rel_reason='', get_rels=False):
         """
         Add a relationship to this top-level object. The rel_item will be
@@ -1720,6 +1720,8 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         :type rel_type: str
         :param rel_date: The date this relationship applies.
         :type rel_date: datetime.datetime
+        :param date: The date this relationship was created.
+        :type date: datetime.datetime
         :param analyst: The user forging this relationship.
         :type analyst: str
         :param rel_confidence: The confidence of the relationship.
@@ -1736,7 +1738,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         
         from crits.relationships.handlers import forge_relationship
         results = forge_relationship(class_=self, right_class=rel_item,
-                       rel_type=rel_type, rel_date=rel_date,
+                       rel_type=rel_type, rel_date=rel_date, date=date,
                        user=analyst, rel_reason=rel_reason,
                        rel_confidence=rel_confidence, get_rels=get_rels)
         return results
