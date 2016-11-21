@@ -3,7 +3,22 @@ def migrate_certificate(self):
     Migrate to the latest schema version.
     """
 
-    migrate_1_to_2(self)
+    migrate_2_to_3(self)
+
+def migrate_2_to_3(self):
+    """
+    Migrate from schema 2 to 3.
+    """
+    from crits.core.core_migrate import migrate_relationships
+
+    if self.schema_version < 2:
+        migrate_1_to_2(self)
+    
+    if self.schema_version == 2:
+        migrate_relationships(self)
+        self.schema_version = 3
+        self.save()
+        self.reload()
 
 def migrate_1_to_2(self):
     """

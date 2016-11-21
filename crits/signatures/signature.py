@@ -98,3 +98,10 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     md5 = StringField()
     title = StringField()
     version = IntField()
+
+    def migrate(self):
+        """
+        Migrate to the latest schema version.
+        """
+
+        pass

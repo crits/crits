@@ -64,6 +64,13 @@ class Relationship(CritsDocument, CritsSchemaDocument, Document):
     rel_reason = StringField()
     rel_confidence = StringField(default='unknown', required=True)
 
+    def migrate(self):
+        """
+        Migrate to the latest schema version.
+        """
+
+        pass
+
     def modify_relationship(self,left_obj,new_type=None,
                              new_date=None, new_confidence='unknown',
                              new_reason="N/A", modification=None, analyst=None):

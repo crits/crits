@@ -3,9 +3,23 @@ def migrate_domain(self):
     Migrate to the latest schema version.
     """
 
-    migrate_1_to_2(self)
-    migrate_2_to_3(self)
+    migrate_3_to_4(self)
 
+def migrate_3_to_4(self):
+    """
+    Migrate from schema 3 to 4.
+    """
+    from crits.core.core_migrate import migrate_relationships
+    
+    if self.schema_version < 3:
+        migrate_2_to_3(self)
+    
+    if self.schema_version == 3:
+        migrate_relationships(self)
+        self.schema_version = 4
+        self.save()
+        self.reload()
+        
 def migrate_2_to_3(self):
     """
     Migrate from schema 1 to 2.

@@ -34,3 +34,43 @@ def migrate_analysis_results(self):
         del self.unsupported_attrs['analysis']
     except:
         pass
+
+
+def migrate_relationships(self):
+    """
+    Migrate relationships to the relationship collection.
+    
+    """
+    from crits.relationships.handlers import forge_relationship
+
+    failed_rels = []
+    old_relationships = getattr(self.unsupported_attrs, 'relationships', None)
+
+    if old_relationships:
+        for rel in old_relationships:
+            rel_type = rel.get('relationship', None)
+            date = rel.get('date', None)
+            relationship_date = rel.get('relationship_date', None)
+            right_id = rel.get('value', None)
+            right_type = rel.get('type', None)
+            rel_confidence = rel.get('rel_confidence', 'unknown')
+            rel_reason = rel.get('rel_reason', None)
+            rel_anaylst = rel.get('analyst', None)
+            
+            result = forge_relationship(class_=self,
+                                        right_id=right_id,
+                                        right_type=right_type,
+                                        date=date,
+                                        rel_type=rel_type,
+                                        rel_date=relationship_date,
+                                        rel_confidence=rel_confidence,
+                                        rel_reason=rel_reason,
+                                        rel_analyst=rel_anaylst)
+            if not result['success']:
+                if result['message'] != "Relationship already exists.":
+                    failed_rels.append(rel)
+        # If the migration was not successful, keep the relationship in unsupported_attrs.
+        if failed_rels:
+            self.unsupported_attrs.relationships = failed_rels
+        else:
+            del self.unsupported_attrs.relationships

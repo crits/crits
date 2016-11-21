@@ -52,7 +52,7 @@ class ActorIdentifier(CritsDocument, CritsSchemaDocument, CritsSourceDocument,
     meta = {
         "collection": settings.COL_ACTOR_IDENTIFIERS,
         "crits_type": 'ActorIdentifier',
-        "latest_schema_version": 2,
+        "latest_schema_version": 1,
         "schema_doc": {
             'name': 'The name of this Action',
             'active': 'Enabled in the UI (on/off)'
@@ -94,7 +94,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     meta = {
         "collection": settings.COL_ACTORS,
         "crits_type": 'Actor',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "schema_doc": {
         },
         "jtable_opts": {
