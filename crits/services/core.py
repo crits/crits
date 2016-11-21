@@ -215,7 +215,7 @@ class AnalysisTask(object):
         self.start_date = None
         self.finish_date = None
         self.status = None
-        self.username = user
+        self.user = user
 
 
         self.log = []
@@ -270,7 +270,7 @@ class AnalysisTask(object):
             'template':             self.service.template,
             'distributed':          self.service.distributed,
             'version':              self.service.version,
-            'analyst':              self.username,
+            'analyst':              self.user.username,
             'id':                   self.task_id,
             'source':               self.source,
             'start_date':           self.start_date,

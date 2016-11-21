@@ -49,7 +49,7 @@ from crits.services.handlers import run_triage, get_supported_services
 from crits.stats.handlers import generate_yara_hits
 
 from crits.vocabulary.relationships import RelationshipTypes
-from crits.vocabulary.acls import SampleACL
+from crits.vocabulary.acls import SampleACL, PCAPACL
 
 logger = logging.getLogger(__name__)
 
@@ -745,7 +745,7 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
     if data:
         try:
             # do we have a pcap?
-            if detect_pcap(data):
+            if detect_pcap(data) and user.has_access_to(PCAPACL.WRITE):
                 pres = handle_pcap_file(filename,
                                         data,
                                         source,
@@ -816,6 +816,12 @@ def handle_file(filename, data, source, source_method='Generic', source_referenc
             return None
         else:
             return retVal
+
+    if not user.has_access_to(SampleACL.WRITE):
+        retVal['success'] = False
+        retVal['message'] = 'User does not have permission to add sample.'
+
+        return retVal
 
     if data:
         md5_digest = md5(data).hexdigest()

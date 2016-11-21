@@ -233,7 +233,7 @@ def run_service(name, type_, id_, user, obj=None,
     saved_config = dict(final_config)
     service_class.save_runtime_config(saved_config)
 
-    task = AnalysisTask(local_obj.obj, service_instance, user.username)
+    task = AnalysisTask(local_obj.obj, service_instance, user)
     task.config = AnalysisConfig(**saved_config)
     task.start()
     add_task(task)
