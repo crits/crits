@@ -227,11 +227,11 @@ def forge_relationship(type_=None, id_=None,
         rel_date = None
 
     if date == 'None':
-        date = None
+        date = datetime.datetime.now()
     elif isinstance(date, basestring) and date != '':
         date = parse(date, fuzzy=True)
     elif not isinstance(date, datetime.datetime):
-        date = None
+        date = datetime.datetime.now()
 
     if not class_:
         if type_ and id_:

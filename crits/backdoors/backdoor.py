@@ -1,7 +1,7 @@
 from mongoengine import Document, StringField, ListField
 from django.conf import settings
 
-from crits.backdoor.migrate import migrate_backdoor
+from crits.backdoors.migrate import migrate_backdoor
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsActionsDocument
 
