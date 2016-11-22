@@ -8,22 +8,22 @@ from crits.core.mongo_tools import mongo_connector
 from crits.core.user_tools import user_sources
 
 META_QUERY = {
-            'Actor': ('name', 'campaign'),
-            'Backdoor': ('name', 'version', 'campaign'),
-            'Campaign': ('name'),
-            'Certificate': ('md5', 'filename', 'description', 'campaign'),
-            'Domain': ('domain'),
-            'Email': ('from_address', 'sender', 'subject', 'campaign'),
-            'Event': ('title', 'event_type', 'description', 'campaign'),
-            'Exploit': ('name', 'cve', 'campaign'),
-            'Indicator': ('type', 'value', 'campaign', 'actions'),
-            'IP': ('ip', 'campaign'),
-            'PCAP': ('md5', 'filename', 'description', 'campaign'),
-            'RawData': ('title', 'data_type', 'tool', 'description',
-                        'version', 'campaign'),
-            'Sample': ('md5', 'filename', 'mimetype', 'size', 'campaign'),
-            'Signature': ('title', 'data_type', 'description', 'version', 'campaign'),
-            'Target': ('firstname', 'lastname', 'email_address', 'email_count'),
+            'Actor': ['name', 'campaign'],
+            'Backdoor': ['name', 'version', 'campaign'],
+            'Campaign': ['name'],
+            'Certificate': ['md5', 'filename', 'description', 'campaign'],
+            'Domain': ['domain'],
+            'Email': ['from_address', 'sender', 'subject', 'campaign'],
+            'Event': ['title', 'event_type', 'description', 'campaign'],
+            'Exploit': ['name', 'cve', 'campaign'],
+            'Indicator': ['type', 'value', 'campaign', 'actions'],
+            'IP': ['ip', 'campaign'],
+            'PCAP': ['md5', 'filename', 'description', 'campaign'],
+            'RawData': ['title', 'data_type', 'tool', 'description',
+                        'version', 'campaign'],
+            'Sample': ['md5', 'filename', 'mimetype', 'size', 'campaign'],
+            'Signature': ['title', 'data_type', 'description', 'version', 'campaign'],
+            'Target': ['firstname', 'lastname', 'email_address', 'email_count'],
         }
 
 def get_relationships(obj=None, type_=None, id_=None, username=None, sorted=True, meta=False):
@@ -65,7 +65,10 @@ def get_relationships(obj=None, type_=None, id_=None, username=None, sorted=True
 
         sorted_related_tlos = {}
         sorted_relationships = {}
+        count = 0
         for rel in relationships:
+            count += 1
+
             if rel['left_obj']['obj_id'] == tlo.id and rel['left_obj']['obj_type'] == tlo._meta['crits_type']:
                 rel['other_obj'] = rel.pop("right_obj")
                 rel['other_obj']['rel_type'] = rel['left_obj']['rel_type']
@@ -78,7 +81,6 @@ def get_relationships(obj=None, type_=None, id_=None, username=None, sorted=True
                 continue
             sorted_relationships.setdefault(rel['other_obj']['obj_type'],[]).append(rel)
             sorted_related_tlos.setdefault(rel['other_obj']['obj_type'],{})[rel['other_obj']['obj_id']] = {}
-        count = 0
 
         for tlo_type in sorted_related_tlos:
             tlo_ids = sorted_related_tlos[tlo_type].keys()
@@ -102,7 +104,6 @@ def get_relationships(obj=None, type_=None, id_=None, username=None, sorted=True
             for obj in query_result:
                 sorted_related_tlos.setdefault(tlo_type,{})
                 sorted_related_tlos[tlo_type][obj['_id']] = obj
-                count += 1
 
             if meta:
                 for tlo_type,rel_list in sorted_relationships.iteritems():
