@@ -310,10 +310,7 @@ def forge_backdoor_relationships(left_obj,right_obj,rel_type,rel_date,analyst,re
     :type rel_reason: str
     :param rel_confidence: The confidence of the relationship.
     :type rel_confidence: str
-    :returns: dict with keys:
-              "success" (boolean)
-              "message" (str if fail, EmbeddedObject if success)
-              "relationships" (dict)
+
     """
     
     # In case of relating to a versioned backdoor we also want to relate to
@@ -358,7 +355,6 @@ def forge_backdoor_relationships(left_obj,right_obj,rel_type,rel_date,analyst,re
                            rel_confidence=rel_confidence,
                            rel_reason=rel_reason)
         other.save(user=analyst)
-    return results
 
 def delete_all_relationships(left_class=None, left_type=None,
                              left_id=None, analyst=None):
