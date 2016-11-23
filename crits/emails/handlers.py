@@ -42,6 +42,7 @@ from crits.indicators.indicator import Indicator
 from crits.notifications.handlers import remove_user_from_notification
 from crits.relationships.handlers import forge_relationship
 from crits.samples.handlers import handle_file, handle_uploaded_file, mail_sample
+from crits.samples.sample import Sample
 from crits.services.handlers import run_triage
 
 from crits.vocabulary.relationships import RelationshipTypes
@@ -182,14 +183,14 @@ def get_email_detail(email_id, analyst):
                                                 meta=True)
         # Get count of related Events for each related Indicator
         for ind in relationships.get('Indicator', []):
-            count = Event.objects(relationships__object_id=ind['id'],
-                                  source__name__in=sources).count()
+            ind_obj = Indicator(id=ind['id'])
+            count = len(ind_obj.get_relationships(username=analyst,sorted=True,meta=False)['Event'])
             ind['rel_ind_events'] = count
-
+    
         # Get count of related Events for each related Sample
         for smp in relationships.get('Sample', []):
-            count = Event.objects(relationships__object_id=smp['id'],
-                                  source__name__in=sources).count()
+            smp_obj = Sample(id=smp['id'])
+            count = len(smp_obj.get_relationships(username=analyst,sorted=True,meta=False)['Event'])
             smp['rel_smp_events'] = count
 
         # relationship

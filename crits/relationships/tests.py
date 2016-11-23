@@ -40,6 +40,7 @@ def prep_db():
     campaign1.save(username=user.username)
     campaign2 = Campaign(name=TCAMPAIGN2)
     campaign2.save(username=user.username)
+
 def clean_db():
     """
     Clean database for test.
@@ -76,20 +77,18 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
                            rel_type=TRELATIONSHIP_TYPE,
                            user=self.user.username,
                            rel_confidence=TRELATIONSHIP_CONFIDENCE)
+        self.relationship1 = self.campaign1.get_relationships(sorted=False,meta=False)[0]
+        self.relationship2 = self.campaign2.get_relationships(sorted=False,meta=False)[0]
     def tearDown(self):
         clean_db()
     def testCreateRelationship(self):
-        relationship1 = self.campaign1.relationships[0]
-        relationship2 = self.campaign2.relationships[0]
-        self.assertEqual(relationship1.rel_confidence, TRELATIONSHIP_CONFIDENCE)
-        self.assertEqual(relationship2.rel_confidence, TRELATIONSHIP_CONFIDENCE)
-        self.assertEqual(relationship1.analyst, self.user.username)
-        self.assertEqual(relationship2.analyst, self.user.username)
+        self.assertEqual(self.relationship1['rel_confidence'], TRELATIONSHIP_CONFIDENCE)
+        self.assertEqual(self.relationship2['rel_confidence'], TRELATIONSHIP_CONFIDENCE)
+        self.assertEqual(self.relationship1['analyst'], self.user.username)
+        self.assertEqual(self.relationship2['analyst'], self.user.username)
     def testChangingReason(self):
-        relationship1 = self.campaign1.relationships[0]
-        relationship2 = self.campaign2.relationships[0]
-        self.assertEqual(relationship1.rel_reason, "")
-        self.assertEqual(relationship2.rel_reason, "")
+        self.assertEqual(self.relationship1['rel_reason'], "")
+        self.assertEqual(self.relationship2['rel_reason'], "")
         update_relationship_reasons(left_class=self.campaign1,
                                     right_class=self.campaign2,
                                     rel_type=TRELATIONSHIP_TYPE,
@@ -97,19 +96,19 @@ class RelationshipConfidenceAndReasonTests(SimpleTestCase):
                                     new_reason=TRELATIONSHIP_NEW_REASON)
         campaign1 = Campaign.objects.get(id=self.campaign1.id)
         campaign2 = Campaign.objects.get(id=self.campaign2.id)
-        relationship1 = campaign1.relationships[0]
-        relationship2 = campaign2.relationships[0]
-        self.assertEqual(relationship1.rel_reason, TRELATIONSHIP_NEW_REASON)
-        self.assertEqual(relationship2.rel_reason, TRELATIONSHIP_NEW_REASON)
+        self.relationship1 = self.campaign1.get_relationships(sorted=False,meta=False)[0]
+        self.relationship2 = self.campaign2.get_relationships(sorted=False,meta=False)[0]
+        self.assertEqual(self.relationship1['rel_reason'], TRELATIONSHIP_NEW_REASON)
+        self.assertEqual(self.relationship2['rel_reason'], TRELATIONSHIP_NEW_REASON)
     def testChangingConfidence(self):
-        relationship1 = self.campaign1.relationships[0]
-        relationship2 = self.campaign2.relationships[0]
-        self.assertEqual(relationship1.rel_confidence, TRELATIONSHIP_CONFIDENCE)
-        self.assertEqual(relationship2.rel_confidence, TRELATIONSHIP_CONFIDENCE)
+        self.assertEqual(self.relationship1['rel_confidence'], TRELATIONSHIP_CONFIDENCE)
+        self.assertEqual(self.relationship2['rel_confidence'], TRELATIONSHIP_CONFIDENCE)
         update_relationship_confidences(left_class=self.campaign1,
                                     right_class=self.campaign2,
                                     rel_type=TRELATIONSHIP_TYPE,
                                     analyst=self.user2.username,
                                     new_confidence=TRELATIONSHIP_NEW_CONFIDENCE)
-        self.assertEqual(relationship1.rel_confidence, TRELATIONSHIP_NEW_CONFIDENCE)
-        self.assertEqual(relationship2.rel_confidence, TRELATIONSHIP_NEW_CONFIDENCE)
+        self.relationship1 = self.campaign1.get_relationships(sorted=False,meta=False)[0]
+        self.relationship2 = self.campaign2.get_relationships(sorted=False,meta=False)[0]
+        self.assertEqual(self.relationship1['rel_confidence'], TRELATIONSHIP_NEW_CONFIDENCE)
+        self.assertEqual(self.relationship2['rel_confidence'], TRELATIONSHIP_NEW_CONFIDENCE)
