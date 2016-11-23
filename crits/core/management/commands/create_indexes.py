@@ -288,5 +288,6 @@ def create_indexes():
     relationships.ensure_index("right_obj.obj_type", background=True)
     relationships.ensure_index("right_obj.rel_type", background=True)
     relationships.ensure_index("relationship_date", background=True)
+    relationships.ensure_index("date", background=True)
     relationships.ensure_index("rel_reason", background=True)
     relationships.ensure_index("rel_confidence", background=True)

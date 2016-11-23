@@ -69,6 +69,7 @@ def migrate_relationships(self):
                                         migrate=True)
             if not result['success']:
                 if result['message'] != "Relationship already exists.":
+                    rel['failed_reason'] = result['message']
                     failed_rels.append(rel)
         # If the migration was not successful, keep the relationship in unsupported_attrs.
         if failed_rels:
