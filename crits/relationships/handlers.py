@@ -133,7 +133,7 @@ def get_relationships(obj=None, type_=None, id_=None, username=None, sorted=True
     else:
         return []
 
-def find_existing_relationship(left_obj,right_obj,rel_date=None,get_rels=False):
+def find_existing_relationship(left_obj,right_obj,rel_date=None,date=None,get_rels=False):
     """
     Find existing relationships via pymongo.  
 
@@ -143,6 +143,8 @@ def find_existing_relationship(left_obj,right_obj,rel_date=None,get_rels=False):
     :type right_obj: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     :param rel_date: The date this relationship applies.
     :type rel_date: datetime.datetime
+    :param date: The creation date for this relationship.
+    :type date: datetime.datetime
     :param get_rels: Return the relationships after finding duplicates.
     :type get_rels: boolean
     :returns: dict with keys:
@@ -167,6 +169,9 @@ def find_existing_relationship(left_obj,right_obj,rel_date=None,get_rels=False):
     if rel_date:
         pymongo_query['$or'][0]['relationship_date'] = rel_date
         pymongo_query['$or'][1]['relationship_date'] = rel_date
+    if date:
+        pymongo_query['$or'][0]['date'] = date
+        pymongo_query['$or'][1]['date'] = date
         
     relationship_col = mongo_connector('relationships')
     relationships = relationship_col.find(pymongo_query)
@@ -184,7 +189,8 @@ def forge_relationship(type_=None, id_=None,
                        right_id=None, right_class=None,
                        rel_type=None, rel_date=None,
                        date=None, user=None, rel_reason="",
-                       rel_confidence='unknown', get_rels=False, **kwargs):
+                       rel_confidence='unknown', get_rels=False,
+                       migrate=False, **kwargs):
     """
     Forge a relationship between two top-level objects.
 
@@ -214,6 +220,8 @@ def forge_relationship(type_=None, id_=None,
     :type rel_confidence: str
     :param get_rels: Return the relationships after forging.
     :type get_rels: boolean
+    :param migrate: Special condition for migrating a relationship.
+    :type migrate: boolean
     :returns: dict with keys:
               "success" (boolean)
               "message" (str if fail, EmbeddedObject if success)
@@ -274,7 +282,10 @@ def forge_relationship(type_=None, id_=None,
     new_relationship.analyst = user 
     
     # Check to see if the relationship already exists
-    duplicate = find_existing_relationship(left_obj,right_obj,rel_date=rel_date,get_rels=False)
+    if migrate:
+        duplicate = find_existing_relationship(left_obj,right_obj,date=date,get_rels=False)
+    else:
+        duplicate = find_existing_relationship(left_obj,right_obj,rel_date=rel_date,get_rels=False)
     
     if duplicate['success']:
          return {'success': False, 'message': 'Relationship already exists.'}

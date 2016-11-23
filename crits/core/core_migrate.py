@@ -65,7 +65,8 @@ def migrate_relationships(self):
                                         rel_date=relationship_date,
                                         rel_confidence=rel_confidence,
                                         rel_reason=rel_reason,
-                                        rel_analyst=rel_anaylst)
+                                        rel_analyst=rel_anaylst,
+                                        migrate=True)
             if not result['success']:
                 if result['message'] != "Relationship already exists.":
                     failed_rels.append(rel)
