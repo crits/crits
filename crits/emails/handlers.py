@@ -593,7 +593,7 @@ def handle_email_fields(data, user, method, related_id=None,
                            user=user.username)
     return result
 
-def handle_json(data, sourcename, reference, user, method,
+def handle_json(data, sourcename, reference, method, tlp, user,
                 save_unsupported=True, campaign=None, confidence=None,
                 bucket_list=None, ticket=None):
 

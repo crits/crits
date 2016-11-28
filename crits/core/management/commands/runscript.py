@@ -8,7 +8,7 @@ from crits.core.user import CRITsUser
 from optparse import make_option
 
 from crits.core.handlers import login_user
-from crits.core.user_tools import get_user_permissions
+from crits.vocabulary.acls import GeneralACL
 
 class Command(BaseCommand):
     """
@@ -87,7 +87,7 @@ class Command(BaseCommand):
                   remote_addr=remote_addr, accept_language=accept_language,
                   totp_pass=totp_pass)
 
-        if get_user_permissions(username)['script_interface']:
+        if u.has_access_to(GeneralACL.SCRIPT_INTERFACE):
             script = script_class(user=u)
             script.run(arg_list)
         else:

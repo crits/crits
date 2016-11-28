@@ -272,8 +272,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
             'message':  'Data length <= 0'
         }
         return status
-    if ((related_type and not (related_id or related_md5)) or
-        (not related_type and (related_id or related_md5))):
+    if ((related_id or related_md5) and not related_type):
         status = {
             'success':   False,
             'message':  'Must specify both related_type and related_id or related_md5.'

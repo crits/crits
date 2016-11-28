@@ -471,7 +471,7 @@ class Service(object):
                               str(self.current_task.obj.id),
                               self.current_task.task_id,
                               status,
-                              self.current_task.username)
+                              self.current_task.user.username)
                 logger.debug("Finished analysis %s, %s, runtime: %s" % (self.current_task.task_id, self.name, str(datetime.now() - t_start)))
             # Reset current_task so another task can be assigned.
             self.current_task = None
