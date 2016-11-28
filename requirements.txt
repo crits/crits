@@ -17,6 +17,7 @@ git+https://github.com/frbapolkosnik/django-tastypie-mongoengine.git
 future
 kombu
 lxml
+cryptography
 mongoengine==0.10.6
 git+https://github.com/MongoEngine/django-mongoengine.git
 pip>=8.1.2
@@ -37,4 +38,3 @@ ushlex
 wsgiref
 olefile
 pyimpfuzzy
-m2crypto

@@ -16,6 +16,7 @@ END=$(tput sgr0)   #ends color
 #============================================================
 PIP='pip'
 PYTH='python'
+ENVS=
 
 verify()
 {
@@ -110,15 +111,7 @@ depend_crits()
     fi
     if [ $? -ne 0 ]
     then
-        printf "${FAIL}Dependency installation failed!${END}\n
-        If M2Crypto failed to install, you might try to install the 
-        OS-provided package with the package manager (apt-get/yum/brew)
-        or try to adjust the CFLAGS, LDFLAGS, and SWIG_FEATURES
-        with the right path to openssl headers and libs:
-        ${INFO}sudo -E env LDFLAGS=\"-L/opt/local/lib\" \
-                    CFLAGS=\"-I/opt/local/include\" \
-                    SWIG_FEATURES=\"-cpperraswarn -includeall -I/opt/local/include\" \
-                    pip install M2Crypto ${END}\n"
+        printf "${FAIL}Dependency installation failed!${END}\n"
         exit
     else
         printf "${INFO}Dependency installation complete!${END}\n"
@@ -194,9 +187,9 @@ server_setup()
       echo "To get a usable system, you still need to use fabric to:"
       echo "- Create an administrator account"
       echo "    $ fab vagrant create_admin_user"
-      echo "- (Optional) Set some development-specific CRITs config settings"
+      echo "- \(Optional\) Set some development-specific CRITs config settings"
       echo "    $ fab vagrant dev_setup"
-      echo "- (Optional) Set up services"
+      echo "- \(Optional\) Set up services"
       echo "    $ fab vagrant init_services"
       echo "- Run the development server"
       echo "    $ fab vagrant runserver"
@@ -288,7 +281,7 @@ darwin_install()
     exit
     }
     brew install mongodb ssdeep upx p7zip libyaml pcre libxml2 openssl
-    brew install https://raw.githubusercontent.com/destijl/homebrew-versions/master/swig304.rb
+    ENVS="env LDFLAGS=\"-L$(brew --prefix openssl)/lib\" CFLAGS=\"-I$(brew --prefix openssl)/include\""
 }
 
 freebsd_install()

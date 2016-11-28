@@ -1,8 +1,12 @@
-import hmac, base64, struct, hashlib, time
+import os, hmac, base64, struct, hashlib, time
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import algorithms, modes
+from cryptography.hazmat.primitives.ciphers.base import Cipher
 from django.utils.crypto import pbkdf2
-from M2Crypto import EVP, Rand
 
 # from http://stackoverflow.com/questions/8529265/google-authenticator-implementation-in-python
+# Perhaps it can be further replaced by https://cryptography.io/en/latest/hazmat/primitives/twofactor/
+
 def get_hotp_token(secret, intervals_no):
     """
     Calculate the token value given intervals_no is the current time
@@ -50,8 +54,10 @@ def decrypt_secret(secret, password, username):
 
     secret = base64.b32decode(secret)
     pw_hash = pbkdf2(password.encode('ascii'), username.encode('ascii'), 10000)
-    crypt_object = EVP.Cipher('aes_128_ecb', pw_hash, '', 0, padding=0)
-    tmp = crypt_object.update(secret)
+    CRYPTO_BACKEND = default_backend()
+    # Construct an AES-ECB Cipher object with the given key
+    crypt_object = Cipher(algorithms.AES(pw_hash), modes.ECB(''), CRYPTO_BACKEND).decryptor()
+    tmp = (crypt_object.update(secret) + crypt_object.finalize())
     return tmp[:10]
 
 def encrypt_secret(secret, password, username):
@@ -59,7 +65,7 @@ def encrypt_secret(secret, password, username):
     Pad the secret with 6 random bytes
     which makes the secret 16 bytes for ECB
     but also makes all encrypted secrets unique
-    even if they have the same oroginal value
+    even if they have the same original value
     which is important for cases where we might allow
     a user to carry over an existing secret from
     another system
@@ -75,8 +81,10 @@ def encrypt_secret(secret, password, username):
 
     secret += gen_random(6)
     pw_hash = pbkdf2(password.encode('ascii'), username.encode('ascii'), 10000)
-    crypt_object = EVP.Cipher('aes_128_ecb', pw_hash, '', 1, padding=0)
-    tmp = crypt_object.update(secret)
+    CRYPTO_BACKEND = default_backend()
+    # Construct an AES-ECB Cipher object with the given key
+    crypt_object = Cipher(algorithms.AES(pw_hash), modes.ECB(''), CRYPTO_BACKEND).encryptor()
+    tmp = (crypt_object.update(secret) + crypt_object.finalize())
     return tmp
 
 def gen_random(secret_len=10):
@@ -90,7 +98,7 @@ def gen_random(secret_len=10):
     :type secret_len: int
     """
 
-    return Rand.rand_bytes(10)
+    return os.urandom(secret_len)
 
 def gen_user_secret(password, username):
     """
