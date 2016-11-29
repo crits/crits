@@ -7,6 +7,7 @@ from django.conf import settings
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsActionsDocument
+from crits.signatures.migrate import migrate_signature
 
 
 class SignatureDependency(CritsDocument, CritsSchemaDocument, Document):
@@ -103,5 +104,4 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         """
         Migrate to the latest schema version.
         """
-
-        pass
+        migrate_signature(self)

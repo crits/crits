@@ -65,10 +65,10 @@ def migrate_relationships(self):
                                         rel_date=relationship_date,
                                         rel_confidence=rel_confidence,
                                         rel_reason=rel_reason,
-                                        rel_analyst=rel_anaylst,
-                                        migrate=True)
+                                        user=rel_anaylst)
             if not result['success']:
-                if result['message'] != "Relationship already exists.":
+                if not (result['message'] == "Relationship already exists." or
+                        result['message'] == "Failed to get right TLO"):
                     rel['failed_reason'] = result['message']
                     failed_rels.append(rel)
         # If the migration was not successful, keep the relationship in unsupported_attrs.

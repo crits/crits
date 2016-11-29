@@ -190,7 +190,7 @@ def forge_relationship(type_=None, id_=None,
                        rel_type=None, rel_date=None,
                        date=None, user=None, rel_reason="",
                        rel_confidence='unknown', get_rels=False,
-                       migrate=False, **kwargs):
+                       **kwargs):
     """
     Forge a relationship between two top-level objects.
 
@@ -220,8 +220,6 @@ def forge_relationship(type_=None, id_=None,
     :type rel_confidence: str
     :param get_rels: Return the relationships after forging.
     :type get_rels: boolean
-    :param migrate: Special condition for migrating a relationship.
-    :type migrate: boolean
     :returns: dict with keys:
               "success" (boolean)
               "message" (str if fail, EmbeddedObject if success)
@@ -282,10 +280,7 @@ def forge_relationship(type_=None, id_=None,
     new_relationship.analyst = user 
     
     # Check to see if the relationship already exists
-    if migrate:
-        duplicate = find_existing_relationship(left_obj,right_obj,date=date,get_rels=False)
-    else:
-        duplicate = find_existing_relationship(left_obj,right_obj,rel_date=rel_date,get_rels=False)
+    duplicate = find_existing_relationship(left_obj,right_obj,rel_date=rel_date,get_rels=False)
     
     if duplicate['success']:
          return {'success': False, 'message': 'Relationship already exists.'}

@@ -7,7 +7,7 @@ def migrate_signature(self):
 
 def migrate_1_to_2(self):
     """
-    Migrate from schema 3 to 4.
+    Migrate from schema 1 to 2.
     """
     from crits.core.core_migrate import migrate_relationships
     
