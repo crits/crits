@@ -439,6 +439,7 @@ def delete_relationship(left_class=None, right_class=None,
         else:
             return {'success': False,
                     'message': "Need a valid left type and id"}
+
     if not right_class:
         if right_type and right_id:
             right_class = class_from_id(right_type, right_id)

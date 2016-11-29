@@ -35,10 +35,10 @@ verify()
         OS=$(cat /etc/redhat-release | sed 's/ [Enterprise|release|Linux release].*//')
         VER=$(cat /etc/redhat-release | sed 's/.*release //;s/ .*$//')
         #Redhat/CentOS release version
-        if [ $OS != 'Fedora' ]
+        if [ "$OS" != 'Fedora' ]
         then
             REL=$(echo $VER | sed 's/.[0-9].[0-9]*//;s/.[0-9]$//')
-            if [ $REL -lt 7 ];
+            if [ "$REL" -lt '7' ];
             then
                 #change for RHEL/CentOS < Release 7 
                 PIP='pip2.7'
@@ -102,10 +102,10 @@ depend_crits()
          SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include" \
          ${PIP} install -U -r requirements.txt
     else 
-        sudo -E env LDFLAGS=-L/opt/local/lib \
-                    CFLAGS=-I/opt/local/include \
-                    SWIG_FEATURES=-cpperraswarn -I/opt/local/include \
-                    ${PIP} install M2Crypto
+        sudo -E env LDFLAGS=-L/usr/local/lib \
+        CFLAGS=-I/usr/local/include \
+        SWIG_FEATURES="-cpperraswarn -includeall -I/usr/local/include" \
+        ${PIP} install M2Crypto
         sudo -E ${PIP} install -U -r requirements.txt
     fi
     if [ $? -ne 0 ]
@@ -300,12 +300,6 @@ freebsd_install()
 red_hat_install()
 {
     printf "${HEAD}Installing CRITs Dependencies${END}\n"
-    if [ ! -f /etc/yum.repos.d/rpmforge.repo ];
-    then
-        printf "${INFO}Installing RPMForge repo${END}\n"
-        sudo -E rpm --import http://dag.wiee.rs/RPM-GPG-KEY.dag.txt
-        sudo -E rpm -i http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el${REL}.rf.x86_64.rpm
-    fi
     if [ ! -f /etc/yum.repos.d/epel.repo ];
     then
         printf "${INFO}Installing EPEL repo${END}\n"

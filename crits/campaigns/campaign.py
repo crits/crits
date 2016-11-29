@@ -213,4 +213,5 @@ class Campaign(CritsBaseAttributes, CritsActionsDocument, Document):
         if ttp_value:
             for c, ttp in enumerate(self.ttps):
                 if ttp_value == ttp.ttp:
-                    del self.ttps[c]
+                    self.ttps.remove(ttp)
+                    break
