@@ -100,7 +100,7 @@ def upload_attach(request, email_id):
     file_form = UploadFileForm(request.user, request.POST, request.FILES)
     json_reply = {'success': False}
 
-    if not file_form.is_valid:
+    if not file_form.is_valid():
         file_form.fields['related_md5_event'].widget = forms.HiddenInput() #hide field so it doesn't reappear
         json_reply['form'] = file_form.as_table()
         return render_to_response('file_upload_response.html',
