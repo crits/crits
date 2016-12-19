@@ -429,11 +429,11 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
 
         # TOTP can still be required for Remote Users
         totp_pass = request.POST.get('totp_pass', None)
-
-        if (not username or
+        logging_in_user = get_user_info(username)
+        if (not username or not logging_in_user.has_access_to(GeneralACL.WEB_INTERFACE) or
                 (not totp_pass and crits_config.totp_web == 'Required')):
             response['success'] = False
-            response['message'] = 'Unknown user or bad password.'
+            response['message'] = 'Unknown user, bad password, or user does not have permission to log on using the web UI.'
             return HttpResponse(json.dumps(response),
                                 content_type="application/json")
 
