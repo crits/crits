@@ -1670,6 +1670,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         'sha1hash': {'sha1': search_query},
         'ssdeephash': {'ssdeep': search_query},
         'sha256hash': {'sha256': search_query},
+        'impfuzzyhash': {'impfuzzy': search_query},
         # slow in larger collections
         'filename': {'$or': [
             {'filename': search_query},
@@ -1679,6 +1680,7 @@ def gen_global_query(obj,user,term,search_type="global",force_full=False):
         # slightly slow in larger collections
         'object_value': {'objects.value': search_query},
         'bucket_list': {'bucket_list': search_query},
+        'ticket': {'tickets.ticket_number': search_query},
         'sectors': {'sectors': search_query},
         'source': {'source.name': search_query},
     }
