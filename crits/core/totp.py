@@ -59,7 +59,7 @@ def encrypt_secret(secret, password, username):
     Pad the secret with 6 random bytes
     which makes the secret 16 bytes for ECB
     but also makes all encrypted secrets unique
-    even if they have the same oroginal value
+    even if they have the same original value
     which is important for cases where we might allow
     a user to carry over an existing secret from
     another system
@@ -90,7 +90,7 @@ def gen_random(secret_len=10):
     :type secret_len: int
     """
 
-    return Rand.rand_bytes(10)
+    return Rand.rand_bytes(secret_len)
 
 def gen_user_secret(password, username):
     """
