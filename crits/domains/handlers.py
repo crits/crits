@@ -718,6 +718,7 @@ def update_tlds(data=None):
     while line:
         line = line.rstrip()
         if line and not line.startswith('//'):
+            line = line.replace("*.", "")
             TLD.objects(tld=line).update_one(set__tld=line, upsert=True)
         line = data.readline()
 
