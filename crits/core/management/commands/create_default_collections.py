@@ -160,6 +160,7 @@ def populate_tlds(drop):
     for line in open(f, 'r').readlines():
         line = line.strip()
         if line and not line.startswith('//'):
+            line = line.replace("*.", "")
             TLD.objects(tld=line).update_one(set__tld=line, upsert=True)
             count += 1
     print "Effective TLDs: added %s TLDs!" % count
