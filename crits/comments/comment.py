@@ -97,8 +97,10 @@ class Comment(CritsDocument, CritsSchemaDocument, CritsSourceDocument, Document)
         Convert the comment from str to HTML.
         """
 
-        if len(self.comment) > 0:
+        if self.comment:
             self.comment = parse_comment(self.comment)['html']
+            # Decode <pre> </pre> tags
+            self.comment = re.sub('&lt;(/?PRE)&gt;', '<\\1>', self.comment, flags=re.I)
 
     def parse_comment(self):
         """
