@@ -122,4 +122,5 @@ class ObjectTypes(vocab):
     WHOIS_NAME = "WHOIS Name"
     WHOIS_ADDR1 = "WHOIS Address 1"
     WHOIS_ADDR2 = "WHOIS Address 2"
+    WHOIS_REGISTRANT_EMAIL_ADDRESS = "WHOIS Registrant Email Address"
     XPI = "XPI"
