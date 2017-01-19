@@ -1980,18 +1980,19 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     :returns: dict -- Keys are result, data, count, msg, crits_type.  'data'
         contains a :class:`crits.core.crits_mongoengine.CritsQuerySet` object.
     """
-
     results = {'result':'ERROR'}
     results['data'] = []
     results['count'] = 0
     results['msg'] = ""
     results['crits_type'] = col_obj._meta['crits_type']
     sourcefilt = user_sources(user)
+
     if isinstance(sort,basestring):
         sort = sort.split(',')
     if isinstance(projection,basestring):
         projection = projection.split(',')
     docs = None
+
     try:
         if not issubclass(col_obj,CritsSourceDocument):
             results['count'] = col_obj.objects(__raw__=query).count()
@@ -2019,7 +2020,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
             docs = col_obj.objects(__raw__=query)
             for doc in docs:
                 if user.check_source_tlp(doc):
-                    filterlist.append(doc.id)
+                    filterlist.append(str(doc.id))
 
             results['count'] = len(filterlist)
             if count:
@@ -2027,12 +2028,13 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                 return results
 
             if projection:
-                docs = docs.filter(id__in=filterlist).\
+                docs = col_obj.objects(__raw__=query, id__in=filterlist).\
                                     order_by(*sort).skip(skip).limit(limit).\
                                     only(*projection)
+
             else:
                 # Hack to fix Dashboard
-                docs = docs.filter(id__in=filterlist).\
+                docs = col_obj.objects(__raw__=query, id__in=filterlist).\
                                     order_by(*sort).skip(skip).limit(limit)
 
         for doc in docs:
