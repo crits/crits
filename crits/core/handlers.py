@@ -2028,14 +2028,13 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                 return results
 
             if projection:
-                docs = col_obj.objects(__raw__=query, id__in=filterlist).\
-                                    order_by(*sort).skip(skip).limit(limit).\
-                                    only(*projection)
-
+                docs = col_obj.objects.filter(id__in=filterlist).\
+                                            order_by(*sort).skip(skip).limit(limit).\
+                                            only(*projection)
             else:
                 # Hack to fix Dashboard
-                docs = col_obj.objects(__raw__=query, id__in=filterlist).\
-                                    order_by(*sort).skip(skip).limit(limit)
+                docs = col_obj.objects.filter(id__in=filterlist).\
+                                            order_by(*sort).skip(skip).limit(limit)
 
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
