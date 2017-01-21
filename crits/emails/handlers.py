@@ -1601,7 +1601,7 @@ def parse_ole_file(file):
     ole.close()
 
     # Process headers to extract data
-    headers = Parser().parse(io.StringIO(email.get('raw_header', '')), headersonly=True)
+    headers = Parser().parse(io.StringIO(email.get('raw_header', u'')), headersonly=True)
     email['from_address'] = headers.get('From', '')
     email['reply_to'] = headers.get('Reply-To', '')
     email['date'] = headers.get('Date', '')

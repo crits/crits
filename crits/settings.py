@@ -312,10 +312,13 @@ STATIC_ROOT = os.path.join(SITE_ROOT, '../extras/www/static')
 STATIC_URL = '/static/'
 
 # List of callables that know how to import templates from various sources.
+#https://docs.djangoproject.com/en/dev/ref/templates/api/#django.template.loaders.cached.Loader
 _TEMPLATE_LOADERS = [
+    ('django.template.loaders.cached.Loader', [
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
     #'django.template.loaders.eggs.load_template_source',
+    ])
 ]
 
 #CACHES = {
@@ -403,6 +406,26 @@ STATICFILES_DIRS = (
 
 AUTH_USER_MODEL = 'mongo_auth.MongoUser'
 MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
+# http://django-debug-toolbar.readthedocs.org/en/latest/configuration.html#debug-toolbar-panels
+DEBUG_TOOLBAR_PANELS = [
+    'debug_toolbar.panels.versions.VersionsPanel',
+    'vcs_info_panel.panels.GitInfoPanel',
+    'debug_toolbar.panels.timer.TimerPanel',
+    'debug_toolbar.panels.settings.SettingsPanel',
+    'debug_toolbar.panels.headers.HeadersPanel',
+    'debug_toolbar.panels.request.RequestPanel',
+    'template_timings_panel.panels.TemplateTimings.TemplateTimings',
+    'template_profiler_panel.panels.template.TemplateProfilerPanel',
+    'debug_toolbar_mongo.panel.MongoDebugPanel',
+    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+    'debug_toolbar.panels.templates.TemplatesPanel',
+    'debug_toolbar.panels.cache.CachePanel',
+    'debug_toolbar.panels.signals.SignalsPanel',
+    'debug_toolbar.panels.logging.LoggingPanel',
+    'debug_toolbar.panels.redirects.RedirectsPanel',
+    'debug_toolbar.panels.sql.SQLPanel',
+]
+INTERNAL_IPS = '127.0.0.1'
 
 if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
     _TEMPLATE_CONTEXT_PROCESSORS = [
@@ -458,6 +481,11 @@ if old_mongoengine:
         'tastypie',
         'tastypie_mongoengine',
         'mongoengine.django.mongo_auth',
+        'template_timings_panel',
+        'template_profiler_panel',
+        'debug_toolbar_mongo',
+        'vcs_info_panel',
+        'debug_toolbar',
     )
 
     _MIDDLEWARE = (
@@ -468,7 +496,9 @@ if old_mongoengine:
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
+    # Only needed for mongoengine<0.10
+    'crits.core.user.AuthenticationMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
     if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
         _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
@@ -518,6 +548,11 @@ else:
         'tastypie_mongoengine',
         'django_mongoengine',
         'django_mongoengine.mongo_auth',
+        'template_timings_panel',
+        'template_profiler_panel',
+        'debug_toolbar_mongo',
+        'vcs_info_panel',
+        'debug_toolbar',
         )
 
     _MIDDLEWARE = (
@@ -528,6 +563,7 @@ else:
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
 
     if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
@@ -562,6 +598,7 @@ if REMOTE_USER:
         _MIDDLEWARE += (
             'crits.core.user.AuthenticationMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
+            'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
     else:
         _MIDDLEWARE = (
@@ -572,6 +609,8 @@ if REMOTE_USER:
             'django.contrib.messages.middleware.MessageMiddleware',
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
+            'django.contrib.auth.middleware.RemoteUserMiddleware',
+            'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
         if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
             _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)

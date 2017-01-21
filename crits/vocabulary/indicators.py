@@ -29,6 +29,7 @@ class IndicatorTypes(vocab):
     EMAIL_BOUNDARY = "Email Boundary"
     EMAIL_ADDRESS = "Email Address"
     EMAIL_FROM = "Email Address From"
+    EMAIL_HEADER_FIELD = "Email Header Field"
     EMAIL_HELO = "Email HELO"
     EMAIL_MESSAGE_ID = "Email Message ID"
     EMAIL_ORIGINATING_IP = "Email Originating IP"
@@ -113,6 +114,7 @@ class IndicatorTypes(vocab):
     WHOIS_NAME = "WHOIS Name"
     WHOIS_ADDR1 = "WHOIS Address 1"
     WHOIS_ADDR2 = "WHOIS Address 2"
+    WHOIS_REGISTRANT_EMAIL_ADDRESS = "WHOIS Registrant Email Address"
     WHOIS_TELEPHONE = "WHOIS Telephone"
     XPI = "XPI"
 
