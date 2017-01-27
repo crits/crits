@@ -20,8 +20,9 @@ RUN git clone --depth 1 https://github.com/moshekaplan/crits.git
 WORKDIR crits
 # Install the dependencies
 RUN TERM=xterm sh ./script/bootstrap < docker_inputs
+
 # Create a new admin. Username: "admin" , Password: "pass1PASS123!"
-RUN python manage.py users -u admin -p "pass1PASS123!" -s -i -a -A -e admin@crits.crits -f "first" -l "last" -o "no-org"
+RUN sh contrib/mongo/mongod_start.sh && python manage.py users -u admin -p "pass1PASS123!" -s -i -a -A -e admin@crits.crits -f "first" -l "last" -o "no-org"
 
 EXPOSE 8080
 
