@@ -15,7 +15,7 @@ RUN apt-get install -y sudo
 RUN apt-get install -y software-properties-common
 
 # Clone the repo
-RUN git clone --depth 1 https://github.com/moshekaplan/crits.git 
+RUN git clone --depth 1 https://github.com/crits/crits.git 
 
 WORKDIR crits
 # Install the dependencies
