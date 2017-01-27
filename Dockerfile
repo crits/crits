@@ -14,10 +14,14 @@ RUN apt-get install -y sudo
 # add-apt-repository command
 RUN apt-get install -y software-properties-common
 
-RUN git clone --depth 1 https://github.com/crits/crits.git 
+# Clone the repo
+RUN git clone --depth 1 https://github.com/moshekaplan/crits.git 
 
 WORKDIR crits
-RUN TERM=xterm sh script/bootstrap < docker_inputs
+# Install the dependencies
+RUN TERM=xterm sh ./script/bootstrap < docker_inputs
+# Create a new admin. Username: "admin" , Password: "pass1PASS123!"
+RUN python manage.py users -u admin -p "pass1PASS123!" -s -i -a -A -e admin@crits.crits -f "first" -l "last" -o "no-org"
 
 EXPOSE 8080
 
