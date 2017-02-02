@@ -1,7 +1,7 @@
 import hashlib
 import json
 
-from PIL import Image
+import Image
 
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
