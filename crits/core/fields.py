@@ -3,7 +3,8 @@ import datetime
 from dateutil.parser import parse
 from mongoengine import DateTimeField, FileField
 from mongoengine.connection import DEFAULT_CONNECTION_NAME
-from mongoengine.python_support import str_types
+#from mongoengine.python_support import str_types
+from six import string_types as str_types
 import io
 
 from django.conf import settings

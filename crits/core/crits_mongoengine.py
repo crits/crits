@@ -16,7 +16,11 @@ from django_mongoengine import Document
 from mongoengine import EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
 from mongoengine import IntField, DateTimeField, ObjectIdField
-from mongoengine.base import BaseDocument, ValidationError
+from mongoengine.base import BaseDocument
+try:
+    from mongoengine import ValidationError
+except ImportError:
+    from mongoengine.base import ValidationError
 
 # Determine if we should be caching queries or not.
 if settings.QUERY_CACHING:
