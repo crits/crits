@@ -12,7 +12,11 @@ from django.template.loader import render_to_string
 from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
 from mongoengine import IntField, DateTimeField, ObjectIdField
-from mongoengine.base import BaseDocument, ValidationError
+from mongoengine.base import BaseDocument
+try:
+    from mongoengine import ValidationError
+except ImportError:
+    from mongoengine.base import ValidationError
 
 # Determine if we should be caching queries or not.
 from mongoengine import QuerySet as QS
