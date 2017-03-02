@@ -118,7 +118,7 @@ class Command(BaseCommand):
         lastname = options.get('lastname')
         sendemail = options.get('sendemail')
         organization = options.get('organization')
-        password = self.temp_password()
+        password = options.get('password')
         reset = options.get('reset')
         setactive = options.get('setactive')
         username = options.get('username')
@@ -127,6 +127,10 @@ class Command(BaseCommand):
         if not username:
             raise CommandError("Must provide a username.")
         user = CRITsUser.objects(username=username).first()
+
+        # Generate a password if one is not provided
+        if not password:
+            password = self.temp_password()
 
         # If we've found a user with that username and we aren't trying to add a
         # new user...
