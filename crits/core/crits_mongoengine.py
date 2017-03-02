@@ -28,10 +28,15 @@ except ImportError:
 
 # Determine if we should be caching queries or not.
 if settings.QUERY_CACHING:
-    from mongoengine import QuerySet as QS
-    #from django_mongoengine import QuerySet as QS
+    try:
+        from django_mongoengine import QuerySet as QS
+    except ImportError:
+        from mongoengine import QuerySet as QS
 else:
-    from mongoengine import QuerySetNoCache as QS
+    try:
+        from django_mongoengine import QuerySetNoCache as QS
+    except ImportError:
+        from mongoengine import QuerySetNoCache as QS
 
 from pprint import pformat
 
@@ -343,7 +348,7 @@ class CritsDocument(BaseDocument):
         super(CritsDocument, self).__init__(**values)
 
     def _custom_save(self, force_insert=False, validate=True, clean=False,
-        write_concern=None,  cascade=None, cascade_kwargs=None,
+        write_concern=None, cascade=None, cascade_kwargs=None,
         _refs=None, username=None, **kwargs):
         """
         Custom save function. Extended to check for valid schema versions,
@@ -367,10 +372,18 @@ class CritsDocument(BaseDocument):
             audit_entry(self, username, "save")
         else:
             do_audit = True
-        super(self.__class__, self).save(force_insert=force_insert,
+        if hasattr(super(self.__class__, self).save(), 'write_concern'):
+            super(self.__class__, self).save(force_insert=force_insert,
+                                             validate=validate,
+                                             clean=clean,
+                                             write_concern=write_concern,
+                                             cascade=cascade,
+                                             cascade_kwargs=cascade_kwargs,
+                                             _refs=_refs)
+        else:
+            super(self.__class__, self).save(force_insert=force_insert,
                                          validate=validate,
                                          clean=clean,
-                                         write_concern=write_concern,
                                          cascade=cascade,
                                          cascade_kwargs=cascade_kwargs,
                                          _refs=_refs)
@@ -378,7 +391,7 @@ class CritsDocument(BaseDocument):
             audit_entry(self, username, "save", new_doc=True)
         return
 
-    def _custom_delete(self, username=None, **write_concern):
+    def _custom_delete(self, username=None, **kwargs):
         """
         Custom delete function. Overridden to allow us to extend to other parts
         of CRITs and clean up dangling relationships, comments, objects, GridFS
@@ -1937,7 +1950,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 if new_rev_type is None:
                     return {'success': False,
                             'message': 'Could not find reverse relationship type'}
-        
+
             for c, r in enumerate(self.relationships):
                 if rel_date:
                     if (r.object_id == rel_item.id

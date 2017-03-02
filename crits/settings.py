@@ -200,7 +200,7 @@ else:
             replicaset=MONGO_REPLICASET)
 
 # Get config from DB
-c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL)
+c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=0)
 db = c[MONGO_DATABASE]
 if MONGO_USER:
     db.authenticate(MONGO_USER, MONGO_PASSWORD)
@@ -327,6 +327,12 @@ _TEMPLATE_LOADERS = [
 #        'LOCATION': 'unix:/data/memcached.sock',
 #    }
 #}
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-crits',
+    }
+}
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',

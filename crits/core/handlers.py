@@ -13,10 +13,12 @@ from bson.objectid import ObjectId
 from django.conf import settings
 
 from django.contrib.auth.signals import user_logged_in
-from django.contrib.auth import login as user_login
+#from django.contrib.auth import login as user_login
 from django.middleware.csrf import rotate_token
 from django.contrib.auth import authenticate
-# we implement django.contrib.auth.login as user_login in here to accomodate mongoengine
+from django.contrib.auth import login as user_login
+# we implement django.contrib.auth.login as user_login in here to accomodate mongoengine/pymongo
+
 try:
     from django.urls import reverse, resolve, get_script_prefix
 except ImportError:
