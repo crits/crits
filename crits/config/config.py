@@ -1,6 +1,10 @@
 import os
 
-from django_mongoengine import Document
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
 from mongoengine import StringField, ListField
 from mongoengine import BooleanField, IntField
 

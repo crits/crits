@@ -3,7 +3,11 @@ import re
 from django.test import SimpleTestCase
 from django.test.client import RequestFactory, Client
 
-from django_mongoengine import Document
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
 from mongoengine import StringField
 
 from crits.config.config import CRITsConfig

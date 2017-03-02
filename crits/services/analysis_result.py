@@ -1,5 +1,8 @@
 from django.conf import settings
-from django_mongoengine import Document
+try:
+    from django_mongoengine import Document
+except ImportError:
+    from mongoengine import Document
 from mongoengine import StringField, ListField, EmbeddedDocument
 from mongoengine import DynamicEmbeddedDocument, DynamicField, UUIDField
 from mongoengine import DictField, EmbeddedDocumentField, BooleanField

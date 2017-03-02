@@ -1,6 +1,10 @@
 import io
 
-from django_mongoengine import Document
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
 from mongoengine import StringField, ListField, IntField
 from django.conf import settings
 from PIL import Image

@@ -1,7 +1,11 @@
 import datetime
 
 from dateutil.parser import parse as date_parser
-from django_mongoengine import Document
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
 from mongoengine import StringField, ListField
 from django.conf import settings
 

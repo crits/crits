@@ -1,6 +1,10 @@
 import datetime
 
-from django_mongoengine import Document
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
 from mongoengine import EmbeddedDocument
 from mongoengine import StringField, ListField
 from mongoengine import EmbeddedDocumentField
@@ -332,4 +336,3 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
         """
 
         return ','.join(str(x) for x in self.attack_types)
-

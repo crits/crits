@@ -12,7 +12,11 @@ except ImportError:
     from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
-from django_mongoengine import Document
+try:
+    from django_mongoengine import Document
+except ImportError:
+    from mongoengine import Document
+
 from mongoengine import EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
 from mongoengine import IntField, DateTimeField, ObjectIdField
