@@ -46,8 +46,8 @@ verify()
          fi
     elif command -v lsb_release >/dev/null 2>&1
     then
-        OS=$(lsb_release -i| sed 's/Distributor ID:\t//')
-        VER=$(lsb_release -r| sed 's/Release:\t//')
+        OS=$(lsb_release -is)
+        VER=$(lsb_release -rs)
     else
         OS=$(uname -s)
         VER=$(uname -r)
