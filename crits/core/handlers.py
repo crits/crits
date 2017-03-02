@@ -114,7 +114,7 @@ def action_add(type_, id_, tlo_action, user=None, **kwargs):
     except (ValidationError, TypeError, KeyError), e:
         return {'success': False, 'message': e}
 
-def action_remove(type_, id_, date, action, user, **kwargs):
+def action_remove(type_, id_, date, action_type, user, **kwargs):
     """
     Remove an action from a TLO.
 
@@ -124,8 +124,8 @@ def action_remove(type_, id_, date, action, user, **kwargs):
     :type id_: str
     :param date: The date of the action to remove.
     :type date: datetime.datetime
-    :param action: The name of the action to remove.
-    :type action: str
+    :param action_type: The name of the action to remove.
+    :type action_type: str
     :param analyst: The user removing the action.
     :type analyst: str
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
@@ -145,7 +145,7 @@ def action_remove(type_, id_, date, action, user, **kwargs):
                 'message': 'Could not find TLO'}
     try:
         date = datetime_parser(date)
-        obj.delete_action(date, action)
+        obj.delete_action(date, action_type)
         obj.save(username=user)
         return {'success': True}
     except (ValidationError, TypeError), e:
