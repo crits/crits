@@ -51,7 +51,7 @@ django_version = django.get_version()
 #Check mongoengine version (we got it from import)
 if StrictVersion(mongoengine_version) < StrictVersion('0.10.0'):
     old_mongoengine = True
-    raise Exception("Mongoengine versions prior to 0.10 are no longer supported! Please see UPDATING!")
+    #raise Exception("Mongoengine versions prior to 0.10 are no longer supported! Please see UPDATING!")
 else:
     old_mongoengine = False
 
