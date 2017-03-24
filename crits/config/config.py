@@ -40,6 +40,7 @@ class CRITsConfig(CritsDocument, Document):
     enable_toasts = BooleanField(default=False)
     git_repo_url = StringField(default='https://github.com/crits/crits')
     http_proxy = StringField(default='')
+    user_agent = StringField(default='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:99.0) Gecko/20100101 Firefox/99.0 CRITs')
     instance_name = StringField(default='My Instance')
     instance_url = StringField(default='')
     invalid_login_attempts = IntField(default=3)

@@ -71,6 +71,7 @@ class Command(BaseCommand):
            enable_toasts:\t\t\t<boolean> (ex: True, true, yes, or 1)
            git_repo_url:\t\t<string>
            http_proxy:\t\t\t<string>
+           user_agent:\t\t\t<string> (ex: "Mozilla/5.0 (Windows NT 6.3; rv:99.0) Gecko/20100101 Firefox/99.0 CRITs")
            instance_name:\t\t<string>
            instance_url:\t\t<string>
            invalid_login_attempts:\t<integer>
