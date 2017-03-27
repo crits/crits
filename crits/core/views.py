@@ -218,9 +218,16 @@ def get_dialog(request):
 
     dialog = request.GET.get('dialog', '')
     # Regex in urls.py doesn't seem to be working, should sanity check dialog
-    return render_to_response(dialog + ".html",
-                              {"error" : 'Dialog not found'},
-                              RequestContext(request))
+    try:
+        resp = render_to_response(dialog + ".html",
+                                  {"error" : 'Dialog not found'},
+                                  RequestContext(request))
+    except Exception as e:
+        resp = render_to_response("error.html",
+                                  {"error": "Dialog not found"},
+                                  RequestContext(request))
+    return resp
+
 
 @user_passes_test(user_can_view_data)
 def update_status(request, type_, id_):
