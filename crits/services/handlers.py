@@ -467,7 +467,7 @@ def finish_task(object_type, object_id, analysis_id, status, analyst):
     # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
     params = {'id': object_id}
-    if 'source' in klass._meta['schema_doc']:
+    if hasattr(klass, 'source'):
         params['source__name__in'] = user_sources(analyst)
     obj = klass.objects(**params).first()
     if not obj:
