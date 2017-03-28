@@ -466,8 +466,10 @@ def finish_task(object_type, object_id, analysis_id, status, analyst):
 
     # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
-    sources = user_sources(analyst)
-    obj = klass.objects(id=object_id, source__name__in=sources).first()
+    params = {'id': object_id}
+    if 'source' in klass._meta['schema_doc']:
+        params['source__name__in'] = user_sources(analyst)
+    obj = klass.objects(**params).first()
     if not obj:
         results['message'] = "Could not find object to add results to."
         return results
