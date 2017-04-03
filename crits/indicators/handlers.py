@@ -1048,6 +1048,17 @@ def activity_add(id_, activity, user, **kwargs):
     if not indicator:
         return {'success': False,
                 'message': 'Could not find Indicator'}
+
+    if not isinstance(activity, dict):
+        activity = {}
+        activity['start_date'] = None
+        activity['end_date'] = None
+        activity['description'] = None
+        if 'start_date' in kwargs:activity['start_date'] = kwargs['start_date']
+        if 'end_date' in kwargs:activity['end_date'] = kwargs['end_date']
+        if 'description' in kwargs:activity['description'] = kwargs['description']
+        activity['date'] = datetime.datetime.now()
+
     try:
 
         activity['analyst'] = user
@@ -1078,13 +1089,24 @@ def activity_update(id_, activity, user=None, **kwargs):
               "message" (str) if failed,
               "object" (dict) if successful.
     """
-
     sources = user_sources(user)
     indicator = Indicator.objects(id=id_,
                                   source__name__in=sources).first()
     if not indicator:
         return {'success': False,
                 'message': 'Could not find Indicator'}
+
+    if not isinstance(activity, dict):
+        activity = {}
+        activity['start_date'] = None
+        activity['end_date'] = None
+        activity['description'] = None
+        activity['date'] = None
+        if 'start_date' in kwargs: activity['start_date'] = kwargs['start_date']
+        if 'end_date' in kwargs: activity['end_date'] = kwargs['end_date']
+        if 'description' in kwargs: activity['description'] = kwargs['description']
+        if 'date' in kwargs: activity['date'] = kwargs['date']
+
     try:
         activity = datetime_parser(activity)
         activity['analyst'] = user
