@@ -30,3 +30,6 @@ INSTALL_RECEIPT.json
 
 # Ignore VirtualEnv
 venv/*
+
+# jetbrains ide
+.idea
