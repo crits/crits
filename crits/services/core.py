@@ -107,6 +107,7 @@ class ServiceManager(object):
             service_description = service_class.description
             supported_types = service_class.supported_types
             compatability_mode = service_class.compatability_mode
+            is_triage_run = service_class.is_triage_run
 
             #logger.debug("Found service subclass: %s version %s" %
             #                (service_name, service_version))
@@ -163,6 +164,7 @@ class ServiceManager(object):
                 svc_obj.version = service_version
                 svc_obj.supported_types = supported_types
                 svc_obj.compatability_mode = compatability_mode
+                svc_obj.is_triage_run = is_triage_run
                 svc_obj.save()
                 self._services[service_class.name] = service_class
         # For anything in the database that did not import properly, mark the
@@ -306,6 +308,9 @@ class Service(object):
 
     source = settings.COMPANY_NAME
 
+    # Set default for is_triage_run
+    is_triage_run = False
+    
     # Set to a list of 'Sample', 'PCAP', etc.
     supported_types = ['all']
 
