@@ -37,3 +37,4 @@ class CRITsService(CritsDocument, CritsSchemaDocument, Document):
     status = StringField()
     supported_types = ListField(StringField())
     version = StringField()
+    is_triage_run = BooleanField()
