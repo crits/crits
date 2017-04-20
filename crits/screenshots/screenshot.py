@@ -1,4 +1,4 @@
-import StringIO
+import io
 
 from mongoengine import Document, StringField, ListField, IntField
 from django.conf import settings
@@ -53,6 +53,9 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
     }
 
     analyst = StringField()
+    # Description is used here instead of inheriting from CritsBaseAttributes
+    # because screenshots don't need the rest of the attributes that come with
+    # inheriting.
     description = StringField()
     filename = StringField()
     height = IntField()
@@ -83,10 +86,11 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
 
         if not screenshot:
             return
-        self.filename = screenshot.name
+        if hasattr(screenshot, 'name'):
+            self.filename = screenshot.name
         im = Image.open(screenshot)
         self.width, self.height = im.size
-        fs = StringIO.StringIO()
+        fs = io.BytesIO()
         im.save(fs, "PNG")
         fs.seek(0)
         self.screenshot = fs.read()
@@ -105,6 +109,7 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
         :type tags: str, list
         """
 
+        tag_list = []
         if isinstance(tags, basestring):
             tag_list = [t.strip() for t in tags.split(',') if len(t.strip())]
         if isinstance(tags, list):
@@ -127,7 +132,7 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
         size = (128, 128)
         im.thumbnail(size, Image.ANTIALIAS)
         im.save(self.thumb, "PNG")
-        fs = StringIO.StringIO()
+        fs = io.BytesIO()
         im.save(fs, "PNG")
         fs.seek(0)
         self.thumb = fs.read()

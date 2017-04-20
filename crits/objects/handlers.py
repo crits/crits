@@ -1,18 +1,19 @@
-import datetime
+import re
 
 from hashlib import md5
 
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.template import RequestContext
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core import form_consts
 from crits.core.class_mapper import class_from_id, class_from_type
-from crits.core.data_tools import convert_string_to_bool
-from crits.core.handlers import get_object_types
+from crits.core.data_tools import convert_string_to_bool, detect_pcap
 from crits.core.handsontable_tools import form_to_dict, get_field_from_label
-from crits.core.crits_mongoengine import EmbeddedCampaign
 from crits.core.mongo_tools import put_file, mongo_connector
 from crits.core.user_tools import get_user_organization
 from crits.indicators.indicator import Indicator
@@ -20,64 +21,16 @@ from crits.objects.forms import AddObjectForm
 from crits.pcaps.handlers import handle_pcap_file
 from crits.relationships.handlers import forge_relationship
 
+from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.indicators import (
+    IndicatorAttackTypes,
+    IndicatorThreatTypes
+)
 
-def get_objects_type(name=None):
-    """
-    Get the type of an ObjectType.
 
-    :param name: The name of the ObjectType.
-    :type name: str
-    :returns: str
-    """
-
-    from crits.objects.object_type import ObjectType
-    if not name:
-        return None
-    obj = ObjectType.objects(name=name).first()
-    if obj:
-        return obj.object_type
-    return None
-
-def get_objects_datatype(name, otype):
-    """
-    Get the datatype of an ObjectType.
-
-    :param name: The name of the ObjectType.
-    :type name: str
-    :param otype: The type of the ObjectType
-    :returns: str
-    """
-
-    from crits.objects.object_type import ObjectType
-    obj = ObjectType.objects(name=name,
-                             object_type=otype).first()
-    if obj:
-        key = obj.datatype.keys()[0]
-        return key
-    else:
-        return None
-
-def split_object_name_type(full_name):
-    """
-    Split the name and type into their separate parts.
-
-    :param full_name: The full name of the ObjectType.
-    :type full_name: str
-    :returns: list of [<name>, <type>]
-    """
-
-    split_name = full_name.split(" - ")
-    # if len(split_name) == 1, name and type are the same
-    return split_name*2 if len(split_name) == 1 else split_name
-
-all_obj_type_choices = [(c[0],
-                         c[0],
-                         {'datatype':c[1].keys()[0],
-                          'datatype_value':c[1].values()[0]}
-                         ) for c in get_object_types(False)]
-
-def validate_and_add_new_handler_object(data, rowData, request, errors, row_counter,
-                                        is_validate_only=False, is_sort_relationships=False,
+def validate_and_add_new_handler_object(data, rowData, request, errors,
+                                        row_counter, is_validate_only=False,
+                                        is_sort_relationships=False,
                                         cache={}, obj=None):
     """
     Validate an object and then add it to the database.
@@ -106,15 +59,20 @@ def validate_and_add_new_handler_object(data, rowData, request, errors, row_coun
     bound_form = parse_row_to_bound_object_form(request, rowData, cache)
 
     if bound_form.is_valid():
-        return add_new_handler_object(data, rowData, request, errors, obj=obj,
-                                      is_validate_only=is_validate_only,
-                                      is_sort_relationships=is_sort_relationships)
+        (result,
+         retVal) = add_new_handler_object(data, rowData, request, obj=obj,
+                                          is_validate_only=is_validate_only,
+                                          is_sort_relationships=is_sort_relationships)
+        if not result and 'message' in retVal:
+            errors.append("%s #%s - %s" % (form_consts.Common.OBJECTS_DATA,
+                                           str(row_counter),
+                                           retVal['message']))
     else:
         formdict = cache.get("object_formdict")
 
         if formdict == None:
-            object_form = AddObjectForm(request.user, all_obj_type_choices)
-            formdict = form_to_dict(object_form, all_obj_type_choices)
+            object_form = AddObjectForm(request.user)
+            formdict = form_to_dict(object_form)
             cache['object_formdict'] = formdict
 
         for name, errorMessages in bound_form.errors.items():
@@ -122,8 +80,10 @@ def validate_and_add_new_handler_object(data, rowData, request, errors, row_coun
             if entry == None:
                 continue
             for message in errorMessages:
-                errors.append("At " + form_consts.Common.OBJECTS_DATA + " #"
-                        + str(row_counter) + ": " + message + " ")
+                errors.append("%s #%s - %s - %s" % (form_consts.Common.OBJECTS_DATA,
+                                                    str(row_counter),
+                                                    name,
+                                                    message))
         result = False
 
     return result, errors, retVal
@@ -134,11 +94,17 @@ def add_new_handler_object_via_bulk(data, rowData, request, errors,
     Bulk add wrapper for the add_new_handler_object() function.
     """
 
-    return add_new_handler_object(data, rowData, request, errors,
-            is_validate_only=is_validate_only,
-            is_sort_relationships=True, cache=cache, obj=obj)
+    (result,
+     retVal) = add_new_handler_object(data, rowData, request,
+                                      is_validate_only=is_validate_only,
+                                      is_sort_relationships=True,
+                                      cache=cache, obj=obj)
+    if not result and 'message' in retVal:
+        errors.append(retVal['message'])
 
-def add_new_handler_object(data, rowData, request, errors, is_validate_only=False,
+    return result, errors, retVal
+
+def add_new_handler_object(data, rowData, request, is_validate_only=False,
                            is_sort_relationships=False, cache={}, obj=None):
     """
     Add an object to the database.
@@ -149,8 +115,6 @@ def add_new_handler_object(data, rowData, request, errors, is_validate_only=Fals
     :type rowData: dict
     :param request: The Django request.
     :type request: :class:`django.http.HttpRequest`
-    :param errors: List of existing errors to append to.
-    :type errors: list
     :param is_validate_only: Only validate.
     :type is_validate_only: bool
     :param cache: Cached data, typically for performance enhancements
@@ -161,7 +125,7 @@ def add_new_handler_object(data, rowData, request, errors, is_validate_only=Fals
                 reasons (by not querying mongo if we already have the
                 top level-object).
     :type obj: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
-    :returns: tuple of (<result>, <errors>, <retVal>)
+    :returns: tuple (<result>, <retVal>)
     """
 
     result = False
@@ -198,23 +162,23 @@ def add_new_handler_object(data, rowData, request, errors, is_validate_only=Fals
             source = get_user_organization(analyst)
             cache['object_user_source'] =  source
 
-    ot_array = object_type.split(" - ")
-    object_type = ot_array[0]
-    name = ot_array[1] if len(ot_array) == 2 else ot_array[0]
-
     if (otype == "" or otype == None) or (oid == "" or oid == None):
         is_validate_locally = True
 
     # TODO file_
-    object_result = add_object(otype, oid, object_type, name,
-            source, method, reference, analyst, value=value,
-            file_=None, add_indicator=add_indicator, get_objects=False,
-            obj=obj, is_validate_only=is_validate_only, is_sort_relationships=is_sort_relationships,
-            is_validate_locally=is_validate_locally, cache=cache)
+    object_result = add_object(
+        otype, oid, object_type, source, method, reference, analyst,
+        value=value, file_=None, add_indicator=add_indicator, get_objects=False,
+        tlo=obj, is_validate_only=is_validate_only,
+        is_sort_relationships=is_sort_relationships,
+        is_validate_locally=is_validate_locally, cache=cache
+    )
 
-    if object_result['success'] == True:
+    if object_result['success']:
+        result = True
+        if 'message' in object_result:
+            retVal['message'] = object_result['message']
         if is_validate_only == False:
-            result = True
             if obj == None:
                 obj = class_from_id(otype, oid)
 
@@ -224,35 +188,31 @@ def add_new_handler_object(data, rowData, request, errors, is_validate_only=Fals
                 if object_result.get('relationships'):
                     retVal['secondary']['relationships'] = object_result.get('relationships')
     else:
-        errors += object_result['message']
+        retVal['message'] = object_result['message']
 
-    return result, errors, retVal
+    return result, retVal
 
-def add_object(type_, oid, object_type, name, source, method,
-               reference, analyst, value=None, file_=None,
-               add_indicator=False, get_objects=True,
-               indicator_campaign=None, indicator_campaign_confidence=None,
-               obj=None, is_sort_relationships=False,
-               is_validate_only=False, is_validate_locally=False, cache={}):
+def add_object(type_, id_, object_type, source, method, reference, user,
+               value=None, file_=None, add_indicator=False, get_objects=True,
+               tlo=None, is_sort_relationships=False, is_validate_only=False,
+               is_validate_locally=False, cache={}, **kwargs):
     """
     Add an object to the database.
 
     :param type_: The top-level object type.
     :type type_: str
-    :param oid: The ObjectId of the top-level object.
-    :type oid: str
+    :param id_: The ObjectId of the top-level object.
+    :type id_: str
     :param object_type: The type of the ObjectType being added.
     :type object_type: str
-    :param name: The name of the ObjectType being added.
-    :type name: str
     :param source: The name of the source adding this object.
     :type source: str
     :param method: The method for this object.
     :type method: str
     :param reference: The reference for this object.
     :type reference: str
-    :param analyst: The user adding this object.
-    :type analyst: str
+    :param user: The user adding this object.
+    :type user: str
     :param value: The value of the object.
     :type value: str
     :param file_: The file if the object is a file upload.
@@ -260,19 +220,21 @@ def add_object(type_, oid, object_type, name, source, method,
     :param add_indicator: Also add an indicator for this object.
     :type add_indicator: bool
     :param get_objects: Return the formatted list of objects when completed.
-    :type get_object: bool
-    :param is_validate_only: Only validate, do not add.
+    :type get_objects: bool
+    :param tlo: The CRITs top-level object we are adding objects to.
+                This is an optional parameter used mainly for performance
+                reasons (by not querying mongo if we already have the
+                top level-object).
+    :type tlo: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
+    :param is_sort_relationships: Return all relationships and meta, sorted
+    :type is_sort_relationships: bool
+    :param is_validate_only: Validate, but do not add to TLO.
     :type is_validate_only: bool
-    :param is_validate_locally: Only validate, do not add.
+    :param is_validate_locally: Validate, but do not add b/c there is no TLO.
     :type is_validate_locally: bool
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
     :type cache: dict
-    :param obj: The CRITs top-level object we are adding objects to.
-                This is an optional parameter used mainly for performance
-                reasons (by not querying mongo if we already have the
-                top level-object).
-    :type obj: :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -280,121 +242,94 @@ def add_object(type_, oid, object_type, name, source, method,
               "relationships" (list)
     """
 
-    results = {}
+    # if object_type is a validated indicator type, then validate value
+    if value:
+        from crits.indicators.handlers import validate_indicator_value
+        (value, error) = validate_indicator_value(value, object_type)
+        if error:
+            return {"success": False, "message": error}
 
-    if oid == None:
-        oid = ""
+    if is_validate_locally: # no TLO provided
+        return {"success": True}
 
-    if obj == None:
-        obj = class_from_id(type_, oid)
+    if not tlo:
+        if type_ and id_:
+            tlo = class_from_id(type_, id_)
+        if not tlo:
+            return {'success': False, 'message': "Failed to find TLO"}
 
-    if not obj:
-        if is_validate_locally == True:
-            # TODO: Perform some form of validation
-            results['success'] = True
-            return results
-        else:
-            results['message'] = "Could not find item to add object to."
-            results['success'] = False
-            return results
     try:
-        cur_len = len(obj.obj)
         if file_:
             data = file_.read()
             filename = file_.name
             md5sum = md5(data).hexdigest()
             value = md5sum
             reference = filename
-        obj.add_object(object_type,
-                       name,
-                       value,
-                       source,
-                       method,
-                       reference,
-                       analyst)
+        ret = tlo.add_object(object_type, value,
+                             source, method, reference, user)
 
-        if is_validate_only == False:
-            obj.save(username=analyst)
-
-        new_len = len(obj.obj)
-        if new_len > cur_len:
-            results['message'] = "Object added successfully!"
-            results['success'] = True
-            if file_:
-                # do we have a pcap?
-                if data[:4] in ('\xa1\xb2\xc3\xd4',
-                                '\xd4\xc3\xb2\xa1',
-                                '\x0a\x0d\x0d\x0a'):
-                    handle_pcap_file(filename,
-                                     data,
-                                     source,
-                                     user=analyst,
-                                     parent_id=oid,
-                                     parent_type=type_)
-                else:
-                    #XXX: MongoEngine provides no direct GridFS access so we
-                    #     need to use pymongo directly.
-                    col = settings.COL_OBJECTS
-                    grid = mongo_connector("%s.files" % col)
-                    if grid.find({'md5': md5sum}).count() == 0:
-                        put_file(filename, data, collection=col)
-            if add_indicator and is_validate_only == False:
-                from crits.indicators.handlers import handle_indicator_ind
-
-                if object_type != name:
-                    object_type = "%s - %s" % (object_type, name)
-
-                ind_res = handle_indicator_ind(value,
-                                               source,
-                                               reference,
-                                               object_type,
-                                               analyst,
-                                               method=method,
-                                               add_domain=True,
-                                               campaign=indicator_campaign,
-                                               campaign_confidence=indicator_campaign_confidence,
-                                               cache=cache)
-
-                if ind_res['success']:
-                    ind = ind_res['object']
-
-                    # Inherit campaigns from top level item when creating
-                    # an indicator from an object if no campaigns were specified
-                    if indicator_campaign == None and ind != None:
-                        for campaign in obj.campaign:
-                            ec = EmbeddedCampaign(name=campaign.name,
-                                                  confidence=campaign.confidence,
-                                                  description="",
-                                                  analyst=analyst,
-                                                  date=datetime.datetime.now())
-                            ind.add_campaign(ec)
-
-                        ind.save(username=analyst)
-
-                    forge_relationship(left_class=obj,
-                                       right_class=ind,
-                                       rel_type="Related_To",
-                                       analyst=analyst,
-                                       get_rels=is_sort_relationships)
-
-            if is_sort_relationships == True:
-                if file_ or add_indicator:
-                    # does this line need to be here?
-                    # obj.reload()
-                    results['relationships'] = obj.sort_relationships(analyst, meta=True)
-                else:
-                    results['relationships'] = obj.sort_relationships(analyst, meta=True)
-
+        if not ret['success']:
+            msg = '%s! [Type: "%s"][Value: "%s"]'
+            return {"success": False,
+                    "message": msg % (ret['message'], object_type, value)}
         else:
-            results['message'] = "Object already exists! [Type: " + object_type + "][Value: " + value + "] "
-            results['success'] = False
-        if (get_objects):
-            results['objects'] = obj.sort_objects()
+            results = {'success': True}
 
+        if not is_validate_only: # save the object
+            tlo.update(add_to_set__obj=ret['object'])
+            results['message'] = "Object added successfully"
+
+        if file_:
+            # do we have a pcap?
+            if detect_pcap(data):
+                handle_pcap_file(filename,
+                                 data,
+                                 source,
+                                 user=user,
+                                 related_id=id_,
+                                 related_type=type_)
+            else:
+                #XXX: MongoEngine provides no direct GridFS access so we
+                #     need to use pymongo directly.
+                col = settings.COL_OBJECTS
+                grid = mongo_connector("%s.files" % col)
+                if grid.find({'md5': md5sum}).count() == 0:
+                    put_file(filename, data, collection=col)
+
+        if add_indicator and not is_validate_only:
+            campaign = tlo.campaign if hasattr(tlo, 'campaign') else None
+            from crits.indicators.handlers import handle_indicator_ind
+            ind_res = handle_indicator_ind(value,
+                                           source,
+                                           object_type,
+                                           IndicatorThreatTypes.UNKNOWN,
+                                           IndicatorAttackTypes.UNKNOWN,
+                                           user,
+                                           method=method,
+                                           reference=reference,
+                                           add_domain=True,
+                                           campaign=campaign,
+                                           cache=cache)
+
+            if ind_res['success']:
+                forge_relationship(class_=tlo,
+                                   right_class=ind_res['object'],
+                                   rel_type=RelationshipTypes.RELATED_TO,
+                                   user=user)
+            else:
+                msg = "Object added, but failed to add Indicator.<br>Error: %s"
+                results['message'] = msg % ind_res.get('message')
+
+        if is_sort_relationships == True:
+            results['relationships'] = tlo.sort_relationships(user, meta=True)
+
+        if get_objects:
+            results['objects'] = tlo.sort_objects()
+
+        results['id'] = str(tlo.id)
         return results
-    except ValidationError, e:
-        return {'success': False,
-                'message': e}
+    except ValidationError as e:
+        return {'success': False, 'message': str(e)}
 
 def delete_object_file(value):
     """
@@ -405,13 +340,19 @@ def delete_object_file(value):
     :type value: str
     """
 
+    if not re.match(r"^[a-f\d]{32}$", value, re.I):
+        return
+
     #XXX: MongoEngine provides no direct GridFS access so we
     #     need to use pymongo directly.
-    obj_list = ('Campaign',
+    obj_list = ('Actor',
+                'Backdoor',
+                'Campaign',
                 'Certificate',
                 'Domain',
                 'Email',
                 'Event',
+                'Exploit',
                 'Indicator',
                 'IP',
                 'PCAP',
@@ -424,22 +365,19 @@ def delete_object_file(value):
     # one instance, which is the one we are going to be removing. If we find
     # another instance, then we should not remove the object from GridFS.
     count = 0
-    found = False
     query = {'objects.value': value}
     for obj in obj_list:
         obj_class = class_from_type(obj)
-        c = len(obj_class.objects(__raw__=query))
-        if c > 0:
-            count += c
-            if count > 1:
-                found = True
-                break
-    if not found:
+        count += len(obj_class.objects(__raw__=query))
+        if count > 1:
+            break
+    else:
         col = settings.COL_OBJECTS
         grid = mongo_connector("%s.files" % col)
         grid.remove({'md5': value})
+    return
 
-def delete_object(type_, oid, object_type, name, value, analyst, get_objects=True):
+def delete_object(type_, oid, object_type, value, analyst, get_objects=True):
     """
     Delete an object.
 
@@ -449,8 +387,6 @@ def delete_object(type_, oid, object_type, name, value, analyst, get_objects=Tru
     :type oid: str
     :param object_type: The type of the object to remove.
     :type object_type: str
-    :param name: The name of the object to remove.
-    :type name: str
     :param value: The value of the object to remove.
     :type value: str
     :param analyst: The user removing this object.
@@ -470,7 +406,6 @@ def delete_object(type_, oid, object_type, name, value, analyst, get_objects=Tru
     try:
         cur_len = len(obj.obj)
         obj.remove_object(object_type,
-                          name,
                           value)
         obj.save(username=analyst)
 
@@ -490,7 +425,7 @@ def delete_object(type_, oid, object_type, name, value, analyst, get_objects=Tru
         return {'success': False,
                 'message': e}
 
-def update_object_value(type_, oid, object_type, name, value, new_value,
+def update_object_value(type_, oid, object_type, value, new_value,
                         analyst):
     """
     Update an object value.
@@ -501,8 +436,6 @@ def update_object_value(type_, oid, object_type, name, value, new_value,
     :type oid: str
     :param object_type: The type of the object to update.
     :type object_type: str
-    :param name: The name of the object to update.
-    :type name: str
     :param value: The value of the object to update.
     :type value: str
     :param new_value: The new value to use.
@@ -518,7 +451,6 @@ def update_object_value(type_, oid, object_type, name, value, new_value,
                 'message': "Could not find item to update object."}
     try:
         obj.update_object_value(object_type,
-                                name,
                                 value,
                                 new_value)
         obj.save(username=analyst)
@@ -526,7 +458,7 @@ def update_object_value(type_, oid, object_type, name, value, new_value,
     except ValidationError, e:
         return {'success': False, 'message': e}
 
-def update_object_source(type_, oid, object_type, name, value, new_source,
+def update_object_source(type_, oid, object_type, value, new_source,
                          new_method, new_reference, analyst):
     """
     Update an object source.
@@ -537,8 +469,6 @@ def update_object_source(type_, oid, object_type, name, value, new_source,
     :type oid: str
     :param object_type: The type of the object to update.
     :type object_type: str
-    :param name: The name of the object to update.
-    :type name: str
     :param value: The value of the object to update.
     :type value: str
     :param new_source: The new source to use.
@@ -558,7 +488,6 @@ def update_object_source(type_, oid, object_type, name, value, new_source,
                 'message': "Could not find item to update object."}
     try:
         obj.update_object_source(object_type,
-                                 name,
                                  value,
                                  new_source=new_source,
                                  new_method=new_method,
@@ -569,8 +498,8 @@ def update_object_source(type_, oid, object_type, name, value, new_source,
     except ValidationError, e:
         return {'success': False, 'message': e}
 
-def create_indicator_from_object(rel_type, rel_id, ind_type, value, analyst,
-                                 request):
+def create_indicator_from_object(rel_type, rel_id, ind_type, value,
+                                 source_name, method, reference, analyst, request):
     """
     Create an indicator out of this object.
 
@@ -581,6 +510,12 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value, analyst,
     :type ind_type: str
     :param value: The indicator value.
     :type value: str
+    :param source_name: The source name for the indicator.
+    :type source_name: str
+    :param method: The source method for the indicator.
+    :type method: str
+    :param reference: The source reference for the indicator.
+    :type reference: str
     :param analyst: The user creating this indicator.
     :type analyst: str
     :param request: The Django request.
@@ -599,36 +534,32 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value, analyst,
     elif ind_type == None or ind_type.strip() == "":
         result = {'success':  False,
                   'message':  "Can't create indicator with an empty type field"}
+    elif source_name == None or source_name.strip() == "":
+        result = {'success':  False,
+                  'message':  "Can't create indicator with an empty source field"}
     else:
         value = value.lower().strip()
         ind_type = ind_type.strip()
-        
+        source_name = source_name.strip()
+
         create_indicator_result = {}
-        ind_tlist = ind_type.split(" - ")
-        if ind_tlist[0] == ind_tlist[1]:
-            ind_type = ind_tlist[0]
         from crits.indicators.handlers import handle_indicator_ind
 
-        if hasattr(me, 'source'):
-            create_indicator_result = handle_indicator_ind(value,
-                                          me.source,
-                                          '',
-                                          ind_type,
-                                          analyst=analyst,
-                                          add_domain=True)
-        else:
-            # In case the top level item doesn't have sources (such as campaign)...
-            # then just default to the user's organization
-            create_indicator_result = handle_indicator_ind(value,
-                                          get_user_organization(analyst),
-                                          '',
-                                          ind_type,
-                                          analyst=analyst,
-                                          add_domain=True)
+        campaign = me.campaign if hasattr(me, 'campaign') else None
+        create_indicator_result = handle_indicator_ind(value,
+                                                       source_name,
+                                                       ind_type,
+                                                       IndicatorThreatTypes.UNKNOWN,
+                                                       IndicatorAttackTypes.UNKNOWN,
+                                                       analyst,
+                                                       method=method,
+                                                       reference=reference,
+                                                       add_domain=True,
+                                                       campaign=campaign)
 
         # Check if an error occurred, if it did then return the error result
         if create_indicator_result.get('success', True) == False:
-            return result
+            return create_indicator_result
 
         indicator = Indicator.objects(ind_type=ind_type,
                                       value=value).first()
@@ -636,13 +567,12 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value, analyst,
             result = {'success': False,
                       'message': "Could not create indicator"}
         else:
-            results = me.add_relationship(rel_item=indicator,
-                                          rel_type="Related_To",
+            results = me.add_relationship(indicator,
+                                          RelationshipTypes.RELATED_TO,
                                           analyst=analyst,
                                           get_rels=True)
             if results['success']:
                 me.save(username=analyst)
-                indicator.save(username=analyst)
                 relationship= {'type': rel_type, 'value': rel_id}
                 message = render_to_string('relationships_listing_widget.html',
                                             {'relationship': relationship,
@@ -708,16 +638,6 @@ def parse_row_to_bound_object_form(request, rowData, cache):
     oid = rowData.get(form_consts.Object.PARENT_OBJECT_ID, "")
     is_add_indicator = convert_string_to_bool(rowData.get(form_consts.Object.ADD_INDICATOR, "False"))
 
-    all_obj_type_choices = cache.get("object_types")
-
-    if all_obj_type_choices == None:
-        all_obj_type_choices = [(c[0],
-                c[0],
-                {'datatype':c[1].keys()[0],
-                 'datatype_value':c[1].values()[0]}
-                ) for c in get_object_types(False)]
-        cache["object_types"] = all_obj_type_choices
-
     data = {
         'object_type': object_type,
         'value': value,
@@ -732,7 +652,7 @@ def parse_row_to_bound_object_form(request, rowData, cache):
     bound_form = cache.get("object_form")
 
     if bound_form == None:
-        bound_form = AddObjectForm(request.user, all_obj_type_choices, data)
+        bound_form = AddObjectForm(request.user, data)
         cache['object_form'] = bound_form
     else:
         bound_form.data = data

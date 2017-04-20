@@ -1,0 +1,10 @@
+
+
+<div id="dialog-{{ request.GET.dialog }}" title="Add New Actor">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "crits.actors.views.add_actor" %}' 
+	  method='POST' enctype="multipart/form-data" 
+      item-type="actor">
+    <table class="form">{{ actor_add.as_table }}</table>
+    </form>
+</div>

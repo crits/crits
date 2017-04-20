@@ -1,0 +1,10 @@
+
+
+<div id="dialog-{{ request.GET.dialog }}" title="Attribute Actor Identifier">
+    <form id="form-{{ request.GET.dialog }}" 
+	  action='{% url "crits.actors.views.attribute_identifier" %}' 
+	  method='POST' enctype="multipart/form-data"
+      item-type="attribute_actor_identifier">
+    <table class="form">{{ attribute_actor_identifier.as_table }}</table>
+    </form>
+</div>

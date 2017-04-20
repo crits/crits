@@ -1,0 +1,1110 @@
+{% extends "base.html" %}
+{% load is_object_id_equal from filters %}
+{% block title %} Save Search {% endblock %}
+{% block css_includes %}
+    <link rel="stylesheet" media="screen" href="{{ STATIC_URL }}css/save_search.css"/>
+{% endblock %}
+{% comment %}
+    The javascript section is large but it also involves using a lot of django tags throughout it.
+    Since these tags cannot be used in external js files, I left all the javascript in the file rather than
+    having half of it internal and half external.
+{% endcomment %}
+{% block javascript_includes %}
+    <script>
+        var $gridster;
+        //tabs to be shown
+        {%if not isDefaultOnDashboard%}
+            var tabs = [{% for result in results %}
+                           {%if result.count > 0 %}
+                               { 
+                                   id: '{{ result.name }}Tab',
+                                   type:"{{ result.name }}",
+                                   caption: '{{ result.name }}s ({{ result.count }})',
+                                   {% if not tableId %}closable:true {% endif %}
+                                },
+                           {% endif %}
+                       {% endfor %}]
+        {% else %}
+            var tabs = [{ id: 'onlyTab', type:"{{ results.type }}", caption: '{{ results.name }}', closable:false }]
+        {% endif %}
+        //used when changing the content of the grid
+        var blankCol = { field: '', caption: '', size:"10%", sortable: true };
+        //columns and data corresponding to each data type
+        var objects = [
+			actorObject= {
+			        url:"{% url 'crits.dashboards.views.load_data' obj='Actor' %}",
+			        cols: [
+			               { field: 'details', caption: 'Details', size:"5%", sortable: false },
+			               { field: 'name', caption: 'Name', size:"10%", sortable: true },
+			               { field: 'description', caption: 'Description', size:"10%", sortable: true },
+			               { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
+			               { field: 'source', caption: 'Source', size:"10%", sortable: true },
+			               { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
+			               { field: 'status', caption: 'Status', size:"10%", sortable: true },
+			           ],
+			           sortBy: null,
+			           data: null,
+			           type: "Actor",
+			           totalRecords: null
+			},
+			analysisObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='AnalysisResult' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'object_type', caption: 'Object Type', size:"5%", sortable: true },
+                           { field: 'service_name', caption: 'Service Name', size:"10%", sortable: true },
+                           { field: 'version', caption: 'Version', size:"10%", sortable: true },
+                           { field: 'start_date', caption: 'Start Date', size:"10%", sortable: true },
+                           { field: 'finish_date', caption: 'Finish Date', size:"10%", sortable: true },
+                           { field: 'results', caption: 'Results', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "AnalysisResult",
+                       totalRecords: null
+            },
+            campaignsObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='Campaign' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'name', caption: 'Name', size:"10%", sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
+                           { field: 'aliases', caption: 'Aliases', size:"10%", sortable: true },
+                           { field: 'indicator_count', caption: 'Indicator Count', size:"10%", sortable: true },
+                           { field: 'email_count', caption: 'Email Count', size:"10%", sortable: true },
+                           { field: 'domain_count', caption: 'Domain Count', size:"10%", sortable: true },
+                           { field: 'sample_count', caption: 'Sample Count', size:"10%", sortable: true },
+                           { field: 'event_count', caption: 'Event Count', size:"10%", sortable: true },
+                           { field: 'ip_count', caption: 'IP Count', size:"10%", sortable: true },
+                           { field: 'pcap_count', caption: 'PCAP Count', size:"10%", sortable: true },
+                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "Campaign",
+                       totalRecords: null
+            },
+            certificatesObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='Certificate' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'filename', caption: 'Filename', size:"10%", sortable: true },
+                           { field: 'description', caption: 'Description', size:"10%", sortable: true },
+                           { field: 'filetype', caption: 'Filetype', size:"10%", sortable: true },
+                           { field: 'size', caption: 'Size', size:"10%", sortable: true },
+                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
+                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "Certificate",
+                       totalRecords: null
+            },
+            commentsObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='Comment' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'obj_type', caption: 'Object Type', size:"10%", sortable: true },
+                           { field: 'comment', caption: 'Comment', size:"10%", sortable: true },
+                           { field: 'date', caption: 'Date', size:"10%", sortable: true },
+                           { field: 'analyst', caption: 'Analyst', size:"10%", sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "Comment",
+                       totalRecords: null
+            },
+            domainsObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='Domain' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'domain', caption: 'Domain', size:"10%", sortable: true },
+                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
+                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "Domain",
+                       totalRecords: null
+            },
+            emailsObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='Email' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'from', caption: 'From', size:"10%", sortable: true },
+                           { field: 'to', caption: 'Recipient', size:"5%", sortable: true },
+                           { field: 'subject', caption: 'Subject', size:"10%", sortable: true },
+                           { field: 'isodate', caption: 'Date', size:"10%", sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
+                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "Email",
+                       totalRecords: null
+            },
+            eventsObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='Event' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'title', caption: 'Title', size:"10%", sortable: true },
+                           { field: 'event_type', caption: 'Event Type', size:"10%", sortable: true },
+                           { field: 'created', caption: 'Added', size:"10%", sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
+                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "Event",
+                       totalRecords: null
+            },
+            indicatorsObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='Indicator' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sizeType:'%', sortable: false },
+                           { field: 'value', caption: 'Value', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'type', caption: 'Type', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'created', caption: 'Added', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'modified', caption: 'Modified', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'campaign', caption: 'Campaign', size:"10%", sizeType:'%',sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sizeType:'%',sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "Indicator",
+                       totalRecords: null
+            },
+            IPsObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='IP' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'ip', caption: 'IP', size:"10%", sortable: true },
+                           { field: 'type', caption: 'Type', size:"10%", sortable: true },
+                           { field: 'created', caption: 'Added', size:"10%", sortable: true },
+                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
+                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "IP",
+                       totalRecords: null
+            },
+            PCAPsObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='PCAP' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'filename', caption: 'Filename', size:"10%", sortable: true },
+                           { field: 'description', caption: 'Description', size:"10%", sortable: true },
+                           { field: 'length', caption: 'Length', size:"10%", sortable: true },
+                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
+                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "PCAP",
+                       totalRecords: null
+            },
+            rawDatasObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='RawData' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'title', caption: 'Title', size:"10%", sortable: true },
+                           { field: 'data_type', caption: 'Data Type', size:"10%", sortable: true },
+                           { field: 'version', caption: 'Version', size:"10%", sortable: true },
+                           { field: 'modified', caption: 'Modified', size:"10%", sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
+                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "RawData",
+                       totalRecords: null
+            },
+            samplesObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='Sample' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'filename', caption: 'Filename', size:"10%", sortable: true },
+                           { field: 'size', caption: 'Size', size:"10%", sortable: true },
+                           { field: 'filetype', caption: 'Filetype', size:"10%", sortable: true },
+                           { field: 'created', caption: 'Added', size:"10%", sortable: true },
+                           { field: 'exploit', caption: 'Exploit', size:"10%", sortable: true },
+                           { field: 'campaign', caption: 'Campaign', size:"10%", sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "Sample",
+                       totalRecords: null
+            },
+            screenShotsObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='Screenshot' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'thumb', caption: 'Thumb', size:"10%", sortable: true },
+                           { field: 'description', caption: 'Description', size:"10%", sortable: true },
+                           { field: 'created', caption: 'Added', size:"10%", sortable: true },
+                           { field: 'source', caption: 'Source', size:"10%", sortable: true },
+                           { field: 'tags', caption: 'Tags', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "Screenshot",
+                       totalRecords: null
+            },
+            targetsObject= {
+                    url:"{% url 'crits.dashboards.views.load_data' obj='Target' %}",
+                    cols: [
+                           { field: 'details', caption: 'Details', size:"5%", sortable: false },
+                           { field: 'email_address', caption: 'Email Address', size:"10%", sortable: true },
+                           { field: 'firstname', caption: 'First Name', size:"10%", sortable: true },
+                           { field: 'lastname', caption: 'Last Name', size:"10%", sortable: true },
+                           { field: 'email_count', caption: 'Email Count', size:"10%", sortable: true },
+                           { field: 'department', caption: 'Department', size:"10%", sortable: true },
+                           { field: 'division', caption: 'Division', size:"10%", sortable: true },
+                           { field: 'status', caption: 'Status', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       data: null,
+                       type: "Target",
+                       totalRecords: null
+            },
+            countsObject= {
+                    cols: [
+                           { field: 'type', caption: 'Type', size:"10%", sortable: true },
+                           { field: 'count', caption: 'Count', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       type: "Count",
+                       totalRecords: null
+            },
+            backdoorsObject= {
+                    cols: [
+                           { field: 'name', caption: 'Name', size:"10%", sortable: true },
+                           { field: 'sample_count', caption: 'Sample Count', size:"10%", sortable: true },
+                       ],
+                       sortBy: null,
+                       type: "Backdoor",
+                       totalRecords: null
+            }
+        ]
+        //default to the first object in the objects array
+        var currentlyShownObject = objects[0];
+        //array to hold the columns that are removed
+        var removedColumns = [];
+        //used when screenshots are shown
+        var refreshForImages = false;
+        //used in adding the droppable event
+        var didDrag = false;
+        //if images are in the grid, set the counter
+        var imgCount = 0;
+        var lastSort = null;
+        //used for pagination
+        var currentPage = 1;
+        var gridWidth = $('#grid').width();
+        var isGridsterInitalized = false;
+        function create_pivot_links(data) {
+            var campBase = "/campaigns/details/__CAMPAIGN__/";
+            var items = data.split('|||');
+            var links = [];
+            for (var i = 0; i < items.length; i++)
+                if (items[i]) {
+                	var campUrl = '<a href="'+campBase.replace("__CAMPAIGN__", items[i])+'">'+items[i]+'</a>';
+                    if (links.indexOf(campUrl) >= 0)
+                        continue;
+                    links.push(campUrl);
+                }
+            return links;
+        }
+        //retrieve the data to show and pass it to the showData() method
+        function loadData(object) {
+            //if the data has not been retrived yet
+            if(object.data == null) {
+                var ajaxData = {
+                    sortBy: JSON.stringify(object.sortBy),
+                    q : "{{ term }}",
+                    search_type: "global",
+                    generalSearch: "Search",
+                    pageNumber: currentPage,
+                };
+                $.ajax({
+                    type:"GET",
+                    {%if isDefaultOnDashboard %}
+                        url: '{{dataUrl}}',
+                    {% else %}
+                        url: object.url,
+                        data: ajaxData,
+                    {% endif %}
+                    datatype: 'json',
+                    success: function(data) {
+                        {%if isDefaultOnDashboard %}
+                            var records =data;
+                        {% else %}
+                            var records =data.Records;
+                        {% endif %}
+                        
+                        if(w2ui['grid'].getColumn('thumb') != null) {
+                            for (i in records) 
+                                records[i].thumb = "<img class='screenshotImg' src='"+records[i].url+"thumb/' />";
+                            imgCount = records.length;
+                            refreshForImages = true;
+                        }
+                        else {
+                            //this is for sorting. The integers were being considered as strings
+                            //so it was causing issues with the sort
+                            for (i in records) {
+                                var record = records[i];
+                                for(k in record)
+                                    if(k.indexOf('count') >= 0 || k == "to" || k == "length" ||
+                                            k == "size" || k == 'results' ||
+                                            (k == "version" && object.type != "AnalysisResult")) 
+                                        record[k] = parseInt(record[k]);
+                                    else if(k == 'campaign')
+                                    	record[k] = create_pivot_links(record[k]);
+                            }
+                        }
+                        showData(records);
+                        object.data = records;
+                    },
+                    error: function(data) {
+                    	showResultsDiv("An unexpected error occurred while loading table. Please refresh and try again.", true);
+                    }
+                });
+            }
+            else    //show the data
+                showData(object.data);
+            changePagination(object);
+        }
+        function reloadGrid() {
+            currentlyShownObject.data = null;
+            loadData(currentlyShownObject);
+        }
+        /* Related to pagination */
+        function changePagination(object) {
+            var totalRecords = object.totalRecords;
+            var lastPage = Math.ceil(totalRecords/25);
+            $("#pagination").html("");
+            if(currentPage > 3)
+                addToPagination("<a class='pagination'>"+1+"</a> ");
+            if(currentPage > 4)
+                addToPagination("... ");
+            for(var i=currentPage-2;i<=currentPage+2;i++) {
+                if(i == currentPage)
+                    addToPagination("<a class='pagination'><b>"+i+"</b></a> ");
+                else if(i >= 1 && i <= lastPage)
+                    addToPagination("<a class='pagination'>"+i+"</a> ");
+                else if(i > lastPage)
+                    break;
+            }
+            if(currentPage < lastPage-3)
+                addToPagination("... ");
+            if(currentPage < lastPage-2)
+                addToPagination("<a class='pagination'>"+lastPage+"</a>");
+        }
+        function addToPagination(string) {
+            $("#pagination").append(string);
+        }
+        $(document).on('click', '.pagination', function() {
+            var newPage = parseInt($(this).text());
+            if(newPage != currentPage) {
+                currentPage = newPage;
+                reloadGrid();
+            }
+        });
+        $(".ui-icon-seek-first").click(function() {
+            if(currentPage > 1) {
+                currentPage = 1;
+                reloadGrid();
+            }
+        });
+        $(".ui-icon-seek-next").click(function() {
+            if(currentPage < Math.ceil(currentlyShownObject.totalRecords/25)) {
+                currentPage++;
+                reloadGrid();
+            }
+        });
+        $(".ui-icon-seek-prev").click(function() {
+            if(currentPage > 1) {
+                currentPage--;
+                reloadGrid();
+            }
+        });
+        $(".ui-icon-seek-end").click(function() {
+            if(currentPage < Math.ceil(currentlyShownObject.totalRecords/25)) {
+                currentPage = Math.ceil(currentlyShownObject.totalRecords/25);
+                reloadGrid();
+            }
+        });
+        /* End pagination */
+        //if all the images have been loaded, refresh the grid
+        function refreshGridIfLastImage(img) {
+            imgCount--;
+            if (imgCount == 0) {
+                refreshGrid();
+                correctGridsterSizeY();
+            }
+        }
+        //show the data passed into it on the grid
+        function showData(data) {
+            //clears the current data. false prevents the refresh(done later)
+            w2ui['grid'].clear(false);
+            //add the rows
+            w2ui['grid'].add(data);
+            //refresh the table
+            refreshGrid();
+            //if images are in the grid
+            if(refreshForImages) {
+                //when image is loaded, fire off the refresh function
+                $('#grid img').on('load', function() {
+                    refreshGridIfLastImage($(this));
+                });
+                refreshForImages = false;
+            }
+            if (!isGridsterInitalized)
+                setUpGridster();
+            correctGridsterSizeY();
+        }
+        //refreshes the grid and then readds the droppable event
+        function refreshGrid() {
+            w2ui['grid'].refresh();
+            addDroppableEvent();
+        }
+        //function to change columns on the grid
+        function changeColumns(object) {
+            //add blank column - this was necessary because having a table with no columns was causing errors
+            w2ui['grid'].addColumn(blankCol);
+            for(index in currentlyShownObject.cols) 
+                w2ui['grid'].removeColumn(currentlyShownObject.cols[index].field);
+            //add in the proper columns
+            w2ui['grid'].addColumn(object.cols);
+            //remove the blank column
+            w2ui['grid'].removeColumn(blankCol.field);
+        }
+        //parent function to alter all the content on the grid
+        function changeGrid(object) {
+            if(object != currentlyShownObject) {
+                currentPage =1;
+                changeColumns(object);    //change the columns of the grid
+                loadData(object);          //get the data for the grid
+                currentlyShownObject = object;     //reset the currentlyshown variable
+                removedColumns = [];               //clear the removeColumns array
+                $("#garbageContent").empty();      //empty out the garbage div
+                currentlyShownObject.sortBy = null;
+            }
+        }
+        //add the tab back to the tabs div
+        function addTab(tabName) {
+            for (i in tabs) 
+                if(tabs[i].id == tabName) {
+                    w2ui['tabs'].add(tabs[i]);
+                    break;
+                }
+        }
+        //submit the table to be pinned to dashaboard
+        $("#pinSearchForm").submit(function(event) {
+            event.preventDefault();
+            var error = false;
+            var tableName = $("#searchName").val();
+            //check if the table name is entered
+            if(tableName == '') {
+                $("#searchName").addClass("error");
+                showDialogMessage("You must give a name to the table.");
+                error = true;
+            }
+            var newDashName;
+            var dashId;
+            {% if not isDefaultOnDashboard %}
+	            if($('#dashboardSelector').val() == "NEW") {
+	            	if($('#dashName').val() == '') {
+		            	$("#dashName").addClass("error");
+			            showDialogMessage("You must give a name to the new dashboard.");
+			            error = true;
+	            	}
+	            	else
+	            		newDashName = $('#dashName').val();
+		        }
+	            else if ($('#dashboardSelector').val() == 'Default')
+	            	newDashName = 'Default';
+	            else
+	            	dashId = $('#dashboardSelector').val();
+	        {% elif currentDash %}
+	            dashId = '{{currentDash}}';
+	        {% else %}
+	            //addToDefaultDash = true;
+	        {% endif %}
+            if(error)
+            	return false;
+            //set up the data to be sent via ajax
+            var data = {
+            		newDashName: newDashName,
+            		dashId: dashId,
+                    userId: "{{ user.id }}",
+                    tableName:tableName,
+                    query: '{{ term }}',
+                    sizex: $('#gridster-li').attr('data-sizex'),
+                    object_type: currentlyShownObject.type,
+                    columns: JSON.stringify(w2ui['grid'].columns),
+                    sortBy: JSON.stringify(currentlyShownObject.sortBy),
+                    isDefaultOnDashboard: '{{isDefaultOnDashboard}}',
+                    maxRows: $('#maxRows').val(),
+                    {% if tableId %}
+                            tableId: '{{tableId}}'
+                    {% endif %}
+            }
+           //ajax call to save the table/search
+            $.ajax({
+                type:"GET",
+                url: "{% url 'crits.dashboards.views.save_search'%}",
+                data: data,
+                datatype: 'json',
+                success: function(data) {
+                    showResultsDiv(data.message, !data.success);
+                    if(data.success && data.newDashName && data.newDashId) {
+                    	if(data.isClone) {
+                    		$('#dashboardSelector option[value="'+dashId+'"]').val(data.newDashId);
+                    		$('.dashboard-nav-submenu').find('a[href*="'+dashId+'"]').attr('href',data.newDashUrl);
+                    	}
+                    	else {
+	                    	$('#dashboardSelector').prepend('<option value="'+data.newDashId+'">'+data.newDashName+'</option>');
+	                    	$('#newDashWrapper').hide();
+	                    	$('.dashboard-nav-submenu').append('<li class="mmenu_item"><a href="'+data.newDashUrl+'">'+data.newDashName+'</a></li>');
+                    	}
+                    }
+                    {%if not tableId%}
+                       $("#pinSearchForm")[0].reset();
+                    {%endif %}
+                },
+                error: function(data) {
+                    showResultsDiv("An unexpected error occurred while saving table. Please refresh and try again.", true);
+                }
+            });
+            $("#pinToDashboardDialog").dialog('close');
+        });
+        //remove error class on typing
+        $(document).on("keyup", ".error", function(){
+            $(this).removeClass("error"); 
+        });
+        //check if the mouse cursor is over garbage can (hover/mouseover was not workign do to columnDrag event)
+        function isOverGarbage(event) {
+            var x = event.pageX;
+            var y =  event.pageY;
+            var offset = $("#trashWrapper").offset();
+            var width = $("#trashWrapper").width();
+            var height = $("#trashWrapper").height();
+            if(x >= offset.left && x <= offset.left+width && y >= offset.top && y <= offset.top+height)
+                return true;
+            return false;
+        }
+        //remove the column being dragged
+        function throwOutColumn(event) {
+            if(w2ui['grid'].columns.length > 1) {
+                var col_caption = $(event.target).text();
+                var col;
+                for (var i in w2ui['grid'].columns) {
+                    col = w2ui['grid'].columns[i];
+                    if (col.caption.trim() == col_caption.trim())
+                        break;
+                    else
+                        col = null;
+                }
+                if (col) {
+                    w2ui['grid'].removeColumn(col.field);
+                    addToRemovedColumns(col);
+                    toggleTrashCan();
+                }
+                else
+                    showResultsDiv("An error occured while removing your column. Please refresh and try again.", true);
+            }
+            else 
+                showResultsDiv("You cannot have a table with no columns!", true);
+        }
+        //hide/show trashcan img
+        function toggleTrashCan() {
+            if(removedColumns.length == 0 && !$("#trashCan").is(":visible"))
+                $("#trashCan").show();
+            else if(removedColumns.length > 0 && $("#trashCan").is(":visible"))
+                $("#trashCan").hide();
+        }
+        //this was necessary because the drag event was causing unecessary highlighting
+        $(document).on("mousedown", ".w2ui-head", function(event) {
+            event.preventDefault();
+        });
+        //when removing a column from the grid
+        function addToRemovedColumns(column) {
+            removedColumns.push(column);
+            $("#garbageContent").append("<button colField='"+column.field+"' class='"+column.field+"Button removedColumn' >"+column.caption+"</button>");
+            $("."+column.field+"Button").draggable({
+                helper: 'clone',
+                cancel:false,
+                start: function() {
+                    $(".w2ui-head").addClass("highlighted");
+                },
+                stop: function() {
+                    $(".w2ui-head").removeClass("highlighted");
+                },
+                distance:10,
+            });
+        }
+        //when clicking on the removed column buttons
+        $(document).on("click", ".removedColumn", function() {
+            var colField = $(this).attr("colField");
+            //find the proper column in the removed columns array
+            for (i in removedColumns) {
+                if(removedColumns[i].field == colField) {
+                    w2ui['grid'].addColumn(removedColumns[i]);
+                    removedColumns.splice(i, 1);
+                    break;
+                }
+            }
+            //remove the button
+            $(this).remove();
+            //if there are no other removed columns, reshow the trashcan
+            refreshGrid();
+            if(removedColumns.length == 0)
+                toggleTrashCan();
+            addDroppableEvent();
+        });
+        $('#garbageHeader').click(function() {
+            if(removedColumns.length > 0) {
+                for (i in removedColumns)
+                    w2ui['grid'].addColumn(removedColumns[i]);
+                removedColumns = [];
+                $('.removedColumn').remove();
+                toggleTrashCan();
+                addDroppableEvent();
+            }
+        });
+        //show message at the bottom of the page
+        function showResultsDiv(message, isError) {
+        	var element = $("#resultsDiv");
+            if(isError)
+                $(element).addClass("errorDiv");
+            else if($(element).hasClass("errorDiv"))
+                $(element).removeClass("errorDiv");
+            $(element).html(message);
+        }
+        //show results in the dialog 
+        function showDialogMessage(message) {
+            $("#dialogDiv").html(message);
+        }
+        //changes the header of the garbage
+        function toggleGarbageHeaderText(text) {
+            $("#garbageHeader").html("<b>"+text+"</b>");
+        }
+        /*
+        adds the droppable event to the column headers
+        called everytime the grid refreshes or reorders columns
+        */
+        function addDroppableEvent() {
+            $("#grid_grid_columns td").each(function(index, value) {
+                $(this).droppable({
+                    drop: function(event, ui) {
+                        var colIndex = $(this).attr("col");
+                        var colField = ui.draggable.attr("colField");
+                        var removedCol;
+                        for (i in removedColumns) {
+                            if(removedColumns[i].field == colField) {
+                                removedCol = removedColumns[i];
+                                removedColumns.splice(i, 1);
+                                break;
+                            }
+                        }
+                        if(removedCol != null) {
+                            w2ui['grid'].columns.splice(colIndex, 0, removedCol);
+                            refreshGrid();
+                            ui.draggable.remove();
+                            if(removedColumns.length == 0)
+                                toggleTrashCan();
+                        }
+                    },
+                });
+            });
+        }
+        /*
+        everytime the grid refreshes or changes the order of the column, it removes all 
+        added classes so this was necessary in order maintain the columns to be dropppable
+        */
+        $(document).on("mousedown", function() {
+            if(didDrag) {
+                //this is necessary for the column buttons
+                addDroppableEvent();
+                didDrag = false;
+            }
+        });
+        //returns the object from the list of objects corresponding to the passed in tab
+        function getGridObjectFromTab(tabObject) {
+            for(i in objects)
+                if(objects[i].type == tabObject.type) {
+                    //this is used for pagination
+                    if(objects[i].totalRecords == null) 
+                        objects[i].totalRecords = parseInt(tabObject.caption.substr(tabObject.caption.indexOf('(')+1));
+                    return objects[i];
+                }
+        }
+        function reSizeLastColumn(tempCols) {
+            var lastColWidth = gridWidth;
+            for (i in tempCols)
+                if (lastColWidth < 1)
+                    return false;
+                else if (i == tempCols.length-1)
+                    tempCols[tempCols.length-1]['size'] = lastColWidth+"px";
+                else
+                    lastColWidth-=parseInt(tempCols[i]['size']);
+            return true;
+        }
+         //document.ready
+        $(document).ready(function() {
+            //initialize the tabs
+            $('#tabs').w2tabs({
+                name: 'tabs',
+                active: 'first',
+                tabs: tabs,
+                onClick: function (event) {
+                	w2ui['grid'].sortData = [];
+                    changeGrid(getGridObjectFromTab(event.object));
+                    showResultsDiv("");
+                },
+                onClose: function(event) {
+                    var target = event.target;
+                    //format stringt add option to the 'Add Tab" select box
+                    $("#tabSelect").append("<option>"+target.substring(0, target.length-3)+"s"+"</option>")
+                },
+            });
+            //set the currentlyShownObject to be the first tab 
+            currentlyShownObject = getGridObjectFromTab(w2ui['tabs'].tabs[0]);
+            //set up the grid
+            $('#grid').w2grid({ 
+                name: 'grid', 
+                reorderColumns: true,
+                fixedBody : false,
+                columns: currentlyShownObject.cols,
+                onColumnDragStart: function() {
+                    $('#trashWrapper').addClass('isDragging');
+                    toggleGarbageHeaderText("Drag Here to Remove");
+                    didDrag = true;
+                },
+                onColumnDragEnd: function(event) {
+                    event.onComplete = function(event) {
+	                    if(isOverGarbage(event.originalEvent))
+	                        throwOutColumn(event);
+	                    toggleGarbageHeaderText("Available Columns");
+	                    addDroppableEvent();
+	                    $('#trashWrapper').removeClass('isDragging');
+                    }
+                },
+                onSort: function(event) {
+                    //there was a bug with w2ui where sometimes the sorting event would not have 
+                    //a direction. This is a fix for the issue
+                    if(event.direction == null) {
+                        event.preventDefault();
+                        if(lastSort != null && lastSort.col == event.field && lastSort.direction == "asc")
+                            event.direction = "desc";
+                        else
+                            event.direction = "asc";
+                        w2ui['grid'].sort(event.field, event.direction);
+                    }
+                    else {
+                        lastSort = {
+                            col: event.field,
+                            direction: event.direction
+                        }
+                        currentlyShownObject.sortBy = {
+                            field: event.field,
+                            direction: event.direction
+                        }
+                        reloadGrid();
+                    }
+                },
+                onColumnResize: function(e) {
+                    e.onComplete = function() {
+                    	var tempCols = w2ui['grid'].columns;
+                        if(!reSizeLastColumn(tempCols)) {
+                            var changingColumn = w2ui['grid'].getColumn(e.field);
+                            var prevWidth = parseInt(changingColumn.size) - e.resizeBy;
+                            changingColumn.size = prevWidth + 'px';
+                            reSizeLastColumn(tempCols);
+                        }
+                        refreshGrid();
+                        for (i in tempCols) {
+                            var col = tempCols[i];
+                            if (col.sizeType != '%')
+                                col.size = parseInt(col.size)/gridWidth*100+'%';
+                        }
+                    };
+                },
+                onRefresh: function() {
+                    if (w2ui['grid']) {
+                        var cols = w2ui['grid'].columns;
+                        for(var i in cols) {
+                            var value = true;
+                            if (i == cols.length-1)
+                                value = false;
+                            cols[i].resizable = value;
+                        }
+                    }
+                }
+            });
+            //load the initial data in the grid
+            loadData(currentlyShownObject);
+            //on add Tab change. append new tab
+            $("#tabSelect").change(function() {
+                var val = $(this).val();
+                if(val != "None") {
+                    //take off the 's' and add 'Tab'
+                    var tabName = val.substring(0, val.length-1)+"Tab";
+                    addTab(tabName);
+                    //remove the selected option
+                    $('option:selected', this).remove();
+                }
+            });
+            //only called when editing a saved table, sets the shown columns
+            //and their sizes
+            {% if columns %}
+                var shownColumns = [];
+                var colSizes = [];
+                {% for col in columns %}
+                    shownColumns.push("{{col.field}}");
+                    colSizes.push("{{col.size}}");
+                {% endfor %}
+                correctShownColumns(shownColumns, colSizes);
+            {% endif %}
+            //sorts the table if its been set
+            {% if sortBy %}
+                w2ui['grid'].sort("{{sortBy.field}}", "{{sortBy.direction}}");
+            {% endif %}
+        });         //document.ready
+        $(window).load(function() {
+            window.setTimeout(function() {
+                refreshGrid();
+            }, 2000);
+        });
+        function correctGridsterSizeY() {
+            var baseY = $gridster.options.widget_base_dimensions[1];
+            var margY = $gridster.options.widget_margins[1];
+            var $this = $('#gridster-li');
+            var maxNeededHeight = $('#tab-content').height();
+            var currentSizeY = $this.attr('data-sizey');
+            for (var i = 1; i < 100; i++) {
+                if (gridster_getTestHeight(i) > maxNeededHeight) {
+                    if (i != currentSizeY)
+                        $gridster.resize_widget($this, null, i);
+                    break;
+                }
+            }
+            function gridster_getTestHeight(x) {
+                return (x*baseY) + ((x-1) * margY)*2;
+            }
+        }
+        $("#pinToDashboard").click(function(e) {
+            e.preventDefault();
+            $("#pinToDashboardDialog").dialog("open");
+        });
+        //dialog to delete a saved table
+        $( "#pinToDashboardDialog" ).dialog({
+            modal: true,
+            autoOpen: false,
+            width: 400,
+            close: function(event, ui) {
+                showDialogMessage("");
+            },
+            buttons: {
+                Pin: function() {
+                    $('#pinSearchForm').submit();
+                },
+                Cancel: function() {
+                    $(this).dialog("close");
+                }
+            }
+        });
+        /*
+        this is only called when editing a saved table
+        by default all columns are shown on load, this hides the ones that are
+        should be hidden in a saved table.
+        
+        It also sets the sizes of the columns.
+        */
+        {% if columns %}
+            function correctShownColumns(shownColumns, colSizes) {
+                //get all the regularly shown columns
+                var columns = w2ui['grid'].columns;
+                //those that arent in the shownColumns list should be added to 
+                //the garbage can
+                for (i in columns) 
+                    if(shownColumns.indexOf(columns[i].field) < 0)
+                        addToRemovedColumns(columns[i])
+                //create a new array to hold the correct columns
+                var correctedColumns = [];
+                for (i in shownColumns) {
+                    //get the column from the grid
+                    var col = w2ui['grid'].getColumn(shownColumns[i]);
+                    //resize it accordingly
+                    col.size = colSizes[i];
+                    //add it to the correct column list
+                    correctedColumns.push(col);
+                }
+                //change the grid columns to the corrected columns
+                w2ui['grid'].columns = correctedColumns;
+                //hide trash can if it has content
+                toggleTrashCan();
+            }
+        {% endif %}
+        /*
+        var colorPickerElement = "even-";
+        $(".color-picker").click(function() {
+            if(!$(this).hasClass("color-picker-selected")) {
+                $(".color-picker-selected").removeClass("color-picker-selected");
+                $(this).addClass("color-picker-selected");
+                var newColor = $(this).attr("color");
+                var oldColor = $(".row-picker-selected").attr("color");
+                $("#grid").removeClass("color-picker-"+colorPickerElement+oldColor);
+                $("#grid").addClass("color-picker-"+colorPickerElement+newColor);
+                
+                
+                $(".row-picker-selected").attr("color", newColor);
+                $(".row-picker-selected").removeClass("color-picker-"+oldColor);
+                $(".row-picker-selected").addClass("color-picker-"+newColor);
+            }
+        });
+        $(".row-picker").click(function() {
+            if(!$(this).hasClass("row-picker-selected")) {
+                //toggle the selected row button
+                $(".row-picker-selected").removeClass("row-picker-selected");
+                $(this).addClass("row-picker-selected");
+                
+                colorPickerElement = $('label[for="'+$(this).attr('id')+'"]').text().toLowerCase()+"-";
+                
+                //re-pick the correct color corresponding to row
+                var selectedColor = $(this).attr("color");
+                $(".color-picker-selected").removeClass("color-picker-selected");
+                $(".color-picker-"+selectedColor+":not(.row-picker)").addClass("color-picker-selected");
+            }
+        });
+        */
+	    $('#dashboardSelector').change(function() {
+	    	if($(this).val() == "NEW")
+	    		$('#newDashWrapper').show();
+	    	else
+	    		$('#newDashWrapper').hide();
+	    });
+        function setUpGridster() {
+            var dashWidth = $('#container').width()*.99;
+            var dashHeight = $('#container').height();
+            $gridster = $('#innerWrapper ul').gridster({
+                widget_margins: [3, 3],
+                widget_base_dimensions: [(dashWidth-294)/50, (dashHeight-294)/50],
+                min_cols: 50,
+                min_rows: 50,
+                resize: {
+                    enabled: true,
+                    axes: ['x'],
+                    stop: function(e, ui, $widget) {
+                        w2ui['grid'].refresh();
+                        gridWidth = $('#grid').width();
+                    }
+                }
+            }).data('gridster');
+            $gridster.disable();
+            isGridsterInitalized = true;
+        }
+    </script>
+{% endblock %}
+{% block content %}
+    <div id='container'>
+	    {% if not tableId %}
+		    <div class='floatright'>
+		        <span id='tabSpan'>Add Tab:
+		            <select id='tabSelect'>
+		               <option>None</option>
+		            </select>
+		        </span>
+		    </div>
+	    {% endif %}
+	    <div id='trashWrapper'>
+	        <div id='trashCan'>
+	            <i id='trashCanImg' class="fa fa-trash fa-4x"></i>
+	        </div>
+	        <div title='Click To Empty' class='center' id='garbageHeader'><b>Available Columns:</b></div>
+	        <div id='garbageContent'></div>
+	    </div>
+	    <div class='clear'></div>
+	    <div id='wrapper' class='{{dashtheme}}-theme draggable' style='width:100%;'>
+		    <div id='innerWrapper'>
+			    <div id="tabs"></div>
+			    <div id="contentWrapper">
+			        <ul class='gridster'>
+                        <li id='gridster-li' data-sizex='{% if sizex %}{{sizex}}{% else %}50{% endif %}' data-sizey='40' data-col='1' data-row='1'>
+					        <div id="tab-content"  >
+					            <div id="grid"></div>
+					            <div id='pagination-wrapper' {%if isDefaultOnDashboard %}style='display:none'{% endif %}>
+					                <div>
+					                    <span class='ui-icon-seek-first ui-icon'></span>
+					                    <span class='ui-icon-seek-prev ui-icon'></span>
+					                </div>
+					                <div id='pagination'></div>
+					                <div>
+					                    <span class='ui-icon-seek-next ui-icon'></span>
+					                    <span class='ui-icon-seek-end ui-icon'></span>
+					                </div>
+					            </div>
+					        </div>
+					    </li>
+                    </ul>
+              </div>
+		    </div>
+		</div>
+	    <div class='clear'></div>
+	    <div id='lowerContentWrapper'>
+	        <div id="resultsDiv" class='center'></div>
+	        <div class='center'>
+	            <button class='submit' id='pinToDashboard'>Pin to dashboard</button>
+	        </div>
+	    </div>
+	    <div id="pinToDashboardDialog" title="Pin To Dashboard" class='center'>
+	        <div id='dialogDiv' class='center errorDiv'></div>
+	        <form id='pinSearchForm'>
+	            {%if not isDefaultOnDashboard %}
+		            <label>Dashboard:</label>
+		            <select id='dashboardSelector' name='dashboardSelector'>
+		                {% for dashboard in dashboards %}
+		                    <option {% if dashboard|is_object_id_equal:currentDash %}selected{% endif %} value='{{dashboard.id}}'>{{dashboard.name}}</option>
+		                {% endfor %}
+		                <option value='NEW'>Create New Dashbaord</option>
+		            </select>
+		            <div id='newDashWrapper' class='hidden'> 
+		                <label>Dashboard Name:</label>
+		                <input name="dashName" type='text' id='dashName'/>
+		            </div>
+		        {%endif%}
+	            <div> 
+	                <label>Table Name:</label>
+	                <input name="searchName" type='text' id='searchName' value='{{tableName}}' {%if isDefaultOnDashboard %}readonly{%endif%}/>
+	            </div>
+	            <div>
+	               {%if not isDefaultOnDashboard %}
+	                    <label>Max Rows:</label>
+	                    <select id='maxRows'>
+	                        <option {%ifequal maxRows 1%}selected{%endifequal%}>1</option>
+	                        <option {%ifequal maxRows 3%}selected{%endifequal%}>3</option>
+	                        <option {%if not maxRows or maxRows == 5 %}selected{%endif%}>5</option>
+	                        <option {%ifequal maxRows 10%}selected{%endifequal%}>10</option>
+	                    </select>
+	                {%endif%}
+	            </div>
+	        </form>
+	    </div>
+    </div>
+{% endblock %}

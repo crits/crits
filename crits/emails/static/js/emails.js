@@ -67,7 +67,8 @@ $(document).ready(function(){
     $(".create-indicator").off().click(function(event) {
         var me = $(this);
         data = {
-            'type': $(this).attr('type'),
+            'type': $(this).attr('data-type'),
+            'field': $(this).attr('data-field'),
         };
 
         // Might be nicer if this was a spinning icon, but working with what we have handy
@@ -118,17 +119,6 @@ $(document).ready(function(){
             dataType: "json",
             success: function(data) {
                 $("#yaml_display").val(data.email_yaml);
-            }
-        });
-    });
-    $("#cybox_button").click(function(event) {
-        event.preventDefault()
-        $.ajax({
-            type: "POST",
-            url: get_email_cybox,
-            dataType: "json",
-            success: function(data) {
-                $("#cybox_display").val(data);
             }
         });
     });
@@ -395,11 +385,12 @@ $(document).ready(function(){
     // });
 
     var localDialogs = {
-    	"add-attachment": {title: "Add Attachment", open: file_upload_dialog, submit: defaultSubmit, href:""},
     	"download-email": {title: "Download Email", submit: defaultSubmit, href:""},
     };
 
     $.each(localDialogs, function(id,opt) { stdDialog(id, opt); });
+
+    populate_id(email_id, 'Email');
     details_copy_id('Email');
     toggle_favorite('Email');
 });

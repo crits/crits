@@ -58,9 +58,9 @@ class Command(BaseCommand):
            classification:\t\t<string> (ex: "unclassified")
            company_name:\t\t<string>
            create_unknown_user:\t\t<boolean> (ex: True, true, yes, or 1)
-           crits_message:\t\t\t<Login screen message string>
+           crits_message:\t\t<Login screen message string>
            crits_email:\t\t\t<email address string>
-           crits_email_subject_tag:\t\t<string>
+           crits_email_subject_tag:\t<string>
            crits_email_end_tag:\t\t<boolean> (ex: True, true, yes, or 1)
            crits_version:\t\t<X.X.X string>
            debug:\t\t\t<boolean> (ex: True, true, yes, or 1)
@@ -68,6 +68,8 @@ class Command(BaseCommand):
            email_host:\t\t\t<string>
            email_port:\t\t\t<string>
            enable_api:\t\t\t<boolean> (ex: True, true, yes, or 1)
+           enable_toasts:\t\t\t<boolean> (ex: True, true, yes, or 1)
+           git_repo_url:\t\t<string>
            http_proxy:\t\t\t<string>
            instance_name:\t\t<string>
            instance_url:\t\t<string>
@@ -76,6 +78,8 @@ class Command(BaseCommand):
            ldap_auth:\t\t\t<boolean> (ex: True, true, yes, or 1)
            ldap_tls:\t\t\t<boolean> (ex: True, true, yes, or 1)
            ldap_server:\t\t\t<string>
+           ldap_bind_dn:\t\t\t<string>
+           ldap_bind_password:\t\t\t<string>
            ldap_usercn:\t\t\t<string>
            ldap_userdn:\t\t\t<string>
            ldap_update_on_login:\t<boolean> (ex: True, true, yes, or 1)
@@ -84,20 +88,21 @@ class Command(BaseCommand):
            password_complexity_desc:\t<string>
            password_complexity_regex:\t<string>
            query_caching:\t\t<boolean> (ex: True, true, yes, or 1)
-           rar_path:\t\t\t<full file path>
            rel_max:\t\t\t<integer>
            remote_user:\t\t\t<boolean> (ex: True, true, yes, or 1)
            rt_url:\t\t\t<string>
            secure_cookie:\t\t<boolean> (ex: True, true, yes, or 1)
            service_dirs:\t\t<list of full directory paths>
-           service_model:\t\t<process/thread/local>
+           service_model:\t\t<process/thread/process_pool/thread_pool/local>
            session_timeout:\t\t<integer>
            splunk_search_url:\t\t<string>
            temp_dir:\t\t\t<full directory path>
            timezone:\t\t\t<string> (ex: "America/New_York")
            total_max:\t\t\t<integer>
-           totp:\t\t\t<boolean> (ex: True, true, yes, or 1)
-           zip7_path:\t\t\t<full file path>"""
+           totp_cli:\t\t\t<string> (ex: Disabled, Required, Optional)
+           totp_web:\t\t\t<string> (ex: Disabled, Required, Optional)
+           zip7_path:\t\t\t<full file path>
+           zip7_password:\t\t\t<string> (ex: infected)"""
     help = 'Set a CRITs configuration option.'
 
     def handle(self, *args, **options):
@@ -208,8 +213,8 @@ def set_config_attribute(crits_config, attr, value):
 
     if hasattr(crits_config, attr):
         if attr in ("enable_api", "create_unknown_user", "debug", "ldap_auth",
-                    "ldap_tls", "remote_user", "secure_cookie",
-                    "ldap_update_on_login", "query_caching", "totp",
+                    "ldap_tls", "remote_user", "secure_cookie", "enable_toasts",
+                    "ldap_update_on_login", "query_caching",
                     "crits_email_end_tag"):
             if value in ('True', 'true', 'yes', '1'):
                 value = True
@@ -218,7 +223,7 @@ def set_config_attribute(crits_config, attr, value):
             else:
                 raise CE('%s is a boolean True/False.' % attr)
         if attr in ('depth_max', 'invalid_login_attempts', 'rel_max',
-                    'session_timeout', 'total_max'):
+                    'session_timeout', 'service_pool_size', 'total_max'):
             try:
                 value = int(value)
             except:
@@ -226,7 +231,7 @@ def set_config_attribute(crits_config, attr, value):
         if attr == "log_level":
             if not value in ('INFO', 'WARN', 'DEBUG'):
                 raise CE('log_level must be INFO, WARN, or DEBUG.')
-        if attr in ('rar_path', 'temp_dir', 'zip7_path', 'log_directory'):
+        if attr in ('temp_dir', 'zip7_path', 'log_directory'):
             if not os.path.exists(value):
                 raise CE('Not a valid path: %s' % value)
         if attr == "allowed_hosts":
@@ -239,8 +244,11 @@ def set_config_attribute(crits_config, attr, value):
                 if not os.path.exists(v):
                     raise CE('Not a valid path: %s' % v)
         if attr == "service_model":
-            if value not in ('process', 'thread', 'local'):
-                raise CE('service_model must be process, thread, or local')
+            if value not in ('process', 'thread', 'process_pool', 'thread_pool', 'local'):
+                raise CE('service_model must be process, thread, process_pool, thread_pool, or local')
+        if attr in ('totp_web', 'totp_cli'):
+            if value not in ('Optional', 'Disabled', 'Required'):
+                raise CE('totp_web/cli must be Optional, Required, or Disabled')
 
         print "Setting [" + str(attr) + "] to a value of [" + str(value) + "]"
         setattr(crits_config, attr, value)

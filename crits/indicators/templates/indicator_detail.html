@@ -1,27 +1,40 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 
 {% block title %} Indicator Detail {% endblock %}
 
 {% block content %}
 
+<script>
+    var get_indicator_type_dropdown = "{% url 'crits.indicators.views.get_indicator_type_dropdown' %}";
+    var indicator_id = "{{ indicator.id | escapejs }}";
+    var ta_search = "{% url 'crits.core.views.global_search_listing' %}";
+    var threat_type_modify = "{% url 'crits.indicators.views.threat_type_modify' indicator.id|escapejs%}";
+    var attack_type_modify = "{% url 'crits.indicators.views.attack_type_modify' indicator.id|escapejs%}";
+    var threat_type_list = "{% url 'crits.indicators.views.get_available_threat_types' %}";
+    var attack_type_list = "{% url 'crits.indicators.views.get_available_attack_types' %}";
+
+</script>
+
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ indicator.analysis|length }})</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     </ul>
 <div id="details_section">
 
 {% if indicator %}
-    <span class="horizontal_menu">
-    <ul class="hmenu">
-        <li><a href="#" class="dialogClick" dialog="download-indicator">Download Indicator</a></li>
-        {% if admin %}
-        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="indicator" action='{% url "crits.indicators.views.remove_indicator" indicator.id %}'>Delete Indicator</a></li>
-        {% endif %}
-    </ul>
-    </span>
+    <div class='content_box'>
+        <span class="horizontal_menu">
+        <ul class="hmenu">
+            <li><a href="#" class="dialogClick" dialog="download-indicator">Download Indicator</a></li>
+            {% if admin %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="indicator" action='{% url "crits.indicators.views.remove_indicator" indicator.id %}'>Delete Indicator</a></li>
+            {% endif %}
+        </ul>
+        </span>
+    </div>
 
 <div class="content_box content_details">
     <h3 class="titleheader">
@@ -47,21 +60,41 @@
             <span class="edit" id="indicator_type" action="{% url 'crits.indicators.views.update_indicator_type' indicator.id %}">{{indicator.ind_type}}</span>
         </td>
         </tr>
-    {% if indicator.ind_type == 'URI - Domain Name' %}
+        <tr>
+            <td class='key'>Threat Types</td>
+            <td>
+                <ul id="threat_type_list" class="ctaglist">
+                    {% for threat_type in indicator.threat_types %}
+                        <li>{{threat_type}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td class='key'>Attack Types</td>
+            <td>
+                <ul id="attack_type_list" class="ctaglist">
+                    {% for attack_type in indicator.attack_types %}
+                        <li>{{attack_type}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+    {% if indicator.ind_type == 'Domain' %}
         <tr>
         <td class='key'>
             Value
         </td>
         <td>
             <a href='{% url "crits.domains.views.domain_detail" indicator.value %}'>{{ indicator.value }}</a>
-    {% elif indicator.type == 'Address - e-mail' %}
+    {% elif indicator.type == 'Email Address' or indicator.type == 'Email Address From' or indicator.type == 'Email Reply-To' or indicator.type == 'Email Address Sender' %}
         <tr>
         <td class='key'>
             Value
         </td>
         <td>
             <a href='{% url 'crits.emails.views.emails_listing' %}?from={{indicator.value}}'>{{ indicator.value }}</a>
-    {% elif indicator.type == 'Address - ipv4-addr' or indicator.type == 'Address - ipv6-addr'%}
+    {% elif indicator.type == 'IPv4 Address' or indicator.type == 'IPv6 Address'%}
         <tr>
         <td class='key'>
             Value
@@ -81,8 +114,13 @@
                  <a href="{{ splunk_search_url }}{{ indicator.value }}"><img src="/new_images/splunk.png" /></a>
              </span>
         {% endif %}
-         </td> 
+         </td>
          </tr>
+        <tr>
+            {% with description=indicator.description %}
+                {% include 'description_widget.html' %}
+            {% endwith %}
+        </tr>
         <tr>
         <td class='key'>
             Creation Date
@@ -149,42 +187,13 @@
     {% with bucket_list=indicator.bucket_list %}
         {% include 'bucket_list_widget.html' %}
     {% endwith %}
+    {% include 'add_related_widget.html' %}
+
 </div>
 <div class="content_box">
-    <h3 class="titleheader">
-    <span>Actions</span>
-        <span class="add_button" data-intro="Add an action" data-position="right">
-          <a href="#" title="Add Action" style="display:inline-block;" 
-class="ui-icon ui-icon-plusthick dialogClick" dialog="add-action" persona="new" action="{% url 'crits.indicators.views.add_update_action' 'add' indicator.id %}"></a>
-	</span>
-    </h3>
-    <div class="content_body">
-    <table class="chart" id="action_listing">
-    <thead>
-        {% if indicator.actions %}
-        <tr>
-        {% else %}
-        <tr style="display:none;">
-        {% endif %}
-        <th>Type</th>
-        <th>Begin</th>
-        <th>End</th>
-        <th>Performed</th>
-        <th>Active</th>
-        <th>Reason</th>
-        <th>Date Added</th>
-        <th>Analyst</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% with indicator_id=indicator.id %}
-        {% for action in indicator.actions %}
-            {% include 'indicators_action_row_widget.html' %}
-        {% endfor %}
-        {% endwith %}
-    </tbody>
-    </table>
-    </div>
+    {% with obj=indicator obj_type="Indicator" %}
+        {% include 'action_listing_widget.html' %}
+    {% endwith %}
 </div>
 <div>
     {% with obj=indicator obj_type=subscription.type %}
@@ -194,6 +203,11 @@ class="ui-icon ui-icon-plusthick dialogClick" dialog="add-action" persona="new" 
 <div>
     {% with hit=indicator col=COL_INDICATORS obj=indicator %}
         {% include "campaigns_display_widget.html" %}
+    {% endwith %}
+</div>
+<div>
+    {% with hit=indicator col=COL_INDICATORS obj=indicator %}
+        {% include "locations_display_widget.html" %}
     {% endwith %}
 </div>
 <div class="content_box">
@@ -253,16 +267,8 @@ class="ui-icon ui-icon-plusthick dialogClick" dialog="add-action" persona="new" 
 <div style="display: none;">
 
 <div id="dialog-download-indicator" title="Download Indicator">
-    <form id="form-download-indicator" action='{% url "crits.core.views.download_object" %}' method="POST" enctype="multipart/form-data">
+    <form id="form-download-indicator" action='{% url "crits.core.views.download_object" %}' method="POST" enctype="multipart/form-data">{% csrf_token %}
     <table class="form">{{forms.download_form.as_table}}</table>
-    </form>
-</div>
-
-<div id="dialog-add-action" title="Add Action">
-    <form id="form-add-action" 
-	  method='POST' enctype="multipart/form-data" 
-	  item-type="action">
-    <table class="form"> {{ forms.new_action.as_table }} </table>
     </form>
 </div>
 
@@ -281,9 +287,17 @@ class="ui-icon ui-icon-plusthick dialogClick" dialog="add-action" persona="new" 
 {% endblock %}
 
 {% block javascript_includes %}
+<script type="text/javascript">
+    $(document).bind('enable_threat_types', function(){
+        threat_type_load = false;
+    });
+    $(document).bind('enable_attack_types', function(){
+        attack_type_load = false;
+    });
+</script>
  <script type="text/javascript" src="{{ STATIC_URL }}js/indicators.js"></script>
 
- {% comment %} 
+ {% comment %}
  Moved relationship setup here, so we can get dialogs to init
  {% endcomment %}
 

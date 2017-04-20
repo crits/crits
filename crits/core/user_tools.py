@@ -1,5 +1,8 @@
 from bson import ObjectId
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core.data_tools import generate_qrcode
 from crits.core.totp import gen_user_secret
@@ -25,8 +28,9 @@ def is_user_favorite(analyst, type_, id_):
         if not user:
             return False
 
-        if str(id_) in user.favorites[type_]:
-            return True
+        if type_ in user.favorites:
+            if str(id_) in user.favorites[type_]:
+                return True
     return False
 
 
@@ -348,11 +352,10 @@ def unsubscribe_user(username, stype, oid):
     from crits.core.user import CRITsUser
     username = str(username)
     user = CRITsUser.objects(username=username).first()
-    c = 0
     for s in user.subscriptions[stype]:
         if str(s._id) == oid:
-            del user.subscriptions[stype][c]
-        c += 1
+            user.subscriptions[stype].remove(s)
+            break
     try:
         user.save()
         return {'success': True}
@@ -399,11 +402,10 @@ def unsubscribe_from_source(username, source):
     from crits.core.user import CRITsUser
     username = str(username)
     user = CRITsUser.objects(username=username).first()
-    c = 0
     for s in user.subscriptions['Source']:
         if s.name == source:
-            del user.subscriptions['Source'][c]
-        c += 1
+            user.subscriptions['Source'].remove(s)
+            break
     try:
         user.save()
         return {'success': True}
@@ -648,7 +650,7 @@ def get_api_key_by_name(username, name):
         return user.get_api_key(name)
     return None
 
-def create_api_key_by_name(username, name):
+def create_api_key_by_name(username, name, default=False):
     """
     Create API key by the name.
 
@@ -663,9 +665,28 @@ def create_api_key_by_name(username, name):
     username = str(username)
     user = CRITsUser.objects(username=username).first()
     if user:
-        return user.create_api_key(name, username)
+        return user.create_api_key(name, username, default=default)
     return {'success': False,
             'message': 'No user to create key for.'}
+
+def make_default_api_key_by_name(username, name):
+    """
+    Make an API key the default by the name.
+
+    :param username: The user to search for.
+    :type username: str
+    :param name: The name of the API key.
+    :type name: str
+    :returns: dict with keys "success" (boolean) and "message" (str)
+    """
+
+    from crits.core.user import CRITsUser
+    username = str(username)
+    user = CRITsUser.objects(username=username).first()
+    if user:
+        return user.default_api_key(name, username)
+    return {'success': False,
+            'message': 'No user to set default key for.'}
 
 def revoke_api_key_by_name(username, name):
     """
@@ -684,4 +705,4 @@ def revoke_api_key_by_name(username, name):
     if user:
         return user.revoke_api_key(name, username)
     return {'success': False,
-            'message': 'No user to create key for.'}
+            'message': 'No user to revoke key for.'}

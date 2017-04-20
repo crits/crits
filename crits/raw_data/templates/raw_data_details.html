@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 {% load filters %}
 
 {% block title %} Raw Data Details {% endblock %}
@@ -11,7 +11,6 @@
     var add_highlight = "{% url 'crits.raw_data.views.add_highlight' raw_data.id %}";
     var remove_highlight = "{% url 'crits.raw_data.views.remove_highlight' raw_data.id %}";
     var details_by_link = "{% url 'crits.raw_data.views.details_by_link' raw_data.link_id|stringformat:"s" %}"
-    var update_raw_data_description = "{% url 'crits.raw_data.views.set_raw_data_description' raw_data.id %}";
     var update_raw_data_tool_details = "{% url 'crits.raw_data.views.set_raw_data_tool_details' raw_data.id %}";
     var update_raw_data_tool_name = "{% url 'crits.raw_data.views.set_raw_data_tool_name' raw_data.id %}";
     var update_raw_data_type = "{% url 'crits.raw_data.views.set_raw_data_type' raw_data.id %}";
@@ -29,19 +28,22 @@
     <li><a href="#highlights_section" id="highlights_button"><span>Highlights</span></a></li>
     <li><a href="#raw_section" id="raw_button"><span>Raw Data</span></a></li>
     <li><a href="#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ raw_data.analysis|length }})</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
 </ul>
 
 <div id="details_section">
-    <span class="horizontal_menu">
-    <ul class="hmenu">
-        <li><a href="#" id="upload-new-version" class="dialogClick" dialog="upload-new-version" data-action="{% url 'crits.raw_data.views.upload_raw_data' raw_data.link_id|stringformat:"s" %}">Upload New Version</a></li>
-        {% if admin %}
-            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="raw_data" action='{% url "crits.raw_data.views.remove_raw_data" raw_data.id %}'>Delete Raw Data</a></li>
-        {% endif %}
-    </ul>
-    </span>
+    <div class='content_box'>
+        <span class="horizontal_menu">
+        <ul class="hmenu">
+            <li><a href="#" id="upload-new-version" class="dialogClick" dialog="upload-new-version" data-action="{% url 'crits.raw_data.views.upload_raw_data' raw_data.link_id|stringformat:"s" %}">Upload New Version</a></li>
+            {% if admin %}
+                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="raw_data" action='{% url "crits.raw_data.views.remove_raw_data" raw_data.id %}'>Delete Raw Data</a></li>
+            {% endif %}
+        </ul>
+        </span>
+    </div>
+
     <div class="content_box content_details">
         <h3 class="titleheader">
             <span id="raw_data_title" title="Copy to clipboard" data-title="{{ raw_data.title }}">"{{ raw_data.title }}" Details<span>
@@ -95,7 +97,6 @@
                 </td>
             </tr>
             <tr>
-            <tr>
             <td class='key'>Version</td>
             <td>
                 <select id="jump_versions" data-link="{{ raw_data.link_id }}"
@@ -104,17 +105,9 @@
             </td>
             </tr>
             <tr>
-            <tr>
-            <td class='key'>Description</td>
-            {% if raw_data.description %}
-                <td>
-                    <span class="edit_underline" id="raw_data_description">{{raw_data.description}}</span>
-                </td>
-            {% else %}
-                <td>
-                    <span class="edit_underline" id="raw_data_description">None</span>
-                </td>
-            {% endif %}
+                {% with description=raw_data.description %}
+                    {% include 'description_widget.html' %}
+                {% endwith %}
             </tr>
             <tr>
                 <td class="key">Status
@@ -145,9 +138,16 @@
         {% with bucket_list=raw_data.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
     </div>
     <div>
         {% include 'raw_data_data.html' %}
+    </div>
+    <div class="content_box">
+        {% with obj=raw_data obj_type="RawData" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
     </div>
     <div>
       {% with obj=raw_data obj_type=subscription.type %}
@@ -157,6 +157,11 @@
     <div>
         {% with hit=raw_data col=COL_RAW_DATA %}
             {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=raw_data col=COL_RAW_DATA %}
+            {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
     <div>
@@ -181,7 +186,7 @@
         <span>Data<span>
         </h3>
         <div>
-            <pre>{{ raw_data.data|cgi_escape }}</pre>
+            <pre>{{ raw_data.data }}</pre>
         </div>
     </div>
 </div>

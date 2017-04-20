@@ -174,12 +174,16 @@ in the system.
    relationship between each of these objects that would otherwise
    be independent. Relationships can be either horizontal (as in the
    above example) or vertical (as in hierarchical). CRITs supports
-   relationships as defined in the CybOX specification. Each object
-   has a \"child\" object in which related objects are declared.
+   relationships. Each object has a \"child\" object in which related
+   objects are declared.
 
 **Sample**
   Samples are binaries which you want to perform some level of analysis on due
   to their potential for being malicious.
+
+**Signature**
+  Signatures are top-level objects used for identifying and storing signature definitions.
+  They can have relationships to samples and also be used in a future services
 
 **Source**
    Source is the term used to refer, very simply, to the intelligence
@@ -194,8 +198,6 @@ in the system.
    universal \"right way\" to define them. Having a solid
    understanding of how your organization defines sources will ensure
    that your own efforts will be compliant.
-
-.. _CybOX Objects: http://cybox.mitre.org/about/faqs.html#B2
 
 Keyboard Shortcuts
 -------------------------------------------
@@ -318,6 +320,21 @@ Clicking any of the \"+\" icons will allow you to quickly create an
 item of the relevant kind. For instance, click the \"+\" next to the
 \"IP\" menu item allows you to quickly create a new IP-type
 indicator.
+
+Dashboards
+-------------------------------------------
+
+Dashboards can be created and custmized to your liking. The easiest way
+to create your own is to alter a public dashboard and save it. This will
+replace the public dashboard with your modified copy of it. You can revert
+back to the public one at any time by simplying deleting your modified copy 
+on the Dashboard Configurations page.
+
+Additionally, you may add your own tables to the dashboard by clicking
+"Configure for Dashboard" on the search results page. Onced clicked, you 
+will be brought to a page where you can customize your table and then choose
+which dashboard you want to pin it to. You also have the option of creating 
+a new dashboard.
 
 Profile Information
 -------------------------------------------
@@ -793,9 +810,8 @@ define a new indicator. An indicator consists of eight pieces of
 information, as follows:
 
 :Indicator Type: Choose the type of indicator from the drop-down.
-        Additional types may be available by clicking "More Object
-        Types" at the bottom of the window.
 :Value: Define the value for the indicator
+:Description: Enter a brief description for the indicator
 :Confidence: Select the confidence level for the indicator
 :Impact: Select the level of impact for the indicator
 :Campaign: (Optional) Select a campaign with which to associate the
@@ -1076,6 +1092,71 @@ will change to an \'X\', indicating that you are now subscribed. To
 unsubscribe, click the \'X\' and it will turn back to a check mark to
 confirm.
 
+Signature Page
+===========================================
+
+This page can be accessed directly from the `Navigation Menu`_.
+From here, you can manage all of the Signatures to which you have
+access. The table on this page shows, by default, the first 25
+Signatures sorted by date added. See `Table Navigation`_ for more
+information on how to interact with the table.
+
+Adding a New Signature
+-------------------------------------------
+There are two common ways to add a new Signature to CRITs:
+
+        1. Open the `Navigation Menu`_ and click the cross symbol
+           next to \"Signatures\".
+        2. From the `Signature Page`_, click the \"Add Signature\"
+           button.
+
+Doing either of these will open a new dialog box that allows you to
+define a new Signature entry. A Signature consists of eight pieces of
+information, as follows:
+
+:Title: The title of the signature to record
+:Data Type: Choose the data type of record
+:Description: Full description of the signature record
+:Data: Actual signature
+:Source: From the drop-down, select the source of the Signature
+:Source Method: (Optional) Record how the Signature was sourced
+:Source Reference: (Optional) Reference for the Signature source
+:Bucket List: This is a list of buckets you want to associate with this Signature.
+:Ticket: Associated Ticket.
+
+Once these fields are filled out, press \"Add Signature\". You should
+see a message that the Signature was successfully added. If you
+encounter an error, report it to your administrator.
+
+Now that you have added the Signature, press \"Cancel\" or ESCAPE to close the
+dialog box. Press \"Reload\" to see your new Signature in the table.
+
+Viewing\/Editing an Existing Signature
+-------------------------------------------
+
+Opening an Signature via the `Signature Page`_ or `Advanced Search`_ will bring
+up the Signature information page.
+
+From here, you can view all of the fields that are associated with
+the Signature object. The tabs at the top of the screen move you
+between the various child objects of the indicator. Clicking on the
+various links and icons will allow you to edit existing data or add
+new data, respectively.
+
+For more information on controls, pleas see the `Terms
+and Concepts`_ section.
+
+Subscribing to an Signature
+-------------------------------------------
+
+When `Viewing\/Editing an Existing Signature`_, you have the option
+to subscribe to it so that it will show up on your `User Profile
+Page`_ under the \"Subscriptions\" tab. Simply select the blue
+checkmark next to your `Assigned Role`_. When you do, the check mark
+will change to an \'X\', indicating that you are now subscribed. To
+unsubscribe, click the \'X\' and it will turn back to a check mark to
+confirm.
+
 Target Page
 ===========================================
 
@@ -1163,7 +1244,9 @@ Follow these steps to change your password.
 API
 ===========================================
 
-CRITs comes with an authenticated API. The API leverages Tastypie. A lot of the
+CRITs comes with an authenticated API. It is disabled by default and
+must be enabled in the Control Panel. Once it is enabled you must restart
+the web server for the URLs to be exposed. The API leverages Tastypie. A lot of the
 features of Tastypie are overridden by CRITs code for our needs. More
 information on Tastypie can be found here:
 
@@ -1194,11 +1277,16 @@ are using.
 The <resource> is the content you wish to utilize within CRITs.
 Currently the available resources are:
 
+- actors
+- actoridentifiers
+- backdoors
 - campaigns
 - certificates
+- comments
 - domains
 - emails
 - events
+- exploits
 - indicators
 - ips
 - pcaps
@@ -1218,10 +1306,6 @@ following formats:
 - json
 - yaml
 - xml
-- stix
-
-If you choose the stix format, you will get a single stix document from the API
-which contains all of the objects returned from that API call.
 
 If you wish to get information about a single document, you would use:
 
@@ -1252,11 +1336,18 @@ you use search operators in the global search box. Here's an example:
 
 You'll notice a couple things here. The first is that there is a "c-" in front
 of the field name. This tells the API that this parameter should be used as a
-field to search against to limit your results. Second is that there is no
-operators for defining AND or OR. Currently this only supports AND operations.
-In our example, only samples with a Campaign Name of "Bad Guys" AND a filename
-of "foo.txt" will be returned to us. Finally, in this format the fields are both
-full matches.
+field to search against to limit your results. In our example, only samples with
+a Campaign Name of "Bad Guys" AND a filename of "foo.txt" will be returned to
+us. Finally, in this format the fields are both full matches.
+
+The above assumes the parameters are to be used in an AND query. If you wish to
+instead use your parameters in an OR query, you can add "or=1" to your parameter
+list:
+
+        /api/v1/samples/?or=1&c-campaign.name=Bad Guys&c-filename=foo.txt
+
+This will return samples with a Campaign Name of "Bad Guys" OR a filename of
+"foo.txt".
 
 As long as you have a "c-" in front of the parameter, you can search against any
 field in the database, whether it is a CRITs supported field or not!
@@ -1343,7 +1434,7 @@ Adding a Domain
         | r = requests.post(url, data=data)
         | if r.status_code == 201:
         |     print "Successfully added "+params['domain']
-        
+
 Listing the Domains:
         | import requests
 
@@ -1388,8 +1479,36 @@ Listing the Domains
         | result=JSON.load(res.body)
 
 
-      
-        
+POST Responses
+-------------------------------------------
+
+In most cases when submitting a POST to add new content to CRITs you will
+get a response in the following JSON format:
+
+        | {
+        |   "return_code": <code>,
+        |   "type": <type>,
+        |   "id": <object_id>,
+        |   "message": <message>,
+        |   "url": <url>
+        | }
+
+The return_code is usually 0 for success, 1 for failure. Some API calls may
+wish to extend this to include other codes to represent other results. Those
+return codes should be listed in the appropriate sections below.
+
+In the event a new TLO was created or content was successfully added to an
+existing TLO, the TLO type and ID will be returned to you. In addition, a
+URL will be provided which can be used to query the API for the details of
+that TLO.
+
+If there is a message to give context, whether the request was successful or
+not, it will also be provided.
+
+In some situations the entire response may not look like this. Refer to the
+sections below for any special conditions you may need to look out for.
+
+
 Common POST Parameters
 -------------------------------------------
 
@@ -1408,6 +1527,63 @@ These parameters are frequently used across most top-level objects in CRITs.
 - must be one of "low", "medium", or "high"
 
 :ticket: Associated Ticket.
+
+Actor API
+-------------------------------------------
+
+GET:
+
+        /api/v1/actors/
+
+        /api/v1/actors/<object_id>/
+
+POST:
+
+        /api/v1/actors/
+
+Unique POST Parameters:
+
+:name: Name of the Actor.
+:aliases: Comma-separated list of actor aliases.
+:description: Description of the Actor.
+
+Actor Identifier API
+-------------------------------------------
+
+GET:
+
+        /api/v1/actoridentifiers/
+
+        /api/v1/actoridentifiers/<object_id>/
+
+POST:
+
+        /api/v1/actoridentifiers/
+
+Unique POST Parameters:
+
+:identifier_type: Type of the Actor Identifier.
+:identifier: Value of the Actor Identifier.
+
+Backdoor API
+-------------------------------------------
+
+GET:
+
+        /api/v1/backdoors/
+
+        /api/v1/backdoors/<object_id>/
+
+POST:
+
+        /api/v1/backdoors/
+
+Unique POST Parameters:
+
+:name: Name of the Backdoor.
+:version: Version of the Backdoor
+:aliases: Comma-separated list of backdoor aliases.
+:description: Description of the Backdoor.
 
 Campaign API
 -------------------------------------------
@@ -1450,6 +1626,19 @@ Unique POST Parameters:
 :related_type: The CRITs type of the related top-level object.
 :relationship: The type of relationship.
 
+Comment API
+-------------------------------------------
+
+POST:
+
+        /api/v1/comments/
+
+Unique POST Parameters:
+
+:comment: The Comment you would like to add.
+:object_id: The ObjectId of the item to add comment to.
+:object_type: The Object Type of this object.
+
 Domain API
 -------------------------------------------
 
@@ -1469,6 +1658,7 @@ Unique POST Parameters:
 :add_ip: Tell the API that you are also adding an IP related to this domain.
 :domain: The domain name.
 :ip: The IP you want to relate to this domain.
+:ip_type: The type of the IP ('IPv4 Address' is most common).
 :ip_source: The source of the IP.
 :ip_method: The method in which you acquired this IP from the source.
 :ip_reference: The reference about this IP source.
@@ -1500,7 +1690,7 @@ only "date" is required:
 :date: The Date field.
 :to: The To field.
 :cc: The CC field.
-:from: The From field.
+:from_address: The From field.
 :sender: The Sender field.
 :subject: The email subject.
 :reply_to: The Reply-To field.
@@ -1533,6 +1723,25 @@ Unique POST Parameters:
 :date: Date of the event.
 :title: Title of the event.
 
+Exploit API
+-------------------------------------------
+
+GET:
+
+        /api/v1/exploits/
+
+        /api/v1/exploits/<object_id>/
+
+POST:
+
+        /api/v1/exploits/
+
+Unique POST Parameters:
+
+:name: Name of the Exploit.
+:cve: CVE identifier of the Exploit.
+:description: Description of the Exploit.
+
 Indicator API
 -------------------------------------------
 
@@ -1559,7 +1768,10 @@ Unique POST Parameters:
 - Must be one of "unknown", "benign", "low", "medium", "high".
 
 :type: The type of the Indicator.
+:threat_type: The threat type of the Indicator.
+:attack_type: The attack type of the Indicator.
 :value: Indicator value.
+:description: A description of the Indicator.
 
 Indicator Activity API
 -------------------------------------------
@@ -1590,29 +1802,11 @@ POST:
 
 Unique POST Parameters:
 
+:description: Add a description to the IP address
 :add_indicator: Add this IP as an Indicator.
 :indicator_reference: Reference for the source of the Indicator.
 :ip: IP Address.
 :ip_type: Type of IP Address.
-
-Object API
--------------------------------------------
-
-POST:
-
-        /api/v1/objects/
-
-Unique POST Parameters:
-
-:crits_type: The type of top-level object to add this object to.
-:crits_id: The ObjectId of the top-level object to add this object to.
-:object_type: The Object Type of this object.
-:source: The name of the source adding this information.
-:method: The method of acquiring this information, or tool used to generate it.
-:reference: The reference to this data (or the name of the file you are uploading).
-:add_indicator: Also add as an Indicator if it is an Indicator type (boolean).
-:filedata: The file you are uploading if this Object Type is a file.
-:value: The value of the Object you are uploading (if no filedata).
 
 PCAP API
 -------------------------------------------
@@ -1658,27 +1852,12 @@ Unique POST Parameters:
 :data: The raw data if the upload type is "metadata".
 :description: Description of the raw data.
 :filedata: The raw data if the upload type is "file".
+:data_type: The type of raw data. Must match choices in the database.
 :link_id: The Link ID of an existing version of this raw data.
 :title: Title for the raw data.
 :tool_details: Details about the tool.
 :tool_name: The tool, utility, or host of the raw data.
 :tool_version: The version of the tool, utility, or host of the raw data.
-
-Relationship API
--------------------------------------------
-
-POST:
-
-        /api/v1/relationships/
-
-Unique POST Parameters:
-
-:left_type: The type of the first top-level object in the relationship.
-:left_id: The ObjectId of the first top-level object in the relationship.
-:right_type: The type of the second top-level object in the relationship.
-:right_id: The ObjectId of the second top-level object in the relationship.
-:rel_type: The relationship type.
-:rel_date: The date the relationship applies (optional).
 
 Sample API
 -------------------------------------------
@@ -1696,15 +1875,22 @@ POST:
 Unique POST Parameters:
 
 :upload_type: One of "metadata" or "file".
+:description: The description of the file.
 :filename: The name of the file if this is a "metadata" upload.
 :md5: The MD5 of the file if this is a "metadata" upload.
+:sha1: The SHA1 of the file if this is a "metadata" upload.
+:sha256: The SHA256 of the file if this is a "metadata" upload.
+:size: The size of the file if this is a "metadata" upload.
+:mimetype: The mimetype of the file if this is a "metadata" upload.
 :filedata: The sample if the upload type is "file".
 :password: The password to unzip the file if it is zipped and the upload type is "file".
 :file_format: The format of the file if the upload type is "file".
 
 - Must be one of "zip", "rar", or "raw".
 
-:parent_md5: The MD5 of the parent sample if this was an embedded sample.
+:related_md5: The MD5 of the related sample if this was an embedded sample.
+:related_id: The ObjectId of the related TLO.
+:related_type: The type of TLO to relate to.
 
 Screenshot API
 --------------
@@ -1727,6 +1913,7 @@ Unique POST Parameters:
 :tags: A comma-separated list of tags for the screenshot.
 :oid: The ObjectId of the top-level object the screenshot(s) is/are for.
 :otype: The type of the top-level object the screenshot(s) is/are for.
+:description: Description of the screenshot.
 
 Service API
 -------------------------------------------
@@ -1743,6 +1930,7 @@ Unique POST Parameters:
 :result: The 'result' contents of your analysis result.
 :result_type: The 'Type' of your result.
 :result_subtype: The 'subtype' of your result.
+:result_is_batch: Set to "1" if you are pushing multiple results.
 :log_message: The contents of the log message.
 :log_level: The level of the log (defaults to 'info').
 :status: The status to set the task to when it is finished.
@@ -1754,6 +1942,36 @@ Unique POST Parameters:
 If you include the "result" field, you will be required to also provide the
 "result_type" and "result_subtype". Also, if you include the "log_message"
 field, "log_level" will be set to "info" if it is not provided.
+
+If you want to submit multiple results at once you have to set "result_is_batch"
+to "1" and supply result, result_type, and result_subtype as JSON list. Make sure
+that all three lists have the same length so there is a type and subtype for each
+result.
+
+Signature API
+-------------------------------------------
+
+GET:
+
+        /api/v1/signatures/
+
+        /api/v1/signatures/<object_id>/
+
+POST:
+
+        /api/v1/signatures/
+
+Unique POST Parameters:
+
+:copy_relationships: Copy the relationships of the linked signature version.
+
+- Requires a link_id
+
+:data: The signature that will be added.
+:description: Description of the signature.
+:data_type: The type of signature. Must match choices in the database.
+:link_id: The Link ID of an existing version of this signature.
+:title: Title for the signature.
 
 Target API
 -------------------------------------------
@@ -1778,3 +1996,149 @@ Unique POST Parameters:
 :organization_id: The ID of the organization if they have one.
 :title: The job title of the Target.
 :note: Notes about the Target.
+
+
+Updating TLOs through the API using PATCH
+-----------------------------------------
+
+Over time we are beginning to expose handler functions to the API allowing you
+to make modifications to TLOs using them. This requires a PATCH request. We will
+not document the specific parameters to include as they will change along with
+the handler they map to. For information on what parameters to include, look at
+the handlers and provide the appropriate arguments. A couple notes, however:
+
+:`id_`: Anywhere you notice an `id_` argument to a handler, we provide it for you.
+:`type_`: Anywhere you notice a `type_` argument to a handler, we provide it for you.
+:user: Anywhere you notice a "user" argument to a handler, we provide it for you.
+
+Attempts at providing those values yourself will be dropped and replaced by the
+values we provide. For example, if you wanted to add releasability to a Sample,
+you don't need to provide a 'Sample' type nor the ObjectId of the sample since
+we can determine that from your PATCH request. PATCH requests are submitted to
+the details URL for a TLO like so:
+
+    /api/v1/samples/<object_id>/?action=add_releasability
+
+You would then look at what the "add_releasability" handler requires for
+arguments, and provide them in your request.
+
+Here is a list of currently exposed handlers:
+
+
+Submitting a PATCH request with python requests
+-----------------------------------------------
+
+As usual, this can be accomplished with the python requests library. As an
+example, let's use the ticket_add action on an Event TLO.
+
+.. code::
+
+    import datetime
+    import json
+    import requests
+    
+    event_id = crits_event_object_id
+    submit_url = 'https://crits_server.com/api/v1/events/{}/'.format(event_id)
+    
+    params = {
+        'api_key' : api_key,
+        'username' : username,
+    }
+    
+    headers = {
+        'Content-Type' : 'application/json',
+    }
+    
+    # date must be in the format %Y-%m-%d %H:%M:%S.%f
+    formatted_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    
+    data = {
+        'action' : 'ticket_add',
+        'ticket' : {
+            'ticket_number' : 12345,
+            'date' : formatted_date,
+        }
+    }
+    
+    r = requests.patch(submit_url, headers=headers, proxies=proxies, params=params,
+                    data=json.dumps(data), verify=False)
+    
+    if r.status_code == 200:
+        print('Yay!')
+
+There are a couple of important things to note about the above example. First,
+all datetime objects must be formatted properly with the provided strftime
+string. Second, when passing a python dict structure as part of the data, you
+must pass it through json.dumps() so it is handled properly by the requests
+library. Otherwise the corresponding function on the CRITs side will receive
+incorrect data. 
+
+Finally, we can view the ticket_add function within the CRITs code itself to
+verify the data it expects in the PATCH request.
+
+.. code::
+
+    def ticket_add(type_, id_, ticket, user, **kwargs):
+        :param ticket: The ticket to add.
+        :type ticket: dict with keys "date", and "ticket_number".
+        :param user: The user creating the ticket.
+        :type user: str
+        :returns: dict with keys:
+                "success" (boolean),
+                "object" (str) if successful,
+                "message" (str) if failed.
+        """
+        # Code
+
+
+Recall that the type\_, id\_, and user are all passed in automatically by the
+API handler. Notice the 'ticket' param is a dict with two keys, so our
+example code used json.dumps() above.
+
+
+Common PATCH actions for all TLOs
+---------------------------------
+
+:action_add:
+:action_update:
+:action_remove:
+:add_object:
+:add_releasability:
+:description_update:
+:forge_relationship:
+:run_service:
+:source_add_update:
+:source_remove:
+:status_update:
+:ticket_add:
+:ticket_update:
+:ticket_remove:
+
+Actor PATCH actions
+-------------------
+
+:update_actor_tags:
+:attribute_actor_identifier:
+:set_identifier_confidence:
+:remove_attribution:
+:set_actor_name:
+:update_actor_aliases:
+
+Indicator PATCH actions
+-----------------------
+
+:activity_add:
+:activity_remove:
+:activity_update:
+:ci_update:
+:modify_attack_types:
+:modify_threat_types:
+
+Signature PATCH actions
+-----------------------
+:update_dependency:
+:update_max_version:
+:update_min_version:
+:update_signature_data:
+:update_signature_type:
+:update_title:

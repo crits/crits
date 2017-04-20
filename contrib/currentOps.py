@@ -26,7 +26,7 @@ def main():
         quiet = True
     if options.opid is not None:
         opid = options.opid
-    conn = pymongo.Connection()
+    conn = pymongo.MongoClient()
     all_ops = conn['admin']['$cmd.sys.inprog'].find_one('inprog')['inprog']
     sync_ops = []
     active_ops = []

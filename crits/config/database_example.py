@@ -13,6 +13,7 @@ MONGO_DATABASE = 'crits'      # database name to connect to
 MONGO_SSL = False             # whether MongoD has SSL enabled
 MONGO_USER = ''               # mongo user with "readWrite" role in the database
 MONGO_PASSWORD = ''           # password for the mongo user
+MONGO_REPLICASET = None       # name of RS, if mongod in Replicaset
 
 # Set this to a sufficiently long random string. We recommend running
 # the following code from a python shell to generate the string and pasting
@@ -35,3 +36,7 @@ FILE_DB = GRIDFS # Set to S3 (NO QUOTES) to use S3. You'll also want to set
 # S3 credentials (if needed)
 #AWS_ACCESS_KEY_ID = ""
 #AWS_SECRET_ACCESS_KEY = ""
+
+# If your S3 location is somewhere other than s3.amazonaws.com, then you
+# can specify a different hostname here. (if needed)
+#S3_HOSTNAME = ""

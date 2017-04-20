@@ -1,13 +1,15 @@
 import json
 
+from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.core.validators import validate_ipv4_address, validate_ipv6_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-
-import crits.service_env
+from django.utils.ipv6 import clean_ipv6_address
 
 from crits.core import form_consts
+from crits.core.class_mapper import class_from_id
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.crits_mongoengine import create_embedded_source
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
@@ -20,7 +22,15 @@ from crits.ips.forms import AddIPForm
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict, validate_and_add_new_handler_object
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
+
+from crits.vocabulary.ips import IPTypes
+from crits.vocabulary.indicators import (
+    IndicatorAttackTypes,
+    IndicatorThreatTypes
+)
+from crits.vocabulary.relationships import RelationshipTypes
+
 
 def generate_ip_csv(request):
     """
@@ -188,8 +198,10 @@ def get_ip_details(ip, analyst):
         favorite = is_user_favorite("%s" % analyst, 'IP', ip.id)
 
         # services
-        manager = crits.service_env.manager
-        service_list = manager.get_supported_services('IP', True)
+        service_list = get_supported_services('IP')
+
+        # analysis results
+        service_results = ip.get_analysis_results()
 
         args = {'objects': objects,
                 'relationships': relationships,
@@ -197,6 +209,7 @@ def get_ip_details(ip, analyst):
                 'subscription': subscription,
                 'favorite': favorite,
                 'service_list': service_list,
+                'service_results': service_results,
                 'screenshots': screenshots,
                 'ip': ip,
                 'comments':comments}
@@ -252,14 +265,20 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
     campaign = data.get('campaign')
     confidence = data.get('confidence')
     source = data.get('source')
+    source_method = data.get('source_method')
     source_reference = data.get('source_reference')
     is_add_indicator = data.get('add_indicator')
     bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
     indicator_reference = data.get('indicator_reference')
+    related_id = data.get('related_id')
+    related_type = data.get('related_type')
+    relationship_type = data.get('relationship_type')
+    description = data.get('description')
 
     retVal = ip_add_update(ip, ip_type,
             source=source,
+            source_method=source_method,
             source_reference=source_reference,
             campaign=campaign,
             confidence=confidence,
@@ -269,52 +288,60 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
             bucket_list=bucket_list,
             ticket=ticket,
             is_validate_only=is_validate_only,
-            cache=cache)
+            cache=cache,
+            related_id=related_id,
+            related_type=related_type,
+            relationship_type=relationship_type,
+            description = description)
+
+    if not retVal['success']:
+        errors.append(retVal.get('message'))
+        retVal['message'] = ""
 
     # This block tries to add objects to the item
     if retVal['success'] == True or is_validate_only == True:
         result = True
-
         objectsData = rowData.get(form_consts.Common.OBJECTS_DATA)
 
         # add new objects if they exist
         if objectsData:
             objectsData = json.loads(objectsData)
-            object_row_counter = 1
 
-            for objectData in objectsData:
+            for object_row_counter, objectData in enumerate(objectsData, 1):
                 new_ip = retVal.get('object')
 
                 if new_ip != None and is_validate_only == False:
-                    objectDict = object_array_to_dict(objectData, "IP", new_ip.id)
+                    objectDict = object_array_to_dict(objectData,
+                                                      "IP", new_ip.id)
                 else:
                     if new_ip != None:
                         if new_ip.id:
-                            objectDict = object_array_to_dict(objectData, "IP", new_ip.id)
+                            objectDict = object_array_to_dict(objectData,
+                                                              "IP", new_ip.id)
                         else:
-                            objectDict = object_array_to_dict(objectData, "IP", "")
+                            objectDict = object_array_to_dict(objectData,
+                                                              "IP", "")
                     else:
-                        objectDict = object_array_to_dict(objectData, "IP", "")
+                        objectDict = object_array_to_dict(objectData,
+                                                          "IP", "")
 
-                (object_result, object_errors, object_retVal) = validate_and_add_new_handler_object(
+                (obj_result,
+                 errors,
+                 obj_retVal) = validate_and_add_new_handler_object(
                         None, objectDict, request, errors, object_row_counter,
                         is_validate_only=is_validate_only, cache=cache)
 
-                if object_retVal.get('success') == False:
+                if not obj_result:
                     retVal['success'] = False
-                if object_retVal.get('message'):
-                    errors.append(object_retVal['message'])
-
-                object_row_counter += 1
-    else:
-        errors += "Failed to add IP: " + str(ip)
 
     return result, errors, retVal
 
-def ip_add_update(ip_address, ip_type, source=None, source_method=None,
-                  source_reference=None, campaign=None, confidence='low', analyst=None,
-                  is_add_indicator=False, indicator_reference=None,
-                  bucket_list=None, ticket=None, is_validate_only=False, cache={}):
+def ip_add_update(ip_address, ip_type, source=None, source_method='',
+                  source_reference='', campaign=None, confidence='low',
+                  analyst=None, is_add_indicator=False, indicator_reference='',
+                  bucket_list=None, ticket=None, is_validate_only=False,
+                  cache={}, related_id=None, related_type=None,
+                  relationship_type=None, description=''):
     """
     Add/update an IP address.
 
@@ -347,11 +374,26 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
     :param cache: Cached data, typically for performance enhancements
                   during bulk operations.
     :type cache: dict
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
+    :param description: A description for this IP
+    :type description: str
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
               "object" (if successful) :class:`crits.ips.ip.IP`
     """
+
+    if not source:
+        return {"success" : False, "message" : "Missing source information."}
+
+    (ip_address, error) = validate_and_normalize_ip(ip_address, ip_type)
+    if error:
+        return {"success": False, "message": error}
 
     retVal = {}
     is_item_new = False
@@ -373,6 +415,11 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
         if cached_results != None:
             cached_results[ip_address] = ip_object
 
+    if not ip_object.description:
+        ip_object.description = description or ''
+    elif ip_object.description != description:
+        ip_object.description += "\n" + (description or '')
+
     if isinstance(source, basestring):
         source = [create_embedded_source(source,
                                          reference=source_reference,
@@ -390,12 +437,22 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
     if source:
         for s in source:
             ip_object.add_source(s)
+    else:
+        return {"success" : False, "message" : "Missing source information."}
 
     if bucket_list:
         ip_object.add_bucket_list(bucket_list, analyst)
 
     if ticket:
         ip_object.add_ticket(ticket, analyst)
+
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
 
     resp_url = reverse('crits.ips.views.ip_detail', args=[ip_object.ip])
 
@@ -412,6 +469,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
             retVal['message'] = message
             retVal['status'] = form_consts.Status.DUPLICATE
             retVal['warning'] = message
+
     elif is_validate_only == True:
         if ip_object.id != None and is_item_new == False:
             message = ('Warning: IP already exists: '
@@ -424,20 +482,30 @@ def ip_add_update(ip_address, ip_type, source=None, source_method=None,
         from crits.indicators.handlers import handle_indicator_ind
         handle_indicator_ind(ip_address,
                              source,
-                             indicator_reference,
                              ip_type,
+                             IndicatorThreatTypes.UNKNOWN,
+                             IndicatorAttackTypes.UNKNOWN,
                              analyst,
-                             source_method,
+                             method=source_method,
+                             reference=indicator_reference,
                              add_domain=False,
                              add_relationship=True,
                              bucket_list=bucket_list,
                              ticket=ticket,
                              cache=cache)
 
+    if related_obj and ip_object and relationship_type:
+        relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+        ip_object.add_relationship(related_obj,
+                              relationship_type,
+                              analyst=analyst,
+                              get_rels=False)
+        ip_object.save(username=analyst)
+
     # run ip triage
     if is_item_new and is_validate_only == False:
         ip_object.reload()
-        run_triage(None, ip_object, analyst)
+        run_triage(ip_object, analyst)
 
     retVal['success'] = True
     retVal['object'] = ip_object
@@ -551,3 +619,63 @@ def process_bulk_add_ip(request, formdict):
     response = parse_bulk_upload(request, parse_row_to_bound_ip_form, add_new_ip_via_bulk, formdict, cache)
 
     return response
+
+def validate_and_normalize_ip(ip_address, ip_type):
+    """
+    Validate and normalize the given IP address
+
+    :param ip_address: the IP address to validate and normalize
+    :type ip_address: str
+    :param ip_type: the type of the IP address
+    :type ip_type: str
+    :returns: tuple: (Valid normalized IP, Error message)
+    """
+
+    cleaned = None
+    if ip_type in (IPTypes.IPV4_SUBNET, IPTypes.IPV6_SUBNET):
+        try:
+            if '/' not in ip_address:
+                raise ValidationError("")
+            cidr_parts = ip_address.split('/')
+            if int(cidr_parts[1]) < 0 or int(cidr_parts[1]) > 128:
+                raise ValidationError("")
+            if ':' not in cidr_parts[0] and int(cidr_parts[1]) > 32:
+                raise ValidationError("")
+            ip_address = cidr_parts[0]
+        except (ValidationError, ValueError):
+            return ("", "Invalid CIDR address")
+
+    if ip_type in (IPTypes.IPV4_ADDRESS, IPTypes.IPV4_SUBNET):
+        try:
+            validate_ipv4_address(ip_address)
+
+            # Remove leading zeros
+            cleaned = []
+            for octet in ip_address.split('.'):
+                cleaned.append(octet.lstrip('0') or '0')
+            cleaned = '.'.join(cleaned)
+        except ValidationError:
+            if ip_type == IPTypes.IPV4_ADDRESS:
+                return ("", "Invalid IPv4 address")
+            else:
+                return ("", "Invalid IPv4 CIDR address")
+
+    if ip_type in (IPTypes.IPV6_ADDRESS, IPTypes.IPV6_SUBNET):
+        try:
+            validate_ipv6_address(ip_address)
+
+            # Replaces the longest continuous zero-sequence with "::" and
+            # removes leading zeroes and makes sure all hextets are lowercase.
+            cleaned = clean_ipv6_address(ip_address)
+        except ValidationError:
+            if ip_type == IPTypes.IPV6_ADDRESS:
+                return ("", "Invalid IPv6 address")
+            else:
+                return ("", "Invalid IPv6 CIDR address")
+
+    if not cleaned:
+        return ("", "Invalid IP type.")
+    elif ip_type in (IPTypes.IPV4_SUBNET, IPTypes.IPV6_SUBNET):
+        return (cleaned + '/' + cidr_parts[1], "")
+    else:
+        return (cleaned, "")

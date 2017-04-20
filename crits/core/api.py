@@ -2,18 +2,20 @@ import json
 import yaml
 
 from bson.objectid import ObjectId
+from dateutil.parser import parse
 from django.http import HttpResponse
 from lxml.etree import tostring
 
-from tastypie.exceptions import BadRequest
+from django.core.urlresolvers import resolve, get_script_prefix
+
+from tastypie.exceptions import BadRequest, ImmediateHttpResponse
 from tastypie.serializers import Serializer
 from tastypie.authentication import SessionAuthentication, ApiKeyAuthentication
 from tastypie.utils.mime import build_content_type
 from tastypie_mongoengine.resources import MongoEngineResource
 
 from crits.core.data_tools import format_file, create_zip
-from crits.core.handlers import download_object_handler, remove_quotes, generate_regex
-from crits.core.source_access import SourceAccess
+from crits.core.handlers import remove_quotes, generate_regex
 from crits.core.user_tools import user_sources
 
 
@@ -100,12 +102,11 @@ class CRITsSerializer(Serializer):
     Custom serializer for CRITs.
     """
 
-    formats = ['json', 'xml', 'yaml', 'stix', 'file']
+    formats = ['json', 'xml', 'yaml', 'file']
     content_types = {
         'json': 'application/json',
         'xml': 'application/xml',
         'yaml': 'text/yaml',
-        'stix': 'application/stix+xml',
         'file': 'application/octet-stream',
     }
 
@@ -179,7 +180,7 @@ class CRITsSerializer(Serializer):
                 if len(files):
                     zipfile = create_zip(files)
                     response =  HttpResponse(zipfile,
-                                                mimetype='application/octet-stream; charset=utf-8')
+                                                content_type="application/octet-stream; charset=utf-8")
                     response['Content-Disposition'] = 'attachment; filename="results.zip"'
                 else:
                     response = BadRequest("No files found!")
@@ -258,75 +259,6 @@ class CRITsSerializer(Serializer):
         data = self._convert_mongoengine(data, options)
         return yaml.dump(data)
 
-    def to_stix(self, data, options=None):
-        """
-        Respond with STIX formatted data.
-
-        :param data: The data to be worked on.
-        :type data: dict for multiple objects,
-                    :class:`tastypie.bundle.Bundle` for a single object.
-        :param options: Options to alter how this serializer works.
-        :type options: dict
-        :returns: str
-        """
-
-        options = options or {}
-        get_binaries = 'stix_no_bin'
-        if 'binaries' in options:
-            try:
-                if int(options['binaries']):
-                    get_binaries = 'stix'
-            except:
-                pass
-
-        # This is bad.
-        # Should probably find a better way to determine the user
-        # who is making this API call. However, the data to
-        # convert is already queried by the API using the user's
-        # source access list, so technically we should not be
-        # looping through any data the user isn't supposed to see,
-        # so this sources list is just a formality to get
-        # download_object_handler() to do what we want.
-        sources = [s.name for s in SourceAccess.objects()]
-
-        if hasattr(data, 'obj'):
-            objects = [(data.obj._meta['crits_type'],
-                       data.obj.id)]
-            object_types = [objects[0][0]]
-        elif 'objects' in data:
-            try:
-                objects = []
-                object_types = []
-                objs = data['objects']
-                data['objects'] = []
-                for obj_ in objs:
-                    objects.append((obj_.obj._meta['crits_type'],
-                                    obj_.obj.id))
-                    object_types.append(obj_.obj._meta['crits_type'])
-            except Exception:
-                return ""
-        else:
-            return ""
-
-        try:
-            # Constants are here to make sure:
-            # 1: total limit of objects to return
-            # 0: depth limit - only want this object
-            # 0: relationship limit - don't get relationships
-            data = download_object_handler(1,
-                                           0,
-                                           0,
-                                           get_binaries,
-                                           'raw',
-                                           object_types,
-                                           objects,
-                                           sources)
-        except Exception:
-            data = ""
-        if 'data' in data:
-            data = data['data']
-        return data
-
     def _convert_mongoengine(self, data, options=None):
         """
         Convert the MongoEngine class to a serializable object.
@@ -361,6 +293,34 @@ class CRITsAPIResource(MongoEngineResource):
 
     class Meta:
         default_format = "application/json"
+
+    def crits_response(self, content, status=200):
+        """
+        An amazing hack so we can return our own custom JSON response. Instead
+        of having the ability to craft and return an HttpResponse, Tastypie
+        requires us to raise this custom exception in order to do so.
+
+        The content should be a dict with keys of:
+
+            - return_code: 0 (success), 1 (failure), etc. for custom returns.
+            - type: The CRITs TLO type (Sample, Email, etc.)
+            - id: The ObjectId (as a string) of the TLO. (optional if not
+                  available)
+            - message: A custom message you wish to return.
+
+        If you wish to extend your content to contain more k/v pairs you can do
+        so as long as they are JSON serializable.
+
+        :param content: The information we wish to return in the response.
+        :type content: dict (must be json serializable)
+        :param status: If we wish to return anything other than a 200.
+        :type status: int
+        :raises: :class:`tastypie.exceptions.ImmediateHttpResponse`
+        """
+
+        raise ImmediateHttpResponse(HttpResponse(json.dumps(content),
+                                                 content_type="application/json",
+                                                 status=status))
 
     def create_response(self, request, data, response_class=HttpResponse,
                         **response_kwargs):
@@ -458,12 +418,26 @@ class CRITsAPIResource(MongoEngineResource):
         exclude = request.GET.get('exclude', None)
         source_list = user_sources(request.user.username)
         no_sources = True
+        # Chop off trailing slash and split on remaining slashes.
+        # If last part of path is not the resource name, assume it is an
+        # object ID.
+        path = request.path[:-1].split('/')
+        if path[-1] != self.Meta.resource_name:
+            # If this is a valid object ID, convert it. Otherwise, use
+            # the string. The corresponding query will return 0.
+            if ObjectId.is_valid(path[-1]):
+                querydict['_id'] = ObjectId(path[-1])
+            else:
+                querydict['_id'] = path[-1]
+
+        do_or = False
         for k,v in get_params.iteritems():
             v = v.strip()
             try:
                 v_int = int(v)
             except:
-                pass
+                # If can't be converted to an int use the string.
+                v_int = v
             if k == "c-_id":
                 try:
                     querydict['_id'] = ObjectId(v)
@@ -480,8 +454,13 @@ class CRITsAPIResource(MongoEngineResource):
                 except ValueError:
                     op_index = None
                 if op_index is not None:
-                    if op in ('$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin'):
+                    if op in ('$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin', '$exists'):
                         val = v
+                        if field in ('created', 'modified'):
+                            try:
+                                val = parse(val, fuzzy=True)
+                            except:
+                                pass
                         if op in ('$in', '$nin'):
                             if field == 'source.name':
                                 val = []
@@ -492,6 +471,11 @@ class CRITsAPIResource(MongoEngineResource):
                                         val.append(s)
                             else:
                                 val = [remove_quotes(i) for i in v.split(',')]
+                        if op == '$exists':
+                            if val in ('true', 'True', '1'):
+                                val = 1
+                            elif val in ('false', 'False', '0'):
+                                val = 0
                         if field in ('size', 'schema_version'):
                             if isinstance(val, list):
                                 v_f = []
@@ -506,10 +490,15 @@ class CRITsAPIResource(MongoEngineResource):
                                     val = int(val)
                                 except:
                                     val = None
-                        if val:
+                        if val or val == 0:
                             querydict[field] = {op: val}
                 elif field in ('size', 'schema_version'):
                     querydict[field] = v_int
+                elif field in ('created', 'modified'):
+                    try:
+                        querydict[field] = parse(v, fuzzy=True)
+                    except:
+                        querydict[field] = v
                 elif field == 'source.name':
                     v = remove_quotes(v)
                     if v in source_list:
@@ -519,10 +508,16 @@ class CRITsAPIResource(MongoEngineResource):
                     querydict[field] = generate_regex(v)
                 else:
                     querydict[field] = remove_quotes(v)
+            if k == 'or':
+                do_or = True
+        if do_or:
+            tmp = {}
+            tmp['$or'] = [{x:y} for x,y in querydict.iteritems()]
+            querydict = tmp
         if no_sources and sources:
             querydict['source.name'] = {'$in': source_list}
         if only or exclude:
-            required = [k for k,v in klass._fields.iteritems() if v.required]
+            required = [k for k,f in klass._fields.iteritems() if f.required]
         if only:
             fields = only.split(',')
             if exclude:
@@ -574,7 +569,126 @@ class CRITsAPIResource(MongoEngineResource):
         :returns: NotImplementedError if the resource doesn't override.
         """
 
-        raise NotImplementedError('You cannot currently update this object through the API.')
+        import crits.actors.handlers as ah
+        import crits.core.handlers as coreh
+        import crits.objects.handlers as objh
+        import crits.relationships.handlers as relh
+        import crits.services.handlers as servh
+        import crits.signatures.handlers as sigh
+        import crits.indicators.handlers as indh
+
+        actions = {
+            'Common': {
+                'add_object': objh.add_object,
+                'add_releasability': coreh.add_releasability,
+                'forge_relationship': relh.forge_relationship,
+                'run_service': servh.run_service,
+                'status_update' : coreh.status_update,
+                'ticket_add' : coreh.ticket_add,
+                'ticket_update' : coreh.ticket_update,
+                'ticket_remove' : coreh.ticket_remove,
+                'source_add_update': coreh.source_add_update,
+                'source_remove': coreh.source_remove,
+                'action_add' : coreh.action_add,
+                'action_update' : coreh.action_update,
+                'action_remove' : coreh.action_remove,
+                'description_update' : coreh.description_update,
+            },
+            'Actor': {
+                'update_actor_tags': ah.update_actor_tags,
+                'attribute_actor_identifier': ah.attribute_actor_identifier,
+                'set_identifier_confidence': ah.set_identifier_confidence,
+                'remove_attribution': ah.remove_attribution,
+                'set_actor_name': ah.set_actor_name,
+                'update_actor_aliases': ah.update_actor_aliases,
+            },
+            'Backdoor': {},
+            'Campaign': {},
+            'Certificate': {},
+            'Domain': {},
+            'Email': {},
+            'Event': {},
+            'Exploit': {},
+            'Indicator': {
+                'modify_attack_types' : indh.modify_attack_types,
+                'modify_threat_types' : indh.modify_threat_types,
+                'activity_add' : indh.activity_add,
+                'activity_update' : indh.activity_update,
+                'activity_remove' : indh.activity_remove,
+                'ci_update' : indh.ci_update
+                          },
+            'IP': {},
+            'PCAP': {},
+            'RawData': {},
+            'Sample': {},
+            'Signature': {
+                'update_dependency': sigh.update_dependency,
+                'update_min_version': sigh.update_min_version,
+                'update_max_version': sigh.update_max_version,
+                'update_signature_data': sigh.update_signature_data,
+                'update_signature_type': sigh.update_signature_type,
+                'update_title': sigh.update_title
+            },
+            'Target': {},
+        }
+
+        prefix = get_script_prefix()
+        uri = bundle.request.path
+        if prefix and uri.startswith(prefix):
+            uri = uri[len(prefix)-1:]
+        view, args, kwargs = resolve(uri)
+
+        type_ = kwargs['resource_name'].title()
+        if type_ == "Raw_Data":
+            type_ = "RawData"
+        if type_[-1] == 's':
+            type_ = type_[:-1]
+        if type_ in ("Pcap", "Ip"):
+            type_ = type_.upper()
+        id_ = kwargs['pk']
+
+        content = {'return_code': 0,
+                   'type': type_,
+                   'message': '',
+                   'id': id_}
+
+        # Make sure we have an appropriate action.
+        action = bundle.data.get("action", None)
+        atype = actions.get(type_, None)
+        if atype is None:
+            content['return_code'] = 1
+            content['message'] = "'%s' is not a valid resource." % type_
+            self.crits_response(content)
+        action_type = atype.get(action, None)
+        if action_type is None:
+            atype = actions.get('Common')
+            action_type = atype.get(action, None)
+        if action_type:
+            data = bundle.data
+            # Requests don't need to have an id_ as we will derive it from
+            # the request URL. Override id_ if the request provided one.
+            data['id_'] = id_
+            # Override type (if provided)
+            data['type_'] = type_
+            # Override user (if provided) with the one who made the request.
+            data['user'] = bundle.request.user.username
+            try:
+                results = action_type(**data)
+                if not results.get('success', False):
+                    content['return_code'] = 1
+                    # TODO: Some messages contain HTML and other such content
+                    # that we shouldn't be returning here.
+                    message = results.get('message', None)
+                    content['message'] = message
+                else:
+                    content['message'] = "success!"
+            except Exception, e:
+                content['return_code'] = 1
+                content['message'] = str(e)
+        else:
+            content['return_code'] = 1
+            content['message'] = "'%s' is not a valid action." % action
+        self.crits_response(content)
 
     def obj_delete_list(self, bundle, **kwargs):
         """
@@ -595,6 +709,20 @@ class CRITsAPIResource(MongoEngineResource):
         """
 
         raise NotImplementedError('You cannot currently delete this object through the API.')
+
+    def resource_name_from_type(self, crits_type):
+        """
+        Take a CRITs type and convert it to the appropriate API resource name.
+
+        :param crits_type: The CRITs type.
+        :type crits_type: str
+        :returns: str
+        """
+
+        if crits_type == "RawData":
+            return "raw_data"
+        else:
+            return "%ss" % crits_type.lower()
 
 
 def determine_format(request, serializer, default_format='application/json'):
@@ -623,3 +751,21 @@ def determine_format(request, serializer, default_format='application/json'):
 
     # No valid 'Accept' header/formats. Sane default.
     return default_format
+
+
+class MongoObject(object):
+    """Class that represents a Mongo-like object"""
+    def __init__(self, initial=None):
+        self.__dict__['_data'] = {}
+
+        if hasattr(initial, 'items'):
+            self.__dict__['_data'] = initial
+
+    def __getattr__(self, name):
+        return self._data.get(name, None)
+
+    def __setattr__(self, name, value):
+        self.__dict__['_data'][name] = value
+
+    def to_dict(self):
+        return self._data

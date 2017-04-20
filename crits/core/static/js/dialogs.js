@@ -119,6 +119,8 @@ function delete_object_click(e, item_type, del_label, data) {
     var fn = (function(e) {
         return function() {
         var form = "<form method='POST' action='" + action + "'>";
+        var csrftoken = readCookie('csrftoken');
+        form = form + "<input type='hidden' name='csrfmiddlewaretoken' value='" + csrftoken + "'>"
         $.each(data, function(k,v) { form = form + $("input").attr("type","hidden").attr("name",k).val(v).html(); } );
         form = form + "</form>";
         $(form).appendTo("body").submit();
@@ -126,6 +128,373 @@ function delete_object_click(e, item_type, del_label, data) {
     })(e);
 
     confirmDelete(del_label, fn);
+}
+
+function populate_id(id, type) {
+    // Upload a related pcap (Using the related dialog persona)
+    $( "#dialog-new-pcap" ).on("dialogopen.add_related_pcap", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        // $(this).find("form").removeAttr("target"); // Get rid of target to refresh page
+        // Unlike new-sample below, this does not redirect us nor refresh the
+        // Relationships list of the Sample, so delay for a few seconds then reload the
+        // page after uploaded.  Added a fileUploadComplete event to work around this.
+        $(this).find("form").bind("fileUploadComplete",
+                    function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+        }
+    });
+
+    // Upload a related Domain (Using the related dialog persona)
+    $( "#dialog-new-domain" ).on("dialogopen.add_related_domain", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Upload a related Sample (Using the related dialog persona)
+    $( "#dialog-new-sample" ).on("dialogopen.add_related_domain", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("fileUploadComplete",
+                    function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+        }
+    });
+    // Add a related Actor (Using the related dialog persona)
+    $( "#dialog-new-actor" ).on("dialogopen.add_related_actor", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Add a related Target (Using the related dialog persona)
+    $( "#dialog-new-target" ).on("dialogopen.add_related_target", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Add a related Email (Using the related dialog persona)
+    $( "#dialog-new-email-eml" ).on("dialogopen.add_related_email", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        // $(this).find("form").removeAttr("target"); // Get rid of target to refresh page
+
+        // Unlike new-sample below, this does not redirect us nor refresh the
+        // Relationships list of the Sample, so delay for a few seconds then reload the
+        // page after uploaded.  Added a fileUploadComplete event to work around this.
+        $(this).find("form").bind("fileUploadComplete",
+                    function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+        }
+    });
+    // Add a related Email (Using the related dialog persona)
+    $( "#dialog-new-email-outlook" ).on("dialogopen.add_related_email", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        // $(this).find("form").removeAttr("target"); // Get rid of target to refresh page
+
+        // Unlike new-sample below, this does not redirect us nor refresh the
+        // Relationships list of the Sample, so delay for a few seconds then reload the
+        // page after uploaded.  Added a fileUploadComplete event to work around this.
+        $(this).find("form").bind("fileUploadComplete",
+                    function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+        }
+    });
+    // Add a related Email (Using the related dialog persona)
+    $( "#dialog-new-email-raw" ).on("dialogopen.add_related_event", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Add a related Email (Using the related dialog persona)
+    $( "#dialog-new-email-yaml" ).on("dialogopen.add_related_event", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Add a related Email (Using the related dialog persona)
+    $( "#dialog-new-email-fields" ).on("dialogopen.add_related_event", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Add a related Event (Using the related dialog persona)
+    $( "#dialog-new-event" ).on("dialogopen.add_related_event", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Add a related Exploit (Using the related dialog persona)
+    $( "#dialog-new-exploit" ).on("dialogopen.add_related_exploit", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Add a related Indicator (Using the related dialog persona)
+    $( "#dialog-new-indicator" ).on("dialogopen.add_related_indicator", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Add a related Indicator (Using the related dialog persona)
+    $( "#dialog-new-indicator-csv" ).on("dialogopen.add_related_indicator", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("fileUploadComplete",
+                    function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+        }
+    });
+    // Add a related Indicator (Using the related dialog persona)
+    $( "#dialog-indicator-blob" ).on("dialogopen.add_related_indicator", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Add a related IP (Using the related dialog persona)
+    $( "#dialog-new-ip" ).on("dialogopen.add_related_ip", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Add a related backdoor (Using the related dialog persona)
+    $( "#dialog-new-backdoor" ).on("dialogopen.add_related_backdoor", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    // Add a related campaign (Using the related dialog persona)
+    $( "#dialog-new-campaign" ).on("dialogopen.add_related_campaign", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    $( "#dialog-new-certificate" ).on("dialogopen.add_related_certificate", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("fileUploadComplete",
+                    function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+        }
+    });
+    // Add a related Raw Data (Using the related dialog persona)
+    $( "#dialog-new-raw-data" ).on("dialogopen.add_related_raw_data", function() {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
+    $( "#dialog-new-raw-data-file" ).on("dialogopen.add_related_raw_data_file", function() {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("fileUploadComplete",
+                    function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+        }
+    });
+    $( "#dialog-new-signature" ).on("dialogopen.add_related_signatures", function(e) {
+        if ($(this).dialog("persona") == "related") {
+        $(this).find("form #id_related_id").val(id);
+        $(this).find("form #id_related_type").val(type);
+        $(this).find("form").bind("addEditSubmitComplete",
+            function(e, response) {
+                    $.ajax({
+                      type: "POST",
+                      success: function() {
+                          $('#relationship_box_container').load(location.href + " #relationship_box_container");
+                      }
+                    })
+              });
+          }
+    });
 }
 
 function delete_item_click(e, item_type, del_label, data) {
@@ -303,6 +672,7 @@ function add_edit_post_success(data,dialog,loc,item_type,e,final_callback) {
     }
 
     if (data.message) {
+    form.trigger("addEditSubmitComplete");
     display_server_msg(data.message, dialog); // item_type);
     }
 
@@ -320,6 +690,11 @@ function addEditSubmit(e) {
                             // -static versions
     }
     var form = dialog.find("form");
+
+    var sel = form.find('#id_action_type');
+    if (typeof sel !== "undefined") {
+        sel.attr('disabled', false);
+    }
 
     var type = form.attr('item-type');
     if (!type)
@@ -352,7 +727,6 @@ function addEditSubmit(e) {
             url: submit_url,
             success: function(data) { add_edit_post_success(data,dialog,updateloc,type,e); }
         });
-
     }
 };
 
@@ -443,7 +817,11 @@ function preference_toggle(e) {
 function defaultSubmit(e) {
     var dialog = $(e.currentTarget).closest(".ui-dialog").find(".ui-dialog-content");
     var form = dialog.find('form');
-
+    var csrftoken = readCookie('csrftoken');
+    var input = $("<input>")
+               .attr("type", "hidden")
+               .attr("name", "csrfmiddlewaretoken").val(csrftoken);
+    form.append($(input));
     form.submit();
 }
 
@@ -495,12 +873,13 @@ function update_dialog(e) {
 
     // get the form's inputs
     var inputs = form.find('input,select,textarea');
+    var sel_val = null;
 
     // pre-populate form
     inputs.each(function(index) {
         var input = $(this);
-    var field = input.attr('name');
-    var value;
+        var field = input.attr('name');
+        var value;
 
         // map input to table cell with "data-field" (changed from class) matching input name
         // first look at the top level
@@ -515,19 +894,39 @@ function update_dialog(e) {
     if (data_elem.length) { // some fields are set by default on page request and don't
                 // need to be set here set here
         var value = data_elem.text();
-            if (input.attr('type') == 'radio') {
-                // check the correct radio element
-                input.filter('[value="'+value+'"]').prop('checked', true);
+        if (field == 'action_type') {
+            sel_val = value;
+        }
+        if (input.attr('type') == 'radio') {
+            // check the correct radio element
+            input.filter('[value="'+value+'"]').prop('checked', true);
+        } else {
+            // handle empty analysis fields (default to current user)
+            if (field == 'analyst' && !value) {
+                input.val(username);                // defined in base.html
             } else {
-                // handle empty analysis fields (default to current user)
-                if (field == 'analyst' && !value) {
-                    input.val(username);                // defined in base.html
-                } else {
-                    input.val(value.trim());
-                }
+                input.val(value.trim());
             }
         }
+        }
      });
+    var sel = form.find('#id_action_type');
+    if (typeof sel !== "undefined") {
+        if (typeof subscription_type !== "undefined") {
+            $.ajax({
+                type:'GET',
+                data: {type: subscription_type},
+                url: get_actions_for_tlo,
+                success: function(data) {
+                    $.each(data.results, function(x,y) {
+                        sel.append($('<option></option>').val(y).html(y));
+                    });
+                    sel.find('option[value="' + sel_val + '"]').attr('selected', true);
+                    sel.attr('disabled', true);
+                }
+            });
+        }
+    }
 }
 
 function timenow() {
@@ -617,6 +1016,13 @@ function dialogClick(e) {
             form.append('<div class="message"></div>');
         }
         form.find('.message').hide().html('');
+            // Only show Relationship Type dropdown if needed
+        if (persona == "related") {
+            $dialog.find('#relationship_type').parents('tr').show();
+        }
+        else {
+            $dialog.find('#relationship_type').parents('tr').hide();
+        }
 
         $dialog.off("dialogopen.dialogClick");
         });
@@ -773,6 +1179,11 @@ function file_upload_dialog(e) {
             clear_server_msg(dialog);
         }
 
+        // If we are being told to redirect, do so.
+        if (response.redirect_url) {
+            document.location = response.redirect_url;
+        }
+
     // XXX TODO: Make this more general for special dialog callbacks, etc..
         if (item_type == "object" || item_type == "object-static") {
             $curTar.parent('form').find('.object-types').change();
@@ -842,6 +1253,7 @@ $(document).ready(function() {
 // Some dialog specific callacks below
 //
 
+
 function releasability_add_submit(e) {
     var widget = $(e.currentTarget);
     var dialog;
@@ -885,6 +1297,22 @@ function releasability_add_submit(e) {
         });
 }
 
+function check_selected(type, dialog) {
+    if (selected_text) {
+        var obj = null;
+        if (type == 'ip') {
+            obj = '#id_ip';
+        } else if (type == 'domain') {
+            obj = '#id_domain';
+        } else if (type == 'indicator') {
+            obj = '#id_value';
+        }
+        if (obj) {
+            dialog.find(obj).val(selected_text);
+            selected_text = null;
+        }
+    }
+}
 
 function new_ip_dialog(e) {
     var dialog = $(this).find("form");
@@ -898,6 +1326,9 @@ function new_ip_dialog(e) {
             ref.hide();
         }
         }).trigger('change');
+
+    // If there is selected text, default the value in the form
+    check_selected('ip', dialog);
 }
 
 function new_domain_dialog(e) {
@@ -942,6 +1373,10 @@ function new_domain_dialog(e) {
 
     //reinitialize ip date field (since this function can be called after page load)
     createPickers();
+
+    // If there is selected text, default the value in the form
+    check_selected('domain', dialog);
+
 }
 
 function new_event_dialog() {
@@ -982,7 +1417,8 @@ function new_indicator_dialog(e) {
     var dialog = $("#dialog-new-indicator").closest(".ui-dialog");
     var form = dialog.find("form");
 
-    add_more_object_types_button(form, 'no_file');
+    // If there is selected text, default the value in the form
+    check_selected('indicator', dialog);
 }
 
 // We may want to do something like this generally, but for now just doing it for single text entry form
@@ -1000,34 +1436,78 @@ function new_sample_dialog() {
     // Upload a related sample (Using the related dialog persona), used from events, samples
     // The action target takes care of passing the parent sample_id here
     if ($(this).dialog("persona") === "related") {
-    $(this).find("form").removeAttr("target"); // Get rid of target to follow redirect
-                           // and refresh current details page
+    $('id_related_md5, label[for="id_related_md5"]').closest("tr").hide();
+    $('#id_related_md5').prop('value', '');
+    $('#id_inherit_sources').prop('checked', true);
+    $('#id_inherit_campaigns').prop('checked', true);
+    }
+    else {
+    $('id_related_md5, label[for="id_related_md5"]').closest("tr").show();
+    $('#id_related_md5').prop('value', '');
+    $('#id_inherit_sources').prop('checked', false);
+    $('#id_inherit_campaigns').prop('checked', false);
+    }
+}
+
+function new_target_dialog(e) {
+    var element = document.getElementById('id_campaign');
+    var className = $(this).dialog("activatedBy")[0].className
+    if (className === "ui-icon ui-icon-plusthick add dialogClick") {
+        var campaign = this.baseURI.match(/\/campaigns\/details\/(.*)\//);
+        element.value = decodeURI(campaign[1]);
+    }
+    else {
+        element.value = '';
     }
 }
 
 /// Standard Dialog setup below
 
 var stdDialogs = {
-      "new-email-raw": {title: "Email (Raw)"},
-      "new-email-fields": {title: "Email"},
-      "new-email-yaml": {title: "Email (YAML)", open: new_email_yaml_dialog},
+      "new-actor": {title: "Actor", personas: {related: newPersona("Add Related Actor", {}, addEditSubmit) } },
+      "new-actor-identifier": {title: "Actor Identifier"},
+      "actor_identifier_type_add": {title: "Actor Identifier Type"},
+      "new-email-raw": {title: "Email (Raw)", personas: {related: newPersona("Add Related Email (raw)", {}, addEditSubmit) } },
+      "new-email-fields": {title: "Email", personas: {related: newPersona("Add Related Email", {}, addEditSubmit) } },
+      "new-email-yaml": {title: "Email (YAML)", personas: {related: newPersona("Add Related Email (YAML)", {open: new_email_yaml_dialog}, addEditSubmit ) }, open: new_email_yaml_dialog },
+      "new-campaign": {title: "Campaign", personas: {related: newPersona("Add Related Campaign", {}, addEditSubmit) } },
+      "new-backdoor": {title: "Backdoor", personas: {related: newPersona("Add Related Backdoor", {}, addEditSubmit) } },
+      "new-exploit": {title: "Exploit", personas: {related: newPersona("Add Related Exploit",{}, addEditSubmit) } },
+      "new-domain": {title: "Domain", personas: {related: newPersona("Add Related Domain", {open: new_domain_dialog}, addEditSubmit ) }, open: new_domain_dialog },
+      "new-indicator": {title: "Indicator",  personas: {related: newPersona("Add Related Indicator", {open: new_indicator_dialog}, addEditSubmit ) }, open: new_indicator_dialog},
+      "action_add": {title: "Action"},
+      "add-action": {title: "Action", href:"",
+		       new: {open: function(e) {
+                    $('#id_action_performed_date').val(timenow());
+                    var sel = $('#form-add-action').find('#id_action_type');
+                    sel.children().remove();
+                    if (typeof subscription_type !== "undefined") {
+                        $.ajax({
+                            type:'GET',
+                            data: {type: subscription_type},
+                            url: get_actions_for_tlo,
+                            success: function(data) {
+                                $.each(data.results, function(x,y) {
+                                    sel.append($('<option></option>').val(y).html(y));
+                                });
+                            }
+                        });
+                    }
+               }},
+		       update: { open: update_dialog} },
+      "indicator-blob": {title: "New Indicator Blob", personas: {related: newPersona("Add Related Indicator Blob", {open: new_indicator_dialog}, addEditSubmit ) }, open: new_indicator_dialog },
 
-      "new-campaign": {title: "Campaign"},
-
-      "new-domain": {title: "Domain", open: new_domain_dialog},
-      "new-indicator": {title: "Indicator", open: new_indicator_dialog},
-      "indicator_action_add": {title: "Indicator Action"},
-      "indicator-blob": {title: "New Indicator Blob"},
-
-      "new-event": {title: "Event", open: new_event_dialog},
-      "new-ip": {title: "IP Address", open: new_ip_dialog},
-      "new-raw-data": {title: "Raw Data" },
+      "new-event": {title: "Event", personas: {related: newPersona("Add Related Event", {open: new_event_dialog}, addEditSubmit ) }, open: new_event_dialog },
+      "new-ip": {title: "IP Address", personas: {related: newPersona("Add Related IP", {open: new_ip_dialog}, addEditSubmit ) }, open: new_ip_dialog },
+      "new-raw-data": {title: "Raw Data", personas: {related: newPersona("Add Related Raw Data", {}, addEditSubmit) } },
       "raw_data_type_add": {title: "Raw Data Type"},
 
-      "new-target": {title: "Target"},
+      "new-signature": {title: "Signature", personas: {related: newPersona("Add Related Signature", {}, addEditSubmit) } },
+      "signature_type_add": {title: "Signature Type"},
+      "signature_dependency_add": {title: "Signature Dependency"},
 
-      "backdoor_add": {title: "Backdoor"},
-      "exploit_add": {title: "Exploit"},
+      "new-target": {title: "Target", personas: {related: newPersona("Add Related Target", {open: new_target_dialog}, addEditSubmit ) }, open: new_target_dialog },
+
       "source_create": {title: "Source"},
       "user_role": {title: "User Role"},
 
@@ -1037,6 +1517,7 @@ var stdDialogs = {
                   addEditSubmit)
       }
       },
+      "location-add": {title: "Add Location"},
       "ticket": {title: "Ticket",
          update: { open: update_dialog} },
 
@@ -1058,19 +1539,17 @@ var stdDialogs = {
 
   var fileDialogs = {
       // File Upload Dialogs
-      "new-standards": {title: "STIX Document"},
-      "new-email-outlook": {title: "Upload Outlook Email" },
-      "new-email-eml": {title: "Email" },
+      "new-email-outlook": {title: "Upload Outlook Email", personas: {related: newPersona("Upload Related Email (Outlook)", {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
+      "new-email-eml": {title: "Email", personas: {related: newPersona("Upload Related Email",
+                        {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
       "new-pcap": {title: "PCAP", personas: {related: newPersona("Upload Related PCAP",
-                                                                 {open: file_upload_dialog},
-                                 defaultSubmit) } },
+                   {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
       "upload_tlds": {title: "TLDS" },
       "new-sample": {title: "Sample", personas: {related: newPersona("Upload Related Sample",
-                                                                     {open: file_upload_dialog},
-                                     defaultSubmit) } },
-      "new-certificate": {title: "Certificate" },
-      "new-raw-data-file": {title: "Raw Data File" },
-      "new-indicator-csv": {title: "New Indicator CSV" },
+                     {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
+      "new-certificate": {title: "Certificate", personas: {related: newPersona("Upload Related Certificate", {open: new_sample_dialog}, defaultSubmit) }, open: new_sample_dialog },
+      "new-raw-data-file": {title: "Raw Data File", personas: {related: newPersona("Upload Related Raw Data", {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
+      "new-indicator-csv": {title: "New Indicator CSV", personas: {related: newPersona("Upload Related Indicators", {open: file_upload_dialog}, defaultSubmit) }, open: file_upload_dialog },
   };
 
   // Ok, now initialize all the dialogs, with the href they are lazy-loaded
@@ -1081,8 +1560,8 @@ var stdDialogs = {
   $.each(fileDialogs, function(id,opt) {
       stdDialog(id, opt, {
           new: { open: file_upload_dialog, submit: defaultSubmit }}
-          )
-          });
+      )
+  });
 
   // New Sample dialog has some additional setup, so add that as an event callback
   $("#dialog-new-sample").on("dialogopen", new_sample_dialog);
@@ -1093,9 +1572,9 @@ var stdDialogs = {
   // There might be a more general fix to this, like assigning the
   // action to the form's submit action by default, but I don't want
   // to make that sort of global change before 3.0.
-  var singleInputDialogs = "#dialog-ticket,#dialog-backdoor_add," +
-      "#dialog-source_create,#dialog-user_role,#dialog-exploit_add," +
-      "#dialog-indicator_action_add,#dialog-raw_data_type_add";
+  var singleInputDialogs = "#dialog-actor-identifier-type,#dialog-ticket,"+
+      "#dialog-source_create,#dialog-user_role," +
+      "#dialog-action_add,#dialog-raw_data_type_add,#dialog-signature_type_add,#dialog-signature_dependency_add";
   $(singleInputDialogs).on("dialogopen", fix_form_submit(addEditSubmit));
 
 
@@ -1124,16 +1603,6 @@ var stdDialogs = {
 
 
   $("#dialog-new-indicator").on("dialogcreate", new_indicator_dialog);
-
-  $(document).on('change', "#id_rst_fmt", function(e) {
-      if (this.value == 'stix') {
-          console.log("disable");
-          $("#id_bin_fmt").val("base64").prop("disabled", true);
-      } else {
-          console.log("enable");
-          $("#id_bin_fmt").prop("disabled", false);
-      }
-  });
 
   // Releasability has plus instance and delete buttons that use same callback
   $(document).on('click', '.add_releasability_instance_button',

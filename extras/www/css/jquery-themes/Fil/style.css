@@ -17,7 +17,7 @@ div.top {
     margin: 0px;
     vertical-align: middle;
     height: 25px;
-    background: #d7d5c0 url(images/ui-bg_highlight-soft_75_d7d5c0_1x100.png) 50% 50% repeat-x;
+    background: #d7d5c0;
     box-shadow: 0px 2px 3px #969696;
     -webkit-box-shadow: 0px 2px 3px #969696;
     z-index: 2;
@@ -34,7 +34,7 @@ div.bottom {
     margin-top: 5px;
     vertical-align: middle;
     height: 25px;
-    background: #d7d5c0 url(images/ui-bg_highlight-soft_75_d7d5c0_1x100.png) 50% 50% repeat-x;
+    background: #d7d5c0;
     box-shadow: 0px -2px 3px #969696;
     -webkit-box-shadow: 0px -2px 3px #969696;
     z-index: 2;
@@ -105,12 +105,13 @@ div.logo {
 
 img.login_logo {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 0;
+    right: 0;
+    bottom: 60%;
+    left: 0;
     width: 145px;
     height: 150px;
-    margin-top: -300px;
-    margin-left: -72px;
+    margin: auto;
 }
 
 div.logo a img {
@@ -562,17 +563,18 @@ div.content a {
 
 span.horizontal_menu {
     margin: 10px auto;
-    display: table;
-    width: auto;
+    width: 100%;
 }
 
 span.horizontal_menu ul.hmenu {
     margin: 0px;
     padding: 0px;
     border: 1px solid #dfdfdf;
-    display: inline-block;
-    height: 20px;
-    width: auto;
+    display: block;
+    height: auto;
+    width: 100%;
+    overflow: auto;
+    white-space: nowrap;
 }
 
 span.horizontal_menu ul.hmenu li.right {
@@ -580,14 +582,14 @@ span.horizontal_menu ul.hmenu li.right {
 }
 
 span.horizontal_menu ul.hmenu li {
-    display: inline;
+    margin-left: 0px;
+    display: inline-block;
     list-style: none;
-    float: left;
     border-right: 1px solid #dfdfdf;
     padding-left: 5px;
     padding-right: 5px;
-    padding-top: 3px;
-    height: 17px;
+    padding-top: 5px;
+    height: 22px;
     vertical-align: middle;
     text-align: center;
     background-color: #f1f1f1;
@@ -823,7 +825,7 @@ table.vertical tr td.key {
     font-weight: bold;
     background-color: #eee;
     border: 1px solid #dfdfdf;
-    width: 100px;
+    width: 120px;
 }
 
 table.vertical tbody td {
@@ -1337,12 +1339,13 @@ a.nav_icon:hover {
 
 .login_box {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 600px;
-    height: 200px;
-    margin-top: -100px;
-    margin-left: -300px;
+    top: 200px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 650px;
+    height: 300px;
+    margin: auto;
     text-align: center;
 }
 
@@ -1583,4 +1586,27 @@ a#reply_inline_comment {
     background-color: #fff;
     border-radius: 50%;
     border: 1px solid #FA8258;
+}
+
+#selectedNodeMenu {
+    z-index: 10;
+    display: none;
+    padding: 5px;
+    background-color: #eeeeee;
+    border: 1px solid #666666;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    color: #222222;
+}
+
+.selected_text_button {
+    min-width: 20px;
+    min-height: 20px;
+    display: inline-block;
+    border-radius: 0px;
+}
+
+.ctaglist {
+     margin: 1px;
 }

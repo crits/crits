@@ -4,19 +4,26 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core import form_consts
-from crits.core.crits_mongoengine import json_handler
+from crits.core.class_mapper import class_from_id
+from crits.core.crits_mongoengine import json_handler, EmbeddedCampaign
 from crits.core.handlers import jtable_ajax_list, build_jtable, jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
 from crits.emails.email import Email
+from crits.services.handlers import run_triage
 from crits.stats.handlers import target_user_stats
 from crits.targets.division import Division
 from crits.targets.forms import TargetInfoForm
 from crits.targets.target import Target
+from crits.vocabulary.relationships import RelationshipTypes
+
 
 
 def generate_target_csv(request):
@@ -45,20 +52,50 @@ def upsert_target(data, analyst):
     if 'email_address' not in data:
         return {'success': False,
                 'message': "No email address to look up"}
-    target = Target.objects(email_address=data['email_address']).first()
-    if not target:
-        target = Target()
-        target.email_address = data['email_address']
 
-    target.department = data['department']
-    target.division = data['division']
-    target.organization_id = data['organization_id']
-    target.firstname = data['firstname']
-    target.lastname = data['lastname']
-    target.note = data['note']
-    target.title = data['title']
-    bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
-    ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+    # check for exact match first
+    target = Target.objects(email_address=data['email_address']).first()
+
+    if not target: # if no exact match, look for case-insensitive match
+        target = Target.objects(email_address__iexact=data['email_address']).first()
+    is_new = False
+    if not target:
+        is_new = True
+        target = Target()
+        target.email_address = data['email_address'].strip().lower()
+
+    bucket_list = False
+    ticket = False
+    related_id = False
+    if 'department' in data:
+        target.department = data['department']
+    if 'division' in data:
+        target.division = data['division']
+    if 'organization_id' in data:
+        target.organization_id = data['organization_id']
+    if 'firstname' in data:
+        target.firstname = data['firstname']
+    if 'lastname' in data:
+        target.lastname = data['lastname']
+    if 'note' in data:
+        target.note = data['note']
+    if 'title' in data:
+        target.title = data['title']
+    if 'campaign' in data and 'camp_conf' in data:
+        target.add_campaign(EmbeddedCampaign(name=data['campaign'],
+                                             confidence=data['camp_conf'],
+                                             analyst=analyst))
+    if 'bucket_list' in data:
+        bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
+    if 'ticket' in data:
+        ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
+    if 'related_id' in data:
+        related_id = data['related_id']
+    if 'related_type' in data:
+        related_type = data['related_type']
+    if 'relationship_type' in data:
+        relationship_type = data['relationship_type']
+
 
     if bucket_list:
         target.add_bucket_list(bucket_list, analyst)
@@ -66,10 +103,32 @@ def upsert_target(data, analyst):
     if ticket:
         target.add_ticket(ticket, analyst)
 
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
     try:
         target.save(username=analyst)
+
+        if related_obj and target:
+            relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+            target.add_relationship(related_obj,
+                                  relationship_type,
+                                  analyst=analyst,
+                                  get_rels=False)
+            target.save(username=analyst)
+
+        target.reload()
+
+        if is_new:
+            run_triage(target, analyst)
         return {'success': True,
-                'message': "Target saved successfully"}
+                'message': "Target saved successfully",
+                'id': str(target.id)}
     except ValidationError, e:
         return {'success': False,
                 'message': "Target save failed: %s" % e}
@@ -96,20 +155,6 @@ def remove_target(email_address=None, analyst=None):
     return {'success': True,
             'message': "Target removed successfully"}
 
-def get_target(email_address=None):
-    """
-    Get a target from the database.
-
-    :param email_address: The email address of the target to get.
-    :type email_address: str
-    :returns: None, :class:`crits.targets.target.Target`
-    """
-
-    if not email_address:
-        return None
-    target = Target.objects(email_address=email_address).first()
-    return target
-
 def get_target_details(email_address, analyst):
     """
     Generate the data to render the Target details template.
@@ -126,14 +171,17 @@ def get_target_details(email_address, analyst):
         template = "error.html"
         args = {'error': "Must provide an email address."}
         return template, args
+
+    # check for exact match first
     target = Target.objects(email_address=email_address).first()
+
+    if not target: # if no exact match, look for case-insensitive match
+        target = Target.objects(email_address__iexact=email_address).first()
     if not target:
         target = Target()
-        target.email_address = email_address
+        target.email_address = email_address.strip().lower()
         form = TargetInfoForm(initial={'email_address': email_address})
     email_list = target.find_emails(analyst)
-    #initial_data = target.to_dict()
-    #initial_data['bucket_list'] = target.get_bucket_list_string();
     form = TargetInfoForm(initial=target.to_dict())
 
     if form.fields.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME) != None:
@@ -177,6 +225,9 @@ def get_target_details(email_address, analyst):
     # favorites
     favorite = is_user_favorite("%s" % analyst, 'Target', target.id)
 
+    # analysis results
+    service_results = target.get_analysis_results()
+
     args = {'objects': objects,
             'relationships': relationships,
             'relationship': relationship,
@@ -186,11 +237,12 @@ def get_target_details(email_address, analyst):
             'screenshots': screenshots,
             'email_list': email_list,
             'target_detail': target,
+            'service_results': service_results,
             'form': form}
 
     return template, args
 
-def get_campaign_targets(campaign,user):
+def get_campaign_targets(campaign, user):
     """
     Get targets related to a specific campaign.
 
@@ -203,12 +255,21 @@ def get_campaign_targets(campaign,user):
 
     # Searching for campaign targets
     sourcefilt = user_sources(user)
+
+    # Get addresses from the 'to' field of emails attributed to this campaign
     emails = Email.objects(source__name__in=sourcefilt,
                            campaign__name=campaign).only('to')
     addresses = {}
     for email in emails:
         for to in email['to']:
-            addresses[to] = 1
+            addresses[to.strip().lower()] = 1 # add the way it should be
+            addresses[to] = 1 # also add the way it is in the Email
+
+    # Get addresses of Targets attributed to this campaign
+    targets = Target.objects(campaign__name=campaign).only('email_address')
+    for target in targets:
+        addresses[target.email_address] = 1
+
     uniq_addrs = addresses.keys()
     return uniq_addrs
 

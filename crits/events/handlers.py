@@ -1,4 +1,5 @@
-import crits.service_env
+from bson.objectid import ObjectId
+import datetime
 import json
 import uuid
 
@@ -6,11 +7,17 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from mongoengine.base import ValidationError
+try:
+    from mongoengine.base import ValidationError
+except ImportError:
+    from mongoengine.errors import ValidationError
 
 from crits.core import form_consts
+from crits.core.class_mapper import class_from_id
+from crits.campaigns.campaign import Campaign
 from crits.campaigns.forms import CampaignForm
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
+from crits.core.crits_mongoengine import EmbeddedCampaign
 from crits.core.exceptions import ZipFileError
 from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list
@@ -18,12 +25,13 @@ from crits.core.handlers import jtable_ajax_delete
 from crits.core.handlers import csv_export
 from crits.core.user_tools import is_admin, user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
-from crits.emails.forms import EmailAttachForm
-from crits.events.event import Event, EventType
+from crits.events.event import Event
 from crits.notifications.handlers import remove_user_from_notification
-from crits.samples.handlers import handle_uploaded_file
-from crits.samples.sample import Sample
-from crits.services.handlers import run_triage
+from crits.samples.handlers import handle_uploaded_file, mail_sample
+from crits.services.handlers import run_triage, get_supported_services
+
+from crits.vocabulary.relationships import RelationshipTypes
+
 
 
 def generate_event_csv(request):
@@ -37,24 +45,6 @@ def generate_event_csv(request):
 
     response = csv_export(request,Event)
     return response
-
-def get_event_types(active):
-    """
-    Get a list of available event types.
-
-    :param active: Get only active event types.
-    :type active: bool
-    :returns: list
-    """
-
-    if active:
-        etypes = EventType.objects(active="on")
-    else:
-        etypes = EventType.objects()
-    event_types = []
-    for etype in etypes:
-        event_types.append(etype.name)
-    return event_types
 
 def get_event_details(event_id, analyst):
     """
@@ -78,7 +68,6 @@ def get_event_details(event_id, analyst):
     event.sanitize("%s" % analyst)
 
     campaign_form = CampaignForm()
-    upload_form = EmailAttachForm(analyst)
     download_form = DownloadFileForm(initial={"obj_type": 'Event',
                                               "obj_id": event_id})
 
@@ -99,6 +88,18 @@ def get_event_details(event_id, analyst):
     #relationships
     relationships = event.sort_relationships("%s" % analyst, meta=True)
 
+    # Get count of related Events for each related Indicator
+    for ind in relationships.get('Indicator', []):
+        count = Event.objects(relationships__object_id=ind['id'],
+                              source__name__in=sources).count()
+        ind['rel_ind_events'] = count
+
+    # Get count of related Events for each related Sample
+    for smp in relationships.get('Sample', []):
+        count = Event.objects(relationships__object_id=smp['id'],
+                              source__name__in=sources).count()
+        smp['rel_smp_events'] = count
+
     # relationship
     relationship = {
             'type': 'Event',
@@ -115,8 +116,10 @@ def get_event_details(event_id, analyst):
     favorite = is_user_favorite("%s" % analyst, 'Event', event.id)
 
     # services
-    manager = crits.service_env.manager
-    service_list = manager.get_supported_services('Event', True)
+    service_list = get_supported_services('Event')
+
+    # analysis results
+    service_results = event.get_analysis_results()
 
     args = {'service_list': service_list,
             'objects': objects,
@@ -128,7 +131,7 @@ def get_event_details(event_id, analyst):
             'screenshots': screenshots,
             'event': event,
             'campaign_form': campaign_form,
-            'upload_form': upload_form,
+            'service_results': service_results,
             'download_form': download_form}
 
     return template, args
@@ -152,11 +155,22 @@ def generate_event_jtable(request, option):
         details_url = mapper['details_url']
         details_url_key = mapper['details_url_key']
         fields = mapper['fields']
+
+        # filter list on relationship to given ObjectId
+        query = {}
+        if 'related' in request.GET:
+            try:
+                oid = ObjectId(request.GET.get('related'))
+                query = {'relationships.value': oid}
+            except:
+                pass
+
         response = jtable_ajax_list(obj_type,
                                     details_url,
                                     details_url_key,
                                     request,
-                                    includes=fields)
+                                    includes=fields,
+                                    query=query)
         return HttpResponse(json.dumps(response,
                                        default=json_handler),
                             content_type="application/json")
@@ -246,7 +260,9 @@ def generate_event_id(event):
     return uuid.uuid4()
 
 def add_new_event(title, description, event_type, source, method, reference,
-                  date, analyst, bucket_list=None, ticket=None):
+                  date, analyst, bucket_list=None, ticket=None,
+                  campaign=None, campaign_confidence=None, related_id=None,
+                  related_type=None, relationship_type=None):
     """
     Add a new Event to CRITs.
 
@@ -270,13 +286,28 @@ def add_new_event(title, description, event_type, source, method, reference,
     :type: str
     :param ticket: Ticket to associate with this event.
     :type ticket: str
+    :param related_id: ID of object to create relationship with
+    :type related_id: str
+    :param related_type: Type of object to create relationship with
+    :type related_type: str
+    :param relationship_type: Type of relationship to create.
+    :type relationship_type: str
     :returns: dict with keys "success" (boolean) and "message" (str)
+    :param campaign: Campaign to associate with this Event
+    :type campaign: str
+    :param campaign_confidence: Confidence to associate with the Campaign
+    :type campaign_confidence: str
     """
+
+    result = dict()
+    if not source:
+        return {'success': False, 'message': "Missing source information."}
 
     event = Event()
     event.title = title
     event.description = description
     event.set_event_type(event_type)
+
     s = create_embedded_source(name=source,
                                reference=reference,
                                method=method,
@@ -284,25 +315,65 @@ def add_new_event(title, description, event_type, source, method, reference,
                                date=date)
     event.add_source(s)
 
+    valid_campaign_confidence = {
+        'low': 'low',
+        'medium': 'medium',
+        'high': 'high'}
+    valid_campaigns = {}
+    for c in Campaign.objects(active='on'):
+        valid_campaigns[c['name'].lower()] = c['name']
+
+    if campaign:
+        if isinstance(campaign, basestring) and len(campaign) > 0:
+            if campaign.lower() not in valid_campaigns:
+                result = {'success':False, 'message':'{} is not a valid campaign.'.format(campaign)}
+            else:
+                confidence = valid_campaign_confidence.get(campaign_confidence, 'low')
+                campaign = EmbeddedCampaign(name=campaign,
+                                                   confidence=confidence,
+                                                   description="",
+                                                   analyst=analyst,
+                                                   date=datetime.datetime.now())
+                event.add_campaign(campaign)
+
     if bucket_list:
         event.add_bucket_list(bucket_list, analyst)
 
     if ticket:
         event.add_ticket(ticket, analyst)
 
+    related_obj = None
+    if related_id:
+        related_obj = class_from_id(related_type, related_id)
+        if not related_obj:
+            retVal['success'] = False
+            retVal['message'] = 'Related Object not found.'
+            return retVal
+
     try:
         event.save(username=analyst)
 
+        if related_obj and event and relationship_type:
+            relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
+            event.add_relationship(related_obj,
+                                  relationship_type,
+                                  analyst=analyst,
+                                  get_rels=False)
+            event.save(username=analyst)
+
         # run event triage
         event.reload()
-        run_triage(None, event, analyst)
+        run_triage(event, analyst)
 
         message = ('<div>Success! Click here to view the new event: <a href='
                    '"%s">%s</a></div>' % (reverse('crits.events.views.view_event',
                                                   args=[event.id]),
                                           title))
         result = {'success': True,
-                  'message': message}
+                  'message': message,
+                  'id': str(event.id),
+                  'object': event}
+
     except ValidationError, e:
         result = {'success': False,
                   'message': e}
@@ -326,29 +397,6 @@ def event_remove(_id, username):
         return {'success':True}
     else:
         return {'success':False,'message': 'Need to be admin'}
-
-def update_event_description(event_id, description, analyst):
-    """
-    Update event description.
-
-    :param event_id: The ObjectId of the Event to update.
-    :type event_id: str
-    :param description: The new description.
-    :type description: str
-    :param analyst: The user updating this Event.
-    :type analyst: str
-    :returns: dict with keys "success" (boolean) and "message" (str)
-    """
-
-    if not description:
-        return {'success': False, 'message': "No description to change"}
-    event = Event.objects(id=event_id).first()
-    event.description = description
-    try:
-        event.save(username=analyst)
-        return {'success': True}
-    except ValidationError, e:
-        return {'success': False, 'message': e}
 
 def update_event_title(event_id, title, analyst):
     """
@@ -396,8 +444,8 @@ def update_event_type(event_id, type_, analyst):
     except ValidationError, e:
         return {'success': False, 'message': e}
 
-def add_sample_for_event(event_id, data, analyst, filedata=None,
-                         filename=None, md5=None):
+def add_sample_for_event(event_id, data, analyst, filedata=None, filename=None,
+                         md5=None, email_addr=None, inherit_sources=False):
     """
     Add a sample related to this Event.
 
@@ -413,63 +461,99 @@ def add_sample_for_event(event_id, data, analyst, filedata=None,
     :type filename: str
     :param md5: The MD5 of the file.
     :type md5: str
-    :returns: dict with keys "success" (boolean) and "error" (str)
+    :param email_addr: Email address to which to email the sample
+    :type email_addr: str
+    :param inherit_sources: 'True' if Sample should inherit Event's Source(s)
+    :type inherit_sources: bool
+    :returns: dict with keys "success" (boolean) and "message" (str)
     """
 
-    sources = user_sources(analyst)
-    event = Event.objects(id=event_id, source__name__in=sources).first()
+    response = {'success': False,
+                'message': 'Unknown error; unable to upload file.'}
+    users_sources = user_sources(analyst)
+    event = Event.objects(id=event_id, source__name__in=users_sources).first()
     if not event:
-        error = "No matching event found"
-        return {'success': False, 'error': error}
+        return {'success': False,
+                'message': "No matching event found"}
     source = data['source']
+    reference = data['reference']
+    file_format = data['file_format']
     campaign = data['campaign']
     confidence = data['confidence']
-    reference = data['source_reference']
-    file_format = data['file_format']
-    password = data['password']
     bucket_list = data[form_consts.Common.BUCKET_LIST_VARIABLE_NAME]
     ticket = data[form_consts.Common.TICKET_VARIABLE_NAME]
+    method = data['method']
+    if filename:
+        filename = filename.strip()
+
+    # If selected, new sample inherits the campaigns of the related event.
+    if data['inherit_campaigns']:
+        if campaign:
+            event.campaign.append(EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst))
+        campaign = event.campaign
+
+    inherited_source = event.source if inherit_sources else None
 
     try:
         if filedata:
-            sample_md5 = handle_uploaded_file(filedata,
-                                              source,
-                                              reference,
-                                              file_format,
-                                              password,
-                                              analyst,
-                                              campaign=campaign,
-                                              confidence=confidence,
-                                              bucket_list=bucket_list,
-                                              ticket=ticket)
+            result = handle_uploaded_file(filedata,
+                                          source,
+                                          method,
+                                          reference,
+                                          file_format,
+                                          data['password'],
+                                          analyst,
+                                          campaign,
+                                          confidence,
+                                          related_id=event.id,
+                                          related_type='Event',
+                                          filename=filename,
+                                          bucket_list=bucket_list,
+                                          ticket=ticket,
+                                          inherited_source=inherited_source)
         else:
-            if not filename or not md5:
-                error = "Need a file, or a filename and an md5"
-                return {'success': False, 'error': error}
-            else:
-                sample_md5 = handle_uploaded_file(None,
-                                                  source,
-                                                  reference,
-                                                  file_format,
-                                                  password,
-                                                  analyst,
-                                                  campaign=campaign,
-                                                  confidence=confidence,
-                                                  bucket_list=bucket_list,
-                                                  ticket=ticket,
-                                                  filename=filename.strip(),
-                                                  md5=md5.strip())
+            if md5:
+                md5 = md5.strip().lower()
+            result = handle_uploaded_file(None,
+                                          source,
+                                          method,
+                                          reference,
+                                          file_format,
+                                          None,
+                                          analyst,
+                                          campaign,
+                                          confidence,
+                                          related_id=event.id,
+                                          related_type='Event',
+                                          filename=filename,
+                                          md5=md5,
+                                          bucket_list=bucket_list,
+                                          ticket=ticket,
+                                          inherited_source=inherited_source,
+                                          is_return_only_md5=False)
     except ZipFileError, zfe:
-        return {'success': False, 'error': zfe.value}
-
-    samples = Sample.objects(md5__in=sample_md5,
-                             source__name__in=sources)
-    if samples:
-        for s in samples:
-            event.add_relationship(rel_item=s,
-                                   rel_type='Related_To',
-                                   analyst=analyst,
-                                   get_rels=False)
-            s.save(username=analyst)
-        event.save(username=analyst)
-    return {'success': True}
+        return {'success': False, 'message': zfe.value}
+    else:
+        if len(result) > 1:
+            response = {'success': True, 'message': 'Files uploaded successfully. '}
+        elif len(result) == 1:
+            if not filedata:
+                response['success'] = result[0].get('success', False)
+                if(response['success'] == False):
+                    response['message'] = result[0].get('message', response.get('message'))
+                else:
+                    result = [result[0].get('object').md5]
+                    response['message'] = 'File uploaded successfully. '
+            else:
+                response = {'success': True, 'message': 'Files uploaded successfully. '}
+        if not response['success']:
+            return response
+        else:
+            if email_addr:
+                for s in result:
+                    email_errmsg = mail_sample(s, [email_addr])
+                    if email_errmsg is not None:
+                        response['success'] = False
+                        msg = "<br>Error emailing sample %s: %s\n" % (s, email_errmsg)
+                        response['message'] = response['message'] + msg
+    return response

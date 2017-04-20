@@ -20,7 +20,7 @@ else:
         opids.append(d.strip())
 
 print "Kill Sequence:"
-conn = pymongo.Connection()
+conn = pymongo.MongoClient()
 # db.$cmd.sys.killop.findOne({op:1234})
 for op in opids:
     print "Killing: %s" % op

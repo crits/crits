@@ -1,11 +1,13 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
-from crits.events.event import Event, EventType
+from crits.events.event import Event
 from crits.events.handlers import add_new_event
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
+
+from crits.vocabulary.events import EventTypes
 
 
 class EventResource(CRITsAPIResource):
@@ -17,7 +19,7 @@ class EventResource(CRITsAPIResource):
 
     class Meta:
         object_class = Event
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "events"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
@@ -42,8 +44,7 @@ class EventResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Event.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
-        :raises BadRequest: If a campaign name is not provided or creation fails.
+        :returns: HttpResponse.
         """
 
         analyst = bundle.request.user.username
@@ -56,12 +57,17 @@ class EventResource(CRITsAPIResource):
         date = bundle.data.get('date', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
+        campaign = bundle.data.get('campaign', None)
+        campaign_confidence = bundle.data.get('campaign_confidence', None)
 
-        if not title and not event_type and not source:
-            raise BadRequest('Must provide a title, event_type, and source.')
-        et = EventType.objects(name=event_type).first()
-        if not et:
-            raise BadRequest('Not a valid Event Type.')
+        content = {'return_code': 0,
+                   'type': 'Event'}
+        if not title or not event_type or not source or not description:
+            content['message'] = 'Must provide a title, event_type, source, and description.'
+            self.crits_response(content)
+        if event_type not in EventTypes.values():
+            content['message'] = 'Not a valid Event Type.'
+            self.crits_response(content)
 
         result = add_new_event(title,
                                description,
@@ -72,8 +78,21 @@ class EventResource(CRITsAPIResource):
                                date,
                                analyst,
                                bucket_list,
-                               ticket)
+                               ticket,
+                               campaign,
+                               campaign_confidence)
+
+        if result.get('message'):
+            content['message'] = result.get('message')
+        content['id'] = result.get('id', '')
+        if result.get('id'):
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'events',
+                                  'api_name': 'v1',
+                                  'pk': result.get('id')})
+            content['url'] = url
         if result['success']:
-            return bundle
+            content['return_code'] = 0
         else:
-            raise BadRequest(str(result['message']))
+            content['return_code'] = 1
+        self.crits_response(content)

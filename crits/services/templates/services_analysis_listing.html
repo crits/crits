@@ -1,5 +1,5 @@
-{% load url from future %}
 
+<div class="content_box">
     <span class="horizontal_menu">
     <ul class="hmenu">
     <li><a id="refresh_services" data-url="{% url 'crits.services.views.refresh_services' relationship.type relationship.value %}" href="#">Refresh Services</a></li>
@@ -9,25 +9,9 @@
         <li>No services enabled.</li>
     {% endfor %} </ul>
     </span>
-    <div class='content_box'>
-        <h3 class='titleheader'>
-        {% if item.filename %}
-            <span>Analysis of '{{ item.filename }}' - {{ relationship.value }}</span>
-        {% elif item.title %}
-            <span>Analysis of '{{ item.title }}' - {{ relationship.value }}</span>
-        {% endif %}
-        </h3>
-        <ul style="list-style: none;">
-        {% for analysis in item.analysis %}
-            <li class="analysis_result_summary_item">
-                <a href="#{{ analysis.service_name}}-{{ analysis.analysis_id }}">
-                    {{ analysis.service_name }} ({{analysis.status}})</a>
-            </li>
-        {% endfor %}
-        </ul>
-    </div>
+</div>
 
-    {% for analysis in item.analysis %}
+    {% for analysis in service_results %}
         {% if analysis.analysis_id %}
             {% include 'services_analysis_widget.html' with analysis=analysis crits_type=crits_type identifier=identifier%}
         {% endif %}

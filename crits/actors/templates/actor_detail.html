@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %} Actor Detail {% endblock %}
+
+{% block content %}
+
+<script>
+    var edit_actor_name = "{% url 'crits.actors.views.edit_actor_name' actor.id|urlencode %}";
+    var update_actor_aliases = "{% url 'crits.actors.views.edit_actor_aliases' %}";
+    var actor_id = "{{ actor.id | escapejs }}"
+</script>
+
+<div id="tabnav" class="tabnav" style="font-size:90%">
+    <ul style="font-size: 125%">
+    <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+    {% include 'services_tab_list_widget.html' %}
+    </ul>
+
+<div id="details_section">
+    <div class='content_box'>
+        <span class="horizontal_menu">
+        <ul class="hmenu">
+            <li><a href="#" class="dialogClick" dialog="download-actor">Download Actor</a></li>
+            {% if admin %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="actor" action='{% url "crits.actors.views.remove_actor" actor.id %}'>Delete Actor</a></li>
+            {% endif %}
+        </ul>
+        </span>
+    </div>
+
+    <div class="content_box content_details">
+        <h3 class="titleheader">
+            <span>Details for {{actor.name}}</span>
+        </h3>
+        <div class="content_body">
+            <table class="vertical" width="100%">
+                <thead>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="key">ID</td>
+                        <td>{{actor.id}}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Name</td>
+                        <td>
+                            <span class="edit_underline" id="edit_actor_name">{{actor.name}}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="key">Aliases</td>
+                        <td>
+                            <ul id="actor_aliases">
+                                {% for alias in actor.aliases %}
+                                    <li>{{ alias }}</li>
+                                {% endfor %}
+                        </td>
+                    </tr>
+                    <tr>
+                        {% with description=actor.description %}
+                            {% include 'description_widget.html' %}
+                        {% endwith %}
+                    </tr>
+                    <tr>
+                        <td class="key">Created</td>
+                        <td>{{actor.created}}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Modified</td>
+                        <td>{{actor.modified}}</td>
+                    </tr>
+                    <tr>
+                        <td class="key">Status
+                            <span style="float: right;" class="object_status_response"></span>
+                        </td>
+                        <td>
+                            <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{actor.status}}</span>
+                        </td>
+                    </tr>
+                    {% include "actor_tags_widget.html" %}
+                    {% with sectors=actor.sectors %}
+                        {% include "sector_widget.html" %}
+                    {% endwith %}
+                    <tr>
+                        {% with sources=actor.source obj_id=actor.id obj_type=subscription.type %}
+                            {% include "sources_listing_widget.html" %}
+                        {% endwith %}
+                    </tr>
+                    <tr>
+                        {% with releasability=actor.releasability %}
+                            {% include "releasability_list_widget.html" %}
+                        {% endwith %}
+                    </tr>
+                </tbody>
+            </table>
+        </div> <!-- content_body -->
+     </div> <!-- content_box -->
+     <div id="detail_floaters">
+         {% include 'details_options_widget.html' %}
+         {% with bucket_list=actor.bucket_list %}
+             {% include 'bucket_list_widget.html' %}
+         {% endwith %}
+         {% include 'add_related_widget.html' %}
+     </div>
+    <div class="content_box">
+        {% with obj=actor obj_type="Actor" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
+    </div>
+     <div id="actor_identifier_widget_container">
+         {% include "actor_identifiers_widget.html" %}
+     </div>
+     <div>
+	    {% with obj=actor obj_type=subscription.type %}
+                {% include 'tickets_listing_widget.html' %}
+	    {% endwith %}
+    </div>
+    <div>
+        {% with hit=actor col=COL_ACTORS %}
+            {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% with hit=actor col=COL_ACTORS %}
+            {% include "locations_display_widget.html" %}
+        {% endwith %}
+    </div>
+    <div>
+        {% include 'relationships_listing_widget.html' %}
+    </div>
+    <div>
+        {% include 'objects_listing_widget.html' %}
+    </div>
+    <div>
+    {% include 'screenshot_widget.html' %}
+    </div>
+    <div>
+        {% include "comments_listing_widget.html" %}
+    </div>
+</div> <!-- details_section -->
+
+{% with item=actor %}
+    {% include "services_analysis_section.html" with crits_type="Actor" identifier=actor.id %}
+{% endwith %}
+
+{% include 'services_tab_tabs_widget.html' %}
+</div>
+
+<div style="display: none;">
+
+<div id="dialog-download-actor">
+    <form id="form-download-actor" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
+    <table class="form">{{download_form.as_table}}</table>
+    </form>
+</div>
+
+</div>
+
+<script type="text/javascript">
+    $(document).bind('enable_actor_aliases', function(){
+        window.add_actor_aliases = true;
+    });
+</script>
+
+{% endblock %}
+
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/actors.js"></script>
+{% endblock %}
+

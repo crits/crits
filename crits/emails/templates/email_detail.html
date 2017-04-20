@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load url from future %}
+
 {% load filters %}
 
 {% block title %} Email Detail {% endblock %}
@@ -8,9 +8,9 @@
 <script>
     var indicator_from_header_field = "{% url 'crits.emails.views.indicator_from_header_field' email.id %}";
     var email_detail = "{% url 'crits.emails.views.email_detail' email.id %}";
-    var get_email_cybox = "{% url 'crits.emails.views.get_email_cybox' email.id %}";
     var update_header_value = "{% url 'crits.emails.views.update_header_value' email.id %}";
     var splunk_search_url = "{{ splunk_search_url }}";
+    var email_id = "{{ email.id | escapejs }}"
 </script>
 
 <div id="tabnav" class="tabnav" style="font-size:90%">
@@ -19,24 +19,20 @@
     <li><a href="#raw_section" id="raw_button"><span>Raw Email</span></a></li>
     <li><a href="#json_section" id="json_button"><span>JSON View</span></a></li>
     <li><a href="#yaml_section" id="yaml_button"><span>YAML View</span></a></li>
-    <li><a href="#cybox_section" id="cybox_button"><span>CybOX View</span></a></li>
+    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
     </ul>
 <div id="details_section">
-    <span class="horizontal_menu">
-    <ul class="hmenu">
-      {% comment %} 
-      XXX add-attachment is very similar to new-sample, in fact it adds a sample, but seems to have some different required
-      fileds, like source_date, and excludes a few fields new-sample uses..  Otherwise we could use the related persona here as well
-      dialog="new-sample" persona="related" action="{% url 'crits.emails.views.upload_attach' email.id %}"
-      {% endcomment %}
-        <li><a href="#" class="dialogClick" dialog="add-attachment">Add Attachment</a></li>
-        <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
-        {% if admin %}
-        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
-        {% endif %}
-    </ul>
-    </span>
+    <div class='content_box'>
+        <span class="horizontal_menu">
+        <ul class="hmenu">
+            <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
+            {% if admin %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
+            {% endif %}
+        </ul>
+        </span>
+    </div>
 
 {% if email %}
     <div class='content_box content_details'>
@@ -57,18 +53,23 @@
                 {{ email.id }}
             </td>
         </tr>
+        <tr>
+            {% with description=email.description %}
+                {% include 'description_widget.html' %}
+            {% endwith %}
+        </tr>
 
         {% for email_field in email_fields %}
-        <tr data-type='{{ email_field.field_type }}'>
+        <tr>
             <td class='key'>{{ email_field.field_displayed_text}}
                 {% if email_field.is_allow_create_indicator %}
                     {% if email_field|does_field_have_indicator:relationships %}
-                        <span type='{{ email_field.field_name }}' title="Create Indicator: Warning: Indicator might already exist" style="float: right;" class="ui-icon ui-icon-circle-plus create-indicator"></span>
+                        <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator: Warning: Indicator might already exist" style="float: right;" class="ui-icon ui-icon-circle-plus create-indicator"></span>
                     {% else %}
                         {% if not email_field.field_value or email_field.field_value.strip == "" %}
-                            <span type='{{ email_field.field_name }}' title="Create Indicator: Warning: A value should be supplied first" style="float: right;" class="ui-icon ui-icon-alert create-indicator"></span> 
+                            <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator: Warning: A value should be supplied first" style="float: right;" class="ui-icon ui-icon-alert create-indicator"></span> 
                         {% elif email_field.field_value %}
-                            <span type='{{ email_field.field_name }}' title="Create Indicator" style="float: right;" class="ui-icon ui-icon-plusthick create-indicator">"{{email_field.field_value}}"</span>
+                            <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator" style="float: right;" class="ui-icon ui-icon-plusthick create-indicator">"{{email_field.field_value}}"</span>
                         {% endif %}
                     {% endif %}
                 {% endif %}
@@ -84,7 +85,7 @@
                     {%endfor%}
                 </span>
                 {% elif email_field.is_href %}
-                    <a class="header_search" href="{% url 'crits.emails.views.emails_listing' %}?{{ email_field.href_search_field }}={{ email_field.field_value }}"><span class="header_value" data-type="{{ email_field.field_name }}">{{ email_field.field_value }}</span></a>
+                    <a class="header_search" href="{% url 'crits.emails.views.emails_listing' %}?{{ email_field.href_search_field }}={{ email_field.field_value|urlencode }}"><span class="header_value" data-type="{{ email_field.field_name }}">{{ email_field.field_value }}</span></a>
                 {% else %}
                     <span class="header_value" data-type="{{ email_field.field_name }}">{{ email_field.field_value }}</span>
                 {% endif %}
@@ -128,6 +129,13 @@
         {% with bucket_list=email.bucket_list %}
             {% include 'bucket_list_widget.html' %}
         {% endwith %}
+        {% include 'add_related_widget.html' %}
+
+    </div>
+    <div class="content_box">
+        {% with obj=email obj_type="Email" %}
+            {% include 'action_listing_widget.html' %}
+        {% endwith %}
     </div>
     <div>
       {% with obj=email obj_type=subscription.type %}
@@ -137,6 +145,11 @@
     <div>
     {% with hit=email col=COL_EMAIL %}
         {% include 'campaigns_display_widget.html' %}
+    {% endwith %}
+    </div>
+    <div>
+    {% with hit=email col=COL_EMAIL %}
+        {% include 'locations_display_widget.html' %}
     {% endwith %}
     </div>
     <div id="relationships_div_container">
@@ -196,20 +209,15 @@
 <div id="yaml_section">
     <textarea id="yaml_display" cols="150" rows="40"></textarea>
 </div>
-<div id="cybox_section">
-    <textarea id="cybox_display" cols="150" rows="40"></textarea>
-</div>
+
+{% with item=email %}
+    {% include "services_analysis_section.html" with crits_type="Email" identifier=email.id %}
+{% endwith %}
+
 {% include 'services_tab_tabs_widget.html' %}
 </div>
 
 <div style="display: none;">
-
-<div id="dialog-add-attachment">
-  <form id="form-add-attachment" action="{% url 'crits.emails.views.upload_attach' email.id %}" method="POST" enctype="multipart/form-data">
-    <table class="form">{{upload_form.as_table}}</table>
-  </form>
-  <div id="form-add-attachment-results" class="form_results"></div>
-</div>
 
 <div id="dialog-download-email">
     <form id="form-download-email" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">

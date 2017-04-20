@@ -18,7 +18,11 @@ class DelayService(Service):
                             default=5),
     ]
 
-    def _scan(self, data, sample_dict):
+    @staticmethod
+    def valid_for(obj):
+        return
+
+    def run(self, obj, config):
         for i in xrange(5):
             self._info(i)
             logger.info(i)
@@ -26,3 +30,4 @@ class DelayService(Service):
             logger.info("sleeping")
             self._notify()
             time.sleep(self.config['sleep_time'])
+

@@ -9,7 +9,6 @@ from crits.core.user_tools import user_can_view_data
 from crits.screenshots.handlers import get_screenshots_for_id, get_screenshot
 from crits.screenshots.handlers import add_screenshot, generate_screenshot_jtable
 from crits.screenshots.handlers import delete_screenshot_from_object
-from crits.screenshots.handlers import edit_ss_description
 
 @user_passes_test(user_can_view_data)
 def screenshots_listing(request,option=None):
@@ -42,7 +41,7 @@ def get_screenshots(request):
         buckets = request.POST.get('buckets', False)
         result = get_screenshots_for_id(type_, _id, analyst, buckets)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",
@@ -68,7 +67,7 @@ def find_screenshot(request):
         tag = request.GET.get('tag', None)
         result = get_screenshot(_id, tag, analyst)
         return HttpResponse(json.dumps(result),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         error = "Could not get screenshot."
         return render_to_response("error.html",
@@ -89,7 +88,7 @@ def render_screenshot(request, _id, thumb=None):
     result = get_screenshot(_id=_id, analyst=analyst, thumb=thumb)
     if not result:
         return HttpResponse(json.dumps(''),
-                            mimetype="application/json")
+                            content_type="application/json")
     else:
         return result
 
@@ -118,7 +117,7 @@ def add_new_screenshot(request):
                             analyst, screenshot, screenshot_ids, oid, otype)
 
     return HttpResponse(json.dumps(result),
-                        mimetype="application/json")
+                        content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def remove_screenshot_from_object(request):
@@ -137,22 +136,4 @@ def remove_screenshot_from_object(request):
 
     result = delete_screenshot_from_object(obj, oid, sid, analyst)
     return HttpResponse(json.dumps(result),
-                        mimetype="application/json")
-
-@user_passes_test(user_can_view_data)
-def update_ss_description(request):
-    """
-    Edit the description of a screenshot.
-
-    :param request: The Django request.
-    :type request: :class:`django.http.HttpRequest`
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    analyst = request.user.username
-    oid = request.POST.get('oid', None)
-    description = request.POST.get('description', None)
-
-    result = edit_ss_description(oid, description, analyst)
-    return HttpResponse(json.dumps(result),
-                        mimetype="application/json")
+                        content_type="application/json")

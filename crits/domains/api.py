@@ -1,6 +1,6 @@
+from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.domains.domain import Domain
 from crits.domains.handlers import add_new_domain
@@ -15,7 +15,7 @@ class DomainResource(CRITsAPIResource):
 
     class Meta:
         object_class = Domain
-        allowed_methods = ('get', 'post')
+        allowed_methods = ('get', 'post', 'patch')
         resource_name = "domains"
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
@@ -41,11 +41,9 @@ class DomainResource(CRITsAPIResource):
 
         :param bundle: Bundle containing the information to create the Domain.
         :type bundle: Tastypie Bundle object.
-        :returns: Bundle object.
-        :raises BadRequest: If a domain name is not provided or creation fails.
+        :returns: HttpResponse.
         """
 
-        analyst = bundle.request.user.username
         request = bundle.request
         # Domain and source information
         domain = bundle.data.get('domain', None)
@@ -58,6 +56,7 @@ class DomainResource(CRITsAPIResource):
         # Also add IP information
         add_ip = bundle.data.get('add_ip', None)
         ip = bundle.data.get('ip', None)
+        ip_type = bundle.data.get('ip_type', None)
         same_source = bundle.data.get('same_source', None)
         ip_source = bundle.data.get('ip_source', None)
         ip_method = bundle.data.get('ip_method', None)
@@ -79,28 +78,42 @@ class DomainResource(CRITsAPIResource):
                 'ip_reference': ip_reference,
                 'add_ip': add_ip,
                 'ip': ip,
+                'ip_type': ip_type,
                 'add_indicators': add_indicators,
                 'bucket_list': bucket_list,
                 'ticket': ticket}
 
-        if analyst:
-            if not domain:
-                raise BadRequest('Need a Domain Name.')
-            # The empty list is necessary. The function requires a list of
-            # non-fatal errors so it can be added to if any other errors
-            # occur. Since we have none, we pass the empty list.
-            (result, errors, retVal) =  add_new_domain(data,
-                                                       request,
-                                                       [])
-            if errors:
-                if not 'message' in retVal:
-                    retVal['message'] = ""
-                elif not isinstance(retVal['message'], basestring):
-                    retVal['message'] = str(retVal['message'])
-                for e in errors:
-                    retVal['message'] += " %s " % str(e)
-                raise BadRequest(retVal['message'])
-            else:
-                return bundle
-        else:
-            raise BadRequest('You must be an authenticated user!')
+        content = {'return_code': 1,
+                   'type': 'Domain'}
+        if not domain:
+            content['message'] = 'Need a Domain Name.'
+            self.crits_response(content)
+
+        # The empty list is necessary. The function requires a list of
+        # non-fatal errors so it can be added to if any other errors
+        # occur. Since we have none, we pass the empty list.
+        (result, errors, retVal) =  add_new_domain(data,
+                                                   request,
+                                                   [])
+        if not 'message' in retVal:
+            retVal['message'] = ""
+        elif not isinstance(retVal['message'], basestring):
+            retVal['message'] = str(retVal['message'])
+        if errors:
+            for e in errors:
+                retVal['message'] += " %s " % str(e)
+
+        obj = retVal.get('object', None)
+        content['message'] = retVal.get('message', '')
+        if obj:
+            content['id'] = str(obj.id)
+            url = reverse('api_dispatch_detail',
+                          kwargs={'resource_name': 'domains',
+                                  'api_name': 'v1',
+                                  'pk': str(obj.id)})
+            content['url'] = url
+
+        if result:
+            content['return_code'] = 0
+
+        self.crits_response(content)

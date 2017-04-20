@@ -1,9 +1,13 @@
 import cgi
+import re
 import string
 
 from crits.indicators.handlers import does_indicator_relationship_exist
+from crits.vocabulary.indicators import IndicatorTypes
 
 from django import template
+from django.template.defaultfilters import stringfilter
+from django.utils.safestring import mark_safe
 register = template.Library()
 
 # TODO: make this more generic if it winds up being used more
@@ -70,8 +74,8 @@ def does_field_have_indicator(field, relationships):
 
     return return_value
 
-@register.filter
-def type(value):
+@register.filter(name="type")
+def typeOf(value):
     """
     Get the type of value.
 
@@ -80,7 +84,7 @@ def type(value):
     :returns: str
     """
 
-    return type(value)
+    return str(type(value))
 
 @register.filter
 def nicify(value):
@@ -126,14 +130,12 @@ def to_line_table(value):
             <tbody>
     """
     lines = value.split('\n')
-    l = 1
-    for line in lines:
+    for l, line in enumerate(lines, 1):
         lhtml = '<tr class="file_line" data-position="%d">' % l
         lhtml += '\n<td class="add_highlight ui-icon ui-icon-star"></td><td class="line_num">'
         lhtml += '<span class="line_number">%d</span></td>\n' % l
         lhtml += '<td class="line_pre"><pre>%s</pre></td>\n</tr>\n' % cgi.escape(line)
         html += lhtml
-        l += 1
     html += '</tbody>\n</table>\n</div>\n'
     return html
 
@@ -148,3 +150,54 @@ def cgi_escape(value):
     """
 
     return cgi.escape(value)
+
+@register.filter
+def to_dict(obj):
+    """
+    Convert a mongoengine object into a dictionary.
+
+    :param obj: The mongoengine object to convert.
+    :type obj: A mongoengine object.
+    :returns: dict
+    """
+
+    return obj.to_dict()
+
+@register.filter
+def absVal(value):
+    """
+    return absolute value
+
+    :param value: the int to get the absolute value of
+    :type value: int
+    :returns: int
+    """
+    return abs(value)
+@register.filter
+@stringfilter
+def url_target_blank(var):
+    """Follow the 'urlize' filter with this to make the URL open in a new tab."""
+    return mark_safe(re.sub("<a([^>]+)(?<!target=)>",'<a target="_blank"\\1>',var))
+
+@register.filter
+def is_object_id_equal(obj1, obj2):
+    if "id" in obj1:
+        obj1 = obj1.id
+    if "id" in obj2:
+        obj2 = obj2.id
+    return str(obj1) == str(obj2)
+
+@register.filter
+def is_indicator_type(value):
+    """
+    Returns True if the value is a valid Indicator Type.
+
+    :param value: The string to validate as an Indicator Type.
+    :type value: str
+    :returns: bool
+    """
+
+    if value in IndicatorTypes.values():
+        return True
+    else:
+        return False

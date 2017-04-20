@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load url from future %}
 
-{% block title %} <h1>Uploaded Files</h1> {% endblock %}
+
+{% block title %}Uploaded Files{% endblock %}
 
 {% block content %}
     {% if sample_md5 %}
@@ -17,6 +17,7 @@
             <tr>
                 <td class="key">Filename</td>
                 <td><a href="{% url 'crits.samples.views.detail' s %}">{{ s }}</a></td>
+                <td>In the event this was a PCAP: <a href="{% url 'crits.pcaps.views.pcap_details' s %}">{{ s }}</a></td>
             </tr>
         {% endfor %}
         </tbody>

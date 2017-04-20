@@ -10,7 +10,7 @@ from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
 from crits.core.user_tools import user_is_admin
 from crits.certificates.forms import UploadCertificateForm
-from crits.certificates.handlers import update_cert_description, handle_cert_file
+from crits.certificates.handlers import handle_cert_file
 from crits.certificates.handlers import delete_cert, get_certificate_details
 from crits.certificates.handlers import generate_cert_jtable, generate_cert_csv
 
@@ -29,31 +29,6 @@ def certificates_listing(request,option=None):
     if option == "csv":
         return generate_cert_csv(request)
     return generate_cert_jtable(request, option)
-
-@user_passes_test(user_can_view_data)
-def set_certificate_description(request, md5):
-    """
-    Set the Certificate description. Should be an AJAX POST.
-
-    :param request: Django request object (Required)
-    :type request: :class:`django.http.HttpRequest`
-    :param md5: The MD5 of the Certificate.
-    :type md5: str
-    :returns: :class:`django.http.HttpResponse`
-    """
-
-    if request.method == 'POST':
-        description = request.POST['description']
-        analyst = request.user.username
-        return HttpResponse(json.dumps(update_cert_description(md5,
-                                                               description,
-                                                               analyst)),
-                            mimetype="application/json")
-    else:
-        error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def certificate_details(request, md5):
@@ -95,15 +70,17 @@ def upload_certificate(request):
             source = form.cleaned_data.get('source')
             user = request.user.username
             description = form.cleaned_data.get('description', '')
-            parent = form.cleaned_data.get('parent_id', '')
-            parent_type = form.cleaned_data.get('parent_type', '')
+            related = form.cleaned_data.get('related_id', '')
+            related_type = form.cleaned_data.get('related_type', '')
+            relationship_type = form.cleaned_data.get('relationship_type','')
             bucket_list = form.cleaned_data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
             ticket = form.cleaned_data.get(form_consts.Common.TICKET_VARIABLE_NAME)
-            method = 'Upload'
+            method = form.cleaned_data.get('method', '') or 'Upload'
+            reference = form.cleaned_data.get('reference', '')
             status = handle_cert_file(filename, data, source, user, description,
-                                      parent_id=parent, parent_type=parent_type,
-                                      method=method, bucket_list=bucket_list,
-                                      ticket=ticket)
+                                      related_id=related, related_type=related_type,
+                                      relationship_type=relationship_type, method=method,
+                                      reference=reference, bucket_list=bucket_list, ticket=ticket)
             if status['success']:
                 return render_to_response('file_upload_response.html',
                                           {'response': json.dumps({

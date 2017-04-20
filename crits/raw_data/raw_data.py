@@ -9,10 +9,9 @@ from django.conf import settings
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import CritsDateTimeField
-
-from cybox.objects.artifact_object import Artifact, Base64Encoding
-from cybox.core import Observable
+from crits.raw_data.migrate import migrate_raw_data
 
 
 class RawDataType(CritsDocument, CritsSchemaDocument, Document):
@@ -68,7 +67,8 @@ class EmbeddedTool(EmbeddedDocument, CritsDocumentFormatter):
     details = StringField()
 
 
-class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
+class RawData(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
+              Document):
     """
     Raw Data class.
     """
@@ -76,7 +76,7 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
     meta = {
         "collection": settings.COL_RAW_DATA,
         "crits_type": 'RawData',
-        "latest_schema_version": 1,
+        "latest_schema_version": 2,
         "schema_doc": {
         },
         "jtable_opts": {
@@ -105,11 +105,10 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
     }
 
     data_type = StringField()
-    description = StringField()
     data = StringField()
     highlights = ListField(EmbeddedDocumentField(EmbeddedHighlight))
     inlines = ListField(EmbeddedDocumentField(EmbeddedInline))
-    link_id = UUIDField(binary=True, required=True, default=uuid.uuid4())
+    link_id = UUIDField(binary=True, required=True, default=uuid.uuid4)
     md5 = StringField()
     title = StringField()
     tool = EmbeddedDocumentField(EmbeddedTool)
@@ -120,7 +119,7 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
         Migrate to the latest schema version.
         """
 
-        pass
+        migrate_raw_data(self)
 
     def add_file_data(self, file_data):
         """
@@ -238,37 +237,3 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, Document):
             else:
                 highlights.append(h)
         self.highlights = highlights
-
-    def to_cybox_observable(self):
-        """
-            Convert a RawData to a CybOX Observables.
-            Returns a tuple of (CybOX object, releasability list).
-
-            To get the cybox object as xml or json, call to_xml() or
-            to_json(), respectively, on the resulting CybOX object.
-        """
-        obj = Artifact(self.data, Artifact.TYPE_FILE)
-        obj.packaging.append(Base64Encoding())
-        obs = Observable(obj)
-        obs.description = self.description
-        return ([obs], self.releasability)
-
-    @classmethod
-    def from_cybox(cls, cybox_obs, source):
-        """
-        Convert a Cybox DefinedObject to a MongoEngine Indicator object.
-
-        :param cybox_obs: The cybox object to create the indicator from.
-        :type cybox_obs: :class:`cybox.core.Observable``
-        :param source: The source list for the Indicator.
-        :type source: list
-        :returns: :class:`crits.indicators.indicator.Indicator`
-        """
-        cybox_object = cybox_obs.object_.properties
-        rawdata = cls(source=source)
-        rawdata.add_file_data(cybox_object.data)
-        db_obj = RawData.objects(md5=rawdata.md5).first()
-        if db_obj:
-            return db_obj
-        return rawdata
-

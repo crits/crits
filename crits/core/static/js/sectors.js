@@ -24,7 +24,7 @@ $(document).ready(function() {
         },
         onTagClicked: function(event, ui) {
             var url = sector_search + "?search_type=sectors&force_full=1&search=Search&q=" + ui.tagLabel;
-            window.location.href = url;
+            window.open(url, '_blank');
         },
         availableTags: (function() {
             var tmp = [];

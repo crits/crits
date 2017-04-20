@@ -1,0 +1,23 @@
+
+{% if identifier.name %}
+    <tr>
+    <td data-field="type">{{identifier.type}}</td>
+    <td data-field="identifier">
+        <a href="{% url 'crits.actors.views.actors_listing' %}?q={{identifier.id}}&search_type=actor_identifier&force_full=1">{{identifier.name}}</a>
+    </td>
+    <td data-field="confidence">
+        <span style="float: left;" class="edit_underline edit_attribution_confidence" data-id="{{identifier.id}}">{{identifier.confidence}}</span>
+    </td>
+    <td data-field="analyst">{{identifier.analyst}}</td>
+    <td data-field="date">{{identifier.date}}</td>
+    <td>
+        {% if admin %}
+        <a href="#" title="Delete Identifier" class="ui-icon ui-icon-close deleteClick" 
+            type="{{actor_id}}" value="{{identifier.id}}" 
+	   data-del-type="Actor Identifier Attribution" 
+	   data-del-key="{{ identifier.id }}"
+	   action="{% url 'crits.actors.views.remove_attributed_identifier' %}" key="{{identifier.id}}"></a>
+        {% endif %}
+    </td>
+    </tr>
+{% endif %}
