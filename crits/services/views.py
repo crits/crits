@@ -267,7 +267,8 @@ def service_run(request, name, crits_type, identifier):
                          identifier,
                          username,
                          execute=settings.SERVICE_MODEL,
-                         custom_config=custom_config)
+                         custom_config=custom_config,
+                         is_triage_run=False)
     if result['success'] == True:
         return refresh_services(request, crits_type, identifier)
     else:
