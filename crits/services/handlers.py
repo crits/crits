@@ -127,7 +127,7 @@ def service_work_handler(service_instance, final_config):
 
 
 def run_service(name, type_, id_, user, obj=None,
-                execute='local', custom_config={}, **kwargs):
+                execute='local', custom_config={}, is_triage_run=False, **kwargs):
     """
     Run a service.
 
@@ -228,7 +228,10 @@ def run_service(name, type_, id_, user, obj=None,
     logger.info("Running %s on %s, execute=%s" % (name, local_obj.obj.id, execute))
     service_instance = service_class(notify=update_analysis_results,
                                      complete=finish_task)
-
+    # Determine if this service is being run via triage
+    if is_triage_run:
+        service_instance.is_triage_run = True
+        
     # Give the service a chance to modify the config that gets saved to the DB.
     saved_config = dict(final_config)
     service_class.save_runtime_config(saved_config)
@@ -297,7 +300,8 @@ def run_triage(obj, user):
                         user,
                         obj=obj,
                         execute=settings.SERVICE_MODEL,
-                        custom_config={})
+                        custom_config={},
+                        is_triage_run=True)
         except:
             pass
     return
