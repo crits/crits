@@ -129,6 +129,16 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         except:
             self.impfuzzy = None
 
+    def is_office(self):
+        """
+        Is this a Office file.
+        """
+
+        ret = self.filedata.grid_id != None and self.filedata.read(8) == "\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+        if self.filedata.grid_id:
+            self.filedata.seek(0)
+        return ret
+
     def is_pe(self):
         """
         Is this a PE file.
