@@ -87,14 +87,14 @@
         </td>
         <td>
             <a href='{% url "crits.domains.views.domain_detail" indicator.value %}'>{{ indicator.value }}</a>
-    {% elif indicator.type == 'Email Address' or indicator.type == 'Email Address From' or indicator.type == 'Email Reply-To' or indicator.type == 'Email Address Sender' %}
+    {% elif indicator.ind_type == 'Email Address' or indicator.ind_type == 'Email Address From' or indicator.ind_type == 'Email Reply-To' or indicator.ind_type == 'Email Address Sender' %}
         <tr>
         <td class='key'>
             Value
         </td>
         <td>
             <a href='{% url 'crits.emails.views.emails_listing' %}?from={{indicator.value}}'>{{ indicator.value }}</a>
-    {% elif indicator.type == 'IPv4 Address' or indicator.type == 'IPv6 Address'%}
+    {% elif indicator.ind_type == 'IPv4 Address' or indicator.ind_type == 'IPv6 Address'%}
         <tr>
         <td class='key'>
             Value
