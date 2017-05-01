@@ -28,7 +28,7 @@ class AddScreenshotForm(forms.Form):
                            help_text='Comma-separated list of tags')
     source = forms.ChoiceField(required=True,
                                label=form_consts.Object.SOURCE,
-                               widget=forms.Select(attrs={'class': 'no_clear bulknoinitial'}))
+                               widget=forms.SelectMultiple(attrs={'class': 'no_clear bulknoinitial'}))
     method = forms.CharField(required=False, label=form_consts.Object.METHOD)
     reference = forms.CharField(widget=forms.TextInput(attrs={'size':'90'}),
                                 required=False, label=form_consts.Object.REFERENCE)

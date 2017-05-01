@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import json
 
@@ -9,7 +10,7 @@ from django.template import RequestContext
 from django.core.urlresolvers import reverse
 
 from crits.core.class_mapper import class_from_id
-from crits.core.crits_mongoengine import json_handler
+from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list,jtable_ajax_delete
 from crits.core.user_tools import user_sources
 from crits.screenshots.screenshot import Screenshot
@@ -101,7 +102,9 @@ def add_screenshot(description, tags, source, method, reference, analyst,
     :param tags: Tags associated with this screenshot.
     :type tags: str, list
     :param source: The source who provided the screenshot.
-    :type source: str
+    :type source: str,
+                       :class:`crits.core.crits_mongoengine.EmbeddedSource`,
+                       list of :class:`crits.core.crits_mongoengine.EmbeddedSource`
     :param method: The method of acquiring this screenshot.
     :type method: str
     :param reference: A reference to the source of this screenshot.
@@ -133,6 +136,7 @@ def add_screenshot(description, tags, source, method, reference, analyst,
         return result
 
     final_screenshots = []
+    timestamp = datetime.datetime.now()
 
     if screenshot_ids:
         if not isinstance(screenshot_ids, list):
@@ -143,13 +147,28 @@ def add_screenshot(description, tags, source, method, reference, analyst,
             screenshot_id = screenshot_id.strip().lower()
             s = Screenshot.objects(id=screenshot_id).first()
             if s:
-                s.add_source(source=source, method=method, reference=reference,
-                        analyst=analyst)
+                # generate new source information and add to sample
+                if isinstance(source, basestring) and len(source) > 0:
+                    sources = create_embedded_source(source,
+                                   date=timestamp,
+                                   method=method,
+                                   reference=reference,
+                                   analyst=analyst)
+                    # this will handle adding a new source, or an instance automatically
+                    s.add_source(sources)
+                elif isinstance(source, EmbeddedSource):
+                    s.add_source(source, method=method, reference=reference)
+                elif isinstance(source, list) and len(source) > 0:
+                    for sourc in source:
+                        if isinstance(sourc, EmbeddedSource):
+                            s.add_source(sourc, method=method, reference=reference)
                 s.add_tags(tags)
-                s.save()
+                s.save(username=analyst)
+                s.reload()
                 obj.screenshots.append(screenshot_id)
-                obj.save()
+                obj.save(username=analyst)
                 final_screenshots.append(s)
+                obj.reload()
     else:
         md5 = hashlib.md5(screenshot.read()).hexdigest()
         check = Screenshot.objects(md5=md5).first()
@@ -163,8 +182,21 @@ def add_screenshot(description, tags, source, method, reference, analyst,
             s.md5 = md5
             screenshot.seek(0)
             s.add_screenshot(screenshot, tags)
-        s.add_source(source=source, method=method, reference=reference,
-                    analyst=analyst)
+        # generate new source information and add to sample
+        if isinstance(source, basestring) and len(source) > 0:
+            sources = create_embedded_source(source,
+                                   date=timestamp,
+                                   method=method,
+                                   reference=reference,
+                                   analyst=analyst)
+            # this will handle adding a new source, or an instance automatically
+            s.add_source(sources)
+        elif isinstance(source, EmbeddedSource):
+            s.add_source(source, method=method, reference=reference)
+        elif isinstance(source, list) and len(source) > 0:
+            for sourc in source:
+                if isinstance(sourc, EmbeddedSource):
+                    s.add_source(sourc, method=method, reference=reference)
         if not s.screenshot and not s.thumb:
             result['message'] = "Problem adding screenshot to GridFS. No screenshot uploaded."
             return result
