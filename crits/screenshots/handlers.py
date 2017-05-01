@@ -102,7 +102,9 @@ def add_screenshot(description, tags, source, method, reference, analyst,
     :param tags: Tags associated with this screenshot.
     :type tags: str, list
     :param source: The source who provided the screenshot.
-    :type source: str
+    :type source_name: str,
+                :class:`crits.core.crits_mongoengine.EmbeddedSource`,
+                list of :class:`crits.core.crits_mongoengine.EmbeddedSource`
     :param method: The method of acquiring this screenshot.
     :type method: str
     :param reference: A reference to the source of this screenshot.
