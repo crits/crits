@@ -151,6 +151,15 @@ $.noty.themes.crits = {
     }
 };
 
+$.ajaxSetup({
+    // Set request header for ajax POST
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
 $(document).ready(function() {
     var notyIDToNotyDict = {};
     var isShowToastNotifications = true;
