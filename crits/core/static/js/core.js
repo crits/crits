@@ -756,7 +756,7 @@ $(document).ready(function() {
     });
 
     $(document).on('keydown', function(e){
-        if (e.keyCode == '17'){
+        if (e.altKey){
             var selected = getSelected();
             if (selected.toString().length > 0) {
                 selected_text = selected.toString()
