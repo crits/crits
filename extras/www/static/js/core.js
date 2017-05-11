@@ -750,21 +750,31 @@ $(document).ready(function() {
 
     $(document).mouseup(function(e) {
         var selected = getSelected();
-        if (selected.toString().length > 0) {
-            selected_text = selected.toString()
-            var span = $('<span>')
-            .attr('id', 'tmpSelectedNode');
-            var range = selected.getRangeAt(0);
-            range.insertNode($(span).get(0));
-            var position = $('#tmpSelectedNode').position();
-            var fspan = $('#selectedNodeMenu')
-            .css('top', position.top)
-            .css('left', position.left)
-            .attr('data-selected', selected_text)
-            .show();
-            $('#tmpSelectedNode').remove();
-        } else {
+        if (selected.toString().length == 0) {
             $('#selectedNodeMenu').hide();
+        }
+    });
+
+    $(document).on('keydown', function(e){
+        if (e.keyCode == '17'){
+            var selected = getSelected();
+            if (selected.toString().length > 0) {
+                selected_text = selected.toString()
+                var span = $('<span>')
+                .attr('id', 'tmpSelectedNode');
+                var range = selected.getRangeAt(0);
+                range.insertNode($(span).get(0));
+                var position = $('#tmpSelectedNode').position();
+                var fspan = $('#selectedNodeMenu')
+                .css('top', position.top)
+                .css('left', position.left)
+                .attr('data-selected', selected_text)
+                //.show();
+                .toggle();
+                $('#tmpSelectedNode').remove();
+            } else {
+                $('#selectedNodeMenu').hide();
+            }
         }
     });
 
