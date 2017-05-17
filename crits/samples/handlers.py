@@ -651,7 +651,7 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
             shutil.rmtree(extractdir)
     return samples
 
-def handle_file(filename, data, source, method='Generic', reference='',
+def handle_file(filename, data, source, method='', reference='',
                 related_md5=None, related_id=None, related_type=None,
                 relationship_type=None, backdoor=None, user='', campaign=None,
                 confidence='low', md5_digest=None, sha1_digest=None,
