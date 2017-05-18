@@ -139,8 +139,9 @@ def get_backdoor_details(id_, user):
         objects = backdoor.sort_objects()
 
         #relationships
-        relationships = backdoor.sort_relationships("%s" % user, meta=True)
-
+        relationships = backdoor.get_relationships(username=user, 
+                                                   sorted=True, 
+                                                   meta=True)
         # relationship
         relationship = {
             'type': 'Backdoor',

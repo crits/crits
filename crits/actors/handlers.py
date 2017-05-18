@@ -243,8 +243,9 @@ def get_actor_details(id_, analyst):
         objects = actor.sort_objects()
 
         #relationships
-        relationships = actor.sort_relationships("%s" % analyst, meta=True)
-
+        relationships = actor.get_relationships(username=analyst, 
+                                                sorted=True, 
+                                                meta=True)
         # relationship
         relationship = {
             'type': 'Actor',

@@ -53,6 +53,7 @@ def remove_indexes():
                  settings.COL_PCAPS,
                  '%s.files' % settings.COL_PCAPS,
                  '%s.chunks' % settings.COL_PCAPS,
+                 settings.COL_RELATIONSHIPS,
                  settings.COL_SAMPLES,
                  '%s.files' % settings.COL_SAMPLES,
                  '%s.chunks' % settings.COL_SAMPLES,
@@ -278,3 +279,15 @@ def create_indexes():
     targets.ensure_index("status", background=True)
     targets.ensure_index("favorite", background=True)
     targets.ensure_index("bucket_list", background=True)
+    
+    relationships = mongo_connector(settings.COL_RELATIONSHIPS)
+    relationships.ensure_index("left_obj.obj_id", background=True)
+    relationships.ensure_index("left_obj.obj_type", background=True)
+    relationships.ensure_index("left_obj.rel_type", background=True)
+    relationships.ensure_index("right_obj.obj_id", background=True)
+    relationships.ensure_index("right_obj.obj_type", background=True)
+    relationships.ensure_index("right_obj.rel_type", background=True)
+    relationships.ensure_index("relationship_date", background=True)
+    relationships.ensure_index("date", background=True)
+    relationships.ensure_index("rel_reason", background=True)
+    relationships.ensure_index("rel_confidence", background=True)

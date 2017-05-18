@@ -149,9 +149,9 @@ def get_sample_details(sample_md5, analyst, format_=None):
         objects = sample.sort_objects()
 
         #relationships
-        relationships = sample.sort_relationships("%s" % analyst,
+        relationships = sample.get_relationships(username=analyst, 
+                                                sorted=True, 
                                                 meta=True)
-
         # relationship
         relationship = {
                 'type': 'Sample',

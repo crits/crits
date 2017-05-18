@@ -41,7 +41,7 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     meta = {
         "collection": settings.COL_DOMAINS,
         "crits_type": 'Domain',
-        "latest_schema_version": 3,
+        "latest_schema_version": 4,
         "schema_doc": {
             'analyst': 'Analyst who added/modified this domain',
             'domain': 'The domain name of this domain',

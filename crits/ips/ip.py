@@ -15,7 +15,7 @@ class IP(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, Documen
     meta = {
         "collection": settings.COL_IPS,
         "crits_type": 'IP',
-        "latest_schema_version": 3,
+        "latest_schema_version": 4,
         "schema_doc": {
             'ip': 'The IP address',
             'type': ('The type of IP address.'

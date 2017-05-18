@@ -15,7 +15,7 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument
     meta = {
         "collection": settings.COL_CERTIFICATES,
         "crits_type": 'Certificate',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "schema_doc": {
             'filename': 'The filename of the certificate',
             'filetype': 'The filetype of the certificate',

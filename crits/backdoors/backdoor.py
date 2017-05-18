@@ -1,6 +1,7 @@
 from mongoengine import Document, StringField, ListField
 from django.conf import settings
 
+from crits.backdoors.migrate import migrate_backdoor
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsActionsDocument
 
@@ -13,7 +14,7 @@ class Backdoor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     meta = {
         "collection": settings.COL_BACKDOORS,
         "crits_type": 'Backdoor',
-        "latest_schema_version": 1,
+        "latest_schema_version": 2,
         "schema_doc": {
         },
         "jtable_opts": {
@@ -38,7 +39,7 @@ class Backdoor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     version = StringField()
 
     def migrate(self):
-        pass
+        migrate_backdoor(self)
 
     # XXX: Identical to Actor.update_aliases()
     def update_aliases(self, aliases):

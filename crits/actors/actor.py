@@ -94,7 +94,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     meta = {
         "collection": settings.COL_ACTORS,
         "crits_type": 'Actor',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "schema_doc": {
         },
         "jtable_opts": {

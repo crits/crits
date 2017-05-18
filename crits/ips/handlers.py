@@ -179,8 +179,9 @@ def get_ip_details(ip, analyst):
         objects = ip.sort_objects()
 
         #relationships
-        relationships = ip.sort_relationships("%s" % analyst, meta=True)
-
+        relationships = ip.get_relationships(username=analyst, 
+                                             sorted=True, 
+                                             meta=True)
         # relationship
         relationship = {
                 'type': 'IP',

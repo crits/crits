@@ -202,9 +202,9 @@ def get_target_details(email_address, analyst):
     objects = target.sort_objects()
 
     #relationships
-    relationships = target.sort_relationships("%s" % analyst,
-                                                meta=True)
-
+    relationships = target.get_relationships(username=analyst, 
+                                             sorted=True, 
+                                             meta=True)
     # relationship
     relationship = {
             'type': 'Target',

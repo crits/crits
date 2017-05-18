@@ -102,8 +102,9 @@ def get_domain_details(domain, analyst):
     objects = dmain.sort_objects()
 
     #relationships
-    relationships = dmain.sort_relationships("%s" % analyst, meta=True)
-
+    relationships = dmain.get_relationships(username=analyst, 
+                                            sorted=True, 
+                                            meta=True)
     # relationship
     relationship = {
             'type': 'Domain',

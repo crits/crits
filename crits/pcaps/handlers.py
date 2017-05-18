@@ -70,8 +70,9 @@ def get_pcap_details(md5, analyst):
         objects = pcap.sort_objects()
 
         #relationships
-        relationships = pcap.sort_relationships("%s" % analyst, meta=True)
-
+        relationships = pcap.get_relationships(username=analyst, 
+                                               sorted=True, 
+                                               meta=True)
         # relationship
         relationship = {
                 'type': 'PCAP',

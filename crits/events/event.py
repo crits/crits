@@ -32,7 +32,7 @@ class Event(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     meta = {
         "collection": settings.COL_EVENTS,
         "crits_type": 'Event',
-        "latest_schema_version": 3,
+        "latest_schema_version": 4,
         "schema_doc": {
             'title': 'Title of this event',
             'event_id': 'Unique event ID',

@@ -9,7 +9,22 @@ def migrate_indicator(self):
     Migrate to the latest schema version.
     """
 
-    migrate_4_to_5(self)
+    migrate_5_to_6(self)
+
+def migrate_5_to_6(self):
+    """
+    Migrate from schema 5 to 6.
+    """
+    from crits.core.core_migrate import migrate_relationships
+    
+    if self.schema_version < 5:
+        migrate_4_to_5(self)
+    
+    if self.schema_version == 5:
+        migrate_relationships(self)
+        self.schema_version = 6
+        self.save()
+        self.reload()
 
 def migrate_4_to_5(self):
     """

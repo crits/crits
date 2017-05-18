@@ -76,7 +76,7 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     meta = {
         "collection": settings.COL_RAW_DATA,
         "crits_type": 'RawData',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "schema_doc": {
         },
         "jtable_opts": {

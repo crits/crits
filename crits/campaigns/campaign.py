@@ -26,7 +26,7 @@ class Campaign(CritsBaseAttributes, CritsActionsDocument, Document):
     meta = {
         "collection": settings.COL_CAMPAIGNS,
         "crits_type": 'Campaign',
-        "latest_schema_version": 3,
+        "latest_schema_version": 4,
         "schema_doc": {
             'schema_version': 'Version of the Campaign schema doc',
             'active': 'Enabled in the UI (on/off)',

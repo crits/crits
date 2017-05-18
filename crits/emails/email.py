@@ -48,7 +48,7 @@ class Email(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         # (See http://mongoengine-odm.readthedocs.org/en/latest/guide/defining-documents.html#working-with-existing-data)
         "collection": settings.COL_EMAIL,
         "crits_type": 'Email',
-        "latest_schema_version": 2,
+        "latest_schema_version": 3,
         "schema_doc": {
             'boundary': 'Email boundary',
             'campaign': 'List [] of campaigns attributed to this email',

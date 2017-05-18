@@ -94,8 +94,9 @@ def get_raw_data_details(_id, analyst):
         objects = raw_data.sort_objects()
 
         #relationships
-        relationships = raw_data.sort_relationships("%s" % analyst, meta=True)
-
+        relationships = raw_data.get_relationships(username=analyst, 
+                                                   sorted=True, 
+                                                   meta=True)
         # relationship
         relationship = {
                 'type': 'RawData',
@@ -409,16 +410,17 @@ def handle_raw_data_file(data, source_name, user=None,
         if copy_rels:
             rd2 = RawData.objects(link_id=link_id).first()
             if rd2:
-                if len(rd2.relationships):
+                rd2_rels = get_relationships(sorted=False)
+                if len(rd2_rels):
                     raw_data.save(username=user)
                     raw_data.reload()
-                    for rel in rd2.relationships:
+                    for rel in rd2_rels:
                         # Get object to relate to.
-                        rel_item = class_from_id(rel.rel_type, rel.object_id)
+                        rel_item = class_from_id(rel['other_obj']['obj_type'], rel['other_obj']['obj_id'])
                         if rel_item:
                             raw_data.add_relationship(rel_item,
-                                                      rel.relationship,
-                                                      rel_date=rel.relationship_date,
+                                                      RelationshipTypes.inverse(rel['other_obj']['rel_type']),
+                                                      rel_date=rel['relationship_date'],
                                                       analyst=user)
 
 

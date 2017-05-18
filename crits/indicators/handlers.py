@@ -40,6 +40,7 @@ from crits.ips.handlers import ip_add_update, validate_and_normalize_ip
 from crits.ips.ip import IP
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
+from crits.relationships.handlers import get_relationships
 
 from crits.vocabulary.indicators import (
     IndicatorTypes,
@@ -228,7 +229,9 @@ def get_indicator_details(indicator_id, analyst):
     objects = indicator.sort_objects()
 
     #relationships
-    relationships = indicator.sort_relationships("%s" % analyst, meta=True)
+    relationships = indicator.get_relationships(username=analyst, 
+                                                sorted=True, 
+                                                meta=True)
 
     #comments
     comments = {'comments': indicator.get_comments(),
@@ -1223,7 +1226,7 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
             ip_class.save(username=analyst)
             ind_class.save(username=analyst)
             if message['success']:
-                rels = obj_class.sort_relationships("%s" % analyst, meta=True)
+                rels = obj_class.get_relationships(username=analyst, sorted=True, meta=True)
                 return {'success': True, 'message': rels, 'value': obj_class.id}
             else:
                 return {'success': False, 'message': message['message']}
@@ -1325,17 +1328,16 @@ def create_indicator_from_tlo(tlo_type, tlo, analyst, source_name=None,
                                  RelationshipTypes.RELATED_TO,
                                  analyst=analyst)
             tlo.save(username=analyst)
-            for rel in tlo.relationships:
-                if rel.rel_type == "Event":
-                    # Get event object to pass in.
-                    rel_item = Event.objects(id=rel.object_id).first()
-                    if rel_item:
-                        ind.add_relationship(rel_item,
-                                             RelationshipTypes.RELATED_TO,
-                                             analyst=analyst)
+            for rel in tlo.get_relationships(sorted=True,meta=False)['Event']:
+                # Get event object to pass in.
+                rel_item = Event.objects(id=rel['other_obj']['obj_id']).first()
+                if rel_item:
+                    ind.add_relationship(rel_item,
+                                         RelationshipTypes.RELATED_TO,
+                                         analyst=analyst)
             ind.save(username=analyst)
             tlo.reload()
-            rels = tlo.sort_relationships("%s" % analyst, meta=True)
+            rels = tlo.get_relationships(username=analyst,sorted=True, meta=True)
             return {'success': True, 'message': rels,
                     'value': tlo.id, 'indicator': ind}
         else:
