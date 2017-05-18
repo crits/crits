@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
@@ -16,7 +19,7 @@ class EmailResource(CRITsAPIResource):
     Currently supports GET and POST.
     """
 
-    class Meta:
+    class Meta(object):
         object_class = Email
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "emails"
@@ -81,7 +84,7 @@ class EmailResource(CRITsAPIResource):
             if not file_:
                 content['message'] = 'No file uploaded.'
                 self.crits_response(content)
-            filedata = file_.read()
+            filedata = file_.read().decode('ISO-8859-1')
             result = handle_eml(filedata, source, reference,
                                 analyst, 'EML Upload' + method, campaign,
                                 confidence, bucket_list=bucket_list, ticket=ticket)

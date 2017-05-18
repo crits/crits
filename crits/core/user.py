@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 #-------------
 # Some sections of the code below have been copied from
 # MongoEngine.
@@ -1058,7 +1061,7 @@ Please contact a site administrator to resolve.
 """
                 try:
                     user.email_user(subject, body)
-                except Exception, err:
+                except Exception as err:
                     logger.warning("Error sending email: %s" % str(err))
             self.track_login_attempt(user, e)
             user.reload()

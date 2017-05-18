@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import object
 import json
 from django.core.urlresolvers import reverse
 from tastypie import authorization
@@ -17,7 +19,7 @@ class ServiceResource(CRITsAPIResource):
     Currently supports POST.
     """
 
-    class Meta:
+    class Meta(object):
         object_class = CRITsService
         allowed_methods = ('post',)
         resource_name = "services"

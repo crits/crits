@@ -1,6 +1,9 @@
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
 import datetime
 import json
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
@@ -113,7 +116,7 @@ def indicator_search(request):
     query[request.GET.get('search_type', '')] = request.GET.get('q', '').strip()
     #return render_to_response('error.html', {'error': query})
     return HttpResponseRedirect(reverse('crits.indicators.views.indicators_listing')
-                                + "?%s" % urllib.urlencode(query))
+                                + "?%s" % urllib.parse.urlencode(query))
 
 @user_passes_test(user_can_view_data)
 def upload_indicator(request):
@@ -438,6 +441,7 @@ def get_indicator_type_dropdown(request):
         if request.is_ajax():
             dd_final = {}
             list_type = request.POST.get('type', None)
+            print('list_type: %s, request: %s' %(list_type, request))
             if list_type == 'indicator_type':
                 type_list = IndicatorTypes.values(sort=True)
             elif list_type == 'threat_type':

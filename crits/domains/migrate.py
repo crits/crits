@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 def migrate_domain(self):
     """
     Migrate to the latest schema version.

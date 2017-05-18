@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from past.builtins import basestring
 import uuid
 
 def migrate_event(self):
@@ -33,7 +36,7 @@ def migrate_1_to_2(self):
     if self.schema_version == 1:
         event_id = self.event_id
         if not isinstance(event_id, uuid.UUID):
-            if not isinstance(event_id, basestring):
+            if not isinstance(event_id, str):
                 event_id = str(event_id)
             try:
                 event_id = uuid.UUID(event_id)

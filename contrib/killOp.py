@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 import sys
 from optparse import OptionParser
 import pymongo
@@ -23,6 +25,6 @@ print "Kill Sequence:"
 conn = pymongo.MongoClient()
 # db.$cmd.sys.killop.findOne({op:1234})
 for op in opids:
-    print "Killing: %s" % op
+    print("Killing: %s" % op)
     result = conn['admin']['$cmd.sys.killop'].find_one({'op': "%s" % op})
-    print "\t%s" % result
+    print("\t%s" % result)

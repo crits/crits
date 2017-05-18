@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.test import SimpleTestCase
 from django.test.client import RequestFactory
 
@@ -116,7 +117,7 @@ class DomainViewTests(SimpleTestCase):
         self.req.user = self.user
         response = views.domains_listing(self.req)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue("#domain_listing" in response.content)
+        self.assertTrue("#domain_listing" in str(response.content))
 
     def testDomainsjtList(self):
         self.req = self.factory.post('/domains/list/jtlist/',

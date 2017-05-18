@@ -1,5 +1,8 @@
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
 import json
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
@@ -48,7 +51,7 @@ def ip_search(request):
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
     #return render_to_response('error.html', {'error': query})
     return HttpResponseRedirect(reverse('crits.ips.views.ips_listing')
-                                + "?%s" % urllib.urlencode(query))
+                                + "?%s" % urllib.parse.urlencode(query))
 
 @user_passes_test(user_can_view_data)
 def ip_detail(request, ip):

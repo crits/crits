@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.core.management.base import BaseCommand
 
 from crits.core.bucket import Bucket
@@ -37,5 +38,5 @@ class Command(BaseCommand):
         # Drop all existing buckets
         Bucket.objects().delete()
 
-        for bucket in buckets.values():
+        for bucket in list(buckets.values()):
             bucket.save()

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import imp
 import os
 
@@ -93,7 +94,7 @@ if settings.ENABLE_API:
                     try:
                         rdef = imp.load_source('urls', abs_path)
                         rdef.register_api(v1_api)
-                    except Exception, e:
+                    except Exception as e:
                         pass
 
     urlpatterns.append(url(r'^api/', include(v1_api.urls)))

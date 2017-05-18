@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import sys
 import traceback
 
@@ -23,7 +26,7 @@ from crits.signatures.signature import Signature
 from crits.samples.sample import Sample
 from crits.targets.target import Target
 
-from prep import prep_database
+from .prep import prep_database
 
 class Command(BaseCommand):
     """
@@ -140,7 +143,7 @@ class Command(BaseCommand):
             not samples and
             not signatures and
             not targets):
-            print "You must select something to upgrade. See '-h' for options."
+            print("You must select something to upgrade. See '-h' for options.")
             sys.exit(1)
         else:
             upgrade(lv, options)
@@ -174,33 +177,33 @@ def migrate_collection(class_obj, sort_ids):
         total = docs.count()
 
     if not total:
-        print "\tNo %ss to migrate!" % class_obj._meta['crits_type']
+        print("\tNo %ss to migrate!" % class_obj._meta['crits_type'])
         return
 
-    print "\tMigrated 0 of %d" % total,
+    print("\tMigrated 0 of %d" % total)
     count = 0
     doc = None
     try:
         for doc in docs:
             if 'migrated' in doc._meta and doc._meta['migrated']:
                 count += 1
-            print "\r\tMigrated %d of %d" % (count, total),
-        print ""
+            print("\r\tMigrated %d of %d" % (count, total))
+        print("")
     except Exception as e:
         # Provide some basic info so admin can query their db and figure out
         # what bad data is blowing up the migration.
-        print "\n\n\tAn error occurred during migration!"
-        print "\tMigrated: %d" % count
+        print("\n\n\tAn error occurred during migration!")
+        print("\tMigrated: %d" % count)
         formatted_lines = traceback.format_exc().splitlines()
-        print "\tError: %s" % formatted_lines[-1]
+        print("\tError: %s" % formatted_lines[-1])
         if hasattr(e, 'tlo'):
-            print "\tDocument ID: %s" % e.tlo
+            print("\tDocument ID: %s" % e.tlo)
         else:
             doc_id = mongo_find_one(class_obj._meta.get('collection'),
                                     {'schema_version': {'$lt': version}}, '_id')
-            print "\tDocument ID: %s" % doc_id.get('_id')
+            print("\tDocument ID: %s" % doc_id.get('_id'))
         if doc:
-            print "\tLast ID: %s" % doc.id
+            print("\tLast ID: %s" % doc.id)
         sys.exit(1)
 
 def upgrade(lv, options):
@@ -275,7 +278,7 @@ def upgrade(lv, options):
     # Always bump the version to the latest in settings.py
     config = CRITsConfig.objects()
     if len(config) > 1:
-        print "You have more than one config object. This is really bad."
+        print("You have more than one config object. This is really bad.")
     else:
         config = config[0]
         config.crits_version = settings.CRITS_VERSION

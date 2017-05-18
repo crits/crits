@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import json
 
 from django.shortcuts import render_to_response

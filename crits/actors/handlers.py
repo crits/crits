@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from past.builtins import basestring
 import json
 
 from django.core.urlresolvers import reverse
@@ -348,13 +351,13 @@ def add_new_actor(name, aliases=None, description=None, source=None,
             actor.description = description.strip()
         is_item_new = True
 
-    if isinstance(source, basestring):
+    if isinstance(source, str):
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
                                          analyst=analyst)]
 
-    if isinstance(campaign, basestring):
+    if isinstance(campaign, str):
         c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst)
         campaign = [c]
 
@@ -541,7 +544,7 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
                     'message': "Missing Identifier"}
         actor_identifier.name = identifier.strip()
 
-    if isinstance(source, basestring):
+    if isinstance(source, str):
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,

@@ -1,4 +1,9 @@
+from __future__ import unicode_literals
+from past.builtins import basestring
+from builtins import object
 import datetime
+
+
 
 from dateutil.parser import parse
 from mongoengine import DateTimeField, FileField
@@ -25,7 +30,7 @@ class CritsDateTimeField(DateTimeField):
         return super(CritsDateTimeField, self).__set__(instance, value)
 
     def transform(self, value):
-        if value and isinstance(value, basestring):
+        if value and isinstance(value, str):
             return parse(value, fuzzy=True)
         elif not value:
             return datetime.datetime.now()

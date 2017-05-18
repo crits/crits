@@ -1,13 +1,16 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from optparse import make_option
 
-from create_indexes import create_indexes
-from create_locations import add_location_objects
-from setconfig import create_config_if_not_exist
-from create_default_dashboard import create_dashboard
+from .create_indexes import create_indexes
+from .create_locations import add_location_objects
+from .setconfig import create_config_if_not_exist
+from .create_default_dashboard import create_dashboard
 
 from crits.core.crits_mongoengine import Action
 from crits.core.user_role import UserRole
@@ -38,9 +41,9 @@ class Command(BaseCommand):
 
         drop = options.get('drop')
         if drop:
-            print "Dropping enabled. Will drop content before adding!"
+            print("Dropping enabled. Will drop content before adding!")
         else:
-            print "Drop protection enabled. Will not drop existing content!"
+            print("Drop protection enabled. Will not drop existing content!")
         populate_user_roles(drop)
         populate_actions(drop)
         populate_raw_data_types(drop)
@@ -74,9 +77,9 @@ def populate_user_roles(drop):
             ur = UserRole()
             ur.name = role
             ur.save()
-        print "User Roles: added %s roles!" % len(user_roles)
+        print("User Roles: added %s roles!" % len(user_roles))
     else:
-        print "User Roles: existing documents detected. skipping!"
+        print("User Roles: existing documents detected. skipping!")
 
 def populate_actions(drop):
     """
@@ -95,9 +98,9 @@ def populate_actions(drop):
             ia = Action()
             ia.name = action
             ia.save()
-        print "Actions: added %s actions!" % len(actions)
+        print("Actions: added %s actions!" % len(actions))
     else:
-        print "Actions: existing documents detected. skipping!"
+        print("Actions: existing documents detected. skipping!")
 
 
 def populate_raw_data_types(drop):
@@ -117,9 +120,9 @@ def populate_raw_data_types(drop):
             dt = RawDataType()
             dt.name = data_type
             dt.save()
-        print "Raw Data Types: added %s types!" % len(data_types)
+        print("Raw Data Types: added %s types!" % len(data_types))
     else:
-        print "Raw Data Types: existing documents detected. skipping!"
+        print("Raw Data Types: existing documents detected. skipping!")
 
 
 def populate_signature_types(drop):
@@ -139,9 +142,9 @@ def populate_signature_types(drop):
             dt = SignatureType()
             dt.name = data_type
             dt.save()
-        print "Signature Types: added %s types!" % len(data_types)
+        print("Signature Types: added %s types!" % len(data_types))
     else:
-        print "Signature Types: existing documents detected. skipping!"
+        print("Signature Types: existing documents detected. skipping!")
 
 
 def populate_tlds(drop):
@@ -153,7 +156,7 @@ def populate_tlds(drop):
     """
 
     if not drop:
-        print "Drop protection does not apply to effective TLDs"
+        print("Drop protection does not apply to effective TLDs")
     TLD.drop_collection()
     f = os.path.join(settings.SITE_ROOT, '..', 'extras', 'effective_tld_names.dat')
     count = 0
@@ -163,4 +166,4 @@ def populate_tlds(drop):
             line = line.replace("*.", "")
             TLD.objects(tld=line).update_one(set__tld=line, upsert=True)
             count += 1
-    print "Effective TLDs: added %s TLDs!" % count
+    print("Effective TLDs: added %s TLDs!" % count)

@@ -1,3 +1,7 @@
+from __future__ import unicode_literals
+from builtins import str
+from past.builtins import basestring
+from builtins import object
 import datetime
 import threading
 
@@ -307,7 +311,7 @@ def process_changed_fields(initial_message, changed_fields, obj):
                 elif len(new_value) > 0:
                     list_value = new_value[0]
 
-                if isinstance(list_value, basestring):
+                if isinstance(list_value, str):
                     change_field_handler = ChangeParser.generic_list_change_handler
                 elif isinstance(list_value, EmbeddedDocument):
                     change_field_handler = ChangeParser.generic_list_json_change_handler

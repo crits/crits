@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import str
 import json
 
 from django.core.urlresolvers import reverse
@@ -129,7 +131,7 @@ def upsert_target(data, analyst):
         return {'success': True,
                 'message': "Target saved successfully",
                 'id': str(target.id)}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False,
                 'message': "Target save failed: %s" % e}
 
@@ -270,7 +272,7 @@ def get_campaign_targets(campaign, user):
     for target in targets:
         addresses[target.email_address] = 1
 
-    uniq_addrs = addresses.keys()
+    uniq_addrs = list(addresses.keys())
     return uniq_addrs
 
 def generate_target_jtable(request, option):

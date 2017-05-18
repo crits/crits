@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import str
 import datetime
 import json
 import logging
@@ -1076,9 +1078,9 @@ def base_context(request):
     base_context['crits_version'] = crits_version
     base_context['enable_toasts'] = enable_toasts
     if git_repo_url:
-        base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long+"'>"+git_branch+':'+git_hash+"</a>"
+        base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long.decode('iso-8859-1')+"'>"+git_branch.decode('iso-8859-1')+':'+git_hash.decode('iso-8859-1')+"</a>"
     else:
-        base_context['git_repo_link'] = "%s:%s" % (git_branch, git_hash)
+        base_context['git_repo_link'] = "%s:%s" % (git_branch.decode('iso-8859-1'), git_hash.decode('iso-8859-1'))
     base_context['hide_git_hash'] = hide_git_hash
     base_context['splunk_search_url'] = splunk_url
     base_context['mongo_database'] = mongo_database
@@ -1110,137 +1112,137 @@ def base_context(request):
         # Forms that require a user
         try:
             base_context['actor_add'] = AddActorForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context AddActorForm Error: %s" % e)
         try:
             base_context['add_actor_identifier'] = AddActorIdentifierForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context AddActorIdentifierForm Error: %s" % e)
         try:
             base_context['backdoor_add'] = AddBackdoorForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context AddBackdoorForm Error: %s" % e)
         try:
             base_context['exploit_add'] = AddExploitForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context AddExploitForm Error: %s" % e)
         try:
             base_context['add_domain'] = AddDomainForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context AddDomainForm Error: %s" % e)
         try:
             base_context['ip_form'] = AddIPForm(user, None)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context AddIPForm Error: %s" % e)
         try:
             base_context['new_action'] = ActionsForm(initial={'analyst': user,
                 'active': "off",
                 'date': datetime.datetime.now()})
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context ActionsForm Error: %s" % e)
         try:
             base_context['source_add'] = SourceForm(user,
                                                     initial={'analyst': user})
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context SourceForm Error: %s" % e)
         try:
             base_context['upload_cert'] = UploadCertificateForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context UploadCertificateForm Error: %s" % e)
         try:
             base_context['upload_csv'] = UploadIndicatorCSVForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context UploadIndicatorCSVForm Error: %s" % e)
         try:
             base_context['upload_email_outlook'] = EmailOutlookForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context EmailOutlookForm Error: %s" % e)
         try:
             base_context['upload_email_eml'] = EmailEMLForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context EmailEMLForm Error: %s" % e)
         try:
             base_context['upload_email_fields'] = EmailUploadForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context EmailUploadForm Error: %s" % e)
         try:
             base_context['upload_email_yaml'] = EmailYAMLForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context EmailYAMLForm Error: %s" % e)
         try:
             base_context['upload_email_raw'] = EmailRawUploadForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context EmailRawUploadForm Error: %s" % e)
         try:
             base_context['upload_event'] = EventForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context EventForm Error: %s" % e)
         try:
             base_context['upload_ind'] = UploadIndicatorForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context UploadIndicatorForm Error: %s" % e)
         try:
             base_context['upload_pcap'] = UploadPcapForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context UploadPcapForm Error: %s" % e)
         try:
             base_context['upload_text'] = UploadIndicatorTextForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context UploadIndicatorTextForm Error: %s" % e)
         try:
             base_context['upload_sample'] = UploadFileForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context UploadFileForm Error: %s" % e)
         try:
             base_context['object_form'] = AddObjectForm(user, None)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context AddObjectForm Error: %s" % e)
         try:
             base_context['releasability_form'] = AddReleasabilityForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context AddReleasabilityForm Error: %s" % e)
         try:
             base_context['screenshots_form'] = AddScreenshotForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context AddScreenshotForm Error: %s" % e)
         try:
             base_context['upload_raw_data'] = UploadRawDataForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context UploadRawDataForm Error: %s" % e)
         try:
             base_context['upload_raw_data_file'] = UploadRawDataFileForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context UploadRawDataFileForm Error: %s" % e)
         try:
             base_context['upload_signature'] = UploadSignatureForm(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context UploadSignatureForm Error: %s" % e)
 
         # Other info acquired from functions
         try:
             base_context['user_list'] = get_user_list()
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context get_user_list Error: %s" % e)
         try:
             base_context['email_notifications'] = get_user_email_notification(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context get_user_email_notification Error: %s" % e)
         try:
             base_context['user_notifications'] = get_user_notifications(user,
                                                                         count=True)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context get_user_notifications Error: %s" % e)
         try:
             base_context['user_organization'] = get_user_organization(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context get_user_organization Error: %s" % e)
         try:
             base_context['user_role'] = get_user_role(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context get_user_role Error: %s" % e)
         try:
             base_context['user_source_list'] = user_sources(user)
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context user_sources Error: %s" % e)
 
         nav_template = get_nav_template(request.user.prefs.nav)
@@ -1260,7 +1262,7 @@ def base_context(request):
     if is_admin(request.user.username):
         try:
             base_context['source_create'] = AddSourceForm()
-        except Exception, e:
+        except Exception as e:
             logger.warning("Base Context AddSourceForm Error: %s" % e)
         base_context['category_list'] = [
                                         {'collection': '', 'name': ''},
@@ -1314,7 +1316,7 @@ def user_context(request):
         context['theme'] = user.get_preference('ui', 'theme', 'default')
         favorite_count = 0
         favorites = user.favorites.to_dict()
-        for favorite in favorites.values():
+        for favorite in list(favorites.values()):
             favorite_count += len(favorite)
         context['user_favorites'] = user.favorites.to_json()
         context['favorite_count'] = favorite_count

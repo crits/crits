@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from past.builtins import basestring
 import datetime
 
 from mongoengine import Document, EmbeddedDocument, StringField, ListField
@@ -195,7 +198,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         :type aliases: list
         """
 
-        if isinstance(aliases, basestring):
+        if isinstance(aliases, str):
             aliases = aliases.split(',')
         aliases = [a.strip() for a in aliases if a != '']
         existing_aliases = None
@@ -218,7 +221,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         :type tags: list
         """
 
-        if isinstance(tags, basestring):
+        if isinstance(tags, str):
             tags = tags.split(',')
         tags = [t.strip() for t in tags if t != '']
         existing_tags = None

@@ -1,7 +1,12 @@
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from past.builtins import basestring
 import datetime
 import hashlib
 import json
-import HTMLParser
+import html.parser
 
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -323,7 +328,6 @@ def handle_signature_file(data, source_name, user=None,
             'message':  'No data object, title, or data type passed in'
         }
         return status
-
     if not source_name:
         return {"success" : False, "message" : "Missing source information."}
 
@@ -343,8 +347,12 @@ def handle_signature_file(data, source_name, user=None,
         return status
 
     # generate md5 and timestamp
-    md5 = hashlib.md5(data).hexdigest()
     timestamp = datetime.datetime.now()
+    if not isinstance(data, str):
+        md5 = hashlib.md5(data.hexdigest())
+        data = data.decode('ISO-8859-1')
+    else:
+        md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
     
     # generate signature
     signature = Signature()
@@ -358,7 +366,7 @@ def handle_signature_file(data, source_name, user=None,
     signature.data_type_max_version = data_type_max_version
 
     if data_type_dependency:
-        if type(data_type_dependency) == unicode:
+        if type(data_type_dependency) == str:
             data_type_dependency = data_type_dependency.split(",")
 
         for item in data_type_dependency:
@@ -367,23 +375,28 @@ def handle_signature_file(data, source_name, user=None,
                 signature.data_type_dependency.append(str(item))
     else:
         data_type_dependency = []
-
+    #print("add_source0: %s %s %d" %(repr(source_name), type(source_name), len(source_name)))
     # generate new source information and add to sample
-    if isinstance(source_name, basestring) and len(source_name) > 0:
+    if isinstance(source_name, str) and len(source_name) > 0:
+        #print("add_source1_")
         source = create_embedded_source(source_name,
-                                   date=timestamp,
                                    method=method,
                                    reference=reference,
                                    analyst=user)
         # this will handle adding a new source, or an instance automatically
+        #print("add_source1a")
         signature.add_source(source)
+        #print("add_source1b")
     elif isinstance(source_name, EmbeddedSource):
         signature.add_source(source_name, method=method, reference=reference)
+        #print("add_source2")
     elif isinstance(source_name, list) and len(source_name) > 0:
+        #print("add_source3")
         for s in source_name:
             if isinstance(s, EmbeddedSource):
+                #print("add_source4")
                 signature.add_source(s, method=method, reference=reference)
-
+    #print("add_source5")
     signature.version = len(Signature.objects(link_id=link_id)) + 1
 
     if link_id:
@@ -413,9 +426,8 @@ def handle_signature_file(data, source_name, user=None,
     if related_id and related_type:
         related_obj = class_from_id(related_type, related_id)
         if not related_obj:
-            retVal['success'] = False
-            retVal['message'] = 'Related Object not found.'
-            return retVal
+            return {'success' : False,
+                    'message' : 'Related Object not found.'}
 
     signature.save(username=user)
 
@@ -480,7 +492,7 @@ def update_signature_type(type_, id_, data_type, user, **kwargs):
         try:
             signature.save(username=user)
             return {'success': True}
-        except ValidationError, e:
+        except ValidationError as e:
             return {'success': False, 'message': str(e)}
 
 
@@ -610,7 +622,7 @@ def update_dependency(type_, id_, dep, user, append=False, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     data_type_dependency = h.unescape(dep)
     try:
         deps = data_type_dependency.split(',')
@@ -625,7 +637,7 @@ def update_dependency(type_, id_, dep, user, append=False, **kwargs):
 
         obj.save(username=user)
         return {'success': True, 'message': "Data type dependency set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 
@@ -659,13 +671,13 @@ def update_min_version(type_, id_, data_type_min_version, user, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     data_type_min_version = h.unescape(data_type_min_version)
     try:
         obj.data_type_min_version = data_type_min_version
         obj.save(username=user)
         return {'success': True, 'message': "Data type min version set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 
@@ -698,13 +710,13 @@ def update_max_version(type_, id_, data_type_max_version, user, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     data_type_max_version = h.unescape(data_type_max_version)
     try:
         obj.data_type_max_version = data_type_max_version
         obj.save(username=user)
         return {'success': True, 'message': "Data type max version set."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 
@@ -750,13 +762,13 @@ def update_signature_data(type_, id_, data, user, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     data = h.unescape(data)
     try:
         obj.data = data
         obj.save(username=user)
         return {'success': True, 'message': "Signature value updated."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def update_title(type_, id_, title, user, **kwargs):
@@ -788,11 +800,11 @@ def update_title(type_, id_, title, user, **kwargs):
 
     # Have to unescape the submitted data. Use unescape() to escape
     # &lt; and friends. Use urllib2.unquote() to escape %3C and friends.
-    h = HTMLParser.HTMLParser()
+    h = html.parser.HTMLParser()
     data = h.unescape(title)
     try:
         obj.title = data
         obj.save(username=title)
         return {'success': True, 'message': "Signature title updated."}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}

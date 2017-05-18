@@ -1,8 +1,13 @@
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from past.builtins import basestring
 import csv
 import datetime
 import json
 import logging
-import urlparse
+import urllib.parse
 
 from io import BytesIO
 from django.conf import settings
@@ -315,7 +320,7 @@ def get_verified_field(data, valid_values, field=None, default=None):
     else:
         value_list = [data]
     for i, item in enumerate(value_list):
-        if isinstance(item, basestring):
+        if isinstance(item, str):
             item = item.lower().strip().replace(' - ', '-')
             if item in valid_values:
                 value_list[i] = valid_values[item]
@@ -451,7 +456,7 @@ def handle_indicator_csv(csv_data, source, method, reference, ctype, username,
                                                analyst=username, method=method,
                                                add_domain=add_domain, related_id=related_id,
                                                related_type=related_type, relationship_type=relationship_type)
-        except Exception, e:
+        except Exception as e:
             result['success'] = False
             result_message += msg % (processed + 1, e)
             continue
@@ -585,7 +590,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
                                            method, add_domain, add_relationship, cache=cache,
                                         related_id=related_id, related_type=related_type,
                                         relationship_type=relationship_type)
-        except Exception, e:
+        except Exception as e:
             return {'success': False, 'message': repr(e)}
 
     return result
@@ -634,7 +639,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
               "is_new_indicator" (boolean) if successful.
     """
 
-    if ind['type'] not in IndicatorTypes.values():
+    if ind['type'] not in list(IndicatorTypes.values()):
         return {'success': False,
                 'message': "Not a valid Indicator Type: %s" % ind['type']}
     for t in ind['threat_types']:
@@ -703,7 +708,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                                        append=True)
 
     if 'campaign' in ind:
-        if isinstance(ind['campaign'], basestring) and len(ind['campaign']) > 0:
+        if isinstance(ind['campaign'], str) and len(ind['campaign']) > 0:
             confidence = ind.get('campaign_confidence', 'low')
             ind['campaign'] = EmbeddedCampaign(name=ind['campaign'],
                                                confidence=confidence,
@@ -757,7 +762,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
         if ind_type in (IndicatorTypes.DOMAIN,
                         IndicatorTypes.URI):
             if ind_type == IndicatorTypes.URI:
-                domain_or_ip = urlparse.urlparse(ind_value).hostname
+                domain_or_ip = urllib.parse.urlparse(ind_value).hostname
                 try:
                     validate_ipv46_address(domain_or_ip)
                     url_contains_ip = True
@@ -782,7 +787,7 @@ def handle_indicator_insert(ind, source, reference='', analyst='', method='',
                 else:
                     dmain = success['object']
 
-        if ind_type in IPTypes.values() or url_contains_ip:
+        if ind_type in list(IPTypes.values()) or url_contains_ip:
             if url_contains_ip:
                 ind_value = domain_or_ip
                 try:
@@ -1059,7 +1064,7 @@ def activity_add(id_, activity, user, **kwargs):
         indicator.save(username=user)
         return {'success': True, 'object': activity,
                 'id': str(indicator.id)}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e,
                 'id': str(indicator.id)}
 
@@ -1095,7 +1100,7 @@ def activity_update(id_, activity, user=None, **kwargs):
                                 activity['date'])
         indicator.save(username=user)
         return {'success': True, 'object': activity}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def activity_remove(id_, date, user, **kwargs):
@@ -1121,7 +1126,7 @@ def activity_remove(id_, date, user, **kwargs):
         indicator.delete_activity(date)
         indicator.save(username=user)
         return {'success': True}
-    except ValidationError, e:
+    except ValidationError as e:
         return {'success': False, 'message': e}
 
 def ci_update(id_, ci_type, value, user, **kwargs):
@@ -1151,7 +1156,7 @@ def ci_update(id_, ci_type, value, user, **kwargs):
                 indicator.set_impact(user, value)
             indicator.save(username=user)
             return {'success': True}
-        except ValidationError, e:
+        except ValidationError as e:
             return {'success': False, "message": e}
     else:
         return {'success': False, 'message': 'Invalid CI type'}
@@ -1227,7 +1232,7 @@ def create_indicator_and_ip(type_, id_, ip, analyst):
                 return {'success': True, 'message': rels, 'value': obj_class.id}
             else:
                 return {'success': False, 'message': message['message']}
-        except Exception, e:
+        except Exception as e:
             return {'success': False, 'message': e}
     else:
         return {'success': False,
@@ -1384,7 +1389,7 @@ def validate_indicator_value(value, ind_type):
             domain = domain_or_ip
 
     # IPs
-    if ind_type in IPTypes.values():
+    if ind_type in list(IPTypes.values()):
         (ip_address, error) = validate_and_normalize_ip(value, ind_type)
         if error:
             return ("", error)

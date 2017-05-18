@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from mongoengine import DynamicDocument, ListField, ObjectIdField, StringField, DictField, IntField, BooleanField
 

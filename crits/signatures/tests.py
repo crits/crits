@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.test import SimpleTestCase
 from django.test.client import RequestFactory
 
@@ -114,7 +115,7 @@ class SignatureViewTests(SimpleTestCase):
         self.req.user = self.user
         response = views.signatures_listing(self.req)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue("#signature_listing" in response.content)
+        self.assertTrue("#signature_listing" in str(response.content))
 
     def testSignaturesjtList(self):
         self.req = self.factory.post('/signatures/list/jtlist/',

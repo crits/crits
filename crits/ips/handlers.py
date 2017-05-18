@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from past.builtins import basestring
 import json
 
 from django.core.exceptions import ValidationError
@@ -420,13 +422,13 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
     elif ip_object.description != description:
         ip_object.description += "\n" + (description or '')
 
-    if isinstance(source, basestring):
+    if isinstance(source, str):
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
                                          analyst=analyst)]
 
-    if isinstance(campaign, basestring):
+    if isinstance(campaign, str):
         c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst)
         campaign = [c]
 

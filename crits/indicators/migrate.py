@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from crits.core.crits_mongoengine import EmbeddedCampaign
 from crits.vocabulary.indicators import (
     IndicatorThreatTypes,

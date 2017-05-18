@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import datetime
 import json
 
@@ -115,7 +116,7 @@ def get_user_allowed_comments(comments, sources):
             docs[c.obj_type][c.obj_id] = [c]
 
     final_comments = []
-    for key, val in docs.items():
+    for key, val in list(docs.items()):
         cls = class_from_type(key)
         obj_ids = [v for v in val] #get keys
         query = {'_id': {'$in':obj_ids},
@@ -246,7 +247,7 @@ def comment_add(cleaned_data, obj_type, obj_id, method, subscr, analyst):
                                  'subscription': subscr})
         message = "Comment added successfully!"
         result = {'success': True, 'html': html, 'message': message}
-    except ValidationError, e:
+    except ValidationError as e:
         result = {'success': False, 'message': e}
     return HttpResponse(json.dumps(result,
                         default=json_handler),
@@ -291,7 +292,7 @@ def comment_update(cleaned_data, obj_type, obj_id, subscr, analyst):
                                      'subscription': subscr})
             message = "Comment updated successfully!"
             result = {'success': True, 'html': html, 'message': message}
-        except ValidationError, e:
+        except ValidationError as e:
             result = {'success': False, 'message': e}
     return HttpResponse(json.dumps(result,
                                    default=json_handler),

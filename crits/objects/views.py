@@ -1,4 +1,8 @@
+from __future__ import unicode_literals
+from past.builtins import basestring
 import json
+
+
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
@@ -60,7 +64,7 @@ def add_new_object(request):
         if 'value' in request.FILES:
             data = request.FILES['value']
         value = request.POST.get('value', None)
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             value = value.strip()
         results = add_object(my_type,
                              oid,

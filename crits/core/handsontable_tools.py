@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import str
 import json
 
 from django import forms
@@ -37,7 +39,7 @@ def convert_handsontable_to_rows(request):
 
         # If the row data is null that means we should skip processing for this row
         if rowData != None:
-            for columnKey, columnValue in rowData.items():
+            for columnKey, columnValue in list(rowData.items()):
                 cleanedRowData[remove_html_tags(columnKey)] = columnValue
 
             cleanedRowsData.append(cleanedRowData)
@@ -256,7 +258,7 @@ def parse_bulk_upload(request, parse_row_function, add_new_function, formdict, c
             else:
                 processedRows += 1;
 
-                for name, errorMessages in bound_form.errors.items():
+                for name, errorMessages in list(bound_form.errors.items()):
                     entry = get_field_from_label(name, formdict)
                     if entry == None:
                         continue
@@ -266,7 +268,7 @@ def parse_bulk_upload(request, parse_row_function, add_new_function, formdict, c
                                            'label': entry['label'],
                                            'message': "At (" + str(rowCounter) + ", " + entry['label'] + "): " + message});
 
-        except Exception,e:
+        except Exception as e:
             import traceback
             traceback.print_exc()
 

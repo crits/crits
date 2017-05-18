@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import json
 
 from mongoengine import Document
@@ -102,6 +103,8 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
             pass
         try:
             self.filetype = magic.from_buffer(data)
+            if not isinstance(self.filetype, str):
+                self.filetype = self.filetype.decode('ISO-8859-1')
         except:
             self.filetype = "Unavailable"
         try:
@@ -113,6 +116,8 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         except:
             self.mimetype = "Unavailable"
         self.size = len(data)
+        if not isinstance(self.filetype, str):
+            self.filetype = self.filetype.decode('ISO-8859-1')
         # this is a shard key. you can't modify it once it's set.
         # MongoEngine will still mark the field as modified even if you set it
         # to the same value.
@@ -122,6 +127,8 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         self.sha256 = sha256(data).hexdigest()
         try:
             self.ssdeep = pydeep.hash_bytes(data)
+            if not isinstance(self.ssdeep, str):
+                self.ssdeep = self.ssdeep.decode('ISO-8859-1')
         except:
             self.ssdeep = None
         try:

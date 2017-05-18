@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from past.builtins import basestring
+from builtins import object
 import json
 import re
 import datetime
@@ -563,12 +566,12 @@ def upsert_domain(domain, source, username=None, campaign=None,
     if not campaign:
         campaign = []
     # assume it's a list, but check if it's a string
-    elif isinstance(campaign, basestring):
+    elif isinstance(campaign, str):
         c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=username)
         campaign = [c]
 
     # assume it's a list, but check if it's a string
-    if isinstance(source, basestring):
+    if isinstance(source, str):
         s = EmbeddedSource()
         s.name = source
         instance = EmbeddedSource.SourceInstance()
@@ -661,7 +664,7 @@ def upsert_domain(domain, source, username=None, campaign=None,
             root_domain.save(username=username)
         if fqdn_domain:
             fqdn_domain.save(username=username)
-    except Exception, e:
+    except Exception as e:
         return {'success': False, 'message': e}
 
     #Add relationships between fqdn, root

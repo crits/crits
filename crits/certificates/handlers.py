@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+from past.builtins import basestring
 import datetime
 import hashlib
 import json
@@ -298,7 +301,7 @@ def handle_cert_file(filename, data, source_name, user=None,
         cert.md5 = md5
 
     # generate source information and add to certificate
-    if isinstance(source_name, basestring) and len(source_name) > 0:
+    if isinstance(source_name, str) and len(source_name) > 0:
         s = create_embedded_source(source_name,
                                    method=method,
                                    reference=reference,

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from mongoengine import Document, StringField, ListField
 from mongoengine import BooleanField, EmbeddedDocumentField
 from django.conf import settings

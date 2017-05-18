@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 def migrate_email(self):
     """
     Migrate to the latest schema version.

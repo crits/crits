@@ -4,6 +4,8 @@
     - fab vagrant create_admin_user
     - fab vagrant runserver
 """
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from fabric.api import cd, prompt, run, task
 from fabtools.vagrant import vagrant

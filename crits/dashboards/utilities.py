@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import str
 from crits.actors.actor import Actor
 from crits.services.analysis_result import AnalysisResult
 from crits.campaigns.campaign import Campaign
@@ -59,7 +61,7 @@ def getHREFLink(object, object_type):
         key = "id"
     #adding the last part of the url 
     if key in object:
-        href += unicode(object[key]) + "/"
+        href += str(object[key]) + "/"
     return href
 
 def get_obj_name_from_title(tableTitle):

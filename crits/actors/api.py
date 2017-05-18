@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import object
 from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
@@ -15,7 +17,7 @@ class ActorResource(CRITsAPIResource):
     Currently supports GET and POST.
     """
 
-    class Meta:
+    class Meta(object):
         object_class = Actor
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "actors"
@@ -92,7 +94,7 @@ class ActorIdentifierResource(CRITsAPIResource):
     Currently supports GET and POST.
     """
 
-    class Meta:
+    class Meta(object):
         object_class = ActorIdentifier
         allowed_methods = ('get', 'post')
         resource_name = "actoridentifiers"
