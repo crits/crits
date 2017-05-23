@@ -48,7 +48,7 @@
             </tr>
             <tr>
             <td class='key'>Created</td>
-            <td>{{ pcap.created }}</td>
+            <td>{{ pcap.created }}{% if pcap.created_by %} by {{ pcap.created_by }}{% endif %}</td>
             </tr>
             <tr>
             <td class='key'>Length</td>

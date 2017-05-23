@@ -53,7 +53,7 @@
             </tr>
             <tr>
             <td class='key'>Created</td>
-            <td>{{ signature.created }}</td>
+            <td>{{ signature.created }}{% if signature.created_by %} by {{ signature.created_by }}{% endif %}</td>
             </tr>
             <tr>
                 <td class='key'>Data Type</td>

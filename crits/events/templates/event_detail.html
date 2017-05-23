@@ -61,7 +61,7 @@
                     </tr>
                     <tr>
                         <td class='key'>Created</td>
-                        <td>{{ event.created }}</td>
+                        <td>{{ event.created }}{% if event.created_by %} by {{ event.created_by }}{% endif %}</td>
                     </tr>
                     <tr>
                         {% with description=event.description %}

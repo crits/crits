@@ -52,7 +52,7 @@
             </tr>
             <tr>
             <td class='key'>Created</td>
-            <td>{{ cert.created }}</td>
+            <td>{{ cert.created }}{% if cert.created_by %} by {{ cert.created_by }}{% endif %}</td>
             </tr>
             <tr>
             <td class='key'>Size</td>

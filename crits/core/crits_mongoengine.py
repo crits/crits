@@ -291,6 +291,8 @@ class CritsBaseDocument(BaseDocument):
     """
 
     created = CritsDateTimeField(default=datetime.datetime.now)
+    created_by = StringField()
+
     # modified will be overwritten on save
     modified = CritsDateTimeField()
     modified_by = StringField()
@@ -378,6 +380,7 @@ class CritsDocument(BaseDocument):
         if self.id:
             audit_entry(self, username, "save")
         else:
+            self.created_by = username
             do_audit = True
         super(self.__class__, self).save(force_insert=force_insert,
                                          validate=validate,

@@ -58,7 +58,7 @@
             </tr>
             <tr>
             <td class='key'>Created</td>
-            <td>{{ raw_data.created }}</td>
+            <td>{{ raw_data.created }}{% if raw_data.created_by %} by {{ raw_data.created_by }}{% endif %}</td>
             </tr>
             <tr>
             <td class='key'>Tool</td>

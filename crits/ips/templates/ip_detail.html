@@ -31,7 +31,7 @@
                     </tr>
                     <tr>
                         <td class="key">Created</td>
-                        <td>{{ip.created}}</td>
+                        <td>{{ip.created}}{% if ip.created_by %} by {{ ip.created_by }}{% endif %}</td>
                     </tr>
                     <tr>
                         {% with description=ip.description %}

@@ -126,7 +126,7 @@
             Creation Date
         </td>
         <td>
-            {{ indicator.created }}
+            {{ indicator.created }}{% if indicator.created_by %} by {{ indicator.created_by }}{% endif %}
         </td>
         </tr>
         <tr>

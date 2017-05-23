@@ -70,7 +70,7 @@
                     </tr>
                     <tr>
                         <td class="key">Created</td>
-                        <td>{{backdoor.created}}</td>
+                        <td>{{backdoor.created}}{% if backdoor.created_by %} by {{ backdoor.created_by }}{% endif %}</td>
                     </tr>
                     <tr>
                         <td class="key">Modified</td>
