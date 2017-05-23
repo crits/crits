@@ -74,7 +74,7 @@
                     </tr>
                     <tr>
                         <td class="key">Modified</td>
-                        <td>{{backdoor.modified}}</td>
+                        <td>{{backdoor.modified}}{% if backdoor.modified_by %} by {{ backdoor.modified_by }}{% endif %}</td>
                     </tr>
                     <tr>
                         <td class="key">Status

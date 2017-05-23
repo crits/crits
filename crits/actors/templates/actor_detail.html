@@ -68,7 +68,7 @@
                     </tr>
                     <tr>
                         <td class="key">Modified</td>
-                        <td>{{actor.modified}}</td>
+                        <td>{{actor.modified}}{% if actor.modified_by %} by {{ actor.modified_by }}{% endif %}</td>
                     </tr>
                     <tr>
                         <td class="key">Status

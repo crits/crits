@@ -134,7 +134,7 @@
             Last Modified
         </td>
         <td>
-            {{ indicator.modified }}
+            {{ indicator.modified }}{% if indicator.modified_by %} by {{ indicator.modified_by }}{% endif %}
         </td>
         </tr>
         <tr>

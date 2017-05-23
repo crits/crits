@@ -286,12 +286,14 @@ class CritsStatusDocument(BaseDocument):
 
 class CritsBaseDocument(BaseDocument):
     """
-    Inherit to add a created and modified date to a top-level object.
+    Inherit to add created and modified dates, and the user who last modified,
+    to a top-level object.
     """
 
     created = CritsDateTimeField(default=datetime.datetime.now)
     # modified will be overwritten on save
     modified = CritsDateTimeField()
+    modified_by = StringField()
 
 
 class CritsSchemaDocument(BaseDocument):
@@ -371,6 +373,7 @@ class CritsDocument(BaseDocument):
         #TODO: convert this to using UTC
         if hasattr(self, 'modified'):
             self.modified = datetime.datetime.now()
+            self.modified_by = username
         do_audit = False
         if self.id:
             audit_entry(self, username, "save")
