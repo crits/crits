@@ -52,7 +52,7 @@
                     <span style="float: right;" class="object_status_response"></span>
                 </td>
                 <td>
-                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{domain.status}}</span>
+                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{domain.status}}</span>{% if domain.status_modified %} - <span id="status_meta">Last set by {{ domain.status_modified.analyst }} at {{ domain.status_modified.date }}{% endif %}</span>
                 </td>
             </tr>
             {% with sectors=domain.sectors %}

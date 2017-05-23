@@ -241,6 +241,23 @@ class CritsDocumentFormatter(object):
         merge(self, arg_dict=arg_dict, overwrite=overwrite)
 
 
+class EmbeddedStatusModified(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    Embedded Status Modified class.
+    """
+
+    analyst = StringField()
+    date = CritsDateTimeField()
+
+
+class CritsStatusModifiedDocument(BaseDocument):
+    """
+    Track who and when last modified the status of a top-level object.
+    """
+
+    status_modified = EmbeddedDocumentField(EmbeddedStatusModified)
+
+
 class CritsStatusDocument(BaseDocument):
     """
     Inherit to add status to a top-level object.
@@ -248,16 +265,21 @@ class CritsStatusDocument(BaseDocument):
 
     status = StringField(default="New")
 
-    def set_status(self, status):
+    def set_status(self, status, analyst):
         """
         Set the status of a top-level object.
 
         :param status: The status to set:
                        ('New', 'In Progress', 'Analyzed', Deprecated')
+        :param analyst: The user setting the status
         """
 
         if status in ('New', 'In Progress', 'Analyzed', 'Deprecated'):
             self.status = status
+            smod = EmbeddedStatusModified()
+            smod.analyst = analyst
+            smod.date = datetime.datetime.now()
+            self.status_modified = smod
             if status == 'Deprecated' and 'actions' in self:
                 for action in self.actions:
                     action.active = "off"
@@ -1210,7 +1232,8 @@ class EmbeddedRelationship(EmbeddedDocument, CritsDocumentFormatter):
     rel_confidence = StringField(default='unknown', required=True)
 
 class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
-                          CritsSchemaDocument, CritsStatusDocument, EmbeddedTickets):
+                          CritsSchemaDocument, CritsStatusDocument,
+                          CritsStatusModifiedDocument, EmbeddedTickets):
     """
     CRITs Base Attributes Class. The main class that should be inherited if you
     are making a new top-level object. Adds all of the standard top-level object

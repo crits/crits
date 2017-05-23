@@ -162,7 +162,7 @@
             <span style="float: right;" class="object_status_response"></span>
         </td>
         <td>
-            <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{indicator.status}}</span>
+            <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{indicator.status}}</span>{% if indicator.status_modified %} - <span id="status_meta">Last set by {{ indicator.status_modified.analyst }} at {{ indicator.status_modified.date }}{% endif %}</span>
         </td>
         </tr>
         {% with sectors=indicator.sectors %}
