@@ -2,18 +2,20 @@ from django import forms
 from django.forms.utils import ErrorList
 
 from crits.campaigns.campaign import Campaign
-from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
+from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceInForm
 from crits.core.handlers import get_item_names, get_source_names
 from crits.core.user_tools import get_user_organization
+
 from crits.core import form_consts
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import Common, BackdoorACL
 
 
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
 
-class AddBackdoorForm(forms.Form):
+class AddBackdoorForm(SourceInForm):
     """
     Django form for adding a Backdoor to CRITs.
     """
@@ -33,34 +35,25 @@ class AddBackdoorForm(forms.Form):
                                  required=False)
     confidence = forms.ChoiceField(label=form_consts.Backdoor.CAMPAIGN_CONFIDENCE,
                                    required=False)
-    source = forms.ChoiceField(widget=forms.Select(attrs={'class': 'bulknoinitial'}),
-                               label=form_consts.Backdoor.SOURCE,
-                               required=True)
-    source_method = forms.CharField(label=form_consts.Backdoor.SOURCE_METHOD,
-                                    required=False)
-    source_reference = forms.CharField(widget=forms.TextInput(attrs={'size': '90'}),
-                                       label=form_consts.Backdoor.SOURCE_REFERENCE,
-                                       required=False)
+
     related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
     related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
                                           label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
-
     def __init__(self, username, *args, **kwargs):
-        super(AddBackdoorForm, self).__init__(*args, **kwargs)
+        super(AddBackdoorForm, self).__init__(username, *args, **kwargs)
 
-        self.fields['campaign'].choices = [('', '')] + [
-            (c.name, c.name) for c in get_item_names(Campaign, True)]
+        if username.has_access_to(Common.CAMPAIGN_READ):
+            self.fields['campaign'].choices = [('', '')] + [
+                (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['confidence'].choices = [
             ('', ''),
             ('low', 'low'),
             ('medium', 'medium'),
             ('high', 'high')]
-        self.fields['source'].choices = [
-            (c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
+
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 

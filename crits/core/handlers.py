@@ -20,6 +20,7 @@ from django.core.urlresolvers import reverse, resolve, get_script_prefix
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.template.loader import render_to_string
 from django.utils.html import escape as html_escape
 from django.utils.http import urlencode, urlunquote, is_safe_url
 
@@ -40,12 +41,15 @@ from crits.core.crits_mongoengine import EmbeddedPreferredAction
 from crits.core.source_access import SourceAccess
 from crits.core.data_tools import create_zip, format_file
 from crits.core.mongo_tools import mongo_connector, get_file
+from crits.core.role import Role
 from crits.core.sector import Sector
 from crits.core.user import CRITsUser, EmbeddedSubscriptions
 from crits.core.user import EmbeddedLoginAttempt
-from crits.core.user_tools import user_sources, is_admin
+from crits.core.user_tools import user_sources
 from crits.core.user_tools import save_user_secret
 from crits.core.user_tools import get_user_email_notification
+from crits.core.user_tools import get_acl_object
+
 
 from crits.actors.actor import Actor
 from crits.backdoors.backdoor import Backdoor
@@ -67,6 +71,8 @@ from crits.targets.target import Target
 from crits.indicators.indicator import Indicator
 
 from crits.core.totp import valid_totp
+
+from crits.vocabulary.acls import *
 
 
 logger = logging.getLogger(__name__)
@@ -92,15 +98,18 @@ def action_add(type_, id_, tlo_action, user=None, **kwargs):
         return {'success': False,
                 'message': 'Not a valid type: %s' % type_}
 
-    sources = user_sources(user)
-    obj = obj_class.objects(id=id_,
-                            source__name__in=sources).first()
+    if type_ != "Campaign":
+        sources = user_sources(user)
+        obj = obj_class.objects(id=id_,
+                                source__name__in=sources).first()
+    else:
+        obj = obj_class.objects(id=id_).first()
     if not obj:
         return {'success': False,
                 'message': 'Could not find TLO'}
     try:
         tlo_action = datetime_parser(tlo_action)
-        tlo_action['analyst'] = user
+        tlo_action['analyst'] = user.username
         obj.add_action(tlo_action['action_type'],
                        tlo_action['active'],
                        tlo_action['analyst'],
@@ -136,9 +145,12 @@ def action_remove(type_, id_, date, action_type, user, **kwargs):
         return {'success': False,
                 'message': 'Not a valid type: %s' % type_}
 
-    sources = user_sources(user)
-    obj = obj_class.objects(id=id_,
-                            source__name__in=sources).first()
+    if type_ != "Campaign":
+        sources = user_sources(user)
+        obj = obj_class.objects(id=id_,
+                                source__name__in=sources).first()
+    else:
+        obj = obj_class.objects(id=id_).first()
 
     if not obj:
         return {'success': False,
@@ -172,9 +184,12 @@ def action_update(type_, id_, tlo_action, user=None, **kwargs):
         return {'success': False,
                 'message': 'Not a valid type: %s' % type_}
 
-    sources = user_sources(user)
-    obj = obj_class.objects(id=id_,
-                            source__name__in=sources).first()
+    if type_ != "Campaign":
+        sources = user_sources(user)
+        obj = obj_class.objects(id=id_,
+                                source__name__in=sources).first()
+    else:
+        obj = obj_class.objects(id=id_).first()
 
     if not obj:
         return {'success': False,
@@ -631,6 +646,15 @@ def add_new_source(source, analyst):
         src = SourceAccess()
         src.name = source
         src.save(username=analyst)
+        r = Role.objects(name=settings.ADMIN_ROLE).first()
+        if r:
+            r.add_source(source,
+                         read=True,
+                         write=True,
+                         tlp_green=True,
+                         tlp_red=True,
+                         tlp_amber=True)
+            r.save()
         return True
     except ValidationError:
         return False
@@ -672,7 +696,7 @@ def merge_source_lists(left, right):
     return left
 
 def source_add_update(type_, id_, action_type, source, method='',
-                      reference='', date=None, user=None, **kwargs):
+                      reference='', tlp=None, date=None, user=None, **kwargs):
     """
     Add or update a source for a top-level object.
 
@@ -688,6 +712,8 @@ def source_add_update(type_, id_, action_type, source, method='',
     :type method: str
     :param reference: The reference to the data for the source.
     :type reference: str
+    :param tlp: The TLP level from this source.
+    :type tlp: str
     :param date: The date of the instance to add/update.
     :type date: datetime.datetime
     :param user: The user performing the add/update.
@@ -711,12 +737,14 @@ def source_add_update(type_, id_, action_type, source, method='',
                         method=method,
                         reference=reference,
                         date=date,
+                        tlp=tlp,
                         analyst=user)
         else:
             obj.edit_source(source=source,
                             method=method,
                             reference=reference,
                             date=date,
+                            tlp=tlp,
                             analyst=user)
         obj.save(username=user)
         obj.reload()
@@ -854,7 +882,7 @@ def get_action_types_for_tlo(obj_type):
 
     return final
 
-def get_item_names(obj, active=None):
+def get_item_names(obj, active=None, user=None):
     """
     Get a list of item names for a specific item in CRITs.
 
@@ -1355,8 +1383,7 @@ def modify_source_access(analyst, data):
     user.first_name = data['first_name']
     user.last_name = data['last_name']
     user.email = data['email']
-    user.role = data['role']
-    user.sources = data['sources']
+    user.roles = data['roles']
     user.organization = data['organization']
     user.totp = data['totp']
     user.secret = data['secret']
@@ -1955,18 +1982,19 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     :returns: dict -- Keys are result, data, count, msg, crits_type.  'data'
         contains a :class:`crits.core.crits_mongoengine.CritsQuerySet` object.
     """
-
     results = {'result':'ERROR'}
     results['data'] = []
     results['count'] = 0
     results['msg'] = ""
     results['crits_type'] = col_obj._meta['crits_type']
     sourcefilt = user_sources(user)
+
     if isinstance(sort,basestring):
         sort = sort.split(',')
     if isinstance(projection,basestring):
         projection = projection.split(',')
     docs = None
+
     try:
         if not issubclass(col_obj,CritsSourceDocument):
             results['count'] = col_obj.objects(__raw__=query).count()
@@ -1988,24 +2016,32 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                     docs = col_obj.objects(__raw__=query).order_by(*sort).\
                                     skip(skip).limit(limit)
         # Else, all other objects that have sources associated with them
-        # need to be filtered appropriately
+        # need to be filtered appropriately for source access and TLP access
         else:
-            results['count'] = col_obj.objects(source__name__in=sourcefilt,
-                                               __raw__=query).count()
+            filterlist = []
+            docs = col_obj.objects(__raw__=query)
+            for doc in docs:
+                if user.check_source_tlp(doc):
+                    filterlist.append(str(doc.id))
+
+            results['count'] = len(filterlist)
             if count:
                 results['result'] = "OK"
                 return results
+
             if projection:
-                docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
-                                    order_by(*sort).skip(skip).limit(limit).\
-                                    only(*projection)
+                docs = col_obj.objects.filter(id__in=filterlist).\
+                                            order_by(*sort).skip(skip).limit(limit).\
+                                            only(*projection)
             else:
                 # Hack to fix Dashboard
-                docs = col_obj.objects(source__name__in=sourcefilt,__raw__=query).\
-                                    order_by(*sort).skip(skip).limit(limit)
+                docs = col_obj.objects.filter(id__in=filterlist).\
+                                            order_by(*sort).skip(skip).limit(limit)
+
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
                 doc.sanitize_sources(username="%s" % user, sources=sourcefilt)
+
     except Exception, e:
         results['msg'] = "ERROR: %s. Sort performed on: %s" % (e,
                                                                ', '.join(sort))
@@ -2236,6 +2272,8 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
 
     response = {"Result": "ERROR"}
     users_sources = user_sources(request.user.username)
+
+    user = request.user
     if request.is_ajax():
         pageSize = request.user.get_preference('ui','table_page_size',25)
 
@@ -2278,7 +2316,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
             query = resp['query']
             term = resp['term']
 
-        response = data_query(col_obj, user=request.user.username, limit=pageSize,
+        response = data_query(col_obj, user=request.user, limit=pageSize,
                               skip=skip, sort=multisort, query=query,
                               projection=includes)
         if response['result'] == "ERROR":
@@ -2291,6 +2329,9 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
         response['Records'] = response.pop('data')
         response['TotalRecordCount'] = response.pop('count')
         response['Result'] = response.pop('result')
+
+        acl = get_acl_object(col_obj._meta['crits_type'])
+
         for doc in response['Records']:
             for key, value in doc.items():
                 # all dates should look the same
@@ -2301,15 +2342,29 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                     doc['password_reset'] = None
                 if key == "campaign":
                     camps = []
-                    for campdict in value:
-                        camps.append(campdict['name'])
+                    if user.has_access_to(Common.CAMPAIGN_READ):
+                        if acl and user.has_access_to(acl.CAMPAIGNS_READ):
+                            for campdict in value:
+                                camps.append(campdict['name'])
                     doc[key] = "|||".join(camps)
                 elif key == "source":
                     srcs = []
-                    for srcdict in doc[key]:
-                        if srcdict['name'] in users_sources:
-                            srcs.append(srcdict['name'])
+                    if col_obj._meta['crits_type'] == 'ActorIdentifier':
+                        if user.has_access_to(ActorACL.SOURCES_READ):
+                            for srcdict in doc[key]:
+                                if srcdict['name'] in users_sources:
+                                    srcs.append(srcdict['name'])
+                    elif user.has_access_to(acl.SOURCES_READ):
+                        for srcdict in doc[key]:
+                            if srcdict['name'] in users_sources:
+                                srcs.append(srcdict['name'])
                     doc[key] = "|||".join(srcs)
+                elif key == "status":
+                    if not user.has_access_to(acl.STATUS_READ):
+                        doc[key] = None
+                elif key == "description":
+                    if acl and not user.has_access_to(acl.DESCRIPTION_READ):
+                        doc[key] = ""
                 elif key == "tags":
                     tags = []
                     for tag in doc[key]:
@@ -2382,9 +2437,6 @@ def jtable_ajax_delete(obj,request):
     :returns: bool -- True if item was deleted
     """
 
-    # Only admins can delete
-    if not is_admin(request.user.username):
-        return False
     # Make sure we are supplied _id
     if not "id" in request.POST:
         return False
@@ -2544,9 +2596,8 @@ def build_jtable(jtopts, request):
         jtable['actions']['listAction'] = jtopts['listurl']
 
     # Delete action
-    # If user is admin and deleteurl is set, provide a delete action in jTable
-    if ( is_admin(request.user.username) and
-            'deleteurl' in jtopts and jtopts['deleteurl'] ):
+    # If deleteurl is set, provide a delete action in jTable
+    if 'deleteurl' in jtopts and jtopts['deleteurl']:
         jtable['actions']['deleteAction'] = jtopts['deleteurl']
 
     # We don't have any views available for these actions
@@ -2664,9 +2715,6 @@ def generate_items_jtable(request, itype, option):
     elif itype == 'SourceAccess':
         fields = ['name', 'active', 'id']
         click = "function () {window.parent.$('#source_create').click();}"
-    elif itype == 'UserRole':
-        fields = ['name', 'active', 'id']
-        click = "function () {window.parent.$('#user_role').click();}"
 
     if option == 'jtlist':
         details_url = None
@@ -2736,6 +2784,72 @@ def generate_items_jtable(request, itype, option):
                                    'jtid': 'items_listing'},
                                   RequestContext(request))
 
+def generate_roles_jtable(request, option):
+    """
+    Generate a jtable list for Roles.
+
+    :param request: The request for this jtable.
+    :type request: :class:`django.http.HttpRequest`
+    :param option: Action to take.
+    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    obj_type = Role
+    itype = "Role"
+    mapper = obj_type._meta['jtable_opts']
+    if option == 'jtlist':
+        details_url = mapper['details_url']
+        details_url_key = mapper['details_url_key']
+        fields = mapper['fields']
+        response = jtable_ajax_list(obj_type,
+                                    details_url,
+                                    details_url_key,
+                                    request,
+                                    includes=fields)
+        return HttpResponse(json.dumps(response, default=json_handler),
+                            content_type="application/json")
+    #TODO: make this delete a role and remove it from any users that have it.
+    # if option == "jtdelete":
+    jtopts = {
+        'title': "Roles",
+        'default_sort': mapper['default_sort'],
+        'listurl': reverse('crits.core.views.roles_listing', args=('jtlist',)),
+        'deleteurl': reverse('crits.core.views.roles_listing',
+                             args=('jtdelete',)),
+        'searchurl': reverse(mapper['searchurl']),
+        'fields': mapper['jtopts_fields'],
+        'hidden_fields': mapper['hidden_fields'],
+        'linked_fields': mapper['linked_fields'],
+        'no_sort': mapper['no_sort']
+    }
+    jtable = build_jtable(jtopts, request)
+    jtable['toolbar'] = [
+        {
+            'tooltip': "'Add Role'",
+            'text': "'Add Role'",
+            'click': "function () {$('#new-role').click();}",
+        },
+
+    ]
+
+    for field in jtable['fields']:
+        if field['fieldname'].startswith("'active"):
+            field['display'] = """ function (data) {
+            return '<a id="is_active_' + data.record.id + '" href="#" onclick=\\'javascript:toggleItemActive("%s","'+data.record.id+'");\\'>' + data.record.active + '</a>';
+            }
+            """ % itype
+    if option == "inline":
+        return render_to_response("jtable.html",
+                                  {'jtable': jtable,
+                                   'jtid': 'roles_listing'},
+                                  RequestContext(request))
+    else:
+        return render_to_response("user_editor.html",
+                                  {'jtable': jtable,
+                                   'jtid': 'roles_listing'},
+                                  RequestContext(request))
+
 def generate_users_jtable(request, option):
     """
     Generate a jtable list for Users.
@@ -2752,14 +2866,15 @@ def generate_users_jtable(request, option):
         details_url = None
         details_url_key = 'username'
         fields = ['username', 'first_name', 'last_name', 'email',
-                   'last_login', 'organization', 'role', 'is_active',
-                   'id']
+                   'last_login', 'organization', 'is_active',
+                   'id', 'roles']
         excludes = ['login_attempts']
         response = jtable_ajax_list(obj_type, details_url, details_url_key,
                                     request, includes=fields,
                                     excludes=excludes)
         return HttpResponse(json.dumps(response, default=json_handler),
                             content_type="application/json")
+
     jtopts = {
         'title': "Users",
         'default_sort': 'last_login DESC',
@@ -2767,8 +2882,8 @@ def generate_users_jtable(request, option):
         'deleteurl': None,
         'searchurl': None,
         'fields': ['username', 'first_name', 'last_name', 'email',
-                   'last_login', 'organization', 'role', 'is_active',
-                   'id'],
+                   'last_login', 'organization', 'is_active',
+                   'id', 'roles'],
         'hidden_fields': ['id'],
         'linked_fields': []
     }
@@ -3657,7 +3772,7 @@ def generate_global_search(request):
             term = resp['term']
             urlparams = resp['urlparams']
 
-            resp = data_query(col_obj, request.user.username, query=formatted_query, count=True)
+            resp = data_query(col_obj, request.user, query=formatted_query, count=True)
             results.append({'count': resp['count'],
                             'url': url,
                             'name': ctype})
@@ -3971,7 +4086,7 @@ def ticket_add(type_, id_, ticket, user, **kwargs):
         return {'success': False, 'message': 'Could not find object.'}
     try:
         ticket = datetime_parser(ticket)
-        ticket['analyst'] = user
+        ticket['analyst'] = user.username
         obj.add_ticket(ticket['ticket_number'],
                              ticket['analyst'],
                              ticket['date'])
@@ -4237,6 +4352,393 @@ def get_bucket_autocomplete(term):
     buckets = [b.name for b in results]
     return HttpResponse(json.dumps(buckets, default=json_handler),
                         content_type='application/json')
+
+def get_role_details(rid, roles, analyst):
+    """
+    Generate the data to render the Role details template.
+
+    :param rid: The ObjectId of the Role to get details for.
+    :type rid: str
+    :param analyst: The user requesting this information.
+    :type analyst: str
+    :returns: template (str), arguments (dict)
+    """
+
+    template = None
+    if rid:
+        role = Role.objects(id=rid).first()
+        if not role or role.name == settings.ADMIN_ROLE:
+            error = ("Either this Role does not exist or you do "
+                    "not have permission to view it.")
+            template = "error.html"
+            args = {'error': error}
+            return template, args
+        show_roles = None
+    if roles:
+        if isinstance(roles, basestring):
+            roles = roles.split(',')
+            roles = [r.strip() for r in roles]
+        tmp = CRITsUser()
+        tmp.roles = roles
+        role = tmp.get_access_list()
+        rid = None
+        show_roles = roles
+
+    do_not_render = ['_id', 'schema_version']
+
+    from crits.core.forms import RoleSourceEdit
+    d = {'sources': [s['name'] for s in role['sources']]}
+    source_form = RoleSourceEdit(initial=d)
+
+    args = {'role': role.to_dict(),
+            'do_not_render': do_not_render,
+            'source_form': source_form,
+            'show_roles': show_roles,
+            "rid": rid}
+
+    return template, args
+
+def edit_role_name(rid, old_name, name, analyst):
+    """
+    Edit the name of a Role.
+
+    :param rid: The ObjectId of the role to alter.
+    :type rid: str
+    :param old_name: The name of the Role.
+    :type old_name: str
+    :param name: The new name of the Role.
+    :type name: str
+    :param analyst: The user making the change.
+    :type analyst: str
+    """
+
+    name = name.strip()
+    if old_name != settings.ADMIN_ROLE and name != settings.ADMIN_ROLE:
+        Role.objects(id=rid,
+                     name__ne=settings.ADMIN_ROLE).update_one(set__name=name)
+        CRITsUser.objects(roles=old_name).update(set__roles__S=name)
+        return {'success': True}
+    else:
+        return {'success': False}
+
+def edit_role_description(rid, description, analyst):
+    """
+    Edit the description of a role.
+
+    :param rid: The ObjectId of the role to alter.
+    :type rid: str
+    :param description: The new description for the Role.
+    :type description: str
+    :param analyst: The user making the change.
+    :type analyst: str
+    """
+
+    description = description.strip()
+    Role.objects(id=rid,
+                 name__ne=settings.ADMIN_ROLE).update_one(set__description=description)
+    return {'success': True}
+
+def add_role_source(rid, name, analyst):
+    """
+    Add a source to a role.
+
+    :param rid: The ObjectId of the role to alter.
+    :type rid: str
+    :param name: The name of the source to add.
+    :type name: str
+    :param analyst: The user making the change.
+    :type analyst: str
+    """
+
+    ed = {'name': name,
+          'read': False,
+          'write': False,
+          'tlp_red': False,
+          'tlp_amber': False,
+          'tlp_green': False}
+    d = {'push__sources': ed}
+    Role.objects(id=rid, name__ne=settings.ADMIN_ROLE).update_one(**d)
+
+    html = render_to_string('role_source_item.html',
+                            {'source': ed})
+    return {'success': True,
+            'html': html}
+
+def remove_role_source(rid, name, analyst):
+    """
+    Remove a source from a role.
+
+    :param rid: The ObjectId of the role to alter.
+    :type rid: str
+    :param name: The name of the source to remove.
+    :type name: str
+    :param analyst: The user making the change.
+    :type analyst: str
+    """
+
+    d = {'pull__sources': {'name': name}}
+    Role.objects(id=rid, name__ne=settings.ADMIN_ROLE).update_one(**d)
+    return {'success': True}
+
+def set_role_value(rid, name, value, analyst):
+    """
+    Set the value of a role item.
+
+    :param rid: The ObjectId of the role to alter.
+    :type rid: str
+    :param name: The name of the item to set.
+    :type name: str
+    :param value: The value to set.
+    :type value: boolean
+    :param analyst: The user making the change.
+    :type analyst: str
+    """
+
+    if value in [1, '1', 'true', 'True', True]:
+        value = True
+    else:
+        value = False
+    if name.startswith("sources"):
+        d = name.split('__')
+        sname = d[1]
+        name = "%s__S__%s" % (d[0], d[2])
+    ud = {'set__%s' % name: value}
+    if name.startswith("sources"):
+        Role.objects(id=rid,
+                     name__ne=settings.ADMIN_ROLE,
+                     sources__name=sname).update_one(**ud)
+    else:
+        Role.objects(id=rid,name__ne=settings.ADMIN_ROLE).update_one(**ud)
+
+def add_new_role(name, copy_from, description, analyst):
+    """
+    Add a new role to the system.
+
+    :param name: The name of the role.
+    :type name: str
+    :param copy_from: Copy this role from an existing role.
+    :type copy_from: str
+    :param analyst: The user adding the role.
+    :type analyst: str
+    :returns: True, False
+    """
+
+    name = name.strip()
+    if name == settings.ADMIN_ROLE:
+        return False
+    if copy_from:
+        role = Role.objects(id=copy_from).first()
+    else:
+        role = Role()
+    role.name = name
+    if not len(description):
+        description = "None"
+    role.description = description
+    role.id = None
+    # hack because MongoEngine makes this false if you unset the id
+    role._created = True
+    try:
+        role.save(username=analyst)
+        role.reload()
+        return {'success': True,
+                'id': str(role.id)}
+    except ValidationError:
+        return {'success': False}
+
+def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
+                      analyst=None):
+    """
+    Gather the necessary data to render the Role graph. The format of a node is:
+
+        {'name': Name of node.
+         'childen': [{'name': Name of child',
+                      'size': Size for child (if doesn't have more children).
+                     }]
+        }
+
+    :param start_type: The starting type. Must be "roles", "sources", or "users".
+    :type start_type: str
+    :param start_node: The first node to render sub-nodes for.
+    :type start_node: str
+    :param expansion_node: The 3rd-level node to expand.
+    :type expansion_node: str
+    :returns: dict
+    """
+
+    data = {'children': []}
+    url = reverse('crits.core.views.role_graph')
+
+    # Roles (default)
+    if start_type == "role" or start_type not in ['source', 'user']:
+        data['name'] = "Roles"
+        roles = Role.objects()
+        for role in roles:
+            role_dict = {'name': role.name,
+                         'children': []}
+            if role.name == start_node:
+                role_dict['expand'] = True
+            else:
+                role_dict['expand'] = False
+
+            # get sources
+            source_list = {'name': 'Sources',
+                           'children': []}
+            if expansion_node and expansion_node.lower() == 'sources':
+                source_list['expand'] = True
+            else:
+                source_list['expand'] = False
+            for source in role.sources:
+                d = {'name': source.name,
+                     'url': "%s?start_type=source&start_node=%s" % (url,
+                                                                    source.name),
+                     'size': 3000}
+                source_list['children'].append(d)
+            role_dict['children'].append(source_list)
+
+            # get users
+            user_list = {'name': 'Users',
+                         'children': []}
+            if expansion_node and expansion_node.lower() == 'users':
+                user_list['expand'] = True
+            else:
+                user_list['expand'] = False
+            users = CRITsUser.objects(roles=role.name)
+            for user in users:
+                d = {'name': user.username,
+                     'url': "%s?start_type=user&start_node=%s" % (url,
+                                                                  user.username),
+                     'size': 3000}
+                user_list['children'].append(d)
+            role_dict['children'].append(user_list)
+
+            # populate
+            data['children'].append(role_dict)
+
+    # Sources
+    if start_type == "source":
+        data['name'] = "Sources"
+        sources = SourceAccess.objects()
+        for source in sources:
+            source_dict = {'name': source.name,
+                           'children': []}
+            if source.name == start_node:
+                source_dict['expand'] = True
+            else:
+                source_dict['expand'] = False
+
+            users_dict = {'name': 'Users',
+                          'children': []}
+            users_list = []
+            if expansion_node and expansion_node.lower() == 'users':
+                users_dict['expand'] = True
+            else:
+                users_dict['expand'] = False
+
+            # get roles
+            roles = Role.objects(sources__name=source.name)
+            for role in roles:
+                role_dict = {'name': role.name,
+                             'url': "%s?start_type=role&start_node=%s" % (url,
+                                                                          role.name),
+                             'children': []}
+                if expansion_node and expansion_node == role.name:
+                    role_dict['expand'] = True
+                else:
+                    role_dict['expand'] = False
+                users = CRITsUser.objects(roles=role.name)
+                for user in users:
+                    d = {'name': user.username,
+                         'url': "%s?start_type=user&start_node=%s" % (url,
+                                                                      user.username),
+                         'size': 3000}
+                    role_dict['children'].append(d)
+                    if user.username not in users_list:
+                        users_dict['children'].append(d)
+                        users_list.append(user.username)
+                source_dict['children'].append(role_dict)
+            source_dict['children'].append(users_dict)
+            data['children'].append(source_dict)
+
+    # Users
+    if start_type == "user":
+        data['name'] = "Users"
+        users = CRITsUser.objects()
+        for user in users:
+            user_dict = {'name': user.username,
+                         'children': []}
+            if user.username == start_node:
+                user_dict['expand'] = True
+            else:
+                user_dict['expand'] = True
+
+            sources_dict = {'name': 'Sources',
+                            'children': []}
+            if expansion_node and expansion_node.lower() == 'sources':
+                sources_dict['expand'] = True
+            else:
+                sources_dict['expand'] = False
+            roles_dict = {'name': 'Roles',
+                          'children': []}
+            if expansion_node and expansion_node.lower() == 'roles':
+                roles_dict['expand'] = True
+            else:
+                roles_dict['expand'] = False
+
+            roles = Role.objects(name__in=user.roles)
+            for role in roles:
+                for source in role.sources:
+                    d = {'name': source.name,
+                         'url': "%s?start_type=source&start_node=%s" % (url,
+                                                                        source.name),
+                         'size': 3000}
+                    sources_dict['children'].append(d)
+                d = {'name': role.name,
+                     'url': "%s?start_type=role&start_node=%s" % (url,
+                                                                  role.name),
+                     'size': 3000}
+                roles_dict['children'].append(d)
+            user_dict['children'].append(sources_dict)
+            user_dict['children'].append(roles_dict)
+            data['children'].append(user_dict)
+
+    return data
+
+def modify_tlp(itype, oid, tlp, analyst):
+    """
+    Modify the TLP for a top-level object.
+
+    :param itype: The CRITs type of the top-level object to modify.
+    :type itype: str
+    :param oid: The ObjectId to search for.
+    :type oid: str
+    :param tlp: The TLP to set.
+    :type sectors: str
+    :param analyst: The user making the modifications.
+    """
+
+    obj = class_from_id(itype, oid)
+    if not obj:
+        return {'success': False,
+                'message': "Cannot find object to set this TLP level for."}
+
+    tlp_dict = {'#ffffff': 'white',
+                '#00ff00': 'green',
+                '#ffcc22': 'amber',
+                '#ff0000': 'red'}
+
+    tlp = tlp_dict.get(tlp, None) or tlp
+    obj.set_tlp(tlp)
+
+    try:
+        obj.save(username=analyst)
+        if obj.tlp == tlp:
+            return {'success': True}
+        else:
+            return {'success': False,
+                    'message': "Cannot set this TLP level."}
+    except ValidationError:
+        return {'success': False,
+                'message': "Invalid TLP level."}
 
 def add_new_action(action, object_types, preferred, analyst):
     """

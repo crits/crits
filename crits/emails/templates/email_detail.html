@@ -19,20 +19,28 @@
     <li><a href="#raw_section" id="raw_button"><span>Raw Email</span></a></li>
     <li><a href="#json_section" id="json_button"><span>JSON View</span></a></li>
     <li><a href="#yaml_section" id="yaml_button"><span>YAML View</span></a></li>
+    {% if EmailACL.SERVICES_READ|has_access_to:user %}
     <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
     </ul>
+
 <div id="details_section">
-    <div class='content_box'>
-        <span class="horizontal_menu">
-        <ul class="hmenu">
-            <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
-            {% if admin %}
-            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
-            {% endif %}
-        </ul>
-        </span>
-    </div>
+    {% if EmailACL.ADD_ATTACHMENT|has_access_to:user or EmailACL.DOWNLOAD|has_access_to:user or EmailACL.DELETE|has_access_to:user %}
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        {% if EmailACL.ADD_ATTACHMENT|has_access_to:user %}
+          <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.emails.views.upload_attach' email.id %}">Add Attachment</a></li>
+        {% endif %}
+        {% if EmailACL.DOWNLOAD|has_access_to:user %}
+          <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
+        {% endif %}
+        {% if EmailACL.DELETE|has_access_to:user %}
+          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
+        {% endif %}
+    </ul>
+    </span>
+  {% endif %}
 
 {% if email %}
     <div class='content_box content_details'>
@@ -53,11 +61,13 @@
                 {{ email.id }}
             </td>
         </tr>
-        <tr>
-            {% with description=email.description %}
-                {% include 'description_widget.html' %}
-            {% endwith %}
-        </tr>
+        {% if EmailACL.DESCRIPTION_READ|has_access_to:user %}
+          <tr>
+              {% with description=email.description %}
+                  {% include 'description_widget.html' %}
+              {% endwith %}
+          </tr>
+        {% endif %}
 
         {% for email_field in email_fields %}
         <tr>
@@ -67,7 +77,7 @@
                         <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator: Warning: Indicator might already exist" style="float: right;" class="ui-icon ui-icon-circle-plus create-indicator"></span>
                     {% else %}
                         {% if not email_field.field_value or email_field.field_value.strip == "" %}
-                            <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator: Warning: A value should be supplied first" style="float: right;" class="ui-icon ui-icon-alert create-indicator"></span> 
+                            <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator: Warning: A value should be supplied first" style="float: right;" class="ui-icon ui-icon-alert create-indicator"></span>
                         {% elif email_field.field_value %}
                             <span data-type='{{ email_field.field_type }}' data-field='{{ email_field.field_name }}' title="Create Indicator" style="float: right;" class="ui-icon ui-icon-plusthick create-indicator">"{{email_field.field_value}}"</span>
                         {% endif %}
@@ -100,70 +110,99 @@
             </td>
         </tr>
         {% endfor %}
-        <tr>
-            <td class="key">Status
-                <span style="float: right;" class="object_status_response"></span>
-            </td>
-            <td>
-                <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{email.status}}</span>
-            </td>
-        </tr>
-        {% with sectors=email.sectors %}
-            {% include "sector_widget.html" %}
+        {% if EmailACL.STATUS_READ|has_access_to:user %}
+          <tr>
+              <td class="key">Status
+                  <span style="float: right;" class="object_status_response"></span>
+              </td>
+              <td>
+                  <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{email.status}}</span>
+              </td>
+          </tr>
+        {% endif %}
+        {% with tlp=email.tlp %}
+            {% include "tlp_widget.html" %}
         {% endwith %}
+        {% if EmailACL.SECTORS_READ|has_access_to:user %}
+          {% with sectors=email.sectors %}
+              {% include "sector_widget.html" %}
+          {% endwith %}
+        {% endif %}
+        {% if EmailACL.SOURCES_READ|has_access_to:user %}
+          <tr>
+          {% with sources=email.source obj_id=email.id obj_type=subscription.type %}
+              {% include "sources_listing_widget.html" %}
+          {% endwith %}
+          </tr>
+        {% endif %}
+        {% if EmailACL.RELEASABILITY_READ|has_access_to:user %}
         <tr>
-        {% with sources=email.source obj_id=email.id obj_type=subscription.type %}
-            {% include "sources_listing_widget.html" %}
-        {% endwith %}
+          {% with releasability=email.releasability %}
+               {% include 'releasability_list_widget.html' %}
+          {% endwith %}
         </tr>
-        <tr>
-        {% with releasability=email.releasability %}
-             {% include 'releasability_list_widget.html' %}
-        {% endwith %}
-        </tr>
-        </tbody> 
+        {% endif %}
+        </tbody>
     </table>
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% with bucket_list=email.bucket_list %}
-            {% include 'bucket_list_widget.html' %}
-        {% endwith %}
+        {% if EmailACL.BUCKETLIST_READ|has_access_to:user %}
+          {% with bucket_list=email.bucket_list %}
+              {% include 'bucket_list_widget.html' %}
+          {% endwith %}
+        {% endif %}
         {% include 'add_related_widget.html' %}
 
     </div>
-    <div class="content_box">
-        {% with obj=email obj_type="Email" %}
-            {% include 'action_listing_widget.html' %}
+    {% if EmailACL.ACTIONS_READ|has_access_to:user %}
+      <div class="content_box">
+          {% with obj=email obj_type="Email" %}
+              {% include 'action_listing_widget.html' %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if EmailACL.TICKETS_READ|has_access_to:user %}
+      <div>
+        {% with obj=email obj_type=subscription.type %}
+           {% include 'tickets_listing_widget.html' %}
         {% endwith %}
-    </div>
-    <div>
-      {% with obj=email obj_type=subscription.type %}
-         {% include 'tickets_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if EmailACL.CAMPAIGNS_READ|has_access_to:user and EmailACL.CAMPAIGN_READ|has_access_to:user %}
+      <div>
+      {% with hit=email col=COL_EMAIL %}
+          {% include 'campaigns_display_widget.html' %}
       {% endwith %}
-    </div>
-    <div>
-    {% with hit=email col=COL_EMAIL %}
-        {% include 'campaigns_display_widget.html' %}
-    {% endwith %}
-    </div>
-    <div>
-    {% with hit=email col=COL_EMAIL %}
-        {% include 'locations_display_widget.html' %}
-    {% endwith %}
-    </div>
-    <div id="relationships_div_container">
-        {% include 'relationships_listing_widget.html' %}
-    </div>
-    <div>
-        {% include 'objects_listing_widget.html' %}
-    </div>
-    <div>
-        {% include "screenshot_widget.html" %}
-    </div>
-    <div>
-        {% include "comments_listing_widget.html" %}
-    </div>
+      </div>
+    {% endif %}
+    {% if EmailACL.LOCATIONS_READ|has_access_to:user %}
+      <div>
+      {% with hit=email col=COL_EMAIL %}
+          {% include 'locations_display_widget.html' %}
+      {% endwith %}
+      </div>
+    {% endif %}
+    {% if EmailACL.RELATIONSHIPS_READ|has_access_to:user %}
+      <div id="relationships_div_container">
+          {% include 'relationships_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if EmailACL.OBJECTS_READ|has_access_to:user %}
+      <div>
+          {% include 'objects_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if EmailACL.SCREENSHOTS_READ|has_access_to:user %}
+      <div>
+          {% include "screenshot_widget.html" %}
+      </div>
+    {% endif %}
+    {% if EmailACL.COMMENTS_READ|has_access_to:user %}
+      <div>
+          {% include "comments_listing_widget.html" %}
+      </div>
+    {% endif %}
 </div>
 <div id="raw_section">
     <div class='content_box'>
@@ -210,20 +249,25 @@
     <textarea id="yaml_display" cols="150" rows="40"></textarea>
 </div>
 
+{% if EmailACL.SERVICES_READ|has_access_to:user %}
 {% with item=email %}
     {% include "services_analysis_section.html" with crits_type="Email" identifier=email.id %}
 {% endwith %}
 
 {% include 'services_tab_tabs_widget.html' %}
+{% endif %}
+
 </div>
 
 <div style="display: none;">
 
+{% if EmailACL.DOWNLOAD|has_access_to:user %}
 <div id="dialog-download-email">
     <form id="form-download-email" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
     <table class="form">{{download_form.as_table}}</table>
     </form>
 </div>
+{% endif %}
 
 </div>
 
@@ -234,4 +278,3 @@
 {% block javascript_includes %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/emails.js"></script>
 {% endblock %}
-

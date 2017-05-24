@@ -1,4 +1,4 @@
-import json
+import json, logging
 
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
@@ -16,7 +16,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
 from crits.core.data_tools import convert_string_to_bool
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, is_user_subscribed, user_sources
+from crits.core.user_tools import is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
 from crits.ips.forms import AddIPForm
 from crits.ips.ip import IP
@@ -30,6 +30,7 @@ from crits.vocabulary.indicators import (
     IndicatorThreatTypes
 )
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import IPACL
 
 
 def generate_ip_csv(request):
@@ -142,44 +143,48 @@ def generate_ip_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
 
-def get_ip_details(ip, analyst):
+def get_ip_details(ip, user):
     """
     Generate the data to render the IP details template.
 
     :param ip: The IP to get details for.
     :type ip: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: CRITsUser
     :returns: template (str), arguments (dict)
     """
 
-    allowed_sources = user_sources(analyst)
+    allowed_sources = user_sources(user)
     ip = IP.objects(ip=ip, source__name__in=allowed_sources).first()
     template = None
     args = {}
+
+    if not user.check_source_tlp(ip):
+        ip = None
+
     if not ip:
         template = "error.html"
         error = ('Either no data exists for this IP or you do not have'
                  ' permission to view it.')
         args = {'error': error}
     else:
-        ip.sanitize("%s" % analyst)
+        ip.sanitize("%s" % user)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, ip.id, 'IP')
+        remove_user_from_notification("%s" % user, ip.id, 'IP')
 
         # subscription
         subscription = {
                 'type': 'IP',
                 'id': ip.id,
-                'subscribed': is_user_subscribed("%s" % analyst, 'IP', ip.id),
+                'subscribed': is_user_subscribed("%s" % user, 'IP', ip.id),
         }
 
         #objects
         objects = ip.sort_objects()
 
         #relationships
-        relationships = ip.sort_relationships("%s" % analyst, meta=True)
+        relationships = ip.sort_relationships("%s" % user, meta=True)
 
         # relationship
         relationship = {
@@ -192,10 +197,10 @@ def get_ip_details(ip, analyst):
                     'url_key':ip.ip}
 
         #screenshots
-        screenshots = ip.get_screenshots(analyst)
+        screenshots = ip.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'IP', ip.id)
+        favorite = is_user_favorite("%s" % user, 'IP', ip.id)
 
         # services
         service_list = get_supported_services('IP')
@@ -212,7 +217,8 @@ def get_ip_details(ip, analyst):
                 'service_results': service_results,
                 'screenshots': screenshots,
                 'ip': ip,
-                'comments':comments}
+                'comments':comments,
+                'IPACL': IPACL}
     return template, args
 
 def get_ip(allowed_sources, ip_address):
@@ -261,12 +267,13 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
 
     ip = data.get('ip')
     ip_type = data.get('ip_type')
-    analyst = data.get('analyst')
     campaign = data.get('campaign')
     confidence = data.get('confidence')
-    source = data.get('source')
+    source = data.get('source_name')
     source_method = data.get('source_method')
     source_reference = data.get('source_reference')
+    source_tlp = data.get('source_tlp')
+    user = request.user
     is_add_indicator = data.get('add_indicator')
     bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
@@ -280,9 +287,10 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
             source=source,
             source_method=source_method,
             source_reference=source_reference,
+            source_tlp=source_tlp,
             campaign=campaign,
             confidence=confidence,
-            analyst=analyst,
+            user=user,
             is_add_indicator=is_add_indicator,
             indicator_reference=indicator_reference,
             bucket_list=bucket_list,
@@ -337,11 +345,12 @@ def add_new_ip(data, rowData, request, errors, is_validate_only=False, cache={})
     return result, errors, retVal
 
 def ip_add_update(ip_address, ip_type, source=None, source_method='',
-                  source_reference='', campaign=None, confidence='low',
-                  analyst=None, is_add_indicator=False, indicator_reference='',
-                  bucket_list=None, ticket=None, is_validate_only=False,
-                  cache={}, related_id=None, related_type=None,
-                  relationship_type=None, description=''):
+                  source_reference='', source_tlp=None, campaign=None,
+                  confidence='low', user=None, is_add_indicator=False,
+                  indicator_reference='', bucket_list=None, ticket=None,
+                  is_validate_only=False, cache={}, related_id=None,
+                  related_type=None, relationship_type=None, description=''):
+
     """
     Add/update an IP address.
 
@@ -359,8 +368,8 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
     :type campaign: str
     :param confidence: Confidence level in the campaign attribution.
     :type confidence: str ("low", "medium", "high")
-    :param analyst: The user adding/updating this IP.
-    :type analyst: str
+    :param user: The user adding/updating this IP.
+    :type user: str
     :param is_add_indicator: Also add an Indicator for this IP.
     :type is_add_indicator: bool
     :param indicator_reference: Reference for the indicator.
@@ -391,6 +400,8 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
     if not source:
         return {"success" : False, "message" : "Missing source information."}
 
+    source_name = source
+
     (ip_address, error) = validate_and_normalize_ip(ip_address, ip_type)
     if error:
         return {"success": False, "message": error}
@@ -420,14 +431,20 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
     elif ip_object.description != description:
         ip_object.description += "\n" + (description or '')
 
-    if isinstance(source, basestring):
-        source = [create_embedded_source(source,
-                                         reference=source_reference,
-                                         method=source_method,
-                                         analyst=analyst)]
+    if isinstance(source_name, basestring):
+        if user.check_source_write(source):
+            source = [create_embedded_source(source,
+                                             reference=source_reference,
+                                             method=source_method,
+                                             tlp=source_tlp,
+                                             analyst=user.username)]
+        else:
+            return {"success":False,
+                    "message": "User does not have permission to add object \
+                                using source %s." % source}
 
     if isinstance(campaign, basestring):
-        c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst)
+        c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user.username)
         campaign = [c]
 
     if campaign:
@@ -441,10 +458,10 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
         return {"success" : False, "message" : "Missing source information."}
 
     if bucket_list:
-        ip_object.add_bucket_list(bucket_list, analyst)
+        ip_object.add_bucket_list(bucket_list, user)
 
     if ticket:
-        ip_object.add_ticket(ticket, analyst)
+        ip_object.add_ticket(ticket, user)
 
     related_obj = None
     if related_id:
@@ -456,8 +473,9 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
 
     resp_url = reverse('crits.ips.views.ip_detail', args=[ip_object.ip])
 
+
     if is_validate_only == False:
-        ip_object.save(username=analyst)
+        ip_object.save(analyst=user.username)
 
         #set the URL for viewing the new data
         if is_item_new == True:
@@ -480,14 +498,15 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
 
     if is_add_indicator:
         from crits.indicators.handlers import handle_indicator_ind
-        handle_indicator_ind(ip_address,
-                             source,
+        result = handle_indicator_ind(ip_address,
+                             source_name,
                              ip_type,
                              IndicatorThreatTypes.UNKNOWN,
                              IndicatorAttackTypes.UNKNOWN,
-                             analyst,
-                             method=source_method,
-                             reference=indicator_reference,
+                             user,
+                             source_method=source_method,
+                             source_reference = indicator_reference,
+                             source_tlp = source_tlp,
                              add_domain=False,
                              add_relationship=True,
                              bucket_list=bucket_list,
@@ -498,14 +517,14 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         ip_object.add_relationship(related_obj,
                               relationship_type,
-                              analyst=analyst,
+                              analyst=user.username,
                               get_rels=False)
-        ip_object.save(username=analyst)
+        ip_object.save(username=user.username)
 
     # run ip triage
     if is_item_new and is_validate_only == False:
         ip_object.reload()
-        run_triage(ip_object, analyst)
+        run_triage(ip_object, user)
 
     retVal['success'] = True
     retVal['object'] = ip_object
@@ -523,15 +542,12 @@ def ip_remove(ip_id, username):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    if is_admin(username):
-        ip = IP.objects(id=ip_id).first()
-        if ip:
-            ip.delete(username=username)
-            return {'success': True}
-        else:
-            return {'success':False, 'message':'Could not find IP.'}
+    ip = IP.objects(id=ip_id).first()
+    if ip:
+        ip.delete(username=username)
+        return {'success': True}
     else:
-        return {'success':False, 'message': 'Must be an admin to remove'}
+        return {'success':False, 'message':'Could not find IP.'}
 
 def parse_row_to_bound_ip_form(request, rowData, cache):
     """
@@ -551,13 +567,12 @@ def parse_row_to_bound_ip_form(request, rowData, cache):
     # TODO Add common method to convert data to string
     ip = rowData.get(form_consts.IP.IP_ADDRESS, "")
     ip_type = rowData.get(form_consts.IP.IP_TYPE, "")
-    # analyst = rowData.get(form_consts.IP.ANALYST, "")
-    analyst = request.user
     campaign = rowData.get(form_consts.IP.CAMPAIGN, "")
     confidence = rowData.get(form_consts.IP.CAMPAIGN_CONFIDENCE, "")
-    source = rowData.get(form_consts.IP.SOURCE, "")
+    source_name = rowData.get(form_consts.IP.SOURCE, "")
     source_method = rowData.get(form_consts.IP.SOURCE_METHOD, "")
     source_reference = rowData.get(form_consts.IP.SOURCE_REFERENCE, "")
+    source_tlp = rowData.get(form_consts.IP.SOURCE_TLP, "")
     is_add_indicator = convert_string_to_bool(rowData.get(form_consts.IP.ADD_INDICATOR, "False"))
     indicator_reference = rowData.get(form_consts.IP.INDICATOR_REFERENCE, "")
     bucket_list = rowData.get(form_consts.Common.BUCKET_LIST, "")
@@ -566,12 +581,12 @@ def parse_row_to_bound_ip_form(request, rowData, cache):
     data = {
         'ip': ip,
         'ip_type': ip_type,
-        'analyst': analyst,
         'campaign': campaign,
         'confidence': confidence,
-        'source': source,
+        'source_name': source_name,
         'source_method': source_method,
         'source_reference': source_reference,
+        'source_tlp': source_tlp,
         'add_indicator': is_add_indicator,
         'indicator_reference': indicator_reference,
         'bucket_list': bucket_list,

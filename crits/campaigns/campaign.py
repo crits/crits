@@ -2,9 +2,11 @@ import datetime
 
 from mongoengine import Document, EmbeddedDocument, StringField, IntField
 from mongoengine import EmbeddedDocumentField, DateTimeField, ListField
+from mongoengine import BooleanField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
+from crits.core.crits_mongoengine import CommonAccess
 from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.campaigns.migrate import migrate_campaign
 
@@ -215,3 +217,15 @@ class Campaign(CritsBaseAttributes, CritsActionsDocument, Document):
                 if ttp_value == ttp.ttp:
                     self.ttps.remove(ttp)
                     break
+
+class CampaignAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Campaigns.
+    """
+
+    aliases_read = BooleanField(default=False)
+    aliases_edit = BooleanField(default=False)
+
+    ttps_read = BooleanField(default=False)
+    ttps_add = BooleanField(default=False)
+    ttps_delete = BooleanField(default=False)

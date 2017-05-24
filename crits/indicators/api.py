@@ -9,6 +9,8 @@ from crits.indicators.handlers import handle_indicator_ind, activity_add
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import IndicatorACL
+
 
 class IndicatorResource(CRITsAPIResource):
     """
@@ -49,7 +51,7 @@ class IndicatorResource(CRITsAPIResource):
         :returns: HttpResponse.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         value = bundle.data.get('value', None)
         ctype = bundle.data.get('type', None)
         threat_type = bundle.data.get('threat_type', None)
@@ -58,6 +60,7 @@ class IndicatorResource(CRITsAPIResource):
         status = bundle.data.get('status', None)
         reference = bundle.data.get('reference', None)
         method = bundle.data.get('method', None)
+        tlp = bundle.data.get('tlp', 'amber')
         add_domain = bundle.data.get('add_domain', False)
         add_relationship = bundle.data.get('add_relationship', False)
         campaign = bundle.data.get('campaign', None)
@@ -68,24 +71,29 @@ class IndicatorResource(CRITsAPIResource):
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
-        result =  handle_indicator_ind(value,
-                                       source,
-                                       ctype,
-                                       threat_type,
-                                       attack_type,
-                                       analyst,
-                                       status=status,
-                                       method=method,
-                                       reference=reference,
-                                       add_domain=add_domain,
-                                       add_relationship=add_relationship,
-                                       campaign=campaign,
-                                       campaign_confidence=campaign_confidence,
-                                       confidence=confidence,
-                                       description=description,
-                                       impact=impact,
-                                       bucket_list=bucket_list,
-                                       ticket=ticket)
+        if user.has_access_to(IndicatorACL.WRITE):
+            result =  handle_indicator_ind(value,
+                                           source,
+                                           ctype,
+                                           threat_type,
+                                           attack_type,
+                                           user,
+                                           status=status,
+                                           source_method=method,
+                                           source_reference=reference,
+                                           source_tlp=tlp,
+                                           add_domain=add_domain,
+                                           add_relationship=add_relationship,
+                                           campaign=campaign,
+                                           campaign_confidence=campaign_confidence,
+                                           confidence=confidence,
+                                           description=description,
+                                           impact=impact,
+                                           bucket_list=bucket_list,
+                                           ticket=ticket)
+        else:
+            result = {'success':False,
+                      'message':'User does not have permission to create Object.'}
 
         content = {'return_code': 0,
                    'type': 'Indicator'}
@@ -141,7 +149,7 @@ class IndicatorActivityResource(CRITsAPIResource):
         :returns: HttpResponse.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user.username
         object_id = bundle.data.get('object_id', None)
         start_date = bundle.data.get('start_date', None)
         end_date = bundle.data.get('end_date', None)
@@ -154,7 +162,7 @@ class IndicatorActivityResource(CRITsAPIResource):
             content['message'] = 'Must provide object_id and description.'
             self.crits_response(content)
 
-        activity = {'analyst': analyst,
+        activity = {'user': user,
                     'start_date': start_date,
                     'end_date': end_date,
                     'description': description,

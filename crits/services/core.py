@@ -204,7 +204,7 @@ class AnalysisTask(object):
     STATUS_LIST = [STATUS_CREATED, STATUS_STARTED,
                    STATUS_ERROR, STATUS_COMPLETED]
 
-    def __init__(self, obj, service, analyst):
+    def __init__(self, obj, service, user):
         self.obj = obj
         # AnalysisTask.service should be an instance of a Service class.
         self.service = service
@@ -217,7 +217,8 @@ class AnalysisTask(object):
         self.start_date = None
         self.finish_date = None
         self.status = None
-        self.username = analyst
+        self.user = user
+
 
         self.log = []
         self.results = []
@@ -271,7 +272,7 @@ class AnalysisTask(object):
             'template':             self.service.template,
             'distributed':          self.service.distributed,
             'version':              self.service.version,
-            'analyst':              self.username,
+            'analyst':              self.user.username,
             'id':                   self.task_id,
             'source':               self.source,
             'start_date':           self.start_date,
@@ -470,11 +471,12 @@ class Service(object):
                     status = self.current_task.STATUS_ERROR
                 else:
                     status = self.current_task.STATUS_COMPLETED
+
                 self.complete(self.current_task.obj._meta['crits_type'],
                               str(self.current_task.obj.id),
                               self.current_task.task_id,
                               status,
-                              self.current_task.username)
+                              self.current_task.user.username)
                 logger.debug("Finished analysis %s, %s, runtime: %s" % (self.current_task.task_id, self.name, str(datetime.now() - t_start)))
             # Reset current_task so another task can be assigned.
             self.current_task = None

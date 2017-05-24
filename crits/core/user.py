@@ -57,6 +57,7 @@ from crits.config.config import CRITsConfig
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, UnsupportedAttrs
 from crits.core.user_migrate import migrate_user
+from crits.core.role import Role
 
 
 
@@ -200,14 +201,14 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
              'sparse': True,
             },
         ],
+        "cached_acl": None,
         "crits_type": 'User',
         "latest_schema_version": 3,
         "schema_doc": {
             'username': 'The username of this analyst',
             'organization': 'The name of the organization this user is from',
-            'role': 'The role this user has been granted from a CRITs Admin',
-            'sources': ('List [] of source names this user has been granted'
-                        ' access to view data from'),
+            'roles': ('List [] of roles names this user has been granted'
+                        ' access to.'),
             'subscriptions': {
                 'Campaign': [
                     {
@@ -319,8 +320,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     login_attempts = ListField(EmbeddedDocumentField(EmbeddedLoginAttempt))
     organization = StringField(default=settings.COMPANY_NAME)
     password_reset = EmbeddedDocumentField(EmbeddedPasswordReset, default=EmbeddedPasswordReset())
-    role = StringField(default="Analyst")
-    sources = ListField(StringField())
+    roles = ListField(StringField())
     subscriptions = EmbeddedDocumentField(EmbeddedSubscriptions, default=EmbeddedSubscriptions())
     favorites = EmbeddedDocumentField(EmbeddedFavorites, default=EmbeddedFavorites())
     prefs = EmbeddedDocumentField(PreferencesField, default=PreferencesField())
@@ -874,6 +874,181 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         from crits.dashboards.handlers import getDashboardsForUser
         return getDashboardsForUser(self)
 
+    def get_sources_list(self):
+        # We always update to make sure we catch changes to a user's role list.
+        self.get_access_list(update=True)
+        return [s.name for s in self._meta['cached_acl'].sources]
+
+    def check_source_tlp(self, object):
+        """
+        """
+
+        user_source_names = self.get_sources_list()
+        user_source_objects = self._meta['cached_acl'].sources
+
+        object_sources = object.source
+
+        for source in object_sources:
+            if source.name in user_source_names:
+                for instance in source.instances:
+                    if instance.tlp == "white":
+                        return True
+                    elif instance.tlp == "red" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_red and usource.read]:
+                        return True
+                    elif instance.tlp == "amber" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_amber and usource.read]:
+                        return True
+                    elif instance.tlp == "green" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_green and usource.read]:
+                        return True
+        return False
+
+    def check_source_write(self, source):
+        """
+        """
+        user_source_names = self.get_sources_list()
+        user_source_objects = self._meta['cached_acl'].sources
+
+        for usource in user_source_objects:
+            if usource.name == source:
+                return usource.write
+
+        return False
+
+    def get_access_list(self, update=False):
+        """
+        Generate a single new Role object based off of a combination of all of
+        the user's assigned roles. Each attribute is analyzed across all roles
+        and the "highest-order-access" is granted.
+
+        :param update: Update the cache before returning. If the cache is empty
+                       we always update first.
+        :type update: boolean
+        :returns: :class:`crits.core.role.Role`
+        """
+
+        # If we already have this cached, return it unless we are supposed to
+        # update the cache first.
+        if self._meta['cached_acl'] and not update:
+            return self._meta['cached_acl']
+
+        acl=None
+        roles = Role.objects(name__in=self.roles)
+        acl = roles.first()
+
+        # for each role, modify the acl object to reflect all of the attributes
+        # the user should be granted access to.
+        for r in roles:
+            for p,v in r._data.iteritems():
+                if p in ['name', 'description', 'active', 'id']:
+                    # No need to worry about these. Added benefit of
+                    # throwing a validation error since there is no name
+                    # preventing people from accidentally saving this as a new
+                    # Role.
+                    pass
+                elif p == 'sources':
+                    # For each source, try to find it in the existing list. If
+                    # we find it, adjust the attributes based on which ones the
+                    # user should get access to. If not, append it to the list
+                    # of sources.
+                    for s in r.sources:
+                        c = 0
+                        found = False
+                        for src in acl.sources:
+                            if s.name == src.name:
+                                for x,y in s._data.iteritems():
+                                    if not getattr(acl.sources[c], x, True):
+                                        setattr(acl.sources[c], x, y)
+                                found = True
+                                break
+                            c += 1
+                        if not found:
+                            acl.sources.append(s)
+                elif p in settings.CRITS_TYPES.iterkeys():
+                    # For each CRITs Type adjust the attributes based on which
+                    # ones the # user should get access to.
+
+                    # Get the attribute we are working with.
+                    attr = getattr(acl, p)
+
+                    # Modify the attributes.
+                    for x,y in getattr(r, p)._data.iteritems():
+                        if not getattr(attr, x, False):
+                            setattr(attr, x, y)
+
+                    # Set the attribute on the ACL.
+                    setattr(acl, p, attr)
+                else:
+                    # Set the attribute if the user should get access to it.
+                    if not getattr(acl, p, False):
+                        setattr(acl, p, v)
+        self._meta['cached_acl'] = acl
+        return acl
+
+    def can_do_one_of(self, acls=[]):
+        """
+        Given a list of possible acls, verify the user has access to do at least
+        one of them.
+
+        :param acls: The ACL list to check.
+        :type acls: list
+        :returns: boolean
+        """
+        result = False
+        for acl in acls:
+            if self.has_access_to(acl):
+                result = True
+                break
+        return result
+
+    def has_access_to(self, attribute):
+        """
+        Try to determine if a user has access to this feature in CRITs. If the
+        "cached_acl" field of '._meta' is None, we will cache the results of
+        '.get_access_list()' there. This will make situations where you have to
+        check several ACL values quicker.
+
+        Checking multiple ACL values at a time will be very common. For example:
+
+            - Does user X have access to the Sample TLO?
+            - If so, does user X have access to see the Bucket List of Samples?
+
+        You could just get the return value of '.get_access_list()' and iterate
+        over it however you wish. This function saves the hassle of replicating
+        that code by allowing you to immediately check for the specific ACL you
+        are looking for. You also want to use strings instead of hardcoding
+        attributes to allow for functions that act dynamically on multiple TLOs
+        to be able to do so without huge if blocks. Example from above:
+
+            for x in settings.CRITS_TYPES.iterkeys():
+                if (X.has_access_to('%s.read' % x)
+                    and X.has_access_to('%s.bucketlist_read' % x):
+
+        Is much cleaner than:
+
+            acl = X.get_access_list()
+            for x in settings.CRITS_TYPES.iterkeys():
+                if (getattr(getattr(acl, x), 'read')
+                    and getattr(getattr(acl, x), 'bucketlist_read'))
+
+        :param attribute: The feature to look up. Can be in the format of
+                          "Attribute.attribute" if it's an embedded attribute.
+        :type attribute: str
+        :returns: boolean
+        """
+
+        if self._meta['cached_acl'] is None:
+            self.get_access_list(update=True)
+
+        attrs = attribute.split('.')
+        attr = self._meta['cached_acl']
+
+        for a in attrs:
+            try:
+                attr = getattr(attr, a, False)
+            except:
+                return False
+        self._meta['cached_acl'] = None
+        return attr
+
 class AuthenticationMiddleware(object):
     # This has been added to make theSessions work on Django 1.8+ and
     # mongoengine 0.8.8 see:
@@ -1176,7 +1351,6 @@ class CRITsRemoteUserBackend(CRITsAuthBackend):
         elif not user and config.create_unknown_user:
             # Create the user
             user = CRITsUser.create_user(username=username, password=None)
-            user.sources.append(config.company_name)
             # Attempt to update info from LDAP
             user.update_from_ldap("Auto LDAP update", config)
             user = self._successful_settings(user, e, totp_enabled)

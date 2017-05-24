@@ -7,11 +7,12 @@ from django.forms.widgets import HiddenInput, RadioSelect, SelectMultiple
 from crits.core import form_consts
 from crits.core.form_consts import Action as ActionConsts
 from crits.core.handlers import get_source_names, get_item_names, ui_themes
-from crits.core.user_role import UserRole
+from crits.core.role import Role
 from crits.core.user_tools import get_user_organization
 from crits.core.widgets import CalWidget
 from crits.config.config import CRITsConfig
 from crits import settings
+
 
 def add_bucketlist_to_form(input_form):
     """
@@ -42,6 +43,51 @@ def add_ticket_to_form(input_form):
                             required=False,
                             label=form_consts.Common.TICKET,
                             help_text="Use comma separated values.")
+
+
+class SourceInForm(forms.Form):
+    """
+    Add source stuff to a form.
+    """
+
+    source_name = forms.ChoiceField(
+        widget=forms.Select(attrs={'class': 'no_clear'}),
+        label=form_consts.Indicator.SOURCE,
+        required=True)
+    source_method = forms.CharField(
+        widget=forms.TextInput,
+        label=form_consts.Indicator.SOURCE_METHOD,
+        required=False)
+    source_reference = forms.CharField(
+        widget=forms.TextInput(attrs={'size': '90'}),
+        label=form_consts.Indicator.SOURCE_REFERENCE,
+        required=False)
+    source_tlp = forms.ChoiceField(
+        widget=forms.Select,
+        label=form_consts.Common.SOURCE_TLP,
+        required=True)
+
+    def __init__(self, username, *args, **kwargs):
+        super(SourceInForm, self).__init__(*args, **kwargs)
+        self.fields['source_name'].choices = [
+            (c.name, c.name) for c in get_source_names(True, True, username)]
+        self.fields['source_name'].initial = get_user_organization(username)
+        self.fields['source_tlp'].choices = [
+            (t, t) for t in ('red', 'amber', 'green', 'white')]
+        self.fields['source_tlp'].initial = 'red'
+
+
+class AddRoleForm(forms.Form):
+    """
+    Django form for adding a role to CRITs.
+    """
+
+    error_css_class = 'error'
+    required_css_class = 'required'
+    name = forms.CharField(widget=forms.TextInput, required=True)
+    description = forms.CharField(widget=forms.TextInput, required=False)
+    copy_from = forms.CharField(widget=HiddenInput, required=False)
+
 
 class ActionsForm(forms.Form):
     """
@@ -285,14 +331,6 @@ class ToastNotificationConfigForm(forms.Form):
         self.fields['initial_notifications_display'].choices = [("show", "show"),
                                                                 ("hide", "hide")]
 
-class AddUserRoleForm(forms.Form):
-    """
-    Django form for adding a new user role.
-    """
-
-    error_css_class = 'error'
-    required_css_class = 'required'
-    role = forms.CharField(widget=forms.TextInput, required=True)
 
 class DownloadFileForm(forms.Form):
     """
@@ -380,11 +418,10 @@ class SourceAccessForm(forms.Form):
                                 required=True)
     email = forms.CharField(widget=forms.TextInput(attrs={'size': '50'}),
                             required=True)
-    sources = forms.MultipleChoiceField(required=True,
-                                        widget=SelectMultiple(attrs={'class':'multiselect',
-                                                                     'style': 'height: auto;'}))
+    roles = forms.MultipleChoiceField(required=True,
+                                      widget=SelectMultiple(attrs={'class':'multiselect',
+                                                                   'style': 'height: auto;'}))
     organization = forms.ChoiceField(required=True, widget=forms.Select)
-    role = forms.ChoiceField(required=True, widget=forms.Select)
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'textbox'}),
                                required=False)
     totp = forms.BooleanField(initial=False, required=False)
@@ -394,17 +431,50 @@ class SourceAccessForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(SourceAccessForm, self).__init__(*args, **kwargs)
-        self.fields['sources'].choices = [(c.name,
-                                           c.name) for c in get_source_names(False,
-                                                                             False,
-                                                                             None)]
-        self.fields['role'].choices = [(c.name,
-                                        c.name) for c in get_item_names(UserRole,
-                                                                           True)]
+        self.fields['roles'].choices = [(c.name,
+                                         c.name) for c in get_item_names(Role,
+                                                                         True)]
         self.fields['organization'].choices = [(c.name,
                                                 c.name) for c in get_source_names(True,
                                                                                      False,
                                                                                      None)]
+
+
+class RoleSourceEdit(forms.Form):
+    """
+    Django form to edit sources for a Role.
+    """
+
+    sources = forms.MultipleChoiceField(required=False,
+                                        widget=SelectMultiple(attrs={'class':'multiselect',
+                                                                     'style': 'height: auto;'}))
+    error_css_class = 'error'
+    required_css_class = 'required'
+
+    def __init__(self, *args, **kwargs):
+        super(RoleSourceEdit, self).__init__(*args, **kwargs)
+        self.fields['sources'].choices = [(c.name,
+                                           c.name) for c in get_source_names(False,
+                                                                             False,
+                                                                             None)]
+
+
+class RoleCombinePreview(forms.Form):
+    """
+    Django form to preview Role combinations.
+    """
+
+    roles = forms.MultipleChoiceField(required=False,
+                                      widget=SelectMultiple(attrs={'class':'multiselect',
+                                                                   'style': 'height: auto;'}))
+    error_css_class = 'error'
+    required_css_class = 'required'
+
+    def __init__(self, *args, **kwargs):
+        super(RoleCombinePreview, self).__init__(*args, **kwargs)
+        self.fields['roles'].choices = [(c.name,
+                                         c.name) for c in get_item_names(Role,
+                                                                         True)]
 
 
 class SourceForm(forms.Form):
@@ -422,7 +492,10 @@ class SourceForm(forms.Form):
                              required=False)
     reference = forms.CharField(widget=forms.TextInput(attrs={'size': '90'}),
                                 required=False)
-    analyst = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    tlp = forms.ChoiceField(required=True,
+                            widget=forms.Select,
+                            label=form_consts.Common.TLP)
+    analyst = forms.CharField(widget=forms.HiddenInput(attrs={'readonly': 'readonly'}))
 
     def __init__(self, username, *args, **kwargs):
         super(SourceForm, self).__init__(*args, **kwargs)
@@ -431,6 +504,9 @@ class SourceForm(forms.Form):
                                                                              True,
                                                                              username)]
         self.fields['name'].initial = get_user_organization(username)
+        self.fields['tlp'].choices = [
+            (t, t) for t in ('red', 'amber', 'green', 'white')]
+        self.fields['tlp'].initial = 'red'
 
 
 class TicketForm(forms.Form):

@@ -7,6 +7,8 @@ from crits.targets.handlers import upsert_target
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import TargetACL
+
 
 class TargetResource(CRITsAPIResource):
     """
@@ -46,9 +48,16 @@ class TargetResource(CRITsAPIResource):
         :returns: HttpResponse.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         data = bundle.data
-        result = upsert_target(data, analyst)
+        content = {'return_code': 1,
+                   'type': 'Target'}
+
+        if not user.has_access_to(TargetACL.WRITE):
+            content['message'] = 'User does not have permission to create Object.'
+            self.crits_response(content)
+
+        result = upsert_target(data, user)
 
         content = {'return_code': 0,
                    'type': 'Target',

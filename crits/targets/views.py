@@ -7,13 +7,14 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
+from crits.core.user_tools import user_can_view_data
 from crits.core.class_mapper import class_from_value
-from crits.core.user_tools import user_can_view_data, user_is_admin
 from crits.targets.forms import TargetInfoForm
 from crits.targets.handlers import upsert_target, get_target_details
 from crits.targets.handlers import remove_target
 from crits.targets.handlers import generate_target_jtable, generate_target_csv
 from crits.targets.handlers import generate_division_jtable
+from crits.vocabulary.acls import TargetACL
 
 @user_passes_test(user_can_view_data)
 def targets_listing(request,option=None):
@@ -27,9 +28,16 @@ def targets_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if option == "csv":
-        return generate_target_csv(request)
-    return generate_target_jtable(request, option)
+    user = request.user
+
+    if user.has_access_to(TargetACL.READ):
+        if option == "csv":
+            return generate_target_csv(request)
+        return generate_target_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Target listing.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def divisions_listing(request,option=None):
@@ -72,12 +80,18 @@ def target_info(request, email_address):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
-    template = "target.html"
-    (new_template, args) = get_target_details(email_address, analyst)
-    if new_template:
-        template = new_template
-    return render_to_response(template, args, RequestContext(request))
+    user = request.user
+    if user.has_access_to(TargetACL.READ):
+        template = "target.html"
+        (new_template, args) = get_target_details(email_address, user)
+        if new_template:
+            template = new_template
+        return render_to_response(template, args, RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Target details.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def add_update_target(request):
@@ -92,7 +106,7 @@ def add_update_target(request):
     if request.method == "POST":
         email = request.POST['email_address']
         new_email = email.strip().lower()
-        form = TargetInfoForm(request.POST)
+        form = TargetInfoForm(request.user, request.POST)
         analyst = request.user.username
         if form.is_valid():
             data = form.cleaned_data
@@ -119,7 +133,7 @@ def add_update_target(request):
                                   {"error" : "Expected AJAX POST" },
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def delete_target(request, email_address=None):
     """
     Delete a target.
@@ -162,9 +176,9 @@ def target_details(request, email_address=None):
     else:
         target = class_from_value('Target', email_address)
         if not target:
-            form = TargetInfoForm(initial={'email_address': email_address})
+            form = TargetInfoForm(request.user, initial={'email_address': email_address})
         else:
-            form = TargetInfoForm(initial=target.to_dict())
+            form = TargetInfoForm(request.user, initial=target.to_dict())
     return render_to_response('target_form.html',
                               {'form': form},
                               RequestContext(request))

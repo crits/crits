@@ -11,7 +11,7 @@ from django.template import RequestContext
 from django.template.loader import render_to_string
 
 from crits.core.crits_mongoengine import json_handler
-from crits.core.user_tools import user_can_view_data, is_admin
+from crits.core.user_tools import user_can_view_data
 from crits.core import form_consts
 from crits.indicators.forms import UploadIndicatorCSVForm
 from crits.indicators.forms import UploadIndicatorForm, UploadIndicatorTextForm
@@ -40,6 +40,8 @@ from crits.vocabulary.indicators import (
     IndicatorThreatTypes
 )
 
+from crits.vocabulary.acls import IndicatorACL
+
 @user_passes_test(user_can_view_data)
 def indicator(request, indicator_id):
     """
@@ -52,15 +54,22 @@ def indicator(request, indicator_id):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
-    template = "indicator_detail.html"
-    (new_template, args) = get_indicator_details(indicator_id,
-                                                 analyst)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    user = request.user
+
+    if user.has_access_to(IndicatorACL.READ):
+        template = "indicator_detail.html"
+        (new_template, args) = get_indicator_details(indicator_id,
+                                                     user)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Indicator details.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def indicators_listing(request, option=None):
@@ -74,9 +83,17 @@ def indicators_listing(request, option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if option == "csv":
-        return generate_indicator_csv(request)
-    return generate_indicator_jtable(request, option)
+    user = request.user
+
+    if user.has_access_to(IndicatorACL.READ):
+        if option == "csv":
+            return generate_indicator_csv(request)
+        return generate_indicator_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Indicator listing.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def remove_indicator(request, _id):
@@ -127,22 +144,24 @@ def upload_indicator(request):
     """
 
     if request.method == "POST":
-        username = request.user.username
+        user = request.user
         failed_msg = ''
         result = None
 
         if request.POST['svalue'] == "Upload CSV":
             form = UploadIndicatorCSVForm(
-                username,
+                user,
                 request.POST,
                 request.FILES)
             if form.is_valid():
                 result = handle_indicator_csv(request.FILES['filedata'],
-                                              request.POST['source'],
-                                              request.POST['method'],
-                                              request.POST['reference'],
-                                              "file",
-                                              username, add_domain=True,
+                                              ctype="file",
+                                              source=request.POST['source_name'],
+                                              source_method=request.POST['source_method'],
+                                              source_reference=request.POST['source_reference'],
+                                              source_tlp=request.POST['source_tlp'],
+                                              user=user.username,
+                                              add_domain=True,
                                               related_id=request.POST['related_id'],
                                               related_type=request.POST['related_type'],
                                               relationship_type=request.POST['relationship_type'])
@@ -155,14 +174,15 @@ def upload_indicator(request):
                     failed_msg = '<div>%s</div>' % result['message']
 
         if request.POST['svalue'] == "Upload Text":
-            form = UploadIndicatorTextForm(username, request.POST)
+            form = UploadIndicatorTextForm(user, request.POST)
             if form.is_valid():
                 result = handle_indicator_csv(request.POST['data'],
-                                              request.POST['source'],
-                                              request.POST['method'],
-                                              request.POST['reference'],
-                                              "ti",
-                                              username,
+                                              ctype="ti",
+                                              source=request.POST['source_name'],
+                                              source_method=request.POST['source_method'],
+                                              source_reference=request.POST['source_reference'],
+                                              source_tlp=request.POST['source_tlp'],
+                                              user=user.username,
                                               add_domain=True,
                                               related_id=request.POST['related_id'],
                                               related_type=request.POST['related_type'],
@@ -176,19 +196,20 @@ def upload_indicator(request):
                     failed_msg = '<div>%s</div>' % result['message']
 
         if request.POST['svalue'] == "Upload Indicator":
-            form = UploadIndicatorForm(username,
+            form = UploadIndicatorForm(user,
                                        request.POST)
             if form.is_valid():
                 result = handle_indicator_ind(
-                    request.POST['value'],
-                    request.POST['source'],
-                    request.POST['indicator_type'],
-                    request.POST['threat_type'],
-                    request.POST['attack_type'],
-                    username,
+                    value=request.POST['value'],
+                    source=request.POST['source_name'],
+                    ctype=request.POST['indicator_type'],
+                    threat_type=request.POST['threat_type'],
+                    attack_type=request.POST['attack_type'],
+                    user=user,
                     status=request.POST['status'],
-                    method=request.POST['method'],
-                    reference=request.POST['reference'],
+                    source_method=request.POST['source_method'],
+                    source_reference=request.POST['source_reference'],
+                    source_tlp=request.POST['source_tlp'],
                     add_domain=True,
                     description=request.POST['description'],
                     campaign=request.POST['campaign'],
@@ -200,6 +221,8 @@ def upload_indicator(request):
                     related_id=request.POST['related_id'],
                     related_type=request.POST['related_type'],
                     relationship_type=request.POST['relationship_type'])
+
+
                 if result['success']:
                     indicator_link = ((' - <a href=\"%s\">Go to this '
                                        'indicator</a> or <a href="%s">all '
@@ -247,7 +270,7 @@ def add_update_activity(request, method, indicator_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        username = request.user.username
+        user = request.user.username
         form = IndicatorActivityForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
@@ -258,17 +281,16 @@ def add_update_activity(request, method, indicator_id):
             }
             if method == "add":
                 add['date'] = datetime.datetime.now()
-                result = activity_add(indicator_id, add, username)
+                result = activity_add(indicator_id, add, user)
             else:
                 date = datetime.datetime.strptime(data['date'],
                                                   settings.PY_DATETIME_FORMAT)
                 date = date.replace(microsecond=date.microsecond/1000*1000)
                 add['date'] = date
-                result = activity_update(indicator_id, add, username)
+                result = activity_update(indicator_id, add, user)
             if 'object' in result:
                 result['html'] = render_to_string('indicators_activity_row_widget.html',
                                                   {'activity': result['object'],
-                                                   'admin': is_admin(username),
                                                    'indicator_id': indicator_id})
             return HttpResponse(json.dumps(result, default=json_handler),
                                 content_type="application/json")
@@ -291,19 +313,14 @@ def remove_activity(request, indicator_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        analyst = request.user.username
-        if is_admin(analyst):
-            date = datetime.datetime.strptime(request.POST['key'],
-                                              settings.PY_DATETIME_FORMAT)
-            date = date.replace(microsecond=date.microsecond/1000*1000)
-            result = activity_remove(indicator_id, date, analyst)
-            return HttpResponse(json.dumps(result),
-                                content_type="application/json")
-        else:
-            error = "You do not have permission to remove this item."
-            return render_to_response("error.html",
-                                      {'error': error},
-                                      RequestContext(request))
+        user = request.user.username
+        date = datetime.datetime.strptime(request.POST['key'],
+                                            settings.PY_DATETIME_FORMAT)
+        date = date.replace(microsecond=date.microsecond/1000*1000)
+        result = activity_remove(indicator_id, date, user)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+    return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
 def update_ci(request, indicator_id, ci_type):
@@ -321,11 +338,11 @@ def update_ci(request, indicator_id, ci_type):
 
     if request.method == "POST" and request.is_ajax():
         value = request.POST['value']
-        analyst = request.user.username
+        user = request.user.username
         return HttpResponse(json.dumps(ci_update(indicator_id,
                                                  ci_type,
                                                  value,
-                                                 analyst)),
+                                                 user)),
                             content_type="application/json")
 
 @user_passes_test(user_can_view_data)
@@ -337,7 +354,6 @@ def indicator_and_ip(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
     if request.method == "POST" and request.is_ajax():
         type_ = None
         id_ = None

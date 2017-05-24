@@ -7,6 +7,8 @@ from crits.ips.handlers import ip_add_update
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import IPACL
+
 
 class IPResource(CRITsAPIResource):
     """
@@ -46,12 +48,13 @@ class IPResource(CRITsAPIResource):
         :returns: HttpResponse.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         data = bundle.data
         ip = data.get('ip', None)
         name = data.get('source', None)
         reference = data.get('reference', None)
         method = data.get('method', None)
+        tlp = data.get('tlp', 'amber')
         campaign = data.get('campaign', None)
         description = data.get('description', None)
         confidence = data.get('confidence', None)
@@ -68,15 +71,20 @@ class IPResource(CRITsAPIResource):
             content['message'] = "Must provide an IP, IP Type, and Source."
             self.crits_response(content)
 
+        if not user.has_access_to(IPACL.WRITE):
+            content['message'] = "User does not have permission to create Object."
+            self.crits_response(content)
+
         result = ip_add_update(ip,
                                ip_type,
                                source=name,
                                source_method=method,
                                source_reference=reference,
+                               source_tlp=tlp,
                                campaign=campaign,
                                confidence=confidence,
                                description=description,
-                               analyst=analyst,
+                               user=user,
                                bucket_list=bucket_list,
                                ticket=ticket,
                                is_add_indicator=add_indicator,

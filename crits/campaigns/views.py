@@ -19,8 +19,10 @@ from crits.campaigns.handlers import add_ttp, edit_ttp, remove_ttp
 from crits.campaigns.handlers import modify_campaign_aliases
 from crits.campaigns.handlers import generate_campaign_jtable, generate_campaign_csv
 from crits.campaigns.handlers import get_campaign_names_list
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_acl_object
 from crits.stats.handlers import campaign_date_stats
+
+from crits.vocabulary.acls import CampaignACL
 
 
 @user_passes_test(user_can_view_data)
@@ -63,10 +65,17 @@ def campaigns_listing(request, option=None):
     :type option: str
     :returns: :class:`django.http.HttpResponse`
     """
+    request.user._setup()
+    user = request.user
+    if user.has_access_to(CampaignACL.READ):
+        if option == "csv":
+            return generate_campaign_csv(request)
+        return generate_campaign_jtable(request, option)
 
-    if option == "csv":
-        return generate_campaign_csv(request)
-    return generate_campaign_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Campaign listing.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def campaign_names(request, active_only=True):
@@ -80,7 +89,13 @@ def campaign_names(request, active_only=True):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    campaign_list = get_campaign_names_list(active_only)
+    user = request.user
+
+    if user.has_access_to(CampaignACL.READ):
+        campaign_list = get_campaign_names_list(active_only)
+    else:
+        campaign_list = None
+
     return HttpResponse(json.dumps(campaign_list), content_type="application/json")
 
 @user_passes_test(user_can_view_data)
@@ -94,15 +109,21 @@ def campaign_details(request, campaign_name):
     :type campaign_name: str
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
-    template = "campaign_detail.html"
-    (new_template, args) = get_campaign_details(campaign_name,
-                                                request.user.username)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    if user.has_access_to(CampaignACL.READ):
+        template = "campaign_detail.html"
+        (new_template, args) = get_campaign_details(campaign_name,
+                                                    request.user.username)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Campaign.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def add_campaign(request):
@@ -113,36 +134,42 @@ def add_campaign(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
+    request.user._setup()
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
         campaign_form = AddCampaignForm(request.POST)
         if campaign_form.is_valid():
-            data = campaign_form.cleaned_data
-            campaign_name = data['campaign']
-            campaign_aliases = data.get('aliases', None)
-            campaign_description = data.get('description', None)
-            bucket_list = data.get('bucket_list')
-            ticket = data.get('ticket')
-            related_id = data['related_id']
-            related_type = data['related_type']
-            relationship_type = data['relationship_type']
+            if user.has_access_to(CampaignACL.WRITE):
+                data = campaign_form.cleaned_data
+                campaign_name = data['campaign']
+                campaign_aliases = data.get('aliases', None)
+                campaign_description = data.get('description', None)
+                bucket_list = data.get('bucket_list')
+                ticket = data.get('ticket')
+                related_id = data['related_id']
+                related_type = data['related_type']
+                relationship_type = data['relationship_type']
 
-            result = add_campaignh(campaign_name,
-                                   campaign_description,
-                                   campaign_aliases,
-                                   request.user.username,
-                                   bucket_list=bucket_list,
-                                   ticket=ticket,
-                                   related_id=related_id,
-                                   related_type=related_type,
-                                   relationship_type=relationship_type)
+                result = add_campaignh(campaign_name,
+                                       campaign_description,
+                                       campaign_aliases,
+                                       request.user.username,
+                                       bucket_list=bucket_list,
+                                       ticket=ticket,
+                                       related_id=related_id,
+                                       related_type=related_type,
+                                       relationship_type=relationship_type)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to add new campaigns.'}
             if result['success']:
                 message = {
                     'message': '<div>Campaign <a href="%s">%s</a> added successfully!</div>' % (reverse('crits.campaigns.views.campaign_details', args=[campaign_name]), campaign_name),
                     'success': True}
             else:
                 message = {
-                    'message': ['Campaign addition failed!']+result['message'],
+                    'message': 'Campaign addition failed!'+str(result['message']),
                     'success': False}
             return HttpResponse(json.dumps(message), content_type="application/json")
         else:
@@ -162,32 +189,41 @@ def campaign_add(request, ctype, objectid):
     :type objectid: str
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
         form = CampaignForm(request.POST)
         result = {}
-        if form.is_valid():
-            data = form.cleaned_data
-            campaign = data['name']
-            confidence = data['confidence']
-            description = data['description']
-            related = data['related']
-            analyst = request.user.username
-            result = campaign_addh(campaign,
-                                   confidence,
-                                   description,
-                                   related,
-                                   analyst,
-                                   ctype,
-                                   objectid,
-                                   update=False)
-            if result['success']:
-                return HttpResponse(json.dumps(result),
-                                    content_type="application/json")
-        result['form'] = form.as_table()
-        result['success'] = False
-        return HttpResponse(json.dumps(result),
-                            content_type="application/json")
+        acl = get_acl_object(ctype)
+
+        if user.has_access_to(acl.CAMPAIGNS_ADD):
+            if form.is_valid():
+                data = form.cleaned_data
+                campaign = data['name']
+                confidence = data['confidence']
+                description = data['description']
+                related = data['related']
+                analyst= request.user.username
+                result = campaign_addh(campaign,
+                                       confidence,
+                                       description,
+                                       related,
+                                       analyst,
+                                       ctype,
+                                       objectid,
+                                       update=False)
+                if result['success']:
+                    return HttpResponse(json.dumps(result),
+                                        content_type="application/json")
+            result['form'] = form.as_table()
+            result['success'] = False
+            return HttpResponse(json.dumps(result),
+                                content_type="application/json")
+        else:
+            result['success'] = False
+            result['message'] = 'User does not have permission to add campaign to TLO.'
+            return HttpResponse(json.dumps(result),
+                                content_type="application/json")
     else:
         return HttpResponse(json.dumps({'success': False,
                                         'message': "Expected AJAX request."}),
@@ -206,40 +242,48 @@ def edit_campaign(request, ctype, objectid):
     :type objectid: str
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
         form = CampaignForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            campaign = data['name']
-            confidence = data['confidence']
-            description = data['description']
-            related = data['related']
-            analyst = request.user.username
-            try:
-                date = datetime.datetime.strptime(data['date'],
-                                                  settings.PY_DATETIME_FORMAT)
-            except ValueError:
-                date = datetime.datetime.now()
+        acl = get_acl_object(ctype)
+        if user.has_access_to(acl.CAMPAIGNS_EDIT):
+            if form.is_valid():
+                data = form.cleaned_data
+                campaign = data['name']
+                confidence = data['confidence']
+                description = data['description']
+                related = data['related']
+                analyst = request.user.username
+                try:
+                    date = datetime.datetime.strptime(data['date'],
+                                                      settings.PY_DATETIME_FORMAT)
+                except ValueError:
+                    date = datetime.datetime.now()
 
-            result = campaign_edit(ctype,
-                                   objectid,
-                                   campaign,
-                                   confidence,
-                                   description,
-                                   date,
-                                   related,
-                                   analyst)
-            if result['success']:
-                return HttpResponse(json.dumps(result),
-                                    content_type="application/json")
+                result = campaign_edit(ctype,
+                                       objectid,
+                                       campaign,
+                                       confidence,
+                                       description,
+                                       date,
+                                       related,
+                                       analyst)
+                if result['success']:
+                    return HttpResponse(json.dumps(result),
+                                        content_type="application/json")
+                else:
+                    result.update({'form': form.as_table()})
+                    return HttpResponse(json.dumps(result),
+                                        content_type="application/json")
             else:
-                result.update({'form': form.as_table()})
-                return HttpResponse(json.dumps(result),
+                return HttpResponse(json.dumps({'success': False,
+                                                'form': form.as_table()}),
                                     content_type="application/json")
         else:
-            return HttpResponse(json.dumps({'success': False,
-                                            'form': form.as_table()}),
+            result ={'success': False,
+                     'message':'User does not have permission to edit Campaign.'}
+            return HttpResponse(json.dumps(result),
                                 content_type="application/json")
     else:
         return HttpResponse(json.dumps({'success': False}),
@@ -258,13 +302,19 @@ def remove_campaign(request, ctype, objectid):
     :type objectid: str
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
         data = request.POST
-        result = campaign_remove(ctype,
-                                 objectid,
-                                 campaign=data.get('key'),
-                                 analyst=request.user.username)
+        acl = get_acl_object(ctype)
+        if user.has_access_to(acl.CAMPAIGNS_DELETE):
+            result = campaign_remove(ctype,
+                                     objectid,
+                                     campaign=data.get('key'),
+                                     analyst=request.user.username)
+        else:
+            result = {'success':False,
+                      'message':'User does not have permission to delete campaign from TLO.'}
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         return render_to_response("error.html",
@@ -285,16 +335,29 @@ def campaign_ttp(request, cid):
 
     if request.method == "POST" and request.is_ajax():
         action = request.POST['action']
-        analyst = request.user.username
+        user = request.user
         if action == "add":
-            result = add_ttp(cid, request.POST['ttp'], analyst)
+            if user.has_access_to(CampaignACL.TTPS_ADD):
+                result = add_ttp(cid, request.POST['ttp'], user.username)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to add TTPs."}
         elif action == "edit":
-            result = edit_ttp(cid, request.POST['old_ttp'],
-                              request.POST['new_ttp'],
-                              analyst)
+            if user.has_access_to(CampaignACL.TTPS_EDIT):
+                result = edit_ttp(cid, request.POST['old_ttp'],
+                                request.POST['new_ttp'],
+                                user.username)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to modify TTPs."}
+
         elif action == "remove":
-            result = remove_ttp(cid, request.POST['ttp'],
-                                analyst)
+            if user.has_access_to(CampaignACL.TTPS_DELETE):
+                result = remove_ttp(cid, request.POST['ttp'],
+                                    user.username)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to remove TTPs."}
         else:
             result = {'success': False, 'message': "Invalid action."}
         if 'campaign' in result:
@@ -319,14 +382,21 @@ def campaign_aliases(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
-        tags = request.POST.get('tags', "").split(",")
-        name = request.POST.get('name', None)
-        return HttpResponse(json.dumps(modify_campaign_aliases(name,
-                                                               tags,
-                                                               request.user.username)),
-                            content_type="application/json")
+        if user.has_access_to(CampaignACL.ALIASES_EDIT):
+            tags = request.POST.get('tags', "").split(",")
+            name = request.POST.get('name', None)
+            return HttpResponse(json.dumps(modify_campaign_aliases(name,
+                                                                   tags,
+                                                                   request.user.username)),
+                                content_type="application/json")
+        else:
+            result = {'success': False,
+                      'message': 'User does not have permission to edit aliases.'}
+            return HttpResponse(json.dumps(result),
+                                content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html", {"error": error}, RequestContext(request))

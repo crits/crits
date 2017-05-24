@@ -35,7 +35,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
 from crits.core.source_access import SourceAccess
-from crits.core.user_tools import is_admin, user_sources, get_user_organization
+from crits.core.user_tools import user_sources
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
@@ -49,6 +49,7 @@ from crits.services.handlers import run_triage, get_supported_services
 from crits.stats.handlers import generate_yara_hits
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import SampleACL, PCAPACL
 
 logger = logging.getLogger(__name__)
 
@@ -66,26 +67,31 @@ def generate_sample_csv(request):
     return response
 
 
-def get_sample_details(sample_md5, analyst, format_=None):
+def get_sample_details(sample_md5, user, format_=None):
     """
     Generate the data to render the Sample details template.
 
     :param sample_md5: The MD5 of the Sample to get details for.
     :type sample_md5: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: CRITsUser
     :param format_: The format of the details page.
     :type format_: str
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    sources = user_sources(analyst)
+    sources = user_sources(user)
     sample = Sample.objects(md5=sample_md5,
                             source__name__in=sources).first()
+
+    if not user.check_source_tlp(sample):
+        sample = None
+
     if not sample:
         return ('error.html', {'error': "File not yet available or you do not have access to view it."})
-    sample.sanitize_sources(username=analyst)
+    sample.sanitize_sources(username=user)
+
     if format_:
         exclude = [
                     "source",
@@ -131,16 +137,16 @@ def get_sample_details(sample_md5, analyst, format_=None):
         else:
             binary_exists = 0
 
-        sample.sanitize("%s" % analyst)
+        sample.sanitize("%s" % user )
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, sample.id, 'Sample')
+        remove_user_from_notification("%s" % user, sample.id, 'Sample')
 
         # subscription
         subscription = {
                 'type': 'Sample',
                 'id': sample.id,
-                'subscribed': is_user_subscribed("%s" % analyst,
+                'subscribed': is_user_subscribed("%s" % user,
                                                 'Sample',
                                                 sample.id),
         }
@@ -149,7 +155,7 @@ def get_sample_details(sample_md5, analyst, format_=None):
         objects = sample.sort_objects()
 
         #relationships
-        relationships = sample.sort_relationships("%s" % analyst,
+        relationships = sample.sort_relationships("%s" % user,
                                                 meta=True)
 
         # relationship
@@ -160,13 +166,13 @@ def get_sample_details(sample_md5, analyst, format_=None):
 
         #comments
         comments = {'comments': sample.get_comments(),
-                    'url_key': sample_md5}
+                        'url_key': sample_md5}
 
         #screenshots
-        screenshots = sample.get_screenshots(analyst)
+        screenshots = sample.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'Sample', sample.id)
+        favorite = is_user_favorite("%s" % user, 'Sample', sample.id)
 
         # services
         service_list = get_supported_services('Sample')
@@ -201,7 +207,8 @@ def get_sample_details(sample_md5, analyst, format_=None):
                 'favorite': favorite,
                 'screenshots': screenshots,
                 'service_list': service_list,
-                'service_results': service_results}
+                'service_results': service_results,
+                'SampleACL': SampleACL}
 
     return template, args
 
@@ -416,13 +423,10 @@ def delete_sample(sample_md5, username=None):
     :returns: bool
     """
 
-    if is_admin(username):
-        sample = Sample.objects(md5=sample_md5).first()
-        if sample:
-            sample.delete(username=username)
-            return True
-        else:
-            return False
+    sample = Sample.objects(md5=sample_md5).first()
+    if sample:
+        sample.delete(username=username)
+        return True
     else:
         return False
 
@@ -506,7 +510,8 @@ def handle_unzip_file(md5, user=None, password=None):
                       reference=reference, campaign=campaign, related_md5=md5, )
 
 def unzip_file(filename, user=None, password=None, data=None, source=None,
-               method='Zip', reference='', campaign=None, confidence='low',
+               source_method='Zip', source_reference='', source_tlp='',
+               campaign=None, confidence='low',
                related_md5=None, related_id=None, related_type='Sample',
                relationship_type=None, bucket_list=None, ticket=None,
                inherited_source=None, is_return_only_md5=True,
@@ -525,9 +530,11 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
     :type data: str
     :param source: The name of the source that provided the data.
     :type source: str
-    :param method: The source method to assign to the data.
+    :param source_method: The source method to assign to the data.
     :type method: str
-    :param reference: A reference to the data source.
+    :param source_reference: A reference to the data source.
+    :type reference: str
+    :param source_tlp: TLP of the source
     :type reference: str
     :param campaign: The campaign to attribute to the data.
     :type campaign: str
@@ -617,13 +624,17 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
                     filepath = extractdir + "/" + filename
                     filehandle = open(filepath, 'rb')
                     new_sample = handle_file(filename, filehandle.read(),
-                                             source, method, reference,
+                                             source,
+                                             source_method=source_method,
+                                             source_reference=source_reference,
+                                             source_tlp=source_tlp,
                                              related_md5=related_md5,
                                              related_id=related_id,
                                              related_type=related_type,
                                              relationship_type=relationship_type,
                                              backdoor='',
-                                             user=user, campaign=campaign,
+                                             user=user,
+                                             campaign=campaign,
                                              confidence=confidence,
                                              bucket_list=bucket_list,
                                              ticket=ticket,
@@ -651,8 +662,8 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
             shutil.rmtree(extractdir)
     return samples
 
-def handle_file(filename, data, source, method='Generic', reference='',
-                related_md5=None, related_id=None, related_type=None,
+def handle_file(filename, data, source, source_method='Generic', source_reference='',
+                source_tlp='', related_md5=None, related_id=None, related_type=None,
                 relationship_type=None, backdoor=None, user='', campaign=None,
                 confidence='low', md5_digest=None, sha1_digest=None,
                 sha256_digest=None, size=0, mimetype=None, bucket_list=None,
@@ -668,10 +679,12 @@ def handle_file(filename, data, source, method='Generic', reference='',
     :type data: str
     :param source: The name of the source that provided the data.
     :type source: list, str, :class:`crits.core.crits_mongoengine.EmbeddedSource`
-    :param method: The source method to assign to the data.
-    :type method: str
-    :param reference: A reference to the data source.
-    :type reference: str
+    :param source_method: The source method to assign to the data.
+    :type source_method: str
+    :param source_reference: A reference to the data source.
+    :type source_reference: str
+    :param source_tlp: TLP of the source
+    :type source_tlp: str
     :param related_md5: The MD5 of a related sample.
     :type related_md5: str
     :param related_id: The ObjectId of a related top-level object.
@@ -732,7 +745,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
     if data:
         try:
             # do we have a pcap?
-            if detect_pcap(data):
+            if detect_pcap(data) and user.has_access_to(PCAPACL.WRITE):
                 pres = handle_pcap_file(filename,
                                         data,
                                         source,
@@ -741,8 +754,9 @@ def handle_file(filename, data, source, method='Generic', reference='',
                                         related_id=related_id,
                                         related_md5=related_md5,
                                         related_type=related_type,
-                                        method=method,
-                                        reference=reference,
+                                        method=source_method,
+                                        reference=source_reference,
+                                        tlp=source_tlp,
                                         relationship=relationship,
                                         bucket_list=bucket_list,
                                         ticket=ticket)
@@ -803,6 +817,12 @@ def handle_file(filename, data, source, method='Generic', reference='',
             return None
         else:
             return retVal
+
+    if not user.has_access_to(SampleACL.WRITE):
+        retVal['success'] = False
+        retVal['message'] = 'User does not have permission to add sample.'
+
+        return retVal
 
     if data:
         md5_digest = md5(data).hexdigest()
@@ -898,18 +918,23 @@ def handle_file(filename, data, source, method='Generic', reference='',
 
     # generate new source information and add to sample
     if isinstance(source, basestring) and len(source) > 0:
-        s = create_embedded_source(source,
-                                   method=method,
-                                   reference=reference,
-                                   analyst=user)
+        if user.check_source_write(source):
+            s = create_embedded_source(source,
+                                       method=source_method,
+                                       reference=source_reference,
+                                       tlp=source_tlp,
+                                       analyst=user.username)
+            sample.add_source(s)
+        else:
+            return {"success":False,
+                    "message": "User does not have permission to add object using source %s." % source}
         # this will handle adding a new source, or an instance automatically
-        sample.add_source(s)
     elif isinstance(source, EmbeddedSource):
-        sample.add_source(source, method=method, reference=reference)
+        sample.add_source(source, method=source_method, reference=source_reference, tlp=source_tlp)
     elif isinstance(source, list) and len(source) > 0:
         for s in source:
             if isinstance(s, EmbeddedSource):
-                sample.add_source(s, method=method, reference=reference)
+                sample.add_source(s, method=source_method, reference=source_reference, tlp=source_tlp)
 
     if bucket_list:
         sample.add_bucket_list(bucket_list, user)
@@ -928,7 +953,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
             campaign_array = campaign
 
             if isinstance(campaign, basestring):
-                campaign_array = [EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user)]
+                campaign_array = [EmbeddedCampaign(name=campaign, confidence=confidence, analyst=user.username)]
 
             for campaign_item in campaign_array:
                 sample.add_campaign(campaign_item)
@@ -950,7 +975,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
                             relationship = RelationshipTypes.RELATED_TO
                 sample.add_relationship(related_obj,
                                         relationship,
-                                        analyst=user,
+                                        analyst=user.username,
                                         get_rels=False)
                 sample.save(username=user)
 
@@ -961,7 +986,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
             if backdoor:
                 backdoor.add_relationship(sample,
                                           RelationshipTypes.RELATED_TO,
-                                          analyst=user)
+                                          analyst=user.username)
                 backdoor.save()
             # Also relate to the specific instance backdoor.
             if backdoor_version:
@@ -971,7 +996,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
                 if backdoor:
                     backdoor.add_relationship(sample,
                                               RelationshipTypes.RELATED_TO,
-                                              analyst=user)
+                                              analyst=user.username)
                     backdoor.save()
 
         # reloading clears the _changed_fields of the sample object. this prevents
@@ -1027,7 +1052,7 @@ def handle_file(filename, data, source, method='Generic', reference='',
         retVal['object'] = sample
         return retVal
 
-def handle_uploaded_file(f, source, method='', reference='', file_format=None,
+def handle_uploaded_file(f, source, source_method='', source_reference='', source_tlp='', file_format=None,
                          password=None, user=None, campaign=None, confidence='low',
                          related_md5=None, related_id=None, related_type=None,relationship_type=None,
                          filename=None, md5=None, sha1=None, sha256=None, size=None,
@@ -1099,14 +1124,14 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
     samples = list()
     if not source:
         return [{'success': False, 'message': "Missing source information."}]
-    if method:
-        method = " - " + method
+    if source_method:
+        source_method = " - " + source_method
     if f:
-        method = "File Upload" + method
+        source_method = "File Upload" + source_method
     elif md5:
-        method = "Metadata Upload" + method
+        source_method = "Metadata Upload" + source_method
     else:
-        method = "Upload" + method
+        source_method = "Upload" + source_method
     try:
         data = f.read()
     except AttributeError:
@@ -1118,6 +1143,7 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
                 filename = md5(data).hexdigest()
             except:
                 filename = "unknown"
+
     if file_format == "zip" and f:
         return unzip_file(
             filename,
@@ -1125,8 +1151,9 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             password=password,
             data=data,
             source=source,
-            method=method,
-            reference=reference,
+            source_method=source_method,
+            source_reference=source_reference,
+            source_tlp=source_tlp,
             campaign=campaign,
             confidence=confidence,
             related_md5=related_md5,
@@ -1141,18 +1168,30 @@ def handle_uploaded_file(f, source, method='', reference='', file_format=None,
             backdoor_version=backdoor_version,
             description=description)
     else:
-        new_sample = handle_file(filename, data, source, method, reference,
-                                 related_md5=related_md5, related_id=related_id,
-                                 related_type=related_type, relationship_type=relationship_type,
-                                 backdoor='', user=user, campaign=campaign,
-                                 confidence=confidence, md5_digest=md5,
-                                 sha1_digest=sha1, sha256_digest=sha256,
-                                 size=size, mimetype=mimetype,
-                                 bucket_list=bucket_list, ticket=ticket,
+        new_sample = handle_file(filename, data, source,
+                                 source_method=source_method,
+                                 source_reference=source_reference,
+                                 source_tlp=source_tlp,
+                                 related_md5=related_md5,
+                                 related_id=related_id,
+                                 related_type=related_type,
+                                 relationship_type=relationship_type,
+                                 backdoor='',
+                                 user=user,
+                                 campaign=campaign,
+                                 confidence=confidence,
+                                 md5_digest=md5,
+                                 sha1_digest=sha1,
+                                 sha256_digest=sha256,
+                                 size=size,
+                                 mimetype=mimetype,
+                                 bucket_list=bucket_list,
+                                 ticket=ticket,
                                  inherited_source=inherited_source,
                                  is_validate_only=is_validate_only,
                                  is_return_only_md5=is_return_only_md5,
-                                 cache=cache, backdoor_name=backdoor_name,
+                                 cache=cache,
+                                 backdoor_name=backdoor_name,
                                  backdoor_version=backdoor_version,
                                  description=description)
 
@@ -1204,9 +1243,10 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     password = data.get('password')
     #is_email_results = data.get('email')
     related_md5 = data.get('related_md5')
-    source = data.get('source')
-    method = data.get('method', '')
-    reference = data.get('reference')
+    source = data.get('source_name')
+    method = data.get('source_method', '')
+    reference = data.get('source_reference', '')
+    tlp = data.get('source_tlp', '')
     bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
     ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
     description = data.get('description', '')
@@ -1214,7 +1254,7 @@ def add_new_sample_via_bulk(data, rowData, request, errors, is_validate_only=Fal
     related_type=data.get('related_type')
     relationship_type=data.get('relationship_type')
 
-    samples = handle_uploaded_file(files, source, method, reference,
+    samples = handle_uploaded_file(files, source, method, reference, tlp,
                                    file_format=fileformat,
                                    password=password,
                                    user=username,
@@ -1349,6 +1389,7 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
     source = rowData.get(form_consts.Sample.SOURCE, "")
     method = rowData.get(form_consts.Sample.SOURCE_METHOD, "")
     reference = rowData.get(form_consts.Sample.SOURCE_REFERENCE, "")
+    tlp = rowData.get(form_consts.Sample.SOURCE_TLP, "")
     bucket_list = rowData.get(form_consts.Sample.BUCKET_LIST, "")
     ticket = rowData.get(form_consts.Common.TICKET, "")
     description = rowData.get(form_consts.Sample.DESCRIPTION, "")
@@ -1371,9 +1412,10 @@ def parse_row_to_bound_sample_form(request, rowData, cache, upload_type="File Up
         'password': password,
         'email': is_email_results,
         'related_md5': related_md5,
-        'source': source,
-        'method': method,
-        'reference': reference,
+        'source_name': source,
+        'source_method': method,
+        'source_tlp': tlp,
+        'source_reference': reference,
         'bucket_list': bucket_list,
         'ticket': ticket,
         'description': description,

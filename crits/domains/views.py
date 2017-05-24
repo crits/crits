@@ -19,6 +19,8 @@ from crits.domains.handlers import update_tlds, generate_domain_jtable
 from crits.domains.handlers import generate_domain_csv, process_bulk_add_domain
 from crits.objects.forms import AddObjectForm
 
+from crits.vocabulary.acls import DomainACL
+
 
 @user_passes_test(user_can_view_data)
 def domain_detail(request, domain):
@@ -32,14 +34,22 @@ def domain_detail(request, domain):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    template = "domain_detail.html"
-    (new_template, args) = get_domain_details(domain,
-                                              request.user.username)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    request.user._setup()
+
+    user = request.user
+    if user.has_access_to(DomainACL.READ):
+        template = "domain_detail.html"
+        (new_template, args) = get_domain_details(domain,
+                                                  user)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Domain details.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def bulk_add_domain(request):
@@ -61,25 +71,37 @@ def bulk_add_domain(request):
     """
 
     formdict = form_to_dict(AddDomainForm(request.user))
+    user = request.user
 
     if request.method == "POST" and request.is_ajax():
-        response = process_bulk_add_domain(request, formdict);
+        if user.has_access_to(DomainACL.WRITE):
+            response = process_bulk_add_domain(request, formdict)
+        else:
+            response = {"success":False,
+                        "message":"User does not have permission to add domains."}
+
 
         return HttpResponse(json.dumps(response,
                             default=json_handler),
                             content_type="application/json")
     else:
-        objectformdict = form_to_dict(AddObjectForm(request.user))
-
-        return render_to_response('bulk_add_default.html',
-                                 {'formdict': formdict,
-                                  'objectformdict': objectformdict,
-                                  'title': "Bulk Add Domains",
-                                  'table_name': 'domain',
-                                  'local_validate_columns': [form_consts.Domain.DOMAIN_NAME],
-                                  'custom_js': "domain_handsontable.js",
-                                  'is_bulk_add_objects': True},
-                                  RequestContext(request));
+        if user.has_access_to(DomainACL.WRITE):
+            objectformdict = form_to_dict(AddObjectForm(request.user))
+            return render_to_response('bulk_add_default.html',
+                                     {'formdict': formdict,
+                                      'objectformdict': objectformdict,
+                                      'title': "Bulk Add Domains",
+                                      'table_name': 'domain',
+                                      'local_validate_columns': [form_consts.Domain.DOMAIN_NAME],
+                                      'custom_js': "domain_handsontable.js",
+                                      'is_bulk_add_objects': True},
+                                      RequestContext(request));
+        else:
+            response = {"success":False,
+                        "message":"User does not have permission to add domains."}
+            return HttpResponse(json.dumps(response,
+                                default=json_handler),
+                                content_type="application/json")
 
 @user_passes_test(user_can_view_data)
 def domains_listing(request,option=None):
@@ -92,10 +114,22 @@ def domains_listing(request,option=None):
     :type option: str of either 'jtlist', 'jtdelete', 'csv', or 'inline'.
     :returns: :class:`django.http.HttpResponse`
     """
+    user = request.user
 
-    if option == "csv":
-        return generate_domain_csv(request)
-    return generate_domain_jtable(request, option)
+    if user.has_access_to(DomainACL.READ):
+        if option == "csv":
+            return generate_domain_csv(request)
+        elif option== "jtdelete" and not user.has_access_to(DomainACL.DELETE):
+            result = {'sucess':False,
+                      'message':'User does not have permission to delete Domain.'}
+            return HttpResponse(json.dumps(result,
+                                           default=json_handler),
+                                content_type="application/json")
+        return generate_domain_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Domain listing.'},
+                                  RequestContext(request))
 
 @user_passes_test(user_can_view_data)
 def add_domain(request):
@@ -112,12 +146,20 @@ def add_domain(request):
         result = False
         retVal = {}
         errors = []
+        user = request.user
         if add_form.is_valid():
             errors = []
             data = add_form.cleaned_data
-            (result, errors, retVal) = add_new_domain(data,
-                                                      request,
-                                                      errors)
+            if user.has_access_to(DomainACL.WRITE):
+                (result, errors, retVal) = add_new_domain(data,
+                                                        request,
+                                                        errors)
+            else:
+                result = {'success':False,
+                          'message':'User does not have permission to add Domain.'}
+                return HttpResponse(json.dumps(result,
+                                               default=json_handler),
+                                    content_type="application/json")
         if errors:
             if not 'message' in retVal:
                 retVal['message'] = ""

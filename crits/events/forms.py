@@ -3,17 +3,18 @@ from django import forms
 
 from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
-from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
+from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceInForm
 from crits.core.widgets import CalWidget
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
 
 from crits.vocabulary.events import EventTypes
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import Common, EventACL
 
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
-class EventForm(forms.Form):
+class EventForm(SourceInForm):
     """
     Django form for creating a new Event.
     """
@@ -33,14 +34,6 @@ class EventForm(forms.Form):
         input_formats=settings.PY_FORM_DATETIME_FORMATS)
     campaign = forms.ChoiceField(widget=forms.Select, required=False)
     campaign_confidence = forms.ChoiceField(widget=forms.Select, required=False)
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'no_clear'}),
-                               label=form_consts.Event.SOURCE)
-    method = forms.CharField(required=False, widget=forms.TextInput,
-                             label=form_consts.Event.SOURCE_METHOD)
-    reference = forms.CharField(required=False, widget=forms.TextInput,
-                                label=form_consts.Event.SOURCE_REFERENCE)
-
     related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
     related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
@@ -48,20 +41,17 @@ class EventForm(forms.Form):
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
-        super(EventForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [(c.name,
-                                          c.name) for c in get_source_names(True,
-                                                                               True,
-                                                                               username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(EventForm, self).__init__(username, *args, **kwargs)
+
         self.fields['event_type'].choices = [
             (c,c) for c in EventTypes.values(sort=True)
         ]
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
         self.fields['campaign'].choices = [("", "")]
-        self.fields['campaign'].choices += [
-            (c.name, c.name) for c in get_item_names(Campaign, True)]
+        if username.has_access_to(Common.CAMPAIGN_READ):
+            self.fields['campaign'].choices = [('', '')] + [
+                (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [
             ("", ""),
             ("low", "low"),

@@ -9,7 +9,6 @@
         <span class="heading"><b>Released:</b> {{instance.date|date:'Y-m-d H:i:s'}}</span>
     </td>
     <td>
-    {% if admin %}
     <span class="ui-icon ui-icon-close deleteClick" 
 	  action="{% url 'crits.core.views.source_releasability' %}" 
 	  title="Delete Releasability Instance" 
@@ -20,6 +19,5 @@
 	  data-del-action="remove_instance" 
 	  data-intro="Delete Instance" 
 	  data-position="right"></a>
-    {% endif %}
     </td>
 </tr>
