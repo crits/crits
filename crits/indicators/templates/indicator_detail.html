@@ -157,26 +157,21 @@
             </div>
         </td>
         </tr>
-        <tr>
-        <td class="key">Status
-            <span style="float: right;" class="object_status_response"></span>
-        </td>
-        <td>
-            <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{indicator.status}}</span>{% if indicator.status_modified %} - <span id="status_meta">Last set by {{ indicator.status_modified.analyst }} at {{ indicator.status_modified.date }}{% endif %}</span>
-        </td>
-        </tr>
         {% with sectors=indicator.sectors %}
             {% include "sector_widget.html" %}
         {% endwith %}
-        <tr>
-        {% with sources=indicator.source obj_id=indicator_id obj_type=subscription.type %}
-            {% include "sources_listing_widget.html" %}
+        {% with tlo=indicator %}
+            {% include "status_widget.html" %}
         {% endwith %}
+        <tr>
+            {% with sources=indicator.source obj_id=indicator_id obj_type=subscription.type %}
+                {% include "sources_listing_widget.html" %}
+            {% endwith %}
         </tr>
         <tr>
-        {% with releasability=indicator.releasability %}
-            {% include 'releasability_list_widget.html' %}
-        {% endwith %}
+            {% with releasability=indicator.releasability %}
+                {% include 'releasability_list_widget.html' %}
+            {% endwith %}
         </tr>
     </tbody>
     </table>

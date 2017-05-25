@@ -68,27 +68,22 @@
                             {% include 'description_widget.html' %}
                         {% endwith %}
                     </tr>
-                    <tr>
-                        <td class="key">Status
-                            <span style="float: right;" class="object_status_response"></span>
-                        </td>
-                        <td>
-                            <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{event.status}}</span>{% if event.status_modified %} - <span id="status_meta">Last set by {{ event.status_modified.analyst }} at {{ event.status_modified.date }}{% endif %}</span>
-                        </td>
-                    </tr>
                     {% with sectors=event.sectors %}
                         {% include "sector_widget.html" %}
                     {% endwith %}
-                    <tr>
-                    {% with sources=event.source obj_id=event.id obj_type=subscription.type %}
-                        {% include "sources_listing_widget.html" %}
+                    {% with tlo=event %}
+                        {% include "status_widget.html" %}
                     {% endwith %}
+                    <tr>
+                        {% with sources=event.source obj_id=event.id obj_type=subscription.type %}
+                            {% include "sources_listing_widget.html" %}
+                        {% endwith %}
                     </tr>
                     <tr>
-                    {% with releasability=event.releasability %}
-                        {% include 'releasability_list_widget.html' %}
-                    {% endwith %}
-                </tr>
+                        {% with releasability=event.releasability %}
+                            {% include 'releasability_list_widget.html' %}
+                        {% endwith %}
+                    </tr>
                 </tbody>
             </table>
         </div>

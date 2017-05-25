@@ -46,16 +46,11 @@
                         <td class="key">Type</td>
                         <td>{{ip.ip_type}}</td>
                     </tr>
-                    <tr>
-                        <td class="key">Status
-                            <span style="float: right;" class="object_status_response"></span>
-                        </td>
-                        <td>
-                            <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{ip.status}}</span>{% if ip.status_modified %} - <span id="status_meta">Last set by {{ ip.status_modified.analyst }} at {{ ip.status_modified.date }}{% endif %}</span>
-                        </td>
-                    </tr>
                     {% with sectors=ip.sectors %}
                         {% include "sector_widget.html" %}
+                    {% endwith %}
+                    {% with tlo=ip %}
+                        {% include "status_widget.html" %}
                     {% endwith %}
                     <tr>
                         {% with sources=ip.source obj_id=ip.id obj_type=subscription.type %}

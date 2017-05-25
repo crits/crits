@@ -70,17 +70,12 @@
                         <td class="key">Modified</td>
                         <td>{{actor.modified}}{% if actor.modified_by %} by {{ actor.modified_by }}{% endif %}</td>
                     </tr>
-                    <tr>
-                        <td class="key">Status
-                            <span style="float: right;" class="object_status_response"></span>
-                        </td>
-                        <td>
-                            <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{actor.status}}</span>{% if actor.status_modified %} - <span id="status_meta">Last set by {{ actor.status_modified.analyst }} at {{ actor.status_modified.date }}{% endif %}</span>
-                        </td>
-                    </tr>
                     {% include "actor_tags_widget.html" %}
                     {% with sectors=actor.sectors %}
                         {% include "sector_widget.html" %}
+                    {% endwith %}
+                    {% with tlo=actor %}
+                        {% include "status_widget.html" %}
                     {% endwith %}
                     <tr>
                         {% with sources=actor.source obj_id=actor.id obj_type=subscription.type %}

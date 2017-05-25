@@ -100,28 +100,23 @@
             </td>
         </tr>
         {% endfor %}
-        <tr>
-            <td class="key">Status
-                <span style="float: right;" class="object_status_response"></span>
-            </td>
-            <td>
-                <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{email.status}}</span>{% if email.status_modified %} - <span id="status_meta">Last set by {{ email.status_modified.analyst }} at {{ email.status_modified.date }}{% endif %}</span>
-            </td>
-        </tr>
         {% with sectors=email.sectors %}
             {% include "sector_widget.html" %}
         {% endwith %}
-        <tr>
-        {% with sources=email.source obj_id=email.id obj_type=subscription.type %}
-            {% include "sources_listing_widget.html" %}
+        {% with tlo=email %}
+            {% include "status_widget.html" %}
         {% endwith %}
+        <tr>
+            {% with sources=email.source obj_id=email.id obj_type=subscription.type %}
+                {% include "sources_listing_widget.html" %}
+            {% endwith %}
         </tr>
         <tr>
-        {% with releasability=email.releasability %}
-             {% include 'releasability_list_widget.html' %}
-        {% endwith %}
+            {% with releasability=email.releasability %}
+                 {% include 'releasability_list_widget.html' %}
+            {% endwith %}
         </tr>
-        </tbody> 
+        </tbody>
     </table>
     </div>
     <div id="detail_floaters">
