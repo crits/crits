@@ -1409,6 +1409,7 @@ $(document).ready(function() {
     $('#object_status.edit').editable(function(value, settings) {
         revert = this.revert;
         var her = $(this).closest('tr').find('.object_status_response');
+        var sm = $(this).closest('tr').find('#status_meta');
         return function(value, settings, elem) {
             $.ajax({
                 type:"POST",
@@ -1427,6 +1428,7 @@ $(document).ready(function() {
                         her.addClass('ui-icon');
                         her.addClass('ui-icon-circle-check');
                         her.attr('title', "Success!");
+                        sm.html('Last set by ' + username + ' a moment ago');
                     }
                 }
             });

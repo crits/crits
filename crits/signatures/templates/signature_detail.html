@@ -52,10 +52,6 @@
             <td>{{ signature.id }}</td>
             </tr>
             <tr>
-            <td class='key'>Created</td>
-            <td>{{ signature.created }}</td>
-            </tr>
-            <tr>
                 <td class='key'>Data Type</td>
                     <span style="float: right;" class="object_status_response"></span>
                 <td>
@@ -97,21 +93,17 @@
                     {% include 'description_widget.html' %}
                 {% endwith %}
             </tr>
-            <tr>
-                <td class="key">Status
-                    <span style="float: right;" class="object_status_response"></span>
-                </td>
-                <td>
-                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{signature.status}}</span>
-                </td>
-            </tr>
             {% with sectors=signature.sectors %}
                 {% include "sector_widget.html" %}
             {% endwith %}
-            <tr>
-            {% with sources=signature.source obj_id=signature.id obj_type=subscription.type %}
-                {% include "sources_listing_widget.html" %}
+            {% with tlo=signature %}
+                {% include "created_modified_widget.html" %}
+                {% include "status_widget.html" %}
             {% endwith %}
+            <tr>
+                {% with sources=signature.source obj_id=signature.id obj_type=subscription.type %}
+                    {% include "sources_listing_widget.html" %}
+                {% endwith %}
             </tr>
             <tr>
                 {% with releasability=signature.releasability %}

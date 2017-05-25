@@ -72,16 +72,12 @@
             <td class="key">Notes</td>
             <td>{{target_detail.note}}</td>
         </tr>
-        <tr>
-            <td class="key">Status
-                <span style="float: right;" class="object_status_response"></span>
-            </td>
-            <td>
-                <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{target_detail.status}}</span>
-            </td>
-        </tr>
         {% with sectors=target_detail.sectors %}
             {% include "sector_widget.html" %}
+        {% endwith %}
+        {% with tlo=target_detail %}
+            {% include "created_modified_widget.html" %}
+            {% include "status_widget.html" %}
         {% endwith %}
         <tr>
             {% with releasability=target_detail.releasability %}

@@ -68,24 +68,12 @@
                             {% include 'description_widget.html' %}
                         {% endwith %}
                     </tr>
-                    <tr>
-                        <td class="key">Created</td>
-                        <td>{{backdoor.created}}</td>
-                    </tr>
-                    <tr>
-                        <td class="key">Modified</td>
-                        <td>{{backdoor.modified}}</td>
-                    </tr>
-                    <tr>
-                        <td class="key">Status
-                            <span style="float: right;" class="object_status_response"></span>
-                        </td>
-                        <td>
-                            <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{backdoor.status}}</span>
-                        </td>
-                    </tr>
                     {% with sectors=backdoor.sectors %}
                         {% include "sector_widget.html" %}
+                    {% endwith %}
+                    {% with tlo=backdoor %}
+                        {% include "created_modified_widget.html" %}
+                        {% include "status_widget.html" %}
                     {% endwith %}
                     <tr>
                         {% with sources=backdoor.source obj_id=backdoor.id obj_type=subscription.type %}

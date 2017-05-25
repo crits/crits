@@ -57,10 +57,6 @@
             <td>{{ raw_data.id }}</td>
             </tr>
             <tr>
-            <td class='key'>Created</td>
-            <td>{{ raw_data.created }}</td>
-            </tr>
-            <tr>
             <td class='key'>Tool</td>
             {% if raw_data.tool.name %}
                 <td>
@@ -109,21 +105,17 @@
                     {% include 'description_widget.html' %}
                 {% endwith %}
             </tr>
-            <tr>
-                <td class="key">Status
-                    <span style="float: right;" class="object_status_response"></span>
-                </td>
-                <td>
-                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{raw_data.status}}</span>
-                </td>
-            </tr>
             {% with sectors=raw_data.sectors %}
                 {% include "sector_widget.html" %}
             {% endwith %}
-            <tr>
-            {% with sources=raw_data.source obj_id=raw_data.id obj_type=subscription.type %}
-                {% include "sources_listing_widget.html" %}
+            {% with tlo=raw_data %}
+                {% include "created_modified_widget.html" %}
+                {% include "status_widget.html" %}
             {% endwith %}
+            <tr>
+                {% with sources=raw_data.source obj_id=raw_data.id obj_type=subscription.type %}
+                    {% include "sources_listing_widget.html" %}
+                {% endwith %}
             </tr>
             <tr>
                 {% with releasability=raw_data.releasability %}

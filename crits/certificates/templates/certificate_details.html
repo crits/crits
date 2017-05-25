@@ -51,10 +51,6 @@
             <td>{{ cert.filetype }}</td>
             </tr>
             <tr>
-            <td class='key'>Created</td>
-            <td>{{ cert.created }}</td>
-            </tr>
-            <tr>
             <td class='key'>Size</td>
             <td>{{ cert.size }}</td>
             </tr>
@@ -67,21 +63,17 @@
                     {% include 'description_widget.html' %}
                 {% endwith %}
             </tr>
-            <tr>
-                <td class="key">Status
-                    <span style="float: right;" class="object_status_response"></span>
-                </td>
-                <td>
-                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{cert.status}}</span>
-                </td>
-            </tr>
             {% with sectors=cert.sectors %}
                 {% include "sector_widget.html" %}
             {% endwith %}
-            <tr>
-            {% with sources=cert.source obj_id=cert.id obj_type=subscription.type %}
-                {% include "sources_listing_widget.html" %}
+            {% with tlo=cert %}
+                {% include "created_modified_widget.html" %}
+                {% include "status_widget.html" %}
             {% endwith %}
+            <tr>
+                {% with sources=cert.source obj_id=cert.id obj_type=subscription.type %}
+                    {% include "sources_listing_widget.html" %}
+                {% endwith %}
             </tr>
             <tr>
                 {% with releasability=cert.releasability %}

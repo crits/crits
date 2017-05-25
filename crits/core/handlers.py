@@ -379,7 +379,7 @@ def status_update(type_, id_, value="In Progress", user=None, **kwargs):
     if not obj:
         return {'success': False, 'message': 'Could not find object.'}
     try:
-        obj.set_status(value)
+        obj.set_status(value, user)
         # Check to see if the set_status was successful or not.
         if obj.status != value:
             return {'success': False, 'message': 'Invalid status: %s.' % value }
