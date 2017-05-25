@@ -62,19 +62,12 @@
                             {% include 'description_widget.html' %}
                         {% endwith %}
                     </tr>
-                    <tr>
-                        <td class="key">Created</td>
-                        <td>{{actor.created}}{% if actor.created_by %} by {{ actor.created_by }}{% endif %}</td>
-                    </tr>
-                    <tr>
-                        <td class="key">Modified</td>
-                        <td>{{actor.modified}}{% if actor.modified_by %} by {{ actor.modified_by }}{% endif %}</td>
-                    </tr>
                     {% include "actor_tags_widget.html" %}
                     {% with sectors=actor.sectors %}
                         {% include "sector_widget.html" %}
                     {% endwith %}
                     {% with tlo=actor %}
+                        {% include "created_modified_widget.html" %}
                         {% include "status_widget.html" %}
                     {% endwith %}
                     <tr>

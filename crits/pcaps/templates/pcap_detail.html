@@ -47,10 +47,6 @@
             <td>{{ pcap.filename }}<a href="{% url 'crits.core.views.download_file' pcap.md5 %}?type=pcap"><div class="ui-icon ui-icon-disk download_file"></div></a></td>
             </tr>
             <tr>
-            <td class='key'>Created</td>
-            <td>{{ pcap.created }}{% if pcap.created_by %} by {{ pcap.created_by }}{% endif %}</td>
-            </tr>
-            <tr>
             <td class='key'>Length</td>
             <td>{{ pcap.length }}</td>
             </tr>
@@ -67,6 +63,7 @@
                 {% include "sector_widget.html" %}
             {% endwith %}
             {% with tlo=pcap %}
+                {% include "created_modified_widget.html" %}
                 {% include "status_widget.html" %}
             {% endwith %}
             <tr>

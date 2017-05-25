@@ -60,10 +60,6 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class='key'>Created</td>
-                        <td>{{ event.created }}{% if event.created_by %} by {{ event.created_by }}{% endif %}</td>
-                    </tr>
-                    <tr>
                         {% with description=event.description %}
                             {% include 'description_widget.html' %}
                         {% endwith %}
@@ -72,6 +68,7 @@
                         {% include "sector_widget.html" %}
                     {% endwith %}
                     {% with tlo=event %}
+                        {% include "created_modified_widget.html" %}
                         {% include "status_widget.html" %}
                     {% endwith %}
                     <tr>

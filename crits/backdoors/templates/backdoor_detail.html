@@ -68,18 +68,11 @@
                             {% include 'description_widget.html' %}
                         {% endwith %}
                     </tr>
-                    <tr>
-                        <td class="key">Created</td>
-                        <td>{{backdoor.created}}{% if backdoor.created_by %} by {{ backdoor.created_by }}{% endif %}</td>
-                    </tr>
-                    <tr>
-                        <td class="key">Modified</td>
-                        <td>{{backdoor.modified}}{% if backdoor.modified_by %} by {{ backdoor.modified_by }}{% endif %}</td>
-                    </tr>
                     {% with sectors=backdoor.sectors %}
                         {% include "sector_widget.html" %}
                     {% endwith %}
                     {% with tlo=backdoor %}
+                        {% include "created_modified_widget.html" %}
                         {% include "status_widget.html" %}
                     {% endwith %}
                     <tr>

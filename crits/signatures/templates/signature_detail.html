@@ -52,10 +52,6 @@
             <td>{{ signature.id }}</td>
             </tr>
             <tr>
-            <td class='key'>Created</td>
-            <td>{{ signature.created }}{% if signature.created_by %} by {{ signature.created_by }}{% endif %}</td>
-            </tr>
-            <tr>
                 <td class='key'>Data Type</td>
                     <span style="float: right;" class="object_status_response"></span>
                 <td>
@@ -101,6 +97,7 @@
                 {% include "sector_widget.html" %}
             {% endwith %}
             {% with tlo=signature %}
+                {% include "created_modified_widget.html" %}
                 {% include "status_widget.html" %}
             {% endwith %}
             <tr>

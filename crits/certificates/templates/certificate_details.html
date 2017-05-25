@@ -51,10 +51,6 @@
             <td>{{ cert.filetype }}</td>
             </tr>
             <tr>
-            <td class='key'>Created</td>
-            <td>{{ cert.created }}{% if cert.created_by %} by {{ cert.created_by }}{% endif %}</td>
-            </tr>
-            <tr>
             <td class='key'>Size</td>
             <td>{{ cert.size }}</td>
             </tr>
@@ -71,6 +67,7 @@
                 {% include "sector_widget.html" %}
             {% endwith %}
             {% with tlo=cert %}
+                {% include "created_modified_widget.html" %}
                 {% include "status_widget.html" %}
             {% endwith %}
             <tr>

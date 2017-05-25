@@ -30,10 +30,6 @@
                         <td>{{ip.id}}</td>
                     </tr>
                     <tr>
-                        <td class="key">Created</td>
-                        <td>{{ip.created}}{% if ip.created_by %} by {{ ip.created_by }}{% endif %}</td>
-                    </tr>
-                    <tr>
                         {% with description=ip.description %}
                             {% include 'description_widget.html' %}
                         {% endwith %}
@@ -50,6 +46,7 @@
                         {% include "sector_widget.html" %}
                     {% endwith %}
                     {% with tlo=ip %}
+                        {% include "created_modified_widget.html" %}
                         {% include "status_widget.html" %}
                     {% endwith %}
                     <tr>

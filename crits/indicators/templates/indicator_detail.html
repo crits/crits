@@ -122,22 +122,6 @@
             {% endwith %}
         </tr>
         <tr>
-        <td class='key'>
-            Creation Date
-        </td>
-        <td>
-            {{ indicator.created }}{% if indicator.created_by %} by {{ indicator.created_by }}{% endif %}
-        </td>
-        </tr>
-        <tr>
-        <td class='key'>
-            Last Modified
-        </td>
-        <td>
-            {{ indicator.modified }}{% if indicator.modified_by %} by {{ indicator.modified_by }}{% endif %}
-        </td>
-        </tr>
-        <tr>
         <td class='key' style="width:20%">
             Confidence
         </td>
@@ -161,6 +145,7 @@
             {% include "sector_widget.html" %}
         {% endwith %}
         {% with tlo=indicator %}
+            {% include "created_modified_widget.html" %}
             {% include "status_widget.html" %}
         {% endwith %}
         <tr>

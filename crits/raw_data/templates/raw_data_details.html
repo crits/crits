@@ -57,10 +57,6 @@
             <td>{{ raw_data.id }}</td>
             </tr>
             <tr>
-            <td class='key'>Created</td>
-            <td>{{ raw_data.created }}{% if raw_data.created_by %} by {{ raw_data.created_by }}{% endif %}</td>
-            </tr>
-            <tr>
             <td class='key'>Tool</td>
             {% if raw_data.tool.name %}
                 <td>
@@ -113,6 +109,7 @@
                 {% include "sector_widget.html" %}
             {% endwith %}
             {% with tlo=raw_data %}
+                {% include "created_modified_widget.html" %}
                 {% include "status_widget.html" %}
             {% endwith %}
             <tr>
