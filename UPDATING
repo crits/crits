@@ -3,6 +3,27 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: robertsjw
+Date:   2016-11-07
+
+    Added support for Role Based Access Control (RBAC). This is a major change
+    with how CRITs provides access to objects. Instead of providing access
+    solely based on a Source, it provides access based on the permissions
+    defined in the Role object assigned to a user. Role objects then have
+    sources that they have access to. When migrating from an existing CRITs
+    Instance, you will need to take the following steps:
+
+    Create default Roles and migrate legacy user roles to new objects:
+      python manage.py create_roles -a
+          - Note create_roles has many options, which can be used individually
+            depending on your use case
+
+    Then, log in using an Administrator (now called UberAdmin) user to add
+    appropriate SourceAccess to the new Role objects.
+
+    Moving forward, SourceAccess objects need to be added to Role objects
+    for users to have access to data from that source. 
+
 
 Author: apolkosnik
 Date:   2016-11-03
@@ -21,11 +42,11 @@ Date:   2016-08-06
     Added support for Mongoengine 0.10.x while allowing you to use currently
     supported version of mongoengine (0.10.x), in essence everything should
     continue to work.
-    
+
     If you want to go with mongoengine 0.10.x, you'll need to upgrade via pip.
-    
+
         pip install -U -r requirements.txt
-    
+
     It will install Mongoengine 0.10.6 and Pymongo 3.2.2 and then
         also django_mongoengine from git.
 
@@ -86,7 +107,7 @@ Date:   2016-02-03
     before every occurrence of the following:
         super(YourCustomServiceConfigForm, self).__init__(*args, **kwargs)
     in forms.py inside your custom-made services.
-    
+
     For CRITs to run on Django 1.7 you also need to update the following:
     django-tastypie==0.12.2
     django-tastypie-mongoengine==0.4.6
@@ -128,7 +149,7 @@ Date: 2015-08-31
 
     Unzip functionality was set up to use the 7za rather than 7z. 7z suports
     much wider variety of formats. The defaults are changed for new installs,
-    for existing installs just change the filename from  7za to 7z in 
+    for existing installs just change the filename from  7za to 7z in
     CRITs Control Panel -> SYSTEM -> General -> "Zip7 path:".
     7z comes with p7zip-plugins on RHEL/Centos, on Ubuntu it's in p7zip-full.
 
@@ -326,30 +347,30 @@ Date:   2014-10-30
 Author: dbuchta
 Date:   2014-10-14
 
-    Dashboards are now saved objects in the db containing a list of tables 
-    affiliated with it. They also have a name and have the option to be 
+    Dashboards are now saved objects in the db containing a list of tables
+    affiliated with it. They also have a name and have the option to be
     public. These can all by changed on the Dashboard Configurations page
     although only an admin can make a dashboard public. When a user other
     then the original creator saves a public dashboard, it creates a clone
     with their own customization applied and the public one is removed
-    from the user's list of dashboards. In order to revert the clone back to 
-    the public, simply delete it and public one will show again. Users also 
-    have the choice of picking their default dashboard from the Dashboard 
+    from the user's list of dashboards. In order to revert the clone back to
+    the public, simply delete it and public one will show again. Users also
+    have the choice of picking their default dashboard from the Dashboard
     Configurations page.
-    
+
     A key feature to these new dashboards are users having the ability to save
-    their favorite searches. This can be done by entering your search criteria 
+    their favorite searches. This can be done by entering your search criteria
     in the Global Quick Search and clicking the "Configure for Dashboard" button
     on the search results page. Once clicked, you will be redirected to another
-    page where you can customize the table to your liking, name it, and choose 
+    page where you can customize the table to your liking, name it, and choose
     which dashboard to pin it to, or to  create a new one.
-    
+
     In order for the dashboard to work correctly, the initial default dashboard
-    must be created in the database. This can be done with the following 
+    must be created in the database. This can be done with the following
     management command:
-    
+
         python manage.py create_default_dashboard
-        
+
 Author: mgoffin
 Date:   2014-10-04
 
@@ -577,7 +598,7 @@ Date:   2014-04-28
     cause python-ldap to throw an exception, and not allow an user to log-in.
     This happens with certain Oracle based LDAP servers, and the known solution
     is to import ldap.controls.pwdpolicy.
-    
+
     ldap.controls.pwdpolicy module is not distributed before 2.4.15, and with
     prior version you wil get a message in you crits log:
     "INFO <date> <time> crits.core.user ldap.controls.pwdpolicy not present."
@@ -785,7 +806,7 @@ Author: inray
 Date:   2013-10-22
 
     The directory structure has been updated to stay compatible with newer
-    version of Django (1.4+).  The change involved moving most CRITs code to a 
+    version of Django (1.4+).  The change involved moving most CRITs code to a
     subdirectory called 'crits' and pointing the configuration and management
     files to the new directory.  The 'DocumentRoot' configuration option is
     the only change required to be made on a normal CRITs installation and is

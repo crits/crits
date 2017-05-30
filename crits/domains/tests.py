@@ -57,7 +57,6 @@ class DomainHandlerTests(SimpleTestCase):
         prep_db()
         self.factory = RequestFactory()
         self.user = CRITsUser.objects(username=TUSER_NAME).first()
-        self.user.sources.append(TSRC)
         self.user.save()
 
 
@@ -85,7 +84,6 @@ class DomainViewTests(SimpleTestCase):
         prep_db()
         self.factory = RequestFactory()
         self.user = CRITsUser.objects(username=TUSER_NAME).first()
-        self.user.sources.append(TSRC)
         self.user.save()
         # Add a test domain
         data = {

@@ -1,5 +1,6 @@
 import json
 import urllib
+import logging
 
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
@@ -10,12 +11,14 @@ from django.template import RequestContext
 from crits.core import form_consts
 from crits.core.data_tools import json_handler
 from crits.core.handsontable_tools import form_to_dict
-from crits.core.user_tools import user_can_view_data, is_admin
+from crits.core.user_tools import user_can_view_data
 from crits.ips.forms import AddIPForm
 from crits.ips.handlers import ip_add_update, ip_remove
 from crits.ips.handlers import generate_ip_jtable, get_ip_details
 from crits.ips.handlers import generate_ip_csv
 from crits.ips.handlers import process_bulk_add_ip
+
+from crits.vocabulary.acls import IPACL
 
 
 @user_passes_test(user_can_view_data)
@@ -30,9 +33,17 @@ def ips_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if option == "csv":
-        return generate_ip_csv(request)
-    return generate_ip_jtable(request, option)
+    user = request.user
+
+    if user.has_access_to(IPACL.READ):
+        if option == "csv":
+            return generate_ip_csv(request)
+        return generate_ip_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view IP listing.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def ip_search(request):
@@ -62,15 +73,21 @@ def ip_detail(request, ip):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    template = "ip_detail.html"
-    analyst = request.user.username
-    (new_template, args) = get_ip_details(ip,
-                                          analyst)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    user = request.user
+    if user.has_access_to(IPACL.READ):
+        template = "ip_detail.html"
+        (new_template, args) = get_ip_details(ip,
+                                              user)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view IP details.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def bulk_add_ip(request):
@@ -119,17 +136,19 @@ def add_update_ip(request, method):
     """
 
     if request.method == "POST" and request.is_ajax():
+        request.user._setup()
         data = request.POST
         form = AddIPForm(request.user, None, data)
+
         if form.is_valid():
             cleaned_data = form.cleaned_data
             ip = cleaned_data['ip']
-            name = cleaned_data['source']
-            reference = cleaned_data['source_reference']
-            method = cleaned_data['source_method']
+            source_name = cleaned_data['source_name']
+            source_reference = cleaned_data['source_reference']
+            source_method = cleaned_data['source_method']
+            source_tlp= cleaned_data['source_tlp']
             campaign = cleaned_data['campaign']
             confidence = cleaned_data['confidence']
-            analyst = cleaned_data['analyst']
             ip_type = cleaned_data['ip_type']
             add_indicator = False
             if cleaned_data.get('add_indicator'):
@@ -143,12 +162,13 @@ def add_update_ip(request, method):
 
             result = ip_add_update(ip,
                                    ip_type,
-                                   source=name,
-                                   source_method=method,
-                                   source_reference=reference,
+                                   source=source_name,
+                                   source_method=source_method,
+                                   source_reference=source_reference,
+                                   source_tlp=source_tlp,
                                    campaign=campaign,
                                    confidence=confidence,
-                                   analyst=analyst,
+                                   user=request.user,
                                    bucket_list=bucket_list,
                                    ticket=ticket,
                                    is_add_indicator=add_indicator,
@@ -189,15 +209,11 @@ def remove_ip(request):
     """
 
     if request.method == "POST" and request.is_ajax():
-        if is_admin(request.user):
-            result = ip_remove(request.POST['key'],
-                               request.user.username)
-            return HttpResponse(json.dumps(result),
-                                content_type="application/json")
-        error = 'You do not have permission to remove this item.'
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
+        result = ip_remove(request.POST['key'],
+                            request.user.username)
+        return HttpResponse(json.dumps(result),
+                            mimetype="application/json")
+
     return render_to_response('error.html',
                               {'error':'Expected AJAX/POST'},
                               RequestContext(request))

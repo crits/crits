@@ -5,6 +5,7 @@ from tastypie.exceptions import BadRequest
 
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
+from crits.core.user_tools import get_acl_object
 from crits.screenshots.handlers import add_screenshot
 from crits.screenshots.screenshot import Screenshot
 
@@ -48,7 +49,7 @@ class ScreenshotResource(CRITsAPIResource):
         :returns: HttpResponse.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         type_ = bundle.data.get('upload_type', None)
 
         content = {'return_code': 1,
@@ -75,15 +76,22 @@ class ScreenshotResource(CRITsAPIResource):
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', None)
         reference = bundle.data.get('reference', None)
+        tlp = bundle.data.get('tlp', 'amber')
         oid = bundle.data.get('oid', None)
         otype = bundle.data.get('otype', None)
+
 
         if not oid or not otype or not source or not (screenshot or screenshot_ids):
             content['message'] = "You must provide a valid set of information."
             self.crits_response(content)
 
+        acl = get_acl_object(otype)
+        if not user.has_access_to(acl.SCREENSHOTS_ADD):
+            content['message'] = 'User does not have permission to create Object.'
+            self.crits_response(content)
+
         result = add_screenshot(description, tags, source, method, reference,
-                                analyst, screenshot, screenshot_ids, oid, otype)
+                                tlp, user.username, screenshot, screenshot_ids, oid, otype)
 
         if result.get('message'):
             content['message'] = result.get('message')

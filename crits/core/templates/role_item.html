@@ -1,0 +1,23 @@
+{% load filters %}
+
+{% if k not in do_not_render %}
+    <tr>
+        <td id="{{k}}" class="role_item key">{{k|nicify}}:</td>
+        <td class="role_item_value">
+            {% if k == "active" %}
+            <a id="is_active_{{rid}}" href="#" onclick="javascript:toggleItemActive('Role', '{{rid}}');">{{v}}</a>
+            {% elif k == "name" %}
+                <span id="role_name" class="edit_underline">{{ v }}</span>
+                <span id="copy_role"><a href id="new-role" class="copy_role add dialogClick" dialog="new-role" persona="new" title="Add Role">Copy Role</a></span>
+            {% elif k == "description" %}
+                <span id="role_description" class="edit_underline">{{v}}</span>
+            {% elif k == "sources" %}
+                Make this an interface: {{v}}
+            {% elif v %}
+                <input class="role_value" type="checkbox" name="{% if tlo %}{{tlo}}__{% endif %}{{k}}" checked>
+            {% else %}
+                <input class="role_value" type="checkbox" name="{% if tlo %}{{tlo}}__{% endif %}{{k}}">
+            {% endif %}
+        </td>
+    </tr>
+{% endif %}

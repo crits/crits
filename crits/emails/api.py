@@ -8,6 +8,8 @@ from crits.emails.handlers import handle_email_fields, handle_msg
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import EmailACL
+
 
 class EmailResource(CRITsAPIResource):
     """
@@ -46,7 +48,7 @@ class EmailResource(CRITsAPIResource):
         :returns: HttpResponse.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         type_ = bundle.data.get('upload_type', None)
 
         content = {'return_code': 1,
@@ -65,9 +67,10 @@ class EmailResource(CRITsAPIResource):
         result = None
 
         # Extract common information
-        source = bundle.data.get('source', None)
-        method = bundle.data.get('method', '')
-        reference = bundle.data.get('reference', None)
+        source = bundle.data.get('source_name', None)
+        method = bundle.data.get('source_method', '')
+        reference = bundle.data.get('source_reference', None)
+        tlp = bundle.data.get('source_tlp', 'amber')
         campaign = bundle.data.get('campaign', None)
         confidence = bundle.data.get('confidence', None)
         bucket_list = bundle.data.get('bucket_list', None)
@@ -76,6 +79,12 @@ class EmailResource(CRITsAPIResource):
         if method:
             method = " - " + method
 
+        if not user.has_access_to(EmailACL.WRITE):
+            content['success'] = False
+            content['message'] = 'User does not have permission to create Object.'
+
+            self.crits_response(content)
+
         if type_ == 'eml':
             file_ = bundle.data.get('filedata', None)
             if not file_:
@@ -83,16 +92,18 @@ class EmailResource(CRITsAPIResource):
                 self.crits_response(content)
             filedata = file_.read()
             result = handle_eml(filedata, source, reference,
-                                analyst, 'EML Upload' + method, campaign,
-                                confidence, bucket_list=bucket_list, ticket=ticket)
+                                user, 'EML Upload' + method, tlp=tlp, campaign=campaign,
+                                confidence=confidence, bucket_list=bucket_list, ticket=ticket)
         if type_ == 'msg':
             raw_email = bundle.data.get('filedata', None)
             password = bundle.data.get('password', None)
+
             result = handle_msg(raw_email,
                                 source,
                                 reference,
-                                analyst,
                                 'Outlook MSG Upload' + method,
+                                tlp,
+                                user,
                                 password,
                                 campaign,
                                 confidence,
@@ -103,8 +114,9 @@ class EmailResource(CRITsAPIResource):
             result = handle_pasted_eml(raw_email,
                                        source,
                                        reference,
-                                       analyst,
                                        'Raw Upload' + method,
+                                       tlp,
+                                       user,
                                        campaign,
                                        confidence,
                                        bucket_list=bucket_list,
@@ -116,8 +128,9 @@ class EmailResource(CRITsAPIResource):
             result = handle_yaml(yaml_data,
                                  source,
                                  reference,
-                                 analyst,
                                  'YAML Upload' + method,
+                                 tlp,
+                                 user,
                                  email_id,
                                  save_unsupported,
                                  campaign,
@@ -130,7 +143,7 @@ class EmailResource(CRITsAPIResource):
             del fields['username']
             del fields['api_key']
             result = handle_email_fields(fields,
-                                         analyst,
+                                         user,
                                          'Fields Upload')
 
         if result.get('message'):

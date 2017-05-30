@@ -194,6 +194,35 @@ function get_stored_item_data(url) {
     }
 }
 
+function modify_tlp(itype, oid, tlp) {
+    var res = false;
+    $.ajax({
+        type: "POST",
+        url: tlp_modify,
+        async: false,
+        data: {
+            'tlp': tlp,
+            'oid': oid,
+            'itype': itype
+        },
+        datatype: 'json',
+        success: function(data) {
+            res = data.success;
+        }
+    });
+    return res;
+}
+
+function reset_tlp_color(e, tlp) {
+    d = {
+        white: '#ffffff',
+        green: '#00ff00',
+        amber: '#ffcc22',
+        red: '#ff0000'
+    }
+    e.simplecolorpicker('selectColor', d[tlp]);
+}
+
 function getUserSources(user) {
   $.ajax({
       type: "POST",

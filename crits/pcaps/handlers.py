@@ -13,14 +13,14 @@ from crits.core.crits_mongoengine import create_embedded_source, json_handler
 from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, user_sources, is_user_favorite
+from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.pcaps.pcap import PCAP
 from crits.services.handlers import run_triage, get_supported_services
 
 from crits.vocabulary.relationships import RelationshipTypes
-
+from crits.vocabulary.acls import PCAPACL
 
 def generate_pcap_csv(request):
     """
@@ -34,35 +34,39 @@ def generate_pcap_csv(request):
     response = csv_export(request, PCAP)
     return response
 
-def get_pcap_details(md5, analyst):
+def get_pcap_details(md5, user):
     """
     Generate the data to render the PCAP details template.
 
     :param md5: The MD5 of the PCAP to get details for.
     :type md5: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: CRITsUser
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    sources = user_sources(analyst)
+    sources = user_sources(user)
     pcap = PCAP.objects(md5=md5, source__name__in=sources).first()
+
+    if not user.check_source_tlp(pcap):
+        pcap = None
+
     if not pcap:
         template = "error.html"
         args = {'error': 'PCAP not yet available or you do not have access to view it.'}
     else:
 
-        pcap.sanitize("%s" % analyst)
+        pcap.sanitize("%s" % user)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, pcap.id, 'PCAP')
+        remove_user_from_notification("%s" % user, pcap.id, 'PCAP')
 
         # subscription
         subscription = {
                 'type': 'PCAP',
                 'id': pcap.id,
-                'subscribed': is_user_subscribed("%s" % analyst,
+                'subscribed': is_user_subscribed("%s" % user,
                                                  'PCAP', pcap.id),
         }
 
@@ -70,7 +74,7 @@ def get_pcap_details(md5, analyst):
         objects = pcap.sort_objects()
 
         #relationships
-        relationships = pcap.sort_relationships("%s" % analyst, meta=True)
+        relationships = pcap.sort_relationships("%s" % user, meta=True)
 
         # relationship
         relationship = {
@@ -83,10 +87,10 @@ def get_pcap_details(md5, analyst):
                     'url_key': md5}
 
         #screenshots
-        screenshots = pcap.get_screenshots(analyst)
+        screenshots = pcap.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'PCAP', pcap.id)
+        favorite = is_user_favorite("%s" % user, 'PCAP', pcap.id)
 
         # services
         # Assume all PCAPs have the data available
@@ -104,7 +108,8 @@ def get_pcap_details(md5, analyst):
                 "subscription": subscription,
                 "screenshots": screenshots,
                 "service_results": service_results,
-                "pcap": pcap}
+                "pcap": pcap,
+                "PCAPACL": PCAPACL}
 
     return template, args
 
@@ -210,7 +215,7 @@ def generate_pcap_jtable(request, option):
 
 def handle_pcap_file(filename, data, source_name, user=None,
                      description=None, related_id=None, related_md5=None,
-                     related_type=None, method='', reference='',
+                     related_type=None, method='', reference='', tlp='',
                      relationship=None, bucket_list=None, ticket=None):
     """
     Add a PCAP.
@@ -267,8 +272,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
             'message':  'Data length <= 0'
         }
         return status
-    if ((related_type and not (related_id or related_md5)) or
-        (not related_type and (related_id or related_md5))):
+    if ((related_id or related_md5) and not related_type):
         status = {
             'success':   False,
             'message':  'Must specify both related_type and related_id or related_md5.'
@@ -310,10 +314,16 @@ def handle_pcap_file(filename, data, source_name, user=None,
 
     # generate source information and add to pcap
     if isinstance(source_name, basestring) and len(source_name) > 0:
-        s = create_embedded_source(source_name,
-                                   method=method,
-                                   reference=reference,
-                                   analyst=user)
+        if user.check_source_write(source_name):
+            s = create_embedded_source(source_name,
+                                       method=method,
+                                       reference=reference,
+                                       tlp=tlp,
+                                       analyst=user.username)
+        else:
+            return {"success":False,
+                    "message": "User does not have permission to add object \
+                                using source %s." % source_name}
         pcap.add_source(s)
     elif isinstance(source_name, EmbeddedSource):
         pcap.add_source(source_name, method=method, reference=reference)
@@ -373,12 +383,9 @@ def delete_pcap(pcap_md5, username=None):
     :returns: True, False
     """
 
-    if is_admin(username):
-        pcap = PCAP.objects(md5=pcap_md5).first()
-        if pcap:
-            pcap.delete(username=username)
-            return True
-        else:
-            return False
+    pcap = PCAP.objects(md5=pcap_md5).first()
+    if pcap:
+        pcap.delete(username=username)
+        return True
     else:
         return False

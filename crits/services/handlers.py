@@ -126,8 +126,8 @@ def service_work_handler(service_instance, final_config):
     service_instance.execute(final_config)
 
 
-def run_service(name, type_, id_, user, obj=None,
-                execute='local', custom_config={}, is_triage_run=False, **kwargs):
+def run_service(name, type_, id_, user, obj=None, execute='local',
+                custom_config={}, is_triage_run=False, **kwargs):
     """
     Run a service.
 
@@ -141,8 +141,8 @@ def run_service(name, type_, id_, user, obj=None,
     :type user: str
     :param obj: The CRITs object, if given this overrides crits_type and identifier.
     :type obj: CRITs object.
-    :param analyst: The user updating the results.
-    :type analyst: str
+    :param user: The user updating the results.
+    :type user: :class:`crits.core.user.CRITsUser`
     :param execute: The execution type.
     :type execute: str
     :param custom_config: Use a custom configuration for this run.
@@ -214,7 +214,7 @@ def run_service(name, type_, id_, user, obj=None,
     # This is because not all config options may be submitted.
     final_config.update(custom_config)
 
-    form = service_class.bind_runtime_form(user, final_config)
+    form = service_class.bind_runtime_form(user.username, final_config)
     if form:
         if not form.is_valid():
             # TODO: return corrected form via AJAX
@@ -231,7 +231,7 @@ def run_service(name, type_, id_, user, obj=None,
     # Determine if this service is being run via triage
     if is_triage_run:
         service_instance.is_triage_run = True
-        
+
     # Give the service a chance to modify the config that gets saved to the DB.
     saved_config = dict(final_config)
     service_class.save_runtime_config(saved_config)
@@ -288,7 +288,7 @@ def run_triage(obj, user):
     :type obj: Class which inherits from
                :class:`crits.core.crits_mongoengine.CritsBaseAttributes`
     :param user: The user requesting the services to be run.
-    :type user: str
+    :type user: :class:`crits.core.user.CRITsUser`
     """
 
     services = triage_services()
@@ -308,7 +308,7 @@ def run_triage(obj, user):
 
 
 def add_result(object_type, object_id, analysis_id, result, type_, subtype,
-               analyst):
+               user):
     """
     add_results wrapper for a single result.
 
@@ -324,17 +324,17 @@ def add_result(object_type, object_id, analysis_id, result, type_, subtype,
     :type type_: str
     :param subtype: The result subtype.
     :type subtype: str
-    :param analyst: The user updating the results.
-    :type analyst: str
+    :param user: The user updating the results.
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
-    
+
     return add_results(object_type, object_id, analysis_id, [result], [type_],
-                      [subtype], analyst)
+                      [subtype], user)
 
 
 def add_results(object_type, object_id, analysis_id, result, type_, subtype,
-               analyst):
+                user):
     """
     Add multiple results to an analysis task.
 
@@ -350,8 +350,8 @@ def add_results(object_type, object_id, analysis_id, result, type_, subtype,
     :type type_: list of str
     :param subtype: The list of result subtypes.
     :type subtype: list of str
-    :param analyst: The user updating the results.
-    :type analyst: str
+    :param user: The user updating the results.
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
@@ -362,7 +362,7 @@ def add_results(object_type, object_id, analysis_id, result, type_, subtype,
 
     # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
-    sources = user_sources(analyst)
+    sources = user.get_sources_list()
     obj = klass.objects(id=object_id, source__name__in=sources).first()
     if not obj:
         res['message'] = "Could not find object to add results to."
@@ -390,12 +390,12 @@ def add_results(object_type, object_id, analysis_id, result, type_, subtype,
     ar = AnalysisResult.objects(analysis_id=analysis_id).first()
     if ar:
         AnalysisResult.objects(id=ar.id).update_one(push_all__results=final_list)
-        
+
     res['success'] = True
     return res
 
 
-def add_log(object_type, object_id, analysis_id, log_message, level, analyst):
+def add_log(object_type, object_id, analysis_id, log_message, level, user):
     """
     Add a log entry to an analysis task.
 
@@ -409,8 +409,8 @@ def add_log(object_type, object_id, analysis_id, log_message, level, analyst):
     :type log_message: dict
     :param level: The log level.
     :type level: str
-    :param analyst: The user updating the log.
-    :type analyst: str
+    :param user: The user updating the log.
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
@@ -421,7 +421,7 @@ def add_log(object_type, object_id, analysis_id, log_message, level, analyst):
 
     # Validate user can add service results to this TLO.
     klass = class_from_type(object_type)
-    sources = user_sources(analyst)
+    sources = user.get_sources_list()
     obj = klass.objects(id=object_id, source__name__in=sources).first()
     if not obj:
         results['message'] = "Could not find object to add results to."
@@ -441,7 +441,7 @@ def add_log(object_type, object_id, analysis_id, log_message, level, analyst):
     return results
 
 
-def finish_task(object_type, object_id, analysis_id, status, analyst):
+def finish_task(object_type, object_id, analysis_id, status, user):
     """
     Finish a task by setting its status to "completed" and setting the finish
     date.
@@ -454,8 +454,8 @@ def finish_task(object_type, object_id, analysis_id, status, analyst):
     :type analysis_id: str
     :param status: The status of the task.
     :type status: str ("error", "completed")
-    :param analyst: The user updating the log.
-    :type analyst: str
+    :param user: The user updating the log.
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
@@ -472,7 +472,7 @@ def finish_task(object_type, object_id, analysis_id, status, analyst):
     klass = class_from_type(object_type)
     params = {'id': object_id}
     if hasattr(klass, 'source'):
-        params['source__name__in'] = user_sources(analyst)
+        params['source__name__in'] = user_sources(user)
     obj = klass.objects(**params).first()
     if not obj:
         results['message'] = "Could not find object to add results to."
@@ -488,7 +488,7 @@ def finish_task(object_type, object_id, analysis_id, status, analyst):
     return results
 
 
-def update_config(service_name, config, analyst):
+def update_config(service_name, config, user):
     """
     Update the configuration for a service.
     """
@@ -498,7 +498,7 @@ def update_config(service_name, config, analyst):
     try:
         #TODO: get/validate the config from service author to set status
         #update_status(service_name)
-        service.save(username=analyst)
+        service.save(username=user.username)
         return {'success': True}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -546,7 +546,7 @@ def _get_config_error(service):
     return error
 
 
-def do_edit_config(name, analyst, post_data=None):
+def do_edit_config(name, user, post_data=None):
     status = {'success': False}
     service = CRITsService.objects(name=name, status__ne="unavailable").first()
     if not service:
@@ -576,7 +576,7 @@ def do_edit_config(name, analyst, post_data=None):
                 status['config_error'] = str(e)
                 return status
 
-            result = update_config(name, form.cleaned_data, analyst)
+            result = update_config(name, form.cleaned_data, user)
             if not result['success']:
                 return status
 
@@ -601,7 +601,7 @@ def get_config(service_name):
 
     return service.config
 
-def set_enabled(service_name, enabled=True, analyst=None):
+def set_enabled(service_name, enabled=True, user=None):
     """
     Enable/disable a service in CRITs.
     """
@@ -614,7 +614,7 @@ def set_enabled(service_name, enabled=True, analyst=None):
     service.enabled = enabled
 
     try:
-        service.save(username=analyst)
+        service.save(username=user.username)
         if enabled:
             url = reverse('crits.services.views.disable', args=(service_name,))
         else:
@@ -623,7 +623,7 @@ def set_enabled(service_name, enabled=True, analyst=None):
     except ValidationError, e:
         return {'success': False, 'message': e}
 
-def set_triage(service_name, enabled=True, analyst=None):
+def set_triage(service_name, enabled=True, user=None):
     """
     Enable/disable a service for running on triage (upload).
     """
@@ -635,7 +635,7 @@ def set_triage(service_name, enabled=True, analyst=None):
     service = CRITsService.objects(name=service_name).first()
     service.run_on_triage = enabled
     try:
-        service.save(username=analyst)
+        service.save(username=user.username)
         if enabled:
             url = reverse('crits.services.views.disable_triage',
                           args=(service_name,))
@@ -681,14 +681,14 @@ def triage_services(status=True):
         services = CRITsService.objects(run_on_triage=True)
     return [s.name for s in services]
 
-def delete_analysis(task_id, analyst):
+def delete_analysis(task_id, user):
     """
     Delete analysis results.
     """
 
     ar = AnalysisResult.objects(id=task_id).first()
     if ar:
-        ar.delete(username=analyst)
+        ar.delete(username=user.username)
 
 def insert_analysis_results(task):
     """

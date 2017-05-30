@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load filters %}
 
 {% block title %} PCAP Detail {% endblock %}
 
@@ -14,21 +14,25 @@
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+    {% if PCAPACL.SERVICES_READ|has_access_to:user %}
+      <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
 </ul>
 
 <div id="details_section">
-    <div class='content_box'>
-        <span class="horizontal_menu">
-        <ul class="hmenu">
+    {% if PCAPACL.DOWNLOAD|has_access_to:user or PCAPACL.DELETE|has_access_to:user %}
+      <span class="horizontal_menu">
+      <ul class="hmenu">
+          {% if PCAPACL.DOWNLOAD|has_access_to:user %}
             <li><a href="{% url 'crits.core.views.download_file' pcap.md5 %}?type=pcap">Download PCAP</a></li>
-            {% if admin %}
-                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="pcap" title="Delete PCAP" action='{% url "crits.pcaps.views.remove_pcap" pcap.md5 %}'>Delete PCAP</a></li>
-            {% endif %}
-        </ul>
-        </span>
-    </div>
+          {% endif %}
+          {% if PCAPACL.DELETE|has_access_to:user %}
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="pcap" title="Delete PCAP" action='{% url "crits.pcaps.views.remove_pcap" pcap.md5 %}'>Delete PCAP</a></li>
+          {% endif %}
+      </ul>
+      </span>
+    {% endif %}
 
     <div class="content_box content_details">
         <h3 class="titleheader">
@@ -59,78 +63,110 @@
             <td>{{ pcap.md5 }}</td>
             </tr>
             <tr>
+              {% if PCAPACL.DESCRIPTION_READ|has_access_to:user %}
                 {% with description=pcap.description %}
                     {% include 'description_widget.html' %}
                 {% endwith %}
-            <tr>
-                <td class="key">Status
-                    <span style="float: right;" class="object_status_response"></span>
-                </td>
-                <td>
-                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{pcap.status}}</span>
-                </td>
-            </tr>
-            {% with sectors=pcap.sectors %}
-                {% include "sector_widget.html" %}
+              {% endif %}
+            {% if PCAPACL.STATUS_READ|has_access_to:user %}
+              <tr>
+                  <td class="key">Status
+                      <span style="float: right;" class="object_status_response"></span>
+                  </td>
+                  <td>
+                      <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{pcap.status}}</span>
+                  </td>
+              </tr>
+            {% endif %}
+            {% with tlp=pcap.tlp %}
+                {% include "tlp_widget.html" %}
             {% endwith %}
+            {% if PCAPACL.SECTORS_READ|has_access_to:user %}
+              {% with sectors=pcap.sectors %}
+                  {% include "sector_widget.html" %}
+              {% endwith %}
+            {% endif %}
             </tr>
-            {% with sources=pcap.source obj_id=pcap.id obj_type=subscription.type %}
-                {% include "sources_listing_widget.html" %}
-            {% endwith %}
+            {% if PCAPACL.SOURCES_READ|has_access_to:user %}
+              {% with sources=pcap.source obj_id=pcap.id obj_type=subscription.type %}
+                  {% include "sources_listing_widget.html" %}
+              {% endwith %}
+            {% endif %}
             </tr>
+            {% if PCAPACL.RELEASABILITY_READ|has_access_to:user %}
             <tr>
                 {% with releasability=pcap.releasability %}
                     {% include 'releasability_list_widget.html' %}
                 {% endwith %}
             </tr>
+            {% endif %}
         </tbody>
         </table>
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% with bucket_list=pcap.bucket_list %}
-            {% include 'bucket_list_widget.html' %}
-        {% endwith %}
+        {% if PCAPACL.BUCKETLIST_READ|has_access_to:user %}
+          {% with bucket_list=pcap.bucket_list %}
+              {% include 'bucket_list_widget.html' %}
+          {% endwith %}
+        {% endif %}
         {% include 'add_related_widget.html' %}
-
     </div>
-    <div class="content_box">
-        {% with obj=pcap obj_type="PCAP" %}
-            {% include 'action_listing_widget.html' %}
+    {% if PCAPACL.ACTIONS_READ|has_access_to:user %}
+      <div class="content_box">
+          {% with obj=pcap obj_type="PCAP" %}
+              {% include 'action_listing_widget.html' %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if PCAPACL.TICKETS_READ|has_access_to:user %}
+      <div>
+        {% with obj=pcap obj_type=subscription.type %}
+           {% include 'tickets_listing_widget.html' %}
         {% endwith %}
-    </div>
-    <div>
-      {% with obj=pcap obj_type=subscription.type %}
-         {% include 'tickets_listing_widget.html' %}
-      {% endwith %}
-    </div>
-    <div>
-        {% with hit=pcap col=COL_PCAPS %}
-            {% include "campaigns_display_widget.html" %}
-        {% endwith %}
-    </div>
-    <div>
-        {% with hit=pcap col=COL_PCAPS %}
-            {% include "locations_display_widget.html" %}
-        {% endwith %}
-    </div>
-    <div>
-        {% include 'relationships_listing_widget.html' %}
-    </div>
-    <div>
-        {% include 'objects_listing_widget.html' %}
-    </div>
-    <div>
-    {% include 'screenshot_widget.html' %}
-    </div>
-    <div>
-        {% include "comments_listing_widget.html" %}
-    </div>
+      </div>
+    {% endif %}
+    {% if PCAPACL.CAMPAIGNS_READ|has_access_to:user and PCAPACL.CAMPAIGN_READ|has_access_to:user %}
+      <div>
+          {% with hit=pcap col=COL_PCAPS %}
+              {% include "campaigns_display_widget.html" %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if PCAPACL.LOCATIONS_READ|has_access_to:user %}
+      <div>
+          {% with hit=pcap col=COL_PCAPS %}
+              {% include "locations_display_widget.html" %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if PCAPACL.RELATIONSHIPS_READ|has_access_to:user %}
+      <div>
+          {% include 'relationships_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if PCAPACL.OBJECTS_READ|has_access_to:user %}
+      <div>
+          {% include 'objects_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if PCAPACL.SCREENSHOTS_READ|has_access_to:user %}
+      <div>
+      {% include 'screenshot_widget.html' %}
+      </div>
+    {% endif %}
+    {% if PCAPACL.COMMENTS_READ|has_access_to:user %}
+      <div>
+          {% include "comments_listing_widget.html" %}
+      </div>
+    {% endif %}
 </div>
+{% if PCAPACL.SERVICES_READ|has_access_to:user %}
 {% with item=pcap %}
     {% include "services_analysis_section.html" with crits_type="PCAP" identifier=pcap.md5 %}
 {% endwith %}
 {% include 'services_tab_tabs_widget.html' %}
+{% endif %}
 </div>
 
 {% else %}
@@ -143,5 +179,3 @@
 {% block javascript_includes %}
  <script type="text/javascript" src="{{ STATIC_URL }}js/pcaps.js"></script>
 {% endblock %}
-
-

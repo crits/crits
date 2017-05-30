@@ -17,12 +17,13 @@ from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source,
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.class_mapper import class_from_id
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, user_sources, is_user_favorite
+from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.raw_data.raw_data import RawData, RawDataType
 from crits.services.handlers import run_triage, get_supported_services
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import RawDataACL
 
 
 
@@ -55,38 +56,42 @@ def get_id_from_link_and_version(link, version):
     else:
         return raw_data.id
 
-def get_raw_data_details(_id, analyst):
+def get_raw_data_details(_id, user):
     """
     Generate the data to render the RawData details template.
 
     :param _id: The ObjectId of the RawData to get details for.
     :type _id: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: str
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    sources = user_sources(analyst)
+    sources = user_sources(user)
     if not _id:
         raw_data = None
     else:
         raw_data = RawData.objects(id=_id, source__name__in=sources).first()
+
+    if not user.check_source_tlp(raw_data):
+        raw_data = None
+
     if not raw_data:
         template = "error.html"
         args = {'error': 'raw_data not yet available or you do not have access to view it.'}
     else:
 
-        raw_data.sanitize("%s" % analyst)
+        raw_data.sanitize("%s" % user)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, raw_data.id, 'RawData')
+        remove_user_from_notification("%s" % user, raw_data.id, 'RawData')
 
         # subscription
         subscription = {
                 'type': 'RawData',
                 'id': raw_data.id,
-                'subscribed': is_user_subscribed("%s" % analyst,
+                'subscribed': is_user_subscribed("%s" % user,
                                                  'RawData', raw_data.id),
         }
 
@@ -94,7 +99,7 @@ def get_raw_data_details(_id, analyst):
         objects = raw_data.sort_objects()
 
         #relationships
-        relationships = raw_data.sort_relationships("%s" % analyst, meta=True)
+        relationships = raw_data.sort_relationships("%s" % user, meta=True)
 
         # relationship
         relationship = {
@@ -109,10 +114,10 @@ def get_raw_data_details(_id, analyst):
                     'url_key': _id}
 
         #screenshots
-        screenshots = raw_data.get_screenshots(analyst)
+        screenshots = raw_data.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'RawData', raw_data.id)
+        favorite = is_user_favorite("%s" % user, 'RawData', raw_data.id)
 
         # services
         service_list = get_supported_services('RawData')
@@ -130,7 +135,8 @@ def get_raw_data_details(_id, analyst):
                 "screenshots": screenshots,
                 "versions": versions,
                 "service_results": service_results,
-                "raw_data": raw_data}
+                "raw_data": raw_data,
+                "RawDataACL": RawDataACL}
 
     return template, args
 
@@ -289,7 +295,7 @@ def generate_raw_data_jtable(request, option):
 def handle_raw_data_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          tool_name=None, tool_version=None, tool_details=None,
-                         link_id=None, method='', reference='',
+                         link_id=None, method='', reference='', tlp='',
                          copy_rels=False, bucket_list=None, ticket=None,
                          related_id=None, related_type=None, relationship_type=None):
     """
@@ -321,6 +327,8 @@ def handle_raw_data_file(data, source_name, user=None,
     :type method: str
     :param reference: A reference to the source of this RawData.
     :type reference: str
+    :param tlp: TLP for the source.
+    :type tlp: str
     :param copy_rels: Copy relationships from the previous version to this one.
     :type copy_rels: bool
     :param bucket_list: Bucket(s) to add to this RawData
@@ -363,7 +371,7 @@ def handle_raw_data_file(data, source_name, user=None,
             'message':  'Data length <= 0'
         }
         return status
-    
+
     if isinstance(data, unicode):
         data=data.encode('utf-8')
     # generate md5 and timestamp
@@ -378,7 +386,7 @@ def handle_raw_data_file(data, source_name, user=None,
         raw_data.created = timestamp
         raw_data.description = description
         raw_data.md5 = md5
-        #raw_data.source = [source]
+        # raw_data.source = [source_name]
         raw_data.data = data
         raw_data.title = title
         raw_data.data_type = data_type
@@ -389,19 +397,25 @@ def handle_raw_data_file(data, source_name, user=None,
 
     # generate new source information and add to sample
     if isinstance(source_name, basestring) and len(source_name) > 0:
-        source = create_embedded_source(source_name,
-                                   date=timestamp,
-                                   method=method,
-                                   reference=reference,
-                                   analyst=user)
+        if user.check_source_write(source_name):
+            source = create_embedded_source(source_name,
+                                       method=method,
+                                       reference=reference,
+                                       tlp=tlp,
+                                       analyst=user.username)
+            raw_data.add_source(source)
+
+        else:
+            return {"success":False,
+                    "message": "User does not have permission to add object using source %s." % source_name}
         # this will handle adding a new source, or an instance automatically
-        raw_data.add_source(source)
+
     elif isinstance(source_name, EmbeddedSource):
-        raw_data.add_source(source_name, method=method, reference=reference)
+        raw_data.add_source(source_name, method=method, reference=reference, tlp=tlp, analyst=user.usrname)
     elif isinstance(source_name, list) and len(source_name) > 0:
         for s in source_name:
             if isinstance(s, EmbeddedSource):
-                raw_data.add_source(s, method=method, reference=reference)
+                raw_data.add_source(s, method=method, reference=reference, tlp=tlp, analyst=user.username)
 
     #XXX: need to validate this is a UUID
     if link_id:
@@ -419,7 +433,7 @@ def handle_raw_data_file(data, source_name, user=None,
                             raw_data.add_relationship(rel_item,
                                                       rel.relationship,
                                                       rel_date=rel.relationship_date,
-                                                      analyst=user)
+                                                      analyst=user.username)
 
 
     raw_data.version = len(RawData.objects(link_id=link_id)) + 1
@@ -438,19 +452,19 @@ def handle_raw_data_file(data, source_name, user=None,
             retVal['message'] = 'Related Object not found.'
             return retVal
 
-    raw_data.save(username=user)
+    raw_data.save(username=user.username)
 
     if related_obj and relationship_type and raw_data:
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         raw_data.add_relationship(related_obj,
                               relationship_type,
-                              analyst=user,
+                              analyst=user.username,
                               get_rels=False)
-        raw_data.save(username=user)
+        raw_data.save(username=user.username)
         raw_data.reload()
 
     # save raw_data
-    raw_data.save(username=user)
+    raw_data.save(username=user.username)
 
     # run raw_data triage
     if is_rawdata_new:
@@ -702,13 +716,10 @@ def delete_raw_data(_id, username=None):
     :returns: bool
     """
 
-    if is_admin(username):
-        raw_data = RawData.objects(id=_id).first()
-        if raw_data:
-            raw_data.delete(username=username)
-            return True
-        else:
-            return False
+    raw_data = RawData.objects(id=_id).first()
+    if raw_data:
+        raw_data.delete(username=username)
+        return True
     else:
         return False
 

@@ -13,7 +13,7 @@ from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, user_sources
+from crits.core.user_tools import user_sources
 from crits.core.user_tools import is_user_subscribed
 from crits.certificates.certificate import Certificate
 from crits.notifications.handlers import remove_user_from_notification
@@ -21,6 +21,7 @@ from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import run_triage, get_supported_services
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import CertificateACL
 
 
 def generate_cert_csv(request):
@@ -35,35 +36,39 @@ def generate_cert_csv(request):
     response = csv_export(request,Certificate)
     return response
 
-def get_certificate_details(md5, analyst):
+def get_certificate_details(md5, user):
     """
     Generate the data to render the Certificate details template.
 
     :param md5: The MD5 of the Certificate to get details for.
     :type md5: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: str
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    sources = user_sources(analyst)
+    sources = user_sources(user.username)
     cert = Certificate.objects(md5=md5, source__name__in=sources).first()
+
+    if not user.check_source_tlp(cert):
+        cert = None
+
     if not cert:
         template = "error.html"
         args = {'error': 'Certificate not yet available or you do not have access to view it.'}
     else:
 
-        cert.sanitize("%s" % analyst)
+        cert.sanitize("%s" % user.username)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, cert.id, 'Certificate')
+        remove_user_from_notification("%s" % user.username, cert.id, 'Certificate')
 
         # subscription
         subscription = {
                 'type': 'Certificate',
                 'id': cert.id,
-                'subscribed': is_user_subscribed("%s" % analyst,
+                'subscribed': is_user_subscribed("%s" % user.username,
                                                  'Certificate', cert.id),
         }
 
@@ -71,7 +76,7 @@ def get_certificate_details(md5, analyst):
         objects = cert.sort_objects()
 
         #relationships
-        relationships = cert.sort_relationships("%s" % analyst, meta=True)
+        relationships = cert.sort_relationships("%s" % user.username, meta=True)
 
         # relationship
         relationship = {
@@ -81,10 +86,10 @@ def get_certificate_details(md5, analyst):
 
         #comments
         comments = {'comments': cert.get_comments(),
-                    'url_key': md5}
+                        'url_key': md5}
 
         #screenshots
-        screenshots = cert.get_screenshots(analyst)
+        screenshots = cert.get_screenshots(user.username)
 
         # services
         service_list = get_supported_services('Certificate')
@@ -100,7 +105,8 @@ def get_certificate_details(md5, analyst):
                 "subscription": subscription,
                 "screenshots": screenshots,
                 'service_results': service_results,
-                "cert": cert}
+                "cert": cert,
+                "CertificateACL": CertificateACL,}
 
     return template, args
 
@@ -205,8 +211,8 @@ def generate_cert_jtable(request, option):
                                   RequestContext(request))
 
 def handle_cert_file(filename, data, source_name, user=None,
-                     description=None, related_md5=None, method='', 
-                     reference='', relationship=None, bucket_list=None, 
+                     description=None, related_md5=None, method='',
+                     reference='', tlp=None, relationship=None, bucket_list=None,
                      ticket=None, related_id=None, related_type=None,
                      relationship_type=None):
     """
@@ -232,6 +238,8 @@ def handle_cert_file(filename, data, source_name, user=None,
     :type method: str
     :param reference: A reference to the source of this Certificate.
     :type reference: str
+    :param tlp: The TLP for this certificate.
+    :type tlp: str
     :param relationship: The relationship between the parent and the Certificate.
     :type relationship: str
     :param bucket_list: Bucket(s) to add to this Certificate
@@ -299,17 +307,26 @@ def handle_cert_file(filename, data, source_name, user=None,
 
     # generate source information and add to certificate
     if isinstance(source_name, basestring) and len(source_name) > 0:
-        s = create_embedded_source(source_name,
-                                   method=method,
-                                   reference=reference,
-                                   analyst=user)
+        if user.check_source_write(source_name):
+            s = create_embedded_source(source_name,
+                                             reference=reference,
+                                             method=method,
+                                             tlp=tlp,
+                                             analyst=user.username)
+        else:
+            return {"success": False,
+                    "message": "User does not have permission to add objects \
+                    using source %s." % str(source_name)}
+
         cert.add_source(s)
     elif isinstance(source_name, EmbeddedSource):
-        cert.add_source(source_name, method=method, reference=reference)
+        cert.add_source(source_name, method=method, reference=reference,
+                        tlp=tlp)
     elif isinstance(source_name, list) and len(source_name) > 0:
         for s in source_name:
             if isinstance(s, EmbeddedSource):
-                cert.add_source(s, method=method, reference=reference)
+                cert.add_source(s, method=method, reference=reference,
+                                tlp=tlp)
 
     if bucket_list:
         cert.add_bucket_list(bucket_list, user)
@@ -335,7 +352,7 @@ def handle_cert_file(filename, data, source_name, user=None,
             relationship=RelationshipTypes.inverse(relationship=relationship_type)
         if not relationship:
             relationship = RelationshipTypes.RELATED_TO
-            
+
         cert.add_relationship(related_obj,
                               relationship,
                               analyst=user,
@@ -363,12 +380,9 @@ def delete_cert(md5, username=None):
     :returns: True, False
     """
 
-    if is_admin(username):
-        cert = Certificate.objects(md5=md5).first()
-        if cert:
-            cert.delete(username=username)
-            return True
-        else:
-            return False
+    cert = Certificate.objects(md5=md5).first()
+    if cert:
+        cert.delete(username=username)
+        return True
     else:
         return False
