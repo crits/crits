@@ -14,7 +14,6 @@ from crits.backdoors.handlers import set_backdoor_version
 from crits.backdoors.handlers import generate_backdoor_csv
 from crits.backdoors.handlers import generate_backdoor_jtable
 from crits.core import form_consts
-from crits.core.user import CRITsUser
 from crits.core.data_tools import json_handler
 from crits.core.user_tools import user_can_view_data
 
@@ -66,7 +65,6 @@ def backdoor_detail(request, id_):
     template = "backdoor_detail.html"
     request.user._setup()
     user = request.user
-    user.get_access_list(update=True)
     if user.has_access_to(BackdoorACL.READ):
         (new_template, args) = get_backdoor_details(id_, user)
         if new_template:

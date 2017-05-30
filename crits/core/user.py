@@ -47,10 +47,8 @@ from mongoengine import DictField, DynamicEmbeddedDocument
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.hashers import check_password, make_password
-#from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
-#from django.contrib.auth.models import _user_has_module_perms
-from django.core.exceptions import ImproperlyConfigured
-from django.db import models
+from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
+from django.contrib.auth.models import _user_has_module_perms
 #from django.utils.translation import ugettext_lazy as _
 
 from crits.config.config import CRITsConfig
@@ -820,14 +818,14 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         # two-step ldap binding
         if len(config.ldap_bind_dn) > 0:
             try:
-            	logger.info("binding with bind_dn: %s" % config.ldap_bind_dn)
-            	l.simple_bind_s(config.ldap_bind_dn, config.ldap_bind_password)
-            	filter = '(|(cn='+self.username+')(uid='+self.username+')(mail='+self.username+'))'
-            	# use the retrieved dn for the second bind
-            	un = l.search_s(config.ldap_userdn,ldap.SCOPE_SUBTREE,filter,['dn'])[0][0]
+                logger.info("binding with bind_dn: %s" % config.ldap_bind_dn)
+                l.simple_bind_s(config.ldap_bind_dn, config.ldap_bind_password)
+                filter = '(|(cn='+self.username+')(uid='+self.username+')(mail='+self.username+'))'
+                # use the retrieved dn for the second bind
+                un = l.search_s(config.ldap_userdn,ldap.SCOPE_SUBTREE,filter,['dn'])[0][0]
             except Exception as err:
-            	#logger.error("Error binding to LDAP for: %s" % config.ldap_bind_dn)
-            	logger.error("Error in info_from_ldap: %s" % err)
+                #logger.error("Error binding to LDAP for: %s" % config.ldap_bind_dn)
+                logger.error("Error in info_from_ldap: %s" % err)
             l.unbind()
             if len(ldap_server) == 2:
                 l = ldap.initialize('%s:%s' % (url.unparse(),
@@ -876,7 +874,11 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
 
     def get_sources_list(self):
         # We always update to make sure we catch changes to a user's role list.
-        self.get_access_list(update=True)
+        # Made the ACL update optional as this was adding 10s to load times
+        # and over 400 reads from the DB. If this breaks something, we should
+        # fix it.
+        if self._meta['cached_acl'] is None:
+            self.get_access_list(update=True)
         return [s.name for s in self._meta['cached_acl'].sources]
 
     def check_source_tlp(self, object):
@@ -904,7 +906,6 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     def check_source_write(self, source):
         """
         """
-        user_source_names = self.get_sources_list()
         user_source_objects = self._meta['cached_acl'].sources
 
         for usource in user_source_objects:
@@ -1046,7 +1047,11 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                 attr = getattr(attr, a, False)
             except:
                 return False
-        self._meta['cached_acl'] = None
+        # Commenting this out. If it is included, it guarantees that every
+        # single call to this function will clear the cached ACL causing a new
+        # lookup every time. This added 3s to load time and over 150 reads to
+        # loading the dashboard alone.
+        #self._meta['cached_acl'] = None
         return attr
 
 class AuthenticationMiddleware(object):
