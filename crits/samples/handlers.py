@@ -1,4 +1,3 @@
-import copy
 import json
 import logging
 import os
@@ -35,7 +34,7 @@ from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_dele
 from crits.core.handlers import csv_export
 from crits.core.handsontable_tools import convert_handsontable_to_rows, parse_bulk_upload
 from crits.core.source_access import SourceAccess
-from crits.core.user_tools import user_sources
+from crits.core.user_tools import user_sources, get_user_organization
 from crits.core.user_tools import is_user_subscribed, is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.objects.handlers import object_array_to_dict
@@ -662,14 +661,15 @@ def unzip_file(filename, user=None, password=None, data=None, source=None,
             shutil.rmtree(extractdir)
     return samples
 
-def handle_file(filename, data, source, source_method='Generic', source_reference='',
-                source_tlp='', related_md5=None, related_id=None, related_type=None,
-                relationship_type=None, backdoor=None, user='', campaign=None,
-                confidence='low', md5_digest=None, sha1_digest=None,
-                sha256_digest=None, size=0, mimetype=None, bucket_list=None,
-                ticket=None, relationship=None, inherited_source=None,
-                is_validate_only=False, is_return_only_md5=True, cache={},
-                backdoor_name=None, backdoor_version=None, description=''):
+def handle_file(filename, data, source, source_method='', source_reference='',
+                source_tlp='', related_md5=None, related_id=None,
+                related_type=None, relationship_type=None, backdoor=None,
+                user='', campaign=None, confidence='low', md5_digest=None,
+                sha1_digest=None, sha256_digest=None, size=0, mimetype=None,
+                bucket_list=None, ticket=None, relationship=None,
+                inherited_source=None, is_validate_only=False,
+                is_return_only_md5=True, cache={}, backdoor_name=None,
+                backdoor_version=None, description=''):
     """
     Handle adding a file.
 
