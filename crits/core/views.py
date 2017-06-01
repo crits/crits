@@ -56,7 +56,7 @@ from crits.core.handlers import edit_role_description, edit_role_name
 from crits.core.handlers import modify_tlp, description_update, data_update
 from crits.core.handlers import do_add_preferred_actions, add_new_action
 from crits.core.handlers import action_add, action_remove, action_update
-from crits.core.handlers import get_action_types_for_tlo
+from crits.core.handlers import get_action_types_for_tlo, generate_audit_csv
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, user_sources
@@ -1914,12 +1914,14 @@ def audit_listing(request, option=None):
     :param request: Django request.
     :type request: :class:`django.http.HttpRequest`
     :param option: Action to take.
-    :type option: str of either 'jtlist', 'jtdelete', or 'inline'.
+    :type option: str of either 'csv', 'jtlist', 'jtdelete', or 'inline'.
     :returns: :class:`django.http.HttpResponse`
     """
 
     user = request.user
     if user.has_access_to(GeneralACL.CONTROL_PANEL_AUDIT_LOG_READ):
+        if option == "csv":
+            return generate_audit_csv(request)
         return generate_audit_jtable(request, option)
     else:
         error = "User does not have permission to view audit listing."
