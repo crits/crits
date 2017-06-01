@@ -3870,6 +3870,18 @@ def generate_counts_jtable(request, option):
                                   RequestContext(request))
 
 
+def generate_audit_csv(request):
+    """
+    Generate a CSV file of the audit log entries
+
+    :param request: The request for this CSV.
+    :type request: :class:`django.http.HttpRequest`
+    :returns: :class:`django.http.HttpResponse`
+    """
+
+    return csv_export(request, AuditLog)
+
+
 def generate_audit_jtable(request, option):
     """
     Generate the jtable data for audit log entries.
