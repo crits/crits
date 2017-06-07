@@ -8,6 +8,10 @@ from crits.core.data_tools import generate_qrcode
 from crits.core.totp import gen_user_secret
 
 from django.conf import settings
+from django.contrib.auth.views import logout_then_login
+
+from crits.vocabulary.acls import GeneralACL
+
 
 def is_user_favorite(analyst, type_, id_):
     """
@@ -33,7 +37,6 @@ def is_user_favorite(analyst, type_, id_):
                 return True
     return False
 
-
 def user_sources(username):
     """
     Get the sources for a user.
@@ -49,13 +52,55 @@ def user_sources(username):
         try:
             user = CRITsUser.objects(username=username).first()
             if user:
-                return user.sources
+                return user.get_sources_list()
             else:
                 return []
         except Exception:
             return []
     else:
         return []
+
+def get_user_role(username):
+    from crits.core.role import Role
+    user = get_user_info(username)
+    roles = Role.objects(name=user.roles[0])
+    return roles
+
+def get_acl_object(crits_type):
+    from crits.vocabulary.acls import *
+    if crits_type == 'Actor':
+        return ActorACL
+    elif crits_type == 'Backdoor':
+        return BackdoorACL
+    elif crits_type == 'Campaign':
+        return CampaignACL
+    elif crits_type == 'Certificate':
+        return CertificateACL
+    elif crits_type == 'Domain':
+        return DomainACL
+    elif crits_type == 'Email':
+        return EmailACL
+    elif crits_type == 'Event':
+        return EventACL
+    elif crits_type == 'Exploit':
+        return ExploitACL
+    elif crits_type == 'Indicator':
+        return IndicatorACL
+    elif crits_type == 'IP':
+        return IPACL
+    elif crits_type == 'PCAP':
+        return PCAPACL
+    elif crits_type == 'RawData':
+        return RawDataACL
+    elif crits_type == 'Sample':
+        return SampleACL
+    elif crits_type == 'Screenshot':
+        return ScreenshotACL
+    elif crits_type == 'Signature':
+        return SignatureACL
+    elif crits_type == 'Target':
+        return TargetACL
+
 
 def sanitize_sources(username, items):
     """
@@ -94,37 +139,6 @@ def get_user_organization(username):
     else:
         return settings.COMPANY_NAME
 
-def is_admin(username):
-    """
-    Determine if the user is an admin.
-
-    :param username: The user to lookup.
-    :type username: str
-    :returns: True, False
-    """
-
-    from crits.core.user import CRITsUser
-    username = str(username)
-    user = CRITsUser.objects(username=username).first()
-    if user:
-        if user.role == "Administrator":
-            return True
-    return False
-
-def get_user_role(username):
-    """
-    Get the user role.
-
-    :param username: The user to lookup.
-    :type username: str
-    :returns: str
-    """
-
-    from crits.core.user import CRITsUser
-    username = str(username)
-    user = CRITsUser.objects(username=username).first()
-    return user.role
-
 def user_can_view_data(user):
     """
     Determine if the user is active and authenticated.
@@ -133,25 +147,13 @@ def user_can_view_data(user):
     :type user: str
     :returns: True, False
     """
-
     if user.is_active:
-        return user.is_authenticated()
+        if user.has_access_to(GeneralACL.WEB_INTERFACE):
+            return user.is_authenticated()
+        else:
+            return False
     else:
         return False
-
-def user_is_admin(user):
-    """
-    Determine if the user is an admin and authenticated and active.
-
-    :param user: The user to lookup.
-    :type user: str
-    :returns: True, False
-    """
-
-    if user.is_active:
-        if user.is_authenticated():
-            return is_admin(user)
-    return False
 
 def get_user_list():
     """
@@ -184,31 +186,6 @@ def get_user_info(username=None):
         return CRITsUser.objects(username=username).first()
     else:
         return username
-
-def add_new_user_role(name, analyst):
-    """
-    Add a new user role to the system.
-
-    :param name: The name of the role.
-    :type name: str
-    :param analyst: The user adding the role.
-    :type analyst: str
-    :returns: True, False
-    """
-
-    from crits.core.user_role import UserRole
-    name = name.strip()
-    role = UserRole.objects(name=name).first()
-    if not role:
-        role = UserRole()
-        role.name = name
-        try:
-            role.save(username=analyst)
-            return True
-        except ValidationError:
-            return False
-    else:
-        return False
 
 def get_user_email_notification(username):
     """

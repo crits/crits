@@ -130,13 +130,6 @@ def prep_sources():
 
     pass
 
-def prep_user_roles():
-    """
-    Migrate user roles.
-    """
-
-    pass
-
 def prep_yarahits():
     """
     Migrate yara hits.

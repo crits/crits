@@ -31,6 +31,7 @@ from crits.relationships.handlers import forge_relationship
 from crits.services.handlers import run_triage, get_supported_services
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import DomainACL
 
 def get_valid_root_domain(domain):
     """
@@ -61,21 +62,25 @@ def get_valid_root_domain(domain):
 
     return (root, fqdn, error)
 
-def get_domain_details(domain, analyst):
+def get_domain_details(domain, user):
     """
     Generate the data to render the Domain details template.
 
     :param domain: The name of the Domain to get details for.
     :type domain: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: str
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    allowed_sources = user_sources(analyst)
+    allowed_sources = user_sources(user)
     dmain = Domain.objects(domain=domain,
                            source__name__in=allowed_sources).first()
+
+    if not user.check_source_tlp(dmain):
+        dmain = None
+
     if not dmain:
         error = ("Either no data exists for this domain"
                  " or you do not have permission to view it.")
@@ -83,17 +88,18 @@ def get_domain_details(domain, analyst):
         args = {'error': error}
         return template, args
 
-    dmain.sanitize_sources(username="%s" % analyst,
+    dmain.sanitize(username="%s" % user,
                            sources=allowed_sources)
 
+
     # remove pending notifications for user
-    remove_user_from_notification("%s" % analyst, dmain.id, 'Domain')
+    remove_user_from_notification("%s" % user, dmain.id, 'Domain')
 
     # subscription
     subscription = {
             'type': 'Domain',
             'id': dmain.id,
-            'subscribed': is_user_subscribed("%s" % analyst,
+            'subscribed': is_user_subscribed("%s" % user,
                                              'Domain',
                                              dmain.id),
     }
@@ -102,7 +108,7 @@ def get_domain_details(domain, analyst):
     objects = dmain.sort_objects()
 
     #relationships
-    relationships = dmain.sort_relationships("%s" % analyst, meta=True)
+    relationships = dmain.sort_relationships("%s" % user, meta=True)
 
     # relationship
     relationship = {
@@ -115,10 +121,10 @@ def get_domain_details(domain, analyst):
                 'url_key':dmain.domain}
 
     #screenshots
-    screenshots = dmain.get_screenshots(analyst)
+    screenshots = dmain.get_screenshots(user)
 
     # favorites
-    favorite = is_user_favorite("%s" % analyst, 'Domain', dmain.id)
+    favorite = is_user_favorite("%s" % user, 'Domain', dmain.id)
 
     # services
     service_list = get_supported_services('Domain')
@@ -135,7 +141,8 @@ def get_domain_details(domain, analyst):
             'screenshots': screenshots,
             'domain': dmain,
             'service_list': service_list,
-            'service_results': service_results}
+            'service_results': service_results,
+            'DomainACL': DomainACL}
 
     return template, args
 
@@ -348,26 +355,34 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
             result_cache[domain.lower()] = True
 
     elif not errors:
-        username = request.user.username
-        reference = data.get('domain_reference')
-        source_name = data.get('domain_source')
-        method = data.get('domain_method')
-        source = [create_embedded_source(source_name, reference=reference,
-                                         method=method, analyst=username)]
+        user = request.user
+        reference = data.get('source_reference')
+        source_name = data.get('source_name')
+        method = data.get('source_method')
+        tlp = data.get('source_tlp')
         bucket_list = data.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
         ticket = data.get(form_consts.Common.TICKET_VARIABLE_NAME)
         related_id = data.get('related_id')
         related_type = data.get('related_type')
         relationship_type = data.get('relationship_type')
 
+        if user.check_source_write(source_name):
+            source = [create_embedded_source(source_name, reference=reference,
+                                             method=method, tlp=tlp, analyst=user.username)]
+        else:
+            result =  {"success": False,
+                    "message": "User does not have permission to add objects \
+                    using source %s." % str(source_name)}
+
+            return False, False, result
         if data.get('campaign') and data.get('confidence'):
             campaign = [EmbeddedCampaign(name=data.get('campaign'),
                                          confidence=data.get('confidence'),
-                                         analyst=username)]
+                                         analyst=user.username)]
         else:
             campaign = []
 
-        retVal = upsert_domain(domain, source, username, campaign,
+        retVal = upsert_domain(domain, source, user.username, campaign,
                                bucket_list=bucket_list, ticket=ticket, cache=cache, related_id=related_id, related_type=related_type, relationship_type=relationship_type)
 
         if not retVal['success']:
@@ -382,18 +397,21 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     ip_source = source_name
                     ip_method = method
                     ip_reference = reference
+                    ip_tlp = tlp
                 else:
                     ip_source = data.get('ip_source')
                     ip_method = data.get('ip_method')
                     ip_reference = data.get('ip_reference')
+                    ip_tlp = data.get('ip_tlp')
                 from crits.ips.handlers import ip_add_update
                 ip_result = ip_add_update(ip,
                                           ip_type,
-                                          ip_source,
-                                          ip_method,
-                                          ip_reference,
+                                          source=ip_source,
+                                          source_method=ip_method,
+                                          source_reference=ip_reference,
+                                          source_tlp=ip_tlp,
                                           campaign=campaign,
-                                          analyst=username,
+                                          user=user,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
                                           cache=cache)
@@ -405,9 +423,9 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     if new_domain and new_ip:
                         new_domain.add_relationship(new_ip,
                                                     RelationshipTypes.RESOLVED_TO,
-                                                    analyst=username,
+                                                    analyst=user.username,
                                                     get_rels=False)
-                        new_domain.save(username=username)
+                        new_domain.save(username=user.username)
 
             #set the URL for viewing the new data
             resp_url = reverse('crits.domains.views.domain_detail', args=[domain])
@@ -429,8 +447,9 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     ip = ip_result['object']
                     result = create_indicator_from_tlo('IP',
                                                        ip,
-                                                       username,
+                                                       user,
                                                        ip_source,
+                                                       source_tlp=ip_tlp,
                                                        add_domain=False)
                     ip_ind = result.get('indicator')
                     if not result['success']:
@@ -439,8 +458,9 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                 # Add an indicator for the domain.
                 result = create_indicator_from_tlo('Domain',
                                                    new_domain,
-                                                   username,
+                                                   user,
                                                    source_name,
+                                                   source_tlp=tlp,
                                                    add_domain=False)
 
                 if not result['success']:
@@ -449,7 +469,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                     forge_relationship(class_=result['indicator'],
                                        right_class=ip_ind,
                                        rel_type=RelationshipTypes.RESOLVED_TO,
-                                       user=username)
+                                       user=user.username)
             result = True
 
     # This block validates, and may also add, objects to the Domain
@@ -551,6 +571,7 @@ def upsert_domain(domain, source, username=None, campaign=None,
               "object" the domain that was added,
               "is_domain_new" (boolean)
     """
+
 
     # validate domain and grab root domain
     (root, domain, error) = get_valid_root_domain(domain)
@@ -688,7 +709,7 @@ def upsert_domain(domain, source, username=None, campaign=None,
                                          analyst=username,
                                          get_rels=False)
             root_domain.save(username=username)
-    
+
     # run domain triage
     if is_fqdn_domain_new:
         fqdn_domain.reload()
@@ -718,6 +739,7 @@ def update_tlds(data=None):
     while line:
         line = line.rstrip()
         if line and not line.startswith('//'):
+            line = line.replace("*.", "")
             TLD.objects(tld=line).update_one(set__tld=line, upsert=True)
         line = data.readline()
 
@@ -797,9 +819,10 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
     domain_name = rowData.get(form_consts.Domain.DOMAIN_NAME, "").strip();
     campaign = rowData.get(form_consts.Domain.CAMPAIGN, "")
     confidence = rowData.get(form_consts.Domain.CAMPAIGN_CONFIDENCE, "")
-    domain_source = rowData.get(form_consts.Domain.DOMAIN_SOURCE, "")
-    domain_method = rowData.get(form_consts.Domain.DOMAIN_METHOD, "")
-    domain_reference = rowData.get(form_consts.Domain.DOMAIN_REFERENCE, "")
+    source = rowData.get(form_consts.Domain.DOMAIN_SOURCE, "")
+    method = rowData.get(form_consts.Domain.DOMAIN_METHOD, "")
+    reference = rowData.get(form_consts.Domain.DOMAIN_REFERENCE, "")
+    tlp = rowData.get(form_consts.Common.SOURCE_TLP, "")
     #is_add_ip = convert_string_to_bool(rowData.get(form_consts.Domain.ADD_IP_ADDRESS, ""))
     is_add_ip = False
 
@@ -811,21 +834,23 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
     ip_source = rowData.get(form_consts.Domain.IP_SOURCE, "")
     ip_method = rowData.get(form_consts.Domain.IP_METHOD, "")
     ip_reference = rowData.get(form_consts.Domain.IP_REFERENCE, "")
+    ip_tlp = rowData.get(form_consts.Domain.IP_TLP, "")
     is_add_indicators = convert_string_to_bool(rowData.get(form_consts.Domain.ADD_INDICATORS, "False"))
 
     bucket_list = rowData.get(form_consts.Common.BUCKET_LIST, "")
     ticket = rowData.get(form_consts.Common.TICKET, "")
 
-    if(ip or created or ip_source or ip_method or ip_reference):
+    if(ip or created or ip_source or ip_method or ip_reference or ip_tlp):
         is_add_ip = True
 
     if is_add_ip == True:
         data = {'domain': domain_name,
                 'campaign': campaign,
                 'confidence': confidence,
-                'domain_source': domain_source,
-                'domain_method': domain_method,
-                'domain_reference': domain_reference,
+                'source_name': source,
+                'source_method': method,
+                'source_reference': reference,
+                'source_tlp': tlp,
                 'add_ip': is_add_ip,
                 'ip': ip,
                 'ip_type': ip_type,
@@ -834,6 +859,7 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
                 'ip_source': ip_source,
                 'ip_method': ip_method,
                 'ip_reference': ip_reference,
+                'ip_tlp': ip_tlp,
                 'add_indicators': is_add_indicators,
                 'bucket_list': bucket_list,
                 'ticket': ticket}
@@ -849,9 +875,10 @@ def parse_row_to_bound_domain_form(request, rowData, cache):
         data = {'domain': domain_name,
                 'campaign': campaign,
                 'confidence': confidence,
-                'domain_source': domain_source,
-                'domain_method': domain_method,
-                'domain_reference': domain_reference,
+                'source_name': source,
+                'source_method': method,
+                'source_reference': reference,
+                'source_tlp': tlp,
                 'add_ip': is_add_ip,
                 'bucket_list': bucket_list,
                 'ticket': ticket}

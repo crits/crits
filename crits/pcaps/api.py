@@ -7,6 +7,8 @@ from crits.pcaps.handlers import handle_pcap_file
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import PCAPACL
+
 
 class PCAPResource(CRITsAPIResource):
     """
@@ -45,7 +47,7 @@ class PCAPResource(CRITsAPIResource):
         :returns: HttpResponse.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         file_ = bundle.data.get('filedata', None)
 
         content = {'return_code': 1,
@@ -60,6 +62,7 @@ class PCAPResource(CRITsAPIResource):
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', None)
         reference = bundle.data.get('reference', None)
+        tlp = bundle.data.get('tlp', 'amber')
         description = bundle.data.get('description', None)
         relationship = bundle.data.get('relationship', None)
         related_id = bundle.data.get('related_id', None)
@@ -68,16 +71,21 @@ class PCAPResource(CRITsAPIResource):
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
+        if not user.has_access_to(PCAPACL.WRITE):
+            content['message'] = 'User does not have permission to create Object.'
+            self.crits_response(content)
+            
         result = handle_pcap_file(filename,
                                   filedata,
                                   source,
-                                  analyst,
+                                  user,
                                   description,
                                   related_id=related_id,
                                   related_md5=related_md5,
                                   related_type = related_type,
                                   method=method,
                                   reference=reference,
+                                  tlp=tlp,
                                   relationship=relationship,
                                   bucket_list=bucket_list,
                                   ticket=ticket)

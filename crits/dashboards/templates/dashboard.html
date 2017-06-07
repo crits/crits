@@ -325,7 +325,7 @@
 	            var editUrl = '{% url "crits.dashboards.views.edit_save_search" table.id %}';
 	            {% if table.sortBy %}
 	                var sortField = '{{table.sortBy.field}}';
-	                var sortDirection = '{{table.sortBy.field}}';
+	                var sortDirection = '{{table.sortBy.direction}}';
 	            {% endif %}
 	            {% if table.isHereByDefault %}
 	                isDefault = true;

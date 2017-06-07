@@ -7,6 +7,8 @@ from crits.domains.handlers import add_new_domain
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import DomainACL
+
 
 class DomainResource(CRITsAPIResource):
     """
@@ -45,11 +47,14 @@ class DomainResource(CRITsAPIResource):
         """
 
         request = bundle.request
+
+        user = request.user
         # Domain and source information
         domain = bundle.data.get('domain', None)
         name = bundle.data.get('source', None)
         reference = bundle.data.get('reference', None)
         method = bundle.data.get('method', None)
+        tlp = bundle.data.get('tlp', 'amber')
         # Campaign information
         campaign = bundle.data.get('campaign', None)
         confidence = bundle.data.get('confidence', None)
@@ -61,14 +66,16 @@ class DomainResource(CRITsAPIResource):
         ip_source = bundle.data.get('ip_source', None)
         ip_method = bundle.data.get('ip_method', None)
         ip_reference = bundle.data.get('ip_reference', None)
+        ip_tlp = bundle.data.get('ip_tlp', 'amber')
         # Also add indicators
         add_indicators = bundle.data.get('add_indicators', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
 
-        data = {'domain_reference': reference,
-                'domain_source': name,
-                'domain_method': method,
+        data = {'source_reference': reference,
+                'source_name': name,
+                'source_method': method,
+                'source_tlp':tlp,
                 'confidence': confidence,
                 'campaign': campaign,
                 'domain': domain,
@@ -76,6 +83,7 @@ class DomainResource(CRITsAPIResource):
                 'ip_source': ip_source,
                 'ip_method': ip_method,
                 'ip_reference': ip_reference,
+                'ip_tlp': ip_tlp,
                 'add_ip': add_ip,
                 'ip': ip,
                 'ip_type': ip_type,
@@ -92,9 +100,15 @@ class DomainResource(CRITsAPIResource):
         # The empty list is necessary. The function requires a list of
         # non-fatal errors so it can be added to if any other errors
         # occur. Since we have none, we pass the empty list.
-        (result, errors, retVal) =  add_new_domain(data,
-                                                   request,
-                                                   [])
+        if user.has_access_to(DomainACL.WRITE):
+            (result, errors, retVal) =  add_new_domain(data,
+                                                       request,
+                                                       [])
+        else:
+            result = False
+            errors = False
+            retVal = {'success':False,
+                      'message':'User does not have permission to create Object.'}
         if not 'message' in retVal:
             retVal['message'] = ""
         elif not isinstance(retVal['message'], basestring):

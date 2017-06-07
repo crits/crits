@@ -8,7 +8,6 @@ from django.template import RequestContext
 
 from crits.core.handlers import get_item_names
 from crits.core.user_tools import user_can_view_data
-from crits.core.user_tools import user_is_admin
 from crits.raw_data.forms import UploadRawDataFileForm, UploadRawDataForm
 from crits.raw_data.forms import NewRawDataTypeForm
 from crits.raw_data.handlers import update_raw_data_tool_details
@@ -27,6 +26,8 @@ from crits.raw_data.handlers import delete_highlight
 from crits.raw_data.handlers import update_raw_data_highlight_date
 from crits.raw_data.raw_data import RawDataType
 
+from crits.vocabulary.acls import RawDataACL, GeneralACL
+
 @user_passes_test(user_can_view_data)
 def raw_data_listing(request,option=None):
     """
@@ -39,9 +40,17 @@ def raw_data_listing(request,option=None):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    if option == "csv":
-        return generate_raw_data_csv(request)
-    return generate_raw_data_jtable(request, option)
+    user = request.user
+
+    if user.has_access_to(RawDataACL.READ):
+        if option == "csv":
+            return generate_raw_data_csv(request)
+        return generate_raw_data_jtable(request, option)
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Raw Data listing.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def set_raw_data_tool_details(request, _id):
@@ -306,13 +315,20 @@ def raw_data_details(request, _id):
     """
 
     template = 'raw_data_details.html'
-    analyst = request.user.username
-    (new_template, args) = get_raw_data_details(_id, analyst)
-    if new_template:
-        template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    user = request.user
+
+    if user.has_access_to(RawDataACL.READ):
+        (new_template, args) = get_raw_data_details(_id, user)
+        if new_template:
+            template = new_template
+        return render_to_response(template,
+                                  args,
+                                  RequestContext(request))
+    else:
+        return render_to_response("error.html",
+                                  {'error': 'User does not have permission to view Raw Data Details.'},
+                                  RequestContext(request))
+
 
 @user_passes_test(user_can_view_data)
 def details_by_link(request, link):
@@ -355,8 +371,8 @@ def upload_raw_data(request, link_id=None):
             data = request.POST.get('data', None)
             has_file = False
         if form.is_valid():
-            source = form.cleaned_data.get('source')
-            user = request.user.username
+            source = form.cleaned_data.get('source_name')
+            user = request.user
             description = form.cleaned_data.get('description', '')
             title = form.cleaned_data.get('title', None)
             tool_name = form.cleaned_data.get('tool_name', '')
@@ -367,8 +383,9 @@ def upload_raw_data(request, link_id=None):
             link_id = link_id
             bucket_list = form.cleaned_data.get('bucket_list')
             ticket = form.cleaned_data.get('ticket')
-            method = form.cleaned_data.get('method', '') or 'Upload'
-            reference = form.cleaned_data.get('reference', '')
+            method = form.cleaned_data.get('source_method', '') or 'Upload'
+            reference = form.cleaned_data.get('source_reference', '')
+            tlp = form.cleaned_data.get('source_tlp', '')
             related_id = form.cleaned_data.get('related_id', '')
             related_type = form.cleaned_data.get('related_type', '')
             relationship_type = form.cleaned_data.get('relationship_type')
@@ -378,13 +395,14 @@ def upload_raw_data(request, link_id=None):
                                           link_id,
                                           method=method,
                                           reference=reference,
+                                          tlp=tlp,
                                           copy_rels=copy_rels,
                                           bucket_list=bucket_list,
                                           ticket=ticket,
                                           related_id=related_id,
                                           related_type=related_type,
                                           relationship_type=relationship_type)
-            
+
 
             if status['success']:
                 jdump = json.dumps({
@@ -417,7 +435,7 @@ def upload_raw_data(request, link_id=None):
                                   {'error': "Expected POST."},
                                   RequestContext(request))
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def remove_raw_data(request, _id):
     """
     Remove RawData from CRITs.
@@ -448,15 +466,19 @@ def new_raw_data_type(request):
 
     if request.method == 'POST' and request.is_ajax():
         form = NewRawDataTypeForm(request.POST)
-        analyst = request.user.username
+        user = request.user
         if form.is_valid():
-            result = add_new_raw_data_type(form.cleaned_data['data_type'],
-                                           analyst)
-            if result:
-                message = {'message': '<div>Raw Data Type added successfully!</div>',
-                           'success': True}
+            if user.has_access_to(GeneralACL.ADD_NEW_RAW_DATA_TYPE):
+                result = add_new_raw_data_type(form.cleaned_data['data_type'],
+                                               user)
+                if result:
+                    message = {'message': '<div>Raw Data Type added successfully!</div>',
+                               'success': True}
+                else:
+                    message = {'message': '<div>Raw Data Type addition failed!</div>',
+                               'success': False}
             else:
-                message = {'message': '<div>Raw Data Type addition failed!</div>',
+                message = {'message': 'User does not have permission to add raw data type.',
                            'success': False}
         else:
             message = {'form': form.as_table()}

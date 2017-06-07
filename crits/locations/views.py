@@ -12,7 +12,7 @@ from crits.locations.handlers import (
     get_location_names_list,
     location_edit
 )
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_acl_object
 
 
 @user_passes_test(user_can_view_data)
@@ -54,15 +54,22 @@ def add_location(request, type_, id_):
             description = data['description']
             latitude = data['latitude']
             longitude = data['longitude']
-            user = request.user.username
-            result = location_add(id_,
-                                  type_,
-                                  location_type,
-                                  location_name,
-                                  user,
-                                  description=description,
-                                  latitude=latitude,
-                                  longitude=longitude)
+            user = request.user
+            acl = get_acl_object(type_)
+
+            if user.has_access_to(acl.LOCATIONS_ADD):
+                result = location_add(id_,
+                                      type_,
+                                      location_type,
+                                      location_name,
+                                      user,
+                                      description=description,
+                                      latitude=latitude,
+                                      longitude=longitude)
+            else:
+                result = {"success":False,
+                          "message":"User does not have permission to add locations."}
+
             if result['success']:
                 return HttpResponse(json.dumps(result),
                                     content_type="application/json")
@@ -94,13 +101,21 @@ def remove_location(request, type_, id_):
         location_name = data.get('key').split('|')[0]
         location_type = data.get('key').split('|')[1]
         date = data.get('key').split('|')[2]
-        result = location_remove(id_,
-                                 type_,
-                                 location_name=location_name,
-                                 location_type=location_type,
-                                 date=date,
-                                 user=request.user.username)
-        return HttpResponse(json.dumps(result), content_type="application/json")
+        user = request.user
+        acl = get_acl_object(type_)
+
+        if user.has_access_to(acl.LOCATIONS_DELETE):
+            result = location_remove(id_,
+                                     type_,
+                                     location_name=location_name,
+                                     location_type=location_type,
+                                     date=date,
+                                     user=request.user.username)
+            return HttpResponse(json.dumps(result), content_type="application/json")
+        else:
+            result = {"success":False,
+                      "message":"User does not have permission to remove location."}
+            return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         return render_to_response("error.html",
                                   {"error": 'Expected AJAX POST.'},
@@ -123,17 +138,24 @@ def edit_location(request, type_, id_):
         description = request.POST.get('description', None)
         latitude = request.POST.get('latitude', None)
         longitude = request.POST.get('longitude', None)
-        user = request.user.username
-        return HttpResponse(json.dumps(location_edit(type_,
-                                                     id_,
-                                                     location_name,
-                                                     location_type,
-                                                     date,
-                                                     user,
-                                                     description=description,
-                                                     latitude=latitude,
-                                                     longitude=longitude)),
-                            content_type="application/json")
+        user = request.user
+        acl = get_acl_object(type_)
+
+        if user.has_access_to(acl.LOCATIONS_EDIT):
+            return HttpResponse(json.dumps(location_edit(type_,
+                                                         id_,
+                                                         location_name,
+                                                         location_type,
+                                                         date,
+                                                         user,
+                                                         description=description,
+                                                         latitude=latitude,
+                                                         longitude=longitude)),
+                                content_type="application/json")
+        else:
+            result = {"success":False,
+                      "message":"User does not have permission to edit location."}
+            return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected POST"
         return render_to_response("error.html",

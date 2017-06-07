@@ -1,0 +1,51 @@
+<link rel="stylesheet" href="/css/jquery.simplecolorpicker.css"></style>
+<script>
+    var tlp_modify = "{% url 'crits.core.views.tlp_modify' %}";
+</script>
+<tr>
+    <td class="key">TLP Sharing
+        <span style="float: right; display: none;" id="tlp_success"></span>
+    </td>
+    <td>
+        <select name="colorpicker">
+            <option id="tlpwhite" value="#ffffff" {% if tlp == 'white' %} selected=selected {% endif %}>White</option>
+            <optgroup label="----------"></optgroup>
+            <option id="tlpgreen" value="#00ff00" {% if tlp == 'green' %} selected=selected {% endif %}>Green</option>
+            <optgroup label="----------"></optgroup>
+            <option id="tlpamber" value="#ffcc22" {% if tlp == 'amber' %} selected=selected {% endif %}>Amber</option>
+            <optgroup label="----------"></optgroup>
+            <option id="tlpred" value="#ff0000" {% if tlp == 'red' %} selected=selected {% endif %}>Red</option>
+        </select>
+    </td>
+</tr>
+<script type="text/javascript" src="/js/jquery.simplecolorpicker.js"></script>
+<script type="text/javascript">
+    // track current TLP
+    var current_tlp = '{{tlp}}';
+    $('select[name="colorpicker"]').simplecolorpicker({
+        picker: true,
+    }).on('change', function(e) {
+        // Bit of a hack to prevent the color from switching even if it fails
+        // to set properly on the backend.
+        var res = modify_tlp('{{subscription.type}}', '{{subscription.id}}', $('select[name="colorpicker"]').val());
+        if (!res) {
+            // reset to the last successful TLP value
+            reset_tlp_color($('select[name="colorpicker"]'), current_tlp);
+            $('#tlp_success').css('display', 'block')
+            .addClass('ui-icon')
+            .addClass('ui-icon-alert')
+            .removeClass('ui-icon-check')
+            .attr('title', "Cannot set a TLP less restrictive than minimum!");
+        } else {
+            $('#tlp_success').css('display', 'block')
+            .addClass('ui-icon')
+            .addClass('ui-icon-check')
+            .removeClass('ui-icon-alert')
+            .attr('title', "Success!");
+            // set new TLP value as current
+            current_tlp = $(this).find('option:selected').text().toLowerCase();
+        };
+    });
+    $('span.simplecolorpicker.picker').css('background-color', '#bbbbbb')
+    .css('min-width', '50px');
+</script>

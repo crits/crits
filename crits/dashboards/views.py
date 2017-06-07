@@ -210,7 +210,7 @@ def get_dashboard_table_data(request, tableName):
     Ajax call to get the records for a default dashboard table.
     Only called from the saved_search.html when editing the table
     """
-    response  = getRecordsForDefaultDashboardTable(request.user.username, tableName)
+    response  = getRecordsForDefaultDashboardTable(request.user, tableName)
     return httpResponse(response)
 
 @user_passes_test(user_can_view_data)

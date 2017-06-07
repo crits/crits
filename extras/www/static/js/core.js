@@ -194,6 +194,35 @@ function get_stored_item_data(url) {
     }
 }
 
+function modify_tlp(itype, oid, tlp) {
+    var res = false;
+    $.ajax({
+        type: "POST",
+        url: tlp_modify,
+        async: false,
+        data: {
+            'tlp': tlp,
+            'oid': oid,
+            'itype': itype
+        },
+        datatype: 'json',
+        success: function(data) {
+            res = data.success;
+        }
+    });
+    return res;
+}
+
+function reset_tlp_color(e, tlp) {
+    d = {
+        white: '#ffffff',
+        green: '#00ff00',
+        amber: '#ffcc22',
+        red: '#ff0000'
+    }
+    e.simplecolorpicker('selectColor', d[tlp]);
+}
+
 function getUserSources(user) {
   $.ajax({
       type: "POST",
@@ -750,21 +779,31 @@ $(document).ready(function() {
 
     $(document).mouseup(function(e) {
         var selected = getSelected();
-        if (selected.toString().length > 0) {
-            selected_text = selected.toString()
-            var span = $('<span>')
-            .attr('id', 'tmpSelectedNode');
-            var range = selected.getRangeAt(0);
-            range.insertNode($(span).get(0));
-            var position = $('#tmpSelectedNode').position();
-            var fspan = $('#selectedNodeMenu')
-            .css('top', position.top)
-            .css('left', position.left)
-            .attr('data-selected', selected_text)
-            .show();
-            $('#tmpSelectedNode').remove();
-        } else {
+        if (selected.toString().length == 0) {
             $('#selectedNodeMenu').hide();
+        }
+    });
+
+    $(document).on('keydown', function(e){
+        if (e.altKey){
+            var selected = getSelected();
+            if (selected.toString().length > 0) {
+                selected_text = selected.toString()
+                var span = $('<span>')
+                .attr('id', 'tmpSelectedNode');
+                var range = selected.getRangeAt(0);
+                range.insertNode($(span).get(0));
+                var position = $('#tmpSelectedNode').position();
+                var fspan = $('#selectedNodeMenu')
+                .css('top', position.top)
+                .css('left', position.left)
+                .attr('data-selected', selected_text)
+                //.show();
+                .toggle();
+                $('#tmpSelectedNode').remove();
+            } else {
+                $('#selectedNodeMenu').hide();
+            }
         }
     });
 

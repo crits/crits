@@ -1,17 +1,21 @@
-from django.conf import settings
 from django import forms
-
+from django.conf import settings
 from crits.campaigns.campaign import Campaign
+from crits.core.forms import (
+    add_bucketlist_to_form,
+    add_ticket_to_form,
+    SourceInForm)
 from crits.core import form_consts
-from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
 from crits.core.widgets import CalWidget
-from crits.core.handlers import get_source_names, get_item_names
+from crits.core.handlers import get_item_names
+from crits.core.handlers import get_source_names
 from crits.core.user_tools import get_user_organization
 from crits.vocabulary.indicators import (
     IndicatorTypes,
     IndicatorThreatTypes,
     IndicatorAttackTypes
 )
+from crits.vocabulary.acls import Common, IndicatorACL
 
 from crits.vocabulary.relationships import RelationshipTypes
 from crits.vocabulary.status import Status
@@ -22,7 +26,6 @@ class IndicatorActivityForm(forms.Form):
     """
     Django form for adding activity.
     """
-
     error_css_class = 'error'
     required_css_class = 'required'
     description = forms.CharField(
@@ -47,7 +50,7 @@ class IndicatorActivityForm(forms.Form):
                                         'readonly': 'readonly',
                                         'id': 'id_activity_date'}))
 
-class UploadIndicatorCSVForm(forms.Form):
+class UploadIndicatorCSVForm(SourceInForm):
     """
     Django form for uploading Indicators via a CSV file.
     """
@@ -55,18 +58,6 @@ class UploadIndicatorCSVForm(forms.Form):
     error_css_class = 'error'
     required_css_class = 'required'
     filedata = forms.FileField()
-    source = forms.ChoiceField(
-        widget=forms.Select(attrs={'class': 'no_clear'}),
-        label=form_consts.Indicator.SOURCE,
-        required=True)
-    method = forms.CharField(
-        widget=forms.TextInput,
-        label=form_consts.Indicator.SOURCE_METHOD,
-        required=False)
-    reference = forms.CharField(
-        widget=forms.TextInput(attrs={'size': '90'}),
-        label=form_consts.Indicator.SOURCE_REFERENCE,
-        required=False)
     related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
     related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
@@ -74,32 +65,17 @@ class UploadIndicatorCSVForm(forms.Form):
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
-        super(UploadIndicatorCSVForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [
-            (c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(UploadIndicatorCSVForm, self).__init__(username, *args, **kwargs)
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
-class UploadIndicatorTextForm(forms.Form):
+class UploadIndicatorTextForm(SourceInForm):
     """
     Django form for uploading Indicators via a CSV blob.
     """
 
     error_css_class = 'error'
     required_css_class = 'required'
-    source = forms.ChoiceField(
-        widget=forms.Select(attrs={'class': 'no_clear'}),
-        label=form_consts.Indicator.SOURCE,
-        required=True)
-    method = forms.CharField(
-        widget=forms.TextInput,
-        label=form_consts.Indicator.SOURCE_METHOD,
-        required=False)
-    reference = forms.CharField(
-        widget=forms.TextInput(attrs={'size': '90'}),
-        label=form_consts.Indicator.SOURCE_REFERENCE,
-        required=False)
     data = forms.CharField(
         widget=forms.Textarea(attrs={'cols': '80', 'rows': '20'}),
         required=True)
@@ -110,16 +86,13 @@ class UploadIndicatorTextForm(forms.Form):
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
-        super(UploadIndicatorTextForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [
-            (c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(UploadIndicatorTextForm, self).__init__(username, *args, **kwargs)
         dt = "Indicator, Type, Threat Type, Attack Type, Description, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action, Status\n"
         self.fields['data'].initial = dt
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
-class UploadIndicatorForm(forms.Form):
+class UploadIndicatorForm(SourceInForm):
     """
     Django form for uploading a single Indicator.
     """
@@ -140,18 +113,6 @@ class UploadIndicatorForm(forms.Form):
     impact = forms.ChoiceField(widget=forms.Select, required=True)
     campaign = forms.ChoiceField(widget=forms.Select, required=False)
     campaign_confidence = forms.ChoiceField(widget=forms.Select, required=False)
-    source = forms.ChoiceField(
-        widget=forms.Select(attrs={'class': 'no_clear'}),
-        label=form_consts.Indicator.SOURCE,
-        required=True)
-    method = forms.CharField(
-        widget=forms.TextInput,
-        label=form_consts.Indicator.SOURCE_METHOD,
-        required=False)
-    reference = forms.CharField(
-        widget=forms.TextInput(attrs={'size': '90'}),
-        label=form_consts.Indicator.SOURCE_REFERENCE,
-        required=False)
     related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
     related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
@@ -159,10 +120,7 @@ class UploadIndicatorForm(forms.Form):
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
-        super(UploadIndicatorForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [
-            (c.name, c.name) for c in get_source_names(True, True, username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(UploadIndicatorForm, self).__init__(username, *args, **kwargs)
         self.fields['status'].choices = [
             (c,c) for c in Status.values()
         ]
@@ -178,9 +136,10 @@ class UploadIndicatorForm(forms.Form):
         ]
         self.fields['attack_type'].initial = IndicatorAttackTypes.UNKNOWN
         self.fields['indicator_type'].widget.attrs = {'class': 'object-types'}
-        self.fields['campaign'].choices = [("", "")]
-        self.fields['campaign'].choices += [
-            (c.name, c.name) for c in get_item_names(Campaign, True)]
+        if username.has_access_to(Common.CAMPAIGN_READ):
+            self.fields['campaign'].choices = [('', '')] + [
+                (c.name, c.name) for c in get_item_names(Campaign, True)]
+
         self.fields['campaign_confidence'].choices = [
             ("", ""),
             ("low", "low"),

@@ -5,6 +5,7 @@ from crits.comments.comment import Comment
 from crits.comments.handlers import comment_add
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
+from crits.core.user_tools import get_acl_object
 
 
 class CommentResource(CRITsAPIResource):
@@ -41,7 +42,7 @@ class CommentResource(CRITsAPIResource):
         :returns: HttpResponse.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         comment = bundle.data.get('comment', None)
         obj_type = bundle.data.get('object_type', None)
         obj_id = bundle.data.get('object_id', None)
@@ -65,9 +66,18 @@ class CommentResource(CRITsAPIResource):
                 'object_id': obj_id,
                 'url_key': obj_id}
 
-        retVal = comment_add(data, obj_type, obj_id, '', {}, analyst)
+        acl = get_acl_object(obj_type)
+        if user.has_access_to(acl.COMMENTS_ADD):
+            retVal = comment_add(data, obj_type, obj_id, '', {}, user.username)
 
-        if "Comment added successfully!" in retVal.content:
+        else:
+            message = 'You do not have permission to add comment to type %s.' % obj_type
+            retVal = False
+            content['message'] = message
+            content['success'] = False
+            content['status_code'] = 1
+
+        if retVal and "Comment added successfully!" in retVal.content:
             content['success'] = True
             content['return_code'] = 0
             content['message'] = 'Comment added successfully!'

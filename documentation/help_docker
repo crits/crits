@@ -1,0 +1,5 @@
+# Build the docker image:
+docker build -t crits/crits .
+
+# Run the docker image, exposing port 8080 for crits
+docker run --publish=8080:8080 crits/crits:latest

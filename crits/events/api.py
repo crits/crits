@@ -8,6 +8,7 @@ from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
 from crits.vocabulary.events import EventTypes
+from crits.vocabulary.acls import EventACL
 
 
 class EventResource(CRITsAPIResource):
@@ -47,13 +48,14 @@ class EventResource(CRITsAPIResource):
         :returns: HttpResponse.
         """
 
-        analyst = bundle.request.user.username
+        user  = bundle.request.user
         title = bundle.data.get('title', None)
         description = bundle.data.get('description', None)
         event_type = bundle.data.get('event_type', None)
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', None)
         reference = bundle.data.get('reference', None)
+        tlp = bundle.data.get('tlp', 'amber')
         date = bundle.data.get('date', None)
         bucket_list = bundle.data.get('bucket_list', None)
         ticket = bundle.data.get('ticket', None)
@@ -69,18 +71,23 @@ class EventResource(CRITsAPIResource):
             content['message'] = 'Not a valid Event Type.'
             self.crits_response(content)
 
-        result = add_new_event(title,
-                               description,
-                               event_type,
-                               source,
-                               method,
-                               reference,
-                               date,
-                               analyst,
-                               bucket_list,
-                               ticket,
-                               campaign,
-                               campaign_confidence)
+        if user.has_access_to(EventACL.WRITE):
+            result = add_new_event(title,
+                                   description,
+                                   event_type,
+                                   source,
+                                   method,
+                                   reference,
+                                   tlp,
+                                   date,
+                                   user,
+                                   bucket_list,
+                                   ticket,
+                                   campaign,
+                                   campaign_confidence)
+        else:
+            result = {'success':False,
+                      'message':'User does not have permission to create Object.'}
 
         if result.get('message'):
             content['message'] = result.get('message')

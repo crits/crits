@@ -1,0 +1,12 @@
+<tr>
+    <th><label id="{{source.name}}">{{ source.name }}</label></th>
+    <td>
+        {% for k,v in source.items %}
+        {% if k != 'name' %}
+            <b>{{k}}:</b>
+            <input class="role_value" type="checkbox"
+            name="sources__{{source.name}}__{{k}}" {% if v %}checked{% endif %}>
+        {% endif %}
+        {% endfor %}
+    </td>
+</tr>

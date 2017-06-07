@@ -41,10 +41,22 @@ urlpatterns = [
     url(r'^items/list/(?P<itype>\S+)/(?P<option>\S+)/$', 'crits.core.views.items_listing'),
     url(r'^items/toggle_active/$', 'crits.core.views.toggle_item_active'),
     url(r'^users/toggle_active/$', 'crits.core.views.toggle_user_active'),
-    url(r'^users/list/$', 'crits.core.views.users_listing'),
     url(r'^users/list/(?P<option>\S+)/$', 'crits.core.views.users_listing'),
+    url(r'^users/list/$', 'crits.core.views.users_listing'),
+    url(r'^roles/list/(?P<option>\S+)/$', 'crits.core.views.roles_listing'),
+    url(r'^roles/list/$', 'crits.core.views.roles_listing'),
+    url(r'^roles/add/$', 'crits.core.views.role_add'),
+    url(r'^roles/details/(?P<rid>\S+)/$', 'crits.core.views.role_details'),
+    url(r'^roles/details/$', 'crits.core.views.role_details'),
+    url(r'^roles/update/$', 'crits.core.views.role_value_change'),
+    url(r'^roles/graph/$', 'crits.core.views.role_graph'),
+    url(r'^roles/add_source/$', 'crits.core.views.role_add_source'),
+    url(r'^roles/remove_source/$', 'crits.core.views.role_remove_source'),
+    url(r'^roles/update_name/$', 'crits.core.views.update_role_name'),
+    url(r'^roles/update_description/$', 'crits.core.views.update_role_description'),
     url(r'^get_item_data/$', 'crits.core.views.get_item_data'),
     url(r'^add_action/$', 'crits.core.views.new_action'),
+
 
     # Default landing page
     url(r'^$', 'crits.dashboards.views.dashboard'),
@@ -76,13 +88,15 @@ urlpatterns = [
     url(r'^timeline/(?P<data_type>\S+)/(?P<extra_data>\S+)/$', 'crits.core.views.timeline'),
     url(r'^timeline/$', 'crits.core.views.timeline'),
 
+    # TLP
+    url(r'^tlp/mod/$', 'crits.core.views.tlp_modify'),
+
     # User Stuff
     url(r'^profile/(?P<user>\S+)/$', 'crits.core.views.profile'),
     url(r'^profile/$', 'crits.core.views.profile'),
     url(r'^source_access/$', 'crits.core.views.source_access'),
     url(r'^source_add/$', 'crits.core.views.source_add'),
     url(r'^get_user_source_list/$', 'crits.core.views.get_user_source_list'),
-    url(r'^user_role_add/$', 'crits.core.views.user_role_add'),
     url(r'^user_source_access/$', 'crits.core.views.user_source_access'),
     url(r'^user_source_access/(?P<username>\S+)/$', 'crits.core.views.user_source_access'),
     url(r'^preference_toggle/(?P<section>\S+)/(?P<setting>\S+)/$', 'crits.core.views.user_preference_toggle'),
@@ -97,6 +111,7 @@ urlpatterns = [
     url(r'^favorites/toggle/$', 'crits.core.views.toggle_favorite'),
     url(r'^favorites/view/$', 'crits.core.views.favorites'),
     url(r'^favorites/list/(?P<ctype>\S+)/(?P<option>\S+)/$', 'crits.core.views.favorites_list'),
+
 
     # User API Authentication
     url(r'^get_api_key/$', 'crits.core.views.get_api_key'),

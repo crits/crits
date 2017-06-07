@@ -1,11 +1,13 @@
 from mongoengine import Document, StringField
-from mongoengine import BooleanField, DynamicEmbeddedDocument
+from mongoengine import BooleanField, DynamicEmbeddedDocument, EmbeddedDocument
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, CritsSourceDocument
+from crits.core.crits_mongoengine import CommonAccess
 from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.domains.migrate import migrate_domain
+
 
 class TLD(CritsDocument, Document):
     """
@@ -94,3 +96,9 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         # - would require adding relationships between the two as well
         return super(self.__class__, self)._custom_save(force_insert, validate,
             clean, write_concern, cascade, cascade_kwargs, _refs, username)
+
+
+class DomainAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Domains.
+    """

@@ -1,9 +1,12 @@
 from mongoengine import Document, StringField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 
+from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.vocabulary.ips import IPTypes
 
-from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument
 from crits.ips.migrate import migrate_ip
 
 
@@ -51,3 +54,9 @@ class IP(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, Documen
 
     def migrate(self):
         migrate_ip(self)
+
+
+class IPAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for IPs.
+    """

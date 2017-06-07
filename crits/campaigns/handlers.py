@@ -36,6 +36,7 @@ from crits.targets.handlers import get_campaign_targets
 from crits.targets.target import Target
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import CampaignACL
 
 # Functions for top level Campaigns.
 def get_campaign_names_list(active):
@@ -56,10 +57,14 @@ def get_campaign_details(campaign_name, analyst):
     template = None
     sources = user_sources(analyst)
     campaign_detail = Campaign.objects(name=campaign_name).first()
+
+
     if not campaign_detail:
         template = "error.html"
         args = {"error": 'No data exists for this campaign.'}
         return template, args
+
+    campaign_detail.sanitize(username=analyst)
 
     ttp_form = TTPForm()
 
@@ -92,6 +97,7 @@ def get_campaign_details(campaign_name, analyst):
     #screenshots
     screenshots = campaign_detail.get_screenshots(analyst)
 
+
     # Get item counts
     formatted_query = {'campaign.name': campaign_name}
     counts = {}
@@ -119,7 +125,8 @@ def get_campaign_details(campaign_name, analyst):
             "favorite": favorite,
             "screenshots": screenshots,
             'service_results': service_results,
-            "ttp_form": ttp_form}
+            "ttp_form": ttp_form,
+            "CampaignACL": CampaignACL}
 
     return template, args
 
@@ -286,8 +293,8 @@ def generate_campaign_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   RequestContext(request))
 
-def add_campaign(name, description, aliases, analyst, 
-                 bucket_list=None, ticket=None, related_id=None, 
+def add_campaign(name, description, aliases, analyst,
+                 bucket_list=None, ticket=None, related_id=None,
                  related_type=None, relationship_type=None):
     """
     Add a Campaign.

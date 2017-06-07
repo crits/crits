@@ -13,7 +13,7 @@ from crits.core.crits_mongoengine import create_embedded_source
 from crits.core.handlers import build_jtable, jtable_ajax_list
 from crits.core.handlers import jtable_ajax_delete
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, is_user_subscribed, user_sources
+from crits.core.user_tools import is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
@@ -115,13 +115,17 @@ def get_backdoor_details(id_, user):
     backdoor = Backdoor.objects(id=id_, source__name__in=allowed_sources).first()
     template = None
     args = {}
+
+    if not user.check_source_tlp(backdoor):
+        backdoor = None
+
     if not backdoor:
         template = "error.html"
         error = ('Either no data exists for this Backdoor or you do not have'
                  ' permission to view it.')
         args = {'error': error}
     else:
-        backdoor.sanitize("%s" % user)
+        backdoor.sanitize("%s" % user.username)
 
         # remove pending notifications for user
         remove_user_from_notification("%s" % user, backdoor.id, 'Backdoor')
@@ -149,7 +153,7 @@ def get_backdoor_details(id_, user):
 
         #comments
         comments = {'comments': backdoor.get_comments(),
-                    'url_key': backdoor.id}
+                        'url_key': backdoor.id}
 
         #screenshots
         screenshots = backdoor.get_screenshots(user)
@@ -178,9 +182,9 @@ def get_backdoor_details(id_, user):
 
 def add_new_backdoor(name, version=None, aliases=None, description=None,
                      source=None, source_method=None, source_reference=None,
-                     campaign=None, confidence=None, user=None,
-                     bucket_list=None, ticket=None, related_id=None,
-                     related_type=None, relationship_type=None):
+                     source_tlp=None, campaign=None, confidence=None,
+                     user=None, bucket_list=None, ticket=None,
+                     related_id=None,related_type=None, relationship_type=None):
     """
     Add an Backdoor to CRITs.
 
@@ -222,12 +226,20 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
     """
 
     retVal = {'success': False, 'message': ''}
+    username = user.username
 
     if isinstance(source, basestring):
-        source = [create_embedded_source(source,
-                                         reference=source_reference,
-                                         method=source_method,
-                                         analyst=user)]
+        if user.check_source_write(source):
+            source = [create_embedded_source(source,
+                                             reference=source_reference,
+                                             method=source_method,
+                                             tlp=source_tlp,
+                                             analyst=username)]
+        else:
+            return {"success": False,
+                    "message": "User does not have permission to add objects \
+                    using source %s." % str(source)}
+
     elif isinstance(source, EmbeddedSource):
         source = [source]
 
@@ -281,7 +293,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         if isinstance(campaign, basestring):
             c = EmbeddedCampaign(name=campaign,
                                  confidence=confidence,
-                                 analyst=user)
+                                 analyst=username)
             campaign = [c]
 
         if campaign:
@@ -297,16 +309,16 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
                     backdoor.aliases.append(alias)
 
         if bucket_list:
-            backdoor.add_bucket_list(bucket_list, user)
+            backdoor.add_bucket_list(bucket_list, username)
 
         if ticket:
-            backdoor.add_ticket(ticket, user)
+            backdoor.add_ticket(ticket, username)
 
-        backdoor.save(username=user)
+        backdoor.save(username=username)
 
         # run backdoor triage
         backdoor.reload()
-        run_triage(backdoor, user)
+        run_triage(backdoor, username)
 
         # Because family objects are put in the list first we will always
         # return a link to the most specific object created. If there is only
@@ -318,7 +330,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         retVal['object'] = backdoor
         retVal['id'] = str(backdoor.id)
 
-    # Only relate to the most specific object created. 
+    # Only relate to the most specific object created.
     related_obj = None
     if related_id and related_type:
         related_obj = class_from_id(related_type, related_id)
@@ -331,11 +343,11 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         backdoor.add_relationship(related_obj,
                                   relationship_type,
-                                  analyst=user,
+                                  analyst=username,
                                   get_rels=False)
-        backdoor.save(username=user)
+        backdoor.save(username=username)
         backdoor.reload()
-            
+
     # If we have a family and specific object, attempt to relate the two.
     if len(objs) == 2:
         objs[0].add_relationship(objs[1], RelationshipTypes.RELATED_TO)
@@ -355,15 +367,12 @@ def backdoor_remove(id_, username):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    if is_admin(username):
-        backdoor = Backdoor.objects(id=id_).first()
-        if backdoor:
-            backdoor.delete(username=username)
-            return {'success': True}
-        else:
-            return {'success': False, 'message': 'Could not find Backdoor.'}
+    backdoor = Backdoor.objects(id=id_).first()
+    if backdoor:
+        backdoor.delete(username=username)
+        return {'success': True}
     else:
-        return {'success': False, 'message': 'Must be an admin to remove'}
+        return {'success': False, 'message': 'Could not find Backdoor.'}
 
 def set_backdoor_name(id_, name, user, **kwargs):
     """
@@ -471,4 +480,3 @@ def get_backdoor_names(user, **kwargs):
         if (b.name, b.version) not in names:
             names.append((b.name, b.version))
     return names
-

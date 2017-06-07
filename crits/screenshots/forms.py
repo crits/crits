@@ -1,10 +1,11 @@
 from django import forms
 from django.forms.widgets import HiddenInput
 from crits.core import form_consts
+from crits.core.forms import SourceInForm
 from crits.core.handlers import get_source_names
 from crits.core.user_tools import get_user_organization
 
-class AddScreenshotForm(forms.Form):
+class AddScreenshotForm(SourceInForm):
     """
     Django form for adding an Object.
     """
@@ -26,12 +27,7 @@ class AddScreenshotForm(forms.Form):
     tags = forms.CharField(widget=forms.TextInput(attrs={'size':'90'}),
                            required=False,
                            help_text='Comma-separated list of tags')
-    source = forms.ChoiceField(required=True,
-                               label=form_consts.Object.SOURCE,
-                               widget=forms.Select(attrs={'class': 'no_clear bulknoinitial'}))
-    method = forms.CharField(required=False, label=form_consts.Object.METHOD)
-    reference = forms.CharField(widget=forms.TextInput(attrs={'size':'90'}),
-                                required=False, label=form_consts.Object.REFERENCE)
+
     otype = forms.CharField(required=False,
                             widget=HiddenInput(attrs={'class':'bulkskip'}),
                             label=form_consts.Object.PARENT_OBJECT_TYPE)
@@ -40,9 +36,4 @@ class AddScreenshotForm(forms.Form):
                           label=form_consts.Object.PARENT_OBJECT_ID)
 
     def __init__(self, username, *args, **kwargs):
-        super(AddScreenshotForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [(c.name,
-                                          c.name) for c in get_source_names(True,
-                                                                            True,
-                                                                            username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(AddScreenshotForm, self).__init__(username, *args, **kwargs)

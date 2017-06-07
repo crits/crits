@@ -51,7 +51,7 @@ django_version = django.get_version()
 #Check mongoengine version (we got it from import)
 if StrictVersion(mongoengine_version) < StrictVersion('0.10.0'):
     old_mongoengine = True
-    raise Exception("Mongoengine versions prior to 0.10 are no longer supported! Please see UPDATING!")
+    #raise Exception("Mongoengine versions prior to 0.10 are no longer supported! Please see UPDATING!")
 else:
     old_mongoengine = False
 
@@ -167,6 +167,7 @@ COL_PCAPS = "pcaps"                                       # main pcaps collectio
 COL_RAW_DATA = "raw_data"                                 # main raw data collection
 COL_RAW_DATA_TYPES = "raw_data_types"                     # list of available raw data types
 COL_RELATIONSHIP_TYPES = "relationship_types"             # list of available relationship types
+COL_ROLES = "roles"                                       # main roles collection
 COL_SAMPLES = "sample"                                    # main samples collection
 COL_SCREENSHOTS = "screenshots"                           # main screenshots collection
 COL_SECTOR_LISTS = "sector_lists"                         # sector lists information
@@ -180,7 +181,6 @@ COL_SOURCES = "sources"                                   # source information g
 COL_STATISTICS = "statistics"                             # list of statistics for different objects (campaigns, for example)
 COL_TARGETS = "targets"                                   # target information for use in email
 COL_USERS = "users"                                       # main users collection
-COL_USER_ROLES = "user_roles"                             # main user roles collection
 COL_YARAHITS = "yarahits"                                 # yara hit counts for samples
 
 # MongoDB connection pool
@@ -200,6 +200,9 @@ coll = db[COL_CONFIG]
 crits_config = coll.find_one({})
 if not crits_config:
     crits_config = {}
+
+# UberAdmin role. Has access to everything, can do everything, etc.
+ADMIN_ROLE = "UberAdmin"
 
 # Populate settings
 # Hosts/domain names that are valid for this site; required if DEBUG is False
@@ -304,10 +307,13 @@ STATIC_ROOT = os.path.join(SITE_ROOT, '../extras/www/static')
 STATIC_URL = '/static/'
 
 # List of callables that know how to import templates from various sources.
+#https://docs.djangoproject.com/en/dev/ref/templates/api/#django.template.loaders.cached.Loader
 _TEMPLATE_LOADERS = [
+    ('django.template.loaders.cached.Loader', [
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
     #'django.template.loaders.eggs.load_template_source',
+    ])
 ]
 
 #CACHES = {
@@ -316,6 +322,12 @@ _TEMPLATE_LOADERS = [
 #        'LOCATION': 'unix:/data/memcached.sock',
 #    }
 #}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -404,6 +416,27 @@ STATICFILES_DIRS = (
 AUTH_USER_MODEL = 'mongo_auth.MongoUser'
 MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
 
+# http://django-debug-toolbar.readthedocs.org/en/latest/configuration.html#debug-toolbar-panels
+DEBUG_TOOLBAR_PANELS = [
+    'debug_toolbar.panels.versions.VersionsPanel',
+    'vcs_info_panel.panels.GitInfoPanel',
+    'debug_toolbar.panels.timer.TimerPanel',
+    'debug_toolbar.panels.settings.SettingsPanel',
+    'debug_toolbar.panels.headers.HeadersPanel',
+    'debug_toolbar.panels.request.RequestPanel',
+    'template_timings_panel.panels.TemplateTimings.TemplateTimings',
+    'template_profiler_panel.panels.template.TemplateProfilerPanel',
+    'debug_toolbar_mongo.panel.MongoDebugPanel',
+    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+    'debug_toolbar.panels.templates.TemplatesPanel',
+    'debug_toolbar.panels.cache.CachePanel',
+    'debug_toolbar.panels.signals.SignalsPanel',
+    'debug_toolbar.panels.logging.LoggingPanel',
+    'debug_toolbar.panels.redirects.RedirectsPanel',
+    'debug_toolbar.panels.sql.SQLPanel',
+]
+INTERNAL_IPS = '127.0.0.1'
+
 if old_mongoengine:
     INSTALLED_APPS = (
         'crits.core',
@@ -436,6 +469,11 @@ if old_mongoengine:
         'tastypie',
         'tastypie_mongoengine',
         'mongoengine.django.mongo_auth',
+        'template_timings_panel',
+        'template_profiler_panel',
+        'debug_toolbar_mongo',
+        'vcs_info_panel',
+        'debug_toolbar',
     )
 
     MIDDLEWARE_CLASSES = (
@@ -447,6 +485,7 @@ if old_mongoengine:
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Only needed for mongoengine<0.10
     'crits.core.user.AuthenticationMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
 
     SESSION_ENGINE = 'mongoengine.django.sessions'
@@ -490,6 +529,11 @@ else:
         'tastypie_mongoengine',
         'django_mongoengine',
         'django_mongoengine.mongo_auth',
+        'template_timings_panel',
+        'template_profiler_panel',
+        'debug_toolbar_mongo',
+        'vcs_info_panel',
+        'debug_toolbar',
         )
 
     MIDDLEWARE_CLASSES = (
@@ -499,6 +543,7 @@ else:
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
     SESSION_ENGINE = 'django_mongoengine.sessions'
 
@@ -523,6 +568,7 @@ if REMOTE_USER:
             'django.middleware.csrf.CsrfViewMiddleware',
             'crits.core.user.AuthenticationMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
+            'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
     else:
         MIDDLEWARE_CLASSES = (
@@ -533,6 +579,7 @@ if REMOTE_USER:
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
+            'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
 
 MONGODB_DATABASES = {
@@ -602,6 +649,7 @@ for handler in LOGGING['handlers'].values():
 # CRITs Types
 CRITS_TYPES = {
     'Actor': COL_ACTORS,
+    'ActorIdentifier': COL_ACTOR_IDENTIFIERS,
     'AnalysisResult': COL_ANALYSIS_RESULTS,
     'Backdoor': COL_BACKDOORS,
     'Campaign': COL_CAMPAIGNS,

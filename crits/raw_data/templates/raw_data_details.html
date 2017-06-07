@@ -28,21 +28,25 @@
     <li><a href="#highlights_section" id="highlights_button"><span>Highlights</span></a></li>
     <li><a href="#raw_section" id="raw_button"><span>Raw Data</span></a></li>
     <li><a href="#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+    {% if RawDataACL.SERVICES_READ|has_access_to:user %}
+      <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
 </ul>
 
 <div id="details_section">
-    <div class='content_box'>
-        <span class="horizontal_menu">
-        <ul class="hmenu">
-            <li><a href="#" id="upload-new-version" class="dialogClick" dialog="upload-new-version" data-action="{% url 'crits.raw_data.views.upload_raw_data' raw_data.link_id|stringformat:"s" %}">Upload New Version</a></li>
-            {% if admin %}
-                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="raw_data" action='{% url "crits.raw_data.views.remove_raw_data" raw_data.id %}'>Delete Raw Data</a></li>
-            {% endif %}
-        </ul>
-        </span>
-    </div>
+    {% if RawDataACL.UPLOAD_NEW_VERSION|has_access_to:user or RawDataACL.DELETE|has_access_to:user %}
+      <span class="horizontal_menu">
+      <ul class="hmenu">
+        {% if RawDataACL.UPLOAD_NEW_VERSION|has_access_to:user %}
+          <li><a href="#" id="upload-new-version" class="dialogClick" dialog="upload-new-version" data-action="{% url 'crits.raw_data.views.upload_raw_data' raw_data.link_id|stringformat:"s" %}">Upload New Version</a></li>
+        {% endif %}
+        {% if RawDataACL.DELETE|has_access_to:user %}
+          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="raw_data" action='{% url "crits.raw_data.views.remove_raw_data" raw_data.id %}'>Delete Raw Data</a></li>
+        {% endif %}
+      </ul>
+      </span>
+    {% endif %}
 
     <div class="content_box content_details">
         <h3 class="titleheader">
@@ -104,78 +108,107 @@
                 </select>
             </td>
             </tr>
-            <tr>
-                {% with description=raw_data.description %}
-                    {% include 'description_widget.html' %}
-                {% endwith %}
-            </tr>
-            <tr>
-                <td class="key">Status
-                    <span style="float: right;" class="object_status_response"></span>
-                </td>
-                <td>
-                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{raw_data.status}}</span>
-                </td>
-            </tr>
-            {% with sectors=raw_data.sectors %}
-                {% include "sector_widget.html" %}
-            {% endwith %}
-            <tr>
-            {% with sources=raw_data.source obj_id=raw_data.id obj_type=subscription.type %}
-                {% include "sources_listing_widget.html" %}
-            {% endwith %}
-            </tr>
-            <tr>
-                {% with releasability=raw_data.releasability %}
-                    {% include 'releasability_list_widget.html' %}
-                {% endwith %}
-            </tr>
+            {% if RawDataACL.DESCRIPTION_READ|has_access_to:user %}
+              <tr>
+                  {% with description=raw_data.description %}
+                      {% include 'description_widget.html' %}
+                  {% endwith %}
+              </tr>
+            {% endif %}
+            {% if RawDataACL.STATUS_READ|has_access_to:user %}
+              <tr>
+                  <td class="key">Status
+                      <span style="float: right;" class="object_status_response"></span>
+                  </td>
+                  <td>
+                      <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{raw_data.status}}</span>
+                  </td>
+              </tr>
+            {% endif %}
+
+            {% if RawDataACL.SECTORS_READ|has_access_to:user %}
+              {% with sectors=raw_data.sectors %}
+                  {% include "sector_widget.html" %}
+              {% endwith %}
+            {% endif %}
+            {% if RawDataACL.SOURCES_READ|has_access_to:user %}
+              <tr>
+              {% with sources=raw_data.source obj_id=raw_data.id obj_type=subscription.type %}
+                  {% include "sources_listing_widget.html" %}
+              {% endwith %}
+              </tr>
+            {% endif %}
+            {% if RawDataACL.RELEASABILITY_READ|has_access_to:user %}
+              <tr>
+                  {% with releasability=raw_data.releasability %}
+                      {% include 'releasability_list_widget.html' %}
+                  {% endwith %}
+              </tr>
+            {% endif %}
         </tbody>
         </table>
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% with bucket_list=raw_data.bucket_list %}
-            {% include 'bucket_list_widget.html' %}
-        {% endwith %}
+        {% if RawDataACL.BUCKETLIST_READ|has_access_to:user %}
+          {% with bucket_list=raw_data.bucket_list %}
+              {% include 'bucket_list_widget.html' %}
+          {% endwith %}
+        {% endif %}
         {% include 'add_related_widget.html' %}
 
     </div>
     <div>
         {% include 'raw_data_data.html' %}
     </div>
-    <div class="content_box">
-        {% with obj=raw_data obj_type="RawData" %}
-            {% include 'action_listing_widget.html' %}
+    {% if RawDataACL.ACTIONS_READ|has_access_to:user %}
+      <div class="content_box">
+          {% with obj=raw_data obj_type="RawData" %}
+              {% include 'action_listing_widget.html' %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if RawDataACL.TICKETS_READ|has_access_to:user %}
+      <div>
+        {% with obj=raw_data obj_type=subscription.type %}
+           {% include 'tickets_listing_widget.html' %}
         {% endwith %}
-    </div>
-    <div>
-      {% with obj=raw_data obj_type=subscription.type %}
-         {% include 'tickets_listing_widget.html' %}
-      {% endwith %}
-    </div>
-    <div>
-        {% with hit=raw_data col=COL_RAW_DATA %}
-            {% include "campaigns_display_widget.html" %}
-        {% endwith %}
-    </div>
-    <div>
-        {% with hit=raw_data col=COL_RAW_DATA %}
-            {% include "locations_display_widget.html" %}
-        {% endwith %}
-    </div>
-    <div>
-        {% include 'relationships_listing_widget.html' %}
-    </div>
-    <div>
-        {% include 'objects_listing_widget.html' %}
-    </div>
-    <div>
-    {% include 'screenshot_widget.html' %}
-    </div>
-    <div>
-        {% include "comments_listing_widget.html" %}
-    </div>
+      </div>
+    {% endif %}
+    {% if RawDataACL.CAMPAIGNS_READ|has_access_to:user and RawDataACL.CAMPAIGN_READ %}
+      <div>
+          {% with hit=raw_data col=COL_RAW_DATA %}
+              {% include "campaigns_display_widget.html" %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if RawDataACL.LOCATIONS_READ|has_access_to:user %}
+      <div>
+          {% with hit=raw_data col=COL_RAW_DATA %}
+              {% include "locations_display_widget.html" %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if RawDataACL.RELATIONSHIPS_READ|has_access_to:user %}
+      <div>
+          {% include 'relationships_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if RawDataACL.OBJECTS_READ|has_access_to:user %}
+      <div>
+          {% include 'objects_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if RawDataACL.SCREENSHOTS_READ|has_access_to:user %}
+      <div>
+        {% include 'screenshot_widget.html' %}
+      </div>
+    {% endif %}
+    {% if RawDataACL.COMMENTS_READ|has_access_to:user %}
+      <div>
+          {% include "comments_listing_widget.html" %}
+      </div>
+    {% endif %}
 </div>
 <div id="highlights_section">
     {% include 'raw_data_highlights.html' %}
@@ -186,25 +219,25 @@
         <span>Data<span>
         </h3>
         <div>
-            <pre>{{ raw_data.data|cgi_escape }}</pre>
+            <pre>{{ raw_data.data }}</pre>
         </div>
     </div>
 </div>
 {% include 'raw_data_versions.html' %}
-{% with item=raw_data %}
-    {% include "services_analysis_section.html" with crits_type="RawData" identifier=raw_data.id %}
-{% endwith %}
-{% include 'services_tab_tabs_widget.html' %}
+{% if RawDataACL.SERVICES_READ|has_access_to:user %}
+  {% with item=raw_data %}
+      {% include "services_analysis_section.html" with crits_type="RawData" identifier=raw_data.id %}
+  {% endwith %}
+  {% include 'services_tab_tabs_widget.html' %}
+{% endif %}
 </div>
 
 {% else %}
 <h3>Raw Data not found. If you just uploaded Raw Data, try refreshing as the system might not have completed processing your upload yet.</h3>
 
 {% endif %}
-
 <a href="#" id="add_inline_comment" title="Add Comment" class="ui-icon
 ui-icon-comment dialogClick" dialog="comments" persona="new" action="{% url 'crits.raw_data.views.add_inline_comment' raw_data.id|stringformat:"s" %}"></a>
-
 {% endblock %}
 
 {% block javascript_includes %}
@@ -212,4 +245,3 @@ ui-icon-comment dialogClick" dialog="comments" persona="new" action="{% url 'cri
 <script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/diffview.js"></script><script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/jsdiff.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/difflib.js"></script>
 {% endblock %}
-

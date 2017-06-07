@@ -1,12 +1,12 @@
 import datetime
 
 from mongoengine import Document, EmbeddedDocument, StringField, ListField
-from mongoengine import EmbeddedDocumentField
+from mongoengine import EmbeddedDocumentField, BooleanField
 from django.conf import settings
 
 from crits.actors.migrate import migrate_actor
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
-from crits.core.crits_mongoengine import CritsDocumentFormatter
+from crits.core.crits_mongoengine import CritsDocumentFormatter, CommonAccess
 from crits.core.crits_mongoengine import CritsSchemaDocument, CritsDocument
 from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import CritsDateTimeField
@@ -281,3 +281,41 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
                     del self.identifiers[c]
                     break
                 c += 1
+
+
+class ActorIdentifierAccess(EmbeddedDocument, CritsDocumentFormatter):
+    """
+    ACL for Actor Identifiers.
+    """
+
+    actor_identifiers_read = BooleanField(default=False)
+    actor_identifiers_add = BooleanField(default=False)
+    actor_identifiers_delete = BooleanField(default=False)
+
+
+class ActorAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Actor.
+    """
+
+    name_edit = BooleanField(default=False)
+    aliases_read = BooleanField(default=False)
+    aliases_edit = BooleanField(default=False)
+
+    intended_effects_read = BooleanField(default=False)
+    intended_effects_edit = BooleanField(default=False)
+
+    motivations_read = BooleanField(default=False)
+    motivations_edit = BooleanField(default=False)
+
+    sophistications_read = BooleanField(default=False)
+    sophistications_edit = BooleanField(default=False)
+
+    threat_types_read = BooleanField(default=False)
+    threat_types_edit = BooleanField(default=False)
+
+    # Actor Identifiers
+    actor_identifiers_read = BooleanField(default=False)
+    actor_identifiers_edit = BooleanField(default=False)
+    actor_identifiers_add = BooleanField(default=False)
+    actor_identifiers_delete = BooleanField(default=False)

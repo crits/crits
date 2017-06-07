@@ -1,13 +1,14 @@
+from mongoengine import Document
+from mongoengine import EmbeddedDocument
 import json
 
-from mongoengine import Document
 from mongoengine import StringField, ListField
-from mongoengine import IntField
+from mongoengine import IntField, BooleanField
 from django.conf import settings
 
 from crits.samples.migrate import migrate_sample
-from crits.core.crits_mongoengine import CritsBaseAttributes
-from crits.core.crits_mongoengine import CritsSourceDocument
+from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
+from crits.core.crits_mongoengine import CritsSourceDocument, CommonAccess
 from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.crits_mongoengine import json_handler
 from crits.core.data_tools import format_file
@@ -129,6 +130,16 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         except:
             self.impfuzzy = None
 
+    def is_office(self):
+        """
+        Is this a Office file.
+        """
+
+        ret = self.filedata.grid_id != None and self.filedata.read(8) == "\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+        if self.filedata.grid_id:
+            self.filedata.seek(0)
+        return ret
+
     def is_pe(self):
         """
         Is this a PE file.
@@ -174,6 +185,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         if isinstance(filenames, list):
             self.filenames = filenames
 
+
     def _json_yaml_convert(self, exclude=[]):
         """
         Helper to convert to a dict before converting to JSON.
@@ -187,3 +199,20 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         if 'filedata' not in exclude:
             (d['filedata'], ext) = format_file(self.filedata.read(), 'base64')
         return json.dumps(d, default=json_handler)
+
+class SampleAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Samples.
+    """
+
+    upload_related_sample = BooleanField(default=False)
+    upload_related_pcap = BooleanField(default=False)
+
+    text_view = BooleanField(default=False)
+    yaml_view = BooleanField(default=False)
+    unrar_sample = BooleanField(default=False)
+    unzip_sample = BooleanField(default=False)
+
+    filename_edit = BooleanField(default=False)
+    filenames_add = BooleanField(default=False)
+    filenames_remove = BooleanField(default=False)

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load filters %}
 
 {% block title %} Backdoor Detail {% endblock %}
 
@@ -14,21 +15,20 @@
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+    {%if BackdoorACL.SERVICES_READ|has_access_to:user %}
+      <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
     {% include 'services_tab_list_widget.html' %}
+    {% endif %}
     </ul>
 
 <div id="details_section">
-    <div class='content_box'>
-        <span class="horizontal_menu">
-        <ul class="hmenu">
-            {% if admin %}
-            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="backdoor" action='{% url "crits.backdoors.views.remove_backdoor" backdoor.id %}'>Delete Backdoor</a></li>
-            {% endif %}
-        </ul>
-        </span>
-    </div>
-
+{% if BackdoorACL.DELETE|has_access_to:user %}
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="backdoor" action='{% url "crits.backdoors.views.remove_backdoor" backdoor.id %}'>Delete Backdoor</a></li>
+    </ul>
+    </span>
+{% endif %}
     <div class="content_box content_details">
         <h3 class="titleheader">
             <span>Details for {{backdoor.name}}</span>
@@ -51,9 +51,14 @@
                     <tr>
                         <td class="key">Version</td>
                         <td>
+                          {% if BackdoorACL.VERSION_EDIT|has_access_to:user %}
                             <span class="edit_underline" id="edit_backdoor_version">{{backdoor.version}}</span>
+                          {% else %}
+                          {{backdoor.version}}
+                          {% endif %}
                         </td>
                     </tr>
+                    {% if BackdoorACL.ALIASES_READ|has_access_to:user %}
                     <tr>
                         <td class="key">Aliases</td>
                         <td>
@@ -63,11 +68,14 @@
                                 {% endfor %}
                         </td>
                     </tr>
+                    {% endif %}
+                    {% if BackdoorACL.DESCRIPTION_READ|has_access_to:user %}
                     <tr>
                         {% with description=backdoor.description %}
                             {% include 'description_widget.html' %}
                         {% endwith %}
                     </tr>
+                    {% endif %}
                     <tr>
                         <td class="key">Created</td>
                         <td>{{backdoor.created}}</td>
@@ -76,6 +84,7 @@
                         <td class="key">Modified</td>
                         <td>{{backdoor.modified}}</td>
                     </tr>
+                    {% if BackdoorACL.STATUS_READ|has_access_to:user %}
                     <tr>
                         <td class="key">Status
                             <span style="float: right;" class="object_status_response"></span>
@@ -84,75 +93,106 @@
                             <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{backdoor.status}}</span>
                         </td>
                     </tr>
+                    {% endif %}
+                    {% with tlp=backdoor.tlp %}
+                        {% include "tlp_widget.html" %}
+                    {% endwith %}
+                    {% if "Backdoor.sectors_read"|has_access_to:user %}
                     {% with sectors=backdoor.sectors %}
                         {% include "sector_widget.html" %}
                     {% endwith %}
+                    {% endif %}
+                    {% if BackdoorACL.SOURCES_READ|has_access_to:user %}
                     <tr>
                         {% with sources=backdoor.source obj_id=backdoor.id obj_type=subscription.type %}
                             {% include "sources_listing_widget.html" %}
                         {% endwith %}
                     </tr>
+                    {%endif%}
+                    {% if BackdoorACL.RELEASABILITY_READ|has_access_to:user %}
                     <tr>
                         {% with releasability=backdoor.releasability %}
                             {% include "releasability_list_widget.html" %}
                         {% endwith %}
                     </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div> <!-- content_body -->
      </div> <!-- content_box -->
      <div id="detail_floaters">
          {% include 'details_options_widget.html' %}
+         {% if BackdoorACL.BUCKETLIST_READ|has_access_to:user %}
          {% with bucket_list=backdoor.bucket_list %}
              {% include 'bucket_list_widget.html' %}
          {% endwith %}
+         {% endif %}
          {% include 'add_related_widget.html' %}
      </div>
     <div class="content_box">
+      {% if BackdoorACL.ACTIONS_READ|has_access_to:user %}
         {% with obj=backdoor obj_type="Backdoor" %}
             {% include 'action_listing_widget.html' %}
         {% endwith %}
+      {% endif %}
     </div>
-     <div>
+    <div>
+      {% if BackdoorACL.TICKETS_READ|has_access_to:user %}
 	    {% with obj=backdoor obj_type=subscription.type %}
                 {% include 'tickets_listing_widget.html' %}
 	    {% endwith %}
+      {% endif %}
     </div>
     <div>
+      {% if BackdoorACL.CAMPAIGNS_READ|has_access_to:user and BackdoorACL.CAMPAIGN_READ|has_access_to:user %}
         {% with hit=backdoor col=COL_BACKDOORS %}
             {% include "campaigns_display_widget.html" %}
         {% endwith %}
+      {% endif %}
     </div>
     <div>
+      {% if BackdoorACL.RELATIONSHIPS_READ|has_access_to:user %}
         {% include 'relationships_listing_widget.html' %}
+      {% endif %}
     </div>
     <div>
+      {% if BackdoorACL.OBJECTS_READ|has_access_to:user %}
         {% include 'objects_listing_widget.html' %}
+      {% endif %}
     </div>
     <div>
-    {% include 'screenshot_widget.html' %}
+      {% if BackdoorACL.SCREENSHOTS_READ|has_access_to:user %}
+        {% include 'screenshot_widget.html' %}
+      {% endif %}
     </div>
     <div>
+      {% if BackdoorACL.COMMENTS_READ|has_access_to:user %}
         {% include "comments_listing_widget.html" %}
+      {% endif %}
     </div>
 </div> <!-- details_section -->
 
+{% if BackdoorACL.SERVICES_READ|has_access_to:user %}
 {% with item=backdoor %}
     {% include "services_analysis_section.html" with crits_type="Backdoor" identifier=backdoor.id %}
 {% endwith %}
+{% endif %}
 
-{% include 'services_tab_tabs_widget.html' %}
+{% if BackdoorACL.SERVICES_READ|has_access_to:user %}
+  {% include 'services_tab_tabs_widget.html' %}
+{% endif %}
 </div>
 
+{% if BackdoorACL.ALIASES_READ|has_access_to:user %}
 <script type="text/javascript">
     $(document).bind('enable_backdoor_aliases', function(){
         window.add_backdoor_aliases = true;
     });
 </script>
+{% endif %}
 
 {% endblock %}
 
 {% block javascript_includes %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/backdoors.js"></script>
 {% endblock %}
-

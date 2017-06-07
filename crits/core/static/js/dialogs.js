@@ -1253,7 +1253,6 @@ $(document).ready(function() {
 // Some dialog specific callacks below
 //
 
-
 function releasability_add_submit(e) {
     var widget = $(e.currentTarget);
     var dialog;
@@ -1377,6 +1376,17 @@ function new_domain_dialog(e) {
     // If there is selected text, default the value in the form
     check_selected('domain', dialog);
 
+}
+
+function new_role_dialog(e) {
+    if (do_copy) {
+        var dialog = $(this).find("form");
+        var copy_from = dialog.find('#id_copy_from');
+        if (typeof(rid) === "undefined") {
+            rid = '';
+        }
+        copy_from.val(rid);
+    }
 }
 
 function new_event_dialog() {
@@ -1509,7 +1519,8 @@ var stdDialogs = {
       "new-target": {title: "Target", personas: {related: newPersona("Add Related Target", {open: new_target_dialog}, addEditSubmit ) }, open: new_target_dialog },
 
       "source_create": {title: "Source"},
-      "user_role": {title: "User Role"},
+      "role_combine_preview": {title: "Role Combinator", submit: defaultSubmit},
+      "new-role": {title: "Role", open: new_role_dialog},
 
       "campaign-add": { title: "Assign Campaign", personas: {
           promote: newPersona("Promote to Campaign",
@@ -1574,7 +1585,7 @@ var stdDialogs = {
   // to make that sort of global change before 3.0.
   var singleInputDialogs = "#dialog-actor-identifier-type,#dialog-ticket,"+
       "#dialog-source_create,#dialog-user_role," +
-      "#dialog-action_add,#dialog-raw_data_type_add,#dialog-signature_type_add,#dialog-signature_dependency_add";
+      "#dialog-action_add,#dialog-raw_data_type_add,#dialog-signature_type_add,#dialog-signature_dependency_add,#dialog-role";
   $(singleInputDialogs).on("dialogopen", fix_form_submit(addEditSubmit));
 
 

@@ -1,7 +1,9 @@
 from mongoengine import Document, StringField, IntField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import getFileField
 from crits.pcaps.migrate import migrate_pcap
@@ -119,3 +121,9 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         if objectid:
             self.filedata.grid_id = objectid['_id']
             self.filedata._mark_as_changed()
+
+
+class PCAPAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for PCAPs.
+    """

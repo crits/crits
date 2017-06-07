@@ -16,12 +16,14 @@ from crits.core.crits_mongoengine import EmbeddedSource, create_embedded_source,
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, user_sources, is_user_favorite
+from crits.core.user_tools import user_sources, is_user_favorite
 from crits.core.user_tools import is_user_subscribed
 from crits.notifications.handlers import remove_user_from_notification
 from crits.signatures.signature import Signature, SignatureType, SignatureDependency
 from crits.services.handlers import run_triage, get_supported_services
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import SignatureACL
+
 
 
 def generate_signature_csv(request):
@@ -55,38 +57,42 @@ def get_id_from_link_and_version(link, version):
         return signature.id
 
 
-def get_signature_details(_id, analyst):
+def get_signature_details(_id, user):
     """
     Generate the data to render the Signature details template.
 
     :param _id: The ObjectId of the Signature to get details for.
     :type _id: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: CRITsUser
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    sources = user_sources(analyst)
+    sources = user_sources(user)
     if not _id:
         signature = None
     else:
         signature = Signature.objects(id=_id, source__name__in=sources).first()
+
+    if not user.check_source_tlp(signature):
+        signature = None
+
     if not signature:
         template = "error.html"
         args = {'error': 'signature not yet available or you do not have access to view it.'}
     else:
 
-        signature.sanitize("%s" % analyst)
+        signature.sanitize("%s" % user)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, signature.id, 'Signature')
+        remove_user_from_notification("%s" % user, signature.id, 'Signature')
 
         # subscription
         subscription = {
                 'type': 'Signature',
                 'id': signature.id,
-                'subscribed': is_user_subscribed("%s" % analyst,
+                'subscribed': is_user_subscribed("%s" % user,
                                                  'Signature', signature.id),
         }
 
@@ -94,7 +100,7 @@ def get_signature_details(_id, analyst):
         objects = signature.sort_objects()
 
         #relationships
-        relationships = signature.sort_relationships("%s" % analyst, meta=True)
+        relationships = signature.sort_relationships("%s" % user, meta=True)
 
         # relationship
         relationship = {
@@ -109,10 +115,10 @@ def get_signature_details(_id, analyst):
                     'url_key': _id}
 
         #screenshots
-        screenshots = signature.get_screenshots(analyst)
+        screenshots = signature.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'Signature', signature.id)
+        favorite = is_user_favorite("%s" % user, 'Signature', signature.id)
 
         # services
         service_list = get_supported_services('Signature')
@@ -130,7 +136,8 @@ def get_signature_details(_id, analyst):
                 "screenshots": screenshots,
                 "versions": versions,
                 "service_results": service_results,
-                "signature": signature}
+                "signature": signature,
+                'SignatureACL': SignatureACL}
 
     return template, args
 
@@ -266,7 +273,8 @@ def generate_signature_jtable(request, option):
 def handle_signature_file(data, source_name, user=None,
                          description=None, title=None, data_type=None,
                          data_type_min_version=None, data_type_max_version=None,
-                         data_type_dependency=None, link_id=None, method='', reference='',
+                         data_type_dependency=None, link_id=None,
+                         source_method='', source_reference='', source_tlp='',
                          copy_rels=False, bucket_list=None, ticket=None,
                          related_id=None, related_type=None, relationship_type=None):
     """
@@ -345,7 +353,7 @@ def handle_signature_file(data, source_name, user=None,
     # generate md5 and timestamp
     md5 = hashlib.md5(data).hexdigest()
     timestamp = datetime.datetime.now()
-    
+
     # generate signature
     signature = Signature()
     signature.created = timestamp
@@ -370,19 +378,24 @@ def handle_signature_file(data, source_name, user=None,
 
     # generate new source information and add to sample
     if isinstance(source_name, basestring) and len(source_name) > 0:
-        source = create_embedded_source(source_name,
-                                   date=timestamp,
-                                   method=method,
-                                   reference=reference,
-                                   analyst=user)
-        # this will handle adding a new source, or an instance automatically
-        signature.add_source(source)
+        if user.check_source_write(source_name):
+            source = create_embedded_source(source_name,
+                                       date=timestamp,
+                                       method=source_method,
+                                       reference=source_reference,
+                                       tlp=source_tlp,
+                                       analyst=user.username)
+            # this will handle adding a new source, or an instance automatically
+            signature.add_source(source)
+        else:
+            return {"success":False,
+                    "message": "User does not have permission to add object using source %s." % source_name}
     elif isinstance(source_name, EmbeddedSource):
-        signature.add_source(source_name, method=method, reference=reference)
+        signature.add_source(source_name, method=source_method, reference=source_reference, tlp=source_tlp)
     elif isinstance(source_name, list) and len(source_name) > 0:
         for s in source_name:
             if isinstance(s, EmbeddedSource):
-                signature.add_source(s, method=method, reference=reference)
+                signature.add_source(s, method=source_method, reference=source_reference, source_tlp=source_tlp)
 
     signature.version = len(Signature.objects(link_id=link_id)) + 1
 
@@ -392,7 +405,7 @@ def handle_signature_file(data, source_name, user=None,
             rd2 = Signature.objects(link_id=link_id).first()
             if rd2:
                 if len(rd2.relationships):
-                    signature.save(username=user)
+                    signature.save(username=user.username)
                     signature.reload()
                     for rel in rd2.relationships:
                         # Get object to relate to.
@@ -401,7 +414,7 @@ def handle_signature_file(data, source_name, user=None,
                             signature.add_relationship(rel_item,
                                                       rel.relationship,
                                                       rel_date=rel.relationship_date,
-                                                      analyst=user)
+                                                      analyst=user.username)
 
     if bucket_list:
         signature.add_bucket_list(bucket_list, user)
@@ -417,21 +430,21 @@ def handle_signature_file(data, source_name, user=None,
             retVal['message'] = 'Related Object not found.'
             return retVal
 
-    signature.save(username=user)
+    signature.save(username=user.username)
 
     if related_obj and signature and relationship_type:
         relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
         signature.add_relationship(related_obj,
                                    relationship_type,
-                                   analyst=user,
+                                   analyst=user.username,
                                    get_rels=False)
-        signature.save(username=user)
+        signature.save(username=user.username)
         signature.reload()
 
 
 
     # save signature
-    signature.save(username=user)
+    signature.save(username=user.username)
     signature.reload()
 
     status = {
@@ -478,7 +491,7 @@ def update_signature_type(type_, id_, data_type, user, **kwargs):
     else:
         signature.data_type = data_type.name
         try:
-            signature.save(username=user)
+            signature.save(username=user.username)
             return {'success': True}
         except ValidationError, e:
             return {'success': False, 'message': str(e)}
@@ -491,16 +504,13 @@ def delete_signature_dependency(_id, username=None):
     :param username: The user deleting this Signature dependency.
     :return: bool
     """
-
-    if is_admin(username):
-        signature_dependency = SignatureDependency.objects(id=_id).first()
-        if signature_dependency:
-            signature_dependency.delete(username=username)
-            return {'success': True}
-        else:
-            return {'success': False}
+    signature_dependency = SignatureDependency.objects(id=_id).first()
+    if signature_dependency:
+        signature_dependency.delete(username=user.usernamename)
+        return {'success': True}
     else:
-       return {'success': False}
+        return {'success': False}
+
 
 
 def delete_signature(_id, username=None):
@@ -514,15 +524,13 @@ def delete_signature(_id, username=None):
     :returns: bool
     """
 
-    if is_admin(username):
-        signature = Signature.objects(id=_id).first()
-        if signature:
-            signature.delete(username=username)
-            return True
-        else:
-            return False
+    signature = Signature.objects(id=_id).first()
+    if signature:
+        signature.delete(username=user.usernamename)
+        return True
     else:
         return False
+
 
 
 def add_new_signature_dependency(data_type, analyst):
@@ -540,7 +548,6 @@ def add_new_signature_dependency(data_type, analyst):
         return False
 
     data_type = str(data_type).strip();
-
 
     try:
         signature_dependency = SignatureDependency.objects(name=data_type).first()
@@ -623,7 +630,7 @@ def update_dependency(type_, id_, dep, user, append=False, **kwargs):
                 add_new_signature_dependency(item, user)
                 obj.data_type_dependency.append(item)
 
-        obj.save(username=user)
+        obj.save(username=user.username)
         return {'success': True, 'message': "Data type dependency set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -663,7 +670,7 @@ def update_min_version(type_, id_, data_type_min_version, user, **kwargs):
     data_type_min_version = h.unescape(data_type_min_version)
     try:
         obj.data_type_min_version = data_type_min_version
-        obj.save(username=user)
+        obj.save(username=user.username)
         return {'success': True, 'message': "Data type min version set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -702,7 +709,7 @@ def update_max_version(type_, id_, data_type_max_version, user, **kwargs):
     data_type_max_version = h.unescape(data_type_max_version)
     try:
         obj.data_type_max_version = data_type_max_version
-        obj.save(username=user)
+        obj.save(username=user.username)
         return {'success': True, 'message': "Data type max version set."}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -754,7 +761,7 @@ def update_signature_data(type_, id_, data, user, **kwargs):
     data = h.unescape(data)
     try:
         obj.data = data
-        obj.save(username=user)
+        obj.save(username=user.username)
         return {'success': True, 'message': "Signature value updated."}
     except ValidationError, e:
         return {'success': False, 'message': e}
