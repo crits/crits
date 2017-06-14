@@ -885,6 +885,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         """
         """
 
+        if not object:
+            return False
+
         user_source_names = self.get_sources_list()
         user_source_objects = self._meta['cached_acl'].sources
 
