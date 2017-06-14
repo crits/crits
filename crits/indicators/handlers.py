@@ -193,7 +193,7 @@ def get_indicator_details(indicator_id, user):
     indicator = Indicator.objects(id=indicator_id,
                                   source__name__in=users_sources).first()
 
-    if not user.check_source_tlp(indicator):
+    if not indicator or not user.check_source_tlp(indicator):
         indicator = None
 
     if not indicator:
