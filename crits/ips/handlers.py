@@ -458,10 +458,10 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
         return {"success" : False, "message" : "Missing source information."}
 
     if bucket_list:
-        ip_object.add_bucket_list(bucket_list, user)
+        ip_object.add_bucket_list(bucket_list, user.username)
 
     if ticket:
-        ip_object.add_ticket(ticket, user)
+        ip_object.add_ticket(ticket, user.username)
 
     related_obj = None
     if related_id:
@@ -475,7 +475,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
 
 
     if is_validate_only == False:
-        ip_object.save(analyst=user.username)
+        ip_object.save(username=user.username)
 
         #set the URL for viewing the new data
         if is_item_new == True:
