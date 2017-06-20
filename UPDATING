@@ -3,6 +3,14 @@ should be aware of. This will also include things like dependency changes or
 references to changes in other repositories. Updates are sorted by commit date
 descending.
 
+Author: apolkosnik
+Date:   2017-06-20
+
+    Swapping out M2Crypto for pycrypto in the core. 
+    Also adding qrcode to requirements, to make it easier to get TOTP going.
+    Run:
+        pip install pycrypto qrcode
+
 Author: robertsjw
 Date:   2016-11-07
 
