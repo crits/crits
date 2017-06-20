@@ -38,3 +38,4 @@ wsgiref
 olefile
 pyimpfuzzy
 m2crypto
+chardet

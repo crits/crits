@@ -1621,28 +1621,29 @@ def parse_ole_file(file):
     email = {}
     email['to'] = []
     for entry in ole.listdir():
+        msg_encoding = chardet.detect(get_stream_data(entry))
         if 'attach' in entry[0]:
             # Attachments are keyed by directory entry in the stream
             # e.g. '__attach_version1.0_#00000000'
             if entry[0] not in attachments:
                 attachments[entry[0]] = {}
             if msg['attachment_name'] in entry[-1]:
-                attachments[entry[0]].update({'name': get_stream_data(entry).decode('utf-16')})
+                attachments[entry[0]].update({'name': get_stream_data(entry).decode(msg_encoding['encoding'])})
             if msg['attachment_data'] in entry[-1]:
                 attachments[entry[0]].update({'data': get_stream_data(entry)})
             if msg['attachment_type'] in entry[-1]:
-                attachments[entry[0]].update({'type': get_stream_data(entry).decode('utf-16')})
+                attachments[entry[0]].update({'type': get_stream_data(entry).decode(msg_encoding['encoding'])})
         else:
             if msg['subject'] in entry[-1]:
-                email['subject'] = get_stream_data(entry).decode('utf-16')
+                email['subject'] = get_stream_data(entry).decode(msg_encoding['encoding'])
             if msg['body'] in entry[-1]:
-                email['raw_body'] = get_stream_data(entry).decode('utf-16')
+                email['raw_body'] = get_stream_data(entry).decode(msg_encoding['encoding'])
             if msg['header'] in entry[-1]:
-                email['raw_header'] = get_stream_data(entry).decode('utf-16')
+                email['raw_header'] = get_stream_data(entry).decode(msg_encoding['encoding'])
             if msg['recipient_email'] in entry[-1]:
-                email['to'].append(get_stream_data(entry).decode('utf-16').lower())
+                email['to'].append(get_stream_data(entry).decode(msg_encoding['encoding']).lower())
             if msg['message_class'] in entry[-1]:
-                message_class = get_stream_data(entry).decode('utf-16').lower()
+                message_class = get_stream_data(entry).decode(msg_encoding['encoding']).lower()
     ole.close()
 
     # Process headers to extract data
