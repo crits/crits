@@ -13,7 +13,7 @@ django-debug-toolbar-template-profiler
 django-debug-toolbar-template-timings
 django-debug-toolbar-vcs-info
 django-tastypie==0.13.3
-git+https://github.com/frbapolkosnik/django-tastypie-mongoengine.git
+git+https://github.com/apolkosnik-old/django-tastypie-mongoengine.git
 future
 kombu
 lxml
@@ -36,5 +36,6 @@ six
 ushlex
 wsgiref
 olefile
+pycrypto
 pyimpfuzzy
-m2crypto
+qrcode
