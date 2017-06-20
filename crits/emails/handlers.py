@@ -12,6 +12,7 @@ import yaml
 import io
 import sys
 import olefile
+import chardet
 
 from dateutil.parser import parse as date_parser
 from django.conf import settings
