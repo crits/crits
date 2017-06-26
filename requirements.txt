@@ -38,4 +38,5 @@ wsgiref
 olefile
 pycrypto
 pyimpfuzzy
+chardet
 qrcode
