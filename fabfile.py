@@ -27,7 +27,7 @@ def create_admin_user(username=None, firstname=None, lastname=None,
         org = prompt("Organization name: ")
 
     print("Adding a default admin account")
-    cmd = 'python manage.py users -a -A -e "{}" -f "{}" -l "{}" -o "{}" -u "{}"'
+    cmd = 'python manage.py users -a -R UberAdmin -e "{}" -f "{}" -l "{}" -o "{}" -u "{}"'
     with cd(APP_ROOT):
         run(cmd.format(email, firstname, lastname, org, username))
     print("Make note of the above password so you can authenticate!")
