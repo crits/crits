@@ -1293,8 +1293,10 @@ def dict_to_email(d, save_unsupported=True):
     clean_dict(d, keys)
 
     if 'x_originating_ip' in d and d['x_originating_ip']:
-        d['x_originating_ip'] = re.findall(r'[0-9]+(?:\.[0-9]+){3}',
-                                           d['x_originating_ip'])[0]
+        orig_ipv4 = re.findall(r'[0-9]+(?:\.[0-9]+){3}',
+                               d['x_originating_ip'])
+        if orig_ipv4:
+            d['x_originating_ip'] = orig_ipv4[0]
 
     if 'date' in d and d['date']:
         if isinstance(d['date'], datetime.datetime):
