@@ -449,7 +449,7 @@ class CRITsAPIResource(MongoEngineResource):
                     querydict['_id'] = ObjectId(v)
                 except:
                     pass
-            if k.startswith("c-"):
+            elif k.startswith("c-"):
                 field = k[2:]
                 # Attempt to discover query operators. We use django-style operators
                 # (same as MongoEngine). These also override regex.
