@@ -2358,16 +2358,15 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             return results
         if not sources:
             sources = user_sources(username)
-        for r in self.relationships:
-            rd = r.to_dict()
-            obj_class = class_from_type(rd['type'])
-            if r.rel_type not in ["Campaign", "Target"]:
-                obj = obj_class.objects(id=rd['value'],
-                        source__name__in=sources).first()
+        for ty in set(rel.to_dict()['type'] for rel in self.relationships):
+            obj_class = class_from_type(ty)
+            objids = [ty_o.to_dict()['value'] for ty_o in filter(lambda o: o.to_dict()['type'] == ty, self.relationships)]
+            if r.rel_type not in ['Campaign', 'Target']:
+                obj = obj_class.objects(id__in=objids, source__name__in=sources)
             else:
-                obj = obj_class.objects(id=rd['value']).first()
+                obj = obj_class.objects(id__in=objids)
             if obj:
-                results.append(obj)
+                results.extend(obj)
         return results
 
     def add_releasability(self, source_item=None, analyst=None, *args, **kwargs):
