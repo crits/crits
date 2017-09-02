@@ -444,9 +444,21 @@ class CRITsAPIResource(MongoEngineResource):
             except:
                 # If can't be converted to an int use the string.
                 v_int = v
-            if k == "c-_id":
+            if k == "c-_id" or k.find("c-_id__") == 0:
                 try:
-                    querydict['_id'] = ObjectId(v)
+                    field = "_id"
+
+                    # Attempt to extract an "in" or "nin" operator
+                    try:
+                        op_index = k.index("__")
+                        op = "$%s" % k[op_index+2:]
+                    except ValueError:
+                        op_index = None
+
+                    if op_index == None:
+                        querydict[field] = ObjectId(v)
+                    elif op in ['$in', '$nin']:
+                        querydict[field] = {op: [ObjectId(x) for x in v.split(',')]}
                 except:
                     pass
             elif k.startswith("c-"):
