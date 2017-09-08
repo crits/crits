@@ -17,11 +17,11 @@ git+https://github.com/apolkosnik-old/django-tastypie-mongoengine.git
 future
 kombu
 lxml
-mongoengine==0.10.6
+mongoengine==0.8.8
 git+https://github.com/MongoEngine/django-mongoengine.git
 pip>=8.1.2
 pydeep==0.2
-pymongo==3.2.2
+pymongo==2.8.1
 pyparsing
 python-dateutil
 python-ldap
