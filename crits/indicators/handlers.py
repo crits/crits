@@ -1080,7 +1080,7 @@ def activity_add(id_, activity, user, **kwargs):
                 'message': 'Could not find Indicator'}
     try:
 
-        activity['analyst'] = user
+        activity['analyst'] = user.username
         indicator.add_activity(activity['analyst'],
                                activity['start_date'],
                                activity['end_date'],
@@ -1117,7 +1117,7 @@ def activity_update(id_, activity, user=None, **kwargs):
                 'message': 'Could not find Indicator'}
     try:
         activity = datetime_parser(activity)
-        activity['analyst'] = user
+        activity['analyst'] = user.username
         indicator.edit_activity(activity['analyst'],
                                 activity['start_date'],
                                 activity['end_date'],
@@ -1176,9 +1176,9 @@ def ci_update(id_, ci_type, value, user, **kwargs):
     if ci_type == "confidence" or ci_type == "impact":
         try:
             if ci_type == "confidence":
-                indicator.set_confidence(user, value)
+                indicator.set_confidence(user.username, value)
             else:
-                indicator.set_impact(user, value)
+                indicator.set_impact(user.username, value)
             indicator.save(username=user.username)
             return {'success': True}
         except ValidationError, e:
