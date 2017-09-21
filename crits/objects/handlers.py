@@ -266,7 +266,7 @@ def add_object(type_, id_, object_type, source, method, reference, tlp, user,
             value = md5sum
             reference = filename
         ret = tlo.add_object(object_type, value,
-                             source, method, reference, user)
+                             source, method, reference, user.username)
 
         if not ret['success']:
             msg = '%s! [Type: "%s"][Value: "%s"]'
@@ -322,7 +322,7 @@ def add_object(type_, id_, object_type, source, method, reference, tlp, user,
                 results['message'] = msg % ind_res.get('message')
 
         if is_sort_relationships == True:
-            results['relationships'] = tlo.sort_relationships(user, meta=True)
+            results['relationships'] = tlo.sort_relationships(user.username, meta=True)
 
         if get_objects:
             results['objects'] = tlo.sort_objects()
@@ -539,6 +539,9 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
     elif source_name == None or source_name.strip() == "":
         result = {'success':  False,
                   'message':  "Can't create indicator with an empty source field"}
+    elif tlp == None or tlp.strip() == "":
+        result = {'success':  False,
+                  'message':  "Can't create indicator with an empty source tlp"}
     else:
         value = value.lower().strip()
         ind_type = ind_type.strip()
@@ -573,10 +576,10 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
         else:
             results = me.add_relationship(indicator,
                                           RelationshipTypes.RELATED_TO,
-                                          analyst=analyst,
+                                          analyst=analyst.username,
                                           get_rels=True)
             if results['success']:
-                me.save(username=analyst)
+                me.save(username=analyst.username)
                 relationship= {'type': rel_type, 'value': rel_id}
                 message = render_to_string('relationships_listing_widget.html',
                                             {'relationship': relationship,
