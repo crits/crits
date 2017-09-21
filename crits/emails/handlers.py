@@ -871,8 +871,11 @@ def handle_msg(data, sourcename, reference, method, tlp, user, password='',
     result['email']['ticket'] = ticket
 
     if result['email'].has_key('date'):
-        result['email']['isodate'] = date_parser(result['email']['date'],
-                                                 fuzzy=True)
+        try:
+            result['email']['isodate'] = date_parser(result['email']['date'],
+                                                     fuzzy=True)
+        except:
+            result['email']['isodate'] = None
 
     obj = handle_email_fields(result['email'], user, method,
                               related_id=related_id, related_type=related_type,
@@ -936,7 +939,7 @@ def handle_msg(data, sourcename, reference, method, tlp, user, password='',
                                    right_type=rel.rel_type,
                                    right_id=rel.object_id,
                                    rel_type=RelationshipTypes.RELATED_TO,
-                                   user=user.username)
+                                   user=user)
 
     response['status'] = True
     response['obj_id'] = obj['object'].id
