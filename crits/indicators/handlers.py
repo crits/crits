@@ -1395,6 +1395,8 @@ def validate_indicator_value(value, ind_type):
     # URL
     if ind_type == IndicatorTypes.URI and "://" in value.split('.')[0]:
         domain_or_ip = urlparse.urlparse(value).hostname
+        if not domain_or_ip:
+            return ("", "Failed to parse a domain or IP from the URL")
         try:
             validate_ipv46_address(domain_or_ip)
             return (value, "")
@@ -1409,6 +1411,8 @@ def validate_indicator_value(value, ind_type):
         if '@' not in value:
             return ("", "Email address must contain an '@'")
         domain_or_ip = value.split('@')[-1]
+        if not domain_or_ip:
+            return ("", "Email address must contain a domain (or IP)")
         if domain_or_ip[0] == '[' and domain_or_ip[-1] == ']':
             try:
                 validate_ipv46_address(domain_or_ip[1:-1])

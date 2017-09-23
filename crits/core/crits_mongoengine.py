@@ -165,7 +165,7 @@ class CritsQuerySet(QS):
         for key in filter_keys:
             if key in fields:
                 fields.remove(key)
-        csvout = ",".join(fields) + "\n"
+        csvout = str(",".join(fields) + "\n")
         csvout += "".join(obj.to_csv(fields) for obj in self)
         return csvout
 
@@ -560,7 +560,9 @@ class CritsDocument(BaseDocument):
         for field in fields:
             if field in self._data:
                 data = ""
-                if field == "aliases" and self._has_method("get_aliases"):
+                if field == "actions" and self._has_method("get_action_types"):
+                    data = ";".join(self.get_action_types())
+                elif field == "aliases" and self._has_method("get_aliases"):
                     data = ";".join(self.get_aliases())
                 elif field == "campaign" and self._has_method("get_campaign_names"):
                     data = ';'.join(self.get_campaign_names())
@@ -571,9 +573,13 @@ class CritsDocument(BaseDocument):
                 else:
                     data = self._data[field]
                     if not hasattr(data, 'encode'):
-                        # Convert non-string data types
-                        data = unicode(data)
+                        try: # convert list of strings
+                            data = ";".join(data)
+                        except: # Convert non-string data types
+                            data = unicode(data)
                 row.append(data.encode('utf-8'))
+            else:
+                row.append('')
 
         csv_wr.writerow(row)
         return csv_string.getvalue()
@@ -843,6 +849,22 @@ class CritsActionsDocument(BaseDocument):
                 ea.date = date
                 self.actions.append(ea)
                 break
+
+    def get_action_types(self, active_only=False):
+        """
+        Return a list of action types applied to the object.
+
+        :param active_only: If True, only return active Actions.
+                            If False, return all Actions.
+        :type active_only: boolean
+        :returns: bool
+        """
+
+        if active_only:
+            return [a['action_type'] for a in self._data['actions']
+                                         if a['active'] == 'on']
+        else:
+            return [a['action_type'] for a in self._data['actions']]
 
 # Embedded Documents common to most classes
 class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
@@ -2366,16 +2388,15 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             return results
         if not sources:
             sources = user_sources(username)
-        for r in self.relationships:
-            rd = r.to_dict()
-            obj_class = class_from_type(rd['type'])
-            if r.rel_type not in ["Campaign", "Target"]:
-                obj = obj_class.objects(id=rd['value'],
-                        source__name__in=sources).first()
+        for ty in set(rel.to_dict()['type'] for rel in self.relationships):
+            obj_class = class_from_type(ty)
+            objids = [ty_o.to_dict()['value'] for ty_o in filter(lambda o: o.to_dict()['type'] == ty, self.relationships)]
+            if r.rel_type not in ['Campaign', 'Target']:
+                obj = obj_class.objects(id__in=objids, source__name__in=sources)
             else:
-                obj = obj_class.objects(id=rd['value']).first()
+                obj = obj_class.objects(id__in=objids)
             if obj:
-                results.append(obj)
+                results.extend(obj)
         return results
 
     def add_releasability(self, source_item=None, analyst=None, *args, **kwargs):
