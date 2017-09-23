@@ -25,10 +25,10 @@ class IP(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, Documen
                     ' Object Types'),
         },
         "jtable_opts": {
-                         'details_url': 'crits.ips.views.ip_detail',
+                         'details_url': 'crits-ips-views-ip_detail',
                          'details_url_key': 'ip',
                          'default_sort': "modified DESC",
-                         'searchurl': 'crits.ips.views.ips_listing',
+                         'searchurl': 'crits-ips-views-ips_listing',
                          'fields': [ "ip", "ip_type", "created", "modified",
                                      "source", "campaign", "status", "id"],
                          'jtopts_fields': [ "details",

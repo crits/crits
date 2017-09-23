@@ -2,7 +2,11 @@ import json
 import urllib
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -86,7 +90,7 @@ def actor_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
-    return HttpResponseRedirect(reverse('crits.actors.views.actors_listing')
+    return HttpResponseRedirect(reverse('crits-actors-views-actors_listing')
                                 + "?%s" % urllib.urlencode(query))
 
 @user_passes_test(user_can_view_data)
@@ -199,7 +203,7 @@ def remove_actor(request, id_):
     if request.method == "POST":
         if user.has_access_to(ActorACL.DELETE):
             actor_remove(id_, request.user)
-            return HttpResponseRedirect(reverse('crits.actors.views.actors_listing'))
+            return HttpResponseRedirect(reverse('crits-actors-views-actors_listing'))
         else:
             return render_to_response('error.html',
                                       {'error':'User does not have permission to remove actor.'},

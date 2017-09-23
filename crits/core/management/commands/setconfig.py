@@ -1,7 +1,6 @@
 import copy
 import os
 
-from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError as CE
 
 from crits.config.config import CRITsConfig
@@ -15,8 +14,8 @@ class Command(BaseCommand):
     Script Class.
     """
 
-    option_list = (
-        make_option("--" + RESET_CONFIG_VARIABLE,
+    def add_arguments(self, parser):
+        parser.add_argument("--" + RESET_CONFIG_VARIABLE,
                     action='store_true',
                     dest=RESET_CONFIG_VARIABLE,
                     default=False,
@@ -24,16 +23,16 @@ class Command(BaseCommand):
                             'settings by dropping the config collection ' +
                             'and then setting the to default values in the ' +
                             'target DB instance. This has the highest ' +
-                            'precedence over other options.'),
-        make_option("--" + CREATE_CONFIG_VARIABLE,
+                            'precedence over other options.')
+        parser.add_argument("--" + CREATE_CONFIG_VARIABLE,
                     action='store_true',
                     dest=CREATE_CONFIG_VARIABLE,
                     default=False,
                     help='Creates a new default CRITs config only if there ' +
                             'is no default configuration in the target ' +
                             'DB instance. This has the second highest ' +
-                            'precedence over other options.'),
-        make_option("--" + REINSERT_CONFIG_VARIABLE,
+                            'precedence over other options.')
+        parser.add_argument("--" + REINSERT_CONFIG_VARIABLE,
                     action='store_true',
                     dest=REINSERT_CONFIG_VARIABLE,
                     default=False,
@@ -47,8 +46,7 @@ class Command(BaseCommand):
                     'This could result in missing fields from the ' +
                     'database, even though defaults specified by the ' +
                     'document in Python is correct. This has the third ' +
-                    'highest precedence over other options.'),
-    ) + BaseCommand.option_list
+                    'highest precedence over other options.')
 
     args = """<configuration option> <value>
 

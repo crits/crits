@@ -16,7 +16,7 @@
     {% for data in signature %}
         <tr>
             <td>
-                <a href="{% url 'crits.signatures.views.signature_detail' data.id %}">{{ data.title }}</a>
+                <a href="{% url 'crits-signatures-views-signature_detail' data.id %}">{{ data.title }}</a>
             </td>
             <td>{{ data.data_type }}</td>
             <td>{{ data.data_type_min_version }}</td>

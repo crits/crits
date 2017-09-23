@@ -24,7 +24,7 @@
         <tr>
             <td>
                 {% if result.result %}
-                <a href="{% url 'crits.core.views.global_search_listing' %}?search_type=global&q={{result.result|urlencode}}&force_full=1">{{result.result}}</a>
+                <a href="{% url 'crits-core-views-global_search_listing' %}?search_type=global&q={{result.result|urlencode}}&force_full=1">{{result.result}}</a>
                 {% endif %}
             </td>
             {% for key, value in result.items %}
@@ -32,7 +32,7 @@
                 {% if key == 'md5' %}
                     <td>
                     {% if value %}
-                    <a href="{% url 'crits.core.views.global_search_listing' %}?search_type=global&q={{value}}">{{value}}</a>
+                    <a href="{% url 'crits-core-views-global_search_listing' %}?search_type=global&q={{value}}">{{value}}</a>
                     {% endif %}
                     </td>
                 {% else %}

@@ -5,7 +5,6 @@ from django.conf import settings
 from django.conf.urls import include, url
 
 urlpatterns = [
-
     url(r'^', include('crits.core.urls')),                        # Core
     url(r'^dashboards/', include('crits.dashboards.urls')),       # Dashboard
     url(r'^actors/', include('crits.actors.urls')),               # Actors
@@ -108,8 +107,8 @@ if settings.DEVEL_INSTANCE:
             url(r'^%s(?P<path>.*)$' % _media_url, serve, {'document_root': settings.MEDIA_ROOT}))
     del(_media_url, serve)
 
-if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns = [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+# if settings.DEBUG:
+#     import debug_toolbar
+#     urlpatterns = [
+#         url(r'^__debug__/', include(debug_toolbar.urls)),
+#     ] + urlpatterns

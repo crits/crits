@@ -5,7 +5,6 @@ import socket
 from crits.settings import crits_config
 from django.core.management.base import BaseCommand, CommandError
 from crits.core.user import CRITsUser
-from optparse import make_option
 
 from crits.core.handlers import login_user
 from crits.vocabulary.acls import GeneralACL
@@ -15,18 +14,17 @@ class Command(BaseCommand):
     Script Class.
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option("-e", "--environ-auth", action="store_true", dest='environ',
+    def add_arguments(self, parser):
+        parser.add_argument("-e", "--environ-auth", action="store_true", dest='environ',
                     default=False,
                     help=("Authenticate using 'CRITS_USER' and 'CRITS_PASSWORD'"
-                          " environment variables (overrides -u and -p).")),
-        make_option("-u", "--username", dest='username', default=None,
-                    help="Username to log in with (will prompt if not provided)."),
-        make_option("-p", "--password", dest='password', default=None,
-                    help="Password to log in with (will prompt if not provided)."),
-    )
-    args = '<location> <script> -- <script argument 1> ...'
-    help = ('Runs scripts using the CRITs environment.\n'
+                          " environment variables (overrides -u and -p)."))
+        parser.add_argument("-u", "--username", dest='username', default=None,
+                    help="Username to log in with (will prompt if not provided).")
+        parser.add_argument("-p", "--password", dest='password', default=None,
+                    help="Password to log in with (will prompt if not provided).")
+        args = '<location> <script> -- <script argument 1> ...'
+        help = ('Runs scripts using the CRITs environment.\n'
             '<location>:\t"crits_scripts" (without quotes) to run a CRITs script '
             '\n\t\tor "foo" (without quotes) where foo is the name of a service.\n'
             '<script>:\tthe name of the script to run.\n')

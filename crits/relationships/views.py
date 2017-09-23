@@ -55,7 +55,7 @@ def add_new_relationship(request):
                                            {'relationship': relationship,
                                             'nohide': True,
                                             'relationships': results['relationships']},
-                                           RequestContext(request))
+                                           request=request)
                 result = {'success': True, 'message': message}
             else:
                 message = "Error adding relationship: %s" % results['message']
@@ -248,7 +248,7 @@ def break_relationship(request):
                                        {'relationship': relationship,
                                         'nohide': True,
                                         'relationships': results['relationships']},
-                                       RequestContext(request))
+                                       request=request)
             result = {'success': True, 'message': message}
         else:
             message = "Error deleting relationship: %s" % results['message']

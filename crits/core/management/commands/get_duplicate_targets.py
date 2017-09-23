@@ -1,22 +1,21 @@
 from bson import Code
 
 from django.core.management.base import BaseCommand
-from optparse import make_option
 
 from crits.emails.email import Email
 from crits.targets.target import Target
 
 class Command(BaseCommand):
 
-    option_list = BaseCommand.option_list + (
-        make_option('--delete',
+    def add_arguments(self, parser):
+        parser.add_argument('--delete',
                     '-d',
                     dest='is_delete',
                     default=False,
                     action='store_true',
-                    help='Delete duplicate targets based on the email_address field.'),
-    )
-    help = 'Prints out duplicate target emails due to case sensitivity.'
+                    help='Delete duplicate targets based on the email_address field.')
+    
+        help = 'Prints out duplicate target emails due to case sensitivity.'
 
     is_delete = False
 

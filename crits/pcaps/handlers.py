@@ -3,7 +3,11 @@ import hashlib
 import json
 
 from bson.objectid import ObjectId
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -150,10 +154,10 @@ def generate_pcap_jtable(request, option):
     jtopts = {
         'title': "PCAPs",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                             type_),
                            args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                               type_),
                              args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),

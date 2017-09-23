@@ -1,7 +1,11 @@
 import json
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response, render
 from django.template import RequestContext
@@ -219,7 +223,7 @@ def upload_signature(request, link_id=None):
             if status['success']:
                 jdump = json.dumps({
                     'message': 'signature uploaded successfully! <a href="%s">View signature</a>'
-                    % reverse('crits.signatures.views.signature_detail',
+                    % reverse('crits-signatures-views-signature_detail',
                               args=[status['_id']]), 'success': True})
                 return HttpResponse(jdump, content_type="application/json")
 
@@ -374,7 +378,7 @@ def remove_signature(request, _id):
     else:
         result = None
     if result:
-        return HttpResponseRedirect(reverse('crits.signatures.views.signatures_listing'))
+        return HttpResponseRedirect(reverse('crits-signatures-views-signatures_listing'))
     else:
         return render_to_response('error.html',
                                   {'error': "Could not delete signature"})

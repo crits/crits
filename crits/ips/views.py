@@ -3,7 +3,11 @@ import urllib
 import logging
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -58,7 +62,7 @@ def ip_search(request):
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
     #return render_to_response('error.html', {'error': query})
-    return HttpResponseRedirect(reverse('crits.ips.views.ips_listing')
+    return HttpResponseRedirect(reverse('crits-ips-views-ips_listing')
                                 + "?%s" % urllib.urlencode(query))
 
 @user_passes_test(user_can_view_data)
@@ -183,7 +187,7 @@ def add_update_ip(request, method):
                 result['message'] = []
                 message = ('<div>Success! Click here to view the new IP: <a '
                            'href="%s">%s</a></div>'
-                           % (reverse('crits.ips.views.ip_detail',
+                           % (reverse('crits-ips-views-ip_detail',
                                       args=[ip]),
                               ip))
                 result['message'].insert(0, message)

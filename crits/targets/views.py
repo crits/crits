@@ -2,7 +2,11 @@ import json
 import urllib
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -65,7 +69,7 @@ def target_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
-    return HttpResponseRedirect(reverse('crits.emails.views.emails_listing') +
+    return HttpResponseRedirect(reverse('crits-emails-views-emails_listing') +
                                 "?%s" % urllib.urlencode(query))
 
 @user_passes_test(user_can_view_data)
@@ -113,7 +117,7 @@ def add_update_target(request):
             results = upsert_target(data, analyst)
             if results['success']:
                 message = '<div>Click here to view the new target: <a href='
-                message += '"%s">%s</a></div>' % (reverse('crits.targets.views.target_info',
+                message += '"%s">%s</a></div>' % (reverse('crits-targets-views-target_info',
                                                           args=[new_email]),
                                                   new_email)
                 result = {'message': message}
@@ -126,7 +130,7 @@ def add_update_target(request):
         if request.is_ajax():
             return HttpResponse(json.dumps(result), content_type="application/json")
         else:
-            return HttpResponseRedirect(reverse('crits.targets.views.target_info',
+            return HttpResponseRedirect(reverse('crits-targets-views-target_info',
                                                 args=[email]))
     else:
         return render_to_response("error.html",
@@ -153,7 +157,7 @@ def delete_target(request, email_address=None):
             return render_to_response("error.html",
                                       {"error" : error },
                                       RequestContext(request))
-        return HttpResponseRedirect(reverse('crits.targets.views.target_details'))
+        return HttpResponseRedirect(reverse('crits-targets-views-target_details'))
     else:
         return render_to_response("error.html",
                                   {"error" : "Expected POST" },

@@ -2,7 +2,11 @@ import datetime
 import json
 
 from django.conf import settings
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -166,13 +170,13 @@ def generate_comment_jtable(request, option):
     jtopts = {
         'title': "Comments",
         'default_sort': "date DESC",
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                             type_),
                            args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                               type_),
                              args=('jtdelete',)),
-        'searchurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_)),
+        'searchurl': reverse('crits-%ss-views-%ss_listing' % (type_,type_)),
         'fields': ["details",
                    "obj_type",
                    "comment",

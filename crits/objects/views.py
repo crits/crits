@@ -98,7 +98,7 @@ def add_new_object(request):
                                         {'objects': results['objects'],
                                          'relationships': relationships,
                                          'subscription': subscription},
-                                        RequestContext(request))
+                                        request=request)
                 result = {'success': True,
                           'html': html,
                           'message': results['message']}
@@ -107,14 +107,14 @@ def add_new_object(request):
                                             {'relationship': relationship,
                                              'nohide': True,
                                              'relationships': relationships},
-                                            RequestContext(request))
+                                            request=request)
                 result['rel_made'] = True
                 result['rel_msg'] = rel_msg
             else:
                 html = render_to_string('objects_listing_widget.html',
                                         {'objects': results['objects'],
                                          'subscription': subscription},
-                                        RequestContext(request))
+                                        request=request)
                 result = {'success': True,
                           'html': html,
                           'message': results['message']}
@@ -206,7 +206,7 @@ def bulk_add_object_inline(request):
                 object_listing_html = render_to_string('objects_listing_widget.html',
                                                        {'objects': class_type.sort_objects(),
                                                         'subscription': subscription},
-                                                       RequestContext(request))
+                                                       request=request)
 
                 response['html'] = object_listing_html
 
@@ -220,7 +220,7 @@ def bulk_add_object_inline(request):
                     rel_html = render_to_string('relationships_listing_widget.html',
                                                 {'relationship': subscription,
                                                  'relationships': class_type.sort_relationships(request.user, meta=True)},
-                                                RequestContext(request))
+                                                request=request)
 
                     response['rel_msg'] = rel_html
                     response['rel_made'] = True

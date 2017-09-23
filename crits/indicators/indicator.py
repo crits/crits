@@ -79,10 +79,10 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
                        ' indicator')
         },
         "jtable_opts": {
-            'details_url': 'crits.indicators.views.indicator',
+            'details_url': 'crits-indicators-views-indicator',
             'details_url_key': 'id',
             'default_sort': "created DESC",
-            'searchurl': 'crits.indicators.views.indicators_listing',
+            'searchurl': 'crits-indicators-views-indicators_listing',
             'fields': ["value", "ind_type", "threat_types", "attack_types",
                        "created", "modified", "source", "campaign", "status",
                        "id"],

@@ -99,7 +99,7 @@ def prep_db():
     user = CRITsUser.create_user(username=TUSER_NAME,
                                  password=TUSER_PASS,
                                  email=TUSER_EMAIL,
-                                 role=TUSER_ROLE,
+                                 #role=TUSER_ROLE,
                                  )
     user.first_name = TUSER_FNAME
     user.last_name = TUSER_LNAME

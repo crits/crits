@@ -582,7 +582,7 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
                                             {'relationship': relationship,
                                              'nohide': True,
                                              'relationships': results['message']},
-                                            RequestContext(request))
+                                            request=request)
                 result = {'success': True, 'message': message}
             else:
                 message = "Indicator created. Could not create relationship"

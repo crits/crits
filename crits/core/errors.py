@@ -7,7 +7,7 @@ from django.template import RequestContext
 
 logger = logging.getLogger(__name__)
 
-def custom_500(request):
+def custom_500(request, exception=None):
     exception, value, tb = sys.exc_info()
     ftb = traceback.format_exception(exception, value, tb)
     logger.debug(ftb)
@@ -16,17 +16,17 @@ def custom_500(request):
                                "value": value},
                               RequestContext(request))
 
-def custom_404(request):
+def custom_404(request, exception=None):
     return render_to_response("404.html",
                               {},
                               RequestContext(request))
 
-def custom_403(request):
+def custom_403(request, exception=None):
     return render_to_response("403.html",
                               {},
                               RequestContext(request))
 
-def custom_400(request):
+def custom_400(request, exception=None):
     return render_to_response("400.html",
                               {},
                               RequestContext(request))

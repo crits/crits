@@ -1,7 +1,11 @@
 import json
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -160,7 +164,7 @@ def remove_backdoor(request, id_):
         user = request.user
         if user.has_access_to(BackdoorACL.DELETE):
             backdoor_remove(id_, user.username)
-        return HttpResponseRedirect(reverse('crits.backdoors.views.backdoors_listing'))
+        return HttpResponseRedirect(reverse('crits-backdoors-views-backdoors_listing'))
     return render_to_response('error.html',
                               {'error':'Expected AJAX/POST'},
                               RequestContext(request))

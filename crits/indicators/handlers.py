@@ -7,7 +7,11 @@ import urlparse
 from io import BytesIO
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.core.validators import validate_ipv4_address, validate_ipv46_address
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -103,10 +107,10 @@ def generate_indicator_jtable(request, option):
     jtopts = {
         'title': "Indicators",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                             type_),
                            args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                               type_),
                              args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),

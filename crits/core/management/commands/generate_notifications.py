@@ -1,6 +1,10 @@
 from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from crits.config.config import CRITsConfig
 from crits.notifications.notification import Notification
 
@@ -40,7 +44,7 @@ class EmailNotification(object):
             self.subject = crits_config.crits_email_subject_tag + "CRITs: Subscriptions and Notifications"
 
         # start the body of the email
-        comments_url = self.instance_url + reverse('crits.comments.views.activity')
+        comments_url = self.instance_url + reverse('crits-comments-views-activity')
         self.body = "Here's info on the latest comments and updates to CRITs that you are subscribed to!\n\n"
         self.body += "For more info, check out the Activity page: %s\n\n" % comments_url
 

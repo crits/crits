@@ -9,7 +9,11 @@ from crits.dashboards.dashboard import SavedSearch, Dashboard
 from crits.core.crits_mongoengine import json_handler
 from crits.core.user_tools import get_acl_object
 from mongoengine import Q
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from crits.campaigns.campaign import Campaign
 from crits.indicators.indicator import Indicator
 from crits.emails.email import Email
@@ -179,7 +183,7 @@ def constructTable(table, records, columns, colNames):
     }
     if table.objType:
         tableObject["objType"] = table.objType
-        tableObject["url"] = reverse("crits.dashboards.views.load_data",
+        tableObject["url"] = reverse("crits-dashboards-views-load_data",
                                           kwargs={"obj":table.objType})
     return tableObject
 
@@ -248,7 +252,7 @@ def parseDocObjectsToStrings(records, obj_type):
             elif key == "to":
                 doc[key] = len(value)
             elif key == "thumb":
-                doc['url'] = reverse("crits.screenshots.views.render_screenshot",
+                doc['url'] = reverse("crits-screenshots-views-render_screenshot",
                                       args=(unicode(doc["_id"]),))
             elif key=="results" and obj_type == "AnalysisResult":
                 doc[key] = len(value)
@@ -551,7 +555,7 @@ def generate_search_for_saved_table(user, id=None,request=None):
                    "count":str(len(records)),
                    "type":get_obj_name_from_title(savedSearch.name)}
         #special url to get the records of a default dashboard since their queries are different
-        url = reverse("crits.dashboards.views.get_dashboard_table_data",
+        url = reverse("crits-dashboards-views-get_dashboard_table_data",
                       kwargs={"tableName":str(savedSearch.name.replace(" ", "_"))})
     args = {'term': term,
             'results': results,

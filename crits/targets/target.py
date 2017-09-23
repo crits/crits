@@ -30,10 +30,10 @@ class Target(CritsBaseAttributes, CritsActionsDocument, Document):
             'note': 'Custom note about target'
         },
         "jtable_opts": {
-                         'details_url': 'crits.targets.views.target_info',
+                         'details_url': 'crits-targets-views-target_info',
                          'details_url_key': 'email_address',
                          'default_sort': "email_count DESC",
-                         'searchurl': 'crits.targets.views.targets_listing',
+                         'searchurl': 'crits-targets-views-targets_listing',
                          'fields': [ "email_address","firstname", "lastname",
                                      "email_count", "department", "division",
                                      "status", "id"],

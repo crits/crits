@@ -56,10 +56,10 @@
         x.innerHTML = user_favorites;
         user_favorites = JSON.parse(x.innerHTML);
         var secure_cookie = "{{ secure_cookie }}";
-        var source_access = "{% url 'crits.core.views.source_access' %}";
+        var source_access = "{% url 'crits-core-views-source_access' %}";
 
-        var obj_types_url = "{% url 'crits.objects.views.get_object_type_dropdown' %}";
-        var get_relationship_type_dropdown = "{% url 'crits.relationships.views.get_relationship_type_dropdown' %}";
+        var obj_types_url = "{% url 'crits-objects-views-get_object_type_dropdown' %}";
+        var get_relationship_type_dropdown = "{% url 'crits-relationships-views-get_relationship_type_dropdown' %}";
 
     {% if subscription.type %}
             var subscription_type = "{{ subscription.type }}";
@@ -67,9 +67,9 @@
             var subscription_type = false;
         {% endif %}
     {% endif %}
-    var login_user = "{% url 'crits.core.views.login' %}";
-    var get_item_data_url = "{% url 'crits.core.views.get_item_data' %}";
-    var get_dialog_url = "{% url 'crits.core.views.get_dialog' %}";
+    var login_user = "{% url 'crits-core-views-login' %}";
+    var get_item_data_url = "{% url 'crits-core-views-get_item_data' %}";
+    var get_dialog_url = "{% url 'crits-core-views-get_dialog' %}";
     </script>
 </head>
 <body>

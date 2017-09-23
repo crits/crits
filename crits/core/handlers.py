@@ -16,7 +16,11 @@ from django.contrib.auth.signals import user_logged_in
 from django.middleware.csrf import rotate_token
 from django.contrib.auth import authenticate
 # we implement django.contrib.auth.login as user_login in here to accomodate mongoengine
-from django.core.urlresolvers import reverse, resolve, get_script_prefix
+try:
+    from django.urls import reverse, resolve, get_script_prefix
+except ImportError:
+    from django.core.urlresolvers import reverse, resolve, get_script_prefix 
+#from django.core.urlresolvers import resolve, get_script_prefix
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -335,7 +339,7 @@ def get_favorites(analyst):
             for obj in objs:
                 obj_attr = getattr(obj, attr)
                 results += '<tr><td>%s</td><td><a href="%s">%s</a></td>' % (type_,
-                    reverse('crits.core.views.details',
+                    reverse('crits-core-views-details',
                              args=(type_, str(obj.id))),
                     obj_attr)
                 results += '<td><span class="ui-icon ui-icon-trash remove_favorite favorites_icon_active" '
@@ -950,7 +954,7 @@ def promote_bucket_list(bucket, confidence, name, related, description, analyst)
             campaign_add(name, confidence, description, related, analyst, obj=obj)
 
     return {'success': True,
-            'message': 'Bucket successfully promoted. <a href="%s">View campaign.</a>' % reverse('crits.campaigns.views.campaign_details', args=(name,))}
+            'message': 'Bucket successfully promoted. <a href="%s">View campaign.</a>' % reverse('crits-campaigns-views-campaign_details', args=(name,))}
 
 def alter_bucket_list(obj, buckets, val):
     """
@@ -1026,7 +1030,7 @@ def generate_bucket_jtable(request, option):
     """
 
     if option == 'jtlist':
-        details_url = 'crits.core.views.bucket_list'
+        details_url = 'crits-core-views-bucket_list'
         details_key = 'name'
         response = jtable_ajax_list(Bucket,
                                     details_url,
@@ -1057,7 +1061,7 @@ def generate_bucket_jtable(request, option):
     jtopts = {'title': 'Buckets',
               'fields': fields,
               'listurl': 'jtlist',
-              'searchurl': reverse('crits.core.views.global_search_listing'),
+              'searchurl': reverse('crits-core-views-global_search_listing'),
               'default_sort': 'name ASC',
               'no_sort': ['Promote'],
               'details_link': ''}
@@ -1066,16 +1070,16 @@ def generate_bucket_jtable(request, option):
         if ctype == 'id':
             continue
         elif ctype == 'name':
-            url = reverse('crits.core.views.global_search_listing') + '?search_type=bucket_list&search=Search&force_full=1'
+            url = reverse('crits-core-views-global_search_listing') + '?search_type=bucket_list&search=Search&force_full=1'
         elif ctype == 'Promote':
-            url = reverse('crits.core.views.bucket_promote')
+            url = reverse('crits-core-views-bucket_promote')
         else:
             lower = ctype.lower()
             if lower != "rawdata":
-                url = reverse('crits.%ss.views.%ss_listing' % (lower, lower))
+                url = reverse('crits-%ss-views-%ss_listing' % (lower, lower))
             else:
                 lower = "raw_data"
-                url = reverse('crits.%s.views.%s_listing' % (lower, lower))
+                url = reverse('crits-%s-views-%s_listing' % (lower, lower))
 
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
@@ -2401,18 +2405,18 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
                 doc[key] = html_escape(doc[key])
             if col_obj._meta['crits_type'] == "Comment":
                 mapper = {
-                    "Actor": 'crits.actors.views.actor_detail',
-                    "Campaign": 'crits.campaigns.views.campaign_details',
-                    "Certificate": 'crits.certificates.views.certificate_details',
-                    "Domain": 'crits.domains.views.domain_detail',
-                    "Email": 'crits.emails.views.email_detail',
-                    "Event": 'crits.events.views.view_event',
-                    "Indicator": 'crits.indicators.views.indicator',
-                    "IP": 'crits.ips.views.ip_detail',
-                    "PCAP": 'crits.pcaps.views.pcap_details',
-                    "RawData": 'crits.raw_data.views.raw_data_details',
-                    "Sample": 'crits.samples.views.detail',
-                    "Signature": 'crits.signatures.views.detail',
+                    "Actor": 'crits-actors-views-actor_detail',
+                    "Campaign": 'crits-campaigns-views-campaign_details',
+                    "Certificate": 'crits-certificates-views-certificate_details',
+                    "Domain": 'crits-domains-views-domain_detail',
+                    "Email": 'crits-emails-views-email_detail',
+                    "Event": 'crits-events-views-view_event',
+                    "Indicator": 'crits-indicators-views-indicator',
+                    "IP": 'crits-ips-views-ip_detail',
+                    "PCAP": 'crits-pcaps-views-pcap_details',
+                    "RawData": 'crits-raw_data-views-raw_data_details',
+                    "Sample": 'crits-samples-views-detail',
+                    "Signature": 'crits-signatures-views-detail',
                 }
                 doc['url'] = reverse(mapper[doc['obj_type']],
                                     args=(doc['url_key'],))
@@ -2630,7 +2634,7 @@ def build_jtable(jtopts, request):
         if field == "actions":
             fdict['display'] = """function (data) { return '<div class="icon-container"><span data-id="'+data.record.id+'" id="'+data.record.id+'" class="preferred_actions_jtable ui-icon ui-icon-heart"></span></div>';}"""
         if field == "thumb":
-            fdict['display'] = """function (data) { return '<img src="%s'+data.record.id+'/thumb/" />';}""" % reverse('crits.screenshots.views.render_screenshot')
+            fdict['display'] = """function (data) { return '<img src="%s'+data.record.id+'/thumb/" />';}""" % reverse('crits-screenshots-views-render_screenshot')
         if field == "description" and jtable['title'] == "Screenshots":
             fdict['display'] = """function (data) { return '<span class="edit_underline edit_ss_description" data-id="'+data.record.id+'">'+data.record.description+'</span>';}"""
         if 'no_sort' in jtopts and field in jtopts['no_sort']:
@@ -2640,7 +2644,7 @@ def build_jtable(jtopts, request):
             fdict['visibility'] = '"hidden"'
         # This creates links for certain jTable columns
         # It will link anything listed in 'linked_fields'
-        campbase = reverse('crits.campaigns.views.campaign_details',args=('__CAMPAIGN__',))
+        campbase = reverse('crits-campaigns-views-campaign_details',args=('__CAMPAIGN__',))
 
         # If linked_fields is not specified lets link source and campaign
         # if they exist as fields in the jTable
@@ -2734,7 +2738,7 @@ def generate_items_jtable(request, itype, option):
     jtopts = {
         'title': "%ss" % itype,
         'default_sort': 'name ASC',
-        'listurl': reverse('crits.core.views.items_listing',
+        'listurl': reverse('crits-core-views-items_listing',
                            args=(itype, 'jtlist',)),
         'deleteurl': None,
         'searchurl': None,
@@ -2814,8 +2818,8 @@ def generate_roles_jtable(request, option):
     jtopts = {
         'title': "Roles",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.core.views.roles_listing', args=('jtlist',)),
-        'deleteurl': reverse('crits.core.views.roles_listing',
+        'listurl': reverse('crits-core-views-roles_listing', args=('jtlist',)),
+        'deleteurl': reverse('crits-core-views-roles_listing',
                              args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -2878,7 +2882,7 @@ def generate_users_jtable(request, option):
     jtopts = {
         'title': "Users",
         'default_sort': 'last_login DESC',
-        'listurl': reverse('crits.core.views.users_listing', args=('jtlist',)),
+        'listurl': reverse('crits-core-views-users_listing', args=('jtlist',)),
         'deleteurl': None,
         'searchurl': None,
         'fields': ['username', 'first_name', 'last_name', 'email',
@@ -2979,12 +2983,12 @@ def dns_timeline(query, analyst, sources):
                     pass
             elif ip:
                 if state == "on":
-                    description += "<br /><b><a style=\"display: inline;\" href=\"%s\">%s</a>:</b> %s" % (reverse('crits.ips.views.ip_detail', args=[ip.ip]), ip.ip, ipl['relationship_date'])
+                    description += "<br /><b><a style=\"display: inline;\" href=\"%s\">%s</a>:</b> %s" % (reverse('crits-ips-views-ip_detail', args=[ip.ip]), ip.ip, ipl['relationship_date'])
                 elif state == "off":
                     e['startdate'] = datetime.datetime.strftime(ipl['relationship_date'],
                                                                 settings.PY_DATETIME_FORMAT)
                     e['title'] = domain
-                    description += "<br /><b><a style=\"display: inline;\" href=\"%s\">%s</a>:</b> %s" % (reverse('crits.ips.views.ip_detail', args=[ip.ip]), ip.ip, ipl['relationship_date'])
+                    description += "<br /><b><a style=\"display: inline;\" href=\"%s\">%s</a>:</b> %s" % (reverse('crits-ips-views-ip_detail', args=[ip.ip]), ip.ip, ipl['relationship_date'])
                     state = "on"
     return events
 
@@ -3033,7 +3037,7 @@ def email_timeline(query, analyst, sources):
             if "from" in email:
                 description += "<br /><b>%s</b>: <a style=\"display: inline;\" href=\"%s\">%s</a>" % \
                                (email["from"],
-                                reverse('crits.emails.views.email_detail', args=[email['_id']]),
+                                reverse('crits-emails-views-email_detail', args=[email['_id']]),
                                 email["from"])
             if "isodate" in email:
                 e['startdate'] = "%s" % email["isodate"]
@@ -3079,7 +3083,7 @@ def indicator_timeline(query, analyst, sources):
         event_id += 1
         e['startdate'] = indicator['created'].strftime("%Y-%m-%d %H:%M:%S.%Z")
         description = ""
-        description += "<br /><b>Value</b>: <a style=\"display: inline;\" href=\"%s\">%s</a>" % (reverse('crits.indicators.views.indicator', args=[indicator['_id']]), indicator['value'])
+        description += "<br /><b>Value</b>: <a style=\"display: inline;\" href=\"%s\">%s</a>" % (reverse('crits-indicators-views-indicator', args=[indicator['_id']]), indicator['value'])
         description += "<br /><b>Type</b>: %s" % indicator['type']
         description += "<br /><b>Created</b>: %s" % indicator['created']
         e['description'] = description
@@ -3263,7 +3267,7 @@ def generate_user_profile(username, request):
         else:
             count = 0
         total_favorites += count
-        url = reverse('crits.core.views.favorites_list', args=(type_, 'inline'))
+        url = reverse('crits-core-views-favorites_list', args=(type_, 'inline'))
         collected_favorites[type_] = {
                                        'count': count,
                                        'url': url
@@ -3327,7 +3331,7 @@ def generate_favorites_jtable(request, type_, option):
     jtopts = {
         'title': type_ + 's',
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.core.views.favorites_list', args=(type_, 'jtlist')),
+        'listurl': reverse('crits-core-views-favorites_list', args=(type_, 'jtlist')),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
         'hidden_fields': mapper['hidden_fields'],
@@ -3655,7 +3659,7 @@ def login_user(username, password, next_url=None, user_agent=None,
                 return response
             response['success'] = True
             if 'message' not in response:
-                response['message'] = reverse('crits.dashboards.views.dashboard')
+                response['message'] = reverse('crits-dashboards-views-dashboard')
             return response
         else:
             logger.info("Attempted login to a disabled account detected: %s" %
@@ -3897,7 +3901,7 @@ def generate_audit_jtable(request, option):
     type_ = "audit"
     if option == "jtlist":
         # Sets display url
-        details_url = 'crits.core.views.details'
+        details_url = 'crits-core-views-details'
         details_url_key = "target_id"
         response = jtable_ajax_list(obj_type,
                                     details_url,
@@ -3909,10 +3913,10 @@ def generate_audit_jtable(request, option):
     jtopts = {
         'title': "Audit Log Entries",
         'default_sort': "date DESC",
-        'listurl': reverse('crits.core.views.%s_listing' % type_,
+        'listurl': reverse('crits-core-views-%s_listing' % type_,
                            args=('jtlist',)),
         'deleteurl': '',
-        'searchurl': reverse('crits.core.views.%s_listing' % type_),
+        'searchurl': reverse('crits-core-views-%s_listing' % type_),
         'fields': ["details",
                    "user",
                    "type",
@@ -3951,22 +3955,22 @@ def details_from_id(type_, id_):
     :returns: str
     """
 
-    type_map = {'Actor': 'crits.actors.views.actor_detail',
-                'Backdoor': 'crits.backdoors.views.backdoor_detail',
-                'Campaign': 'crits.campaigns.views.campaign_details',
-                'Certificate': 'crits.certificates.views.certificate_details',
-                'Domain': 'crits.domains.views.domain_detail',
-                'Email': 'crits.emails.views.email_detail',
-                'Event': 'crits.events.views.view_event',
-                'Exploit': 'crits.exploits.views.exploit_detail',
-                'Indicator': 'crits.indicators.views.indicator',
-                'IP': 'crits.ips.views.ip_detail',
-                'PCAP': 'crits.pcaps.views.pcap_details',
-                'RawData': 'crits.raw_data.views.raw_data_details',
-                'Sample': 'crits.samples.views.detail',
-                'Screenshot': 'crits.screenshots.views.render_screenshot',
-                'Signature': 'crits.signatures.views.signature_detail',
-                'Target': 'crits.targets.views.target_info',
+    type_map = {'Actor': 'crits-actors-views-actor_detail',
+                'Backdoor': 'crits-backdoors-views-backdoor_detail',
+                'Campaign': 'crits-campaigns-views-campaign_details',
+                'Certificate': 'crits-certificates-views-certificate_details',
+                'Domain': 'crits-domains-views-domain_detail',
+                'Email': 'crits-emails-views-email_detail',
+                'Event': 'crits-events-views-view_event',
+                'Exploit': 'crits-exploits-views-exploit_detail',
+                'Indicator': 'crits-indicators-views-indicator',
+                'IP': 'crits-ips-views-ip_detail',
+                'PCAP': 'crits-pcaps-views-pcap_details',
+                'RawData': 'crits-raw_data-views-raw_data_details',
+                'Sample': 'crits-samples-views-detail',
+                'Screenshot': 'crits-screenshots-views-render_screenshot',
+                'Signature': 'crits-signatures-views-signature_detail',
+                'Target': 'crits-targets-views-target_info',
                 }
     if type_ in type_map and id_:
         if type_ == 'Campaign':
@@ -4261,7 +4265,7 @@ def generate_sector_jtable(request, option):
     """
 
     if option == 'jtlist':
-        details_url = 'crits.core.views.sector_list'
+        details_url = 'crits-core-views-sector_list'
         details_key = 'name'
         response = jtable_ajax_list(Sector,
                                     details_url,
@@ -4292,7 +4296,7 @@ def generate_sector_jtable(request, option):
     jtopts = {'title': 'Sectors',
               'fields': fields,
               'listurl': 'jtlist',
-              'searchurl': reverse('crits.core.views.global_search_listing'),
+              'searchurl': reverse('crits-core-views-global_search_listing'),
               'default_sort': 'name ASC',
               'no_sort': [],
               'details_link': ''}
@@ -4301,14 +4305,17 @@ def generate_sector_jtable(request, option):
         if ctype == 'id':
             continue
         elif ctype == 'name':
-            url = reverse('crits.core.views.global_search_listing') + '?search_type=sectors&search=Search&force_full=1'
+            url = reverse('crits-core-views-global_search_listing') + '?search_type=sectors&search=Search&force_full=1'
         else:
             lower = ctype.lower()
-            if lower != "rawdata":
-                url = reverse('crits.%ss.views.%ss_listing' % (lower, lower))
+            if lower not in ('rawdata', 'sector' ):
+                url = reverse('crits-%ss-views-%ss_listing' % (lower, lower))
+                print("moo: " + url+ "lower: " + lower)
+            elif lower == 'sector':
+                url = reverse('crits-core-views-%s_listing' % (lower, lower))
             else:
                 lower = "raw_data"
-                url = reverse('crits.%s.views.%s_listing' % (lower, lower))
+                url = reverse('crits-%s-views-%s_listing' % (lower, lower))
 
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
@@ -4578,7 +4585,7 @@ def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
     """
 
     data = {'children': []}
-    url = reverse('crits.core.views.role_graph')
+    url = reverse('crits-core-views-role_graph')
 
     # Roles (default)
     if start_type == "role" or start_type not in ['source', 'user']:

@@ -1,7 +1,11 @@
 import json
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -157,7 +161,7 @@ def save_search(request):
         response["newDashId"] = str(newDash.id)
         response["newDashName"] = newDash.name
         response["isClone"] = clone
-        response["newDashUrl"] = reverse("crits.dashboards.views.dashboard",
+        response["newDashUrl"] = reverse("crits-dashboards-views-dashboard",
                                           kwargs={"dashId":newDash.id})
     return httpResponse(response)
 

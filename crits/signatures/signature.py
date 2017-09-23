@@ -61,10 +61,10 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         "schema_doc": {
         },
         "jtable_opts": {
-                         'details_url': 'crits.signatures.views.signature_detail',
+                         'details_url': 'crits-signatures-views-signature_detail',
                          'details_url_key': 'id',
                          'default_sort': "modified DESC",
-                         'searchurl': 'crits.signatures.views.signatures_listing',
+                         'searchurl': 'crits-signatures-views-signatures_listing',
                          'fields': [ "title", "data_type", "data_type_min_version",
                                      "data_type_max_version",
                                      "data_type_dependency", "version",

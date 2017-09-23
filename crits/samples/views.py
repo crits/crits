@@ -2,7 +2,11 @@ import json
 
 from django import forms
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -303,7 +307,7 @@ def upload_file(request, related_md5=None):
                 if len(result) > 1:
                     filedata = request.FILES['filedata']
                     message = ('<a href="%s">View Uploaded Samples.</a>'
-                               % reverse('crits.samples.views.view_upload_list',
+                               % reverse('crits-samples-views-view_upload_list',
                                          args=[filedata.name, result]))
                     response = {'success': True,
                                 'message': message }
@@ -325,7 +329,7 @@ def upload_file(request, related_md5=None):
                                 msg = "<br>Error emailing sample %s: %s\n" % (s, email_errmsg)
                                 response['message'] = response['message'] + msg
                     if reload_page:
-                        response['redirect_url'] = reverse('crits.samples.views.detail', args=[related_md5])
+                        response['redirect_url'] = reverse('crits-samples-views-detail', args=[related_md5])
                 return render_to_response("file_upload_response.html",
                                           {'response': json.dumps(response)},
                                           RequestContext(request))
@@ -337,7 +341,7 @@ def upload_file(request, related_md5=None):
                                                                'form': form.as_table()})},
                                       RequestContext(request))
     else:
-        return HttpResponseRedirect(reverse('crits.samples.views.samples_listing'))
+        return HttpResponseRedirect(reverse('crits-samples-views-samples_listing'))
 
 @user_passes_test(user_can_view_data)
 def strings(request, sample_md5):
@@ -504,7 +508,7 @@ def unzip_sample(request, md5):
                 return render_to_response('error.html',
                                           {'error' : zfe.value},
                                           RequestContext(request))
-        return HttpResponseRedirect(reverse('crits.samples.views.detail',
+        return HttpResponseRedirect(reverse('crits-samples-views-detail',
                                             args=[md5]))
     else:
         return render_to_response('error.html',
@@ -546,7 +550,7 @@ def remove_sample(request, md5):
     result = delete_sample(md5, '%s' % request.user.username)
     if result:
         org = get_user_organization(request.user.username)
-        return HttpResponseRedirect(reverse('crits.samples.views.samples_listing')
+        return HttpResponseRedirect(reverse('crits-samples-views-samples_listing')
                                     +'?source=%s' % org)
     else:
         return render_to_response('error.html',

@@ -1,19 +1,17 @@
 from django.core.management.base import BaseCommand
-from optparse import make_option
 
 class Command(BaseCommand):
     """
     Script Class.
     """
-    option_list = BaseCommand.option_list + (
-        make_option('--drop',
+    def add_arguments(self, parser):
+        parser.add_argument('--drop',
                     '-d',
                     dest='drop',
                     action="store_true",
                     default=False,
-                    help='Drop existing content before adding.'),
-    )
-    help = 'Creates the default dashboard.'
+                    help='Drop existing content before adding.')
+        help = 'Creates the default dashboard.'
 
     def handle(self, *args, **options):
         """

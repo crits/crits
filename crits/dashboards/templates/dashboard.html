@@ -16,7 +16,7 @@
                 Reset: function() {
                     $.ajax({
                         type:'GET',
-                        url: '{% url "crits.dashboards.views.destroy_dashboard" %}',
+                        url: '{% url "crits-dashboards-views-destroy_dashboard" %}',
                         data: {dashId: '{{ currentDash }}'},
                         datatype: 'json',
                         success: function(data) {
@@ -47,14 +47,14 @@
 		                Update: function() {  //if the parent still exists, give the option to update
 		                	$.ajax({
 		                        type:"GET",
-		                        url: "{% url 'crits.dashboards.views.delete_dashboard'%}",
+		                        url: "{% url 'crits-dashboards-views-delete_dashboard'%}",
 		                        data: {
 		                            id:'{{currentDash}}',
 		                        },
 		                        success: function(data) {
 		                            showResults(data.message, !data.success);
 		                            if (data.success) 
-		                            	window.location = '{% url "crits.dashboards.views.dashboard" parent %}';
+		                            	window.location = '{% url "crits-dashboards-views-dashboard" parent %}';
 		                        },
 		                        error: function(data) {
 		                            throwUnexpectedError();
@@ -71,7 +71,7 @@
 	                	if($('#do-not-show-again').is(':checked'))
 		                	$.ajax({
 		                        type:'GET',
-		                        url: '{% url "crits.dashboards.views.ignore_parent" currentDash %}',
+		                        url: '{% url "crits-dashboards-views-ignore_parent" currentDash %}',
 		                        datatype: 'json',
 		                        success: function(data) {
 		                        },
@@ -134,7 +134,7 @@
             if (searchId) {
                 $.ajax({
                     type:'GET',
-                    url: '{% url "crits.dashboards.views.add_search" %}',
+                    url: '{% url "crits-dashboards-views-add_search" %}',
                     data: {
                         id:searchId,
                         dashboard:'{{currentDash}}'
@@ -221,7 +221,7 @@
             });
             $.ajax({
                 type:'POST',
-                url: '{% url "crits.dashboards.views.save_new_dashboard" %}',
+                url: '{% url "crits-dashboards-views-save_new_dashboard" %}',
                 data: {
                     data: JSON.stringify(data),
                     userId: '{{ user.id }}',
@@ -322,7 +322,7 @@
                 var searchTerm = '{{table.searchTerm}}';
                 var id = '{{table.id}}';
 	            var title = '{{table.title}}';
-	            var editUrl = '{% url "crits.dashboards.views.edit_save_search" table.id %}';
+	            var editUrl = '{% url "crits-dashboards-views-edit_save_search" table.id %}';
 	            {% if table.sortBy %}
 	                var sortField = '{{table.sortBy.field}}';
 	                var sortDirection = '{{table.sortBy.direction}}';
@@ -527,7 +527,7 @@
             <div class='floatleft'>
                 <select id='dashId'>
                     {% for dash in dashboards %}
-                        <option {% if dash|is_object_id_equal:currentDash %}selected{% endif %} value='{% url "crits.dashboards.views.dashboard" dash.id %}'>
+                        <option {% if dash|is_object_id_equal:currentDash %}selected{% endif %} value='{% url "crits-dashboards-views-dashboard" dash.id %}'>
                             {{dash.name}}{% if dash.isPublic %} (Public){% elif dash.parent %} (Modified){% endif %}
                         </option>
                     {% endfor %}	                   
@@ -551,7 +551,7 @@
                         <i class='fa fa-trash-o dont-toggle'></i>
                     </button>
                     <div class='divider'>
-                        <button class='edit-button dont-toggle' href='{% url "crits.dashboards.views.saved_searches_list" %}' id='myDashboardsButton' title='Config'>
+                        <button class='edit-button dont-toggle' href='{% url "crits-dashboards-views-saved_searches_list" %}' id='myDashboardsButton' title='Config'>
                             <i class="fa fa-list dont-toggle"></i>
                         </button>
                     </div>

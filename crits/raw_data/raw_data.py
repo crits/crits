@@ -82,10 +82,10 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         "schema_doc": {
         },
         "jtable_opts": {
-                         'details_url': 'crits.raw_data.views.raw_data_details',
+                         'details_url': 'crits-raw_data-views-raw_data_details',
                          'details_url_key': 'id',
                          'default_sort': "modified DESC",
-                         'searchurl': 'crits.raw_data.views.raw_data_listing',
+                         'searchurl': 'crits-raw_data-views-raw_data_listing',
                          'fields': [ "title", "data_type", "version",
                                      "modified", "source", "campaign",
                                      "id", "status"],

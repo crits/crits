@@ -3,7 +3,11 @@ import json
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.forms.utils import ErrorList
@@ -223,7 +227,7 @@ def domain_search(request):
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
     #return render_to_response('error.html', {'error': query})
-    return HttpResponseRedirect(reverse('crits.domains.views.domains_listing')
+    return HttpResponseRedirect(reverse('crits-domains-views-domains_listing')
                                 + "?%s" % urllib.urlencode(query))
 
 @user_passes_test(user_can_view_data)
@@ -244,7 +248,7 @@ def tld_update(request):
             if result['success']:
                 response = {'success': True,
                             'message': 'Success! <a href="%s">Go to Domains.</a>'
-                            % reverse('crits.domains.views.domains_listing')}
+                            % reverse('crits-domains-views-domains_listing')}
             else:
                 response = {'success': False, 'form': form.as_table()}
         else:
