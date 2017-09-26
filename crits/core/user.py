@@ -913,7 +913,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     def check_source_write(self, source):
         """
         """
-        user_source_objects = self.acl.sources
+        user_source_objects = self.acl.get('sources')
 
         for usource in user_source_objects:
             if usource.name == source:
