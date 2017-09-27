@@ -1641,15 +1641,15 @@ def parse_ole_file(file):
                 attachments[entry[0]].update({'type': get_stream_data(entry).decode(msg_encoding['encoding'])})
         else:
             if msg['subject'] in entry[-1]:
-                email['subject'] = get_stream_data(entry).decode(msg_encoding['encoding'])
+                email['subject'] = get_stream_data(entry).decode(msg_encoding['encoding']).replace('\x00', '')
             if msg['body'] in entry[-1]:
-                email['raw_body'] = get_stream_data(entry).decode(msg_encoding['encoding'])
+                email['raw_body'] = get_stream_data(entry).decode(msg_encoding['encoding']).replace('\x00', '')
             if msg['header'] in entry[-1]:
-                email['raw_header'] = get_stream_data(entry).decode(msg_encoding['encoding'])
+                email['raw_header'] = get_stream_data(entry).decode(msg_encoding['encoding']).replace('\x00', '')
             if msg['recipient_email'] in entry[-1]:
-                email['to'].append(get_stream_data(entry).decode(msg_encoding['encoding']).lower())
+                email['to'].append(get_stream_data(entry).decode(msg_encoding['encoding']).lower().replace('\x00', ''))
             if msg['message_class'] in entry[-1]:
-                message_class = get_stream_data(entry).decode(msg_encoding['encoding']).lower()
+                message_class = get_stream_data(entry).decode(msg_encoding['encoding']).lower().replace('\x00', '')
     ole.close()
 
     # Process headers to extract data
