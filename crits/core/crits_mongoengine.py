@@ -228,6 +228,16 @@ class CritsDocumentFormatter(object):
 
         return self.to_json()
 
+    def get(self, attr=None, ret=None):
+        """
+         Simulate a `.get()` from a dict.
+        """
+
+        if attr is not None:
+            return getattr(self, attr)
+
+        return ret
+
     def merge(self, arg_dict=None, overwrite=False, **kwargs):
         """
         Merge a dictionary into a top-level object class.
