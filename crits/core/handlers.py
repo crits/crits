@@ -4468,7 +4468,7 @@ def users_need_acl_updating(rid=None, rname=None):
     if rname is None:
         return
 
-    CRITsUser.objects(roles=rname).update(set__acl_needs_update=True)
+    CRITsUser.objects(roles=rname).update(set__acl_needs_update=True, multi=True)
     return
 
 def add_role_source(rid, name, analyst):
