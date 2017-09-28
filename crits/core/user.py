@@ -199,7 +199,6 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
              'sparse': True,
             },
         ],
-        "cached_acl": None,
         "crits_type": 'User',
         "latest_schema_version": 3,
         "schema_doc": {
@@ -322,6 +321,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     subscriptions = EmbeddedDocumentField(EmbeddedSubscriptions, default=EmbeddedSubscriptions())
     favorites = EmbeddedDocumentField(EmbeddedFavorites, default=EmbeddedFavorites())
     prefs = EmbeddedDocumentField(PreferencesField, default=PreferencesField())
+    acl_needs_update = BooleanField(default=False)
+    acl = DictField()
     totp = BooleanField(default=False)
     secret = StringField(default="")
     api_keys = ListField(EmbeddedDocumentField(EmbeddedAPIKey))
@@ -812,9 +813,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         l.set_option(ldap.OPT_REFERRALS, 0)
         l.set_option(ldap.OPT_TIMEOUT, 10)
         # setup auth for custom cn's
-        cn = "cn="
-        if config.ldap_usercn:
-            cn = config.ldap_usercn
+        #cn = "cn="
+        #if config.ldap_usercn:
+        #    cn = config.ldap_usercn
         # two-step ldap binding
         if len(config.ldap_bind_dn) > 0:
             try:
@@ -877,9 +878,12 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         # Made the ACL update optional as this was adding 10s to load times
         # and over 400 reads from the DB. If this breaks something, we should
         # fix it.
-        if self._meta['cached_acl'] is None:
+        if self.acl_needs_update:
             self.get_access_list(update=True)
-        return [s.name for s in self._meta['cached_acl'].sources]
+        try:
+            return [s.name for s in self.acl.get('sources')]
+        except:
+            return []
 
     def check_source_tlp(self, object):
         """
@@ -889,7 +893,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
             return False
 
         user_source_names = self.get_sources_list()
-        user_source_objects = self._meta['cached_acl'].sources
+        user_source_objects = self.acl.get('sources')
 
         object_sources = object.source
 
@@ -909,7 +913,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     def check_source_write(self, source):
         """
         """
-        user_source_objects = self._meta['cached_acl'].sources
+        user_source_objects = self.acl.get('sources')
 
         for usource in user_source_objects:
             if usource.name == source:
@@ -931,12 +935,12 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
 
         # If we already have this cached, return it unless we are supposed to
         # update the cache first.
-        if self._meta['cached_acl'] and not update:
-            return self._meta['cached_acl']
+        if not update:
+            return self.acl
 
-        acl=None
+        acl = {}
         roles = Role.objects(name__in=self.roles)
-        acl = roles.first()
+        acl = roles.first()._data
 
         # for each role, modify the acl object to reflect all of the attributes
         # the user should be granted access to.
@@ -984,10 +988,13 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                     # Set the attribute if the user should get access to it.
                     if not getattr(acl, p, False):
                         setattr(acl, p, v)
-        self._meta['cached_acl'] = acl
+        acl = dict(acl)
+        self.acl = acl
+        self.acl_needs_update = False
+        self.save()
         return acl
 
-    def can_do_one_of(self, acls=[]):
+    def can_do_one_of(self, acls=None):
         """
         Given a list of possible acls, verify the user has access to do at least
         one of them.
@@ -997,18 +1004,17 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         :returns: boolean
         """
         result = False
+        if acls is None:
+            acls = []
         for acl in acls:
             if self.has_access_to(acl):
                 result = True
                 break
         return result
 
-    def has_access_to(self, attribute):
+    def has_access_to(self, attribute=None):
         """
-        Try to determine if a user has access to this feature in CRITs. If the
-        "cached_acl" field of '._meta' is None, we will cache the results of
-        '.get_access_list()' there. This will make situations where you have to
-        check several ACL values quicker.
+        Try to determine if a user has access to this feature in CRITs.
 
         Checking multiple ACL values at a time will be very common. For example:
 
@@ -1039,22 +1045,17 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         :returns: boolean
         """
 
-        if self._meta['cached_acl'] is None:
+        if self.acl_needs_update or len(self.acl) == 0:
             self.get_access_list(update=True)
 
         attrs = attribute.split('.')
-        attr = self._meta['cached_acl']
+        attr = self.acl
 
         for a in attrs:
             try:
-                attr = getattr(attr, a, False)
+                attr = attr.get(a, False)
             except:
                 return False
-        # Commenting this out. If it is included, it guarantees that every
-        # single call to this function will clear the cached ACL causing a new
-        # lookup every time. This added 3s to load time and over 150 reads to
-        # loading the dashboard alone.
-        #self._meta['cached_acl'] = None
         return attr
 
 class AuthenticationMiddleware(object):
