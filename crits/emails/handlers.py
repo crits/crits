@@ -875,7 +875,8 @@ def handle_msg(data, sourcename, reference, method, tlp, user, password='',
             result['email']['isodate'] = date_parser(result['email']['date'],
                                                      fuzzy=True)
         except:
-            result['email']['isodate'] = None
+            response['reason'] = 'Error parse date.'
+            return response
 
     obj = handle_email_fields(result['email'], user, method,
                               related_id=related_id, related_type=related_type,
