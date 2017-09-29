@@ -963,31 +963,31 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                         for src in acl.sources:
                             if s.name == src.name:
                                 for x,y in s._data.iteritems():
-                                    if not getattr(acl.sources[c], x, True):
-                                        setattr(acl.sources[c], x, y)
+                                    if not acl['sources'][c].get(x, True):
+                                        acl['sources'][c][x] = y
                                 found = True
                                 break
                             c += 1
                         if not found:
-                            acl.sources.append(s)
+                            acl['sources'].append(s)
                 elif p in settings.CRITS_TYPES.iterkeys():
                     # For each CRITs Type adjust the attributes based on which
                     # ones the # user should get access to.
 
                     # Get the attribute we are working with.
-                    attr = getattr(acl, p)
+                    attr = acl.get(p, False)
 
                     # Modify the attributes.
-                    for x,y in getattr(r, p)._data.iteritems():
-                        if not getattr(attr, x, False):
-                            setattr(attr, x, y)
+                    for x,y in r.get(p, {})._data.iteritems():
+                        if not attr.get(x, False):
+                            attr[x] = y
 
                     # Set the attribute on the ACL.
-                    setattr(acl, p, attr)
+                    acl[p] = attr
                 else:
                     # Set the attribute if the user should get access to it.
-                    if not getattr(acl, p, False):
-                        setattr(acl, p, v)
+                    if not acl.get(p, False):
+                        acl[p] = v
         acl = dict(acl)
         self.acl = acl
         self.acl_needs_update = False
