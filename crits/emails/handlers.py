@@ -1635,7 +1635,7 @@ def parse_ole_file(file):
             if entry[0] not in attachments:
                 attachments[entry[0]] = {}
             if msg['attachment_name'] in entry[-1]:
-                attachments[entry[0]].update({'name': get_stream_data(entry).decode(msg_encoding['encoding'])})
+                attachments[entry[0]].update({'name': get_stream_data(entry).decode(msg_encoding['encoding']).replace('\x00', '')})
             if msg['attachment_data'] in entry[-1]:
                 attachments[entry[0]].update({'data': get_stream_data(entry)})
             if msg['attachment_type'] in entry[-1]:
