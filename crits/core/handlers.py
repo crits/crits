@@ -2020,6 +2020,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
         # need to be filtered appropriately for source access and TLP access
         else:
             filterlist = []
+            query['source.name'] = {'$in': sourcefilt}
             docs = col_obj.objects(__raw__=query)
             for doc in docs:
                 if user.check_source_tlp(doc):

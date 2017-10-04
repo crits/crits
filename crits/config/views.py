@@ -8,7 +8,7 @@ from crits.config.config import CRITsConfig
 from crits.config.forms import ConfigGeneralForm, ConfigLDAPForm, ConfigSecurityForm, ConfigCritsForm
 from crits.config.forms import ConfigLoggingForm, ConfigServicesForm, ConfigDownloadForm
 from crits.config.handlers import modify_configuration
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_user_list
 
 from crits.vocabulary.acls import GeneralACL
 
@@ -45,6 +45,7 @@ def crits_config(request):
             config_services_form = ConfigServicesForm()
             config_download_form = ConfigDownloadForm()
             config_CRITs_form = ConfigCritsForm()
+        user_list = get_user_list()
         return render_to_response('config.html',
                                   {'config_general_form': config_general_form,
                                    'config_LDAP_form': config_LDAP_form,
@@ -52,7 +53,8 @@ def crits_config(request):
                                    'config_logging_form': config_logging_form,
                                    'config_services_form': config_services_form,
                                    'config_download_form': config_download_form,
-                                   'config_CRITs_form': config_CRITs_form,},
+                                   'config_CRITs_form': config_CRITs_form,
+                                   'user_list': user_list},
                                   RequestContext(request))
     else:
         return render_to_response('error.html',
@@ -67,7 +69,6 @@ def modify_config(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-    from django.forms.util import ErrorList
 
     # Get the current configuration, set as default unless user has permission to edit.
     crits_config = CRITsConfig.objects().first()

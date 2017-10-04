@@ -60,7 +60,7 @@ from crits.core.handlers import get_action_types_for_tlo, generate_audit_csv
 from crits.core.source_access import SourceAccess
 from crits.core.user import CRITsUser
 from crits.core.user_tools import user_can_view_data, user_sources
-from crits.core.user_tools import get_user_list, get_nav_template
+from crits.core.user_tools import get_nav_template
 from crits.core.user_tools import get_acl_object
 from crits.core.user_tools import get_user_email_notification
 from crits.core.user_tools import get_user_info, get_user_organization
@@ -429,7 +429,17 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
 
         # TOTP can still be required for Remote Users
         totp_pass = request.POST.get('totp_pass', None)
+        if username is None:
+            response['success'] = False
+            response['message'] = 'Unknown user, bad password, or user does not have permission to log on using the web UI.'
+            return HttpResponse(json.dumps(response),
+                                content_type="application/json")
         logging_in_user = get_user_info(username)
+        if logging_in_user is None:
+            response['success'] = False
+            response['message'] = 'Unknown user, bad password, or user does not have permission to log on using the web UI.'
+            return HttpResponse(json.dumps(response),
+                                content_type="application/json")
         logging_in_user.get_access_list(update=True)
         if (not username or logging_in_user is None or not logging_in_user.has_access_to(GeneralACL.WEB_INTERFACE) or
                 (not totp_pass and crits_config.totp_web == 'Required')):
@@ -1354,10 +1364,6 @@ def base_context(request):
             logger.warning("Base Context UploadSignatureForm Error: %s" % e)
 
         # Other info acquired from functions
-        try:
-            base_context['user_list'] = get_user_list()
-        except Exception, e:
-            logger.warning("Base Context get_user_list Error: %s" % e)
         try:
             base_context['email_notifications'] = get_user_email_notification(user.username)
         except Exception, e:
