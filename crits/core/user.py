@@ -960,7 +960,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                     for s in r.sources:
                         c = 0
                         found = False
-                        for src in acl.sources:
+                        for src in acl['sources']:
                             if s.name == src.name:
                                 for x,y in s._data.iteritems():
                                     if not acl['sources'][c].get(x, True):
@@ -978,9 +978,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                     attr = acl.get(p, False)
 
                     # Modify the attributes.
-                    for x,y in r.get(p, {})._data.iteritems():
-                        if not attr.get(x, False):
-                            attr[x] = y
+                    for x,y in getattr(r, p)._data.iteritems():
+                        if not getattr(attr, x, False):
+                            setattr(attr, x, y)
 
                     # Set the attribute on the ACL.
                     acl[p] = attr
