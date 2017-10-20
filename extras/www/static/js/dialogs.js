@@ -893,7 +893,12 @@ function update_dialog(e) {
 
     if (data_elem.length) { // some fields are set by default on page request and don't
                 // need to be set here set here
-        var value = data_elem.text();
+        if (field == 'comment') { // Only for editing comments
+            var value = data_elem.html(); // Get the HTML version
+            value = value.replace(/<br>/g, '\n'); // Preserve newlines
+        } else { //Everything else
+            var value = data_elem.text();
+        }
         if (field == 'action_type') {
             sel_val = value;
         }
