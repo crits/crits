@@ -103,6 +103,8 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
             pass
         try:
             self.filetype = magic.from_buffer(data)
+            if len(self.filetype) > 1000:
+                self.filetype = self.filetype[0:1000] + '<TRUNCATED>'
         except:
             self.filetype = "Unavailable"
         try:

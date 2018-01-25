@@ -1399,6 +1399,7 @@ def modify_source_access(analyst, data):
                     'message': 'Password does not meet complexity policy: %s' % pc}
     if data['subscriptions'] == '':
         user.subscriptions = EmbeddedSubscriptions()
+    user.acl_needs_update = True
     try:
         user.save(username=analyst)
         return {'success': True}
@@ -2023,6 +2024,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
         # need to be filtered appropriately for source access and TLP access
         else:
             filterlist = []
+            query['source.name'] = {'$in': sourcefilt}
             docs = col_obj.objects(__raw__=query)
             for doc in docs:
                 if user.check_source_tlp(doc):
@@ -3643,6 +3645,7 @@ def login_user(username, password, next_url=None, user_agent=None,
             user.login_attempts.append(e)
             user.save()
         if user.is_active:
+            user.get_access_list(update=True)
             user.invalid_login_attempts = 0
             user.password_reset.reset_code = ""
             user.save()
@@ -4457,6 +4460,25 @@ def edit_role_description(rid, description, analyst):
                  name__ne=settings.ADMIN_ROLE).update_one(set__description=description)
     return {'success': True}
 
+def users_need_acl_updating(rid=None, rname=None):
+    """
+    A role has been updated and users should be flagged to have their ACL
+    updated on the next ACL check.
+
+    :param rid: The ObjectID of the role in question.
+    :type rid: str
+    :param rname: The name of the role in question.
+    :type rname: str
+    """
+
+    if rid:
+        rname = Role.objects(id=rid).first().name
+    if rname is None:
+        return
+
+    CRITsUser.objects(roles=rname).update(set__acl_needs_update=True, multi=True)
+    return
+
 def add_role_source(rid, name, analyst):
     """
     Add a source to a role.
@@ -4477,6 +4499,7 @@ def add_role_source(rid, name, analyst):
           'tlp_green': False}
     d = {'push__sources': ed}
     Role.objects(id=rid, name__ne=settings.ADMIN_ROLE).update_one(**d)
+    users_need_acl_updating(rid=rid)
 
     html = render_to_string('role_source_item.html',
                             {'source': ed})
@@ -4497,6 +4520,7 @@ def remove_role_source(rid, name, analyst):
 
     d = {'pull__sources': {'name': name}}
     Role.objects(id=rid, name__ne=settings.ADMIN_ROLE).update_one(**d)
+    users_need_acl_updating(rid=rid)
     return {'success': True}
 
 def set_role_value(rid, name, value, analyst):
@@ -4528,6 +4552,7 @@ def set_role_value(rid, name, value, analyst):
                      sources__name=sname).update_one(**ud)
     else:
         Role.objects(id=rid,name__ne=settings.ADMIN_ROLE).update_one(**ud)
+    users_need_acl_updating(rid=rid)
 
 def add_new_role(name, copy_from, description, analyst):
     """
