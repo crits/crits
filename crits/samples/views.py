@@ -310,7 +310,7 @@ def upload_file(request, related_md5=None):
                                 'message': message }
                     md5_response = result
                 # regular file upload; result is a list with a single dict
-                elif len(result) == 1:
+                else:
                     response['success'] = result[0].get('success', False)
                     response['message'] = result[0].get('message',
                                                         response.get('message'))
