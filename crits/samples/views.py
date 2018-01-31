@@ -300,7 +300,8 @@ def upload_file(request, related_md5=None):
                                                                    'message': zfe.value})},
                                           RequestContext(request))
             else:
-                if len(result) > 1:
+                # zip file upload, etc; result is a list of strings (1 hash per file)
+                if len(result) > 0 and not isinstance(result[0], dict):
                     filedata = request.FILES['filedata']
                     message = ('<a href="%s">View Uploaded Samples.</a>'
                                % reverse('crits.samples.views.view_upload_list',
@@ -308,7 +309,8 @@ def upload_file(request, related_md5=None):
                     response = {'success': True,
                                 'message': message }
                     md5_response = result
-                elif len(result) == 1:
+                # regular file upload; result is a list with a single dict
+                else:
                     response['success'] = result[0].get('success', False)
                     response['message'] = result[0].get('message',
                                                         response.get('message'))
