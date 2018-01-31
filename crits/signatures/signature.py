@@ -5,13 +5,15 @@ try:
 except ImportError:
 	from mongoengine import Document
 
-from mongoengine import StringField, IntField, ListField
+from mongoengine import EmbeddedDocument
+from mongoengine import StringField, ListField
 from mongoengine import UUIDField
+from mongoengine import IntField, BooleanField
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
-from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
-from crits.core.crits_mongoengine import CritsActionsDocument
+from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
+from crits.core.crits_mongoengine import CritsSourceDocument, CritsDocument, CritsSchemaDocument
+from crits.core.crits_mongoengine import CommonAccess, CritsActionsDocument
 
 
 class SignatureDependency(CritsDocument, CritsSchemaDocument, Document):
@@ -103,3 +105,25 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
     md5 = StringField()
     title = StringField()
     version = IntField()
+
+class SignatureAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Signatures.
+    """
+
+    upload_new_version = BooleanField(default=False)
+
+    data_type_read = BooleanField(default=False)
+    data_type_edit = BooleanField(default=False)
+
+    data_type_min_version_read = BooleanField(default=False)
+    data_type_min_version_edit = BooleanField(default=False)
+
+    data_type_max_version_read = BooleanField(default=False)
+    data_type_max_version_edit = BooleanField(default=False)
+
+    data_read = BooleanField(default=False)
+    data_edit = BooleanField(default=False)
+
+    dependencies_read = BooleanField(default=False)
+    dependencies_edit = BooleanField(default=False)

@@ -15,11 +15,11 @@ def custom_500(request, exception=None):
                                "value": value})
 
 def custom_404(request, exception=None):
-    return render("404.html",
+    return render(request, "404.html",
                               {})
 
 def custom_403(request, exception=None):
-    return render("403.html",
+    return render(request, "403.html",
                               {})
 
 def custom_400(request, exception=None):

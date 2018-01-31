@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load filters %}
 
 
 {% block title %}Target Details{% endblock %}
@@ -13,8 +14,10 @@
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
     <li><a href="#emails_section" id="emails_button"><span>Emails ({{email_list.count}})</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+    {% if TargetACL.SERVICES_READ|has_access_to:user %}
+      <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
     </ul>
 <div id="details_section">
 <div class="content_box content_details">
@@ -38,11 +41,13 @@
                 {% endif %}
             </td>
         </tr>
-        <tr>
-            {% with description=target_detail.description %}
-                {% include 'description_widget.html' %}
-            {% endwith %}
-        </tr>
+        {% if TargetACL.DESCRIPTION_READ|has_access_to:user %}
+          <tr>
+              {% with description=target_detail.description %}
+                  {% include 'description_widget.html' %}
+              {% endwith %}
+          </tr>
+        {% endif %}
         <tr>
             <td class="key">Name</td>
             <td>
@@ -72,67 +77,93 @@
             <td class="key">Notes</td>
             <td>{{target_detail.note}}</td>
         </tr>
-        <tr>
-            <td class="key">Status
-                <span style="float: right;" class="object_status_response"></span>
-            </td>
-            <td>
-                <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{target_detail.status}}</span>
-            </td>
-        </tr>
-        {% with sectors=target_detail.sectors %}
-            {% include "sector_widget.html" %}
-        {% endwith %}
-        <tr>
-            {% with releasability=target_detail.releasability %}
-                {% include "releasability_list_widget.html" %}
-            {% endwith %}
-        </tr>
+        {% if TargetACL.STATUS_READ|has_access_to:user %}
+          <tr>
+              <td class="key">Status
+                  <span style="float: right;" class="object_status_response"></span>
+              </td>
+              <td>
+                  <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{target_detail.status}}</span>
+              </td>
+          </tr>
+        {% endif %}
+        {% if TargetACL.SECTORS_READ|has_access_to:user %}
+          {% with sectors=target_detail.sectors %}
+              {% include "sector_widget.html" %}
+          {% endwith %}
+        {% endif %}
+        {% if TargetACL.RELEASABILITY_READ|has_access_to:user %}
+          <tr>
+              {% with releasability=target_detail.releasability %}
+                  {% include "releasability_list_widget.html" %}
+              {% endwith %}
+          </tr>
+        {% endif %}
         </tbody>
     </table>
     </div>
-    <button class="form_submit_button" id="edit_details">Edit Details</button>
+    {% if TargetACL.EDIT_DETAILS|has_access_to:user %}
+      <button class="form_submit_button" id="edit_details">Edit Details</button>
+    {% endif %}
 </div>
 {% if target_detail.id %}
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% with bucket_list=target_detail.bucket_list %}
-            {% include 'bucket_list_widget.html' %}
-        {% endwith %}
+        {% if TargetACL.BUCKETLIST_READ|has_access_to:user %}
+          {% with bucket_list=target_detail.bucket_list %}
+              {% include 'bucket_list_widget.html' %}
+          {% endwith %}
+        {% endif %}
         {% include 'add_related_widget.html' %}
     </div>
-    <div class="content_box">
-        {% with obj=target_detail obj_type="Target" %}
-            {% include 'action_listing_widget.html' %}
+    {% if TargetACL.ACTIONS_READ|has_access_to:user %}
+      <div class="content_box">
+          {% with obj=target_detail obj_type="Target" %}
+              {% include 'action_listing_widget.html' %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if TargetACL.TICKETS_READ|has_access_to:user %}
+      <div>
+        {% with obj=target_detail obj_type=subscription.type %}
+           {% include 'tickets_listing_widget.html' %}
         {% endwith %}
-    </div>
-    <div>
-      {% with obj=target_detail obj_type=subscription.type %}
-         {% include 'tickets_listing_widget.html' %}
-      {% endwith %}
-    </div>
-    <div>
-      {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
-         {% include "campaigns_display_widget.html" %}
-      {% endwith %}
-    </div>
-    <div>
-      {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
-         {% include "locations_display_widget.html" %}
-      {% endwith %}
-    </div>
-    <div>
-        {% include 'relationships_listing_widget.html' %}
-    </div>
-    <div>
-        {% include 'objects_listing_widget.html' %}
-    </div>
-    <div>
-    {% include 'screenshot_widget.html' %}
-    </div>
-    <div>
-        {% include 'comments_listing_widget.html' %}
-    </div>
+      </div>
+    {% endif %}
+    {% if TargetACL.CAMPAIGNS_READ|has_access_to:user and TargetACL.CAMPAIGN_READ %}
+      <div>
+        {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
+           {% include "campaigns_display_widget.html" %}
+        {% endwith %}
+      </div>
+    {% endif %}
+    {% if TargetACL.LOCATIONS_READ|has_access_to:user %}
+      <div>
+        {% with hit=target_detail col=COL_TARGETS obj=target_detail %}
+           {% include "locations_display_widget.html" %}
+        {% endwith %}
+      </div>
+    {% endif %}
+    {% if TargetACL.RELATIONSHIPS_READ|has_access_to:user %}
+      <div>
+          {% include 'relationships_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if TargetACL.OBJECTS_READ|has_access_to:user %}
+      <div>
+          {% include 'objects_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if TargetACL.SCREENSHOTS_READ|has_access_to:user %}
+      <div>
+      {% include 'screenshot_widget.html' %}
+      </div>
+    {% endif %}
+    {% if TargetACL.COMMENTS_READ|has_access_to:user %}
+      <div>
+          {% include 'comments_listing_widget.html' %}
+      </div>
+    {% endif %}
 {% endif %}
 
 </div>
@@ -142,22 +173,26 @@
     </div>
 </div>
 
-{% with item=target_detail %}
-    {% include "services_analysis_section.html" with crits_type="Target" identifier=target_detail.id %}
-{% endwith %}
+{% if TargetACL.SERVICES_READ|has_access_to:user %}
+  {% with item=target_detail %}
+      {% include "services_analysis_section.html" with crits_type="Target" identifier=target_detail.id %}
+  {% endwith %}
 
-{% if target_detail.id %}
-    {% include 'services_tab_tabs_widget.html' %}
-    </div>
+  {% if target_detail.id %}
+      {% include 'services_tab_tabs_widget.html' %}
+      </div>
+  {% endif %}
 {% endif %}
 
-<div style="display: none;">
-    <div id="edit-details-form" title="Edit Details" style="display: table;">
-        <form id="form-edit-details" action='{% url 'crits-targets-views-add_update_target' %}' method='POST' style="display: inline;">{% csrf_token %}
-        <table class='form'> {{ form.as_table }}</table>
-        </form>
-    </div>
-</div>
+{% if TargetACL.EDIT_DETAILS|has_access_to:user %}
+  <div style="display: none;">
+      <div id="edit-details-form" title="Edit Details" style="display: table;">
+          <form id="form-edit-details" action='{% url 'crits-targets-views-add_update_target' %}' method='POST' style="display: inline;">{% csrf_token %}
+          <table class='form'> {{ form.as_table }}</table>
+          </form>
+      </div>
+  </div>
+{% endif %}
 
 {% endblock %}
 

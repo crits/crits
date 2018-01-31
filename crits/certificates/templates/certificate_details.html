@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load filters %}
 
 {% block title %} Certificate Details {% endblock %}
 
@@ -14,22 +14,24 @@
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+    {% if CertificateACL.SERVICES_READ|has_access_to:user %}
+      <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
 </ul>
-
 <div id="details_section">
-    <div class='content_box'>
-        <span class="horizontal_menu">
-        <ul class="hmenu">
-            <li><a href="{% url 'crits-core-views-download_file' cert.md5 %}?type=cert">Download Certificate</a></li>
-            {% if admin %}
-                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="certifcate" action='{% url "crits-certificates-views-remove_certificate" cert.md5 %}'>Delete Certificate</a></li>
-            {% endif %}
-        </ul>
-        </span>
-    </div>
-
+    {% if CertificateACL.DOWNLOAD|has_access_to:user or CertificateACL.DELETE|has_access_to:user %}
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+      {% if CertificateACL.DOWNLOAD|has_access_to:user %}
+        <li><a href="{% url 'crits-core-views-download_file' cert.md5 %}?type=cert">Download Certificate</a></li>
+      {% endif %}
+      {% if CertificateACL.DELETE|has_access_to:user %}
+        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="certifcate" action='{% url "crits-certificates-views-remove_certificate" cert.md5 %}'>Delete Certificate</a></li>
+      {% endif %}
+    </ul>
+    </span>
+    {% endif %}
     <div class="content_box content_details">
         <h3 class="titleheader">
         <span>Certificate Details<span>
@@ -62,11 +64,14 @@
             <td class='key'>MD5</td>
             <td>{{ cert.md5 }}</td>
             </tr>
+            {% if CertificateACL.DESCRIPTION_READ|has_access_to:user %}
             <tr>
                 {% with description=cert.description %}
                     {% include 'description_widget.html' %}
                 {% endwith %}
             </tr>
+            {% endif %}
+            {% if CertificateACL.STATUS_READ|has_access_to:user %}
             <tr>
                 <td class="key">Status
                     <span style="float: right;" class="object_status_response"></span>
@@ -75,66 +80,96 @@
                     <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{cert.status}}</span>
                 </td>
             </tr>
+            {% endif %}
+            {% with tlp=cert.tlp %}
+                {% include "tlp_widget.html" %}
+            {% endwith %}
+            {% if CertificateACL.SECTORS_READ|has_access_to:user %}
             {% with sectors=cert.sectors %}
                 {% include "sector_widget.html" %}
             {% endwith %}
-            <tr>
-            {% with sources=cert.source obj_id=cert.id obj_type=subscription.type %}
-                {% include "sources_listing_widget.html" %}
-            {% endwith %}
-            </tr>
-            <tr>
-                {% with releasability=cert.releasability %}
-                    {% include 'releasability_list_widget.html' %}
-                {% endwith %}
-            </tr>
+            {% endif %}
+            {% if CertificateACL.SOURCES_READ|has_access_to:user %}
+              <tr>
+              {% with sources=cert.source obj_id=cert.id obj_type=subscription.type %}
+                  {% include "sources_listing_widget.html" %}
+              {% endwith %}
+              </tr>
+            {% endif %}
+            {% if CertificateACL.RELEASABILITY_READ|has_access_to:user %}
+              <tr>
+                  {% with releasability=cert.releasability %}
+                      {% include 'releasability_list_widget.html' %}
+                  {% endwith %}
+              </tr>
+            {% endif %}
         </tbody>
         </table>
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% with bucket_list=cert.bucket_list %}
-            {% include 'bucket_list_widget.html' %}
-        {% endwith %}
+        {% if CertificateACL.BUCKETLIST_READ|has_access_to:user %}
+          {% with bucket_list=cert.bucket_list %}
+              {% include 'bucket_list_widget.html' %}
+          {% endwith %}
+        {% endif %}
         {% include 'add_related_widget.html' %}
     </div>
+    {% if CertificateACL.ACTIONS_READ|has_access_to:user %}
     <div class="content_box">
         {% with obj=cert obj_type="Certificate" %}
             {% include 'action_listing_widget.html' %}
         {% endwith %}
     </div>
+    {% endif %}
+    {% if CertificateACL.TICKETS_READ|has_access_to:user %}
     <div>
       {% with obj=cert obj_type=subscription.type %}
          {% include 'tickets_listing_widget.html' %}
       {% endwith %}
     </div>
+    {% endif %}
+    {% if CertificateACL.CAMPAIGNS_READ|has_access_to:user and  CertificateACL.CAMPAIGN_READ|has_access_to:user %}
     <div>
         {% with hit=cert col=COL_CERTIFICATES %}
             {% include "campaigns_display_widget.html" %}
         {% endwith %}
     </div>
+    {% endif %}
+    {% if CertificateACL.LOCATIONS_READ|has_access_to:user %}
     <div>
         {% with hit=cert col=COL_CERTIFICATES %}
             {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
+    {% endif %}
+    {% if CertificateACL.RELATIONSHIPS_READ|has_access_to:user %}
     <div>
         {% include 'relationships_listing_widget.html' %}
     </div>
+    {% endif %}
+    {% if CertificateACL.OBJECTS_READ|has_access_to:user %}
     <div>
         {% include 'objects_listing_widget.html' %}
     </div>
+    {% endif %}
+    {% if CertificateACL.SCREENSHOTS_READ|has_access_to:user %}
     <div>
     {% include 'screenshot_widget.html' %}
     </div>
+    {% endif %}
+    {% if CertificateACL.COMMENTS_READ|has_access_to:user %}
     <div>
         {% include "comments_listing_widget.html" %}
     </div>
+    {% endif %}
 </div>
-{% with item=cert %}
-    {% include "services_analysis_section.html" with crits_type="certificate" identifier=cert.md5 %}
-{% endwith %}
-{% include 'services_tab_tabs_widget.html' %}
+{% if CertificateACL.SERVICES_READ|has_access_to:user %}
+  {% with item=cert %}
+      {% include "services_analysis_section.html" with crits_type="certificate" identifier=cert.md5 %}
+  {% endwith %}
+  {% include 'services_tab_tabs_widget.html' %}
+{% endif %}
 </div>
 
 {% else %}
@@ -147,4 +182,3 @@
 {% block javascript_includes %}
  <script type="text/javascript" src="{{ STATIC_URL }}js/certificates.js"></script>
 {% endblock %}
-

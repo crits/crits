@@ -6,15 +6,18 @@ try:
 except ImportError:
 	from mongoengine import Document
 
-from mongoengine import StringField, ListField
+from mongoengine import StringField, ListField, BooleanField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import CritsDateTimeField
 from crits.emails.migrate import migrate_email
 
 from crits.core.data_tools import convert_datetimes_to_string
+
 
 class RawHeadersField(StringField):
     """
@@ -155,3 +158,17 @@ class Email(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
         return super(self.__class__, self)._custom_save(force_insert, validate,
             clean, write_concern, cascade, cascade_kwargs, _refs, username)
+
+
+class EmailAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Emails.
+    """
+
+    add_attachment = BooleanField(default=False)
+
+    header_field_edit = BooleanField(default=False)
+    header_field_to_indicator = BooleanField(default=False)
+
+    raw_body_edit = BooleanField(default=False)
+    raw_header_edit = BooleanField(default=False)

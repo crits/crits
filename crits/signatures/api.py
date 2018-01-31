@@ -10,6 +10,7 @@ from crits.signatures.handlers import handle_signature_file
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import SignatureACL
 
 class SignatureResource(CRITsAPIResource):
     """
@@ -50,12 +51,13 @@ class SignatureResource(CRITsAPIResource):
 
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         content = {'return_code': 1,
                    'type': 'Signature'}
         data = bundle.data.get('data', None)
         source = bundle.data.get('source', None)
         description = bundle.data.get('description', '')
+        tlp = bundle.data.get('tlp', 'amber')
         title = bundle.data.get('title', None)
         data_type = bundle.data.get('data_type', None)
         data_type_min_version = bundle.data.get('data_type_min_version', None)
@@ -75,13 +77,18 @@ class SignatureResource(CRITsAPIResource):
             content['message'] = "Must provide a data type."
             self.crits_response(content)
 
-        result = handle_signature_file(data, source, analyst,
+        if not user.has_access_to(SignatureACL.WRITE):
+            content['message'] = 'User does not have permission to create Object.'
+            self.crits_response(content)
+
+        result = handle_signature_file(data, source, user,
                                       description, title, data_type,
                                       data_type_min_version,
                                       data_type_max_version,
                                       data_type_dependency,link_id,
-                                      method=method,
-                                      reference=reference,
+                                      source_method=method,
+                                      source_reference=reference,
+                                      source_tlp=tlp,
                                       copy_rels=copy_rels,
                                       bucket_list=bucket_list,
                                       ticket=ticket)

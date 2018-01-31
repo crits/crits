@@ -22,13 +22,13 @@
                 <td class="key">Enabled?</td>
                 <td>
                 {% if service.enabled %}
-                    {% if admin and service.status == "available"%}
+                    {% if service.status == "available"%}
                         <span class="enabled" data-url="{% url 'crits-services-views-disable' service.name %}">Yes</span>
                     {% else %}
                         <span>Yes</span>
                     {% endif %}
                 {% else %}
-                    {% if admin and service.status == "available"%}
+                    {% if service.status == "available"%}
                         <span class="enabled" data-url="{% url 'crits-services-views-enable' service.name %}">No</span>
                     {% else %}
                         <span>No</span>
@@ -40,13 +40,13 @@
                 <td class="key">Run on triage?</td>
                 <td>
                 {% if service.run_on_triage %}
-                    {% if admin and service.status == "available"%}
+                    {% if service.status == "available"%}
                         <span class="enabled" data-url="{% url 'crits-services-views-disable_triage' service.name %}">Yes</span>
                     {% else %}
                         <span>Yes</span>
                     {% endif %}
                 {% else %}
-                    {% if admin and service.status == "available"%}
+                    {% if service.status == "available"%}
                         <span class="enabled" data-url="{% url 'crits-services-views-enable_triage' service.name %}">No</span>
                     {% else %}
                         <span>No</span>
@@ -62,7 +62,7 @@
                 <td class="key">Status</td>
                 <td class="{{ service.status }}">
                     {{ service.status|capfirst }}
-                    {% if admin and config_error %}
+                    {% if config_error %}
                         - <span style="font-weight: bold; color: red">{{ config_error }}</span>
                     {% endif %}
                 </td>

@@ -23,21 +23,25 @@
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
     <li><a href="#versions_section" id="versions_button"><span>Versions ({{ versions}})</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+    {% if SignatureACL.SERVICES_READ|has_access_to:user %}
+      <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
 </ul>
 
 <div id="details_section">
-    <div class='content_box'>
-        <span class="horizontal_menu">
-        <ul class="hmenu">
-            <li><a href="#" id="upload-new-signature-version" class="dialogClick" dialog="upload-new-signature-version" data-action="{% url 'crits-signatures-views-upload_signature' signature.link_id|stringformat:"s" %}">Upload New Version</a></li>
-            {% if admin %}
-                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="signature" action='{% url "crits-signatures-views-remove_signature" signature.id %}'>Delete Signature</a></li>
-            {% endif %}
-        </ul>
-        </span>
-    </div>
+    {% if SignatureACL.UPLOAD_NEW_VERSION|has_access_to:user or SignatureACL.DELETE|has_access_to:user %}
+      <span class="horizontal_menu">
+      <ul class="hmenu">
+          {% if SignatureACL.UPLOAD_NEW_VERSION|has_access_to:user %}
+              <li><a href="#" id="upload-new-signature-version" class="dialogClick" dialog="upload-new-signature-version" data-action="{% url 'crits-signatures-views-upload_signature' signature.link_id|stringformat:"s" %}">Upload New Version</a></li>
+          {% endif %}
+          {% if SignatureACL.DELETE|has_access_to:user %}
+              <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="signature" action='{% url "crits-signatures-views-remove_signature" signature.id %}'>Delete Signature</a></li>
+          {% endif %}
+      </ul>
+      </span>
+    {% endif %}
 
     <div class="content_box content_details">
         <h3 class="titleheader">
@@ -55,35 +59,43 @@
             <td class='key'>Created</td>
             <td>{{ signature.created }}</td>
             </tr>
-            <tr>
-                <td class='key'>Data Type</td>
-                    <span style="float: right;" class="object_status_response"></span>
-                <td>
-                    <span class="edit" id="signature_type" action="{% url 'crits-signatures-views-set_signature_type' subscription.id %}">{{signature.data_type}}</span>
-                </td>
-            </tr>
-            <tr>
-                <td class="key">Data Type Min Version</td>
-                <td>
-                    <span class="edit_underline" id="data_type_min_version" action="{% url 'crits-signatures-views-update_data_type_min_version' %}">{{signature.data_type_min_version}}</span>
-                    <span id="data_type_min_version_error"></span>
-                </td>
-            </tr>
-            <tr>
-                <td class="key">Data Type Max Version</td>
-                <td>
-                    <span class="edit_underline" id="data_type_max_version" action="{% url 'crits-signatures-views-update_data_type_max_version' %}">{{signature.data_type_max_version}}</span>
-                    <span id="data_type_max_version_error"></span>
-                </td>
-            </tr>
-            <tr>
-                <td class='key'>Dependencies</td>
-                <td>
-                    <span id="data_type_dependency">
-                            <input id="data_type_dependency_input" type="text" value="{{ signature.data_type_dependency|join:','}}">
-                    </span>
-                </td>
-            </tr>
+            {% if SignatureACL.DATA_TYPE_READ|has_access_to:user %}
+              <tr>
+                  <td class='key'>Data Type</td>
+                      <span style="float: right;" class="object_status_response"></span>
+                  <td>
+                      <span class="edit" id="signature_type" action="{% url 'crits-signatures-views-set_signature_type' subscription.id %}">{{signature.data_type}}</span>
+                  </td>
+              </tr>
+            {% endif %}
+            {% if SignatureACL.DATA_TYPE_MIN_VERSION_READ|has_access_to:user %}
+              <tr>
+                  <td class="key">Data Type Min Version</td>
+                  <td>
+                      <span class="edit_underline" id="data_type_min_version" action="{% url 'crits-signatures-views-update_data_type_min_version' %}">{{signature.data_type_min_version}}</span>
+                      <span id="data_type_min_version_error"></span>
+                  </td>
+              </tr>
+            {% endif %}
+            {% if SignatureACL.DATA_TYPE_MAX_VERSION_READ|has_access_to:user %}
+              <tr>
+                  <td class="key">Data Type Max Version</td>
+                  <td>
+                      <span class="edit_underline" id="data_type_max_version" action="{% url 'crits-signatures-views-update_data_type_max_version' %}">{{signature.data_type_max_version}}</span>
+                      <span id="data_type_max_version_error"></span>
+                  </td>
+              </tr>
+            {% endif %}
+            {% if SignatureACL.DEPENDENCIES_READ|has_access_to:user %}
+              <tr>
+                  <td class='key'>Dependencies</td>
+                  <td>
+                      <span id="data_type_dependency">
+                              <input id="data_type_dependency_input" type="text" value="{{ signature.data_type_dependency|join:','}}">
+                      </span>
+                  </td>
+              </tr>
+            {% endif %}
             <tr>
             <td class='key'>Version</td>
             <td>
@@ -92,87 +104,122 @@
                 </select>
             </td>
             </tr>
-            <tr>
-                {% with description=signature.description %}
-                    {% include 'description_widget.html' %}
-                {% endwith %}
-            </tr>
-            <tr>
-                <td class="key">Status
-                    <span style="float: right;" class="object_status_response"></span>
-                </td>
-                <td>
-                    <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{signature.status}}</span>
-                </td>
-            </tr>
-            {% with sectors=signature.sectors %}
-                {% include "sector_widget.html" %}
+            {% if SignatureACL.DESCRIPTION_READ|has_access_to:user %}
+              <tr>
+                  {% with description=signature.description %}
+                      {% include 'description_widget.html' %}
+                  {% endwith %}
+              </tr>
+            {% endif %}
+            {% if SignatureACL.STATUS_READ|has_access_to:user %}
+              <tr>
+                  <td class="key">Status
+                      <span style="float: right;" class="object_status_response"></span>
+                  </td>
+                  <td>
+                      <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{signature.status}}</span>
+                  </td>
+              </tr>
+            {% endif %}
+            {% with tlp=signature.tlp %}
+                {% include "tlp_widget.html" %}
             {% endwith %}
-            <tr>
-            {% with sources=signature.source obj_id=signature.id obj_type=subscription.type %}
-                {% include "sources_listing_widget.html" %}
-            {% endwith %}
-            </tr>
-            <tr>
-                {% with releasability=signature.releasability %}
-                    {% include 'releasability_list_widget.html' %}
-                {% endwith %}
-            </tr>
+            {% if SignatureACL.SECTORS_READ|has_access_to:user %}
+              {% with sectors=signature.sectors %}
+                  {% include "sector_widget.html" %}
+              {% endwith %}
+            {% endif %}
+            {% if SignatureACL.SOURCES_READ|has_access_to:user %}
+              <tr>
+              {% with sources=signature.source obj_id=signature.id obj_type=subscription.type %}
+                  {% include "sources_listing_widget.html" %}
+              {% endwith %}
+              </tr>
+            {% endif %}
+            {% if SignatureACL.RELEASABILITY_READ|has_access_to:user %}
+              <tr>
+                  {% with releasability=signature.releasability %}
+                      {% include 'releasability_list_widget.html' %}
+                  {% endwith %}
+              </tr>
+            {% endif %}
         </tbody>
         </table>
     </div>
 
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% with bucket_list=signature.bucket_list %}
-            {% include 'bucket_list_widget.html' %}
-        {% endwith %}
+        {% if SignatureACL.BUCKETLIST_READ|has_access_to:user %}
+          {% with bucket_list=signature.bucket_list %}
+              {% include 'bucket_list_widget.html' %}
+          {% endwith %}
+        {% endif %}
         {% include 'add_related_widget.html' %}
     </div>
-    <div>
-        {% with data=signature.data %}
-            {% include 'data_widget.html' %}
+    {% if SignatureACL.DATA_READ|has_access_to:user %}
+      <div>
+          {% with data=signature.data %}
+              {% include 'data_widget.html' %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if SignatureACL.ACTIONS_READ|has_access_to:user %}
+      <div class="content_box">
+          {% with obj=signature obj_type="Signature" %}
+              {% include 'action_listing_widget.html' %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if SignatureACL.TICKETS_READ|has_access_to:user %}
+      <div>
+        {% with obj=signature obj_type=subscription.type %}
+           {% include 'tickets_listing_widget.html' %}
         {% endwith %}
-    </div>
-    <div class="content_box">
-        {% with obj=signature obj_type="Signature" %}
-            {% include 'action_listing_widget.html' %}
-        {% endwith %}
-    </div>
-    <div>
-      {% with obj=signature obj_type=subscription.type %}
-         {% include 'tickets_listing_widget.html' %}
-      {% endwith %}
-    </div>
-    <div>
-        {% with hit=signature col=COL_SIGNATURE %}
-            {% include "campaigns_display_widget.html" %}
-        {% endwith %}
-    </div>
-    <div>
-        {% with hit=signature col=COL_SIGNATURE %}
-            {% include "locations_display_widget.html" %}
-        {% endwith %}
-    </div>
-    <div>
-        {% include 'relationships_listing_widget.html' %}
-    </div>
-    <div>
-        {% include 'objects_listing_widget.html' %}
-    </div>
-    <div>
-    {% include 'screenshot_widget.html' %}
-    </div>
-    <div>
-        {% include "comments_listing_widget.html" %}
-    </div>
+      </div>
+    {% endif %}
+    {% if SignatureACL.CAMPAIGNS_READ|has_access_to:user and SignatureACL.CAMPAIGN_READ %}
+      <div>
+          {% with hit=signature col=COL_SIGNATURE %}
+              {% include "campaigns_display_widget.html" %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if SignatureACL.LOCATIONS_READ|has_access_to:user %}
+      <div>
+          {% with hit=signature col=COL_SIGNATURE %}
+              {% include "locations_display_widget.html" %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if SignatureACL.RELATIONSHIPS_READ|has_access_to:user %}
+      <div>
+          {% include 'relationships_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if SignatureACL.OBJECTS_READ|has_access_to:user %}
+      <div>
+          {% include 'objects_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if SignatureACL.SCREENSHOTS_READ|has_access_to:user %}
+      <div>
+      {% include 'screenshot_widget.html' %}
+      </div>
+    {% endif %}
+    {% if SignatureACL.COMMENTS_READ|has_access_to:user %}
+      <div>
+          {% include "comments_listing_widget.html" %}
+      </div>
+    {% endif %}
 </div>
 
 {% include 'signature_versions.html' %}
-{% with item=signature %}
-    {% include "services_analysis_section.html" with crits_type="Signature" identifier=signature.id %}
-{% endwith %}
-{% include 'services_tab_tabs_widget.html' %}
+{% if SignatureACL.SERVICES_READ|has_access_to:user %}
+  {% with item=signature %}
+      {% include "services_analysis_section.html" with crits_type="Signature" identifier=signature.id %}
+  {% endwith %}
+  {% include 'services_tab_tabs_widget.html' %}
+{% endif %}
 </div>
 
 {% else %}
@@ -187,4 +234,3 @@
 <script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/diffview.js"></script><script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/jsdiff.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/jsdifflib/difflib.js"></script>
 {% endblock %}
-

@@ -5,14 +5,15 @@ try:
 except ImportError:
 	from mongoengine import Document
 
-from mongoengine import EmbeddedDocument
+from mongoengine import EmbeddedDocument, BooleanField
 from mongoengine import StringField, ListField
 from mongoengine import EmbeddedDocumentField
 
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocumentFormatter
-from crits.core.crits_mongoengine import CritsSourceDocument, CritsActionsDocument
+from crits.core.crits_mongoengine import CritsSourceDocument, CommonAccess
+from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import CritsDateTimeField
 from crits.indicators.migrate import migrate_indicator
 
@@ -241,6 +242,7 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
                 self.activity.remove(t)
                 break
 
+
     def add_threat_type_list(self, threat_types, analyst, append=True):
         """
         Add threat types to this Indicator.
@@ -336,3 +338,24 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
         """
 
         return ','.join(str(x) for x in self.attack_types)
+
+class IndicatorAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Indicators.
+    """
+
+    type_edit = BooleanField(default=False)
+    threat_type_edit = BooleanField(default=False)
+    attack_type_edit = BooleanField(default=False)
+    confidence_edit = BooleanField(default=False)
+    impact_edit = BooleanField(default=False)
+
+    actions_read = BooleanField(default=False)
+    actions_add = BooleanField(default=False)
+    actions_edit = BooleanField(default=False)
+    actions_delete = BooleanField(default=False)
+
+    activity_read = BooleanField(default=False)
+    activity_add = BooleanField(default=False)
+    activity_edit = BooleanField(default=False)
+    activity_delete = BooleanField(default=False)

@@ -2,12 +2,13 @@ try:
 	from django_mongoengine import Document
 except ImportError:
 	from mongoengine import Document
-
 from mongoengine import StringField, IntField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 
 from crits.certificates.migrate import migrate_certificate
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
+from crits.core.crits_mongoengine import CommonAccess, CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import getFileField
 
@@ -120,3 +121,9 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument
         if objectid:
             self.filedata.grid_id = objectid['_id']
             self.filedata._mark_as_changed()
+
+
+class CertificateAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Certificates.
+    """

@@ -25,6 +25,7 @@ from crits.targets.division import Division
 from crits.targets.forms import TargetInfoForm
 from crits.targets.target import Target
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import TargetACL
 
 
 
@@ -157,14 +158,14 @@ def remove_target(email_address=None, analyst=None):
     return {'success': True,
             'message': "Target removed successfully"}
 
-def get_target_details(email_address, analyst):
+def get_target_details(email_address, user):
     """
     Generate the data to render the Target details template.
 
     :param email_address: The email address of the target.
     :type email_address: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: CRITsUser
     :returns: template (str), arguments (dict)
     """
 
@@ -182,9 +183,9 @@ def get_target_details(email_address, analyst):
     if not target:
         target = Target()
         target.email_address = email_address.strip().lower()
-        form = TargetInfoForm(initial={'email_address': email_address})
-    email_list = target.find_emails(analyst)
-    form = TargetInfoForm(initial=target.to_dict())
+        form = TargetInfoForm(analyst, initial={'email_address': email_address})
+    email_list = target.find_emails(user)
+    form = TargetInfoForm(user, initial=target.to_dict())
 
     if form.fields.get(form_consts.Common.BUCKET_LIST_VARIABLE_NAME) != None:
         form.fields.pop(form_consts.Common.BUCKET_LIST_VARIABLE_NAME)
@@ -195,7 +196,7 @@ def get_target_details(email_address, analyst):
     subscription = {
         'type': 'Target',
         'id': target.id,
-        'subscribed': is_user_subscribed("%s" % analyst,
+        'subscribed': is_user_subscribed("%s" % user,
                                             'Target',
                                             target.id)
     }
@@ -204,7 +205,7 @@ def get_target_details(email_address, analyst):
     objects = target.sort_objects()
 
     #relationships
-    relationships = target.sort_relationships("%s" % analyst,
+    relationships = target.sort_relationships("%s" % user,
                                                 meta=True)
 
     # relationship
@@ -222,10 +223,10 @@ def get_target_details(email_address, analyst):
                     'url_key': email_address}
 
     #screenshots
-    screenshots = target.get_screenshots(analyst)
+    screenshots = target.get_screenshots(user)
 
     # favorites
-    favorite = is_user_favorite("%s" % analyst, 'Target', target.id)
+    favorite = is_user_favorite("%s" % user, 'Target', target.id)
 
     # analysis results
     service_results = target.get_analysis_results()
@@ -240,7 +241,8 @@ def get_target_details(email_address, analyst):
             'email_list': email_list,
             'target_detail': target,
             'service_results': service_results,
-            'form': form}
+            'form': form,
+            'TargetACL': TargetACL}
 
     return template, args
 

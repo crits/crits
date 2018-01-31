@@ -4,6 +4,7 @@ import io
 import csv
 
 from bson import json_util, ObjectId
+from collections import OrderedDict
 from dateutil.parser import parse
 from django.conf import settings
 try:
@@ -19,7 +20,7 @@ except ImportError:
 
 from mongoengine import EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
-from mongoengine import IntField, DateTimeField, ObjectIdField
+from mongoengine import IntField, DateTimeField, ObjectIdField, BooleanField
 from mongoengine.base import BaseDocument
 try:
     from mongoengine import ValidationError
@@ -40,7 +41,7 @@ else:
 
 from pprint import pformat
 
-from crits.core.user_tools import user_sources, is_admin
+from crits.core.user_tools import user_sources
 from crits.core.fields import CritsDateTimeField
 from crits.core.class_mapper import class_from_id, class_from_type
 from crits.vocabulary.relationships import RelationshipTypes
@@ -161,7 +162,7 @@ class CritsQuerySet(QS):
         for key in filter_keys:
             if key in fields:
                 fields.remove(key)
-        csvout = ",".join(fields) + "\n"
+        csvout = str(",".join(fields) + "\n")
         csvout += "".join(obj.to_csv(fields) for obj in self)
         return csvout
 
@@ -218,7 +219,6 @@ class CritsQuerySet(QS):
             final_list.append(doc)
         return final_list
 
-
 class CritsDocumentFormatter(object):
     """
     Class to inherit from to gain the ability to convert a top-level object
@@ -245,6 +245,16 @@ class CritsDocumentFormatter(object):
         """
 
         return self.to_json()
+
+    def get(self, attr=None, ret=None):
+        """
+         Simulate a `.get()` from a dict.
+        """
+
+        if attr is not None:
+            return getattr(self, attr)
+
+        return ret
 
     def merge(self, arg_dict=None, overwrite=False, **kwargs):
         """
@@ -372,6 +382,16 @@ class CritsDocument(BaseDocument):
             audit_entry(self, username, "save")
         else:
             do_audit = True
+
+        # MongoEngine evidently tries to add partial functions as attributes:
+        # https://github.com/MongoEngine/mongoengine/blob/master/mongoengine/base/document.py#L967
+        # A bit of a hack but removing it manually until we can figure out why it is
+        # here and how to stop it from happening.
+        try:
+            self.unsupported_attrs.__delattr__('get_tlp_display')
+        except:
+            pass
+
         if hasattr(super(self.__class__, self).save(), 'write_concern'):
             super(self.__class__, self).save(force_insert=force_insert,
                                              validate=validate,
@@ -546,7 +566,9 @@ class CritsDocument(BaseDocument):
         for field in fields:
             if field in self._data:
                 data = ""
-                if field == "aliases" and self._has_method("get_aliases"):
+                if field == "actions" and self._has_method("get_action_types"):
+                    data = ";".join(self.get_action_types())
+                elif field == "aliases" and self._has_method("get_aliases"):
                     data = ";".join(self.get_aliases())
                 elif field == "campaign" and self._has_method("get_campaign_names"):
                     data = ';'.join(self.get_campaign_names())
@@ -557,9 +579,13 @@ class CritsDocument(BaseDocument):
                 else:
                     data = self._data[field]
                     if not hasattr(data, 'encode'):
-                        # Convert non-string data types
-                        data = unicode(data)
+                        try: # convert list of strings
+                            data = ";".join(data)
+                        except: # Convert non-string data types
+                            data = unicode(data)
                 row.append(data.encode('utf-8'))
+            else:
+                row.append('')
 
         csv_wr.writerow(row)
         return csv_string.getvalue()
@@ -830,6 +856,22 @@ class CritsActionsDocument(BaseDocument):
                 self.actions.append(ea)
                 break
 
+    def get_action_types(self, active_only=False):
+        """
+        Return a list of action types applied to the object.
+
+        :param active_only: If True, only return active Actions.
+                            If False, return all Actions.
+        :type active_only: boolean
+        :returns: bool
+        """
+
+        if active_only:
+            return [a['action_type'] for a in self._data['actions']
+                                         if a['active'] == 'on']
+        else:
+            return [a['action_type'] for a in self._data['actions']]
+
 # Embedded Documents common to most classes
 class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
     """
@@ -845,6 +887,7 @@ class EmbeddedSource(EmbeddedDocument, CritsDocumentFormatter):
         date = CritsDateTimeField(default=datetime.datetime.now)
         method = StringField()
         reference = StringField()
+        tlp = StringField(default='red', choices=('white', 'green', 'amber', 'red'))
 
         def __eq__(self, other):
             """
@@ -871,7 +914,7 @@ class CritsSourceDocument(BaseDocument):
     source = ListField(EmbeddedDocumentField(EmbeddedSource), required=True)
 
     def add_source(self, source_item=None, source=None, method='',
-                   reference='', date=None, analyst=None):
+                   reference='', date=None, analyst=None, tlp=None):
         """
         Add a source instance to this top-level object.
 
@@ -887,10 +930,15 @@ class CritsSourceDocument(BaseDocument):
         :type date: datetime.datetime
         :param analyst: The user adding the source instance.
         :type analyst: str
+        :param tlp: The TLP level this data was shared under.
+        :type tlp: str
         """
 
+        sc = len(self.source)
         s = None
-        if source and analyst:
+        if source and analyst and tlp:
+            if tlp not in ('white', 'green', 'amber', 'red'):
+                tlp = 'red'
             if not date:
                 date = datetime.datetime.now()
             s = EmbeddedSource()
@@ -900,16 +948,18 @@ class CritsSourceDocument(BaseDocument):
             i.reference = reference
             i.method = method
             i.analyst = analyst
+            i.tlp = tlp
             s.instances = [i]
         if not isinstance(source_item, EmbeddedSource):
             source_item = s
 
         if isinstance(source_item, EmbeddedSource):
             match = None
-            if method or reference: # if method or reference is given, use it
+            if method or reference or tlp: # use method, reference, and tlp
                 for instance in source_item.instances:
                     instance.method = method or instance.method
                     instance.reference = reference or instance.reference
+                    instance.tlp = tlp or instance.tlp
             for c, s in enumerate(self.source):
                 if s.name == source_item.name: # find index of matching source
                     match = c
@@ -924,9 +974,11 @@ class CritsSourceDocument(BaseDocument):
                         self.source[match].instances.append(new_inst)
             else: # else, add as new source
                 self.source.append(source_item)
+            if not sc:
+                self.tlp = source_item.instances[0].tlp
 
     def edit_source(self, source=None, date=None, method='',
-                    reference='', analyst=None):
+                    reference='', analyst=None, tlp=None):
         """
         Edit a source instance from this top-level object.
 
@@ -940,8 +992,12 @@ class CritsSourceDocument(BaseDocument):
         :type reference: str
         :param analyst: The user editing the source instance.
         :type analyst: str
+        :param tlp: The TLP this data was shared under.
+        :type tlp: str
         """
 
+        if tlp not in ('white', 'green', 'amber', 'red'):
+            tlp = 'red'
         if source and date:
             for c, s in enumerate(self.source):
                 if s.name == source:
@@ -950,6 +1006,7 @@ class CritsSourceDocument(BaseDocument):
                             self.source[c].instances[i].method = method
                             self.source[c].instances[i].reference = reference
                             self.source[c].instances[i].analyst = analyst
+                            self.source[c].instances[i].tlp = tlp
 
     def remove_source(self, source=None, date=None, remove_all=False):
         """
@@ -1253,6 +1310,47 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
     releasability = ListField(EmbeddedDocumentField(Releasability))
     screenshots = ListField(StringField())
     sectors = ListField(StringField())
+    tlp = StringField(default='red', choices=('white', 'green', 'amber', 'red'))
+
+    def set_tlp(self, tlp):
+        """
+        Set the TLP of this TLO.
+
+        :param tlp: The TLP to set.
+        """
+
+        if tlp not in ('white', 'green', 'amber', 'red'):
+            tlp = 'red'
+        if tlp in self.get_acceptable_tlp_levels():
+            self.tlp = tlp
+
+    def get_acceptable_tlp_levels(self):
+        """
+        Based on what TLP levels sources have shared, limit the list of TLP
+        levels you can share this with accordingly.
+
+        :returns: list
+        """
+
+        d = {'white': ['white', 'green', 'amber', 'red'],
+             'green': ['green', 'amber', 'red'],
+             'amber': ['amber', 'red'],
+             'red': ['red']}
+
+        my_tlps = []
+        for s in self.source:
+            for i in s.instances:
+                my_tlps.append(i.tlp)
+        my_tlps = OrderedDict.fromkeys(my_tlps).keys()
+
+        if 'white' in my_tlps:
+            return d['white']
+        elif 'green' in my_tlps:
+            return d['green']
+        elif 'amber' in my_tlps:
+            return d['amber']
+        else:
+            return d['red']
 
     def add_campaign(self, campaign_item=None, update=True):
         """
@@ -1563,8 +1661,12 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
         if not isinstance(object_item, EmbeddedObject):
             object_item = EmbeddedObject()
             object_item.analyst = analyst
-            src = create_embedded_source(source, method=method,
-                                         reference=reference, analyst=analyst)
+            src = create_embedded_source(source,
+                                                         method=method,
+                                                         reference=reference,
+                                                         needs_tlp=False,
+                                                         analyst=analyst)
+
             if not src:
                 return {'success': False, 'message': 'Invalid Source'}
             object_item.source = [src]
@@ -1677,6 +1779,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 source = [create_embedded_source(new_source,
                                                  method=new_method,
                                                  reference=new_reference,
+                                                 needs_tlp=False,
                                                  analyst=analyst)]
                 self.obj[c].source = source
                 break
@@ -1696,7 +1799,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                                 {'campaign': campaign,
                                  'hit': self,
                                  'obj': None,
-                                 'admin': is_admin(analyst),
                                  'relationship': {'type': self._meta['crits_type']}})
         return html
 
@@ -1715,7 +1817,6 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                                 {'location': location,
                                  'hit': self,
                                  'obj': None,
-                                 'admin': is_admin(analyst),
                                  'relationship': {'type': self._meta['crits_type']}})
         return html
 
@@ -2294,16 +2395,15 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             return results
         if not sources:
             sources = user_sources(username)
-        for r in self.relationships:
-            rd = r.to_dict()
-            obj_class = class_from_type(rd['type'])
-            if r.rel_type not in ["Campaign", "Target"]:
-                obj = obj_class.objects(id=rd['value'],
-                        source__name__in=sources).first()
+        for ty in set(rel.to_dict()['type'] for rel in self.relationships):
+            obj_class = class_from_type(ty)
+            objids = [ty_o.to_dict()['value'] for ty_o in filter(lambda o: o.to_dict()['type'] == ty, self.relationships)]
+            if r.rel_type not in ['Campaign', 'Target']:
+                obj = obj_class.objects(id__in=objids, source__name__in=sources)
             else:
-                obj = obj_class.objects(id=rd['value']).first()
+                obj = obj_class.objects(id__in=objids)
             if obj:
-                results.append(obj)
+                results.extend(obj)
         return results
 
     def add_releasability(self, source_item=None, analyst=None, *args, **kwargs):
@@ -2439,6 +2539,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             # the source already will reflect the changes as well
             self.releasability[:] = [r for r in self.releasability if r.name in sources]
 
+
     def sanitize(self, username=None, sources=None, rels=True):
         """
         Sanitize this top-level object down to only what the user can see based
@@ -2462,6 +2563,7 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
             if rels:
                 if hasattr(self, 'relationships'):
                     self.sanitize_relationships(username, sources)
+
 
     def get_campaign_names(self):
         """
@@ -2502,6 +2604,95 @@ class CritsBaseAttributes(CritsDocument, CritsBaseDocument,
                 return None
         else:
             return None
+
+
+class CommonAccess(BaseDocument):
+    """
+    ACL for common TLO content.
+    """
+
+    # Basics
+    read = BooleanField(default=False)
+    write = BooleanField(default=False)
+    delete = BooleanField(default=False)
+    download = BooleanField(default=False)
+
+    description_read = BooleanField(default=False)
+    description_edit = BooleanField(default=False)
+
+    #Actions List
+    actions_read = BooleanField(default=False)
+    actions_add = BooleanField(default=False)
+    actions_edit = BooleanField(default=False)
+    actions_delete = BooleanField(default=False)
+
+    # Bucket List
+    bucketlist_read = BooleanField(default=False)
+    bucketlist_edit = BooleanField(default=False)
+
+    # Campaigns
+    campaigns_read = BooleanField(default=False)
+    campaigns_add = BooleanField(default=False)
+    campaigns_edit = BooleanField(default=False)
+    campaigns_delete = BooleanField(default=False)
+
+    # Comments
+    comments_read = BooleanField(default=False)
+    comments_add = BooleanField(default=False)
+    comments_edit = BooleanField(default=False)
+    comments_delete = BooleanField(default=False)
+
+    # Locations
+    locations_read = BooleanField(default=False)
+    locations_add = BooleanField(default=False)
+    locations_edit = BooleanField(default=False)
+    locations_delete = BooleanField(default=False)
+
+    # Objects
+    objects_read = BooleanField(default=False)
+    objects_add = BooleanField(default=False)
+    objects_edit = BooleanField(default=False)
+    objects_delete = BooleanField(default=False)
+
+    # Relationships
+    relationships_read = BooleanField(default=False)
+    relationships_add = BooleanField(default=False)
+    relationships_edit = BooleanField(default=False)
+    relationships_delete = BooleanField(default=False)
+
+    # Releasability
+    releasability_read = BooleanField(default=False)
+    releasability_add = BooleanField(default=False)
+    releasability_delete = BooleanField(default=False)
+
+    # Screenshots
+    screenshots_read = BooleanField(default=False)
+    screenshots_add = BooleanField(default=False)
+    screenshots_delete = BooleanField(default=False)
+
+    # Sectors
+    sectors_read = BooleanField(default=False)
+    sectors_edit = BooleanField(default=False)
+
+    # Services
+    services_read = BooleanField(default=False)
+    services_execute = BooleanField(default=False)
+
+    # Sources
+    sources_read = BooleanField(default=False)
+    sources_add = BooleanField(default=False)
+    sources_edit = BooleanField(default=False)
+    sources_delete = BooleanField(default=False)
+
+    # Status
+    status_read = BooleanField(default=False)
+    status_edit = BooleanField(default=False)
+
+    # Tickets
+    tickets_read = BooleanField(default=False)
+    tickets_add = BooleanField(default=False)
+    tickets_edit = BooleanField(default=False)
+    tickets_delete = BooleanField(default=False)
 
 
 def merge(self, arg_dict=None, overwrite=False, **kwargs):
@@ -2557,7 +2748,8 @@ def json_handler(obj):
         return str(obj)
 
 def create_embedded_source(name, source_instance=None, date=None,
-                           reference='', method='', analyst=None):
+                           reference='', method='', tlp=None,
+                           needs_tlp=True, analyst=None):
     """
     Create an EmbeddedSource object. If source_instance is provided it will be
     used, otherwise date, reference, and method will be used.
@@ -2569,14 +2761,21 @@ def create_embedded_source(name, source_instance=None, date=None,
         :class:`crits.core.crits_mongoengine.EmbeddedSource.SourceInstance`
     :param date: The date for the source instance.
     :type date: datetime.datetime
-    :param reference: The reference for this source instance.
-    :type reference: str
     :param method: The method for this source instance.
     :type method: str
+    :param reference: The reference for this source instance.
+    :type reference: str
+    :param tlp: The TLP for this source instance.
+    :type tlp: str
+    :param needs_tlp: If this source needs a TLP (object sources don't yet).
+    :type needs_tlp: bool
     :param analyst: The user creating this embedded source.
     :type analyst: str
     :returns: None, :class:`crits.core.crits_mongoengine.EmbeddedSource`
     """
+
+    if tlp not in ('white', 'green', 'amber', 'red', None):
+        return None
 
     if isinstance(name, basestring):
         s = EmbeddedSource()
@@ -2590,6 +2789,10 @@ def create_embedded_source(name, source_instance=None, date=None,
             i.date = date
             i.reference = reference
             i.method = method
+            if needs_tlp:
+                if not tlp:
+                    return None
+                i.tlp = tlp
             i.analyst = analyst
             s.instances = [i]
         return s

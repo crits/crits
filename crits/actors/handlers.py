@@ -15,7 +15,7 @@ from crits.core.crits_mongoengine import create_embedded_source
 from crits.core.forms import DownloadFileForm
 from crits.core.handlers import build_jtable, jtable_ajax_list, jtable_ajax_delete
 from crits.core.handlers import csv_export
-from crits.core.user_tools import is_admin, is_user_subscribed, user_sources
+from crits.core.user_tools import is_user_subscribed, user_sources
 from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
 from crits.services.handlers import run_triage, get_supported_services
@@ -27,6 +27,7 @@ from crits.vocabulary.actors import (
     IntendedEffects
 )
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import ActorACL
 
 
 def generate_actor_identifier_csv(request):
@@ -145,9 +146,13 @@ def generate_actor_jtable(request, option):
     :returns: :class:`django.http.HttpResponse`
     """
 
+    request.user._setup()
+    user = request.user
+
     obj_type = Actor
     type_ = "actor"
     mapper = obj_type._meta['jtable_opts']
+
     if option == "jtlist":
         # Sets display url
         details_url = mapper['details_url']
@@ -162,9 +167,14 @@ def generate_actor_jtable(request, option):
                                        default=json_handler),
                             content_type="application/json")
     if option == "jtdelete":
-        response = {"Result": "ERROR"}
-        if jtable_ajax_delete(obj_type, request):
-            response = {"Result": "OK"}
+        if user.has_access_to(ActorACL.DELETE):
+            if jtable_ajax_delete(obj_type, request):
+                response = {"Result": "OK"}
+            else:
+                respones = {"Result": "ERROR"}
+        else:
+            response = {"Result": "OK",
+                        "message": "User does not have permission to delete"}
         return HttpResponse(json.dumps(response,
                                        default=json_handler),
                             content_type="application/json")
@@ -202,50 +212,55 @@ def generate_actor_jtable(request, option):
                                    'jtid': '%s_listing' % type_},
                                   )
 
-def get_actor_details(id_, analyst):
+def get_actor_details(id_, user):
     """
     Generate the data to render the Actor details template.
 
     :param id_: The Actor ObjectId to get details for.
     :type actorip: str
-    :param analyst: The user requesting this information.
-    :type analyst: str
+    :param user: The user requesting this information.
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: template (str), arguments (dict)
     """
 
-    allowed_sources = user_sources(analyst)
+    username = user.username
+    allowed_sources = user_sources(username)
     actor = Actor.objects(id=id_, source__name__in=allowed_sources).first()
     template = None
     args = {}
+
+    if not user.check_source_tlp(actor):
+        actor = None
+
     if not actor:
         template = "error.html"
         error = ('Either no data exists for this Actor or you do not have'
                  ' permission to view it.')
         args = {'error': error}
     else:
-        actor.sanitize("%s" % analyst)
+        actor.sanitize("%s" % username)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % analyst, actor.id, 'Actor')
+        remove_user_from_notification("%s" % username, actor.id, 'Actor')
 
         download_form = DownloadFileForm(initial={"obj_type": 'Actor',
                                                   "obj_id": actor.id})
 
         # generate identifiers
-        actor_identifiers = actor.generate_identifiers_list(analyst)
+        actor_identifiers = actor.generate_identifiers_list(username)
 
         # subscription
         subscription = {
             'type': 'Actor',
             'id': actor.id,
-            'subscribed': is_user_subscribed("%s" % analyst, 'Actor', actor.id),
+            'subscribed': is_user_subscribed("%s" % username, 'Actor', actor.id),
         }
 
         #objects
         objects = actor.sort_objects()
 
         #relationships
-        relationships = actor.sort_relationships("%s" % analyst, meta=True)
+        relationships = actor.sort_relationships("%s" % username, meta=True)
 
         # relationship
         relationship = {
@@ -258,10 +273,10 @@ def get_actor_details(id_, analyst):
                     'url_key': actor.id}
 
         #screenshots
-        screenshots = actor.get_screenshots(analyst)
+        screenshots = actor.get_screenshots(username)
 
         # favorites
-        favorite = is_user_favorite("%s" % analyst, 'Actor', actor.id)
+        favorite = is_user_favorite("%s" % username, 'Actor', actor.id)
 
         # services
         service_list = get_supported_services('Actor')
@@ -281,7 +296,8 @@ def get_actor_details(id_, analyst):
                 'screenshots': screenshots,
                 'actor': actor,
                 'actor_id': id_,
-                'comments': comments}
+                'comments': comments,
+                'ActorACL': ActorACL}
     return template, args
 
 def get_actor_by_name(allowed_sources, actor):
@@ -299,9 +315,10 @@ def get_actor_by_name(allowed_sources, actor):
     return actor
 
 def add_new_actor(name, aliases=None, description=None, source=None,
-                  source_method='', source_reference='', campaign=None,
-                  confidence=None, analyst=None, bucket_list=None, ticket=None, 
-                  related_id=None, related_type=None, relationship_type=None):
+                  source_method='', source_reference='', source_tlp=None,
+                  campaign=None, confidence=None, user=None,
+                  bucket_list=None, ticket=None, related_id=None,
+                  related_type=None, relationship_type=None):
     """
     Add an Actor to CRITs.
 
@@ -317,12 +334,14 @@ def add_new_actor(name, aliases=None, description=None, source=None,
     :type source_method: str
     :param source_reference: A reference to this data.
     :type source_reference: str
+    :param source_tlp: The TLP for this Actor.
+    :type source_tlp: str
     :param campaign: A campaign to attribute to this actor.
     :type campaign: str
     :param confidence: Confidence level in the campaign attribution.
     :type confidence: str ("low", "medium", "high")
-    :param analyst: The user adding this actor.
-    :type analyst: str
+    :param user: The user adding this actor.
+    :type user: :class:`crits.core.user.CRITsUser`
     :param bucket_list: Buckets to assign to this actor.
     :type bucket_list: str
     :param ticket: Ticket to assign to this actor.
@@ -339,6 +358,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
               "object" (if successful) :class:`crits.actors.actor.Actor`
     """
 
+    username = user.username
     is_item_new = False
     retVal = {}
     actor = Actor.objects(name=name).first()
@@ -351,13 +371,21 @@ def add_new_actor(name, aliases=None, description=None, source=None,
         is_item_new = True
 
     if isinstance(source, basestring):
-        source = [create_embedded_source(source,
-                                         reference=source_reference,
-                                         method=source_method,
-                                         analyst=analyst)]
+        if user.check_source_write(source):
+            source = [create_embedded_source(source,
+                                             reference=source_reference,
+                                             method=source_method,
+                                             tlp=source_tlp,
+                                             analyst=username)]
+        else:
+            return {"success": False,
+                    "message": "User does not have permission to add objects \
+                    using source %s." % str(source)}
 
     if isinstance(campaign, basestring):
-        c = EmbeddedCampaign(name=campaign, confidence=confidence, analyst=analyst)
+        c = EmbeddedCampaign(name=campaign,
+                             confidence=confidence,
+                             analyst=username)
         campaign = [c]
 
     if campaign:
@@ -378,10 +406,10 @@ def add_new_actor(name, aliases=None, description=None, source=None,
                 actor.aliases.append(alias)
 
     if bucket_list:
-        actor.add_bucket_list(bucket_list, analyst)
+        actor.add_bucket_list(bucket_list, username)
 
     if ticket:
-        actor.add_ticket(ticket, analyst)
+        actor.add_ticket(ticket, username)
 
     related_obj = None
     if related_id and related_type:
@@ -391,21 +419,21 @@ def add_new_actor(name, aliases=None, description=None, source=None,
             retVal['message'] = 'Related Object not found.'
             return retVal
 
-    actor.save(username=analyst)
+    actor.save(username=username)
 
     if related_obj and actor:
             relationship_type=RelationshipTypes.inverse(relationship=relationship_type)
             actor.add_relationship(related_obj,
                                   relationship_type,
-                                  analyst=analyst,
+                                  analyst=username,
                                   get_rels=False)
-            actor.save(username=analyst)
+            actor.save(username=username)
             actor.reload()
 
     # run actor triage
     if is_item_new:
         actor.reload()
-        run_triage(actor, analyst)
+        run_triage(actor, user)
 
     resp_url = reverse('crits-actors-views-actor_detail', args=[actor.id])
 
@@ -418,35 +446,32 @@ def add_new_actor(name, aliases=None, description=None, source=None,
 
     return retVal
 
-def actor_remove(id_, username):
+def actor_remove(id_, user):
     """
     Remove an Actor from CRITs.
 
     :param id_: The ObjectId of the Actor to remove.
     :type id_: str
-    :param username: The user removing this Actor.
-    :type username: str
+    :param user: The user removing this Actor.
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    if is_admin(username):
-        actor = Actor.objects(id=id_).first()
-        if actor:
-            actor.delete(username=username)
-            return {'success': True}
-        else:
-            return {'success': False, 'message': 'Could not find Actor.'}
+    actor = Actor.objects(id=id_).first()
+    if actor:
+        actor.delete(username=user.username)
+        return {'success': True}
     else:
-        return {'success': False, 'message': 'Must be an admin to remove'}
+        return {'success':False, 'message':'Could not find Actor.'}
 
-def create_actor_identifier_type(username, identifier_type):
+def create_actor_identifier_type(identifier_type, user):
     """
     Add a new Actor Identifier Type.
 
-    :param username: The CRITs user adding the identifier type.
-    :type username: str
     :param identifier_type: The Identifier Type.
     :type identifier_type: str
+    :param user: The CRITs user adding the identifier type.
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed.
@@ -459,7 +484,7 @@ def create_actor_identifier_type(username, identifier_type):
     else:
         identifier = ActorThreatIdentifier()
         identifier.name = identifier_type
-        identifier.save(username=username)
+        identifier.save(username=user.username)
         return {'success': True,
                 'message': 'Identifier Type added successfully!'}
 
@@ -503,12 +528,12 @@ def update_actor_tags(id_, tag_type, tags, user, **kwargs):
                 'message': 'No actor could be found.'}
     else:
         actor.update_tags(tag_type, tags)
-        actor.save(username=user)
+        actor.save(username=user.username)
         return {'success': True}
 
 def add_new_actor_identifier(identifier_type, identifier=None, source=None,
                              source_method='', source_reference='',
-                             analyst=None):
+                             source_tlp=None, user=None):
     """
     Add an Actor Identifier to CRITs.
 
@@ -522,8 +547,10 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
     :type source_method: str
     :param source_reference: A reference to this data.
     :type source_reference: str
-    :param analyst: The user adding this actor.
-    :type analyst: str
+    :param source_tlp: The TLP for this identifier.
+    :type source_tlp: str
+    :param user: The user adding this actor.
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -547,7 +574,8 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
         source = [create_embedded_source(source,
                                          reference=source_reference,
                                          method=source_method,
-                                         analyst=analyst)]
+                                         tlp=source_tlp,
+                                         analyst=user.username)]
 
     if source:
         for s in source:
@@ -555,7 +583,7 @@ def add_new_actor_identifier(identifier_type, identifier=None, source=None,
     else:
         return {"success" : False, "message" : "Missing source information."}
 
-    actor_identifier.save(username=analyst)
+    actor_identifier.save(username=user.username)
     actor_identifier.reload()
 
     return {'success': True,
@@ -578,7 +606,7 @@ def actor_identifier_types(active=True):
     it_list = [i.name for i in its]
     return {'items': it_list}
 
-def actor_identifier_type_values(type_=None, username=None):
+def actor_identifier_type_values(type_=None, user=None):
     """
     Get the available Actor Identifier Type values.
 
@@ -589,8 +617,8 @@ def actor_identifier_type_values(type_=None, username=None):
 
     result = {}
 
-    if username and type_:
-        sources = user_sources(username)
+    if user and type_:
+        sources = user.get_sources_list()
         ids = ActorIdentifier.objects(active="on",
                                       identifier_type=type_,
                                       source__name__in=sources).order_by('+name')
@@ -617,8 +645,10 @@ def attribute_actor_identifier(id_, identifier_type, identifier=None,
               "message" (str),
     """
 
-    sources = user_sources(user)
-    admin = is_admin(user)
+    if not user:
+        return {'success': False,
+                'message': "Could not find actor"}
+    sources = user.get_sources_list()
     actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
@@ -626,10 +656,13 @@ def attribute_actor_identifier(id_, identifier_type, identifier=None,
                 'message': "Could not find actor"}
 
     c = len(actor.identifiers)
-    actor.attribute_identifier(identifier_type, identifier, confidence, user)
-    actor.save(username=user)
+    actor.attribute_identifier(identifier_type,
+                               identifier,
+                               confidence,
+                               user.username)
+    actor.save(username=user.username)
     actor.reload()
-    actor_identifiers = actor.generate_identifiers_list(user)
+    actor_identifiers = actor.generate_identifiers_list(user.username)
 
     if len(actor.identifiers) <= c:
         return {'success': False,
@@ -637,7 +670,6 @@ def attribute_actor_identifier(id_, identifier_type, identifier=None,
 
     html = render_to_string('actor_identifiers_widget.html',
                             {'actor_identifiers': actor_identifiers,
-                             'admin': admin,
                              'actor_id': str(actor.id)})
 
     return {'success': True,
@@ -654,13 +686,16 @@ def set_identifier_confidence(id_, identifier=None, confidence="low",
     :param confidence: The confidence level.
     :type confidence: str
     :param user: The user editing this identifier.
-    :type user: str
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
     """
 
-    sources = user_sources(user)
+    if not user:
+        return {'success': False,
+                'message': "Could not find actor"}
+    sources = user.get_sources_list()
     actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
@@ -668,7 +703,7 @@ def set_identifier_confidence(id_, identifier=None, confidence="low",
                 'message': "Could not find actor"}
 
     actor.set_identifier_confidence(identifier, confidence)
-    actor.save(username=user)
+    actor.save(username=user.username)
 
     return {'success': True}
 
@@ -680,14 +715,16 @@ def remove_attribution(id_, identifier=None, user=None, **kwargs):
     :param identifier: The Actor Identifier ObjectId.
     :type identifier: str
     :param user: The user removing this attribution.
-    :type user: str
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
     """
 
-    sources = user_sources(user)
-    admin = is_admin(user)
+    if not user:
+        return {'success': False,
+                'message': "Could not find actor"}
+    sources = user.get_sources_list()
     actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
@@ -695,13 +732,12 @@ def remove_attribution(id_, identifier=None, user=None, **kwargs):
                 'message': "Could not find actor"}
 
     actor.remove_attribution(identifier)
-    actor.save(username=user)
+    actor.save(username=user.username)
     actor.reload()
-    actor_identifiers = actor.generate_identifiers_list(user)
+    actor_identifiers = actor.generate_identifiers_list(user.username)
 
     html = render_to_string('actor_identifiers_widget.html',
                             {'actor_identifiers': actor_identifiers,
-                             'admin': admin,
                              'actor_id': str(actor.id)})
 
     return {'success': True,
@@ -716,13 +752,13 @@ def set_actor_name(id_, name, user, **kwargs):
     :param name: The new name.
     :type name: str
     :param user: The user updating the name.
-    :type user: str
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
     """
 
-    sources = user_sources(user)
+    sources = user.get_sources_list()
     actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
@@ -730,7 +766,7 @@ def set_actor_name(id_, name, user, **kwargs):
                 'message': "Could not find actor"}
 
     actor.name = name.strip()
-    actor.save(username=user)
+    actor.save(username=user.username)
     return {'success': True}
 
 def update_actor_aliases(id_, aliases, user, **kwargs):
@@ -742,11 +778,11 @@ def update_actor_aliases(id_, aliases, user, **kwargs):
     :param aliases: The aliases we are setting.
     :type aliases: list
     :param user: The user updating the aliases.
-    :type user: str
+    :type user: :class:`crits.core.user.CRITsUser`
     :returns: dict
     """
 
-    sources = user_sources(user)
+    sources = user.get_sources_list()
     actor = Actor.objects(id=id_,
                           source__name__in=sources).first()
     if not actor:
@@ -754,5 +790,5 @@ def update_actor_aliases(id_, aliases, user, **kwargs):
                 'message': 'No actor could be found.'}
     else:
         actor.update_aliases(aliases)
-        actor.save(username=user)
+        actor.save(username=user.username)
         return {'success': True}

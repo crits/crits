@@ -9,11 +9,13 @@ except ImportError:
 
 from mongoengine import StringField, IntField, EmbeddedDocument
 from mongoengine import ListField, EmbeddedDocumentField, UUIDField
+from mongoengine import BooleanField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsSourceDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
+from crits.core.crits_mongoengine import CommonAccess
 from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.fields import CritsDateTimeField
 from crits.raw_data.migrate import migrate_raw_data
@@ -242,3 +244,21 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
             else:
                 highlights.append(h)
         self.highlights = highlights
+
+
+class RawDataAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for RawData.
+    """
+
+    upload_new_version = BooleanField(default=False)
+
+    tool_edit = BooleanField(default=False)
+    tool_description_edit = BooleanField(default=False)
+    data_type_edit = BooleanField(default=False)
+
+    line_comment_add = BooleanField(default=False)
+
+    highlight_add = BooleanField(default=False)
+    highlight_line_date_edit = BooleanField(default=False)
+    highlight_comment_edit = BooleanField(default=False)

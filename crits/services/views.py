@@ -12,7 +12,7 @@ from django.shortcuts import render
 from django.template.loader import render_to_string
 
 from crits.core.class_mapper import class_from_type
-from crits.core.user_tools import user_can_view_data, user_is_admin, user_sources
+from crits.core.user_tools import user_can_view_data, get_acl_object
 from crits.services.analysis_result import AnalysisResult
 from crits.services.handlers import do_edit_config, generate_analysis_results_csv
 from crits.services.handlers import generate_analysis_results_jtable
@@ -41,7 +41,7 @@ def analysis_results_listing(request,option=None):
         return generate_analysis_results_csv(request)
     return generate_analysis_results_jtable(request, option)
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def list(request):
     """
     List all services.
@@ -77,7 +77,7 @@ def analysis_result(request, analysis_id):
                                   {'error': "No TLO found to redirect to."})
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def detail(request, name):
     """
     List all details about a single service.
@@ -93,55 +93,58 @@ def detail(request, name):
         return render(request, 'error.html', {'error': results['error']})
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def enable(request, name):
     """
     Enable a service.
     """
 
-    result = set_enabled(name, True, request.user.username)
-    return HttpResponse(json.dumps(result), content_type="application/json")
+    request.user._setup()
+    result = set_enabled(name, True, request.user)
+    return HttpResponse(json.dumps(result), content_type='application/json')
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def disable(request, name):
     """
     Disable a service.
     """
 
-    result = set_enabled(name, False, request.user.username)
-    return HttpResponse(json.dumps(result), content_type="application/json")
+    request.user._setup()
+    result = set_enabled(name, False, request.user)
+    return HttpResponse(json.dumps(result), content_type='application/json')
 
-
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def enable_triage(request, name):
     """
     Enable a service to run during triage.
     """
 
-    result = set_triage(name, True, request.user.username)
-    return HttpResponse(json.dumps(result), content_type="application/json")
+    request.user._setup()
+    result = set_triage(name, True, request.user)
+    return HttpResponse(json.dumps(result), content_type='application/json')
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def disable_triage(request, name):
     """
     Disable a service from running during triage.
     """
 
-    result = set_triage(name, False, request.user.username)
-    return HttpResponse(json.dumps(result), content_type="application/json")
+    request.user._setup()
+    result = set_triage(name, False, request.user)
+    return HttpResponse(json.dumps(result), content_type='application/json')
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def edit_config(request, name):
     """
     Edit a service's configuration.
     """
 
-    analyst = request.user.username
+    request.user._setup()
     if request.method == "POST" and request.is_ajax():
-        results = do_edit_config(name, analyst, post_data=request.POST)
+        results = do_edit_config(name, request.user, post_data=request.POST)
         if 'service' in results:
             del results['service']
         return HttpResponse(json.dumps(results), content_type="application/json")
@@ -150,7 +153,7 @@ def edit_config(request, name):
         return render(request, 'error.html',
                                   {'error': "Expected AJAX POST."})
     else:
-        results = do_edit_config(name, analyst)
+        results = do_edit_config(name, request.user)
         if results['success'] == True:
             return render(request, 'services_edit_config.html',
                                       {'form': results['form'],
@@ -168,7 +171,8 @@ def get_form(request, name, crits_type, identifier):
 
     response = {}
     response['name'] = name
-    analyst = request.user.username
+    request.user._setup()
+    username = request.user.username
 
     service = CRITsService.objects(name=name, status__ne="unavailable").first()
     if not service:
@@ -181,7 +185,7 @@ def get_form(request, name, crits_type, identifier):
 
     config = service.config.to_dict()
 
-    form_html = service_class.generate_runtime_form(analyst,
+    form_html = service_class.generate_runtime_form(username,
                                                     config,
                                                     crits_type,
                                                     identifier)
@@ -200,9 +204,10 @@ def refresh_services(request, crits_type, identifier):
     """
 
     response = {}
+    request.user._setup()
 
     # Verify user can see results.
-    sources = user_sources(request.user.username)
+    sources = request.user.get_sources_list()
     klass = class_from_type(crits_type)
     if not klass:
         msg = 'Could not find object to refresh!'
@@ -250,7 +255,7 @@ def service_run(request, name, crits_type, identifier):
     Run a service.
     """
 
-    username = str(request.user.username)
+    request.user._setup()
 
     if request.method == 'POST':
         custom_config = request.POST
@@ -258,26 +263,33 @@ def service_run(request, name, crits_type, identifier):
         # Run with no config...
         custom_config = {}
 
-    result = run_service(name,
-                         crits_type,
-                         identifier,
-                         username,
-                         execute=settings.SERVICE_MODEL,
-                         custom_config=custom_config)
+    user = request.user
+    acl = get_acl_object(crits_type)
+
+    if user.has_access_to(acl.SERVICES_EXECUTE):
+        result = run_service(name,
+                            crits_type,
+                            identifier,
+                            user,
+                            execute=settings.SERVICE_MODEL,
+                            custom_config=custom_config,
+                            is_triage_run=False)
+    else:
+        result = {"success":False,
+                  "message":"User does not have permission to run services."}
     if result['success'] == True:
         return refresh_services(request, crits_type, identifier)
     else:
         return HttpResponse(json.dumps(result), content_type="application/json")
 
 
-@user_passes_test(user_is_admin)
+@user_passes_test(user_can_view_data)
 def delete_task(request, crits_type, identifier, task_id):
     """
     Delete a service task.
     """
 
-    analyst = request.user.username
-
+    request.user._setup()
     # Identifier is used since there's not currently an index on task_id
-    delete_analysis(task_id, analyst)
+    delete_analysis(task_id, request.user)
     return refresh_services(request, crits_type, identifier)

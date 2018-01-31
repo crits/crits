@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% load filters %}
+
+{% block title %} Role Detail {% endblock %}
+
+{% block content %}
+
+<script>
+    var role_value_change = "{% url 'crits.core.views.role_value_change' %}";
+    var role_add_source = "{% url 'crits.core.views.role_add_source' %}";
+    var role_remove_source = "{% url 'crits.core.views.role_remove_source' %}";
+    var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
+    var update_role_name = "{% url 'crits.core.views.update_role_name' %}";
+    var update_role_description = "{% url 'crits.core.views.update_role_description' %}";
+    var rid = "{{ rid }}";
+    var do_copy = false;
+    {% if show_roles %}
+        var no_submit = true;
+    {% else %}
+        var no_submit = false;
+    {% endif %}
+</script>
+<style>
+    table.vertical tr td {
+        min-width: 250px;
+    }
+    table.form tr th {
+        max-width: 300px;
+    }
+    div.ui-multiselect {
+        min-width: 297px;
+    }
+    div.selected {
+        min-width: 148px;
+    }
+    div.available {
+        min-width: 148px;
+    }
+    table.form tr th label {
+        float: left;
+    }
+    #copy_role {
+        float: right;
+    }
+</style>
+
+<div id="tabnav" class="tabnav" style="font-size:90%">
+    <ul style="font-size: 125%">
+    <li><a href="#general_section" id="general_button"><span>General</span></a></li>
+    <li><a href="#actor_section" id="actor_button"><span>Actor</span></a></li>
+    <li><a href="#backdoor_section" id="backdoor_button"><span>Backdoor</span></a></li>
+    <li><a href="#campaign_section" id="campaign_button"><span>Campaign</span></a></li>
+    <li><a href="#certificate_section" id="certificate_button"><span>Certificate</span></a></li>
+    <li><a href="#domain_section" id="domain_button"><span>Domain</span></a></li>
+    <li><a href="#email_section" id="email_button"><span>Email</span></a></li>
+    <li><a href="#event_section" id="event_button"><span>Event</span></a></li>
+    <li><a href="#exploit_section" id="exploit_button"><span>Exploit</span></a></li>
+    <li><a href="#indicator_section" id="indicator_button"><span>Indicator</span></a></li>
+    <li><a href="#ip_section" id="ip_button"><span>IP</span></a></li>
+    <li><a href="#pcap_section" id="pcap_button"><span>PCAP</span></a></li>
+    <li><a href="#rawdata_section" id="rawdata_button"><span>Raw Data</span></a></li>
+    <li><a href="#sample_section" id="sample_button"><span>Sample</span></a></li>
+    <li><a href="#signature_section" id="signature_button"><span>Signature</span></a></li>
+    <li><a href="#target_section" id="ttarget_button"><span>Target</span></a></li>
+    </ul>
+<div id="general_section">
+    {% if show_roles %}
+    <div>
+        <h3>Role Combination Preview for:
+            {% for r in show_roles %}
+                {% if forloop.last %}
+                    {{ r }}
+                {% else %}
+                    {{ r }},
+                {% endif %}
+            {% endfor %}
+        </h3>
+        <span>Note: This view is read-only and meant as an informative
+            representation of what combining these rules would grant access to
+            for any users assigned to the combination of these roles.
+        </span>
+        <br /><br />
+    </div>
+    {% endif %}
+    <div style="float: right;">
+        <table class="form" id="role_source_table">
+            {{ source_form.as_table }}
+            {% for source in role.sources %}
+                {% include 'role_source_item.html' %}
+            {% endfor %}
+        </table>
+    </div>
+    <table class="vertical">
+        <tbody>
+            {% with tlo=None %}
+                {% for k,v in role.items %}
+                    {% if not k|is_tlo and k != "sources" %}
+                        {% include 'role_item.html' %}
+                    {% endif %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="actor_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Actor" %}
+                {% for k,v in role.Actor.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="backdoor_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Backdoor" %}
+                {% for k,v in role.Backdoor.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="campaign_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Campaign" %}
+                {% for k,v in role.Campaign.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="certificate_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Certificate" %}
+                {% for k,v in role.Certificate.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="domain_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Domain" %}
+                {% for k,v in role.Domain.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="email_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Email" %}
+                {% for k,v in role.Email.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="event_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Event" %}
+                {% for k,v in role.Event.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="exploit_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Exploit" %}
+                {% for k,v in role.Exploit.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="indicator_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Indicator" %}
+                {% for k,v in role.Indicator.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="ip_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="IP" %}
+                {% for k,v in role.IP.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="pcap_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="PCAP" %}
+                {% for k,v in role.PCAP.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="rawdata_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="RawData" %}
+                {% for k,v in role.RawData.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="sample_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Sample" %}
+                {% for k,v in role.Sample.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="signature_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Signature" %}
+                {% for k,v in role.Signature.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+<div id="target_section">
+    <table class="vertical">
+        <tbody>
+            {% with tlo="Target" %}
+                {% for k,v in role.Target.items %}
+                    {% include 'role_item.html' %}
+                {% endfor %}
+            {% endwith %}
+        </tbody>
+    </table>
+</div>
+
+</div>
+
+
+{% endblock %}
+
+{% block javascript_includes %}
+ <script type="text/javascript" src="{{ STATIC_URL }}js/roles.js"></script>
+{% endblock %}

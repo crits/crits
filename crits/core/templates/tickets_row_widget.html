@@ -13,9 +13,7 @@
     <td data-field="date">{{ticket.date}}</td>
     <td data-field="analyst">{{ticket.analyst}}</td>
     <td>
-    {% if admin %}
     <a href="#" title="Delete Ticket" class="ui-icon ui-icon-close deleteClick" type="ticket" action="{% url 'crits-core-views-add_update_ticket' 'remove' obj_type obj.id %}" key="{{ticket.date}}"></a>
-    {% endif %}
     <a href="#" title="Edit Ticket" class="ui-icon ui-icon-pencil dialogClick" dialog="ticket" persona="update" action="{% url 'crits-core-views-add_update_ticket' 'update' obj_type obj.id %}"></a>
     </td>
 </tr>

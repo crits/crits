@@ -8,6 +8,10 @@ from crits.core.data_tools import generate_qrcode
 from crits.core.totp import gen_user_secret
 
 from django.conf import settings
+from django.contrib.auth.views import logout_then_login
+
+from crits.vocabulary.acls import GeneralACL
+
 
 def is_user_favorite(analyst, type_, id_):
     """
@@ -33,29 +37,66 @@ def is_user_favorite(analyst, type_, id_):
                 return True
     return False
 
-
-def user_sources(username):
+def user_sources(user=None):
     """
     Get the sources for a user.
 
-    :param username: The user to lookup.
-    :type username: str
+    :param user: The user to lookup.
+    :type user: str or CRITsUser
     :returns: list
     """
 
-    if username:
+    if user is None:
+        return []
+
+    if not hasattr(user, 'username'):
         from crits.core.user import CRITsUser
-        username = str(username)
+        user = str(user)
         try:
-            user = CRITsUser.objects(username=username).first()
-            if user:
-                return user.sources
-            else:
-                return []
+            user = CRITsUser.objects(username=user).first()
         except Exception:
             return []
+    if user:
+        return user.get_sources_list()
     else:
         return []
+
+
+def get_acl_object(crits_type):
+    from crits.vocabulary.acls import *
+    if crits_type == 'Actor':
+        return ActorACL
+    elif crits_type == 'Backdoor':
+        return BackdoorACL
+    elif crits_type == 'Campaign':
+        return CampaignACL
+    elif crits_type == 'Certificate':
+        return CertificateACL
+    elif crits_type == 'Domain':
+        return DomainACL
+    elif crits_type == 'Email':
+        return EmailACL
+    elif crits_type == 'Event':
+        return EventACL
+    elif crits_type == 'Exploit':
+        return ExploitACL
+    elif crits_type == 'Indicator':
+        return IndicatorACL
+    elif crits_type == 'IP':
+        return IPACL
+    elif crits_type == 'PCAP':
+        return PCAPACL
+    elif crits_type == 'RawData':
+        return RawDataACL
+    elif crits_type == 'Sample':
+        return SampleACL
+    elif crits_type == 'Screenshot':
+        return ScreenshotACL
+    elif crits_type == 'Signature':
+        return SignatureACL
+    elif crits_type == 'Target':
+        return TargetACL
+
 
 def sanitize_sources(username, items):
     """
@@ -77,53 +118,29 @@ def sanitize_sources(username, items):
         final_items.append(item)
     return final_items
 
-def get_user_organization(username):
+def get_user_organization(user=None):
     """
     Get the organization for a user.
 
-    :param username: The user to lookup.
-    :type username: str
+    :param user: The user to lookup.
+    :type user: str or CRITsUser
     :returns: str
     """
 
-    from crits.core.user import CRITsUser
-    username = str(username)
-    user = CRITsUser.objects(username=username).first()
+    if user is None:
+        return settings.COMPANY_NAME
+
+    if not hasattr(user, 'username'):
+        from crits.core.user import CRITsUser
+        user = str(user)
+        try:
+            user = CRITsUser.objects(username=user).first()
+        except Exception:
+            return settings.COMPANY_NAME
     if user:
         return user.organization
     else:
         return settings.COMPANY_NAME
-
-def is_admin(username):
-    """
-    Determine if the user is an admin.
-
-    :param username: The user to lookup.
-    :type username: str
-    :returns: True, False
-    """
-
-    from crits.core.user import CRITsUser
-    username = str(username)
-    user = CRITsUser.objects(username=username).first()
-    if user:
-        if user.role == "Administrator":
-            return True
-    return False
-
-def get_user_role(username):
-    """
-    Get the user role.
-
-    :param username: The user to lookup.
-    :type username: str
-    :returns: str
-    """
-
-    from crits.core.user import CRITsUser
-    username = str(username)
-    user = CRITsUser.objects(username=username).first()
-    return user.role
 
 def user_can_view_data(user):
     """
@@ -133,25 +150,13 @@ def user_can_view_data(user):
     :type user: str
     :returns: True, False
     """
-
     if user.is_active:
-        return user.is_authenticated()
+        if user.has_access_to(GeneralACL.WEB_INTERFACE):
+            return user.is_authenticated()
+        else:
+            return False
     else:
         return False
-
-def user_is_admin(user):
-    """
-    Determine if the user is an admin and authenticated and active.
-
-    :param user: The user to lookup.
-    :type user: str
-    :returns: True, False
-    """
-
-    if user.is_active:
-        if user.is_authenticated():
-            return is_admin(user)
-    return False
 
 def get_user_list():
     """
@@ -185,58 +190,55 @@ def get_user_info(username=None):
     else:
         return username
 
-def add_new_user_role(name, analyst):
-    """
-    Add a new user role to the system.
-
-    :param name: The name of the role.
-    :type name: str
-    :param analyst: The user adding the role.
-    :type analyst: str
-    :returns: True, False
-    """
-
-    from crits.core.user_role import UserRole
-    name = name.strip()
-    role = UserRole.objects(name=name).first()
-    if not role:
-        role = UserRole()
-        role.name = name
-        try:
-            role.save(username=analyst)
-            return True
-        except ValidationError:
-            return False
-    else:
-        return False
-
-def get_user_email_notification(username):
+def get_user_email_notification(user=None):
     """
     Get user email notification preference.
 
-    :param username: The user to query for.
-    :type username: str
+    :param user: The user to query for.
+    :type user: str or CRITsUser
     :returns: str
     """
 
-    from crits.core.user import CRITsUser
-    username = str(username)
-    user = CRITsUser.objects(username=username).first()
-    return user.get_preference('notify', 'email', False)
+    if user is None:
+        return None
 
-def get_user_subscriptions(username):
+    if not hasattr(user, 'username'):
+        from crits.core.user import CRITsUser
+        user = str(user)
+        try:
+            user = CRITsUser.objects(username=user).first()
+            return user.get_preference('notify', 'email', False)
+        except Exception:
+            return None
+    if user:
+        return user.get_preference('notify', 'email', False)
+    else:
+        return None
+
+def get_user_subscriptions(user=None):
     """
     Get user subscriptions.
 
-    :param username: The user to query for.
-    :type username: str
-    :returns: list
+    :param user: The user to query for.
+    :type user: str or CRITsUser
+    :returns: str
     """
 
-    from crits.core.user import CRITsUser
-    username = str(username)
-    user = CRITsUser.objects(username=username).first()
-    return user.subscriptions
+    if user is None:
+        return None
+
+    if not hasattr(user, 'username'):
+        from crits.core.user import CRITsUser
+        user = str(user)
+        try:
+            user = CRITsUser.objects(username=user).first()
+            return user.subscriptions
+        except Exception:
+            return None
+    if user:
+        return user.subscriptions
+    else:
+        return None
 
 def get_subscribed_users(stype, oid, sources):
     """
@@ -277,13 +279,22 @@ def is_user_subscribed(username, stype, oid):
     :returns: boolean
     """
 
-    from crits.core.user import CRITsUser
-    username = str(username)
-    query = {'username': username, 'subscriptions.%s.id' % stype: ObjectId(oid)}
-    results = CRITsUser.objects(__raw__=query).first()
-    if results is not None:
-        return True
+    if username is None:
+        return False
+
+    if not hasattr(username, 'username'):
+        from crits.core.user import CRITsUser
+        username = str(username)
+        query = {'username': username, 'subscriptions.%s.id' % stype: ObjectId(oid)}
+        results = CRITsUser.objects(__raw__=query).first()
+        if results is not None:
+            return True
+        else:
+            return False
     else:
+        for s in username.subscriptions[stype]:
+            if str(s) == oid:
+                return True
         return False
 
 def is_user_subscribed_to_source(username, source):
@@ -297,13 +308,22 @@ def is_user_subscribed_to_source(username, source):
     :returns: boolean
     """
 
-    from crits.core.user import CRITsUser
-    username = str(username)
-    query = {'username': username, 'subscriptions.Source.name': source}
-    results = CRITsUser.objects(__raw__=query).first()
-    if results is not None:
-        return True
+    if username is None:
+        return False
+
+    if not hasattr(username, 'username'):
+        from crits.core.user import CRITsUser
+        username = str(username)
+        query = {'username': username, 'subscriptions.Source.name': source}
+        results = CRITsUser.objects(__raw__=query).first()
+        if results is not None:
+            return True
+        else:
+            return False
     else:
+        for s in username.subscriptions['Source']:
+            if s['name'] == source:
+                return True
         return False
 
 def subscribe_user(username, stype, oid):

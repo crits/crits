@@ -32,7 +32,7 @@ TUSER_PASS_HASH_RE = re.compile('^[\d\w]+\$(\d+\$)?(\w+\$)?\S+$')
 TUSER_EMAIL = "test_user@example.com"
 TUSER_FNAME = "Testfirst"
 TUSER_LNAME = "Testlast"
-TUSER_ROLE = "Administrator"
+TUSER_ROLE = "UberAdmin"
 TOBJS_VALUE = "Test source value"
 TOBJ_VALUE = "Test value"
 TOBJS_NAME = "tsrcobj"
@@ -104,6 +104,7 @@ def prep_db():
     user = CRITsUser.create_user(username=TUSER_NAME,
                                  password=TUSER_PASS,
                                  email=TUSER_EMAIL,
+                                 role=TUSER_ROLE,
                                  )
     user.first_name = TUSER_FNAME
     user.last_name = TUSER_LNAME

@@ -1,7 +1,7 @@
 from django import forms
 
 from crits.core import form_consts
-from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
+from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceInForm
 from crits.core.handlers import get_source_names, get_item_names
 from crits.core.user_tools import get_user_organization
 from crits.raw_data.raw_data import RawDataType
@@ -9,7 +9,7 @@ from crits.vocabulary.relationships import RelationshipTypes
 
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
-class UploadRawDataFileForm(forms.Form):
+class UploadRawDataFileForm(SourceInForm):
     """
     Django form for uploading raw data as a file.
     """
@@ -25,14 +25,6 @@ class UploadRawDataFileForm(forms.Form):
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                                'rows':'2'}),
                                                                required=False)
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'no_clear'}),
-                               label=form_consts.RawData.SOURCE)
-    method = forms.CharField(required=False, widget=forms.TextInput,
-                             label=form_consts.RawData.SOURCE_METHOD)
-    reference = forms.CharField(required=False,
-                                widget=forms.TextInput(attrs={'size': '90'}),
-                                label=form_consts.RawData.SOURCE_REFERENCE)
     related_id = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_ID)
     related_type = forms.CharField(widget=forms.HiddenInput(), required=False, label=form_consts.Common.RELATED_TYPE)
     relationship_type = forms.ChoiceField(required=False,
@@ -40,13 +32,7 @@ class UploadRawDataFileForm(forms.Form):
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
-        super(UploadRawDataFileForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [(c.name,
-                                          c.name
-                                          ) for c in get_source_names(True,
-                                                                      True,
-                                                                      username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(UploadRawDataFileForm, self).__init__(username, *args, **kwargs)
         self.fields['data_type'].choices = [(c.name,
                                              c.name
                                              ) for c in get_item_names(RawDataType,
@@ -57,7 +43,7 @@ class UploadRawDataFileForm(forms.Form):
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
 
-class UploadRawDataForm(forms.Form):
+class UploadRawDataForm(SourceInForm):
     """
     Django form for uploading raw data as a field in the form.
     """
@@ -72,14 +58,7 @@ class UploadRawDataForm(forms.Form):
     description = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                                'rows':'2'}),
                                                                required=False)
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'no_clear'}),
-                               label=form_consts.RawData.SOURCE)
-    method = forms.CharField(required=False, widget=forms.TextInput,
-                             label=form_consts.RawData.SOURCE_METHOD)
-    reference = forms.CharField(required=False,
-                                widget=forms.TextInput(attrs={'size': '90'}),
-                                label=form_consts.RawData.SOURCE_REFERENCE)
+
     data = forms.CharField(widget=forms.Textarea(attrs={'cols':'80',
                                                         'rows':'2'}),
                                                         required=True)
@@ -91,13 +70,8 @@ class UploadRawDataForm(forms.Form):
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
-        super(UploadRawDataForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [(c.name,
-                                          c.name
-                                          ) for c in get_source_names(True,
-                                                                      True,
-                                                                      username)]
-        self.fields['source'].initial = get_user_organization(username)
+        super(UploadRawDataForm, self).__init__(username, *args, **kwargs)
+
         self.fields['data_type'].choices = [(c.name,
                                              c.name
                                              ) for c in get_item_names(RawDataType,

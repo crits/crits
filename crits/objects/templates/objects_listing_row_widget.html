@@ -61,7 +61,8 @@
                 <td>
                   <b>Name:</b> <span name="source_name" sname="{{ object.source.0.name }}">{{ object.source.0.name }}</span><br />
                     <b>Method:</b> <span name="source_method" method="{{ object.source.0.instances.0.method }}">{{ object.source.0.instances.0.method|default:"None" }}</span><br />
-                    <b>Reference:</b> <span name="source_reference" reference="{{ object.source.0.instances.0.reference }}">{{ object.source.0.instances.0.reference|default:"None"}}</span>
+                    <b>Reference:</b> <span name="source_reference" reference="{{ object.source.0.instances.0.reference }}">{{ object.source.0.instances.0.reference|default:"None"}}</span><br />
+                    <b>TLP:</b> <span name="source_tlp" tlp="{{ object.source.0.instances.0.tlp }}">{{ object.source.0.instances.0.tlp|default:"None" }}</span>
                 </td>
                 <td>
                     {% if source_add %}

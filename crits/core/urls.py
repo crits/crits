@@ -47,10 +47,22 @@ urlpatterns = [
     url(r'^items/list/(?P<itype>\S+)/(?P<option>\S+)/$', views.items_listing, name='crits-core-views-items_listing'),
     url(r'^items/toggle_active/$', views.toggle_item_active, name='crits-core-views-toggle_item_active'),
     url(r'^users/toggle_active/$', views.toggle_user_active, name='crits-core-views-toggle_user_active'),
-    url(r'^users/list/$', views.users_listing, name='crits-core-views-users_listing'),
     url(r'^users/list/(?P<option>\S+)/$', views.users_listing, name='crits-core-views-users_listing'),
+    url(r'^users/list/$', views.users_listing, name='crits-core-views-users_listing'),
+    url(r'^roles/list/(?P<option>\S+)/$', views.roles_listing, name='crits-core-views-roles_listing'),
+    url(r'^roles/list/$', views.roles_listing, name='crits-core-views-roles_listing'),
+    url(r'^roles/add/$', views.role_add, name='crits-core-views-role_add'),
+    url(r'^roles/details/(?P<rid>\S+)/$', views.role_details, name='crits-core-views-role_details'),
+    url(r'^roles/details/$', views.role_details, name='crits-core-views-role_details'),
+    url(r'^roles/update/$', views.role_value_change, name='crits-core-views-role_value_change'),
+    url(r'^roles/graph/$', views.role_graph, name='crits-core-views-role_graph'),
+    url(r'^roles/add_source/$', views.role_add_source, name='crits-core-views-role_add_source'),
+    url(r'^roles/remove_source/$', views.role_remove_source, name='crits-core-views-role_remove_source'),
+    url(r'^roles/update_name/$', views.update_role_name, name='crits-core-views-update_role_name'),
+    url(r'^roles/update_description/$', views.update_role_description, name='crits-core-views-update_role_description'),
     url(r'^get_item_data/$', views.get_item_data, name='crits-core-views-get_item_data'),
     url(r'^add_action/$', views.new_action, name='crits-core-views-new_action'),
+
 
     # Default landing page
     url(r'^$', dviews.dashboard, name='crits-dashboards-views-dashboard'),
@@ -82,13 +94,15 @@ urlpatterns = [
     url(r'^timeline/(?P<data_type>\S+)/(?P<extra_data>\S+)/$', views.timeline, name='crits-core-views-timeline'),
     url(r'^timeline/$', views.timeline, name='crits-core-views-timeline'),
 
+    # TLP
+    url(r'^tlp/mod/$', 'crits.core.views.tlp_modify'),
+
     # User Stuff
     url(r'^profile/(?P<user>\S+)/$', views.profile, name='crits-core-views-profile'),
     url(r'^profile/$', views.profile, name='crits-core-views-profile'),
     url(r'^source_access/$', views.source_access, name='crits-core-views-source_access'),
     url(r'^source_add/$', views.source_add, name='crits-core-views-source_add'),
     url(r'^get_user_source_list/$', views.get_user_source_list, name='crits-core-views-get_user_source_list'),
-    url(r'^user_role_add/$', views.user_role_add, name='crits-core-views-user_role_add'),
     url(r'^user_source_access/$', views.user_source_access, name='crits-core-views-user_source_access'),
     url(r'^user_source_access/(?P<username>\S+)/$', views.user_source_access, name='crits-core-views-user_source_access'),
     url(r'^preference_toggle/(?P<section>\S+)/(?P<setting>\S+)/$', views.user_preference_toggle, name='crits-core-views-user_preference_toggle'),
@@ -96,7 +110,7 @@ urlpatterns = [
     url(r'^clear_user_notifications/$', views.clear_user_notifications, name='crits-core-views-clear_user_notifications'),
     url(r'^delete_user_notification/(?P<type_>\S+)/(?P<oid>\S+)/$', views.delete_user_notification, name='crits-core-views-delete_user_notification'),
     url(r'^change_subscription/(?P<stype>\S+)/(?P<oid>\S+)/$', views.change_subscription, name='crits-core-views-change_subscription'),
-    url(r'^source_subscription/$', views.source_subscription, name='crits-core-views-source_subscription'),
+    url(r'^source_subscription/$', views.change_subscription, name='crits-core-views-change_subscription'),
     url(r'^change_password/$', views.change_password, name='crits-core-views-change_password'),
     url(r'^change_totp_pin/$', views.change_totp_pin, name='crits-core-views-change_totp_pin'),
     url(r'^reset_password/$', views.reset_password, name='crits-core-views-reset_password'),

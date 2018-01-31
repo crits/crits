@@ -52,16 +52,15 @@ from mongoengine import DictField, DynamicEmbeddedDocument
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.hashers import check_password, make_password
-#from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
-#from django.contrib.auth.models import _user_has_module_perms
-from django.core.exceptions import ImproperlyConfigured
-from django.db import models
+from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
+from django.contrib.auth.models import _user_has_module_perms
 #from django.utils.translation import ugettext_lazy as _
 
 from crits.config.config import CRITsConfig
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 from crits.core.crits_mongoengine import CritsDocumentFormatter, UnsupportedAttrs
 from crits.core.user_migrate import migrate_user
+from crits.core.role import Role
 
 
 
@@ -210,9 +209,8 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         "schema_doc": {
             'username': 'The username of this analyst',
             'organization': 'The name of the organization this user is from',
-            'role': 'The role this user has been granted from a CRITs Admin',
-            'sources': ('List [] of source names this user has been granted'
-                        ' access to view data from'),
+            'roles': ('List [] of roles names this user has been granted'
+                        ' access to.'),
             'subscriptions': {
                 'Campaign': [
                     {
@@ -324,11 +322,12 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     login_attempts = ListField(EmbeddedDocumentField(EmbeddedLoginAttempt))
     organization = StringField(default=settings.COMPANY_NAME)
     password_reset = EmbeddedDocumentField(EmbeddedPasswordReset, default=EmbeddedPasswordReset())
-    role = StringField(default="Analyst")
-    sources = ListField(StringField())
+    roles = ListField(StringField())
     subscriptions = EmbeddedDocumentField(EmbeddedSubscriptions, default=EmbeddedSubscriptions())
     favorites = EmbeddedDocumentField(EmbeddedFavorites, default=EmbeddedFavorites())
     prefs = EmbeddedDocumentField(PreferencesField, default=PreferencesField())
+    acl_needs_update = BooleanField(default=False)
+    acl = DictField()
     totp = BooleanField(default=False)
     secret = StringField(default="")
     api_keys = ListField(EmbeddedDocumentField(EmbeddedAPIKey))
@@ -819,20 +818,20 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         l.set_option(ldap.OPT_REFERRALS, 0)
         l.set_option(ldap.OPT_TIMEOUT, 10)
         # setup auth for custom cn's
-        cn = "cn="
-        if config.ldap_usercn:
-            cn = config.ldap_usercn
+        #cn = "cn="
+        #if config.ldap_usercn:
+        #    cn = config.ldap_usercn
         # two-step ldap binding
         if len(config.ldap_bind_dn) > 0:
             try:
-            	logger.info("binding with bind_dn: %s" % config.ldap_bind_dn)
-            	l.simple_bind_s(config.ldap_bind_dn, config.ldap_bind_password)
-            	filter = '(|(cn='+self.username+')(uid='+self.username+')(mail='+self.username+'))'
-            	# use the retrieved dn for the second bind
-            	un = l.search_s(config.ldap_userdn,ldap.SCOPE_SUBTREE,filter,['dn'])[0][0]
+                logger.info("binding with bind_dn: %s" % config.ldap_bind_dn)
+                l.simple_bind_s(config.ldap_bind_dn, config.ldap_bind_password)
+                filter = '(|(cn='+self.username+')(uid='+self.username+')(mail='+self.username+'))'
+                # use the retrieved dn for the second bind
+                un = l.search_s(config.ldap_userdn,ldap.SCOPE_SUBTREE,filter,['dn'])[0][0]
             except Exception as err:
-            	#logger.error("Error binding to LDAP for: %s" % config.ldap_bind_dn)
-            	logger.error("Error in info_from_ldap: %s" % err)
+                #logger.error("Error binding to LDAP for: %s" % config.ldap_bind_dn)
+                logger.error("Error in info_from_ldap: %s" % err)
             l.unbind()
             if len(ldap_server) == 2:
                 l = ldap.initialize('%s:%s' % (url.unparse(),
@@ -878,6 +877,191 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
     def getDashboards(self):
         from crits.dashboards.handlers import getDashboardsForUser
         return getDashboardsForUser(self)
+
+    def get_sources_list(self):
+        # We always update to make sure we catch changes to a user's role list.
+        # Made the ACL update optional as this was adding 10s to load times
+        # and over 400 reads from the DB. If this breaks something, we should
+        # fix it.
+        if self.acl_needs_update:
+            self.get_access_list(update=True)
+        try:
+            return [s.name for s in self.acl.get('sources')]
+        except:
+            return []
+
+    def check_source_tlp(self, object):
+        """
+        """
+
+        if not object:
+            return False
+
+        user_source_names = self.get_sources_list()
+        user_source_objects = self.acl.get('sources')
+
+        object_sources = object.source
+
+        for source in object_sources:
+            if source.name in user_source_names:
+                for instance in source.instances:
+                    if instance.tlp == "white":
+                        return True
+                    elif instance.tlp == "red" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_red and usource.read]:
+                        return True
+                    elif instance.tlp == "amber" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_amber and usource.read]:
+                        return True
+                    elif instance.tlp == "green" and [True for usource in user_source_objects if usource.name == source.name and usource.tlp_green and usource.read]:
+                        return True
+        return False
+
+    def check_source_write(self, source):
+        """
+        """
+        user_source_objects = self.acl.get('sources')
+
+        for usource in user_source_objects:
+            if usource.name == source:
+                return usource.write
+
+        return False
+
+    def get_access_list(self, update=False):
+        """
+        Generate a single new Role object based off of a combination of all of
+        the user's assigned roles. Each attribute is analyzed across all roles
+        and the "highest-order-access" is granted.
+
+        :param update: Update the cache before returning. If the cache is empty
+                       we always update first.
+        :type update: boolean
+        :returns: :class:`crits.core.role.Role`
+        """
+
+        # If we already have this cached, return it unless we are supposed to
+        # update the cache first.
+        if not update:
+            return self.acl
+
+        acl = {}
+        roles = Role.objects(name__in=self.roles)
+        acl = roles.first()._data
+
+        # for each role, modify the acl object to reflect all of the attributes
+        # the user should be granted access to.
+        for r in roles:
+            for p,v in r._data.iteritems():
+                if p in ['name', 'description', 'active', 'id']:
+                    # No need to worry about these. Added benefit of
+                    # throwing a validation error since there is no name
+                    # preventing people from accidentally saving this as a new
+                    # Role.
+                    pass
+                elif p == 'sources':
+                    # For each source, try to find it in the existing list. If
+                    # we find it, adjust the attributes based on which ones the
+                    # user should get access to. If not, append it to the list
+                    # of sources.
+                    for s in r.sources:
+                        c = 0
+                        found = False
+                        for src in acl['sources']:
+                            if s.name == src.name:
+                                for x,y in s._data.iteritems():
+                                    if not acl['sources'][c].get(x, True):
+                                        acl['sources'][c][x] = y
+                                found = True
+                                break
+                            c += 1
+                        if not found:
+                            acl['sources'].append(s)
+                elif p in settings.CRITS_TYPES.iterkeys():
+                    # For each CRITs Type adjust the attributes based on which
+                    # ones the # user should get access to.
+
+                    # Get the attribute we are working with.
+                    attr = acl.get(p, False)
+
+                    # Modify the attributes.
+                    for x,y in getattr(r, p)._data.iteritems():
+                        if not getattr(attr, x, False):
+                            setattr(attr, x, y)
+
+                    # Set the attribute on the ACL.
+                    acl[p] = attr
+                else:
+                    # Set the attribute if the user should get access to it.
+                    if not acl.get(p, False):
+                        acl[p] = v
+        acl = dict(acl)
+        self.acl = acl
+        self.acl_needs_update = False
+        self.save()
+        return acl
+
+    def can_do_one_of(self, acls=None):
+        """
+        Given a list of possible acls, verify the user has access to do at least
+        one of them.
+
+        :param acls: The ACL list to check.
+        :type acls: list
+        :returns: boolean
+        """
+        result = False
+        if acls is None:
+            acls = []
+        for acl in acls:
+            if self.has_access_to(acl):
+                result = True
+                break
+        return result
+
+    def has_access_to(self, attribute=None):
+        """
+        Try to determine if a user has access to this feature in CRITs.
+
+        Checking multiple ACL values at a time will be very common. For example:
+
+            - Does user X have access to the Sample TLO?
+            - If so, does user X have access to see the Bucket List of Samples?
+
+        You could just get the return value of '.get_access_list()' and iterate
+        over it however you wish. This function saves the hassle of replicating
+        that code by allowing you to immediately check for the specific ACL you
+        are looking for. You also want to use strings instead of hardcoding
+        attributes to allow for functions that act dynamically on multiple TLOs
+        to be able to do so without huge if blocks. Example from above:
+
+            for x in settings.CRITS_TYPES.iterkeys():
+                if (X.has_access_to('%s.read' % x)
+                    and X.has_access_to('%s.bucketlist_read' % x):
+
+        Is much cleaner than:
+
+            acl = X.get_access_list()
+            for x in settings.CRITS_TYPES.iterkeys():
+                if (getattr(getattr(acl, x), 'read')
+                    and getattr(getattr(acl, x), 'bucketlist_read'))
+
+        :param attribute: The feature to look up. Can be in the format of
+                          "Attribute.attribute" if it's an embedded attribute.
+        :type attribute: str
+        :returns: boolean
+        """
+
+        if self.acl_needs_update or len(self.acl) == 0:
+            self.get_access_list(update=True)
+
+        attrs = attribute.split('.')
+        attr = self.acl
+
+        for a in attrs:
+            try:
+                attr = attr.get(a, False)
+            except:
+                return False
+        return attr
 
 class AuthenticationMiddleware(object):
     # This has been added to make theSessions work on Django 1.8+ and
@@ -1181,7 +1365,6 @@ class CRITsRemoteUserBackend(CRITsAuthBackend):
         elif not user and config.create_unknown_user:
             # Create the user
             user = CRITsUser.create_user(username=username, password=None)
-            user.sources.append(config.company_name)
             # Attempt to update info from LDAP
             user.update_from_ldap("Auto LDAP update", config)
             user = self._successful_settings(user, e, totp_enabled)

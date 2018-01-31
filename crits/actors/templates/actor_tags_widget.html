@@ -1,8 +1,10 @@
+{% load filters %}
 <script>
     var global_search = "{% url 'crits-core-views-global_search_listing' %}";
     var actor_tags_modify = "{% url 'crits-actors-views-actor_tags_modify' %}";
     var actor_tags_list = "{% url 'crits-actors-views-get_actor_tags' %}";
 </script>
+{% if ActorACL.INTENDED_EFFECTS_READ|has_access_to:user %}
 <tr>
     <td class="key">Intended Effects</td>
     <td>
@@ -13,6 +15,8 @@
         </ul>
     </td>
 </tr>
+{% endif %}
+{% if ActorACL.MOTIVATIONS_READ|has_access_to:user %}
 <tr>
     <td class="key">Motivations</td>
     <td>
@@ -23,6 +27,8 @@
         </ul>
     </td>
 </tr>
+{% endif %}
+{% if ActorACL.SOPHISTICATIONS_READ|has_access_to:user %}
 <tr>
     <td class="key">Sophistication</td>
     <td>
@@ -33,6 +39,8 @@
         </ul>
     </td>
 </tr>
+{% endif %}
+{% if ActorACL.THREAT_TYPES_READ|has_access_to:user %}
 <tr>
     <td class="key">Threat Types</td>
     <td>
@@ -43,6 +51,7 @@
         </ul>
     </td>
 </tr>
+{% endif %}
 <script type="text/javascript">
     $(document).bind('enable_actor_tags', function(){
         actor_tags = false;

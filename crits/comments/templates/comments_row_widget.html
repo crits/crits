@@ -6,7 +6,7 @@
     </td>
     <td>
         <div class="comment_body">
-            <span data-field="comment"> 
+            <span data-field="comment">
                 {{ comment.comment|safe }}
             </span>
             {% if comment.url_key and not subscription %}
@@ -35,11 +35,11 @@
             {% endif %}
             {% if comment.analyst == user.username %}
             <span class="comment_button">
-                <a href="#" title="Delete Comment" class="ui-icon ui-icon-close deleteClick" type="comment" action="{% url 'crits-comments-views-remove_comment' comment.obj_id %}" key="{{comment.created}}">
+                <a href="#" title="Delete Comment" class="ui-icon ui-icon-close deleteClick" type="comment" action="{% url 'crits-comments-views-remove_comment' comment.obj_type comment.obj_id %}" key="{{comment.created}}">
                 </a>
             </span>
             <span class="comment_button">
-                <a href="#" title="Edit Comment" class="ui-icon ui-icon-pencil dialogClick" dialog="comments" persona="update" 
+                <a href="#" title="Edit Comment" class="ui-icon ui-icon-pencil dialogClick" dialog="comments" persona="update"
 		   action="{% url 'crits-comments-views-add_update_comment' 'update' comment.obj_type comment.obj_id %}">
                 </a>
             </span>

@@ -19,8 +19,9 @@ from tastypie_mongoengine.resources import MongoEngineResource
 
 from crits.core.data_tools import format_file, create_zip
 from crits.core.handlers import remove_quotes, generate_regex
-from crits.core.user_tools import user_sources
+from crits.core.user_tools import get_acl_object
 
+from crits.vocabulary.acls import GeneralACL
 
 # The following leverages code from the Tastypie library.
 class CRITsApiKeyAuthentication(ApiKeyAuthentication):
@@ -56,6 +57,9 @@ class CRITsApiKeyAuthentication(ApiKeyAuthentication):
             return self._unauthorized()
 
         if not user.is_active:
+            return self._unauthorized()
+
+        if not user.has_access_to(GeneralACL.API_INTERFACE):
             return self._unauthorized()
 
         key_auth_check = self.get_key(user, api_key)
@@ -415,12 +419,14 @@ class CRITsAPIResource(MongoEngineResource):
         """
 
         querydict = {}
+        user = request.user
         get_params = request.GET.copy()
         regex = request.GET.get('regex', False)
         only = request.GET.get('only', None)
         exclude = request.GET.get('exclude', None)
-        source_list = user_sources(request.user.username)
+        source_list = user.get_sources_list()
         no_sources = True
+
         # Chop off trailing slash and split on remaining slashes.
         # If last part of path is not the resource name, assume it is an
         # object ID.
@@ -441,12 +447,24 @@ class CRITsAPIResource(MongoEngineResource):
             except:
                 # If can't be converted to an int use the string.
                 v_int = v
-            if k == "c-_id":
+            if k == "c-_id" or k.find("c-_id__") == 0:
                 try:
-                    querydict['_id'] = ObjectId(v)
+                    field = "_id"
+
+                    # Attempt to extract an "in" or "nin" operator
+                    try:
+                        op_index = k.index("__")
+                        op = "$%s" % k[op_index+2:]
+                    except ValueError:
+                        op_index = None
+
+                    if op_index == None:
+                        querydict[field] = ObjectId(v)
+                    elif op in ['$in', '$nin']:
+                        querydict[field] = {op: [ObjectId(x) for x in v.split(',')]}
                 except:
                     pass
-            if k.startswith("c-"):
+            elif k.startswith("c-"):
                 field = k[2:]
                 # Attempt to discover query operators. We use django-style operators
                 # (same as MongoEngine). These also override regex.
@@ -519,6 +537,7 @@ class CRITsAPIResource(MongoEngineResource):
             querydict = tmp
         if no_sources and sources:
             querydict['source.name'] = {'$in': source_list}
+
         if only or exclude:
             required = [k for k,f in klass._fields.iteritems() if f.required]
         if only:
@@ -538,14 +557,34 @@ class CRITsAPIResource(MongoEngineResource):
             results = klass.objects(__raw__=querydict).exclude(*fields)
         else:
             results = klass.objects(__raw__=querydict)
+
+        # There has to be a better way to do this...
+        # Final scrub to remove results the user does not have access to
+        id_list = []
+
+        if not klass._meta['crits_type']:
+            return results
+
+        for result in results:
+            if user.check_source_tlp(result):
+                id_list.append(result.id)
+
+        results = klass.objects(id__in=id_list)
+
         return results
 
     def obj_get_list(self, bundle, **kwargs):
         """
         Placeholder for overriding the default tastypie function in the future.
         """
+        user = bundle.request.user
 
-        return super(CRITsAPIResource, self).obj_get_list(bundle=bundle, **kwargs)
+        acl = get_acl_object(bundle.obj._meta['crits_type'])
+
+        if not acl or (bundle.obj._meta['crits_type'] == 'Screenshot' or user.has_access_to(acl.READ)):
+            return super(CRITsAPIResource, self).obj_get_list(bundle=bundle, **kwargs)
+        else:
+            raise NotImplementedError('You do not have access to this object.')
 
     def obj_get(self, bundle, **kwargs):
         """

@@ -2,7 +2,7 @@ from django import forms
 from django.forms.widgets import HiddenInput
 
 from crits.campaigns.campaign import Campaign
-from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
+from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceInForm
 from crits.core.handlers import get_item_names
 from crits.core import form_consts
 

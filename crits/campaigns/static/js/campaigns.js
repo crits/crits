@@ -34,7 +34,7 @@ $(document).ready(function() {
             $("#form-add-ttp :input[name='ttp']").val('');
         }
     });
-    
+
     function add_ttp() {
         var action = "add";
         var ttp = $("#form-add-ttp :input[name='ttp']").val();
@@ -128,9 +128,7 @@ $(document).ready(function() {
             update_aliases(my_tags);
         },
         beforeTagRemoved: function(event, ui) {
-            if (is_admin != "True") {
-                return false;
-            }
+            return true;
         },
         afterTagRemoved: function(event, ui) {
             var my_tags = $("#campaign_aliases").tagit("assignedTags");
@@ -163,8 +161,8 @@ $(document).ready(function() {
 			 update: { open: update_dialog} },
 
     };
-    $.each(localDialogs, function(id,opt) { 
-	    stdDialog(id,opt); 
+    $.each(localDialogs, function(id,opt) {
+	    stdDialog(id,opt);
 	});
     populate_id(campaign_id,'Campaign');
     details_copy_id('Campaign');

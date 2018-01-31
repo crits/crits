@@ -11,7 +11,8 @@ except ImportError:
     from django.core.urlresolvers import reverse
 
 from crits.core.class_mapper import class_from_id
-from crits.core.crits_mongoengine import json_handler
+from crits.core.crits_mongoengine import json_handler, create_embedded_source
+from crits.core.crits_mongoengine import EmbeddedSource
 from crits.core.handlers import build_jtable, jtable_ajax_list,jtable_ajax_delete
 from crits.core.user_tools import user_sources
 from crits.screenshots.screenshot import Screenshot
@@ -93,7 +94,7 @@ def get_screenshot(_id=None, tag=None, analyst=None, thumb=False):
     im.save(response, "PNG")
     return response
 
-def add_screenshot(description, tags, source, method, reference, analyst,
+def add_screenshot(description, tags, source, method, reference, tlp, analyst,
                    screenshot, screenshot_ids, oid, otype):
     """
     Add a screenshot or screenshots to a top-level object.
@@ -103,11 +104,15 @@ def add_screenshot(description, tags, source, method, reference, analyst,
     :param tags: Tags associated with this screenshot.
     :type tags: str, list
     :param source: The source who provided the screenshot.
-    :type source: str
+    :type source_name: str,
+                :class:`crits.core.crits_mongoengine.EmbeddedSource`,
+                list of :class:`crits.core.crits_mongoengine.EmbeddedSource`
     :param method: The method of acquiring this screenshot.
     :type method: str
     :param reference: A reference to the source of this screenshot.
     :type reference: str
+    :param tlp: The TLP Sharing of this screenshot.
+    :type tlp: str
     :param analyst: The user adding the screenshot.
     :type analyst: str
     :param screenshot: The screenshot to add.
@@ -145,8 +150,20 @@ def add_screenshot(description, tags, source, method, reference, analyst,
             screenshot_id = screenshot_id.strip().lower()
             s = Screenshot.objects(id=screenshot_id).first()
             if s:
-                s.add_source(source=source, method=method, reference=reference,
-                        analyst=analyst)
+                if isinstance(source, basestring) and len(source) > 0:
+                    s_embed = create_embedded_source(source, method=method,
+                                                    reference=reference,
+                                                    analyst=analyst,
+                                                     tlp=tlp)
+                    s.add_source(s_embed)
+                elif isinstance(source, EmbeddedSource):
+                    s.add_source(source=source, method=method,
+                                 reference=reference, analyst=analyst, tlp=tlp)
+                elif isinstance(source, list) and len(source) > 0:
+                    for x in source:
+                        if isinstance(x, EmbeddedSource):
+                            s.add_source(x, method=method, reference=reference,
+                                         analyst=analyst, tlp=tlp)
                 s.add_tags(tags)
                 s.save()
                 obj.screenshots.append(screenshot_id)
@@ -165,8 +182,20 @@ def add_screenshot(description, tags, source, method, reference, analyst,
             s.md5 = md5
             screenshot.seek(0)
             s.add_screenshot(screenshot, tags)
-        s.add_source(source=source, method=method, reference=reference,
-                    analyst=analyst)
+        if isinstance(source, basestring) and len(source) > 0:
+            s_embed = create_embedded_source(source, method=method,
+                                             reference=reference,
+                                            analyst=analyst,
+                                             tlp=tlp)
+            s.add_source(s_embed)
+        elif isinstance(source, EmbeddedSource):
+            s.add_source(source, method=method, reference=reference,
+                         analyst=analyst, tlp=tlp)
+        elif isinstance(source, list) and len(source) > 0:
+            for x in source:
+                if isinstance(x, EmbeddedSource):
+                    s.add_source(x, method=method, reference=reference,
+                                 analyst=analyst, tlp=tlp)
         if not s.screenshot and not s.thumb:
             result['message'] = "Problem adding screenshot to GridFS. No screenshot uploaded."
             return result

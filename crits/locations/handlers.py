@@ -56,7 +56,7 @@ def location_add(id_, type_, location_type, location_name, user,
         description = description,
         latitude = latitude,
         longitude = longitude,
-        analyst = user
+        analyst = user.username
     )
     location.date = location.date.replace(microsecond=0)
     result = obj.add_location(location)

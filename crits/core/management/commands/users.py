@@ -15,91 +15,96 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--adduser',
-                        '-a',
-                        dest='adduser',
-                        action='store_true',
-                        default=False,
-                        help='Add a new user to CRITs.')
-        parser.add_argument('--administrator',
-                        '-A',
-                        dest='admin',
-                        action='store_true',
-                        default=False,
-                        help='Make this user an administrator.')
+                    '-a',
+                    dest='adduser',
+                    action='store_true',
+                    default=False,
+                    help='Add a new user to CRITs.')
         parser.add_argument('--clearsecret',
-                        '-c',
-                        dest='clearsecret',
-                        action='store_true',
-                        default=False,
-                        help="Clear a user's secret.")
+                    '-c',
+                    dest='clearsecret',
+                    action='store_true',
+                    default=False,
+                    help="Clear a user's secret.")
         parser.add_argument('--deactivateuser',
-                        '-d',
-                        dest='deactivate',
-                        action='store_true',
-                        default=False,
-                        help='Deactivate a user account.')
+                    '-d',
+                    dest='deactivate',
+                    action='store_true',
+                    default=False,
+                    help='Deactivate a user account.')
         parser.add_argument('--email',
-                        '-e',
-                        dest='email',
-                        default=None,
-                        help='Email address of new user.')
+                    '-e',
+                    dest='email',
+                    default=None,
+                    help='Email address of new user.')
         parser.add_argument('--sendemail',
-                        '-E',
-                        dest='sendemail',
-                        action='store_true',
-                        default=False,
-                        help='Email new user their temporary password.')
+                    '-E',
+                    dest='sendemail',
+                    action='store_true',
+                    default=False,
+                    help='Email new user their temporary password.')
         parser.add_argument('--firstname',
-                        '-f',
-                        dest='firstname',
-                        default='',
-                        help='First name of new user.')
+                    '-f',
+                    dest='firstname',
+                    default='',
+                    help='First name of new user.')
         parser.add_argument('--invalidreset',
-                        '-i',
-                        dest='invalidreset',
-                        action='store_true',
-                        default=False,
-                        help="Reset a user's invalid login attempts to 0.")
+                    '-i',
+                    dest='invalidreset',
+                    action='store_true',
+                    default=False,
+                    help="Reset a user's invalid login attempts to 0.")
         parser.add_argument('--lastname',
-                        '-l',
-                        dest='lastname',
-                        default='',
-                        help='Last name of new user.')
+                    '-l',
+                    dest='lastname',
+                    default='',
+                    help='Last name of new user.')
         parser.add_argument('--organization',
-                        '-o',
-                        dest='organization',
-                        default='',
-                        help='Assign user to an organization/source.')
+                    '-o',
+                    dest='organization',
+                    default='',
+                    help='Assign user to an organization/source.')
+        parser.add_argument('--password',
+                    '-p',
+                    dest='password',
+                    default='',
+                    help='Specify a password for the account.')
         parser.add_argument('--reset',
-                        '-r',
-                        dest='reset',
-                        action='store_true',
-                        default=False,
-                        help='Assign a new temporary password to a user.')
+                    '-r',
+                    dest='reset',
+                    action='store_true',
+                    default=False,
+                    help='Assign a new temporary password to a user.')
+        parser.add_argument('--roles',
+                    '-R',
+                    dest='roles',
+                    default='',
+                    help='Assign user to a set of roles.')
         parser.add_argument('--setactive',
-                        '-s',
-                        dest='setactive',
-                        action='store_true',
-                        default=False,
-                        help='Set a user account to active.')
+                    '-s',
+                    dest='setactive',
+                    action='store_true',
+                    default=False,
+                    help='Set a user account to active.')
         parser.add_argument('--enabletotp',
-                        '-t',
-                        dest='enabletotp',
-                        action='store_true',
-                        default=False,
-                        help='Enable TOTP for a user.')
+                    '-t',
+                    dest='enabletotp',
+                    action='store_true',
+                    default=False,
+                    help='Enable TOTP for a user.')
         parser.add_argument('--disabletotp',
-                        '-T',
-                        dest='disabletotp',
-                        action='store_true',
-                        default=False,
-                        help='Disable TOTP for a user.')
+                    '-T',
+                    dest='disabletotp',
+                    action='store_true',
+                    default=False,
+                    help='Disable TOTP for a user.')
         parser.add_argument('--username',
-                        '-u',
-                        dest='username',
-                        default=None,
-                        help='Username for new user.')
-        help = 'Add and edit a CRITs user. If "-a" is not used, we will try to edit.'
+                    '-u',
+                    dest='username',
+                    default=None,
+                    help='Username for new user.')
+    )
+    help = 'Add and edit a CRITs user. If "-a" is not used, we will try to edit.'
 
     def handle(self, *args, **options):
         """
@@ -107,7 +112,6 @@ class Command(BaseCommand):
         """
 
         adduser = options.get('adduser')
-        admin = options.get('admin')
         clearsecret = options.get('clearsecret')
         deactivate = options.get('deactivate')
         disabletotp = options.get('disabletotp')
@@ -120,6 +124,7 @@ class Command(BaseCommand):
         organization = options.get('organization')
         password = options.get('password')
         reset = options.get('reset')
+        roles = options.get('roles')
         setactive = options.get('setactive')
         username = options.get('username')
 
@@ -135,8 +140,6 @@ class Command(BaseCommand):
         # If we've found a user with that username and we aren't trying to add a
         # new user...
         if user and not adduser:
-            if admin:
-                user.role = "Administrator"
             if clearsecret:
                 user.secret = ""
             if deactivate and not setactive:
@@ -157,6 +160,8 @@ class Command(BaseCommand):
                 user.organization = organization
             if reset:
                 user.set_password(password)
+            if roles:
+                user.roles = [r.strip() for r in roles.split(',')]
             if setactive and not deactivate:
                 user.is_active = True
             try:
@@ -178,8 +183,8 @@ class Command(BaseCommand):
             user.is_staff = True
             user.save()
             user.organization = organization
-            if admin:
-                user.role = "Administrator"
+            if roles:
+                user.roles = [r.strip() for r in roles.split(',')]
             user.save()
 
             if sendemail:

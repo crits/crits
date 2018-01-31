@@ -3,12 +3,13 @@ from django.forms.widgets import RadioSelect
 
 from crits.campaigns.campaign import Campaign
 from crits.core import form_consts
-from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form
+from crits.core.forms import add_bucketlist_to_form, add_ticket_to_form, SourceInForm
 from crits.core.handlers import get_source_names, get_item_names
 from crits.backdoors.handlers import get_backdoor_names
 from crits.core.user_tools import get_user_organization
 
 from crits.vocabulary.relationships import RelationshipTypes
+from crits.vocabulary.acls import Common, SampleACL
 
 relationship_choices = [(c, c) for c in RelationshipTypes.values(sort=True)]
 
@@ -32,7 +33,7 @@ class XORSearchForm(forms.Form):
     skip_nulls = forms.BooleanField(required=False)
     is_key = forms.BooleanField(required=False)
 
-class UploadFileForm(forms.Form):
+class UploadFileForm(SourceInForm):
     """
     Django form to handle uploading a sample.
     """
@@ -81,15 +82,6 @@ class UploadFileForm(forms.Form):
     inherit_campaigns = forms.BooleanField(initial=True,
                                            required=False,
                                            label=form_consts.Sample.INHERIT_CAMPAIGNS)
-    source = forms.ChoiceField(required=True,
-                               widget=forms.Select(attrs={'class': 'no_clear bulknoinitial'}),
-                               label=form_consts.Sample.SOURCE)
-    method = forms.CharField(widget=forms.TextInput,
-                                required=False,
-                                label=form_consts.Sample.SOURCE_METHOD)
-    reference = forms.CharField(widget=forms.TextInput,
-                                required=False,
-                                label=form_consts.Sample.SOURCE_REFERENCE)
     inherit_sources = forms.BooleanField(initial=True,
                                          required=False,
                                          label=form_consts.Sample.INHERIT_SOURCES)
@@ -107,13 +99,9 @@ class UploadFileForm(forms.Form):
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
     def __init__(self, username, *args, **kwargs):
-        super(UploadFileForm, self).__init__(*args, **kwargs)
-        self.fields['source'].choices = [(c.name,
-                                          c.name) for c in get_source_names(True,
-                                                                            True,
-                                                                            username)]
-        self.fields['source'].initial = get_user_organization(username)
-        self.fields['campaign'].choices = [('', '')] + [
+        super(UploadFileForm, self).__init__(username, *args, **kwargs)
+        if username.has_access_to(Common.CAMPAIGN_READ):
+            self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['confidence'].choices = [('', ''),
                                              ('low', 'low'),

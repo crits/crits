@@ -5,7 +5,6 @@ except ImportError:
     from django.core.urlresolvers import reverse
 from tastypie import authorization
 from tastypie.authentication import MultiAuthentication
-from tastypie.exceptions import BadRequest
 
 from crits.services.handlers import add_result, add_results, add_log, finish_task
 from crits.services.service import CRITsService
@@ -52,7 +51,7 @@ class ServiceResource(CRITsAPIResource):
         :returns: HttpResponse.
 
         """
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         object_type = bundle.data.get('object_type', None)
         object_id = bundle.data.get('object_id', None)
         analysis_id = bundle.data.get('analysis_id', None)
@@ -78,10 +77,9 @@ class ServiceResource(CRITsAPIResource):
             if not result_type or not result_subtype:
                 content['message'] = 'When adding a result, also need type and subtype'
                 self.crits_response(content)
-
             if not result_is_batch:
                 result = add_result(object_type, object_id, analysis_id,
-                                    result, result_type, result_subtype, analyst)
+                                    result, result_type, result_subtype, user)
             else:
                 result_list = json.loads(result)
                 result_type_list = json.loads(result_type)
@@ -90,22 +88,21 @@ class ServiceResource(CRITsAPIResource):
                 if not (len(result_list) == len(result_type_list) == len(result_subtype_list)):
                     content['message'] = 'When adding results in batch result, result_type, and result_subtype must have the same length!'
                     self.crits_response(content)
-                
                 result = add_results(object_type, object_id, analysis_id, result_list,
-                                     result_type_list, result_subtype_list, analyst)
+                                     result_type_list, result_subtype_list, user)
 
             if not result['success']:
                 message += ", %s" % result['message']
                 success = False
         if log_message:
             result = add_log(object_type, object_id, analysis_id,
-                             log_message, log_level, analyst)
+                             log_message, log_level, user)
             if not result['success']:
                 message += ", %s" % result['message']
                 success = False
         if finish:
             result = finish_task(object_type, object_id, analysis_id,
-                                     status, analyst)
+                                     status, user)
             if not result['success']:
                 message += ", %s" % result['message']
                 success = False

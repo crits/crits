@@ -10,6 +10,8 @@ from crits.samples.handlers import handle_uploaded_file
 from crits.core.api import CRITsApiKeyAuthentication, CRITsSessionAuthentication
 from crits.core.api import CRITsSerializer, CRITsAPIResource
 
+from crits.vocabulary.acls import SampleACL
+
 
 class SampleResource(CRITsAPIResource):
     """
@@ -48,7 +50,7 @@ class SampleResource(CRITsAPIResource):
         :returns: HttpResponse.
         """
 
-        analyst = bundle.request.user.username
+        user = bundle.request.user
         type_ = bundle.data.get('upload_type', None)
 
         content = {'return_code': 1,
@@ -80,6 +82,7 @@ class SampleResource(CRITsAPIResource):
         source = bundle.data.get('source', None)
         method = bundle.data.get('method', "")
         reference = bundle.data.get('reference', None)
+        tlp = bundle.data.get('tlp', 'amber')
         file_format = bundle.data.get('file_format', None)
         related_md5 = bundle.data.get('related_md5', None)
         related_id = bundle.data.get('related_id', None)
@@ -99,13 +102,18 @@ class SampleResource(CRITsAPIResource):
             content['message'] = "Must specify related_type and related_id"
             self.crits_response(content)
 
+        if not user.has_access_to(SampleACL.WRITE):
+            content['message'] = 'User does not have permission to create Object.'
+            self.crits_response(content)
+
         sample_md5 = handle_uploaded_file(filedata,
                                           source,
                                           method,
                                           reference,
+                                          tlp,
                                           file_format,
                                           password,
-                                          user=analyst,
+                                          user=user,
                                           description=description,
                                           campaign=campaign,
                                           confidence=confidence,

@@ -175,6 +175,7 @@ COL_PCAPS = "pcaps"                                       # main pcaps collectio
 COL_RAW_DATA = "raw_data"                                 # main raw data collection
 COL_RAW_DATA_TYPES = "raw_data_types"                     # list of available raw data types
 COL_RELATIONSHIP_TYPES = "relationship_types"             # list of available relationship types
+COL_ROLES = "roles"                                       # main roles collection
 COL_SAMPLES = "sample"                                    # main samples collection
 COL_SCREENSHOTS = "screenshots"                           # main screenshots collection
 COL_SECTOR_LISTS = "sector_lists"                         # sector lists information
@@ -188,7 +189,6 @@ COL_SOURCES = "sources"                                   # source information g
 COL_STATISTICS = "statistics"                             # list of statistics for different objects (campaigns, for example)
 COL_TARGETS = "targets"                                   # target information for use in email
 COL_USERS = "users"                                       # main users collection
-COL_USER_ROLES = "user_roles"                             # main user roles collection
 COL_YARAHITS = "yarahits"                                 # yara hit counts for samples
 
 # MongoDB connection pool
@@ -208,6 +208,9 @@ coll = db[COL_CONFIG]
 crits_config = coll.find_one({})
 if not crits_config:
     crits_config = {}
+
+# UberAdmin role. Has access to everything, can do everything, etc.
+ADMIN_ROLE = "UberAdmin"
 
 # Populate settings
 # Hosts/domain names that are valid for this site; required if DEBUG is False
@@ -331,6 +334,12 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'unique-crits',
+    }
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
 }
 
@@ -690,6 +699,7 @@ for handler in LOGGING['handlers'].values():
 # CRITs Types
 CRITS_TYPES = {
     'Actor': COL_ACTORS,
+    'ActorIdentifier': COL_ACTOR_IDENTIFIERS,
     'AnalysisResult': COL_ANALYSIS_RESULTS,
     'Backdoor': COL_BACKDOORS,
     'Campaign': COL_CAMPAIGNS,

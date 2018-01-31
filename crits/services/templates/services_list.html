@@ -39,13 +39,13 @@
                 <td>{{ service.supported_types|join:", " }}</td>
                 <td>
                 {% if service.enabled %}
-                    {% if admin and service.status == "available"%}
+                    {% if service.status == "available"%}
                         <span class="enabled" data-url="{% url 'crits-services-views-disable' service.name %}">Yes</span>
                     {% else %}
                         <span>Yes</span>
                     {% endif %}
                 {% else %}
-                    {% if admin and service.status == "available"%}
+                    {% if service.status == "available"%}
                         <span class="enabled" data-url="{% url 'crits-services-views-enable' service.name %}">No</span>
                     {% else %}
                         <span>No</span>
@@ -54,13 +54,13 @@
                 </td>
                 <td>
                 {% if service.run_on_triage %}
-                    {% if admin and service.status == "available"%}
+                    {% if service.status == "available"%}
                         <span class="enabled" data-url="{% url 'crits-services-views-disable_triage' service.name %}">Yes</span>
                     {% else %}
                         <span>Yes</span>
                     {% endif %}
                 {% else %}
-                    {% if admin and service.status == "available"%}
+                    {% if service.status == "available"%}
                         <span class="enabled" data-url="{% url 'crits-services-views-enable_triage' service.name %}">No</span>
                     {% else %}
                         <span>No</span>

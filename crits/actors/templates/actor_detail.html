@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load filters %}
 
 {% block title %} Actor Detail {% endblock %}
 
@@ -8,26 +9,30 @@
     var edit_actor_name = "{% url 'crits-actors-views-edit_actor_name' actor.id|urlencode %}";
     var update_actor_aliases = "{% url 'crits-actors-views-edit_actor_aliases' %}";
     var actor_id = "{{ actor.id | escapejs }}"
+    var id = actor_id
 </script>
 
 <div id="tabnav" class="tabnav" style="font-size:90%">
     <ul style="font-size: 125%">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
+    {% if ActorACL.SERVICES_READ %}
+      <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
     </ul>
-
 <div id="details_section">
-    <div class='content_box'>
-        <span class="horizontal_menu">
-        <ul class="hmenu">
-            <li><a href="#" class="dialogClick" dialog="download-actor">Download Actor</a></li>
-            {% if admin %}
-            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="actor" action='{% url "crits-actors-views-remove_actor" actor.id %}'>Delete Actor</a></li>
-            {% endif %}
-        </ul>
-        </span>
-    </div>
+    {% if ActorACL.DOWNLOAD|has_access_to:user or ActorACL.DELETE|has_access_to:user %}
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        {% if ActorACL.DOWNLOAD|has_access_to:user %}
+          <li><a href="#" class="dialogClick" dialog="download-actor">Download Actor</a></li>
+        {% endif %}
+        {% if ActorACL.DELETE|has_access_to:user %}
+          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="actor" action='{% url "crits-actors-views-remove_actor" actor.id %}'>Delete Actor</a></li>
+        {% endif %}
+    </ul>
+    </span>
+    {% endif %}
 
     <div class="content_box content_details">
         <h3 class="titleheader">
@@ -48,6 +53,7 @@
                             <span class="edit_underline" id="edit_actor_name">{{actor.name}}</span>
                         </td>
                     </tr>
+                    {% if ActorACL.ALIASES_READ|has_access_to:user %}
                     <tr>
                         <td class="key">Aliases</td>
                         <td>
@@ -55,13 +61,17 @@
                                 {% for alias in actor.aliases %}
                                     <li>{{ alias }}</li>
                                 {% endfor %}
+                            </ul>
                         </td>
                     </tr>
+                    {% endif %}
+                    {% if ActorACL.DESCRIPTION_READ|has_access_to:user %}
                     <tr>
                         {% with description=actor.description %}
                             {% include 'description_widget.html' %}
                         {% endwith %}
                     </tr>
+                    {% endif %}
                     <tr>
                         <td class="key">Created</td>
                         <td>{{actor.created}}</td>
@@ -70,6 +80,7 @@
                         <td class="key">Modified</td>
                         <td>{{actor.modified}}</td>
                     </tr>
+                    {% if ActorACL.STATUS_READ|has_access_to:user %}
                     <tr>
                         <td class="key">Status
                             <span style="float: right;" class="object_status_response"></span>
@@ -78,73 +89,105 @@
                             <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{actor.status}}</span>
                         </td>
                     </tr>
+                    {% endif %}
                     {% include "actor_tags_widget.html" %}
-                    {% with sectors=actor.sectors %}
-                        {% include "sector_widget.html" %}
+                    {% with tlp=actor.tlp %}
+                        {% include "tlp_widget.html" %}
                     {% endwith %}
+                    {% if ActorACL.SECTORS_READ|has_access_to:user %}
+                      {% with sectors=actor.sectors %}
+                          {% include "sector_widget.html" %}
+                      {% endwith %}
+                    {% endif %}
+                    {% if ActorACL.SOURCES_READ|has_access_to:user %}
                     <tr>
                         {% with sources=actor.source obj_id=actor.id obj_type=subscription.type %}
                             {% include "sources_listing_widget.html" %}
                         {% endwith %}
                     </tr>
-                    <tr>
-                        {% with releasability=actor.releasability %}
-                            {% include "releasability_list_widget.html" %}
-                        {% endwith %}
-                    </tr>
+                    {% endif %}
+                    {% if ActorACL.RELEASABILITY_READ|has_access_to:user %}
+                      <tr>
+                          {% with releasability=actor.releasability %}
+                              {% include "releasability_list_widget.html" %}
+                          {% endwith %}
+                      </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div> <!-- content_body -->
      </div> <!-- content_box -->
      <div id="detail_floaters">
          {% include 'details_options_widget.html' %}
-         {% with bucket_list=actor.bucket_list %}
-             {% include 'bucket_list_widget.html' %}
-         {% endwith %}
+         {% if ActorACL.BUCKETLIST_READ|has_access_to:user %}
+           {% with bucket_list=actor.bucket_list %}
+               {% include 'bucket_list_widget.html' %}
+           {% endwith %}
+         {% endif %}
          {% include 'add_related_widget.html' %}
      </div>
-    <div class="content_box">
+     {% if ActorACL.ACTIONS_READ|has_access_to:user %}
+     <div class="content_box">
         {% with obj=actor obj_type="Actor" %}
             {% include 'action_listing_widget.html' %}
         {% endwith %}
-    </div>
-     <div id="actor_identifier_widget_container">
-         {% include "actor_identifiers_widget.html" %}
      </div>
+     {% endif %}
+     {% if ActorACL.ACTOR_IDENTIFIERS_READ|has_access_to:user %}
+     <div id="actor_identifier_widget_container">
+       {% include "actor_identifiers_widget.html" %}
+     </div>
+     {% endif %}
+     {% if ActorACL.TICKETS_READ|has_access_to:user %}
      <div>
 	    {% with obj=actor obj_type=subscription.type %}
-                {% include 'tickets_listing_widget.html' %}
+        {% include 'tickets_listing_widget.html' %}
 	    {% endwith %}
     </div>
+    {% endif %}
+    {% if ActorACL.CAMPAIGNS_READ|has_access_to:user and "Campaign.read"|has_access_to:user %}
     <div>
-        {% with hit=actor col=COL_ACTORS %}
-            {% include "campaigns_display_widget.html" %}
-        {% endwith %}
+    {% with hit=actor col=COL_ACTORS %}
+        {% include "campaigns_display_widget.html" %}
+    {% endwith %}
     </div>
+    {% endif %}
+    {% if ActorACL.LOCATIONS_READ|has_access_to:user %}
     <div>
         {% with hit=actor col=COL_ACTORS %}
             {% include "locations_display_widget.html" %}
         {% endwith %}
     </div>
+    {% endif %}
+    {% if ActorACL.RELATIONSHIPS_READ|has_access_to:user %}
     <div>
         {% include 'relationships_listing_widget.html' %}
     </div>
+    {% endif %}
+    {% if ActorACL.OBJECTS_READ|has_access_to:user %}
     <div>
         {% include 'objects_listing_widget.html' %}
     </div>
+    {% endif %}
+    {% if ActorACL.SCREENSHOTS_READ|has_access_to:user %}
     <div>
-    {% include 'screenshot_widget.html' %}
+      {% include 'screenshot_widget.html' %}
     </div>
+    {% endif %}
+    {% if ActorACL.COMMENTS_READ|has_access_to:user %}
     <div>
         {% include "comments_listing_widget.html" %}
     </div>
+    {% endif %}
 </div> <!-- details_section -->
 
+{% if ActorACL.SERVICES_READ %}
 {% with item=actor %}
     {% include "services_analysis_section.html" with crits_type="Actor" identifier=actor.id %}
 {% endwith %}
 
 {% include 'services_tab_tabs_widget.html' %}
+{% endif %}
 </div>
 
 <div style="display: none;">
@@ -168,4 +211,3 @@
 {% block javascript_includes %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/actors.js"></script>
 {% endblock %}
-

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load filters %}
 
 {% block title %}Sample Detail{% endblock %}
 
@@ -14,7 +14,6 @@
     var get_xor = "{% url 'crits-samples-views-xor' sample.md5 %}?key=";
     var update_sample_filename = "{% url 'crits-samples-views-set_sample_filename' %}";
     var update_sample_filenames = "{% url 'crits-samples-views-set_sample_filenames' %}";
-    var is_admin = "{{ admin }}";
     var related_id = "{{sample.id|escapejs }}";
     var related_type = "Sample"
 </script>
@@ -23,24 +22,30 @@
 <div id="tabnav" class="tabnav" style="font-size:90%;">
     <ul style="font-size: 125%;">
     <li><a href="#details_section" id="details_button"><span>Details</span></a></li>
-    <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
-    <li><a href="#tools_section" id="tools_button"><span>Tools</span></a></li>
-    {% include 'services_tab_list_widget.html' %}
-     </ul>
+    {% if SampleACL.SERVICES_READ|has_access_to:user %}
+      <li><a href="#analysis_section" id="analysis_button"><span>Analysis ({{ service_results|length }})</span></a></li>
+      <li><a href="#tools_section" id="tools_button"><span>Tools</span></a></li>
+      {% include 'services_tab_list_widget.html' %}
+    {% endif %}
+    </ul>
 <div id="details_section">
-    <div class='content_box'>
-        <span class="horizontal_menu">
-        <ul class="hmenu">
-            <li><a href="#" class="dialogClick" dialog="download-sample">Download Sample</a></li>
-            <li><a href="{% url 'crits-samples-views-detail' sample.md5 %}?format=text">Text</a></li>
-            <li><a href="{% url 'crits-samples-views-detail' sample.md5 %}?format=yaml">YAML</a></li>
-            <li><a href="#" class="dialogClick" dialog="unzip-sample">Un7zip</a></li>
-            {% if admin %}
-                <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="sample" action='{% url "crits-samples-views-remove_sample" sample.md5 %}'>Delete Sample</a></li>
-            {% endif %}
-        </ul>
-        </span>
-    </div>
+    <span class="horizontal_menu">
+    <ul class="hmenu">
+        {% if SampleACL.DOWNLOAD|has_access_to:user %}
+          <li><a href="#" class="dialogClick" dialog="download-sample">Download Sample</a></li>
+        {% endif %}
+        {% if SampleACL.TEXT_VIEW|has_access_to:user %}
+          <li><a href="{% url 'crits-samples-views-detail' sample.md5 %}?format=text">Text</a></li>
+        {% endif %}
+        {% if SampleACL.YAML_VIEW|has_access_to:user %}
+          <li><a href="{% url 'crits-samples-views-detail' sample.md5 %}?format=yaml">YAML</a></li>
+        {% endif %}
+        <li><a href="#" class="dialogClick" dialog="unzip-sample">Un7zip</a></li>
+        {% if SampleACL.DELETE|has_access_to:user %}
+          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="sample" action='{% url "crits-samples-views-remove_sample" sample.md5 %}'>Delete Sample</a></li>
+        {% endif %}
+    </ul>
+    </span>
     <div class='content_box content_details'>
         <h3 class='titleheader'>
             <span>File Details</span>
@@ -53,11 +58,13 @@
                 <td class="key">ID</td>
                 <td>{{ sample.id }}</td>
             </tr>
-            <tr>
-                {% with description=sample.description %}
-                    {% include 'description_widget.html' %}
-                {% endwith %}
-            </tr>
+            {% if SampleACL.DESCRIPTION_READ|has_access_to:user %}
+              <tr>
+                  {% with description=sample.description %}
+                      {% include 'description_widget.html' %}
+                  {% endwith %}
+              </tr>
+            {% endif %}
             <tr>
                 <td class="key">Filename</td>
                 <td>
@@ -110,90 +117,119 @@
                 <td class="key">SSDeep</td>
                 <td>{{ sample.ssdeep }}</td>
             </tr>
-            <tr>
-                <td class="key">impfuzzy</td>
-                <td>{{ sample.impfuzzy }}</td>
-            </tr>
-            <tr>
-                <td class="key">Status
-                    <span style="float: right;" class="object_status_response"></span>
-                </td>
-                <td>
-                    <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{sample.status}}</span>
-                </td>
-            </tr>
-            {% with sectors=sample.sectors %}
-                {% include "sector_widget.html" %}
+            {% if SampleACL.STATUS_READ|has_access_to:user %}
+              <tr>
+                  <td class="key">Status
+                      <span style="float: right;" class="object_status_response"></span>
+                  </td>
+                  <td>
+                      <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{sample.status}}</span>
+                  </td>
+              </tr>
+            {% endif %}
+            {% with tlp=sample.tlp %}
+                {% include "tlp_widget.html" %}
             {% endwith %}
-            <tr>
-            {% with sources=sample.source obj_id=sample.id obj_type=subscription.type %}
-                {% include "sources_listing_widget.html" %}
-            {% endwith %}
-            </tr>
-            <tr>
-            {% with releasability=sample.releasability %}
-                {% include 'releasability_list_widget.html' %}
-            {% endwith %}
-            </tr>
+            {% if SampleACL.SECTORS_READ|has_access_to:user %}
+              {% with sectors=sample.sectors %}
+                  {% include "sector_widget.html" %}
+              {% endwith %}
+            {% endif %}
+            {% if SampleACL.SOURCES_READ|has_access_to:user %}
+              <tr>
+              {% with sources=sample.source obj_id=sample.id obj_type=subscription.type %}
+                  {% include "sources_listing_widget.html" %}
+              {% endwith %}
+              </tr>
+            {% endif %}
+            {% if SampleACL.RELEASABILITY_READ|has_access_to:user %}
+              <tr>
+              {% with releasability=sample.releasability %}
+                  {% include 'releasability_list_widget.html' %}
+              {% endwith %}
+              </tr>
+            {% endif %}
             </tbody>
         </table>
     </div>
     <div id="detail_floaters">
         {% include 'details_options_widget.html' %}
-        {% with bucket_list=sample.bucket_list %}
-            {% include 'bucket_list_widget.html' %}
-        {% endwith %}
+        {% if SampleACL.BUCKETLIST_READ|has_access_to:user %}
+          {% with bucket_list=sample.bucket_list %}
+              {% include 'bucket_list_widget.html' %}
+          {% endwith %}
+        {% endif %}
         {% include 'add_related_widget.html' %}
 
     </div>
-    <div class="content_box">
-        {% with obj=sample obj_type="Sample" %}
-            {% include 'action_listing_widget.html' %}
-        {% endwith %}
-    </div>
-    <div>
-        {% with obj=sample obj_type=subscription.type %}
-                 {% include 'tickets_listing_widget.html' %}
-        {% endwith %}
-    </div>
-    <div>
-        {% with hit=sample col=COL_SAMPLES %}
-            {% include 'campaigns_display_widget.html' %}
-        {% endwith %}
-    </div>
-    <div>
-        {% with hit=sample col=COL_SAMPLES %}
-            {% include 'locations_display_widget.html' %}
-        {% endwith %}
-    </div>
-    <div>
-        {% include 'relationships_listing_widget.html' %}
-    </div>
-    <div>
-        {% include 'objects_listing_widget.html' %}
-    </div>
-    <div>
-    {% include 'screenshot_widget.html' %}
-    </div>
-    <div>
-        {% include "comments_listing_widget.html" %}
-    </div>
+    {% if SampleACL.ACTIONS_READ|has_access_to:user %}
+      <div class="content_box">
+          {% with obj=sample obj_type="Sample" %}
+              {% include 'action_listing_widget.html' %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if SampleACL.TICKETS_READ|has_access_to:user %}
+      <div>
+          {% with obj=sample obj_type=subscription.type %}
+                   {% include 'tickets_listing_widget.html' %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if SampleACL.CAMPAIGNS_READ|has_access_to:user and SampleACL.CAMPAIGN_READ %}
+      <div>
+          {% with hit=sample col=COL_SAMPLES %}
+              {% include 'campaigns_display_widget.html' %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if SampleACL.LOCATIONS_READ|has_access_to:user %}
+      <div>
+          {% with hit=sample col=COL_SAMPLES %}
+              {% include 'locations_display_widget.html' %}
+          {% endwith %}
+      </div>
+    {% endif %}
+    {% if SampleACL.RELATIONSHIPS_READ|has_access_to:user %}
+      <div>
+          {% include 'relationships_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if SampleACL.OBJECTS_READ|has_access_to:user %}
+      <div>
+          {% include 'objects_listing_widget.html' %}
+      </div>
+    {% endif %}
+    {% if SampleACL.SCREENSHOTS_READ|has_access_to:user %}
+      <div>
+      {% include 'screenshot_widget.html' %}
+      </div>
+    {% endif %}
+    {% if SampleACL.COMMENTS_READ|has_access_to:user %}
+      <div>
+          {% include "comments_listing_widget.html" %}
+      </div>
+    {% endif %}
 </div>
-{% with item=sample %}
-    {% include "services_analysis_section.html" with crits_type="Sample" identifier=sample.md5 %}
-{% endwith %}
-<div id="tools_section">
-    {% include 'samples_tools_widget.html' %}
-{% include 'services_tab_tabs_widget.html' %}
-</div>
+{% if SampleACL.SERVICES_READ|has_access_to:user %}
+  {% with item=sample %}
+      {% include "services_analysis_section.html" with crits_type="Sample" identifier=sample.md5 %}
+  {% endwith %}
+  <div id="tools_section">
+      {% include 'samples_tools_widget.html' %}
+  {% include 'services_tab_tabs_widget.html' %}
+  </div>
+{% endif %}
 
 <div style="display: none;">
 
-<div id="dialog-download-sample" title="Download Sample">
-    <form id="form-download-sample" action="{% url 'crits-core-views-download_object' %}" method="POST" enctype="multipart/form-data">
-    <table class="form">{{download_form.as_table}}</table>
-    </form>
-</div>
+{% if SampleACL.DOWNLOAD|has_access_to:user %}
+  <div id="dialog-download-sample" title="Download Sample">
+      <form id="form-download-sample" action="{% url 'crits-core-views-download_object' %}" method="POST" enctype="multipart/form-data">
+      <table class="form">{{download_form.as_table}}</table>
+      </form>
+  </div>
+{% endif %}
 
 <div id="dialog-unzip-sample" title="Unzip Sample">
     <form id="form-unzip-sample" action="{% url 'crits-samples-views-unzip_sample' sample.md5 %}" method="POST" enctype="multipart/form-data">

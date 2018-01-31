@@ -3,7 +3,7 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    url(r'^remove/(?P<obj_id>\S+)/$', views.remove_comment, name='crits-comments-views-remove_comment'),
+    url(r'^remove/(?P<obj_type>\S+)/(?P<obj_id>\S+)/$', views.remove_comment, name='crits-comments-views-remove_comment'),
     url(r'^(?P<method>\S+)/(?P<obj_type>\S+)/(?P<obj_id>\S+)/$', views.add_update_comment, name='crits-comments-views-add_update_comment'),
     url(r'^activity/$', views.activity, name='crits-comments-views-activity'),
     url(r'^activity/(?P<atype>\S+)/(?P<value>\S+)/$', views.activity, name='crits-comments-views-activity'),

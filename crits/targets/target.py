@@ -4,9 +4,11 @@ except ImportError:
 	from mongoengine import Document
 
 from mongoengine import StringField, IntField, EmailField
+from mongoengine import BooleanField, EmbeddedDocument
 from django.conf import settings
 
-from crits.core.crits_mongoengine import CritsBaseAttributes
+from crits.core.crits_mongoengine import CritsBaseAttributes, CommonAccess
+from crits.core.crits_mongoengine import CritsDocumentFormatter
 from crits.core.crits_mongoengine import CritsActionsDocument
 from crits.core.user_tools import user_sources
 from crits.emails.email import Email
@@ -76,3 +78,11 @@ class Target(CritsBaseAttributes, CritsActionsDocument, Document):
         emails = Email.objects(to__iexact=self.email_address,
                                source__name__in=sources)
         return emails
+
+
+class TargetAccess(EmbeddedDocument, CritsDocumentFormatter, CommonAccess):
+    """
+    ACL for Targets.
+    """
+
+    edit_details = BooleanField(default=False)

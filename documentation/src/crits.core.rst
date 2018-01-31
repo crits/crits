@@ -140,14 +140,6 @@ crits.core.user module
     :undoc-members:
     :show-inheritance:
 
-crits.core.user_role module
----------------------------
-
-.. automodule:: crits.core.user_role
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 crits.core.user_tools module
 ----------------------------
 

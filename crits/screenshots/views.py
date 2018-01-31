@@ -4,10 +4,13 @@ from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from crits.core.user_tools import user_can_view_data
+from crits.core.user_tools import user_can_view_data, get_acl_object
 from crits.screenshots.handlers import get_screenshots_for_id, get_screenshot
 from crits.screenshots.handlers import add_screenshot, generate_screenshot_jtable
 from crits.screenshots.handlers import delete_screenshot_from_object
+
+from crits.vocabulary.acls import ScreenshotACL
+
 
 @user_passes_test(user_can_view_data)
 def screenshots_listing(request,option=None):
@@ -97,19 +100,26 @@ def add_new_screenshot(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
+    user = request.user
     description = request.POST.get('description', None)
-    reference = request.POST.get('reference', None)
-    method = request.POST.get('method', None)
+    reference = request.POST.get('source_reference', None)
+    method = request.POST.get('source_method', None)
+    tlp = request.POST.get('source_tlp', None)
     tags = request.POST.get('tags', None)
-    source = request.POST.get('source', None)
+    source = request.POST.get('source_name', None)
     oid = request.POST.get('oid', None)
     otype = request.POST.get('otype', None)
     screenshot_ids = request.POST.get('screenshot_ids', None)
     screenshot = request.FILES.get('screenshot', None)
 
-    result = add_screenshot(description, tags, source, method, reference,
-                            analyst, screenshot, screenshot_ids, oid, otype)
+    acl = get_acl_object(otype)
+
+    if user.has_access_to(acl.SCREENSHOTS_ADD):
+        result = add_screenshot(description, tags, source, method, reference, tlp,
+                                user.username, screenshot, screenshot_ids, oid, otype)
+    else:
+        result = {"success":False,
+                  "message":"User does not have permission to add screenshots."}
 
     return HttpResponse(json.dumps(result),
                         content_type="application/json")
@@ -124,11 +134,15 @@ def remove_screenshot_from_object(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    analyst = request.user.username
+    user = request.user
     obj = request.POST.get('obj', None)
     oid = request.POST.get('oid', None)
     sid = request.POST.get('sid', None)
 
-    result = delete_screenshot_from_object(obj, oid, sid, analyst)
+    if user.has_access_to(str(obj + ScreenshotACL.SCREENSHOT_DELETE )):
+        result = delete_screenshot_from_object(obj, oid, sid, user)
+    else:
+        result = {"success":False,
+                  "message":"User does not have permission to remove screenshots."}
     return HttpResponse(json.dumps(result),
                         content_type="application/json")
