@@ -95,7 +95,7 @@ urlpatterns = [
     url(r'^timeline/$', views.timeline, name='crits-core-views-timeline'),
 
     # TLP
-    url(r'^tlp/mod/$', 'crits.core.views.tlp_modify'),
+    url(r'^tlp/mod/$', views.tlp_modify, name='crits-core-views-tlp_modify'),
 
     # User Stuff
     url(r'^profile/(?P<user>\S+)/$', views.profile, name='crits-core-views-profile'),
@@ -110,7 +110,7 @@ urlpatterns = [
     url(r'^clear_user_notifications/$', views.clear_user_notifications, name='crits-core-views-clear_user_notifications'),
     url(r'^delete_user_notification/(?P<type_>\S+)/(?P<oid>\S+)/$', views.delete_user_notification, name='crits-core-views-delete_user_notification'),
     url(r'^change_subscription/(?P<stype>\S+)/(?P<oid>\S+)/$', views.change_subscription, name='crits-core-views-change_subscription'),
-    url(r'^source_subscription/$', views.change_subscription, name='crits-core-views-change_subscription'),
+    url(r'^source_subscription/$', views.source_subscription, name='crits-core-views-source_subscription'),
     url(r'^change_password/$', views.change_password, name='crits-core-views-change_password'),
     url(r'^change_totp_pin/$', views.change_totp_pin, name='crits-core-views-change_totp_pin'),
     url(r'^reset_password/$', views.reset_password, name='crits-core-views-reset_password'),

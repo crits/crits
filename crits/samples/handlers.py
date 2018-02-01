@@ -507,8 +507,8 @@ def handle_unzip_file(md5, user=None, password=None):
     source = sample.source[0].name
     campaign = sample.campaign
     reference = ''
-    return unzip_file(md5, user, password, data, source, method="Unzip Existing Sample",
-                      reference=reference, campaign=campaign, related_md5=md5, )
+    return unzip_file(md5, user, password, data, source, source_method="Unzip Existing Sample",
+                      source_reference=reference, campaign=campaign, related_md5=md5, )
 
 def unzip_file(filename, user=None, password=None, data=None, source=None,
                source_method='Zip', source_reference='', source_tlp='',

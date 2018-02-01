@@ -2808,8 +2808,8 @@ def generate_roles_jtable(request, option):
     jtopts = {
         'title': "Roles",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.core.views.roles_listing', args=('jtlist',)),
-        'deleteurl': reverse('crits.core.views.roles_listing',
+        'listurl': reverse('crits-core-views-roles_listing', args=('jtlist',)),
+        'deleteurl': reverse('crits-core-views-roles_listing',
                              args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -4322,7 +4322,7 @@ def get_role_details(rid, roles, analyst):
             args = {'error': error}
             return template, args
         show_roles = None
-    if roles:
+    if len(roles)>0:
         if isinstance(roles, basestring):
             roles = roles.split(',')
             roles = [r.strip() for r in roles]
@@ -4331,12 +4331,21 @@ def get_role_details(rid, roles, analyst):
         role = tmp.get_access_list()
         rid = None
         show_roles = roles
+    else:
+        role = None
+        source_form = None
+        error = ("Either this Role does not exist or you do "
+                "not have permission to view it.")
+        template = "error.html"
+        args = {'error': error}
+        return template, args
+        #show_roles = None
 
     do_not_render = ['_id', 'schema_version']
-
-    from crits.core.forms import RoleSourceEdit
-    d = {'sources': [s['name'] for s in role['sources']]}
-    source_form = RoleSourceEdit(initial=d)
+    if role != None:
+        from crits.core.forms import RoleSourceEdit
+        d = {'sources': [s['name'] for s in role['sources']]}
+        source_form = RoleSourceEdit(initial=d)
 
     args = {'role': role.to_dict(),
             'do_not_render': do_not_render,
@@ -4536,7 +4545,7 @@ def render_role_graph(start_type="roles", start_node=None, expansion_node=None,
     """
 
     data = {'children': []}
-    url = reverse('crits.core.views.role_graph')
+    url = reverse('crits-core-views-role_graph')
 
     # Roles (default)
     if start_type == "role" or start_type not in ['source', 'user']:

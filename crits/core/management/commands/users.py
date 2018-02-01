@@ -103,7 +103,7 @@ class Command(BaseCommand):
                     dest='username',
                     default=None,
                     help='Username for new user.')
-    )
+    
     help = 'Add and edit a CRITs user. If "-a" is not used, we will try to edit.'
 
     def handle(self, *args, **options):

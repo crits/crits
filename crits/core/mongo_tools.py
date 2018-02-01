@@ -6,6 +6,9 @@ import gridfs
 import pymongo
 
 import magic
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MongoError(Exception):
     """
@@ -35,7 +38,7 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
                                         settings.MONGO_PORT,
                                         read_preference=preference,
                                         ssl=settings.MONGO_SSL,
-					w=0)
+					                   w=1)
         db = connection[settings.MONGO_DATABASE]
         if settings.MONGO_USER:
             db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
@@ -65,7 +68,7 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
                                         settings.MONGO_PORT,
                                         read_preference=preference,
                                         ssl=settings.MONGO_SSL,
-					w=0)
+					                       w=1)
         db = connection[settings.MONGO_DATABASE]
         if settings.MONGO_USER:
             db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
@@ -129,7 +132,8 @@ def get_file_gridfs(sample_md5, collection=settings.COL_SAMPLES):
         objectid = fm.find_one({'md5': sample_md5}, {'_id': 1})['_id']
         fs = gridfs_connector("%s" % collection)
         data = fs.get(objectid).read()
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         return None
     return data
 
@@ -150,7 +154,8 @@ def put_file_gridfs(m, data, collection=settings.COL_SAMPLES):
     try:
         fs = gridfs_connector("%s" % collection)
         fs.put(data, content_type="%s" % mimetype, filename="%s" % m)
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         return None
     return m
 

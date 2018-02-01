@@ -65,11 +65,12 @@ class ConfigGeneralForm(forms.Form):
         required=True)
     zip7_path = forms.CharField(
         widget=forms.TextInput,
+        label='7z path',
         help_text='*Requires a web server restart.',
         required=True)
     zip7_password = forms.CharField(
         widget=forms.TextInput,
-        label='ZIP Password for downloaded artifacts',
+        label='ZIP Password for Sample download',
         required=False)
     enable_toasts = forms.BooleanField(initial=False,
         label="Enable Toast Notifications",

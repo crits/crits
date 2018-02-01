@@ -8,6 +8,7 @@ from dateutil.parser import parse
 from time import gmtime, strftime
 
 from django.conf import settings
+from django import get_version
 from django.contrib.auth.decorators import user_passes_test
 try:
     from django.urls import reverse
@@ -106,6 +107,8 @@ from crits.vocabulary.sectors import Sectors
 from crits.vocabulary.acls import *
 
 logger = logging.getLogger(__name__)
+
+django_version = get_version()
 
 @user_passes_test(user_can_view_data)
 def update_object_description(request):
@@ -347,7 +350,7 @@ def login(request):
     user = request.user
 
     # Is the user already authenticated?
-    if request.user.is_authenticated() and user.has_access_to(GeneralACL.WEB_INTERFACE):
+    if (request.user.is_authenticated if django_version >= (1, 10) else request.user.is_authenticated()) and user.has_access_to(GeneralACL.WEB_INTERFACE):
         resp = validate_next(next_url)
         if not resp['success']:
             return render(request, 'error.html',
@@ -358,7 +361,7 @@ def login(request):
 
     # Setup defaults
     username = None
-    login = True
+    login_ = True
     show_auth = True
     message = crits_config.crits_message
     token_message = """
@@ -380,9 +383,9 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
             else:
                 # Login failed, set messages/settings and continue
                 message = resp['message']
-                login = False
+                login_ = False
                 if resp['type'] == "totp_required":
-                    login = True
+                    login_ = True
         else:
             logger.warn("REMOTE_USER enabled, but no user passed.")
             message = 'REMOTE_USER not provided. Please notify an admin.'
@@ -444,7 +447,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
     return render(request, 'login.html',
                               {'next': url,
                                'theme': 'default',
-                               'login': login,
+                               'login': login_,
                                'show_auth': show_auth,
                                'message': message,
                                'token_message': token_message})
@@ -686,7 +689,7 @@ def role_add(request):
                                       description,
                                       user)
                 if result['success']:
-                    url = reverse('crits.core.views.role_details',
+                    url = reverse('crits-core-views-role_details',
                                   args=[result['id']])
                     message = {'message': '<div><a href="%s">Role</a> added successfully!</div>' % url,
                                'success': True}
@@ -1174,7 +1177,7 @@ def base_context(request):
     base_context['service_nav_templates'] = settings.SERVICE_NAV_TEMPLATES
     base_context['service_cp_templates'] = settings.SERVICE_CP_TEMPLATES
     base_context['service_tab_templates'] = settings.SERVICE_TAB_TEMPLATES
-    if request.user.is_authenticated():
+    if (request.user.is_authenticated if django_version >= (1, 10) else request.user.is_authenticated()):
         user = request.user
         base_context['acl'] = ReadACL
         base_context['GeneralACL'] = GeneralACL

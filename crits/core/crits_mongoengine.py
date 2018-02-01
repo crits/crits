@@ -392,11 +392,11 @@ class CritsDocument(BaseDocument):
         except:
             pass
 
-        if hasattr(super(self.__class__, self).save(), 'write_concern'):
+        if hasattr(super(self.__class__, self).save(), 'w'):
             super(self.__class__, self).save(force_insert=force_insert,
                                              validate=validate,
                                              clean=clean,
-                                             write_concern=write_concern,
+                                             w=write_concern,
                                              cascade=cascade,
                                              cascade_kwargs=cascade_kwargs,
                                              _refs=_refs)

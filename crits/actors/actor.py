@@ -5,7 +5,7 @@ try:
 except ImportError:
 	from mongoengine import Document
 
-from mongoengine import EmbeddedDocument, StringField, ListField
+from mongoengine import EmbeddedDocument, StringField, ListField, BooleanField
 from mongoengine import EmbeddedDocumentField
 
 from django.conf import settings

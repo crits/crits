@@ -164,7 +164,7 @@ def bulk_add_md5_sample(request):
                                   'table_name': 'sample',
                                   'local_validate_columns': [form_consts.Sample.MD5],
                                   'is_bulk_add_objects': True},
-                                  );
+                                  )
 
 @user_passes_test(user_can_view_data)
 def upload_file(request, related_md5=None):
@@ -292,10 +292,15 @@ def upload_file(request, related_md5=None):
                         description=description)
 
             except ZipFileError, zfe:
-                return render(request, 'file_upload_response.html', {'response': json.dumps({'success': False})})
+                print("error from unpacking")
+                return render(request, 'file_upload_response.html', {'response': json.dumps({'success': False,
+                                'message': zfe.value})})
             else:
                 # zip file upload, etc; result is a list of strings (1 hash per file)
+                print("%d %s %s" % (len(result), type(result), type(result[0])))
+                print (repr(result))
                 if len(result) > 0 and not isinstance(result[0], dict):
+                    print ('cooking!')
                     filedata = request.FILES['filedata']
                     message = ('<a href="%s">View Uploaded Samples.</a>'
                                % reverse('crits-samples-views-view_upload_list',
@@ -305,6 +310,7 @@ def upload_file(request, related_md5=None):
                     md5_response = result
                 # regular file upload; result is a list with a single dict
                 else:
+                    print("cooking with hash")
                     response['success'] = result[0].get('success', False)
                     response['message'] = result[0].get('message',
                                                         response.get('message'))
@@ -322,11 +328,13 @@ def upload_file(request, related_md5=None):
                                 response['message'] = response['message'] + msg
                     if reload_page:
                         response['redirect_url'] = reverse('crits-samples-views-detail', args=[related_md5])
+                print("sent to rendering")
                 return render(request, "file_upload_response.html", {'response': json.dumps(response)})
         else:
             if related_md5: #if this is a 'related' upload, hide field so it doesn't reappear
                 form.fields['related_md5'].widget = forms.HiddenInput()
-            return render(request, 'file_upload_response.html', {'response': json.dumps({'success': False})})
+            return render(request, 'file_upload_response.html', {'response': json.dumps({'success': False,
+                        'form': form.as_table()})})
     else:
         return HttpResponseRedirect(reverse('crits-samples-views-samples_listing'))
 

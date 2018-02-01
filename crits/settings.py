@@ -21,6 +21,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 DJANGO_ROOT = os.path.dirname(os.path.realpath(django.__file__))
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
+WSGI_APPLICATION = 'wsgi.application'
+
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 # Version
 CRITS_VERSION = '4-master'
@@ -59,7 +61,7 @@ else:
 # Set to DENY|SAMEORIGIN|ALLOW-FROM uri
 # Default: SAMEORIGIN
 # More details: https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options
-X_FRAME_OPTIONS = 'DENY'
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 
 # Setup for runserver or Apache
@@ -443,11 +445,11 @@ DEBUG_TOOLBAR_PANELS = [
 INTERNAL_IPS = '127.0.0.1'
 
 if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
+    #'django.template.context_processors.debug',
     _TEMPLATE_CONTEXT_PROCESSORS = [
-        #'django.template.context_processors.debug',
         'django.template.context_processors.request',
         'django.template.context_processors.static',
-        #'django.contrib.auth.context_processors.auth',
+        'django.contrib.auth.context_processors.auth',
         'django.contrib.messages.context_processors.messages',
         'crits.core.views.base_context',
         'crits.core.views.collections',
@@ -498,10 +500,14 @@ if old_mongoengine:
         'mongoengine.django.mongo_auth',
         'template_timings_panel',
         'template_profiler_panel',
-        'debug_toolbar_mongo',
-        'vcs_info_panel',
-        'debug_toolbar',
+
     )
+    if DEBUG:
+        INSTALLED_APPS += (
+            'debug_toolbar_mongo',
+            'vcs_info_panel',
+            'debug_toolbar',
+        )
 
     _MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
@@ -511,10 +517,14 @@ if old_mongoengine:
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Only needed for mongoengine<0.10
     'crits.core.user.AuthenticationMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
+    # crits.core.user.AuthenticationMiddleware' # Only needed for mongoengine<0.10
+    if DEBUG:
+        _MIDDLEWARE += ( 
+            'debug_toolbar.middleware.DebugToolbarMiddleware',
+        )
+
     if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
         _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
     # Only needed for mongoengine<0.10
@@ -527,6 +537,7 @@ if old_mongoengine:
     SESSION_SERIALIZER = 'mongoengine.django.sessions.BSONSerializer'
 
     AUTHENTICATION_BACKENDS = (
+        'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'crits.core.user.CRITsAuthBackend',
     )
 
@@ -563,11 +574,15 @@ else:
         'tastypie_mongoengine',
         'django_mongoengine',
         'django_mongoengine.mongo_auth',
-        'template_timings_panel',
-        'template_profiler_panel',
-        'debug_toolbar_mongo',
-        'vcs_info_panel',
-        'debug_toolbar',
+    )
+        
+    if DEBUG:
+        INSTALLED_APPS += ( 
+            'template_timings_panel',
+            'template_profiler_panel',
+            'debug_toolbar_mongo',
+            'vcs_info_panel',
+            'debug_toolbar',
         )
 
     _MIDDLEWARE = (
@@ -578,8 +593,12 @@ else:
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
+    if DEBUG:
+        _MIDDLEWARE += (
+            'debug_toolbar.middleware.DebugToolbarMiddleware',
+
+        )
 
     if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
         _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
@@ -590,6 +609,7 @@ else:
 
     AUTHENTICATION_BACKENDS = (
         #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
+        'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'crits.core.user.CRITsAuthBackend',
     )
 
@@ -613,8 +633,12 @@ if REMOTE_USER:
         _MIDDLEWARE += (
             'crits.core.user.AuthenticationMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
-            'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
+
+        if DEBUG:
+            _MIDDLEWARE += (
+                'debug_toolbar.middleware.DebugToolbarMiddleware',
+            )
     else:
         _MIDDLEWARE = (
             'django.middleware.common.CommonMiddleware',
@@ -625,8 +649,12 @@ if REMOTE_USER:
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
-            'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
+        if DEBUG:
+            _MIDDLEWARE += ( 
+                'debug_toolbar.middleware.DebugToolbarMiddleware',
+            )
+
         if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
             _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
 
@@ -743,7 +771,7 @@ for service_directory in SERVICE_DIRS:
                     SERVICE_CP_TEMPLATES = SERVICE_CP_TEMPLATES + ('%s_cp_items.html' % d,)
                 if os.path.isfile(view_items):
                     if '%s_context' % d in open(view_items).read():
-                        context_module = '%s.views.%s_context' % (d, d)
+                        context_module = '%s-views-%s_context' % (d, d)
                         _TEMPLATE_CONTEXT_PROCESSORS += (context_module,)
                 for tab_temp in glob.glob('%s/*_tab.html' % abs_path):
                     head, tail = os.path.split(tab_temp)

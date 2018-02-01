@@ -12,6 +12,9 @@ from mongoengine import StringField
 
 from crits.config.config import CRITsConfig
 from crits.core.user import CRITsUser
+
+from crits.core.role import Role
+
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsQuerySet
 from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.source_access import SourceAccess
@@ -100,33 +103,38 @@ def prep_db():
     crits_config.save()
     # Add Source
     handlers.add_new_source(TSRC, TRANDUSER)
+
     # Add User
     user = CRITsUser.create_user(username=TUSER_NAME,
                                  password=TUSER_PASS,
-                                 email=TUSER_EMAIL,
-                                 role=TUSER_ROLE,
+                                 email=TUSER_EMAIL
                                  )
     user.first_name = TUSER_FNAME
     user.last_name = TUSER_LNAME
     user.save()
+
     # Add test source object
+    '''
     obj = TestSourceObject()
     obj.name = TOBJS_NAME
     obj.value = TOBJS_VALUE
-    obj.add_source(source=TSRC, analyst=TUSER_NAME)
     obj.save()
+    role.add_source(source=TSRC) #, read=True, write=True, tlp_red=True, tlp_amber=True, tlp_green=True)
+    role.save()
+    
     # Add another with Different source
     obj = TestSourceObject()
     obj.name = TOBJS_NAME
     obj.value = TOBJS_VALUE
-    obj.add_source(source=TUNKSRC, analyst=TRANDUSER)
+    obj.add_source(source=TUNKSRC) #, read=True, write=True, tlp_red=True, tlp_amber=True, tlp_green=True) #analyst=TRANDUSER)
     obj.save()
     # Add test non-source object
     obj = TestObject()
     obj.name = TOBJ_NAME
     obj.value = TOBJ_VALUE
     obj.save()
-
+    '''
+    
 
 def clean_db():
     """
@@ -259,7 +267,7 @@ class DataQueryTests(SimpleTestCase):
                 'first_name': self.user.first_name,
                 'last_name': self.user.last_name,
                 'email': self.user.email,
-                'role': self.user.role,
+                'roles': self.user.roles,
                 'sources': [TSRC, ],
                 'organization': TSRC,
                 'secret': '',
@@ -309,7 +317,7 @@ class DataQueryTests(SimpleTestCase):
                 'first_name': self.user.first_name,
                 'last_name': self.user.last_name,
                 'email': self.user.email,
-                'role': self.user.role,
+                'roles': self.user.roles,
                 'sources': [TSRC, ],
                 'secret': '',
                 'organization': TSRC,
