@@ -771,7 +771,7 @@ for service_directory in SERVICE_DIRS:
                     SERVICE_CP_TEMPLATES = SERVICE_CP_TEMPLATES + ('%s_cp_items.html' % d,)
                 if os.path.isfile(view_items):
                     if '%s_context' % d in open(view_items).read():
-                        context_module = '%s-views-%s_context' % (d, d)
+                        context_module = str('%s.views.%s_context' % (d, d))
                         _TEMPLATE_CONTEXT_PROCESSORS += (context_module,)
                 for tab_temp in glob.glob('%s/*_tab.html' % abs_path):
                     head, tail = os.path.split(tab_temp)

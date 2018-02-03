@@ -14,7 +14,7 @@ HEAD=$(tput setaf 5) #magenta
 INFO=$(tput setaf 6) #cyan
 END=$(tput sgr0)   #ends color
 #============================================================
-PIP='pip2'
+PIP='pip'
 PYTH='python2'
 
 verify()

@@ -52,8 +52,9 @@ from mongoengine import DictField, DynamicEmbeddedDocument
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.hashers import check_password, make_password
-from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
-from django.contrib.auth.models import _user_has_module_perms
+# Importing these breaks on django 1.11
+#from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
+#from django.contrib.auth.models import _user_has_module_perms
 #from django.utils.translation import ugettext_lazy as _
 
 from crits.config.config import CRITsConfig

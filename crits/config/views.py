@@ -1,4 +1,5 @@
 import json
+import logging
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -10,6 +11,8 @@ from crits.config.handlers import modify_configuration
 from crits.core.user_tools import user_can_view_data, get_user_list
 
 from crits.vocabulary.acls import GeneralACL
+
+logger = logging.getLogger(__name__)
 
 @user_passes_test(user_can_view_data)
 def crits_config(request):
@@ -45,7 +48,8 @@ def crits_config(request):
             config_download_form = ConfigDownloadForm()
             config_CRITs_form = ConfigCritsForm()
         user_list = get_user_list()
-        return render(request, 'config.html',
+        try:
+            return render(request, 'config.html',
                                   {'config_general_form': config_general_form,
                                    'config_LDAP_form': config_LDAP_form,
                                    'config_security_form': config_security_form,
@@ -54,6 +58,9 @@ def crits_config(request):
                                    'config_download_form': config_download_form,
                                    'config_CRITs_form': config_CRITs_form,
                                    'user_list': user_list})
+        except Exception as e:
+            # this should help troubleshooting config forms
+            logger.error(e)
     else:
         return render(request, 'error.html',
                                   {'error': 'User does not have permission to view Control Panel.'})

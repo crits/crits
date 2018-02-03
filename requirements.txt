@@ -1,4 +1,5 @@
-Django
+# Django 1.11 works, but somehow is very slow, so let's stick to 1.10
+Django<1.11
 Pillow
 amqp
 anyjson
