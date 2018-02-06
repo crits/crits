@@ -14,7 +14,7 @@
     {% for data in raw_data %}
         <tr>
             <td>
-                <a href="{% url 'crits-raw_data-views-raw_data_details' data.id %}">{{ data.title }}</a>
+                <a href="{% url 'crits.raw_data.views.raw_data_details' data.id %}">{{ data.title }}</a>
             </td>
             <td>{{ data.data_type }}</td>
             <td>{{ data.tool.name }} ({{ data.tool.version }})</td>

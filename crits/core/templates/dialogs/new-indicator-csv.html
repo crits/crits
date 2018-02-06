@@ -10,7 +10,7 @@
         If you are unsure, then inspect the raw CSV file before uploading, otherwise you may<br/>
         end up with unanticipated quote characters in your results.</p>
     <form id="form-{{ request.GET.dialog }}"
-	  action='{% url "crits-indicators-views-upload_indicator" %}'
+	  action='{% url "crits.indicators.views.upload_indicator" %}'
 	  method='POST' enctype="multipart/form-data" target="csv-iframe"
 	  item-type="indicator" input_clear_filter="[type!='hidden']">
     <table class="form">{{ upload_csv.as_table }}</table>

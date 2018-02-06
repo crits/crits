@@ -2,7 +2,7 @@
 
 <div id="dialog-{{ request.GET.dialog }}" title="Upload Email (Fields)">
     <form id="form-{{ request.GET.dialog }}" 
-	  action='{% url "crits-emails-views-email_fields_add" %}' 
+	  action='{% url "crits.emails.views.email_fields_add" %}' 
 	  method='POST' enctype="mutipart/form-data"
 	  item-type="email-fields">
     <table class="form">{{ upload_email_fields.as_table }}</table>

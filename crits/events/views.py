@@ -3,11 +3,7 @@ import urllib
 
 from django import forms
 from django.contrib.auth.decorators import user_passes_test
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -110,7 +106,7 @@ def event_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')] = request.GET.get('q', '').strip()
-    return HttpResponseRedirect(reverse('crits-events-views-events_listing') +
+    return HttpResponseRedirect(reverse('crits.events.views.events_listing') +
                                 "?%s" % urllib.urlencode(query))
 
 
@@ -165,7 +161,7 @@ def remove_event(request, _id):
 
     if result['success']:
         return HttpResponseRedirect(
-            reverse('crits-events-views-events_listing')
+            reverse('crits.events.views.events_listing')
         )
 
     else:

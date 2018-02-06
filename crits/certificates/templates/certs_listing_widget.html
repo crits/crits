@@ -13,7 +13,7 @@
     {% for cert in cert_list %}
         <tr>
             <td>
-                <a href="{% url 'crits-certificates-views-certificate_details' cert.md5 %}">{{ cert.filename }}</a>
+                <a href="{% url 'crits.certificates.views.certificate_details' cert.md5 %}">{{ cert.filename }}</a>
             </td>
             <td>{{ cert.size }}</td>
             <td>{{ cert.description }}</td>

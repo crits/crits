@@ -1,12 +1,12 @@
 <script>
-    var edit_location = "{% url 'crits-locations-views-edit_location' relationship.type hit.id %}";
+    var edit_location = "{% url 'crits.locations.views.edit_location' relationship.type hit.id %}";
 </script>
 
 <div class="content_box">
     <h3 class="titleheader">
     <span>Locations</span>
     <span class="add_button" data-intro="Add a location" data-position="right">
-      <a href="#" action="{% url 'crits-locations-views-add_location' relationship.type hit.id %}" class="ui-icon ui-icon-plusthick dialogClick" dialog="location-add" persona="new" title="Add Location"></a>
+      <a href="#" action="{% url 'crits.locations.views.add_location' relationship.type hit.id %}" class="ui-icon ui-icon-plusthick dialogClick" dialog="location-add" persona="new" title="Add Location"></a>
     </span>
     </h3>
     <div class="content_body">

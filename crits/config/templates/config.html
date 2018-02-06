@@ -12,15 +12,15 @@
     {% endcomment %}
     <script type="text/javascript">
         //used in item_editor
-        var toggle_item_active = "{% url 'crits-core-views-toggle_item_active' %}";
+        var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
 
         //Added to support deleting dependencies...
-        var delete_signature_dependency = "{% url 'crits-signatures-views-remove_signature_dependency' %}";
+        var delete_signature_dependency = "{% url 'crits.signatures.views.remove_signature_dependency' %}";
 
         //used in user_editor
-        var user_source_access = "{% url 'crits-core-views-user_source_access' %}";
-        var toggle_user_active = "{% url 'crits-core-views-toggle_user_active' %}";
-        var new_action = "{% url 'crits-core-views-new_action' %}"
+        var user_source_access = "{% url 'crits.core.views.user_source_access' %}";
+        var toggle_user_active = "{% url 'crits.core.views.toggle_user_active' %}";
+        var new_action = "{% url 'crits.core.views.new_action' %}"
         //below hash variables are used in selecting the correct tab on load
         var itemHashTabs = ["#actor_threat_identifiers_button",
                             "#campaign_button",
@@ -36,7 +36,7 @@
         var auditLogHash = "#auditLog"
         //objects used in modularized ajax call
         var itemsObject = {
-                url:"{% url 'crits-core-views-item_editor' %}",
+                url:"{% url 'crits.core.views.item_editor' %}",
                 container:$("#itemsContainer"),
                 hasGottenData:false,
                 extraFunctions:function(){
@@ -45,22 +45,22 @@
                 }
         };
         var rolesObject = {
-                url:"{% url 'crits-core-views-roles_listing' %}",
+                url:"{% url 'crits.core.views.roles_listing' %}",
                 container:$("#rolesContainer"),
                 hasGottenData:false,
         };
         var usersObject = {
-                url:"{% url 'crits-core-views-users_listing' %}",
+                url:"{% url 'crits.core.views.users_listing' %}",
                 container:$("#usersContainer"),
                 hasGottenData:false,
         };
         var servicesObject = {
-                url:"{% url 'crits-services-views-list' %}",
+                url:"{% url 'crits.services.views.list' %}",
                 container:$("#servicesContainer"),
                 hasGottenData:false,
         };
         var auditLogObject = {
-                url:"{% url 'crits-core-views-audit_listing' %}",
+                url:"{% url 'crits.core.views.audit_listing' %}",
                 container:$("#audit_logContainer"),
                 hasGottenData:false,
         };
@@ -283,7 +283,7 @@
         {% if GeneralACL.CONTROL_PANEL_SYSTEM_READ|has_access_to:user %}
           <div id='systemContainer' class='rightContent forceInvisible'>
                  <div id="config_results"></div>
-              <form id="config_form" action='{% url 'crits-config-views-modify_config' %}' method='POST'>
+              <form id="config_form" action='{% url 'crits.config.views.modify_config' %}' method='POST'>
                   <div id='CRITsTab' class='box forceInvisible'>
                       <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
                   </div>
@@ -333,7 +333,7 @@
           <div id="itemsContainer" class='rightContent forceInvisible'></div>
           <div id="itemsContainer" class='rightContent forceInvisible'>
               <div id="add-new-action-form" title="Add/Edit Action">
-                  <form id="form-add-new-action" action='{% url "crits-core-views-new_action" %}' method='POST' enctype="multipart/form-data">
+                  <form id="form-add-new-action" action='{% url "crits.core.views.new_action" %}' method='POST' enctype="multipart/form-data">
                       <table class="form">{{ add_new_action.as_table }}</table>
                       <div id="form-add-new-action-results" class="form_results"></div>
                   </form>
@@ -353,7 +353,7 @@
                   </select>
                   <br />
                   <br />
-                  <form id="form-add-new-user" action='{% url "crits-core-views-source_access" %}' method='POST' enctype="multipart/form-data">
+                  <form id="form-add-new-user" action='{% url "crits.core.views.source_access" %}' method='POST' enctype="multipart/form-data">
                       <table class="form">{{ source_access.as_table }}</table>
                       <div id="form-add-new-user-results" class="form_results"></div>
                   </form>

@@ -4,11 +4,7 @@ import urllib
 
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -115,7 +111,7 @@ def remove_indicator(request, _id):
     result = indicator_remove(_id,
                               '%s' % request.user.username)
     if result['success']:
-        return HttpResponseRedirect(reverse('crits-indicators-views-indicators_listing'))
+        return HttpResponseRedirect(reverse('crits.indicators.views.indicators_listing'))
     else:
         return render_to_response('error.html',
                                   {'error': result['message']})
@@ -133,7 +129,7 @@ def indicator_search(request):
     query = {}
     query[request.GET.get('search_type', '')] = request.GET.get('q', '').strip()
     #return render_to_response('error.html', {'error': query})
-    return HttpResponseRedirect(reverse('crits-indicators-views-indicators_listing')
+    return HttpResponseRedirect(reverse('crits.indicators.views.indicators_listing')
                                 + "?%s" % urllib.urlencode(query))
 
 @user_passes_test(user_can_view_data)
@@ -173,7 +169,7 @@ def upload_indicator(request):
                     message = {'message': ('<div>%s <a href="%s">Go to all'
                                            ' indicators</a></div>' %
                                            (result['message'],
-                                            reverse('crits-indicators-views-indicators_listing')))}
+                                            reverse('crits.indicators.views.indicators_listing')))}
                 else:
                     failed_msg = '<div>%s</div>' % result['message']
 
@@ -195,7 +191,7 @@ def upload_indicator(request):
                     message = {'message': ('<div>%s <a href="%s">Go to all'
                                            ' indicators</a></div>' %
                                            (result['message'],
-                                            reverse('crits-indicators-views-indicators_listing')))}
+                                            reverse('crits.indicators.views.indicators_listing')))}
                 else:
                     failed_msg = '<div>%s</div>' % result['message']
 
@@ -231,9 +227,9 @@ def upload_indicator(request):
                     indicator_link = ((' - <a href=\"%s\">Go to this '
                                        'indicator</a> or <a href="%s">all '
                                        'indicators</a>.</div>') %
-                                      (reverse('crits-indicators-views-indicator',
+                                      (reverse('crits.indicators.views.indicator',
                                                args=[result['objectid']]),
-                                       reverse('crits-indicators-views-indicators_listing')))
+                                       reverse('crits.indicators.views.indicators_listing')))
 
                     if result.get('is_new_indicator', False) == False:
                         message = {'message': ('<div>Warning: Updated existing'
@@ -246,7 +242,7 @@ def upload_indicator(request):
 
         if result == None or not result['success']:
             failed_msg += ('<a href="%s"> Go to all indicators</a></div>'
-                           % reverse('crits-indicators-views-indicators_listing'))
+                           % reverse('crits.indicators.views.indicators_listing'))
             message = {'message': failed_msg, 'form': form.as_table()}
         elif result != None:
             message['success'] = result['success']
@@ -382,7 +378,7 @@ def indicator_and_ip(request):
                 message = render_to_string('relationships_listing_widget.html',
                                            {'relationships': result['message'],
                                             'relationship': relationship},
-                                           request=request)
+                                           RequestContext(request))
                 result = {'success': True, 'message': message}
             else:
                 result = {
@@ -430,7 +426,7 @@ def indicator_from_tlo(request):
                 message = render_to_string('relationships_listing_widget.html',
                                            {'relationships': result['message'],
                                             'relationship': relationship},
-                                           request=request)
+                                           RequestContext(request))
                 result = {'success': True, 'message': message}
             else:
                 result = {

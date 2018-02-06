@@ -16,7 +16,7 @@
                 update_buckets(my_tags);
             },
             onTagClicked: function(event, ui) {
-                var url = "{% url 'crits-core-views-global_search_listing' %}?search_type=bucket_list&force_full=1&search=Search&q=" + encodeURIComponent(ui.tagLabel);
+                var url = "{% url 'crits.core.views.global_search_listing' %}?search_type=bucket_list&force_full=1&search=Search&q=" + encodeURIComponent(ui.tagLabel);
                 window.location.href = url;
             },
             autocomplete: {
@@ -26,7 +26,7 @@
                     data = {term: request.term}
                     $.ajax({
                         type: 'POST',
-                        url: "{% url 'crits-core-views-bucket_autocomplete' %}",
+                        url: "{% url 'crits.core.views.bucket_autocomplete' %}",
                         data: data,
                         datatype: 'json',
                         success: function(data) {
@@ -47,7 +47,7 @@
                 };
                 $.ajax({
                     type: "POST",
-                    url: "{% url 'crits-core-views-bucket_modify' %}",
+                    url: "{% url 'crits.core.views.bucket_modify' %}",
                     data: data,
                     datatype: 'json',
                     //success: function(data) {

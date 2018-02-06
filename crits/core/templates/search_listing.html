@@ -23,7 +23,7 @@
 </div>
 
 
-<form id='openSavedSearch' method='GET' action='{% url "crits-dashboards-views-new_save_search" %}'>
+<form id='openSavedSearch' method='GET' action='{% url "crits.dashboards.views.new_save_search" %}'>
     <input type='hidden' value='{{term}}' name='q'/>
     <input type='hidden' value='global' name='search_type'/>
     <input type='submit' value='Configure for Dashboard'/>

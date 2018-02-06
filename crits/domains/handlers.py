@@ -2,11 +2,7 @@ import json
 import re
 import datetime
 
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -199,9 +195,9 @@ def generate_domain_jtable(request, option):
     jtopts = {
         'title': "Domains",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_, type_),
+        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_, type_),
                                                     args=('jtlist',)),
-        'deleteurl': reverse('crits-%ss-views-%ss_listing' % (type_, type_),
+        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_, type_),
                                                     args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -348,7 +344,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
 
         if fqdn_domain:
             if isinstance(fqdn_domain, Domain):
-                resp_url = reverse('crits-domains-views-domain_detail', args=[domain])
+                resp_url = reverse('crits.domains.views.domain_detail', args=[domain])
                 message = ('Warning: Domain already exists: '
                                      '<a href="%s">%s</a>' % (resp_url, domain))
                 retVal['message'] = message
@@ -432,7 +428,7 @@ def add_new_domain(data, request, errors, rowData=None, is_validate_only=False, 
                         new_domain.save(username=user.username)
 
             #set the URL for viewing the new data
-            resp_url = reverse('crits-domains-views-domain_detail', args=[domain])
+            resp_url = reverse('crits.domains.views.domain_detail', args=[domain])
 
             if retVal['is_domain_new'] == True:
                 retVal['message'] = ('Success! Click here to view the new domain: '

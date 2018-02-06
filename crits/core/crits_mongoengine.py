@@ -7,21 +7,10 @@ from bson import json_util, ObjectId
 from collections import OrderedDict
 from dateutil.parser import parse
 from django.conf import settings
-
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
-
+from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
 
-try:
-    from django_mongoengine import Document
-except ImportError:
-    from mongoengine import Document
-
-from mongoengine import EmbeddedDocument, DynamicEmbeddedDocument
+from mongoengine import Document, EmbeddedDocument, DynamicEmbeddedDocument
 from mongoengine import StringField, ListField, EmbeddedDocumentField
 from mongoengine import IntField, DateTimeField, ObjectIdField, BooleanField
 from mongoengine.base import BaseDocument
@@ -31,16 +20,7 @@ except ImportError:
     from mongoengine.base import ValidationError
 
 # Determine if we should be caching queries or not.
-if settings.QUERY_CACHING:
-    try:
-        from django_mongoengine import QuerySet as QS
-    except ImportError:
-        from mongoengine import QuerySet as QS
-else:
-    try:
-        from django_mongoengine import QuerySetNoCache as QS
-    except ImportError:
-        from mongoengine import QuerySetNoCache as QS
+from mongoengine import QuerySet as QS
 
 from pprint import pformat
 
@@ -90,10 +70,9 @@ class CritsQuerySet(QS):
 
         if self._len is not None:
             return self._len
-        if settings.QUERY_CACHING:
-            if self._has_more:
-                # populate the cache
-                list(self._iter_results())
+        if self._has_more:
+            # populate the cache
+            list(self._iter_results())
             self._len = len(self._result_cache)
         else:
             self._len = self.count()
@@ -361,7 +340,7 @@ class CritsDocument(BaseDocument):
         super(CritsDocument, self).__init__(**values)
 
     def _custom_save(self, force_insert=False, validate=True, clean=False,
-        write_concern=None, cascade=None, cascade_kwargs=None,
+        write_concern=None,  cascade=None, cascade_kwargs=None,
         _refs=None, username=None, **kwargs):
         """
         Custom save function. Extended to check for valid schema versions,
@@ -395,16 +374,7 @@ class CritsDocument(BaseDocument):
         except:
             pass
 
-        if hasattr(super(self.__class__, self).save(), 'write_concern'):
-            super(self.__class__, self).save(force_insert=force_insert,
-                                              validate=validate,
-                                              clean=clean,
-                                              write_concern=write_concern,
-                                              cascade=cascade,
-                                              cascade_kwargs=cascade_kwargs,
-                                              _refs=_refs)
-        else:
-            super(self.__class__, self).save(force_insert=force_insert,
+        super(self.__class__, self).save(force_insert=force_insert,
                                          validate=validate,
                                          clean=clean,
                                          write_concern=write_concern,
@@ -415,7 +385,7 @@ class CritsDocument(BaseDocument):
             audit_entry(self, username, "save", new_doc=True)
         return
 
-    def _custom_delete(self, username=None, **kwargs):
+    def _custom_delete(self, username=None, **write_concern):
         """
         Custom delete function. Overridden to allow us to extend to other parts
         of CRITs and clean up dangling relationships, comments, objects, GridFS

@@ -6,11 +6,7 @@ from django.shortcuts import render_to_response, render
 from django.template import RequestContext
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import user_passes_test
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
@@ -67,7 +63,7 @@ def email_search(request):
     query[request.GET.get('search_type',
                           '')]=request.GET.get('q',
                                                '').strip()
-    return HttpResponseRedirect(reverse('crits-emails-views-emails_listing')
+    return HttpResponseRedirect(reverse('crits.emails.views.emails_listing')
                                 + "?%s" % urllib.urlencode(query))
 
 
@@ -95,7 +91,7 @@ def email_del(request, email_id):
                                   RequestContext(request))
 
     email.delete(username=request.user.username)
-    return HttpResponseRedirect(reverse('crits-emails-views-emails_listing'))
+    return HttpResponseRedirect(reverse('crits.emails.views.emails_listing'))
 
 
 @user_passes_test(user_can_view_data)
@@ -110,7 +106,7 @@ def upload_attach(request, email_id):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    redirect = reverse('crits-emails-views-email_detail', args=[email_id])
+    redirect = reverse('crits.emails.views.email_detail', args=[email_id])
     user = request.user
 
     if request.method != 'POST':
@@ -209,7 +205,7 @@ def email_fields_add(request):
                                          form_data['relationship_type'])
 
             if result['status']:
-                redirect = reverse('crits-emails-views-email_detail',
+                redirect = reverse('crits.emails.views.email_detail',
                                    args=[result['object'].id])
                 if not request.is_ajax():
                     return HttpResponseRedirect(redirect)
@@ -281,7 +277,7 @@ def email_yaml_add(request, email_id=None):
                                  form_data['relationship_type'])
 
             if result['status']:
-                redirect = reverse('crits-emails-views-email_detail',
+                redirect = reverse('crits.emails.views.email_detail',
                                    args=[result['object'].id])
                 if not request.is_ajax():
                     return HttpResponseRedirect(redirect)
@@ -349,7 +345,7 @@ def email_raw_add(request):
                                        form_data['relationship_type'])
 
             if result['status']:
-                redirect = reverse('crits-emails-views-email_detail',
+                redirect = reverse('crits.emails.views.email_detail',
                                    args=[result['object'].id])
                 if not request.is_ajax():
                     return HttpResponseRedirect(redirect)
@@ -424,7 +420,7 @@ def email_eml_add(request):
                                 form_data['relationship_type'])
 
             if result['status']:
-                redirect = reverse('crits-emails-views-email_detail',
+                redirect = reverse('crits.emails.views.email_detail',
                                    args=[result['object'].id])
                 json_reply['success'] = True
                 message = 'Email uploaded successfully'
@@ -488,7 +484,7 @@ def email_outlook_add(request):
                                 form_data['relationship_type'])
 
             if result['status']:
-                redirect = reverse('crits-emails-views-email_detail',
+                redirect = reverse('crits.emails.views.email_detail',
                                    args=[result['obj_id']])
                 json_reply['success'] = True
                 message = 'Email uploaded successfully'

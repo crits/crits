@@ -1,11 +1,7 @@
 import json
 
 from django.contrib.auth.decorators import user_passes_test
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -108,7 +104,7 @@ def upload_pcap(request):
                 return render_to_response('file_upload_response.html',
                                           {'response': json.dumps({
                     'message': 'PCAP uploaded successfully! <a href="%s">View PCAP</a>'
-                        % reverse('crits-pcaps-views-pcap_details',
+                        % reverse('crits.pcaps.views.pcap_details',
                                   args=[status['md5']]), 'success': True})},
                                           RequestContext(request))
             else:
@@ -140,7 +136,7 @@ def remove_pcap(request, md5):
 
     result = delete_pcap(md5, '%s' % request.user.username)
     if result:
-        return HttpResponseRedirect(reverse('crits-pcaps-views-pcaps_listing'))
+        return HttpResponseRedirect(reverse('crits.pcaps.views.pcaps_listing'))
     else:
         return render_to_response('error.html',
                                   {'error': "Could not delete pcap"})

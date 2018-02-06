@@ -4,9 +4,9 @@
 {% block title %} Event Detail {% endblock %}
 {% block content %}
 <script>
-    var update_event_title = "{% url 'crits-events-views-set_event_title' event.id %}";
-    var update_event_type = "{% url 'crits-events-views-set_event_type' event.id %}";
-    var get_event_types = "{% url 'crits-events-views-get_event_type_dropdown' %}";
+    var update_event_title = "{% url 'crits.events.views.set_event_title' event.id %}";
+    var update_event_type = "{% url 'crits.events.views.set_event_type' event.id %}";
+    var get_event_types = "{% url 'crits.events.views.get_event_type_dropdown' %}";
     var event_id = "{{ event.id | escapejs}}";
 
 </script>
@@ -32,7 +32,7 @@
               <li><a href="#" class="dialogClick" dialog="download-event">Download Event</a></li>
             {% endif %}
             {% if EventACL.DELETE|has_access_to:user %}
-              <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="event" action='{% url "crits-events-views-remove_event" event.id %}'>Delete Event</a></li>
+              <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="event" action='{% url "crits.events.views.remove_event" event.id %}'>Delete Event</a></li>
             {% endif %}
         </ul>
     </span>
@@ -82,7 +82,7 @@
                               <span style="float: right;" class="object_status_response"></span>
                           </td>
                           <td>
-                              <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{event.status}}</span>
+                              <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{event.status}}</span>
                           </td>
                       </tr>
                     {% endif %}
@@ -181,7 +181,7 @@
 <div style="display: none;">
 
 <div id="dialog-download-event">
-    <form id="form-download-event" action="{% url 'crits-core-views-download_object' %}" method="POST" enctype="multipart/form-data">
+    <form id="form-download-event" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
     <table class="form">{{download_form.as_table}}</table>
     </form>
 </div>

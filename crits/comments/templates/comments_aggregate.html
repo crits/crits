@@ -4,8 +4,8 @@
 {% block title %} Aggregate Comments {% endblock %}
 {% block content %}
 <script type="text/javascript">
-    var activity_url = "{% url 'crits-comments-views-activity' %}";
-    var new_comments_url = "{% url 'crits-comments-views-get_new_comments' %}";
+    var activity_url = "{% url 'crits.comments.views.activity' %}";
+    var new_comments_url = "{% url 'crits.comments.views.get_new_comments' %}";
     var atype = "{{ atype }}";
     var value = "{{ value }}";
 </script>
@@ -39,7 +39,7 @@
                         <tr>
                             <td class="key">Reset:</td>
                             <td>
-                                <a href="{% url 'crits-comments-views-activity' %}">Today's<br />Activity</a>
+                                <a href="{% url 'crits.comments.views.activity' %}">Today's<br />Activity</a>
                             </td>
                         </tr>
                     </tbody>

@@ -6,7 +6,7 @@ Does not use dynamic dialog name due to being included in samples_tools_widget
 
 <div id="dialog-add-object" title="Add New Object">
     <form id="form-add-object" 
-	  action='{% url "crits-objects-views-add_new_object" %}' 
+	  action='{% url "crits.objects.views.add_new_object" %}' 
 	  method='POST' enctype="multipart/form-data" target="object-iframe"
 	  item-type="object" input_clear_filter="[type!='hidden']" >
     <table class="form">{{ object_form.as_table }}</table>

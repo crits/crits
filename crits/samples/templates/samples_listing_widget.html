@@ -14,7 +14,7 @@
     {% for hit in sample_list %}
         <tr>
         <td class="sample_detail" id="{{ hit.samples.md5 }}">
-            <a href="{% url 'crits-samples-views-detail' hit.md5 %}">{{ hit.filename }}</a>
+            <a href="{% url 'crits.samples.views.detail' hit.md5 %}">{{ hit.filename }}</a>
         </td>
         <td>{{ hit.size }}</td>
         <td>{{ hit.mimetype }}</td>
@@ -23,7 +23,7 @@
         {% if hit.campaign %}
         {% for campaign in hit.campaign %}
             {% if campaign.name %}
-            <a href="{% url 'crits-campaigns-views-campaign_details' campaign.name %}">{{campaign.name}}</a>
+            <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">{{campaign.name}}</a>
             {% endif %}
         {% endfor %}
         {%endif %}

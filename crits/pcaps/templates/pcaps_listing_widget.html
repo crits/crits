@@ -13,7 +13,7 @@
     {% for pcap in pcap_list %}
         <tr>
             <td>
-                <a href="{% url 'crits-pcaps-views-pcap_details' pcap.md5 %}">{{ pcap.filename }}</a>
+                <a href="{% url 'crits.pcaps.views.pcap_details' pcap.md5 %}">{{ pcap.filename }}</a>
             </td>
             <td>{{ pcap.length }}</td>
             <td>{{ pcap.description }}</td>

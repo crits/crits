@@ -18,7 +18,7 @@
         <tr>
             <td>
                 {% if indicator.value %}
-                    <a href="{% url 'crits-indicators-views-indicator' indicator.id %}">{{ indicator.value }}</a>
+                    <a href="{% url 'crits.indicators.views.indicator' indicator.id %}">{{ indicator.value }}</a>
                 {% endif %}
                 {% if splunk_search_url %}
                 <span style="float: right;">
@@ -26,16 +26,16 @@
                 </span>
                 {% endif %}
             </td>
-        <td><a href="{% url 'crits-indicators-views-indicators_listing' %}?type={{ indicator.ind_type|urlencode }}">{{ indicator.ind_type }}</a></td>
+        <td><a href="{% url 'crits.indicators.views.indicators_listing' %}?type={{ indicator.ind_type|urlencode }}">{{ indicator.ind_type }}</a></td>
         <td>{{ indicator.created|date:"DATE_FORMAT" }}</td>
         <td>
             {% for camp in indicator.campaign %}
-                <a href="{% url 'crits-indicators-views-indicators_listing' %}?campaign={{camp.name}}">{{camp.name}}</a><br/>
+                <a href="{% url 'crits.indicators.views.indicators_listing' %}?campaign={{camp.name}}">{{camp.name}}</a><br/>
             {% endfor %}
         </td>
         <td>
             {% for source in indicator.source %}
-                <a href="{% url 'crits-indicators-views-indicators_listing' %}?source={{source.name}}">{{source.name}}</a><br/>
+                <a href="{% url 'crits.indicators.views.indicators_listing' %}?source={{source.name}}">{{source.name}}</a><br/>
             {% endfor %}
         </td>
         <td>

@@ -25,10 +25,10 @@
       <span class="horizontal_menu">
       <ul class="hmenu">
           {% if PCAPACL.DOWNLOAD|has_access_to:user %}
-            <li><a href="{% url 'crits-core-views-download_file' pcap.md5 %}?type=pcap">Download PCAP</a></li>
+            <li><a href="{% url 'crits.core.views.download_file' pcap.md5 %}?type=pcap">Download PCAP</a></li>
           {% endif %}
           {% if PCAPACL.DELETE|has_access_to:user %}
-            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="pcap" title="Delete PCAP" action='{% url "crits-pcaps-views-remove_pcap" pcap.md5 %}'>Delete PCAP</a></li>
+            <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="pcap" title="Delete PCAP" action='{% url "crits.pcaps.views.remove_pcap" pcap.md5 %}'>Delete PCAP</a></li>
           {% endif %}
       </ul>
       </span>
@@ -48,7 +48,7 @@
             </tr>
             <tr>
             <td class='key'>Filename</td>
-            <td>{{ pcap.filename }}<a href="{% url 'crits-core-views-download_file' pcap.md5 %}?type=pcap"><div class="ui-icon ui-icon-disk download_file"></div></a></td>
+            <td>{{ pcap.filename }}<a href="{% url 'crits.core.views.download_file' pcap.md5 %}?type=pcap"><div class="ui-icon ui-icon-disk download_file"></div></a></td>
             </tr>
             <tr>
             <td class='key'>Created</td>
@@ -74,7 +74,7 @@
                       <span style="float: right;" class="object_status_response"></span>
                   </td>
                   <td>
-                      <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{pcap.status}}</span>
+                      <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{pcap.status}}</span>
                   </td>
               </tr>
             {% endif %}

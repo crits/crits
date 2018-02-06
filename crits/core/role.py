@@ -51,10 +51,10 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
         "schema_doc": {
         },
         "jtable_opts": {
-                         'details_url': 'crits-core-views-role_details',
+                         'details_url': 'crits.core.views.role_details',
                          'details_url_key': 'id',
                          'default_sort': "name ASC",
-                         'searchurl': 'crits-core-views-roles_listing',
+                         'searchurl': 'crits.core.views.roles_listing',
                           'fields': [ "name", "active", "description",
                                       "id" ],
                           'jtopts_fields': [ "details",

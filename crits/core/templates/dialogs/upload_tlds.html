@@ -9,7 +9,7 @@
   </p>
   
   <form id="form-{{ request.GET.dialog }}" 
-	action='{% url "crits-domains-views-tld_update" %}' 
+	action='{% url "crits.domains.views.tld_update" %}' 
 	method='POST' enctype="multipart/form-data" target="tld-iframe" item-type="">
     <table class="form">{{ upload_tlds.as_table }}</table>
     <iframe name="tld-iframe" class="file-submit-iframe" style="display:none;"></iframe>

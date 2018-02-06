@@ -18,11 +18,7 @@ from dateutil.parser import parse as date_parser
 from django.conf import settings
 from crits.core.forms import DownloadFileForm
 from crits.emails.forms import EmailYAMLForm
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -401,9 +397,9 @@ def generate_email_jtable(request, option):
     jtopts = {
         'title': "Emails",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_,
+        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
                                                             type_), args=('jtlist',)),
-        'deleteurl': reverse('crits-%ss-views-%ss_listing' % (type_,
+        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
                                                               type_), args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -1375,7 +1371,7 @@ def update_email_header_value(email_id, type_, value, analyst):
                 links = ""
                 for v in value:
                     # dirty ugly hack to "urlencode" the resulting URL
-                    url = reverse('crits-targets-views-target_info',
+                    url = reverse('crits.targets.views.target_info',
                                   args=[v]).replace('@', '%40')
                     links += '<a href="%s">%s</a>, ' % (url, v)
                 result = {'success': True,
@@ -1446,7 +1442,7 @@ def create_indicator_from_header_field(email, header_field, ind_type,
             message = render_to_string('relationships_listing_widget.html',
                                         {'relationship': relationship,
                                         'relationships': results['message']},
-                                        request=request)
+                                        RequestContext(request))
             result = {'success': True, 'message': message}
         else:
             result = {

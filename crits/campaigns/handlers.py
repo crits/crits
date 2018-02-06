@@ -4,11 +4,7 @@ from django.conf import settings
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.http import HttpResponse
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 try:
     from mongoengine.base import ValidationError
 except ImportError:
@@ -224,7 +220,7 @@ def generate_campaign_jtable(request, option):
     jtopts = {
         'title': "Campaigns",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_, type_),
+        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_, type_),
                            args=('jtlist',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -266,7 +262,7 @@ def generate_campaign_jtable(request, option):
         {
             'tooltip': "'Refresh campaign stats'",
             'text': "'Refresh Stats'",
-            'click': "function () {$.get('" + reverse('crits-%ss-views-%ss_listing' % (type_, type_)) + "', {'refresh': 'yes'}, function () { $('#campaign_listing').jtable('reload');});}"
+            'click': "function () {$.get('" + reverse('crits.%ss.views.%ss_listing' % (type_, type_)) + "', {'refresh': 'yes'}, function () { $('#campaign_listing').jtable('reload');});}"
         },
         {
             'tooltip': "'Add Campaign'",
@@ -278,7 +274,7 @@ def generate_campaign_jtable(request, option):
     # Make count fields clickable to search those listings
     for ctype in ["actor", "backdoor", "exploit", "indicator", "email",
                   "domain", "sample", "event", "ip", "pcap"]:
-        url = reverse('crits-%ss-views-%ss_listing' % (ctype, ctype))
+        url = reverse('crits.%ss.views.%ss_listing' % (ctype, ctype))
         for field in jtable['fields']:
             if field['fieldname'].startswith("'" + ctype):
                 field['display'] = """ function (data) {

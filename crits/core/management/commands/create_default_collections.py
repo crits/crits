@@ -2,6 +2,7 @@ import os
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from optparse import make_option
 
 from create_indexes import create_indexes
 from create_roles import add_uber_admin_role, add_readonly_role, add_analyst_role
@@ -20,14 +21,15 @@ class Command(BaseCommand):
     Script Class.
     """
 
-    def add_arguments(self, parser):
-        parser.add_argument('--drop',
+    option_list = BaseCommand.option_list + (
+        make_option('--drop',
                     '-d',
                     dest='drop',
                     action="store_true",
                     default=False,
-                    help='Drop existing content before adding.')
-        help = 'Creates default CRITs collections in MongoDB.'
+                    help='Drop existing content before adding.'),
+    )
+    help = 'Creates default CRITs collections in MongoDB.'
 
     def handle(self, *args, **options):
         """

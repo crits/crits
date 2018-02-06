@@ -6,9 +6,9 @@
 {% block content %}
 
 <script>
-   var edit_backdoor_name = "{% url 'crits-backdoors-views-edit_backdoor_name' backdoor.id|urlencode %}";
-   var edit_backdoor_version = "{% url 'crits-backdoors-views-edit_backdoor_version' backdoor.id|urlencode %}";
-   var update_backdoor_aliases = "{% url 'crits-backdoors-views-edit_backdoor_aliases' %}";
+   var edit_backdoor_name = "{% url 'crits.backdoors.views.edit_backdoor_name' backdoor.id|urlencode %}";
+   var edit_backdoor_version = "{% url 'crits.backdoors.views.edit_backdoor_version' backdoor.id|urlencode %}";
+   var update_backdoor_aliases = "{% url 'crits.backdoors.views.edit_backdoor_aliases' %}";
    var backdoor_id = "{{backdoor.id | escapejs}}"
 </script>
 
@@ -25,7 +25,7 @@
 {% if BackdoorACL.DELETE|has_access_to:user %}
     <span class="horizontal_menu">
     <ul class="hmenu">
-        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="backdoor" action='{% url "crits-backdoors-views-remove_backdoor" backdoor.id %}'>Delete Backdoor</a></li>
+        <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="backdoor" action='{% url "crits.backdoors.views.remove_backdoor" backdoor.id %}'>Delete Backdoor</a></li>
     </ul>
     </span>
 {% endif %}
@@ -90,7 +90,7 @@
                             <span style="float: right;" class="object_status_response"></span>
                         </td>
                         <td>
-                            <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{backdoor.status}}</span>
+                            <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{backdoor.status}}</span>
                         </td>
                     </tr>
                     {% endif %}

@@ -83,7 +83,7 @@
                   <span style="float: right;" class="object_status_response"></span>
               </td>
               <td>
-                  <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{target_detail.status}}</span>
+                  <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{target_detail.status}}</span>
               </td>
           </tr>
         {% endif %}
@@ -187,7 +187,7 @@
 {% if TargetACL.EDIT_DETAILS|has_access_to:user %}
   <div style="display: none;">
       <div id="edit-details-form" title="Edit Details" style="display: table;">
-          <form id="form-edit-details" action='{% url 'crits-targets-views-add_update_target' %}' method='POST' style="display: inline;">{% csrf_token %}
+          <form id="form-edit-details" action='{% url 'crits.targets.views.add_update_target' %}' method='POST' style="display: inline;">{% csrf_token %}
           <table class='form'> {{ form.as_table }}</table>
           </form>
       </div>

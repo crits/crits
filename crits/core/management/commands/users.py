@@ -2,6 +2,7 @@ import string
 import re
 
 from django.core.management.base import BaseCommand, CommandError
+from optparse import make_option
 from random import choice
 
 from crits.core.user import CRITsUser
@@ -13,97 +14,98 @@ class Command(BaseCommand):
     Script Class.
     """
 
-    def add_arguments(self, parser):
-        parser.add_argument('--adduser',
+    option_list = BaseCommand.option_list + (
+        make_option('--adduser',
                     '-a',
                     dest='adduser',
                     action='store_true',
                     default=False,
-                    help='Add a new user to CRITs.')
-        parser.add_argument('--clearsecret',
+                    help='Add a new user to CRITs.'),
+        make_option('--clearsecret',
                     '-c',
                     dest='clearsecret',
                     action='store_true',
                     default=False,
-                    help="Clear a user's secret.")
-        parser.add_argument('--deactivateuser',
+                    help="Clear a user's secret."),
+        make_option('--deactivateuser',
                     '-d',
                     dest='deactivate',
                     action='store_true',
                     default=False,
-                    help='Deactivate a user account.')
-        parser.add_argument('--email',
+                    help='Deactivate a user account.'),
+        make_option('--email',
                     '-e',
                     dest='email',
                     default=None,
-                    help='Email address of new user.')
-        parser.add_argument('--sendemail',
+                    help='Email address of new user.'),
+        make_option('--sendemail',
                     '-E',
                     dest='sendemail',
                     action='store_true',
                     default=False,
-                    help='Email new user their temporary password.')
-        parser.add_argument('--firstname',
+                    help='Email new user their temporary password.'),
+        make_option('--firstname',
                     '-f',
                     dest='firstname',
                     default='',
-                    help='First name of new user.')
-        parser.add_argument('--invalidreset',
+                    help='First name of new user.'),
+        make_option('--invalidreset',
                     '-i',
                     dest='invalidreset',
                     action='store_true',
                     default=False,
-                    help="Reset a user's invalid login attempts to 0.")
-        parser.add_argument('--lastname',
+                    help="Reset a user's invalid login attempts to 0."),
+        make_option('--lastname',
                     '-l',
                     dest='lastname',
                     default='',
-                    help='Last name of new user.')
-        parser.add_argument('--organization',
+                    help='Last name of new user.'),
+        make_option('--organization',
                     '-o',
                     dest='organization',
                     default='',
-                    help='Assign user to an organization/source.')
-        parser.add_argument('--password',
+                    help='Assign user to an organization/source.'),
+        make_option('--password',
                     '-p',
                     dest='password',
                     default='',
-                    help='Specify a password for the account.')
-        parser.add_argument('--reset',
+                    help='Specify a password for the account.'),
+        make_option('--reset',
                     '-r',
                     dest='reset',
                     action='store_true',
                     default=False,
-                    help='Assign a new temporary password to a user.')
-        parser.add_argument('--roles',
+                    help='Assign a new temporary password to a user.'),
+        make_option('--roles',
                     '-R',
                     dest='roles',
                     default='',
-                    help='Assign user to a set of roles.')
-        parser.add_argument('--setactive',
+                    help='Assign user to a set of roles.'),
+        make_option('--setactive',
                     '-s',
                     dest='setactive',
                     action='store_true',
                     default=False,
-                    help='Set a user account to active.')
-        parser.add_argument('--enabletotp',
+                    help='Set a user account to active.'),
+        make_option('--enabletotp',
                     '-t',
                     dest='enabletotp',
                     action='store_true',
                     default=False,
-                    help='Enable TOTP for a user.')
-        parser.add_argument('--disabletotp',
+                    help='Enable TOTP for a user.'),
+        make_option('--disabletotp',
                     '-T',
                     dest='disabletotp',
                     action='store_true',
                     default=False,
-                    help='Disable TOTP for a user.')
-        parser.add_argument('--username',
+                    help='Disable TOTP for a user.'),
+        make_option('--username',
                     '-u',
                     dest='username',
                     default=None,
-                    help='Username for new user.')
-        help = 'Add and edit a CRITs user. If "-a" is not used, we will try to edit.'
+                    help='Username for new user.'),
+    )
+    help = 'Add and edit a CRITs user. If "-a" is not used, we will try to edit.'
 
     def handle(self, *args, **options):
         """
@@ -180,8 +182,8 @@ class Command(BaseCommand):
             user.first_name = firstname
             user.last_name = lastname
             user.is_staff = True
-            user.organization = organization
             user.save()
+            user.organization = organization
             if roles:
                 user.roles = [r.strip() for r in roles.split(',')]
             user.save()
@@ -222,7 +224,7 @@ Thank you!
             pw_regex = settings.PASSWORD_COMPLEXITY_REGEX
         rex = re.compile(pw_regex)
         chars = string.letters + string.digits + string.punctuation
-        for i in range(20):
+        for i in xrange(20):
             passwd = ''
             while len(passwd) < 50:
                 passwd += choice(chars)

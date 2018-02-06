@@ -3,7 +3,7 @@
 <div id="dialog-{{ request.GET.dialog }}">
   <form id="form-{{ request.GET.dialog }}" 
 	method='POST' enctype="mutlipart/form-data"
-	action="{% url 'crits-core-views-source_releasability' %}"
+	action="{% url 'crits.core.views.source_releasability' %}"
 	item-type="releasability">
     <table class="form">{{ releasability_form.as_table }}</table>
   </form>

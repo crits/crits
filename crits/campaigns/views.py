@@ -7,11 +7,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import user_passes_test
 
 from crits.campaigns.forms import AddCampaignForm, CampaignForm
@@ -169,7 +165,7 @@ def add_campaign(request):
                           'message':'User does not have permission to add new campaigns.'}
             if result['success']:
                 message = {
-                    'message': '<div>Campaign <a href="%s">%s</a> added successfully!</div>' % (reverse('crits-campaigns-views-campaign_details', args=[campaign_name]), campaign_name),
+                    'message': '<div>Campaign <a href="%s">%s</a> added successfully!</div>' % (reverse('crits.campaigns.views.campaign_details', args=[campaign_name]), campaign_name),
                     'success': True}
             else:
                 message = {
@@ -368,7 +364,7 @@ def campaign_ttp(request, cid):
             campaign = result['campaign']
             html = render_to_string('campaign_ttps_data_widget.html',
                                     {'campaign_detail': campaign},
-                                    request=request)
+                                    RequestContext(request))
             del result['campaign']
             result['html'] = html
         return HttpResponse(json.dumps(result), content_type="application/json")

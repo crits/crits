@@ -7,13 +7,13 @@
 
 <script>
     var sample_id_escaped = "{{ sample.id|escapejs }}";
-    var get_strings = "{% url 'crits-samples-views-strings' sample.md5 %}";
-    var get_stackstrings = "{% url 'crits-samples-views-stackstrings' sample.md5 %}";
-    var get_hex = "{% url 'crits-samples-views-hex' sample.md5 %}";
-    var xor_search = "{% url 'crits-samples-views-xor_searcher' sample.md5 %}";
-    var get_xor = "{% url 'crits-samples-views-xor' sample.md5 %}?key=";
-    var update_sample_filename = "{% url 'crits-samples-views-set_sample_filename' %}";
-    var update_sample_filenames = "{% url 'crits-samples-views-set_sample_filenames' %}";
+    var get_strings = "{% url 'crits.samples.views.strings' sample.md5 %}";
+    var get_stackstrings = "{% url 'crits.samples.views.stackstrings' sample.md5 %}";
+    var get_hex = "{% url 'crits.samples.views.hex' sample.md5 %}";
+    var xor_search = "{% url 'crits.samples.views.xor_searcher' sample.md5 %}";
+    var get_xor = "{% url 'crits.samples.views.xor' sample.md5 %}?key=";
+    var update_sample_filename = "{% url 'crits.samples.views.set_sample_filename' %}";
+    var update_sample_filenames = "{% url 'crits.samples.views.set_sample_filenames' %}";
     var related_id = "{{sample.id|escapejs }}";
     var related_type = "Sample"
 </script>
@@ -35,14 +35,14 @@
           <li><a href="#" class="dialogClick" dialog="download-sample">Download Sample</a></li>
         {% endif %}
         {% if SampleACL.TEXT_VIEW|has_access_to:user %}
-          <li><a href="{% url 'crits-samples-views-detail' sample.md5 %}?format=text">Text</a></li>
+          <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=text">Text</a></li>
         {% endif %}
         {% if SampleACL.YAML_VIEW|has_access_to:user %}
-          <li><a href="{% url 'crits-samples-views-detail' sample.md5 %}?format=yaml">YAML</a></li>
+          <li><a href="{% url 'crits.samples.views.detail' sample.md5 %}?format=yaml">YAML</a></li>
         {% endif %}
         <li><a href="#" class="dialogClick" dialog="unzip-sample">Un7zip</a></li>
         {% if SampleACL.DELETE|has_access_to:user %}
-          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="sample" action='{% url "crits-samples-views-remove_sample" sample.md5 %}'>Delete Sample</a></li>
+          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="sample" action='{% url "crits.samples.views.remove_sample" sample.md5 %}'>Delete Sample</a></li>
         {% endif %}
     </ul>
     </span>
@@ -92,7 +92,7 @@
             </tr>
             <tr>
                 <td class="key">Size</td>
-                <td><a href="{% url 'crits-samples-views-samples_listing'%}?search_type=size&q={{sample.size}}&force_full=1">{{ sample.size }}</a></td>
+                <td><a href="{% url 'crits.samples.views.samples_listing'%}?search_type=size&q={{sample.size}}&force_full=1">{{ sample.size }}</a></td>
             </tr>
             <tr>
                 {% if binary_exists == 0 %}
@@ -123,7 +123,7 @@
                       <span style="float: right;" class="object_status_response"></span>
                   </td>
                   <td>
-                      <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{sample.status}}</span>
+                      <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{sample.status}}</span>
                   </td>
               </tr>
             {% endif %}
@@ -225,14 +225,14 @@
 
 {% if SampleACL.DOWNLOAD|has_access_to:user %}
   <div id="dialog-download-sample" title="Download Sample">
-      <form id="form-download-sample" action="{% url 'crits-core-views-download_object' %}" method="POST" enctype="multipart/form-data">
+      <form id="form-download-sample" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
       <table class="form">{{download_form.as_table}}</table>
       </form>
   </div>
 {% endif %}
 
 <div id="dialog-unzip-sample" title="Unzip Sample">
-    <form id="form-unzip-sample" action="{% url 'crits-samples-views-unzip_sample' sample.md5 %}" method="POST" enctype="multipart/form-data">
+    <form id="form-unzip-sample" action="{% url 'crits.samples.views.unzip_sample' sample.md5 %}" method="POST" enctype="multipart/form-data">
     {% comment %}
         This is intentionally using unzip_sample_form here.
     {% endcomment %}

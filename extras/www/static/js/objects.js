@@ -216,7 +216,6 @@ $(document).ready(function() {
         var source = $(guardian).find("span[name='source_name']").attr('sname');
         var method = $(guardian).find("span[name='source_method']").attr('method');
         var reference = $(guardian).find("span[name='source_reference']").attr('reference');
-        var tlp = $(guardian).find("span[name='source_tlp']").attr('tlp');
 
         // Might be nicer if this was a spinning icon, but working with what we have handy
         me.removeClass('ui-icon-plus');
@@ -232,7 +231,6 @@ $(document).ready(function() {
             'source': source,
             'method': method,
             'reference': reference,
-            'tlp': tlp,
         };
         $.ajax({
             type: "POST",

@@ -1,22 +1,16 @@
 import datetime
 import json
 import logging
-from distutils.version import StrictVersion
 
 from bson import json_util
 from dateutil.parser import parse
 from time import gmtime, strftime
 
-from django import get_version
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response, redirect, render
+from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.template.loader import render_to_string
 
@@ -109,8 +103,6 @@ from crits.vocabulary.sectors import Sectors
 from crits.vocabulary.acls import *
 
 logger = logging.getLogger(__name__)
-
-django_version = get_version()
 
 
 @user_passes_test(user_can_view_data)
@@ -373,30 +365,21 @@ def login(request):
     accept_language = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
     next_url = request.GET.get('next', request.POST.get('next', None))
     user = request.user
-    if StrictVersion(django_version) >= StrictVersion('1.10.0'):
-        # Is the user already authenticated?
-        if request.user.is_authenticated and user.has_access_to(GeneralACL.WEB_INTERFACE):
-            resp = validate_next(next_url)
-            if not resp['success']:
-                return render_to_response(request, 'error.html',
-                                          {'data': resp,
-                                        'error': resp['message']})
-            else:
-                return HttpResponseRedirect(resp['message'])
-    else:
-        # Is the user already authenticated?
-        if request.user.is_authenticated() and user.has_access_to(GeneralACL.WEB_INTERFACE):
-            resp = validate_next(next_url)
-            if not resp['success']:
-                return render(request, 'error.html',
-                                          {'data': resp,
-                                        'error': resp['message']})
-            else:
-                return HttpResponseRedirect(resp['message'])
+
+    # Is the user already authenticated?
+    if request.user.is_authenticated() and user.has_access_to(GeneralACL.WEB_INTERFACE):
+        resp = validate_next(next_url)
+        if not resp['success']:
+            return render_to_response('error.html',
+                                      {'data': resp,
+                                    'error': resp['message']},
+                                    RequestContext(request))
+        else:
+            return HttpResponseRedirect(resp['message'])
 
     # Setup defaults
     username = None
-    login_ = True
+    login = True
     show_auth = True
     message = crits_config.crits_message
     token_message = """
@@ -418,9 +401,9 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
             else:
                 # Login failed, set messages/settings and continue
                 message = resp['message']
-                login_ = False
+                login = False
                 if resp['type'] == "totp_required":
-                    login_ = True
+                    login = True
         else:
             logger.warn("REMOTE_USER enabled, but no user passed.")
             message = 'REMOTE_USER not provided. Please notify an admin.'
@@ -483,7 +466,7 @@ If you are already setup with TOTP, please enter your PIN + Key above."""
     return render_to_response('login.html',
                               {'next': url,
                                'theme': 'default',
-                               'login': login_,
+                               'login': login,
                                'show_auth': show_auth,
                                'message': message,
                                'token_message': token_message},
@@ -637,7 +620,7 @@ def source_releasability(request):
             html = render_to_string('releasability_header_widget.html',
                                     {'releasability': result['obj'],
                                      'subscription': subscription},
-                                    request=request)
+                                    RequestContext(request))
             response = {'success': result['success'],
                         'html': html}
         else:
@@ -740,7 +723,7 @@ def role_add(request):
                                       description,
                                       user)
                 if result['success']:
-                    url = reverse('crits-core-views-role_details',
+                    url = reverse('crits.core.views.role_details',
                                   args=[result['id']])
                     message = {'message': '<div><a href="%s">Role</a> added successfully!</div>' % url,
                                'success': True}
@@ -855,14 +838,14 @@ def add_update_source(request, method, obj_type, obj_id):
                                                           {'source': result['object'],
                                                            'obj_type': obj_type,
                                                            'obj_id': obj_id},
-                                                          request=request)
+                                                          RequestContext(request))
                     else:
                         result['html'] = render_to_string('sources_row_widget.html',
                                                           {'source': result['object'],
                                                            'instance': result['instance'],
                                                            'obj_type': obj_type,
                                                            'obj_id': obj_id},
-                                                          request=request)
+                                                          RequestContext(request))
                 return HttpResponse(json.dumps(result,
                                                default=json_handler),
                                     content_type="application/json")
@@ -1615,7 +1598,7 @@ def user_preference_update(request, section):
             pref['form'] = form  # Inject our form instance with validation results
             result['html'] = render_to_string("preferences_widget.html",
                                               {'pref': pref},
-                                              request=request)
+                                              RequestContext(request))
 
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
@@ -1636,7 +1619,7 @@ def clear_user_notifications(request):
     """
 
     remove_user_notifications("%s" % request.user.username)
-    return HttpResponseRedirect(reverse('crits-core-views-profile') + '#notifications_button')
+    return HttpResponseRedirect(reverse('crits.core.views.profile') + '#notifications_button')
 
 @user_passes_test(user_can_view_data)
 def delete_user_notification(request, type_, oid):
@@ -2450,8 +2433,7 @@ def get_available_sectors(request):
             json.dumps(Sectors.values(sort=True), default=json_handler),
             content_type='application/json'
         )
-    else:
-        return HttpResponse({})
+    return HttpResponse({})
 
 @user_passes_test(user_can_view_data)
 def bucket_autocomplete(request):

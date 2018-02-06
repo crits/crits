@@ -1,7 +1,7 @@
 
 <div class="content_box" style="width: 100%;">
     {% if paging %}
-    {% url 'crits-targets-views-user_target' as paging_url %}
+    {% url 'crits.targets.views.user_target' as paging_url %}
     {% include 'paging_widget_top.html' %}
     {% endif %}
     <div class="content_body">
@@ -24,7 +24,7 @@
             <td>{{ hit.firstname }}</td>
             <td>{{ hit.lastname }}</td>
 
-            <td><a href="{% url 'crits-targets-views-target_info' hit.email_address %}">{{ hit.email_address }}</a></td>
+            <td><a href="{% url 'crits.targets.views.target_info' hit.email_address %}">{{ hit.email_address }}</a></td>
 
             <td>{{ hit.organization_id}} </td>
             <td>{{ hit.email_count|floatformat }}</td>

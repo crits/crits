@@ -84,11 +84,11 @@
             <tbody>
                 {% for rel in rel_list %}
                     <tr mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}" rConfidence="{{ rel.rel_confidence }}" {% if rel_type == 'Indicator' %} data-value="{{rel.ind_value}}" data-type="{{rel.ind_type}}"{% endif %}>
-                        <td style="width: 16px; padding: 0px"><a href="{% url 'crits-core-views-details' rel_type rel.value %}" style="width: 16px; padding: 0px" class="ui-icon ui-icon-document" title="View Details"></a></td>
-                        <td class="relationship_type_edit tooltip_edit" action="{% url 'crits-relationships-views-update_relationship_type' %}">{{ rel.relationship }}</td>
+                        <td style="width: 16px; padding: 0px"><a href="{% url 'crits.core.views.details' rel_type rel.value %}" style="width: 16px; padding: 0px" class="ui-icon ui-icon-document" title="View Details"></a></td>
+                        <td class="relationship_type_edit tooltip_edit" action="{% url 'crits.relationships.views.update_relationship_type' %}">{{ rel.relationship }}</td>
                         {% if rel_type == 'Campaign' %}
                             <td>
-                                <a href="{% url 'crits-campaigns-views-campaign_details' rel.name %}">{{ rel.name }}</a>
+                                <a href="{% url 'crits.campaigns.views.campaign_details' rel.name %}">{{ rel.name }}</a>
                             </td>
                         {% elif rel_type == 'Domain' %}
                             <td>{{ rel.domain }}</td>
@@ -118,7 +118,7 @@
                                 </span>
                                 {% endif%}
                             </td>
-                            <td><a href="{% url 'crits-indicators-views-indicators_listing' %}?type={{ rel.ind_type }}">{{ rel.ind_type }}</a></td>
+                            <td><a href="{% url 'crits.indicators.views.indicators_listing' %}?type={{ rel.ind_type }}">{{ rel.ind_type }}</a></td>
                             <td>
                                 {% for action in rel.actions %}
                                     {% if action.active == 'off' %}
@@ -133,17 +133,17 @@
                             </td>
                             {% if relationship.type in 'EventEmail' %}
                                 <td class='eventCountWidth'>
-                                    <a href="{% url 'crits-events-views-events_listing' %}?related={{ rel.id }}">{{ rel.rel_ind_events }}</a>
+                                    <a href="{% url 'crits.events.views.events_listing' %}?related={{ rel.id }}">{{ rel.rel_ind_events }}</a>
                                 </td>
                             {% endif %}
                         {% elif rel_type == 'IP' %}
                             <td>{{ rel.ip }}</td>
                         {% elif rel_type == 'Certificate' %}
-                            <td><a href="{% url 'crits-certificates-views-certificate_details' rel.md5 %}">{{ rel.filename }}</a></td>
+                            <td><a href="{% url 'crits.certificates.views.certificate_details' rel.md5 %}">{{ rel.filename }}</a></td>
                             <td>{{ rel.filetype }}</td>
                             <td>{{ rel.description }}</td>
                         {% elif rel_type == 'PCAP' %}
-                            <td><a href="{% url 'crits-pcaps-views-pcap_details' rel.md5 %}">{{ rel.filename }}</a></td>
+                            <td><a href="{% url 'crits.pcaps.views.pcap_details' rel.md5 %}">{{ rel.filename }}</a></td>
                             <td>{{ rel.description }}</td>
                         {% elif rel_type == 'RawData' %}
                             <td>{{ rel.title }}</td>
@@ -161,7 +161,7 @@
                             <td class='campaignWidth'>
                                 {% if acl.CAMPAIGN_READ|has_access_to:user %}
                                   {% for campaign in rel.campaign %}
-                                      <a href="{% url 'crits-campaigns-views-campaign_details' campaign.name %}">
+                                      <a href="{% url 'crits.campaigns.views.campaign_details' campaign.name %}">
                                           {% if campaign.confidence == 'low' %}
                                               <font color="green">
                                           {% elif campaign.confidence == 'medium' %}
@@ -178,11 +178,11 @@
                         {% endif %}
                         <td width="125px">{{rel.analyst}}</td>
                         <td width="125px">{{rel.relationship_date|date:"Y-m-d H:i:s"}}</td>
-                        <td class='relationship_confidence_edit' action="{% url 'crits-relationships-views-update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
+                        <td class='relationship_confidence_edit' action="{% url 'crits.relationships.views.update_relationship_confidence' %}">{{ rel.rel_confidence }}</td>
                         <td width="35px">
                             <div class="qtip-container ui-icon ui-icon-note" title="More Info..."></div>
                             <div class="qtip-body" mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}">
-                                <b>Relationship Date:</b> <span class="relationship_date_edit tooltip_edit" action="{% url 'crits-relationships-views-update_relationship_date' %}">
+                                <b>Relationship Date:</b> <span class="relationship_date_edit tooltip_edit" action="{% url 'crits.relationships.views.update_relationship_date' %}">
                                     {% if rel.relationship_date != '' %}
                                         {{ rel.relationship_date }}
                                     {% else %}
@@ -192,7 +192,7 @@
                                 <b>Forge Date:</b> {{ rel.date|date:"Y-m-d" }}
                                 <div  mtype="{{ relationship.type }}" mvalue="{{ relationship.value }}" rtype="{{ rel_type }}" rvalue="{{ rel.value }}" frel="{{ rel.relationship }}" rdate="{{ rel.relationship_date }}" fdate="{{ rel.date }}" rConfidence="{{ rel.rel_confidence }}" {% if rel_type == 'Indicator' %} data-value="{{rel.ind_value}}" data-type="{{rel.ind_type}}"{% endif %}>
                                     <b>Reason: </b>
-                                    <div style="display:inline-block; min-width:200px" class='relationship_reason_edit' action="{% url 'crits-relationships-views-update_relationship_reason' %}">
+                                    <div style="display:inline-block; min-width:200px" class='relationship_reason_edit' action="{% url 'crits.relationships.views.update_relationship_reason' %}">
                                         {% if rel.rel_reason != null and rel.rel_reason != '' %}
                                             {{ rel.rel_reason }}
                                         {% else %}

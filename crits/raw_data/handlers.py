@@ -3,11 +3,7 @@ import hashlib
 import json
 
 from dateutil.parser import parse
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -187,7 +183,7 @@ def generate_raw_data_versions(_id):
                                                              'version',
                                                              'data')
         for rv in rvs:
-            link = reverse('crits-raw_data-views-raw_data_details',
+            link = reverse('crits.raw_data.views.raw_data_details',
                            args=(rv.id,))
             versions.append({'title': rv.title,
                             'version': rv.version,

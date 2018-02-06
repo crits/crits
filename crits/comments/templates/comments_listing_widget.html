@@ -22,7 +22,7 @@ var comments_url_key = "{{comments.url_key|escapejs}}";
         {% endif %}
         {% if subscription %}
                 <span class="add_button">
-		  <a href="#" title="Add Comment" class="ui-icon ui-icon-comment dialogClick" dialog="comments" persona="new" action="{% url 'crits-comments-views-add_update_comment' 'add' subscription.type subscription.id  %}"></a>
+		  <a href="#" title="Add Comment" class="ui-icon ui-icon-comment dialogClick" dialog="comments" persona="new" action="{% url 'crits.comments.views.add_update_comment' 'add' subscription.type subscription.id  %}"></a>
 		</span>
                 <span style="float: right;" class="ui-icon ui-icon-triangle-1-s collapsible"></span>
         </h3>

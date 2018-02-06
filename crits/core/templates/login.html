@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!--{% csrf_token %}-->
+{% csrf_token %}
 
 <script>
-    var reset_password = "{% url 'crits-core-views-reset_password' %}";
+    var reset_password = "{% url 'crits.core.views.reset_password' %}";
 </script>
 
     {% if reset %}
@@ -110,7 +110,7 @@
             </tbody>
         </table>
         <br />
-        <a href="{% url 'crits-core-views-reset_password' %}" style="float: left;">Forgot Password?</a>
+        <a href="{% url 'crits.core.views.reset_password' %}" style="float: left;">Forgot Password?</a>
         <input class="login_submit_button" id="submit_login" type="submit" value="Login" />
         </form>
         <span id="ajax_response"></span>

@@ -6,9 +6,9 @@
 {% block content %}
 
 <script>
-    var indicator_from_header_field = "{% url 'crits-emails-views-indicator_from_header_field' email.id %}";
-    var email_detail = "{% url 'crits-emails-views-email_detail' email.id %}";
-    var update_header_value = "{% url 'crits-emails-views-update_header_value' email.id %}";
+    var indicator_from_header_field = "{% url 'crits.emails.views.indicator_from_header_field' email.id %}";
+    var email_detail = "{% url 'crits.emails.views.email_detail' email.id %}";
+    var update_header_value = "{% url 'crits.emails.views.update_header_value' email.id %}";
     var splunk_search_url = "{{ splunk_search_url }}";
     var email_id = "{{ email.id | escapejs }}"
 </script>
@@ -30,13 +30,13 @@
     <span class="horizontal_menu">
     <ul class="hmenu">
         {% if EmailACL.ADD_ATTACHMENT|has_access_to:user %}
-          <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits-emails-views-upload_attach' email.id %}">Add Attachment</a></li>
+          <li><a href="#" class="dialogClick" dialog="new-sample" persona="related" action="{% url 'crits.emails.views.upload_attach' email.id %}">Add Attachment</a></li>
         {% endif %}
         {% if EmailACL.DOWNLOAD|has_access_to:user %}
           <li><a href="#" class="dialogClick" dialog="download-email">Download Email</a></li>
         {% endif %}
         {% if EmailACL.DELETE|has_access_to:user %}
-          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits-emails-views-email_del" email.id %}'>Delete Email</a></li>
+          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="email" action='{% url "crits.emails.views.email_del" email.id %}'>Delete Email</a></li>
         {% endif %}
     </ul>
     </span>
@@ -91,11 +91,11 @@
                 {% if email_field.is_email_list %}
                     <span class="header_value" data-type="{{ email_field.field_name }}" data-list="{% for value in email_field.field_value %}{{ value }}, {% endfor %}">
                     {% for value in email_field.field_value %}
-                        <a href="{% url 'crits-targets-views-target_info' value %}">{{ value }}</a>,
+                        <a href="{% url 'crits.targets.views.target_info' value %}">{{ value }}</a>,
                     {%endfor%}
                 </span>
                 {% elif email_field.is_href %}
-                    <a class="header_search" href="{% url 'crits-emails-views-emails_listing' %}?{{ email_field.href_search_field }}={{ email_field.field_value|urlencode }}"><span class="header_value" data-type="{{ email_field.field_name }}">{{ email_field.field_value }}</span></a>
+                    <a class="header_search" href="{% url 'crits.emails.views.emails_listing' %}?{{ email_field.href_search_field }}={{ email_field.field_value|urlencode }}"><span class="header_value" data-type="{{ email_field.field_name }}">{{ email_field.field_value }}</span></a>
                 {% else %}
                     <span class="header_value" data-type="{{ email_field.field_name }}">{{ email_field.field_value }}</span>
                 {% endif %}
@@ -116,7 +116,7 @@
                   <span style="float: right;" class="object_status_response"></span>
               </td>
               <td>
-                  <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{email.status}}</span>
+                  <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{email.status}}</span>
               </td>
           </tr>
         {% endif %}
@@ -263,7 +263,7 @@
 
 {% if EmailACL.DOWNLOAD|has_access_to:user %}
 <div id="dialog-download-email">
-    <form id="form-download-email" action="{% url 'crits-core-views-download_object' %}" method="POST" enctype="multipart/form-data">
+    <form id="form-download-email" action="{% url 'crits.core.views.download_object' %}" method="POST" enctype="multipart/form-data">
     <table class="form">{{download_form.as_table}}</table>
     </form>
 </div>

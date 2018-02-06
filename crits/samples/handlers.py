@@ -8,11 +8,7 @@ import time
 
 from bson.objectid import ObjectId
 from django.core.mail import send_mail
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -261,9 +257,9 @@ def generate_sample_jtable(request, option):
     jtopts = {
         'title': "Samples",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits-%ss-views-%ss_listing' %
+        'listurl': reverse('crits.%ss.views.%ss_listing' %
                            (type_, type_), args=('jtlist',)),
-        'deleteurl': reverse('crits-%ss-views-%ss_listing' %
+        'deleteurl': reverse('crits.%ss.views.%ss_listing' %
                              (type_, type_), args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -353,10 +349,10 @@ def generate_yarahit_jtable(request, option):
     jtopts = {
         'title': "Yara Hits",
         'default_sort': "result ASC",
-        'listurl': reverse('crits-samples-views-%ss_listing' % (type_,),
+        'listurl': reverse('crits.samples.views.%ss_listing' % (type_,),
                            args=('jtlist',)),
         'deleteurl': "",
-        'searchurl': reverse('crits-samples-views-%ss_listing' % (type_,)),
+        'searchurl': reverse('crits.samples.views.%ss_listing' % (type_,)),
         'fields': ["result", "engine", "version", "sample_count","_id"],
         'hidden_fields': ["_id"],
         'linked_fields': []
@@ -366,7 +362,7 @@ def generate_yarahit_jtable(request, option):
         {
             'tooltip': "'Refresh Yara Hits'",
             'text': "'Refresh Stats'",
-            'click': "function () {$.get('"+reverse('crits-samples-views-%ss_listing' % type_)+"', {'refresh': 'yes'}, function () { $('#yarahits_listing').jtable('reload');});}"
+            'click': "function () {$.get('"+reverse('crits.samples.views.%ss_listing' % type_)+"', {'refresh': 'yes'}, function () { $('#yarahits_listing').jtable('reload');});}"
         },
     ]
 
@@ -768,7 +764,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
                     if is_return_only_md5 == True:
                         return pres['md5'].lower()
                     retVal['message'] += ('Detected a PCAP! New PCAP: <a href="%s">%s.</a>'
-                                        % (reverse('crits-pcaps-views-pcap_details',
+                                        % (reverse('crits.pcaps.views.pcap_details',
                                                     args=[pres['md5'].lower()]),
                                                     pres['md5'].lower()))
                 else:
@@ -1019,7 +1015,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
         # New sample, and successfully uploaded
         if is_validate_only == False:
             retVal['message'] += ('Success: Added new sample <a href="%s">%s.</a>'
-                                  % (reverse('crits-samples-views-detail',
+                                  % (reverse('crits.samples.views.detail',
                                              args=[sample.md5.lower()]),
                                              sample.md5.lower()))
             # Update Cache
@@ -1029,7 +1025,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
         # Duplicate sample, but uploaded anyways
         if is_validate_only == False:
             message = ('Success: Updated sample <a href="%s">%s.</a>'
-                                  % (reverse('crits-samples-views-detail',
+                                  % (reverse('crits.samples.views.detail',
                                              args=[sample.md5.lower()]),
                                             sample.md5.lower()))
             retVal['message'] += message
@@ -1043,7 +1039,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
                                     ' when MD5 already exists as file [' +
                                     sample.filename  + ']'
                                     '<a href="%s">%s.</a>'
-                                    % (reverse('crits-samples-views-detail',
+                                    % (reverse('crits.samples.views.detail',
                                                args=[sample.md5.lower()]),
                                                sample.md5.lower()))
                 retVal['message'] += warning_message

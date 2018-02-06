@@ -25,7 +25,7 @@
     <div id="details_section">
     <div class="content_box content_details">
       <h3 class="titleheader">
-    <span>Details for <span class="edit text" action="{% url 'crits-domains-views-edit_domain' domain.domain %}">{{ domain.domain }}</span></span>
+    <span>Details for <span class="edit text" action="{% url 'crits.domains.views.edit_domain' domain.domain %}">{{ domain.domain }}</span></span>
       </h3>
 
         <div class="content_body">
@@ -57,7 +57,7 @@
                     <span style="float: right;" class="object_status_response"></span>
                 </td>
                 <td>
-                    <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{domain.status}}</span>
+                    <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{domain.status}}</span>
                 </td>
             </tr>
             {% endif %}

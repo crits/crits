@@ -8,7 +8,7 @@
    <script src="/js/flot/jquery.flot.js" type="text/javascript"></script>
    <script>
 $(document).ready(function() {
-    var dataurl = "{% url 'crits-campaigns-views-campaign_stats' %}?campaign={{campaign}}";
+    var dataurl = "{% url 'crits.campaigns.views.campaign_stats' %}?campaign={{campaign}}";
     var chart = $("#chart");
     var options = {
         lines: { show: true },

@@ -34,7 +34,7 @@
                 <p>
                     <b>Comments</b>
                 </p>
-                <form id="form-add-comment-static" item-type="comment" action="{% url 'crits-comments-views-add_update_comment' 'add' subscription.type subscription.id  %}">
+                <form id="form-add-comment-static" item-type="comment" action="{% url 'crits.comments.views.add_update_comment' 'add' subscription.type subscription.id  %}">
                     <input class="form_submit_button" type="submit" value="Add Comment" id="add_comment_static">
                 </form>
                 <div class="message"><div>
@@ -51,7 +51,7 @@
 	    {% include "dialogs/comments.html" %}  
 	  </span>
 
-                <form id="form-add-object-static" method="POST" enctype="multipart/form-data" target="object-static-iframe" action='{% url "crits-objects-views-add_new_object" %}' item-type="object-static">
+                <form id="form-add-object-static" method="POST" enctype="multipart/form-data" target="object-static-iframe" action='{% url "crits.objects.views.add_new_object" %}' item-type="object-static">
 		  {% comment %}
 		  Both of these buttons should probably not be type=submit, but that also affects
 		  the style, so left as is for now

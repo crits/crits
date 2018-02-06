@@ -1,11 +1,7 @@
 import json
 
 from django.contrib.auth.decorators import user_passes_test
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -411,7 +407,7 @@ def upload_raw_data(request, link_id=None):
             if status['success']:
                 jdump = json.dumps({
                     'message': 'raw_data uploaded successfully! <a href="%s">View raw_data</a>'
-                    % reverse('crits-raw_data-views-raw_data_details',
+                    % reverse('crits.raw_data.views.raw_data_details',
                               args=[status['_id']]), 'success': True})
                 if not has_file:
                     return HttpResponse(jdump, content_type="application/json")
@@ -453,7 +449,7 @@ def remove_raw_data(request, _id):
 
     result = delete_raw_data(_id, '%s' % request.user.username)
     if result:
-        return HttpResponseRedirect(reverse('crits-raw_data-views-raw_data_listing'))
+        return HttpResponseRedirect(reverse('crits.raw_data.views.raw_data_listing'))
     else:
         return render_to_response('error.html',
                                   {'error': "Could not delete raw_data"})

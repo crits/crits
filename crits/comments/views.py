@@ -4,11 +4,7 @@ import urllib
 
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -36,7 +32,7 @@ def comment_search(request):
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
     #return render_to_response('error.html', {'error': query})
-    return HttpResponseRedirect(reverse('crits-comments-views-comments_listing')+
+    return HttpResponseRedirect(reverse('crits.comments.views.comments_listing')+
                                 "?%s" % urllib.urlencode(query))
 
 
@@ -163,7 +159,7 @@ def get_new_comments(request):
         for comment in comments:
             username = {'username': '%s' % request.user.username}
             context = {'comment': comment, 'user': username}
-            html += render_to_string('comments_row_widget.html', context, request=request)
+            html += render_to_string('comments_row_widget.html', context)
         result = {'success': True, 'html': html}
         return HttpResponse(json.dumps(result,
                                        default=json_handler),

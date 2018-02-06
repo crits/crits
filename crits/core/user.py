@@ -47,12 +47,9 @@ from mongoengine import DictField, DynamicEmbeddedDocument
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.hashers import check_password, make_password
-
-#from django_mongoengine.mongo_auth.models import _user_has_perm, _user_get_all_permissions, _user_has_module_perms
-#from django_mongoengine.mongo_auth.models import _user_has_module_perms
-#from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
-#from django.contrib.auth.models import _user_has_module_perms
-##from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
+from django.contrib.auth.models import _user_has_module_perms
+#from django.utils.translation import ugettext_lazy as _
 
 from crits.config.config import CRITsConfig
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
@@ -701,7 +698,6 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         return permissions
 
     def get_all_permissions(self, obj=None):
-        from django.contrib.auth.models import _user_get_all_permissions
         return _user_get_all_permissions(self, obj)
 
     def has_perm(self, perm, obj=None):
@@ -716,7 +712,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         # Active superusers have all permissions.
         if self.is_active and self.is_superuser:
             return True
-        from django.contrib.auth.models import _user_has_perm
+
         # Otherwise we need to check the backends.
         return _user_has_perm(self, perm, obj)
 
@@ -728,7 +724,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         # Active superusers have all permissions.
         if self.is_active and self.is_superuser:
             return True
-        from django.contrib.auth.models import _user_has_module_perms
+
         return _user_has_module_perms(self, app_label)
 
     def email_user(self, subject, message, from_email=None):

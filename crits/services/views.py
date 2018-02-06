@@ -3,11 +3,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -73,7 +69,7 @@ def analysis_result(request, analysis_id):
 
     ar = AnalysisResult.objects(id=analysis_id).first()
     if ar:
-        return HttpResponseRedirect(reverse('crits-core-views-details',
+        return HttpResponseRedirect(reverse('crits.core.views.details',
                                             args=(ar.object_type,ar.object_id)))
     else:
         return render_to_response('error.html',
@@ -252,7 +248,7 @@ def refresh_services(request, crits_type, identifier):
                                          'crits_type': crits_type,
                                          'identifier': identifier,
                                          'service_list': service_list},
-                                        request=request)
+                                        RequestContext(request))
 
     return HttpResponse(json.dumps(response), content_type="application/json")
 

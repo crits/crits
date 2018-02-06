@@ -15,11 +15,7 @@ except ImportError:
 
 from multiprocessing.pool import Pool, ThreadPool
 
-try:
-    from django.urls import reverse
-except ImportError:
-    from django.core.urlresolvers import reverse
-
+from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -87,9 +83,9 @@ def generate_analysis_results_jtable(request, option):
     jtopts = {
         'title': "Analysis Results",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits-services-views-%ss_listing' % type_,
+        'listurl': reverse('crits.services.views.%ss_listing' % type_,
                            args=('jtlist',)),
-        'deleteurl': reverse('crits-services-views-%ss_listing' % type_,
+        'deleteurl': reverse('crits.services.views.%ss_listing' % type_,
                              args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -620,9 +616,9 @@ def set_enabled(service_name, enabled=True, user=None):
     try:
         service.save(username=user.username)
         if enabled:
-            url = reverse('crits-services-views-disable', args=(service_name,))
+            url = reverse('crits.services.views.disable', args=(service_name,))
         else:
-            url = reverse('crits-services-views-enable', args=(service_name,))
+            url = reverse('crits.services.views.enable', args=(service_name,))
         return {'success': True, 'url': url}
     except ValidationError, e:
         return {'success': False, 'message': e}
@@ -641,10 +637,10 @@ def set_triage(service_name, enabled=True, user=None):
     try:
         service.save(username=user.username)
         if enabled:
-            url = reverse('crits-services-views-disable_triage',
+            url = reverse('crits.services.views.disable_triage',
                           args=(service_name,))
         else:
-            url = reverse('crits-services-views-enable_triage',
+            url = reverse('crits.services.views.enable_triage',
                           args=(service_name,))
         return {'success': True, 'url': url}
     except ValidationError, e:

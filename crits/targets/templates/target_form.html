@@ -10,7 +10,7 @@
     <span>Details</span>
     </h3>
     <div class="content_body" style="display: table;">
-    <form action='{% url 'crits-targets-views-target_details' %}' method='POST' style="display: inline;">
+    <form action='{% url 'crits.targets.views.target_details' %}' method='POST' style="display: inline;">
         <table class='form'> {{ form.as_table }}</table>
         <input class="form_submit_button" type="submit" name="svalue" value="Submit">
         <input class="form_submit_button" type="submit" name="svalue" value="Delete" style="float: right;">
