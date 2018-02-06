@@ -202,7 +202,7 @@ else:
             replicaset=MONGO_REPLICASET)
 
 # Get config from DB
-c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=0)
+c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=1, connect=False)
 db = c[MONGO_DATABASE]
 if MONGO_USER:
     db.authenticate(MONGO_USER, MONGO_PASSWORD)
@@ -229,6 +229,7 @@ CRITS_EMAIL =               crits_config.get('crits_email', '')
 CRITS_EMAIL_SUBJECT_TAG =   crits_config.get('crits_email_subject_tag', '')
 CRITS_EMAIL_END_TAG =       crits_config.get('crits_email_end_tag', True)
 DEBUG =                     crits_config.get('debug', True)
+ENABLE_DEBUG_TOOLBAR =      crits_config.get('enable_debug_toolbar', False)
 if crits_config.get('email_host', None):
     EMAIL_HOST =            crits_config.get('email_host', None)
 if crits_config.get('email_port', None):
@@ -442,6 +443,15 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.redirects.RedirectsPanel',
     'debug_toolbar.panels.sql.SQLPanel',
 ]
+
+DEBUG_TOOLBAR_CONFIG = {
+    # Add in this line to disable the panel
+    'DISABLE_PANELS': {
+        'debug_toolbar.panels.templates.TemplatesPanel',
+        'debug_toolbar.panels.redirects.RedirectsPanel',
+    },
+}
+
 INTERNAL_IPS = '127.0.0.1'
 
 if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
@@ -498,12 +508,13 @@ if old_mongoengine:
         'tastypie',
         'tastypie_mongoengine',
         'mongoengine.django.mongo_auth',
-        'template_timings_panel',
-        'template_profiler_panel',
+
 
     )
-    if DEBUG:
+    if ENABLE_DEBUG_TOOLBAR:
         INSTALLED_APPS += (
+            'template_timings_panel',
+            'template_profiler_panel',
             'debug_toolbar_mongo',
             'vcs_info_panel',
             'debug_toolbar',
@@ -520,7 +531,7 @@ if old_mongoengine:
     'crits.core.user.AuthenticationMiddleware',
     )
     # crits.core.user.AuthenticationMiddleware' # Only needed for mongoengine<0.10
-    if DEBUG:
+    if ENABLE_DEBUG_TOOLBAR:
         _MIDDLEWARE += ( 
             'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
@@ -576,7 +587,7 @@ else:
         'django_mongoengine.mongo_auth',
     )
         
-    if DEBUG:
+    if ENABLE_DEBUG_TOOLBAR:
         INSTALLED_APPS += ( 
             'template_timings_panel',
             'template_profiler_panel',
@@ -594,7 +605,7 @@ else:
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
     )
-    if DEBUG:
+    if ENABLE_DEBUG_TOOLBAR:
         _MIDDLEWARE += (
             'debug_toolbar.middleware.DebugToolbarMiddleware',
 
@@ -635,7 +646,7 @@ if REMOTE_USER:
             'django.contrib.auth.middleware.RemoteUserMiddleware',
         )
 
-        if DEBUG:
+        if ENABLE_DEBUG_TOOLBAR:
             _MIDDLEWARE += (
                 'debug_toolbar.middleware.DebugToolbarMiddleware',
             )
@@ -650,7 +661,7 @@ if REMOTE_USER:
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
         )
-        if DEBUG:
+        if ENABLE_DEBUG_TOOLBAR:
             _MIDDLEWARE += ( 
                 'debug_toolbar.middleware.DebugToolbarMiddleware',
             )
@@ -799,7 +810,7 @@ else:
     MIDDLEWARE = _MIDDLEWARE
 
 if StrictVersion(DJANGO_VERSION) < StrictVersion('1.8.0'):
-    #    raise Exception("Django versions prior to 1.8 are not supported! Please upgrade to at least 1.8!")
+    print ("Django  versions prior to 1.8.0 are not supported! Please consider upgrading.")
     TEMPLATE_DEBUG = _TEMPLATE_DEBUG
     TEMPLATE_DIRS = _TEMPLATE_DIRS
     TEMPLATE_CONTEXT_PROCESSORS = _TEMPLATE_CONTEXT_PROCESSORS

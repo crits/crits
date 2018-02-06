@@ -38,7 +38,7 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
                                         settings.MONGO_PORT,
                                         read_preference=preference,
                                         ssl=settings.MONGO_SSL,
-					                   w=1)
+					                   w=1, connect=False)
         db = connection[settings.MONGO_DATABASE]
         if settings.MONGO_USER:
             db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
@@ -68,7 +68,7 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
                                         settings.MONGO_PORT,
                                         read_preference=preference,
                                         ssl=settings.MONGO_SSL,
-					                       w=1)
+					                       w=1, connect=False)
         db = connection[settings.MONGO_DATABASE]
         if settings.MONGO_USER:
             db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)

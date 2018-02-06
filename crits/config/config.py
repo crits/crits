@@ -38,6 +38,7 @@ class CRITsConfig(CritsDocument, Document):
     crits_version = StringField(required=True,
                                 default=settings.CRITS_VERSION)
     debug = BooleanField(default=True)
+    enable_debug_toolbar = BooleanField(default=False)
     depth_max = IntField(default=10)
     email_host = StringField(default='')
     email_port = StringField(default='')

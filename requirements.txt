@@ -1,5 +1,4 @@
-# Django 1.11 works, but somehow is very slow, so let's stick to 1.10
-Django<1.11
+Django
 Pillow
 amqp
 anyjson
@@ -15,7 +14,7 @@ django-debug-toolbar-template-profiler
 django-debug-toolbar-template-timings
 django-debug-toolbar-vcs-info
 django-tastypie
-git+https://github.com/apolkosnik-old/django-tastypie-mongoengine.git
+git+https://github.com/Work4Labs/django-tastypie-mongoengine.git
 future
 kombu
 lxml

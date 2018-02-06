@@ -14,6 +14,10 @@ class ConfigGeneralForm(forms.Form):
         help_text='*Requires a web server restart.',
         initial=False,
         required=False)
+    enable_debug_toolbar = forms.BooleanField(
+        help_text='*Requires a web server restart.',
+        initial=False,
+        required=False)
     email_host = forms.CharField(
         widget=forms.TextInput,
         help_text='*Requires a web server restart.',

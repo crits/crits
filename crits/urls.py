@@ -108,7 +108,7 @@ if settings.DEVEL_INSTANCE:
             url(r'^%s(?P<path>.*)$' % _media_url, serve, {'document_root': settings.MEDIA_ROOT}))
     del(_media_url, serve)
 
-if settings.DEBUG:
+if settings.ENABLE_DEBUG_TOOLBAR:
     import debug_toolbar
     urlpatterns = [
         url(r'^__debug__/', include(debug_toolbar.urls)),
