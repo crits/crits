@@ -34,11 +34,18 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
 
     try:
-        connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
+        if pymongo.version_tuple >=(3,0):
+            connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
                                         settings.MONGO_PORT,
                                         read_preference=preference,
                                         ssl=settings.MONGO_SSL,
 					                   w=1, connect=False)
+        else:
+            connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
+                                        settings.MONGO_PORT,
+                                        read_preference=preference,
+                                        ssl=settings.MONGO_SSL,
+                                       w=1)
         db = connection[settings.MONGO_DATABASE]
         if settings.MONGO_USER:
             db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)

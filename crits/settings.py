@@ -10,7 +10,7 @@ import subprocess
 from pymongo import ReadPreference, MongoClient
 from mongoengine import connect
 from mongoengine import __version__ as mongoengine_version
-from pymongo import version as pymongo_version
+from pymongo import version_tuple as pymongo_versiont
 
 from distutils.version import StrictVersion
 
@@ -202,7 +202,10 @@ else:
             replicaset=MONGO_REPLICASET)
 
 # Get config from DB
-c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=1, connect=False)
+if pymongo_versiont >=(3,0):
+    c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=1, connect=False)
+else:
+    c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=1)
 db = c[MONGO_DATABASE]
 if MONGO_USER:
     db.authenticate(MONGO_USER, MONGO_PASSWORD)
@@ -443,14 +446,6 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.redirects.RedirectsPanel',
     'debug_toolbar.panels.sql.SQLPanel',
 ]
-
-DEBUG_TOOLBAR_CONFIG = {
-    # Add in this line to disable the panel
-    'DISABLE_PANELS': {
-        'debug_toolbar.panels.templates.TemplatesPanel',
-        'debug_toolbar.panels.redirects.RedirectsPanel',
-    },
-}
 
 INTERNAL_IPS = '127.0.0.1'
 
