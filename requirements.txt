@@ -18,7 +18,9 @@ git+https://github.com/Work4Labs/django-tastypie-mongoengine.git
 future
 kombu
 lxml
-mongoengine
+#mongoengine
+git+https://github.com/apolkosnik/mongoengine.git@v0.8.9
+# This is in case we'll see faster mongoengine in the future
 git+https://github.com/MongoEngine/django-mongoengine.git
 pip>=8.1.2
 pydeep>=0.2

@@ -426,6 +426,7 @@ STATICFILES_DIRS = (
 
 
 AUTH_USER_MODEL = 'mongo_auth.MongoUser'
+
 MONGOENGINE_USER_DOCUMENT = 'crits.core.user.CRITsUser'
 # http://django-debug-toolbar.readthedocs.org/en/latest/configuration.html#debug-toolbar-panels
 DEBUG_TOOLBAR_PANELS = [
@@ -449,7 +450,7 @@ DEBUG_TOOLBAR_PANELS = [
 
 INTERNAL_IPS = '127.0.0.1'
 
-if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
+if django.VERSION >= (1,8,0):
     #'django.template.context_processors.debug',
     _TEMPLATE_CONTEXT_PROCESSORS = [
         'django.template.context_processors.request',
@@ -531,7 +532,7 @@ if old_mongoengine:
             'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
 
-    if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
+    if django.VERSION >= (1,8,0):
         _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
     # Only needed for mongoengine<0.10
     _MIDDLEWARE += ('crits.core.user.AuthenticationMiddleware',)
@@ -539,11 +540,12 @@ if old_mongoengine:
 
 
     SESSION_ENGINE = 'mongoengine.django.sessions'
-
+    #SESSION_ENGINE = 'django_mongoengine.sessions'
     SESSION_SERIALIZER = 'mongoengine.django.sessions.BSONSerializer'
 
     AUTHENTICATION_BACKENDS = (
-        'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
+        # not needed on good old mongoengine
+        #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'crits.core.user.CRITsAuthBackend',
     )
 
@@ -606,7 +608,7 @@ else:
 
         )
 
-    if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
+    if django.VERSION >= (1,8,0):
         _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
 
     SESSION_ENGINE = 'django_mongoengine.sessions'
@@ -633,7 +635,7 @@ if REMOTE_USER:
             'django.middleware.clickjacking.XFrameOptionsMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
         )
-        if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
+        if django.VERSION >= (1,8,0):
             _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
 
         _MIDDLEWARE += (
@@ -661,7 +663,7 @@ if REMOTE_USER:
                 'debug_toolbar.middleware.DebugToolbarMiddleware',
             )
 
-        if StrictVersion(DJANGO_VERSION) >= StrictVersion('1.8.0'):
+        if django.VERSION >= (1,8,0):
             _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
 
         _MIDDLEWARE += ('django.contrib.auth.middleware.RemoteUserMiddleware',)
