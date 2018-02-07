@@ -10,8 +10,9 @@ from crits.core.totp import gen_user_secret
 from django.conf import settings
 #from django.contrib.auth.views import logout_then_login
 
-#from crits.vocabulary.acls import GeneralACL
-from crits.vocabulary.acls import *
+from crits.vocabulary.acls import GeneralACL
+
+from collections import defaultdict
 
 def is_user_favorite(analyst, type_, id_):
     """
@@ -63,24 +64,26 @@ def user_sources(user=None):
 
 
 def get_acl_object(crits_type):
-    types = {
-        'actor': ActorACL,
-        'Backdoor': BackdoorACL,
-        'Campaign': CampaignACL,
-        'Certificate': CertificateACL,
-        'Domain': DomainACL,
-        'Email': EmailACL,
-        'Event': EventACL,
-        'Exploit': ExploitACL,
-        'Indicator': IndicatorACL,
-        'IP': IPACL,
-        'PCAP': PCAPACL,
-        'RawData': RawDataACL,
-        'Sample': SampleACL,
-        'Screenshot': ScreenshotACL,
-        'Signature': SignatureACL,
-        'Target': TargetACL
-        }
+    import crits.vocabulary.acls
+    types = defaultdict(
+        lambda: None, {
+        'Actor': crits.vocabulary.acls.ActorACL,
+        'Backdoor': crits.vocabulary.acls.BackdoorACL,
+        'Campaign': crits.vocabulary.acls.CampaignACL,
+        'Certificate': crits.vocabulary.acls.CertificateACL,
+        'Domain': crits.vocabulary.acls.DomainACL,
+        'Email': crits.vocabulary.acls.EmailACL,
+        'Event': crits.vocabulary.acls.EventACL,
+        'Exploit': crits.vocabulary.acls.ExploitACL,
+        'Indicator': crits.vocabulary.acls.IndicatorACL,
+        'IP': crits.vocabulary.acls.IPACL,
+        'PCAP': crits.vocabulary.acls.PCAPACL,
+        'RawData': crits.vocabulary.acls.RawDataACL,
+        'Sample': crits.vocabulary.acls.SampleACL,
+        'Screenshot': crits.vocabulary.acls.ScreenshotACL,
+        'Signature': crits.vocabulary.acls.SignatureACL,
+        'Target': crits.vocabulary.acls.TargetACL
+        })
     return types[crits_type]
 
 def sanitize_sources(username, items):

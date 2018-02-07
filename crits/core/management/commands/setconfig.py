@@ -61,6 +61,7 @@ class Command(BaseCommand):
                crits_email_end_tag:\t\t<boolean> (ex: True, true, yes, or 1)
                crits_version:\t\t<X.X.X string>
                debug:\t\t\t<boolean> (ex: True, true, yes, or 1)
+               enable_dt:\t\t\t<boolean> (ex:True, true, yes, or 1)
                depth_max:\t\t\t<integer>
                email_host:\t\t\t<string>
                email_port:\t\t\t<string>

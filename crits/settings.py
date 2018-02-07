@@ -203,9 +203,9 @@ else:
 
 # Get config from DB
 if pymongo_versiont >=(3,0):
-    c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=1, connect=False)
+    c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=0) #, connect=False)
 else:
-    c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=1)
+    c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=0)
 db = c[MONGO_DATABASE]
 if MONGO_USER:
     db.authenticate(MONGO_USER, MONGO_PASSWORD)
@@ -232,7 +232,7 @@ CRITS_EMAIL =               crits_config.get('crits_email', '')
 CRITS_EMAIL_SUBJECT_TAG =   crits_config.get('crits_email_subject_tag', '')
 CRITS_EMAIL_END_TAG =       crits_config.get('crits_email_end_tag', True)
 DEBUG =                     crits_config.get('debug', True)
-ENABLE_DEBUG_TOOLBAR =      crits_config.get('enable_debug_toolbar', False)
+ENABLE_DT =                 crits_config.get('enable_dt', False)
 if crits_config.get('email_host', None):
     EMAIL_HOST =            crits_config.get('email_host', None)
 if crits_config.get('email_port', None):
@@ -326,9 +326,10 @@ _TEMPLATE_LOADERS = [
     ('django.template.loaders.cached.Loader', [
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-    #'django.template.loaders.eggs.load_template_source',
     ])
 ]
+#'django.template.loaders.eggs.load_template_source',
+
 
 #CACHES = {
 #    'default': {
@@ -450,6 +451,16 @@ DEBUG_TOOLBAR_PANELS = [
 
 INTERNAL_IPS = '127.0.0.1'
 
+if django.VERSION >= (1,11,0):
+    DEBUG_TOOLBAR_CONFIG = {
+        # Add in this line to disable the panel
+        'DISABLE_PANELS': {
+            'debug_toolbar.panels.templates.TemplatesPanel',
+            'debug_toolbar.panels.redirects.RedirectsPanel',
+        },
+    }
+
+
 if django.VERSION >= (1,8,0):
     #'django.template.context_processors.debug',
     _TEMPLATE_CONTEXT_PROCESSORS = [
@@ -507,7 +518,7 @@ if old_mongoengine:
 
 
     )
-    if ENABLE_DEBUG_TOOLBAR:
+    if ENABLE_DT:
         INSTALLED_APPS += (
             'template_timings_panel',
             'template_profiler_panel',
@@ -527,7 +538,7 @@ if old_mongoengine:
     'crits.core.user.AuthenticationMiddleware',
     )
     # crits.core.user.AuthenticationMiddleware' # Only needed for mongoengine<0.10
-    if ENABLE_DEBUG_TOOLBAR:
+    if ENABLE_DT:
         _MIDDLEWARE += ( 
             'debug_toolbar.middleware.DebugToolbarMiddleware',
         )
@@ -545,10 +556,9 @@ if old_mongoengine:
 
     AUTHENTICATION_BACKENDS = (
         'django.contrib.auth.backends.ModelBackend',
-        # not needed on good old mongoengine
-        #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'crits.core.user.CRITsAuthBackend',
-    )
+    )   # not needed on good old mongoengine
+        #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
 
 else:
     # new mongoengine (0.10+)
@@ -586,7 +596,7 @@ else:
         'django_mongoengine.mongo_auth',
     )
         
-    if ENABLE_DEBUG_TOOLBAR:
+    if ENABLE_DT:
         INSTALLED_APPS += ( 
             'template_timings_panel',
             'template_profiler_panel',
@@ -604,7 +614,7 @@ else:
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
     )
-    if ENABLE_DEBUG_TOOLBAR:
+    if ENABLE_DT:
         _MIDDLEWARE += (
             'debug_toolbar.middleware.DebugToolbarMiddleware',
 
@@ -618,11 +628,12 @@ else:
     SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
 
     AUTHENTICATION_BACKENDS = (
-        #'django.contrib.auth.backends.ModelBackend',
-        #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
+
         'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'crits.core.user.CRITsAuthBackend',
-    )
+    )        
+        #'django.contrib.auth.backends.ModelBackend',
+        #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
 
 if REMOTE_USER:
     AUTHENTICATION_BACKENDS = (
@@ -646,7 +657,7 @@ if REMOTE_USER:
             'django.contrib.auth.middleware.RemoteUserMiddleware',
         )
 
-        if ENABLE_DEBUG_TOOLBAR:
+        if ENABLE_DT:
             _MIDDLEWARE += (
                 'debug_toolbar.middleware.DebugToolbarMiddleware',
             )
@@ -661,7 +672,7 @@ if REMOTE_USER:
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.RemoteUserMiddleware',
         )
-        if ENABLE_DEBUG_TOOLBAR:
+        if ENABLE_DT:
             _MIDDLEWARE += ( 
                 'debug_toolbar.middleware.DebugToolbarMiddleware',
             )
