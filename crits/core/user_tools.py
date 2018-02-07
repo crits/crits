@@ -8,6 +8,7 @@ from crits.core.data_tools import generate_qrcode
 from crits.core.totp import gen_user_secret
 
 from django.conf import settings
+from collections import defaultdict
 #from django.contrib.auth.views import logout_then_login
 
 #from crits.vocabulary.acls import GeneralACL
@@ -63,39 +64,25 @@ def user_sources(user=None):
 
 
 def get_acl_object(crits_type):
-    if crits_type == 'Actor':
-        return ActorACL
-    elif crits_type == 'Backdoor':
-        return BackdoorACL
-    elif crits_type == 'Campaign':
-        return CampaignACL
-    elif crits_type == 'Certificate':
-        return CertificateACL
-    elif crits_type == 'Domain':
-        return DomainACL
-    elif crits_type == 'Email':
-        return EmailACL
-    elif crits_type == 'Event':
-        return EventACL
-    elif crits_type == 'Exploit':
-        return ExploitACL
-    elif crits_type == 'Indicator':
-        return IndicatorACL
-    elif crits_type == 'IP':
-        return IPACL
-    elif crits_type == 'PCAP':
-        return PCAPACL
-    elif crits_type == 'RawData':
-        return RawDataACL
-    elif crits_type == 'Sample':
-        return SampleACL
-    elif crits_type == 'Screenshot':
-        return ScreenshotACL
-    elif crits_type == 'Signature':
-        return SignatureACL
-    elif crits_type == 'Target':
-        return TargetACL
-
+    types = defaultdict(lambda: None, 
+        {'actor': ActorACL},
+        {'Backdoor': BackdoorACL},
+        {'Campaign': CampaignACL},
+        {'Certificate': CertificateACL},
+        {'Domain': DomainACL},
+        {'Email': EmailACL},
+        {'Event': EventACL},
+        {'Exploit': ExploitACL},
+        {'Indicator': IndicatorACL},
+        {'IP': IPACL},
+        {'PCAP': PCAPACL},
+        {'RawData': RawDataACL},
+        {'Sample': SampleACL},
+        {'Screenshot': ScreenshotACL},
+        {'Signature': SignatureACL},
+        {'Target': TargetACL},
+    )
+    return types[crits_type]
 
 def sanitize_sources(username, items):
     """

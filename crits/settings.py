@@ -544,12 +544,14 @@ if old_mongoengine:
     SESSION_SERIALIZER = 'mongoengine.django.sessions.BSONSerializer'
 
     AUTHENTICATION_BACKENDS = (
+        'django.contrib.auth.backends.ModelBackend',
         # not needed on good old mongoengine
         #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'crits.core.user.CRITsAuthBackend',
     )
 
 else:
+    # new mongoengine (0.10+)
     INSTALLED_APPS = (
         'crits.core',
         'crits.dashboards',
@@ -616,6 +618,7 @@ else:
     SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
 
     AUTHENTICATION_BACKENDS = (
+        #'django.contrib.auth.backends.ModelBackend',
         #'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'django_mongoengine.mongo_auth.backends.MongoEngineBackend',
         'crits.core.user.CRITsAuthBackend',
