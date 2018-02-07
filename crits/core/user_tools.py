@@ -8,7 +8,6 @@ from crits.core.data_tools import generate_qrcode
 from crits.core.totp import gen_user_secret
 
 from django.conf import settings
-from collections import defaultdict
 #from django.contrib.auth.views import logout_then_login
 
 #from crits.vocabulary.acls import GeneralACL
@@ -64,24 +63,24 @@ def user_sources(user=None):
 
 
 def get_acl_object(crits_type):
-    types = defaultdict(lambda: None, 
-        {'actor': ActorACL},
-        {'Backdoor': BackdoorACL},
-        {'Campaign': CampaignACL},
-        {'Certificate': CertificateACL},
-        {'Domain': DomainACL},
-        {'Email': EmailACL},
-        {'Event': EventACL},
-        {'Exploit': ExploitACL},
-        {'Indicator': IndicatorACL},
-        {'IP': IPACL},
-        {'PCAP': PCAPACL},
-        {'RawData': RawDataACL},
-        {'Sample': SampleACL},
-        {'Screenshot': ScreenshotACL},
-        {'Signature': SignatureACL},
-        {'Target': TargetACL},
-    )
+    types = {
+        'actor': ActorACL,
+        'Backdoor': BackdoorACL,
+        'Campaign': CampaignACL,
+        'Certificate': CertificateACL,
+        'Domain': DomainACL,
+        'Email': EmailACL,
+        'Event': EventACL,
+        'Exploit': ExploitACL,
+        'Indicator': IndicatorACL,
+        'IP': IPACL,
+        'PCAP': PCAPACL,
+        'RawData': RawDataACL,
+        'Sample': SampleACL,
+        'Screenshot': ScreenshotACL,
+        'Signature': SignatureACL,
+        'Target': TargetACL
+        }
     return types[crits_type]
 
 def sanitize_sources(username, items):

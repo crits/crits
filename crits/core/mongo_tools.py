@@ -54,8 +54,8 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
         raise MongoError("Error connecting to Mongo database: %s" % e)
     except KeyError as e:
         raise MongoError("Unknown database or collection: %s" % e)
-    except:
-        raise
+    except Exception as e:
+        raise MongoError("MongoError: %s" % e)
 
 def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
@@ -91,8 +91,8 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
         raise MongoError("Error connecting to Mongo database: %s" % e)
     except KeyError as e:
         raise MongoError("Unknown database: %s" % e)
-    except:
-        raise
+    except Exception as e:
+        raise MongoError("MongoError: %s" % e)
 
 def get_file(sample_md5, collection=settings.COL_SAMPLES):
     """
