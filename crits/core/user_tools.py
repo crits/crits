@@ -12,8 +12,6 @@ from django.conf import settings
 
 from crits.vocabulary.acls import GeneralACL
 
-from collections import defaultdict
-
 def is_user_favorite(analyst, type_, id_):
     """
     Check if an ID is in a user's favorites.
@@ -64,27 +62,40 @@ def user_sources(user=None):
 
 
 def get_acl_object(crits_type):
-    import crits.vocabulary.acls
-    types = defaultdict(
-        lambda: None, {
-        'Actor': crits.vocabulary.acls.ActorACL,
-        'Backdoor': crits.vocabulary.acls.BackdoorACL,
-        'Campaign': crits.vocabulary.acls.CampaignACL,
-        'Certificate': crits.vocabulary.acls.CertificateACL,
-        'Domain': crits.vocabulary.acls.DomainACL,
-        'Email': crits.vocabulary.acls.EmailACL,
-        'Event': crits.vocabulary.acls.EventACL,
-        'Exploit': crits.vocabulary.acls.ExploitACL,
-        'Indicator': crits.vocabulary.acls.IndicatorACL,
-        'IP': crits.vocabulary.acls.IPACL,
-        'PCAP': crits.vocabulary.acls.PCAPACL,
-        'RawData': crits.vocabulary.acls.RawDataACL,
-        'Sample': crits.vocabulary.acls.SampleACL,
-        'Screenshot': crits.vocabulary.acls.ScreenshotACL,
-        'Signature': crits.vocabulary.acls.SignatureACL,
-        'Target': crits.vocabulary.acls.TargetACL
-        })
-    return types[crits_type]
+    from crits.vocabulary.acls import *
+    if crits_type == 'Actor':
+        return ActorACL
+    elif crits_type == 'Backdoor':
+        return BackdoorACL
+    elif crits_type == 'Campaign':
+        return CampaignACL
+    elif crits_type == 'Certificate':
+        return CertificateACL
+    elif crits_type == 'Domain':
+        return DomainACL
+    elif crits_type == 'Email':
+        return EmailACL
+    elif crits_type == 'Event':
+        return EventACL
+    elif crits_type == 'Exploit':
+        return ExploitACL
+    elif crits_type == 'Indicator':
+        return IndicatorACL
+    elif crits_type == 'IP':
+        return IPACL
+    elif crits_type == 'PCAP':
+        return PCAPACL
+    elif crits_type == 'RawData':
+        return RawDataACL
+    elif crits_type == 'Sample':
+        return SampleACL
+    elif crits_type == 'Screenshot':
+        return ScreenshotACL
+    elif crits_type == 'Signature':
+        return SignatureACL
+    elif crits_type == 'Target':
+        return TargetACL
+
 
 def sanitize_sources(username, items):
     """
