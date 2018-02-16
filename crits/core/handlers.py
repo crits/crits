@@ -2007,15 +2007,11 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                                               'password_reset',
                                               'api_keys').\
                                               order_by(*sort).skip(skip).\
-                                              limit(limit).only(*projection)
+                                              only(*projection).limit(limit)
             else:
-                if projection:
                     docs = col_obj.objects(__raw__=query).order_by(*sort).\
-                                    skip(skip).limit(limit).only(*projection)
-                else:
-                    # Hack to fix AuditLog
-                    docs = col_obj.objects(__raw__=query).order_by(*sort).\
-                                    skip(skip).limit(limit)
+                                    skip(skip).only(*projection).limit(limit)
+
         # Else, all other objects that have sources associated with them
         # need to be filtered appropriately for source access and TLP access
         else:
@@ -2031,14 +2027,9 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                 results['result'] = "OK"
                 return results
 
-            if projection:
-                docs = col_obj.objects.filter(id__in=filterlist).\
-                                            order_by(*sort).skip(skip).limit(limit).\
-                                            only(*projection)
-            else:
-                # Hack to fix Dashboard
-                docs = col_obj.objects.filter(id__in=filterlist).\
-                                            order_by(*sort).skip(skip).limit(limit)
+            docs = col_obj.objects.filter(id__in=filterlist).\
+                                            order_by(*sort).skip(skip).\
+                                            only(*projection).limit(limit)
 
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
