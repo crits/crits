@@ -43,7 +43,7 @@ from crits.indicators.indicator import Indicator
 from crits.notifications.handlers import remove_user_from_notification
 from crits.relationships.handlers import forge_relationship
 from crits.samples.handlers import handle_file, handle_uploaded_file, mail_sample
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 from crits.vocabulary.relationships import RelationshipTypes
 from crits.vocabulary.indicators import (
@@ -332,7 +332,8 @@ def get_email_detail(email_id, user):
                 True, True, True, False, True,
                 href_search_field="x_originating_ip"
                 ))
-
+        # services
+        service_list = get_supported_services('Email')
         # analysis results
         service_results = email.get_analysis_results()
 
@@ -348,6 +349,7 @@ def get_email_detail(email_id, user):
                 'campaign_form': campaign_form,
                 'download_form': download_form,
                 'update_data_form': update_data_form,
+                'service_list': service_list,
                 'service_results': service_results,
                 'rt_url': settings.RT_URL,
                 'EmailACL': EmailACL,}
