@@ -34,18 +34,11 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
 
     try:
-        if pymongo.version_tuple >=(3,0):
-            connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
+        connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
                                         settings.MONGO_PORT,
                                         read_preference=preference,
                                         ssl=settings.MONGO_SSL,
-					                   w=0) #, connect=False)
-        else:
-            connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
-                                        settings.MONGO_PORT,
-                                        read_preference=preference,
-                                        ssl=settings.MONGO_SSL,
-                                       w=0)
+					                   w=1) #, connect=False)
         db = connection[settings.MONGO_DATABASE]
         if settings.MONGO_USER:
             db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
@@ -71,18 +64,13 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
 
     try:
-        if pymongo.version_tuple >=(3,0):
-            connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
+        # w=0 writes to GridFS are now prohibited.
+        #if pymongo.version_tuple >=(3,0):
+        connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
                                         settings.MONGO_PORT,
                                         read_preference=preference,
                                         ssl=settings.MONGO_SSL,
-                                        w=0) #, connect=False)
-        else:
-            connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
-                                        settings.MONGO_PORT,
-                                        read_preference=preference,
-                                        ssl=settings.MONGO_SSL,
-                                        w=0)
+                                        w=1) #, connect=False)
         db = connection[settings.MONGO_DATABASE]
         if settings.MONGO_USER:
             db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)

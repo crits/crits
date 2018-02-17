@@ -535,7 +535,7 @@ if old_mongoengine:
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'crits.core.user.AuthenticationMiddleware',
+    #'crits.core.user.AuthenticationMiddleware',
     )
     # crits.core.user.AuthenticationMiddleware' # Only needed for mongoengine<0.10
     if ENABLE_DT:

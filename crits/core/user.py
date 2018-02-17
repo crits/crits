@@ -40,18 +40,22 @@ import uuid
 from hashlib import sha1
 
 try:
-	from django_mongoengine import Document
+    from django_mongoengine import Document
 except ImportError:
-	from mongoengine import Document
+    from mongoengine import Document
 
 from mongoengine import EmbeddedDocument, StringField, DateTimeField, ListField
 from mongoengine import BooleanField, ObjectIdField, EmailField
 from mongoengine import EmbeddedDocumentField, IntField
 from mongoengine import DictField, DynamicEmbeddedDocument
 
+
+from django.utils.functional import SimpleLazyObject
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.hashers import check_password, make_password
+from django.http import HttpResponse
+
 # Importing these breaks on django 1.11
 #from django.contrib.auth.models import _user_has_perm, _user_get_all_permissions
 #from django.contrib.auth.models import _user_has_module_perms
@@ -1070,6 +1074,19 @@ class AuthenticationMiddleware(object):
     # https://github.com/MongoEngine/mongoengine/issues/966
     # For mongoengine 10.x you can comment out AuthenticationMiddleware from settings.py
 
+    from django import VERSION as d_VERSION
+ 
+    if d_VERSION >= (1,10,0):
+        def __init__(self, get_response):
+            self.get_response = get_response
+
+        def __call__(self, request):
+            return self.get_response(request)
+
+        def process_exception(self, request, exception): 
+            if settings.DEBUG:
+                return HttpResponse("exception: %s" % exception)
+
     def _get_user_session_key(self, request):
         from bson.objectid import ObjectId
 
@@ -1080,8 +1097,11 @@ class AuthenticationMiddleware(object):
             return ObjectId(request.session[SESSION_KEY])
 
     def process_request(self, request):
-        from django.utils.functional import SimpleLazyObject
-        from mongoengine.django.auth import get_user
+        # Used for with Django <1.10
+        try:
+            from mongoengine.django.auth import get_user
+        except ImportError:
+            pass
 
         assert hasattr(request, 'session'), (
             "The Django authentication middleware requires session middleware "
@@ -1101,7 +1121,7 @@ class CRITsAuthBackend(object):
     supports_anonymous_user = False
     supports_inactive_user = False
 
-    def authenticate(self, username=None, password=None, user_agent=None,
+    def authenticate(self, request=None, username=None, password=None, user_agent=None,
                      remote_addr=None, accept_language=None,
                      totp_enabled='Disabled'):
         """
@@ -1342,7 +1362,6 @@ class CRITsRemoteUserBackend(CRITsAuthBackend):
         :type totp_enabled: str
         :returns: :class:`crits.core.user.CRITsUser`, None
         """
-
         e = EmbeddedLoginAttempt()
         e.user_agent = user_agent
         e.remote_addr = remote_addr
