@@ -331,17 +331,17 @@ def handle_cert_file(filename, data, source_name, user=None,
                                 tlp=tlp)
 
     if bucket_list:
-        cert.add_bucket_list(bucket_list, user)
+        cert.add_bucket_list(bucket_list, user.username)
 
     if ticket:
-        cert.add_ticket(ticket, user)
+        cert.add_ticket(ticket, user.username)
 
     # add file to GridFS
     if not isinstance(cert.filedata.grid_id, ObjectId):
         cert.add_file_data(data)
 
     # save cert
-    cert.save(username=user)
+    cert.save(username=user.username)
     cert.reload()
 
     # run certificate triage
@@ -357,9 +357,9 @@ def handle_cert_file(filename, data, source_name, user=None,
 
         cert.add_relationship(related_obj,
                               relationship,
-                              analyst=user,
+                              analyst=user.username,
                               get_rels=False)
-        cert.save(username=user)
+        cert.save(username=user.username)
 
     status = {
         'success':      True,

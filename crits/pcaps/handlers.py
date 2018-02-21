@@ -339,13 +339,13 @@ def handle_pcap_file(filename, data, source_name, user=None,
         pcap.add_file_data(data)
 
     if bucket_list:
-        pcap.add_bucket_list(bucket_list, user)
+        pcap.add_bucket_list(bucket_list, user.username)
 
     if ticket:
-        pcap.add_ticket(ticket, user)
+        pcap.add_ticket(ticket, user.username)
 
     # save pcap
-    pcap.save(username=user)
+    pcap.save(username=user.username)
 
     # update relationship if a related top-level object is supplied
     if related_obj and pcap:
@@ -355,9 +355,9 @@ def handle_pcap_file(filename, data, source_name, user=None,
             relationship = RelationshipTypes.RELATED_TO
         pcap.add_relationship(related_obj,
                               relationship,
-                              analyst=user,
+                              analyst=user.username,
                               get_rels=False)
-        pcap.save(username=user)
+        pcap.save(username=user.username)
 
     # run pcap triage
     if is_pcap_new and data:
