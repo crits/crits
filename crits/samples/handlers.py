@@ -751,7 +751,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
                 pres = handle_pcap_file(filename,
                                         data,
                                         source,
-                                        user=user,
+                                        user=user.username,
                                         description=description,
                                         related_id=related_id,
                                         related_md5=related_md5,
@@ -939,10 +939,10 @@ def handle_file(filename, data, source, source_method='', source_reference='',
                 sample.add_source(s, method=source_method, reference=source_reference, tlp=source_tlp)
 
     if bucket_list:
-        sample.add_bucket_list(bucket_list, user)
+        sample.add_bucket_list(bucket_list, user.username)
 
     if ticket:
-        sample.add_ticket(ticket, user)
+        sample.add_ticket(ticket, user.username)
 
     # if no proper source has been provided, don't add the sample
     if len(sample.source) == 0:
@@ -961,7 +961,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
                 sample.add_campaign(campaign_item)
 
         # save sample to get an id since the rest of the processing needs it
-        sample.save(username=user)
+        sample.save(username=user.username)
 
         sources = user_sources(user)
 
@@ -979,7 +979,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
                                         relationship,
                                         analyst=user.username,
                                         get_rels=False)
-                sample.save(username=user)
+                sample.save(username=user.username)
 
         if backdoor_name:
             # Relate this to the backdoor family if there is one.
