@@ -358,7 +358,7 @@ class CritsDocument(BaseDocument):
         super(CritsDocument, self).__init__(**values)
 
     def _custom_save(self, force_insert=False, validate=True, clean=False,
-        write_concern=1, cascade=None, cascade_kwargs=None,
+        write_concern=None, cascade=None, cascade_kwargs=None,
         _refs=None, username=None, **kwargs):
         """
         Custom save function. Extended to check for valid schema versions,
