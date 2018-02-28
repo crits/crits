@@ -1966,7 +1966,7 @@ def check_query(qparams,user,obj):
     return newquery
 
 def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
-               projection=[], count=False):
+               projection=[], excludes=[], count=False):
     """
     Basic query function
 
@@ -1984,6 +1984,8 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     :type query: dict
     :param projection: Projection filter to apply to query
     :type projection: list
+    :param excludes: fields to exclude from query results
+    :type excludes: list
     :returns: dict -- Keys are result, data, count, msg, crits_type.  'data'
         contains a :class:`crits.core.crits_mongoengine.CritsQuerySet` object.
     """
@@ -1993,34 +1995,42 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     results['msg'] = ""
     results['crits_type'] = col_obj._meta['crits_type']
     sourcefilt = user_sources(user)
-
     if isinstance(sort,basestring):
         sort = sort.split(',')
     if isinstance(projection,basestring):
         projection = projection.split(',')
+    if not projection:
+        try:
+            projection = col_obj._meta['jtable_opts']['fields']
+        except KeyError:
+            projection = []
     docs = None
-
+    #print('projection: %s' % repr(projection))
     try:
-        if not issubclass(col_obj,CritsSourceDocument):
-            results['count'] = col_obj.objects(__raw__=query).count()
+        if not issubclass(col_obj,CritsSourceDocument): 
             if count:
+                results['count'] = col_obj.objects(__raw__=query).as_pymongo().count()
                 results['result'] = "OK"
                 return results
             if col_obj._meta['crits_type'] == 'User':
-                docs = col_obj.objects(__raw__=query).exclude('password',
+                #print ("query1: %s" % repr(query))
+                docs = col_obj.objects(__raw__=query).only(*projection).exclude('password',
                                               'password_reset',
                                               'api_keys').\
                                               order_by(*sort).skip(skip).\
-                                              only(*projection).limit(limit)
+                                              limit(limit)
             else:
-                    docs = col_obj.objects(__raw__=query).order_by(*sort).\
-                                    skip(skip).only(*projection).limit(limit)
-
+                    #print ("query2: %s" % repr(query))
+                    docs = col_obj.objects(__raw__=query).\
+                                    order_by(*sort).\
+                                    skip(skip).limit(limit)
+            #results['count'] = len(docs)
         # Else, all other objects that have sources associated with them
         # need to be filtered appropriately for source access and TLP access
         else:
             filterlist = []
             query['source.name'] = {'$in': sourcefilt}
+            #print ("query3: %s" % repr(query))
             docs = col_obj.objects(__raw__=query)
             for doc in docs:
                 if user.check_source_tlp(doc):
@@ -2308,7 +2318,7 @@ def jtable_ajax_list(col_obj,url,urlfieldparam,request,excludes=[],includes=[],q
 
         response = data_query(col_obj, user=request.user, limit=pageSize,
                               skip=skip, sort=multisort, query=query,
-                              projection=includes)
+                              projection=includes, excludes=excludes)
         if response['result'] == "ERROR":
             return {'Result': "ERROR", 'Message': response['msg']}
         response['crits_type'] = col_obj._meta['crits_type']
