@@ -11,7 +11,7 @@ django-debug-toolbar
 #git+https://github.com/brianz/django-debug-toolbar-mongo.git
 git+https://github.com/conversocial/django-debug-toolbar-mongo.git
 django-debug-toolbar-template-profiler
-django-debug-toolbar-template-timings
+django-debug-toolbar-template-timings>0.8
 django-debug-toolbar-vcs-info
 django-tastypie
 git+https://github.com/Work4Labs/django-tastypie-mongoengine.git
