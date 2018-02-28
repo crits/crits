@@ -4313,7 +4313,7 @@ def get_role_details(rid, roles, analyst):
             args = {'error': error}
             return template, args
         show_roles = None
-    if len(roles)>0:
+    if roles:
         if isinstance(roles, basestring):
             roles = roles.split(',')
             roles = [r.strip() for r in roles]
@@ -4322,15 +4322,6 @@ def get_role_details(rid, roles, analyst):
         role = tmp.get_access_list()
         rid = None
         show_roles = roles
-    else:
-        role = None
-        source_form = None
-        error = ("Either this Role does not exist or you do "
-                "not have permission to view it.")
-        template = "error.html"
-        args = {'error': error}
-        return template, args
-        #show_roles = None
 
     do_not_render = ['_id', 'schema_version']
     if role != None:
