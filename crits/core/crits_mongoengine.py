@@ -83,7 +83,9 @@ class CritsQuerySet(QS):
         Modified version of the default only() which allows
         us to add default fields we always want to include.
         """
-
+        # We don't need to modify the fields when None are passed
+        if not fields:
+            return super(CritsQuerySet, self).only(*fields)
         #Always include schema_version so we can migrate if needed.
         if 'schema_version' not in fields:
             fields = fields + ('schema_version',)
