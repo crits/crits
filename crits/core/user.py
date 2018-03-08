@@ -910,6 +910,26 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                         return True
         return False
 
+    def check_dict_source_tlp(self, object): 
+        """
+        pymongo dict version of check_source_tlp()
+        """
+        if not object:
+            return False
+
+        user_source_objects = self.acl.get('sources')
+        for source in object['source']:
+            for instance in source['instances']:
+                if instance['tlp'] == "white":
+                    return True
+                elif instance['tlp'] == "red" and [True for usource in user_source_objects if usource.name == source['name'] and usource.tlp_red and usource.read]:
+                    return True
+                elif instance['tlp'] == "amber" and [True for usource in user_source_objects if usource.name == source['name']  and usource.tlp_amber and usource.read]:
+                    return True
+                elif instance['tlp'] == "green" and [True for usource in user_source_objects if usource.name == source['name']  and usource.tlp_green and usource.read]:
+                    return True
+        return False
+
     def check_source_write(self, source):
         """
         """
