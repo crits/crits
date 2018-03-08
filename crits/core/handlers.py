@@ -2015,13 +2015,15 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
         # Else, all other objects that have sources associated with them
         # need to be filtered appropriately for source access and TLP access
         else:
+            fily = {'id': 1, 'tlp':1,'source':1}
             filterlist = []
             query['source.name'] = {'$in': sourcefilt}
-            docs = col_obj.objects(__raw__=query)
-            for doc in docs:
-                if user.check_source_tlp(doc):
-                    filterlist.append(str(doc.id))
-
+            # Inspiration came from: https://stackoverflow.com/questions/12068558/use-mongoengine-and-pymongo-together
+            col = col_obj._get_collection()
+            resy = col.find(query, fily).sort(*sort)
+            for r in resy:
+                if user.check_dict_source_tlp(r):
+                    filterlist.append(str(r['_id']))
             results['count'] = len(filterlist)
             if count:
                 results['result'] = "OK"
