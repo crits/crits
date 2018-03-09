@@ -930,13 +930,14 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         user_source_objects = self.acl.get('sources')
         for source in object['source']:
             for instance in source['instances']:
-                if instance['tlp'] == "white":
+		itlp = instance.get('tlp', 'red')
+                if itlp == "white":
                     return True
-                elif instance['tlp'] == "red" and [True for usource in user_source_objects if usource.name == source['name'] and usource.tlp_red and usource.read]:
+                elif itlp == "red" and [True for usource in user_source_objects if usource.name == source['name'] and usource.tlp_red and usource.read]:
                     return True
-                elif instance['tlp'] == "amber" and [True for usource in user_source_objects if usource.name == source['name']  and usource.tlp_amber and usource.read]:
+                elif itlp == "amber" and [True for usource in user_source_objects if usource.name == source['name']  and usource.tlp_amber and usource.read]:
                     return True
-                elif instance['tlp'] == "green" and [True for usource in user_source_objects if usource.name == source['name']  and usource.tlp_green and usource.read]:
+                elif itlp == "green" and [True for usource in user_source_objects if usource.name == source['name']  and usource.tlp_green and usource.read]:
                     return True
         return False
 
