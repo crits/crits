@@ -2000,12 +2000,13 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     if isinstance(projection,basestring):
         projection = projection.split(',')
     if not projection:
-        try:
-            projection = col_obj._meta['jtable_opts']['fields']
-        except KeyError:
-            projection = []
+        projection = []
+# This could reduce fields when projection is Null 
+#        try:
+#            projection = col_obj._meta['jtable_opts']['fields']
+#        except KeyError:
+#            projection = []
     docs = None
-    #print('projection: %s' % repr(projection))
     try:
         if not issubclass(col_obj,CritsSourceDocument): 
             if count:
@@ -2013,24 +2014,21 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                 results['result'] = "OK"
                 return results
             if col_obj._meta['crits_type'] == 'User':
-                #print ("query1: %s" % repr(query))
                 docs = col_obj.objects(__raw__=query).only(*projection).exclude('password',
                                               'password_reset',
                                               'api_keys').\
                                               order_by(*sort).skip(skip).\
                                               limit(limit)
             else:
-                    #print ("query2: %s" % repr(query))
                     docs = col_obj.objects(__raw__=query).\
                                     order_by(*sort).\
                                     skip(skip).limit(limit)
-            #results['count'] = len(docs)
+            results['count'] = len(docs)
         # Else, all other objects that have sources associated with them
         # need to be filtered appropriately for source access and TLP access
         else:
             filterlist = []
             query['source.name'] = {'$in': sourcefilt}
-            #print ("query3: %s" % repr(query))
             docs = col_obj.objects(__raw__=query)
             for doc in docs:
                 if user.check_source_tlp(doc):
