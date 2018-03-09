@@ -35,11 +35,11 @@
             <tr coll="{{ subscription.type }}" oid="{{ subscription.id }}" {% if object.type != None %} type="{{ object.type }}" {% endif %} vvalue="{{ object.value }}">
                 <td>
                     <div class="object_value">
-                    <a class="object_value_search" style="display: inline;" href="{% url 'crits.core.views.global_search_listing' %}?search_type=object&otype={{ object_type }}&q={{ object.value|urlencode }}&force_full=1"><span name="object_value">{{ object.value }}</span></a>
+                    <a class="object_value_search" style="display: inline;" href="{% url 'crits-core-views-global_search_listing' %}?search_type=object&otype={{ object_type }}&q={{ object.value|urlencode }}&force_full=1"><span name="object_value">{{ object.value }}</span></a>
                     </div>
                     <div class="object_value_icon">
                     {% if object.type == 'File Upload' %}
-                        <a style="display: inline;" href="{% url 'crits.core.views.download_file' object.value %}?type=object">
+                        <a style="display: inline;" href="{% url 'crits-core-views-download_file' object.value %}?type=object">
                             <div class="ui-icon ui-icon-disk download_file"></div>
                         </a>
                     {% else %}
@@ -66,7 +66,7 @@
                 </td>
                 <td>
                     {% if source_add %}
-                            <div class="ui-icon ui-icon-trash deleteClick" title="Delete Object" action="{% url 'crits.objects.views.delete_this_object' %}" coll="{{ subscription.type }}" oid="{{ subscription.id }}" {% if object.type != None %} type="{{ object.type }}"{% endif %} vvalue="{{ object.value }}"></div>
+                            <div class="ui-icon ui-icon-trash deleteClick" title="Delete Object" action="{% url 'crits-objects-views-delete_this_object' %}" coll="{{ subscription.type }}" oid="{{ subscription.id }}" {% if object.type != None %} type="{{ object.type }}"{% endif %} vvalue="{{ object.value }}"></div>
                     {% endif %}
                 </td>
             </tr>

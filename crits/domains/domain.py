@@ -1,5 +1,11 @@
-from mongoengine import Document, StringField
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import StringField
 from mongoengine import BooleanField, DynamicEmbeddedDocument, EmbeddedDocument
+
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsBaseAttributes, CritsDocument
@@ -51,10 +57,10 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
             'watchlistEnabled': 'Boolean - whether this is a domain to watch',
         },
         "jtable_opts": {
-                         'details_url': 'crits.domains.views.domain_detail',
+                         'details_url': 'crits-domains-views-domain_detail',
                          'details_url_key': 'domain',
                          'default_sort': "domain ASC",
-                         'searchurl': 'crits.domains.views.domains_listing',
+                         'searchurl': 'crits-domains-views-domains_listing',
                          'fields': [ "domain", "modified", "source",
                                      "campaign", "status", "id"],
                          'jtopts_fields': [ "details",

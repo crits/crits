@@ -3,10 +3,12 @@ import datetime
 import json
 import uuid
 
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 try:
     from mongoengine.base import ValidationError
 except ImportError:
@@ -189,13 +191,13 @@ def generate_event_jtable(request, option):
     jtopts = {
         'title': "Events",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                             type_),
                            args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                               type_),
                              args=('jtdelete',)),
-        'searchurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'searchurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                               type_)),
         'fields': mapper['jtopts_fields'],
         'hidden_fields': mapper['hidden_fields'],
@@ -242,16 +244,16 @@ def generate_event_jtable(request, option):
         },
     ]
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button' : '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )
 
 def generate_event_id(event):
     """
@@ -377,7 +379,7 @@ def add_new_event(title, description, event_type, source_name, source_method,
         run_triage(event, user.username)
 
         message = ('<div>Success! Click here to view the new event: <a href='
-                   '"%s">%s</a></div>' % (reverse('crits.events.views.view_event',
+                   '"%s">%s</a></div>' % (reverse('crits-events-views-view_event',
                                                   args=[event.id]),
                                           title))
         result = {'success': True,

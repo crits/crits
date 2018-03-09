@@ -3,10 +3,12 @@ import hashlib
 import json
 
 from bson.objectid import ObjectId
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core.class_mapper import class_from_id, class_from_value
 from crits.core.crits_mongoengine import create_embedded_source, json_handler
@@ -150,10 +152,10 @@ def generate_pcap_jtable(request, option):
     jtopts = {
         'title': "PCAPs",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                             type_),
                            args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                               type_),
                              args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
@@ -202,16 +204,16 @@ def generate_pcap_jtable(request, option):
         },
     ]
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button' : '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )
 
 def handle_pcap_file(filename, data, source_name, user=None,
                      description=None, related_id=None, related_md5=None,

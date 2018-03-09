@@ -6,13 +6,13 @@
 {% block content %}
 
 <script>
-    var get_indicator_type_dropdown = "{% url 'crits.indicators.views.get_indicator_type_dropdown' %}";
+    var get_indicator_type_dropdown = "{% url 'crits-indicators-views-get_indicator_type_dropdown' %}";
     var indicator_id = "{{ indicator.id | escapejs }}";
-    var ta_search = "{% url 'crits.core.views.global_search_listing' %}";
-    var threat_type_modify = "{% url 'crits.indicators.views.threat_type_modify' indicator.id|escapejs%}";
-    var attack_type_modify = "{% url 'crits.indicators.views.attack_type_modify' indicator.id|escapejs%}";
-    var threat_type_list = "{% url 'crits.indicators.views.get_available_threat_types' %}";
-    var attack_type_list = "{% url 'crits.indicators.views.get_available_attack_types' %}";
+    var ta_search = "{% url 'crits-core-views-global_search_listing' %}";
+    var threat_type_modify = "{% url 'crits-indicators-views-threat_type_modify' indicator.id|escapejs%}";
+    var attack_type_modify = "{% url 'crits-indicators-views-attack_type_modify' indicator.id|escapejs%}";
+    var threat_type_list = "{% url 'crits-indicators-views-get_available_threat_types' %}";
+    var attack_type_list = "{% url 'crits-indicators-views-get_available_attack_types' %}";
 
 </script>
 
@@ -34,7 +34,7 @@
           <li><a href="#" class="dialogClick" dialog="download-indicator">Download Indicator</a></li>
         {% endif %}
         {% if IndicatorACL.DELETE|has_access_to:user %}
-          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="indicator" action='{% url "crits.indicators.views.remove_indicator" indicator.id %}'>Delete Indicator</a></li>
+          <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="indicator" action='{% url "crits-indicators-views-remove_indicator" indicator.id %}'>Delete Indicator</a></li>
         {% endif %}
     </ul>
     </span>
@@ -61,7 +61,7 @@
             <span style="float: right;display: inline-block" id="indicator_type_error"></span>
         </td>
         <td>
-            <span class="edit" id="indicator_type" action="{% url 'crits.indicators.views.update_indicator_type' indicator.id %}">{{indicator.ind_type}}</span>
+            <span class="edit" id="indicator_type" action="{% url 'crits-indicators-views-update_indicator_type' indicator.id %}">{{indicator.ind_type}}</span>
         </td>
         </tr>
         <tr>
@@ -90,21 +90,21 @@
             Value
         </td>
         <td>
-            <a href='{% url "crits.domains.views.domain_detail" indicator.value %}'>{{ indicator.value }}</a>
+            <a href='{% url "crits-domains-views-domain_detail" indicator.value %}'>{{ indicator.value }}</a>
     {% elif indicator.ind_type == 'Email Address' or indicator.ind_type == 'Email Address From' or indicator.ind_type == 'Email Reply-To' or indicator.ind_type == 'Email Address Sender' %}
         <tr>
         <td class='key'>
             Value
         </td>
         <td>
-            <a href='{% url 'crits.emails.views.emails_listing' %}?from={{indicator.value}}'>{{ indicator.value }}</a>
+            <a href='{% url 'crits-emails-views-emails_listing' %}?from={{indicator.value}}'>{{ indicator.value }}</a>
     {% elif indicator.ind_type == 'IPv4 Address' or indicator.ind_type == 'IPv6 Address'%}
         <tr>
         <td class='key'>
             Value
         </td>
         <td>
-            <a href='{% url 'crits.ips.views.ip_detail' indicator.value %}'>{{ indicator.value }}</a>
+            <a href='{% url 'crits-ips-views-ip_detail' indicator.value %}'>{{ indicator.value }}</a>
     {% else %}
         <tr>
         <td class='key'>
@@ -146,7 +146,7 @@
             Confidence
         </td>
         <td>
-            <div style="text-align: center;" class="slider" id="slider-confidence" rating="{{ indicator.confidence.rating|default:'low' }}" action="{% url 'crits.indicators.views.update_ci' indicator.id 'confidence' %}">
+            <div style="text-align: center;" class="slider" id="slider-confidence" rating="{{ indicator.confidence.rating|default:'low' }}" action="{% url 'crits-indicators-views-update_ci' indicator.id 'confidence' %}">
                 <a style="left: 0%; width: 55px; font-size:90%; z-index: 1;" class="ui-slider-handle ui-state-default ui-corner-all" href="#"></a>
             </div>
         </td>
@@ -156,7 +156,7 @@
             Impact
         </td>
         <td>
-            <div style="text-align: center;" class="slider" id="slider-impact" rating="{{ indicator.impact.rating|default:'low' }}" action="{% url 'crits.indicators.views.update_ci' indicator.id 'impact' %}">
+            <div style="text-align: center;" class="slider" id="slider-impact" rating="{{ indicator.impact.rating|default:'low' }}" action="{% url 'crits-indicators-views-update_ci' indicator.id 'impact' %}">
                 <a style="left: 0%; width: 55px; font-size:90%; z-index: 1;" class="ui-slider-handle ui-state-default ui-corner-all" href="#"></a>
             </div>
         </td>
@@ -167,7 +167,7 @@
                 <span style="float: right;" class="object_status_response"></span>
             </td>
           <td>
-              <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{indicator.status}}</span>
+              <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{indicator.status}}</span>
           </td>
           </tr>
         {% endif %}
@@ -240,7 +240,7 @@
     <h3 class="titleheader">
     <span>Activity</span>
     <span class="add_button" data-intro="Add activity" data-position="right">
-      <a href="#" title="Add Activity" class="ui-icon ui-icon-plusthick dialogClick" dialog="add-activity" persona="new" action="{% url 'crits.indicators.views.add_update_activity' 'add' indicator.id %}"></a>
+      <a href="#" title="Add Activity" class="ui-icon ui-icon-plusthick dialogClick" dialog="add-activity" persona="new" action="{% url 'crits-indicators-views-add_update_activity' 'add' indicator.id %}"></a>
     </span>
     </h3>
     <div class="content_body">
@@ -304,7 +304,7 @@
 <div style="display: none;">
 
 <div id="dialog-download-indicator" title="Download Indicator">
-    <form id="form-download-indicator" action='{% url "crits.core.views.download_object" %}' method="POST" enctype="multipart/form-data">{% csrf_token %}
+    <form id="form-download-indicator" action='{% url "crits-core-views-download_object" %}' method="POST" enctype="multipart/form-data">{% csrf_token %}
     <table class="form">{{forms.download_form.as_table}}</table>
     </form>
 </div>

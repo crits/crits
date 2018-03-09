@@ -1,4 +1,9 @@
-from mongoengine import Document, StringField
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import StringField
 from mongoengine import EmbeddedDocument
 from django.conf import settings
 
@@ -25,10 +30,10 @@ class IP(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, Documen
                     ' Object Types'),
         },
         "jtable_opts": {
-                         'details_url': 'crits.ips.views.ip_detail',
+                         'details_url': 'crits-ips-views-ip_detail',
                          'details_url_key': 'ip',
                          'default_sort': "modified DESC",
-                         'searchurl': 'crits.ips.views.ips_listing',
+                         'searchurl': 'crits-ips-views-ips_listing',
                          'fields': [ "ip", "ip_type", "created", "modified",
                                      "source", "campaign", "status", "id"],
                          'jtopts_fields': [ "details",

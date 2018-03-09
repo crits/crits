@@ -35,7 +35,7 @@ class Command(BaseCommand):
                         buckets[bucket][otype] += 1
 
         # Drop all existing buckets
-        Bucket.objects().delete()
+        Bucket.objects().delete_one()
 
         for bucket in buckets.values():
             bucket.save()

@@ -45,6 +45,20 @@ Date:   2016-11-03
         django-debug-toolbar-vcs-info
 
 Author: apolkosnik
+Date:   2016-09-21
+
+    Added support for Django 1.10, it should only work with Mongoengine 0.10.x.
+    CRITs doesn't support Django versions prior to 1.8.
+    For a good measure, when upgrading please try to remove any remnants of
+    the older versions of: 
+        django
+        mongoengine
+        tastypie, 
+        django-tastypie-mongoengine
+        pymongo
+        django-mongoengine
+
+Author: apolkosnik
 Date:   2016-08-06
 
     Added support for Mongoengine 0.10.x while allowing you to use currently

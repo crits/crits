@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from optparse import make_option
 
 import sys
 
@@ -12,31 +11,32 @@ class Command(BaseCommand):
     """
     Script Class.
     """
-    option_list = BaseCommand.option_list + (
-        make_option("-a", "--all", action="store_true", dest="mall",
+
+    def add_arguments(self, parser):
+        parser.add_argument("-a", "--all", action="store_true", dest="mall",
                     default=False,
-                    help="Create All Roles and migrate legacy roles."),
-        make_option("-A", "--Analyst", action="store_true",
+                    help="Create All Roles and migrate legacy roles.")
+        parser.add_argument("-A", "--Analyst", action="store_true",
                     dest="analyst",
                     default=False,
-                    help="Create Analyst Role."),
-        make_option("-d", "--drop", action="store_true",
+                    help="Create Analyst Role.")
+        parser.add_argument("-d", "--drop", action="store_true",
                     dest="drop",
                     default=False,
-                    help="Drop all existing roles."),
-        make_option("-m", "--migrate", action="store_true",
+                    help="Drop all existing roles.")
+        parser.add_argument("-m", "--migrate", action="store_true",
                     dest="migrate",
                     default=False,
-                    help="Migrate legacy role to new Role"),
-        make_option("-r", "--readonly", action="store_true",
+                    help="Migrate legacy role to new Role")
+        parser.add_argument("-r", "--readonly", action="store_true",
                     dest="readonly",
                     default=False,
-                    help="Create Read Only Role."),
-        make_option("-u", "--UberAdmin", action="store_true",
+                    help="Create Read Only Role.")
+        parser.add_argument("-u", "--UberAdmin", action="store_true",
                     dest="uberadmin",
                     default=False,
-                    help="Create UberAdmin Role."),
-        )
+                    help="Create UberAdmin Role.")
+        
 
     help = 'Creates the default UberAdmin Role in MongoDB.'
 

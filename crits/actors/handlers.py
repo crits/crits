@@ -1,9 +1,11 @@
 import json
 
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.template.loader import render_to_string
 
 from crits.actors.actor import Actor, ActorIdentifier, ActorThreatIdentifier
@@ -94,9 +96,9 @@ def generate_actor_identifier_jtable(request, option):
     jtopts = {
         'title': "Actor Identifiers",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.actors.views.%ss_listing' %
+        'listurl': reverse('crits-actors-views-%ss_listing' %
                            (type_), args=('jtlist',)),
-        'deleteurl': reverse('crits.actors.views.%ss_listing' %
+        'deleteurl': reverse('crits-actors-views-%ss_listing' %
                              (type_), args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -108,7 +110,7 @@ def generate_actor_identifier_jtable(request, option):
     jtable = build_jtable(jtopts, request)
     for field in jtable['fields']:
         if field['fieldname'] == "'name'":
-            url = reverse('crits.actors.views.actors_listing')
+            url = reverse('crits-actors-views-actors_listing')
             field['display'] = """ function (data) {
             return '<a href="%s?q='+data.record.id+'&search_type=actor_identifier&force_full=1">'+data.record.name+'</a>';
             }
@@ -122,16 +124,16 @@ def generate_actor_identifier_jtable(request, option):
         },
     ]
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button': '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )
 
 def generate_actor_jtable(request, option):
     """
@@ -179,9 +181,9 @@ def generate_actor_jtable(request, option):
     jtopts = {
         'title': "Actors",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' %
+        'listurl': reverse('crits-%ss-views-%ss_listing' %
                            (type_, type_), args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' %
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' %
                              (type_, type_), args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -199,16 +201,16 @@ def generate_actor_jtable(request, option):
         },
     ]
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button': '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )
 
 def get_actor_details(id_, user):
     """
@@ -433,7 +435,7 @@ def add_new_actor(name, aliases=None, description=None, source=None,
         actor.reload()
         run_triage(actor, user)
 
-    resp_url = reverse('crits.actors.views.actor_detail', args=[actor.id])
+    resp_url = reverse('crits-actors-views-actor_detail', args=[actor.id])
 
     retVal['message'] = ('Success! Click here to view the new Actor: '
                          '<a href="%s">%s</a>' % (resp_url, actor.name))

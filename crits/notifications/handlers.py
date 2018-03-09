@@ -483,7 +483,7 @@ def remove_user_from_notification_id(username, id):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    Notification.objects(id=id).update(pull__users=username)
+    Notification.objects(id=id).update_one(pull__users=username)
     return {'success': True}
 
 def remove_user_notifications(username):
@@ -495,7 +495,7 @@ def remove_user_notifications(username):
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
-    Notification.objects(users=username).update(pull__users=username)
+    Notification.objects(users=username).update_one(pull__users=username)
 
 
 def get_user_notifications(username, count=False, newer_than=None):

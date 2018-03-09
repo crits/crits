@@ -32,7 +32,7 @@
         //columns and data corresponding to each data type
         var objects = [
 			actorObject= {
-			        url:"{% url 'crits.dashboards.views.load_data' obj='Actor' %}",
+			        url:"{% url 'crits-dashboards-views-load_data' obj='Actor' %}",
 			        cols: [
 			               { field: 'details', caption: 'Details', size:"5%", sortable: false },
 			               { field: 'name', caption: 'Name', size:"10%", sortable: true },
@@ -48,7 +48,7 @@
 			           totalRecords: null
 			},
 			analysisObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='AnalysisResult' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='AnalysisResult' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'object_type', caption: 'Object Type', size:"5%", sortable: true },
@@ -64,7 +64,7 @@
                        totalRecords: null
             },
             campaignsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Campaign' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='Campaign' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'name', caption: 'Name', size:"10%", sortable: true },
@@ -85,7 +85,7 @@
                        totalRecords: null
             },
             certificatesObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Certificate' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='Certificate' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'filename', caption: 'Filename', size:"10%", sortable: true },
@@ -103,7 +103,7 @@
                        totalRecords: null
             },
             commentsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Comment' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='Comment' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'obj_type', caption: 'Object Type', size:"10%", sortable: true },
@@ -118,7 +118,7 @@
                        totalRecords: null
             },
             domainsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Domain' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='Domain' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'domain', caption: 'Domain', size:"10%", sortable: true },
@@ -133,7 +133,7 @@
                        totalRecords: null
             },
             emailsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Email' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='Email' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'from', caption: 'From', size:"10%", sortable: true },
@@ -150,7 +150,7 @@
                        totalRecords: null
             },
             eventsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Event' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='Event' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'title', caption: 'Title', size:"10%", sortable: true },
@@ -166,7 +166,7 @@
                        totalRecords: null
             },
             indicatorsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Indicator' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='Indicator' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sizeType:'%', sortable: false },
                            { field: 'value', caption: 'Value', size:"10%", sizeType:'%',sortable: true },
@@ -183,7 +183,7 @@
                        totalRecords: null
             },
             IPsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='IP' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='IP' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'ip', caption: 'IP', size:"10%", sortable: true },
@@ -200,7 +200,7 @@
                        totalRecords: null
             },
             PCAPsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='PCAP' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='PCAP' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'filename', caption: 'Filename', size:"10%", sortable: true },
@@ -217,7 +217,7 @@
                        totalRecords: null
             },
             rawDatasObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='RawData' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='RawData' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'title', caption: 'Title', size:"10%", sortable: true },
@@ -234,7 +234,7 @@
                        totalRecords: null
             },
             samplesObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Sample' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='Sample' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'filename', caption: 'Filename', size:"10%", sortable: true },
@@ -252,7 +252,7 @@
                        totalRecords: null
             },
             screenShotsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Screenshot' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='Screenshot' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'thumb', caption: 'Thumb', size:"10%", sortable: true },
@@ -267,7 +267,7 @@
                        totalRecords: null
             },
             targetsObject= {
-                    url:"{% url 'crits.dashboards.views.load_data' obj='Target' %}",
+                    url:"{% url 'crits-dashboards-views-load_data' obj='Target' %}",
                     cols: [
                            { field: 'details', caption: 'Details', size:"5%", sortable: false },
                            { field: 'email_address', caption: 'Email Address', size:"10%", sortable: true },
@@ -568,7 +568,7 @@
            //ajax call to save the table/search
             $.ajax({
                 type:"GET",
-                url: "{% url 'crits.dashboards.views.save_search'%}",
+                url: "{% url 'crits-dashboards-views-save_search' %}",
                 data: data,
                 datatype: 'json',
                 success: function(data) {

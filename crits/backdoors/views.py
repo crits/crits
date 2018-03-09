@@ -1,10 +1,12 @@
 import json
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.backdoors.forms import AddBackdoorForm
 from crits.backdoors.handlers import add_new_backdoor, get_backdoor_details
@@ -46,9 +48,8 @@ def backdoors_listing(request,option=None):
 
         return generate_backdoor_jtable(request, option)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view backdoor listing.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view backdoor listing.'})
 
 @user_passes_test(user_can_view_data)
 def backdoor_detail(request, id_):
@@ -72,14 +73,11 @@ def backdoor_detail(request, id_):
 
         args['BackdoorACL'] = BackdoorACL
 
-        return render_to_response(template,
-                                  args,
-                                  RequestContext(request))
+        return render(request, template,
+                                  args)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view backdoor listing.'},
-                                  RequestContext(request))
-
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view backdoor listing.'})
 
 @user_passes_test(user_can_view_data)
 def add_backdoor(request):
@@ -139,9 +137,7 @@ def add_backdoor(request):
         return HttpResponse(json.dumps({'success': False,
                                         'form':form.as_table()}),
                             content_type="application/json")
-    return render_to_response("error.html",
-                              {'error': 'Expected AJAX/POST'},
-                              RequestContext(request))
+    return render(request, "error.html", {'error': 'Expected AJAX/POST'})
 
 @user_passes_test(user_can_view_data)
 def remove_backdoor(request, id_):
@@ -160,10 +156,9 @@ def remove_backdoor(request, id_):
         user = request.user
         if user.has_access_to(BackdoorACL.DELETE):
             backdoor_remove(id_, user.username)
-        return HttpResponseRedirect(reverse('crits.backdoors.views.backdoors_listing'))
-    return render_to_response('error.html',
-                              {'error':'Expected AJAX/POST'},
-                              RequestContext(request))
+        return HttpResponseRedirect(reverse('crits-backdoors-views-backdoors_listing'))
+    return render(request, 'error.html',
+                              {'error':'Expected AJAX/POST'})
 
 @user_passes_test(user_can_view_data)
 def edit_backdoor_name(request, id_):
@@ -196,9 +191,7 @@ def edit_backdoor_name(request, id_):
                                 content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def edit_backdoor_aliases(request):
@@ -225,9 +218,7 @@ def edit_backdoor_aliases(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def edit_backdoor_version(request, id_):
@@ -260,6 +251,4 @@ def edit_backdoor_version(request, id_):
                                 content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })

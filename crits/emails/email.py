@@ -1,7 +1,12 @@
 import datetime
 
 from dateutil.parser import parse as date_parser
-from mongoengine import Document, StringField, ListField, BooleanField
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import StringField, ListField, BooleanField
 from mongoengine import EmbeddedDocument
 from django.conf import settings
 
@@ -77,10 +82,10 @@ class Email(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
             'x_mailer': 'X-Mailer header field',
         },
         "jtable_opts": {
-                         'details_url': 'crits.emails.views.email_detail',
+                         'details_url': 'crits-emails-views-email_detail',
                          'details_url_key': 'id',
                          'default_sort': "isodate DESC",
-                         'searchurl': 'crits.emails.views.emails_listing',
+                         'searchurl': 'crits-emails-views-emails_listing',
                          'fields': [ "from_address", "subject", "isodate",
                                      "source", "campaign", "id", "to",
                                      "status", "cc" ],

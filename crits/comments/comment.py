@@ -2,10 +2,18 @@ import datetime
 import re
 
 from bson.objectid import ObjectId
-from mongoengine import Document, EmbeddedDocument
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import EmbeddedDocument
 from mongoengine import ObjectIdField, StringField, ListField, EmbeddedDocumentField
 from django.conf import settings
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 
 from crits.core.user import CRITsUser
 from crits.core.fields import CritsDateTimeField
@@ -215,13 +223,13 @@ def parse_comment(comment):
     # generate html
     for user in users:
         link = '<a href="%s" class="comment_link">@%s</a>'\
-               % (reverse('crits.comments.views.activity', args=['byuser',
+               % (reverse('crits-comments-views-activity', args=['byuser',
                                                                  user]),
                   user)
         comment = comment.replace('@%s' % user, link)
     for tag in tags:
         link = '<a href="%s" class="comment_link">#%s</a>'\
-               % (reverse('crits.comments.views.activity', args=['bytag',
+               % (reverse('crits-comments-views-activity', args=['bytag',
                                                                  tag]),
                   tag)
         comment = comment.replace('#%s' % tag, link)

@@ -1,6 +1,12 @@
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
 
-from mongoengine import Document, StringField, ListField, BooleanField
+from mongoengine import StringField, ListField, BooleanField
+
 from mongoengine import EmbeddedDocument
+
 from django.conf import settings
 
 from crits.core.crits_mongoengine import (
@@ -25,10 +31,10 @@ class Backdoor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         "schema_doc": {
         },
         "jtable_opts": {
-            'details_url': 'crits.backdoors.views.backdoor_detail',
+            'details_url': 'crits-backdoors-views-backdoor_detail',
             'details_url_key': 'id',
             'default_sort': "modified DESC",
-            'searchurl': 'crits.backdoors.views.backdoors_listing',
+            'searchurl': 'crits-backdoors-views-backdoors_listing',
             'fields': ["name", "version", "description", "modified", "source",
                        "campaign", "status", "id"],
             'jtopts_fields': ["details", "name", "version", "description",

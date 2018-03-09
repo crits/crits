@@ -1,9 +1,13 @@
-from mongoengine import Document
-from mongoengine import EmbeddedDocument
 import json
+
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
 
 from mongoengine import StringField, ListField
 from mongoengine import IntField, BooleanField
+from mongoengine import EmbeddedDocument
 from django.conf import settings
 
 from crits.samples.migrate import migrate_sample
@@ -43,10 +47,10 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
             'filedata': 'The ObjectId of the file in GridFS'
         },
         "jtable_opts": {
-                         'details_url': 'crits.samples.views.detail',
+                         'details_url': 'crits-samples-views-detail',
                          'details_url_key': 'md5',
                          'default_sort': "created DESC",
-                         'searchurl': 'crits.samples.views.samples_listing',
+                         'searchurl': 'crits-samples-views-samples_listing',
                          'fields': [ "filename", "size", "filetype",
                                      "created", "modified", "campaign",
                                      "source", "md5", "id", "status"],

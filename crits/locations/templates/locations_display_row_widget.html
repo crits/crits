@@ -22,7 +22,7 @@
            type="location" value="{{location.location}}"
            data-del-type="Location Association"
            data-del-key="{{location.location}}"
-           action="{% url 'crits.locations.views.remove_location' relationship.type hit.id %}"
+           action="{% url 'crits-locations-views-remove_location' relationship.type hit.id %}"
            key="{{location.location}}|{{location.location_type}}|{{location.date}}"></a>
         {% endif %}
     </td>

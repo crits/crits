@@ -1,5 +1,9 @@
 from django.conf import settings
-from mongoengine import Document, StringField, ListField, EmbeddedDocument
+try:
+    from django_mongoengine import Document
+except ImportError:
+    from mongoengine import Document
+from mongoengine import StringField, ListField, EmbeddedDocument
 from mongoengine import DynamicEmbeddedDocument, DynamicField, UUIDField
 from mongoengine import DictField, EmbeddedDocumentField, BooleanField
 
@@ -56,10 +60,10 @@ class AnalysisResult(CritsDocument, CritsSchemaDocument, CritsDocumentFormatter,
             'version': 'Version of the service used.',
         },
         "jtable_opts": {
-                         'details_url': 'crits.services.views.analysis_result',
+                         'details_url': 'crits-services-views-analysis_result',
                          'details_url_key': 'id',
                          'default_sort': "start_date DESC",
-                         'searchurl': 'crits.services.views.analysis_results_listing',
+                         'searchurl': 'crits-services-views-analysis_results_listing',
                          'fields': [ "object_type", "service_name", "version",
                                      "start_date", "finish_date", "results",
                                      "object_id", "id"],

@@ -2,9 +2,8 @@ import json
 
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.template.loader import render_to_string
-from django.template import RequestContext
 
 from crits.core.user_tools import user_can_view_data, get_acl_object
 from crits.relationships.forms import ForgeRelationshipForm
@@ -55,7 +54,7 @@ def add_new_relationship(request):
                                            {'relationship': relationship,
                                             'nohide': True,
                                             'relationships': results['relationships']},
-                                           RequestContext(request))
+                                            request=request)
                 result = {'success': True, 'message': message}
             else:
                 message = "Error adding relationship: %s" % results['message']
@@ -67,9 +66,8 @@ def add_new_relationship(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def update_relationship_type(request):
@@ -105,9 +103,8 @@ def update_relationship_type(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def update_relationship_confidence(request):
@@ -150,9 +147,8 @@ def update_relationship_confidence(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def update_relationship_reason(request):
@@ -181,9 +177,8 @@ def update_relationship_reason(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def update_relationship_date(request):
@@ -213,9 +208,8 @@ def update_relationship_date(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def break_relationship(request):
@@ -248,7 +242,7 @@ def break_relationship(request):
                                        {'relationship': relationship,
                                         'nohide': True,
                                         'relationships': results['relationships']},
-                                       RequestContext(request))
+                                       request=request)
             result = {'success': True, 'message': message}
         else:
             message = "Error deleting relationship: %s" % results['message']
@@ -256,9 +250,8 @@ def break_relationship(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def get_relationship_type_dropdown(request):
@@ -279,11 +272,9 @@ def get_relationship_type_dropdown(request):
             return HttpResponse(json.dumps(result), content_type="application/json")
         else:
             error = "Expected AJAX"
-            return render_to_response("error.html",
-                                      {"error" : error },
-                                      RequestContext(request))
+            return render(request, "error.html",
+                                      {"error" : error })
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {"error" : error })

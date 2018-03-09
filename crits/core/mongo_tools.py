@@ -6,6 +6,9 @@ import gridfs
 import pymongo
 
 import magic
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MongoError(Exception):
     """
@@ -34,7 +37,8 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
         connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
                                         settings.MONGO_PORT,
                                         read_preference=preference,
-                                        ssl=settings.MONGO_SSL)
+                                        ssl=settings.MONGO_SSL,
+					                   w=1) #, connect=False)
         db = connection[settings.MONGO_DATABASE]
         if settings.MONGO_USER:
             db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
@@ -43,8 +47,8 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
         raise MongoError("Error connecting to Mongo database: %s" % e)
     except KeyError as e:
         raise MongoError("Unknown database or collection: %s" % e)
-    except:
-        raise
+    except Exception as e:
+        raise MongoError("MongoError: %s" % e)
 
 def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
@@ -60,10 +64,13 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
 
     try:
+        # w=0 writes to GridFS are now prohibited.
+        #if pymongo.version_tuple >=(3,0):
         connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
                                         settings.MONGO_PORT,
                                         read_preference=preference,
-                                        ssl=settings.MONGO_SSL)
+                                        ssl=settings.MONGO_SSL,
+                                        w=1) #, connect=False)
         db = connection[settings.MONGO_DATABASE]
         if settings.MONGO_USER:
             db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
@@ -72,8 +79,8 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
         raise MongoError("Error connecting to Mongo database: %s" % e)
     except KeyError as e:
         raise MongoError("Unknown database: %s" % e)
-    except:
-        raise
+    except Exception as e:
+        raise MongoError("MongoError: %s" % e)
 
 def get_file(sample_md5, collection=settings.COL_SAMPLES):
     """
@@ -127,7 +134,8 @@ def get_file_gridfs(sample_md5, collection=settings.COL_SAMPLES):
         objectid = fm.find_one({'md5': sample_md5}, {'_id': 1})['_id']
         fs = gridfs_connector("%s" % collection)
         data = fs.get(objectid).read()
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         return None
     return data
 
@@ -148,7 +156,8 @@ def put_file_gridfs(m, data, collection=settings.COL_SAMPLES):
     try:
         fs = gridfs_connector("%s" % collection)
         fs.put(data, content_type="%s" % mimetype, filename="%s" % m)
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         return None
     return m
 

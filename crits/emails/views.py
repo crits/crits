@@ -2,11 +2,13 @@ import json
 import urllib
 
 from django import forms
-from django.shortcuts import render_to_response, render
-from django.template import RequestContext
+from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
@@ -40,9 +42,8 @@ def emails_listing(request,option=None):
     user = request.user
 
     if not user.has_access_to(EmailACL.READ):
-        return render_to_response('error.html',
-                                  {'error':'User does not have permission to delete email.'},
-                                  RequestContext(request))
+        return render(request, 'error.html',
+                                  {'error':'User does not have permission to delete email.'})
 
     if option == "csv":
         return generate_email_csv(request)
@@ -63,7 +64,7 @@ def email_search(request):
     query[request.GET.get('search_type',
                           '')]=request.GET.get('q',
                                                '').strip()
-    return HttpResponseRedirect(reverse('crits.emails.views.emails_listing')
+    return HttpResponseRedirect(reverse('crits-emails-views-emails_listing')
                                 + "?%s" % urllib.urlencode(query))
 
 
@@ -82,16 +83,13 @@ def email_del(request, email_id):
 
     email = Email.objects(id=email_id).first()
     if not user.has_access_to(EmailACL.DELETE):
-        return render_to_response('error.html',
-                                  {'error':'User does not have permission to delete email.'},
-                                  RequestContext(request))
+        return render(request, 'error.html',
+                                  {'error':'User does not have permission to delete email.'})
     if not email:
-        return render_to_response('error.html',
-                                  {'error': "Could not delete email."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Could not delete email."})
 
     email.delete(username=request.user.username)
-    return HttpResponseRedirect(reverse('crits.emails.views.emails_listing'))
+    return HttpResponseRedirect(reverse('crits-emails-views-emails_listing'))
 
 
 @user_passes_test(user_can_view_data)
@@ -106,7 +104,7 @@ def upload_attach(request, email_id):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    redirect = reverse('crits.emails.views.email_detail', args=[email_id])
+    redirect = reverse('crits-emails-views-email_detail', args=[email_id])
     user = request.user
 
     if request.method != 'POST':
@@ -118,15 +116,12 @@ def upload_attach(request, email_id):
     if not file_form.is_valid():
         file_form.fields['related_md5_event'].widget = forms.HiddenInput() #hide field so it doesn't reappear
         json_reply['form'] = file_form.as_table()
-        return render_to_response('file_upload_response.html',
-                                  {'response': json.dumps(json_reply)},
-                                  RequestContext(request))
+        return render(request, 'file_upload_response.html', {'response': json.dumps(json_reply)})
 
     if not user.has_access_to(EmailACL.ADD_ATTACHMENT):
         json_reply['message'] = "User does not have permission to upload attachment."
-        return render_to_response('file_upload_response.html',
-                                  {'response': json.dumps(json_reply)},
-                                  RequestContext(request))
+        return render(request, 'file_upload_response.html',
+                                  {'response': json.dumps(json_reply)})
 
 
     analyst = request.user.username
@@ -143,9 +138,7 @@ def upload_attach(request, email_id):
                           source__name__in=users_sources).first()
     if not email:
         json_reply['message'] = "Could not find email."
-        return render_to_response('file_upload_response.html',
-                                  {'response': json.dumps(json_reply)},
-                                  RequestContext(request))
+        return render(request, 'file_upload_response.html', {'response': json.dumps(json_reply)})
 
     result = create_email_attachment(email,
                                      file_form,
@@ -166,9 +159,7 @@ def upload_attach(request, email_id):
     # If successful, tell the browser to redirect back to this email.
     if result['success']:
         result['redirect_url'] = redirect
-    return render_to_response('file_upload_response.html',
-                              {'response': json.dumps(result)},
-                              RequestContext(request))
+    return render(request, 'file_upload_response.html', {'response': json.dumps(result)})
 
 
 @user_passes_test(user_can_view_data)
@@ -205,7 +196,7 @@ def email_fields_add(request):
                                          form_data['relationship_type'])
 
             if result['status']:
-                redirect = reverse('crits.emails.views.email_detail',
+                redirect = reverse('crits-emails-views-email_detail',
                                    args=[result['object'].id])
                 if not request.is_ajax():
                     return HttpResponseRedirect(redirect)
@@ -223,9 +214,7 @@ def email_fields_add(request):
         return HttpResponse(json.dumps(json_reply),
                             content_type="application/json")
     else:
-        return render_to_response('error.html',
-                                  {'error': message},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': message})
 
 
 @user_passes_test(user_can_view_data)
@@ -277,7 +266,7 @@ def email_yaml_add(request, email_id=None):
                                  form_data['relationship_type'])
 
             if result['status']:
-                redirect = reverse('crits.emails.views.email_detail',
+                redirect = reverse('crits-emails-views-email_detail',
                                    args=[result['object'].id])
                 if not request.is_ajax():
                     return HttpResponseRedirect(redirect)
@@ -294,9 +283,7 @@ def email_yaml_add(request, email_id=None):
         return HttpResponse(json.dumps(json_reply),
                             content_type="application/json")
     else:
-        return render_to_response('error.html',
-                                  {'error': message},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': message})
 
 
 @user_passes_test(user_can_view_data)
@@ -345,7 +332,7 @@ def email_raw_add(request):
                                        form_data['relationship_type'])
 
             if result['status']:
-                redirect = reverse('crits.emails.views.email_detail',
+                redirect = reverse('crits-emails-views-email_detail',
                                    args=[result['object'].id])
                 if not request.is_ajax():
                     return HttpResponseRedirect(redirect)
@@ -364,9 +351,7 @@ def email_raw_add(request):
         return HttpResponse(json.dumps(json_reply),
                             content_type="application/json")
     else:
-        return render_to_response('error.html',
-                                  {'error': message},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': message})
 
 
 @user_passes_test(user_can_view_data)
@@ -420,7 +405,7 @@ def email_eml_add(request):
                                 form_data['relationship_type'])
 
             if result['status']:
-                redirect = reverse('crits.emails.views.email_detail',
+                redirect = reverse('crits-emails-views-email_detail',
                                    args=[result['object'].id])
                 json_reply['success'] = True
                 message = 'Email uploaded successfully'
@@ -431,9 +416,7 @@ def email_eml_add(request):
                 message = result['reason']
 
     json_reply['message'] = message
-    return render_to_response('file_upload_response.html',
-                              {'response': json.dumps(json_reply)},
-                              RequestContext(request))
+    return render(request, 'file_upload_response.html', {'response': json.dumps(json_reply)})
 
 
 @user_passes_test(user_can_view_data)
@@ -484,7 +467,7 @@ def email_outlook_add(request):
                                 form_data['relationship_type'])
 
             if result['status']:
-                redirect = reverse('crits.emails.views.email_detail',
+                redirect = reverse('crits-emails-views-email_detail',
                                    args=[result['obj_id']])
                 json_reply['success'] = True
                 message = 'Email uploaded successfully'
@@ -516,9 +499,8 @@ def email_detail(request, email_id):
     template = 'email_detail.html'
     user = request.user
     if not user.has_access_to(EmailACL.READ):
-        return render_to_response('error.html',
-                                  {'error':'User does not have permission to view email.'},
-                                  RequestContext(request))
+        return render(request, 'error.html',
+                                  {'error':'User does not have permission to view email.'})
     if request.method == "GET" and request.is_ajax():
         return get_email_formatted(email_id,
                                    user.username,
@@ -526,9 +508,7 @@ def email_detail(request, email_id):
     (new_template, args) = get_email_detail(email_id, user)
     if new_template:
         template = new_template
-    return render_to_response(template,
-                              args,
-                              RequestContext(request))
+    return render(request, template, args)
 
 
 @user_passes_test(user_can_view_data)
@@ -570,9 +550,7 @@ def indicator_from_header_field(request, email_id):
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected AJAX POST"},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected AJAX POST"})
 
 
 @user_passes_test(user_can_view_data)
@@ -598,6 +576,4 @@ def update_header_value(request, email_id):
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected AJAX POST"},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected AJAX POST"})

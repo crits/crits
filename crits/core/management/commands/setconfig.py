@@ -1,7 +1,6 @@
 import copy
 import os
 
-from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError as CE
 
 from crits.config.config import CRITsConfig
@@ -14,96 +13,95 @@ class Command(BaseCommand):
     """
     Script Class.
     """
+    def add_arguments(self, parser):
+        parser.add_argument("--" + RESET_CONFIG_VARIABLE,
+                        action='store_true',
+                        dest=RESET_CONFIG_VARIABLE,
+                        default=False,
+                        help='Forces a reset of ALL CRITs configuration ' +
+                                'settings by dropping the config collection ' +
+                                'and then setting the to default values in the ' +
+                                'target DB instance. This has the highest ' +
+                                'precedence over other options.'),
+        parser.add_argument("--" + CREATE_CONFIG_VARIABLE,
+                        action='store_true',
+                        dest=CREATE_CONFIG_VARIABLE,
+                        default=False,
+                        help='Creates a new default CRITs config only if there ' +
+                                'is no default configuration in the target ' +
+                                'DB instance. This has the second highest ' +
+                                'precedence over other options.'),
+        parser.add_argument("--" + REINSERT_CONFIG_VARIABLE,
+                        action='store_true',
+                        dest=REINSERT_CONFIG_VARIABLE,
+                        default=False,
+                        help='Copies the old CRITs_config, inserts the copy, ' +
+                        'and then deletes the old CRITsConfig ' +
+                        'This allows a document to "refresh" or explicitly ' +
+                        'write the config fields to the database -- this ' +
+                        'is due to the fact that variables are not written to ' +
+                        'the database unless a "dirty"/"changed" is set for ' +
+                        'fields. This is done for performance reasons. ' +
+                        'This could result in missing fields from the ' +
+                        'database, even though defaults specified by the ' +
+                        'document in Python is correct. This has the third ' +
+                        'highest precedence over other options.'),
 
-    option_list = (
-        make_option("--" + RESET_CONFIG_VARIABLE,
-                    action='store_true',
-                    dest=RESET_CONFIG_VARIABLE,
-                    default=False,
-                    help='Forces a reset of ALL CRITs configuration ' +
-                            'settings by dropping the config collection ' +
-                            'and then setting the to default values in the ' +
-                            'target DB instance. This has the highest ' +
-                            'precedence over other options.'),
-        make_option("--" + CREATE_CONFIG_VARIABLE,
-                    action='store_true',
-                    dest=CREATE_CONFIG_VARIABLE,
-                    default=False,
-                    help='Creates a new default CRITs config only if there ' +
-                            'is no default configuration in the target ' +
-                            'DB instance. This has the second highest ' +
-                            'precedence over other options.'),
-        make_option("--" + REINSERT_CONFIG_VARIABLE,
-                    action='store_true',
-                    dest=REINSERT_CONFIG_VARIABLE,
-                    default=False,
-                    help='Copies the old CRITs_config, inserts the copy, ' +
-                    'and then deletes the old CRITsConfig ' +
-                    'This allows a document to "refresh" or explicitly ' +
-                    'write the config fields to the database -- this ' +
-                    'is due to the fact that variables are not written to ' +
-                    'the database unless a "dirty"/"changed" is set for ' +
-                    'fields. This is done for performance reasons. ' +
-                    'This could result in missing fields from the ' +
-                    'database, even though defaults specified by the ' +
-                    'document in Python is correct. This has the third ' +
-                    'highest precedence over other options.'),
-    ) + BaseCommand.option_list
+        args = """<configuration option> <value>
 
-    args = """<configuration option> <value>
+               Available configuration options:
 
-           Available configuration options:
-
-           allowed_hosts:\t\t<list of allowed_hosts>
-           classification:\t\t<string> (ex: "unclassified")
-           company_name:\t\t<string>
-           create_unknown_user:\t\t<boolean> (ex: True, true, yes, or 1)
-           crits_message:\t\t<Login screen message string>
-           crits_email:\t\t\t<email address string>
-           crits_email_subject_tag:\t<string>
-           crits_email_end_tag:\t\t<boolean> (ex: True, true, yes, or 1)
-           crits_version:\t\t<X.X.X string>
-           debug:\t\t\t<boolean> (ex: True, true, yes, or 1)
-           depth_max:\t\t\t<integer>
-           email_host:\t\t\t<string>
-           email_port:\t\t\t<string>
-           enable_api:\t\t\t<boolean> (ex: True, true, yes, or 1)
-           enable_toasts:\t\t\t<boolean> (ex: True, true, yes, or 1)
-           git_repo_url:\t\t<string>
-           http_proxy:\t\t\t<string>
-           instance_name:\t\t<string>
-           instance_url:\t\t<string>
-           invalid_login_attempts:\t<integer>
-           language_code:\t\t<string> (ex: "en-us")
-           ldap_auth:\t\t\t<boolean> (ex: True, true, yes, or 1)
-           ldap_tls:\t\t\t<boolean> (ex: True, true, yes, or 1)
-           ldap_server:\t\t\t<string>
-           ldap_bind_dn:\t\t\t<string>
-           ldap_bind_password:\t\t\t<string>
-           ldap_usercn:\t\t\t<string>
-           ldap_userdn:\t\t\t<string>
-           ldap_update_on_login:\t<boolean> (ex: True, true, yes, or 1)
-           log_directory:\t\t<full directory path>
-           log_level:\t\t\t<INFO/DEBUG/WARN>
-           password_complexity_desc:\t<string>
-           password_complexity_regex:\t<string>
-           query_caching:\t\t<boolean> (ex: True, true, yes, or 1)
-           rel_max:\t\t\t<integer>
-           remote_user:\t\t\t<boolean> (ex: True, true, yes, or 1)
-           rt_url:\t\t\t<string>
-           secure_cookie:\t\t<boolean> (ex: True, true, yes, or 1)
-           service_dirs:\t\t<list of full directory paths>
-           service_model:\t\t<process/thread/process_pool/thread_pool/local>
-           session_timeout:\t\t<integer>
-           splunk_search_url:\t\t<string>
-           temp_dir:\t\t\t<full directory path>
-           timezone:\t\t\t<string> (ex: "America/New_York")
-           total_max:\t\t\t<integer>
-           totp_cli:\t\t\t<string> (ex: Disabled, Required, Optional)
-           totp_web:\t\t\t<string> (ex: Disabled, Required, Optional)
-           zip7_path:\t\t\t<full file path>
-           zip7_password:\t\t\t<string> (ex: infected)"""
-    help = 'Set a CRITs configuration option.'
+               allowed_hosts:\t\t<list of allowed_hosts>
+               classification:\t\t<string> (ex: "unclassified")
+               company_name:\t\t<string>
+               create_unknown_user:\t\t<boolean> (ex: True, true, yes, or 1)
+               crits_message:\t\t<Login screen message string>
+               crits_email:\t\t\t<email address string>
+               crits_email_subject_tag:\t<string>
+               crits_email_end_tag:\t\t<boolean> (ex: True, true, yes, or 1)
+               crits_version:\t\t<X.X.X string>
+               debug:\t\t\t<boolean> (ex: True, true, yes, or 1)
+               enable_dt:\t\t\t<boolean> (ex:True, true, yes, or 1)
+               depth_max:\t\t\t<integer>
+               email_host:\t\t\t<string>
+               email_port:\t\t\t<string>
+               enable_api:\t\t\t<boolean> (ex: True, true, yes, or 1)
+               enable_toasts:\t\t\t<boolean> (ex: True, true, yes, or 1)
+               git_repo_url:\t\t<string>
+               http_proxy:\t\t\t<string>
+               instance_name:\t\t<string>
+               instance_url:\t\t<string>
+               invalid_login_attempts:\t<integer>
+               language_code:\t\t<string> (ex: "en-us")
+               ldap_auth:\t\t\t<boolean> (ex: True, true, yes, or 1)
+               ldap_tls:\t\t\t<boolean> (ex: True, true, yes, or 1)
+               ldap_server:\t\t\t<string>
+               ldap_bind_dn:\t\t\t<string>
+               ldap_bind_password:\t\t\t<string>
+               ldap_usercn:\t\t\t<string>
+               ldap_userdn:\t\t\t<string>
+               ldap_update_on_login:\t<boolean> (ex: True, true, yes, or 1)
+               log_directory:\t\t<full directory path>
+               log_level:\t\t\t<INFO/DEBUG/WARN>
+               password_complexity_desc:\t<string>
+               password_complexity_regex:\t<string>
+               query_caching:\t\t<boolean> (ex: True, true, yes, or 1)
+               rel_max:\t\t\t<integer>
+               remote_user:\t\t\t<boolean> (ex: True, true, yes, or 1)
+               rt_url:\t\t\t<string>
+               secure_cookie:\t\t<boolean> (ex: True, true, yes, or 1)
+               service_dirs:\t\t<list of full directory paths>
+               service_model:\t\t<process/thread/process_pool/thread_pool/local>
+               session_timeout:\t\t<integer>
+               splunk_search_url:\t\t<string>
+               temp_dir:\t\t\t<full directory path>
+               timezone:\t\t\t<string> (ex: "America/New_York")
+               total_max:\t\t\t<integer>
+               totp_cli:\t\t\t<string> (ex: Disabled, Required, Optional)
+               totp_web:\t\t\t<string> (ex: Disabled, Required, Optional)
+               zip7_path:\t\t\t<full file path>
+               zip7_password:\t\t\t<string> (ex: infected)"""
+        help = 'Set a CRITs configuration option.'
 
     def handle(self, *args, **options):
         """

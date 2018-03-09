@@ -1,6 +1,11 @@
 import datetime
 
-from mongoengine import Document, StringField, ObjectIdField
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import StringField, ObjectIdField
 from django.conf import settings
 
 from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument

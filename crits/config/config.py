@@ -1,6 +1,11 @@
 import os
 
-from mongoengine import Document, StringField, ListField
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import StringField, ListField
 from mongoengine import BooleanField, IntField
 
 from crits.core.crits_mongoengine import CritsDocument
@@ -33,6 +38,7 @@ class CRITsConfig(CritsDocument, Document):
     crits_version = StringField(required=True,
                                 default=settings.CRITS_VERSION)
     debug = BooleanField(default=True)
+    enable_dt = BooleanField(default=False)
     depth_max = IntField(default=10)
     email_host = StringField(default='')
     email_port = StringField(default='')

@@ -8,14 +8,14 @@
 
 <script>
     var signature_id = "{{ signature.id }}";
-    var details_by_link = "{% url 'crits.signatures.views.details_by_link' signature.link_id|stringformat:"s" %}"
-    var update_signature_type = "{% url 'crits.signatures.views.set_signature_type' signature.id %}";
-    var update_min_version = "{% url 'crits.signatures.views.update_data_type_min_version' %}";
-    var update_max_version = "{% url 'crits.signatures.views.update_data_type_max_version' %}";
-    var update_dependency = "{% url 'crits.signatures.views.update_data_type_dependency' %}";
-    var get_signature_type_dropdown = "{% url 'crits.signatures.views.get_signature_type_dropdown' %}";
-    var get_signature_versions = "{% url 'crits.signatures.views.get_signature_versions' signature.id|stringformat:"s" %}";
-    var signature_autocomplete = "{% url 'crits.signatures.views.dependency_autocomplete' %}";
+    var details_by_link = "{% url 'crits-signatures-views-details_by_link' signature.link_id|stringformat:"s" %}"
+    var update_signature_type = "{% url 'crits-signatures-views-set_signature_type' signature.id %}";
+    var update_min_version = "{% url 'crits-signatures-views-update_data_type_min_version' %}";
+    var update_max_version = "{% url 'crits-signatures-views-update_data_type_max_version' %}";
+    var update_dependency = "{% url 'crits-signatures-views-update_data_type_dependency' %}";
+    var get_signature_type_dropdown = "{% url 'crits-signatures-views-get_signature_type_dropdown' %}";
+    var get_signature_versions = "{% url 'crits-signatures-views-get_signature_versions' signature.id|stringformat:"s" %}";
+    var signature_autocomplete = "{% url 'crits-signatures-views-dependency_autocomplete' %}";
 </script>
 
 {% if signature %}
@@ -34,10 +34,10 @@
       <span class="horizontal_menu">
       <ul class="hmenu">
           {% if SignatureACL.UPLOAD_NEW_VERSION|has_access_to:user %}
-              <li><a href="#" id="upload-new-signature-version" class="dialogClick" dialog="upload-new-signature-version" data-action="{% url 'crits.signatures.views.upload_signature' signature.link_id|stringformat:"s" %}">Upload New Version</a></li>
+              <li><a href="#" id="upload-new-signature-version" class="dialogClick" dialog="upload-new-signature-version" data-action="{% url 'crits-signatures-views-upload_signature' signature.link_id|stringformat:"s" %}">Upload New Version</a></li>
           {% endif %}
           {% if SignatureACL.DELETE|has_access_to:user %}
-              <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="signature" action='{% url "crits.signatures.views.remove_signature" signature.id %}'>Delete Signature</a></li>
+              <li class="right"><a href="#" class="deleteClick" data-is-object="true" type="signature" action='{% url "crits-signatures-views-remove_signature" signature.id %}'>Delete Signature</a></li>
           {% endif %}
       </ul>
       </span>
@@ -64,7 +64,7 @@
                   <td class='key'>Data Type</td>
                       <span style="float: right;" class="object_status_response"></span>
                   <td>
-                      <span class="edit" id="signature_type" action="{% url 'crits.signatures.views.set_signature_type' subscription.id %}">{{signature.data_type}}</span>
+                      <span class="edit" id="signature_type" action="{% url 'crits-signatures-views-set_signature_type' subscription.id %}">{{signature.data_type}}</span>
                   </td>
               </tr>
             {% endif %}
@@ -72,7 +72,7 @@
               <tr>
                   <td class="key">Data Type Min Version</td>
                   <td>
-                      <span class="edit_underline" id="data_type_min_version" action="{% url 'crits.signatures.views.update_data_type_min_version' %}">{{signature.data_type_min_version}}</span>
+                      <span class="edit_underline" id="data_type_min_version" action="{% url 'crits-signatures-views-update_data_type_min_version' %}">{{signature.data_type_min_version}}</span>
                       <span id="data_type_min_version_error"></span>
                   </td>
               </tr>
@@ -81,7 +81,7 @@
               <tr>
                   <td class="key">Data Type Max Version</td>
                   <td>
-                      <span class="edit_underline" id="data_type_max_version" action="{% url 'crits.signatures.views.update_data_type_max_version' %}">{{signature.data_type_max_version}}</span>
+                      <span class="edit_underline" id="data_type_max_version" action="{% url 'crits-signatures-views-update_data_type_max_version' %}">{{signature.data_type_max_version}}</span>
                       <span id="data_type_max_version_error"></span>
                   </td>
               </tr>
@@ -117,7 +117,7 @@
                       <span style="float: right;" class="object_status_response"></span>
                   </td>
                   <td>
-                      <span class="edit" id="object_status" action="{% url 'crits.core.views.update_status' subscription.type subscription.id %}">{{signature.status}}</span>
+                      <span class="edit" id="object_status" action="{% url 'crits-core-views-update_status' subscription.type subscription.id %}">{{signature.status}}</span>
                   </td>
               </tr>
             {% endif %}

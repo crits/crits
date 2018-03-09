@@ -1,6 +1,11 @@
 import datetime
 
-from mongoengine import Document, EmbeddedDocument, StringField, IntField
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import EmbeddedDocument, StringField, IntField
 from mongoengine import EmbeddedDocumentField, DateTimeField, ListField
 from mongoengine import BooleanField
 from django.conf import settings
@@ -45,10 +50,10 @@ class Campaign(CritsBaseAttributes, CritsActionsDocument, Document):
             'ttps': 'List [] of TTPs this Campaign is associated with',
         },
         "jtable_opts": {
-            'details_url': 'crits.campaigns.views.campaign_details',
+            'details_url': 'crits-campaigns-views-campaign_details',
             'details_url_key': 'name',
             'default_sort': "name ASC",
-            'searchurl': 'crits.campaigns.views.campaigns_listing',
+            'searchurl': 'crits-campaigns-views-campaigns_listing',
             'fields': ["name", "aliases", "actor_count", "backdoor_count",
                        "exploit_count", "indicator_count", "email_count",
                        "domain_count", "sample_count", "event_count",
