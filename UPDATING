@@ -4,6 +4,46 @@ references to changes in other repositories. Updates are sorted by commit date
 descending.
 
 Author: apolkosnik
+Date:   2018-03-10
+
+    Django 1.11.x support has arrived, but it will also require some changes
+        to your customized code. A list of some things that changed:
+        - Updated all url.py files to use url() and import views, and 
+            referencing the view functions directly
+        - Added name params to urlpatterns for compatibility with reverse() 
+            on Django 1.10+ (Reversing by dotted path is deprecated )
+        - Updated templates to use view names rather than view class names
+        - RemovedInDjango110: The context_instance argument of
+            render_to_string is deprecated. Also render_to_response() calls 
+            were migrated to render() due to deprecation.
+        - security middleware and some additional security options added
+        - Added a listing of loaded top-level modules (only the ones without
+            the "." in the name, and with version filled-in)
+        - switched argparse in management commands to Django's parser
+        - SESSION_ENGINE has been switched to signed_cookies backend
+        - See UPDATING in crits_services to fix your custom services
+
+    Due to issues with Django 1.11 and mongoengine, debug_toolbar has its
+        own config option, and it only works when Debug is enabled
+        
+        At this point when upgrading it makes sense to update your packages
+        (you might need to run it via sudo, if you are not using venv):
+            pip install -U -r requirements.txt
+            
+    Since, there is enormous performance hit on MongoEngine 0.9+, 
+    I've forked mongoengine and created a "v0.8.9" branch, which
+    contains some small fixes that allow use of Django 1.11
+
+    There are some suggestions regarding MongoEngine and Pymongo combinations:
+    - My fork of Mongoengine the "0.8.9" likes to be paired with PyMongo 2.8.1, 
+         this setup currently works with Django 1.11.x
+    - Original Mongoengine 0.8.8 likes to be paired with PyMongo 2.8.1, 
+         this setup currently works on Django 1.8.x, and 1.9.x
+    - Mongoengine 0.11 - 0.15 goes well with PyMongo 3.6.x, 
+         this setup works with Django 1.8.x - 1.11.x, but requires
+         django-mongorngine 0.3 to be installed
+            
+Author: apolkosnik
 Date:   2017-06-20
 
     Swapping out M2Crypto for pycrypto in the core. 
