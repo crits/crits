@@ -971,6 +971,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
 
         acl = {}
         roles = Role.objects(name__in=self.roles)
+        if not roles:
+            logger.error("No ROLES defined for user: {0}".format(self.username))
+            return False
         acl = roles.first()._data
 
         # for each role, modify the acl object to reflect all of the attributes
