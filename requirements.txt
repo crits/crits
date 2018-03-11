@@ -1,4 +1,5 @@
-Django
+#Django 2.0+ requires Python 3.x
+Django<2.0
 Pillow
 amqp
 anyjson
@@ -18,10 +19,11 @@ git+https://github.com/Work4Labs/django-tastypie-mongoengine.git
 future
 kombu
 lxml
-#mongoengine
+#mongoengine from 0.9 to the latest: 0.15 makes CRITs painfully slow
+#mongoengine - below in a patched version of MongoEngine 0.8.8 that works with Django 1.11
 git+https://github.com/apolkosnik/mongoengine.git@v0.8.9
-# This is in case we'll see faster mongoengine in the future
-git+https://github.com/MongoEngine/django-mongoengine.git
+# This is here in case you'd like to try the more recent versions of mongoengine
+git+https://github.com/MongoEngine/django-mongoengine.git@v0.3
 pip>=8.1.2
 pydeep>=0.2
 pymongo
