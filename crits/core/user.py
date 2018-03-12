@@ -920,7 +920,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                         return True
         return False
 
-    def check_dict_source_tlp(self, object): 
+    def check_dict_source_tlp(self, object):
         """
         pymongo dict version of check_source_tlp()
         """
@@ -930,7 +930,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         user_source_objects = self.acl.get('sources')
         for source in object['source']:
             for instance in source['instances']:
-		itlp = instance.get('tlp', 'red')
+                itlp = instance.get('tlp', 'red')
                 if itlp == "white":
                     return True
                 elif itlp == "red" and [True for usource in user_source_objects if usource.name == source['name'] and usource.tlp_red and usource.read]:
@@ -1099,7 +1099,7 @@ class AuthenticationMiddleware(object):
     # For mongoengine 10.x you can comment out AuthenticationMiddleware from settings.py
 
     from django import VERSION as d_VERSION
- 
+
     if d_VERSION >= (1,10,0):
         def __init__(self, get_response):
             self.get_response = get_response
@@ -1107,7 +1107,7 @@ class AuthenticationMiddleware(object):
         def __call__(self, request):
             return self.get_response(request)
 
-        def process_exception(self, request, exception): 
+        def process_exception(self, request, exception):
             if settings.DEBUG:
                 return HttpResponse("exception: %s" % exception)
 
