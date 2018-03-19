@@ -16,4 +16,4 @@ then
 fi
 
 echo "Attempting to start runserver on port 8080"
-python manage.py runserver 0.0.0.0:8080
+python -Wall manage.py runserver 0.0.0.0:8080

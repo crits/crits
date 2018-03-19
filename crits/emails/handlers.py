@@ -18,10 +18,12 @@ from dateutil.parser import parse as date_parser
 from django.conf import settings
 from crits.core.forms import DownloadFileForm
 from crits.emails.forms import EmailYAMLForm
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.template.loader import render_to_string
 
 from crits.campaigns.forms import CampaignForm
@@ -43,7 +45,7 @@ from crits.indicators.indicator import Indicator
 from crits.notifications.handlers import remove_user_from_notification
 from crits.relationships.handlers import forge_relationship
 from crits.samples.handlers import handle_file, handle_uploaded_file, mail_sample
-from crits.services.handlers import run_triage
+from crits.services.handlers import run_triage, get_supported_services
 
 from crits.vocabulary.relationships import RelationshipTypes
 from crits.vocabulary.indicators import (
@@ -332,7 +334,8 @@ def get_email_detail(email_id, user):
                 True, True, True, False, True,
                 href_search_field="x_originating_ip"
                 ))
-
+        # services
+        service_list = get_supported_services('Email')
         # analysis results
         service_results = email.get_analysis_results()
 
@@ -348,6 +351,7 @@ def get_email_detail(email_id, user):
                 'campaign_form': campaign_form,
                 'download_form': download_form,
                 'update_data_form': update_data_form,
+                'service_list': service_list,
                 'service_results': service_results,
                 'rt_url': settings.RT_URL,
                 'EmailACL': EmailACL,}
@@ -397,9 +401,9 @@ def generate_email_jtable(request, option):
     jtopts = {
         'title': "Emails",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                             type_), args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                               type_), args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -452,16 +456,14 @@ def generate_email_jtable(request, option):
         },
     ]
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
-                                   'button' : '%ss_tab' % type_},
-                                  RequestContext(request))
+                                   'button' : '%ss_tab' % type_})
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
-                                   'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                   'jtid': '%s_listing' % type_})
 
 def handle_email_fields(data, user, method, related_id=None,
                         related_type=None, relationship_type=None):
@@ -1371,7 +1373,7 @@ def update_email_header_value(email_id, type_, value, analyst):
                 links = ""
                 for v in value:
                     # dirty ugly hack to "urlencode" the resulting URL
-                    url = reverse('crits.targets.views.target_info',
+                    url = reverse('crits-targets-views-target_info',
                                   args=[v]).replace('@', '%40')
                     links += '<a href="%s">%s</a>, ' % (url, v)
                 result = {'success': True,
@@ -1442,7 +1444,7 @@ def create_indicator_from_header_field(email, header_field, ind_type,
             message = render_to_string('relationships_listing_widget.html',
                                         {'relationship': relationship,
                                         'relationships': results['message']},
-                                        RequestContext(request))
+                                        request=request)
             result = {'success': True, 'message': message}
         else:
             result = {

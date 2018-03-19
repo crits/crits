@@ -8,10 +8,9 @@ from crits.core.data_tools import generate_qrcode
 from crits.core.totp import gen_user_secret
 
 from django.conf import settings
-from django.contrib.auth.views import logout_then_login
+#from django.contrib.auth.views import logout_then_login
 
 from crits.vocabulary.acls import GeneralACL
-
 
 def is_user_favorite(analyst, type_, id_):
     """

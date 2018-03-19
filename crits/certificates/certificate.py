@@ -1,4 +1,8 @@
-from mongoengine import Document, StringField, IntField
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+from mongoengine import StringField, IntField
 from mongoengine import EmbeddedDocument
 from django.conf import settings
 
@@ -26,10 +30,10 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument
             'source': 'List [] of source information about who provided the certificate'
         },
         "jtable_opts": {
-                         'details_url': 'crits.certificates.views.certificate_details',
+                         'details_url': 'crits-certificates-views-certificate_details',
                          'details_url_key': 'md5',
                          'default_sort': "modified DESC",
-                         'searchurl': 'crits.certificates.views.certificates_listing',
+                         'searchurl': 'crits-certificates-views-certificates_listing',
                          'fields': [ "filename", "description", "filetype",
                                      "size", "modified", "source", "campaign",
                                      "id", "md5", "status" ],

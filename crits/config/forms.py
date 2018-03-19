@@ -14,6 +14,11 @@ class ConfigGeneralForm(forms.Form):
         help_text='*Requires a web server restart.',
         initial=False,
         required=False)
+    enable_dt = forms.BooleanField(
+        help_text='*Requires a web server restart. Only works when Debug above is turned on',
+        initial=False,
+        label="Enable Debug Toolbar",
+        required=False)
     email_host = forms.CharField(
         widget=forms.TextInput,
         help_text='*Requires a web server restart.',
@@ -65,11 +70,12 @@ class ConfigGeneralForm(forms.Form):
         required=True)
     zip7_path = forms.CharField(
         widget=forms.TextInput,
+        label='7z path',
         help_text='*Requires a web server restart.',
         required=True)
     zip7_password = forms.CharField(
         widget=forms.TextInput,
-        label='ZIP Password for downloaded artifacts',
+        label='ZIP Password for Sample download',
         required=False)
     enable_toasts = forms.BooleanField(initial=False,
         label="Enable Toast Notifications",

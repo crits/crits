@@ -1,10 +1,12 @@
 import json
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response, render
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core.handlers import get_item_names
 from crits.core.user_tools import user_can_view_data
@@ -46,9 +48,8 @@ def signatures_listing(request,option=None):
         return generate_signature_jtable(request, option)
 
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Signature listing.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Signature listing.'})
 
 @user_passes_test(user_can_view_data)
 def set_signature_type(request, id_):
@@ -78,9 +79,7 @@ def set_signature_type(request, id_):
                                 content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def get_signature_versions(request, _id):
@@ -99,9 +98,7 @@ def get_signature_versions(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def signature_detail(request, _id):
@@ -125,9 +122,8 @@ def signature_detail(request, _id):
 
         return render(request, template, args)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Signature Details.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Signature Details.'})
 
 @user_passes_test(user_can_view_data)
 def details_by_link(request, link):
@@ -219,7 +215,7 @@ def upload_signature(request, link_id=None):
             if status['success']:
                 jdump = json.dumps({
                     'message': 'signature uploaded successfully! <a href="%s">View signature</a>'
-                    % reverse('crits.signatures.views.signature_detail',
+                    % reverse('crits-signatures-views-signature_detail',
                               args=[status['_id']]), 'success': True})
                 return HttpResponse(jdump, content_type="application/json")
 
@@ -233,9 +229,7 @@ def upload_signature(request, link_id=None):
             status['message'] = "User does not have permission to add signature."
 
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected POST."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected POST."})
 
 
 @user_passes_test(user_can_view_data)
@@ -264,9 +258,7 @@ def update_data_type_dependency(request):
                                             'message': 'User does not have permission to edit data dependencies.'}),
                                 content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
 
 @user_passes_test(user_can_view_data)
 def update_data_type_min_version(request):
@@ -294,9 +286,7 @@ def update_data_type_min_version(request):
                                             'message': 'User does not have permission to edit min version.'}),
                                 content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
 
 @user_passes_test(user_can_view_data)
 def update_data_type_max_version(request):
@@ -324,9 +314,7 @@ def update_data_type_max_version(request):
                                             'message': 'User does not have permission to edit max version.'}),
                                 content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
 
 
 @user_passes_test(user_can_view_data)
@@ -351,9 +339,7 @@ def remove_signature_dependency(request):
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 
 @user_passes_test(user_can_view_data)
@@ -374,9 +360,9 @@ def remove_signature(request, _id):
     else:
         result = None
     if result:
-        return HttpResponseRedirect(reverse('crits.signatures.views.signatures_listing'))
+        return HttpResponseRedirect(reverse('crits-signatures-views-signatures_listing'))
     else:
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                                   {'error': "Could not delete signature"})
 
 
@@ -412,7 +398,7 @@ def new_signature_dependency(request):
         return HttpResponse(json.dumps(message),
                             content_type="application/json")
     else:
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                               {'error':'Expected AJAX POST'})
 
 
@@ -447,7 +433,7 @@ def new_signature_type(request):
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),
                             content_type="application/json")
-    return render_to_response('error.html',
+    return render(request, 'error.html',
                               {'error':'Expected AJAX POST'})
 
 
@@ -471,9 +457,7 @@ def get_signature_dependency_dropdown(request):
             return HttpResponse(json.dumps(result), content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
+        return render(request, "error.html", {'error': error})
 
 
 @user_passes_test(user_can_view_data)
@@ -496,9 +480,7 @@ def get_signature_type_dropdown(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
+        return render(request, "error.html", {'error': error})
 
 
 @user_passes_test(user_can_view_data)

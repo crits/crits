@@ -1,6 +1,10 @@
 import logging
 
-from mongoengine import Document
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
 from mongoengine import StringField, IntField
 
 from django.conf import settings
@@ -10,6 +14,7 @@ from crits.core.crits_mongoengine import CritsDocument, CritsSchemaDocument
 logger = logging.getLogger(__name__)
 
 class Sector(CritsDocument, CritsSchemaDocument, Document):
+
     """
     CRITs Sector Class
     """

@@ -1,11 +1,13 @@
 import json, logging
 
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.core.validators import validate_ipv4_address, validate_ipv6_address
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.utils.ipv6 import clean_ipv6_address
 
 from crits.core import form_consts
@@ -82,9 +84,9 @@ def generate_ip_jtable(request, option):
     jtopts = {
         'title': "IPs",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' %
+        'listurl': reverse('crits-%ss-views-%ss_listing' %
                            (type_, type_), args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' %
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' %
                              (type_, type_), args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -132,16 +134,16 @@ def generate_ip_jtable(request, option):
         },
     ]
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button' : '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )
 
 def get_ip_details(ip, user):
     """
@@ -471,7 +473,7 @@ def ip_add_update(ip_address, ip_type, source=None, source_method='',
             retVal['message'] = 'Related Object not found.'
             return retVal
 
-    resp_url = reverse('crits.ips.views.ip_detail', args=[ip_object.ip])
+    resp_url = reverse('crits-ips-views-ip_detail', args=[ip_object.ip])
 
 
     if is_validate_only == False:

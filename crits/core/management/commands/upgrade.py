@@ -3,7 +3,6 @@ import traceback
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from optparse import make_option
 
 from crits.actors.actor import Actor
 from crits.backdoors.backdoor import Backdoor
@@ -29,79 +28,78 @@ class Command(BaseCommand):
     """
     Script Class.
     """
-
-    option_list = BaseCommand.option_list + (
-        make_option("-a", "--migrate_all", action="store_true", dest="mall",
+    def add_arguments(self, parser):
+        parser.add_argument("-a", "--migrate_all", action="store_true", dest="mall",
                     default=False,
-                    help="Migrate all collections."),
-        make_option("-A", "--migrate_actors", action="store_true",
+                    help="Migrate all collections.")
+        parser.add_argument("-A", "--migrate_actors", action="store_true",
                     dest="actors",
                     default=False,
-                    help="Migrate actors."),
-        make_option("-b", "--migrate_backdoors", action="store_true",
+                    help="Migrate actors.")
+        parser.add_argument("-b", "--migrate_backdoors", action="store_true",
                     dest="backdoors",
                     default=False,
-                    help="Migrate backdoors."),
-        make_option("-c", "--migrate_campaigns", action="store_true",
+                    help="Migrate backdoors.")
+        parser.add_argument("-c", "--migrate_campaigns", action="store_true",
                     dest="campaigns",
                     default=False,
-                    help="Migrate campaigns."),
-        make_option("-C", "--migrate_certificates", action="store_true",
+                    help="Migrate campaigns.")
+        parser.add_argument("-C", "--migrate_certificates", action="store_true",
                     dest="certificates",
                     default=False,
-                    help="Migrate certificates."),
-        make_option("-D", "--migrate_domains", action="store_true",
+                    help="Migrate certificates.")
+        parser.add_argument("-D", "--migrate_domains", action="store_true",
                     dest="domains",
                     default=False,
-                    help="Migrate domains."),
-        make_option("-e", "--migrate_emails", action="store_true",
+                    help="Migrate domains.")
+        parser.add_argument("-e", "--migrate_emails", action="store_true",
                     dest="emails",
                     default=False,
-                    help="Migrate emails."),
-        make_option("-E", "--migrate_events", action="store_true",
+                    help="Migrate emails.")
+        parser.add_argument("-E", "--migrate_events", action="store_true",
                     dest="events",
                     default=False,
-                    help="Migrate events."),
-        make_option("-i", "--migrate_indicators", action="store_true",
+                    help="Migrate events.")
+        parser.add_argument("-i", "--migrate_indicators", action="store_true",
                     dest="indicators",
                     default=False,
-                    help="Migrate indicators."),
-        make_option("-I", "--migrate_ips", action="store_true",
+                    help="Migrate indicators.")
+        parser.add_argument("-I", "--migrate_ips", action="store_true",
                     dest="ips",
                     default=False,
-                    help="Migrate ips."),
-        make_option("-o", "--sort-ids", action="store_true", dest="sort_ids",
+                    help="Migrate ips.")
+        parser.add_argument("-o", "--sort-ids", action="store_true", dest="sort_ids",
                     default=False,
-                    help="Sort by ObjectId before migrating."),
-        make_option("-P", "--migrate_pcaps", action="store_true",
+                    help="Sort by ObjectId before migrating.")
+        parser.add_argument("-P", "--migrate_pcaps", action="store_true",
                     dest="pcaps",
                     default=False,
-                    help="Migrate pcaps."),
-        make_option("-r", "--migrate_raw_data", action="store_true",
+                    help="Migrate pcaps.")
+        parser.add_argument("-r", "--migrate_raw_data", action="store_true",
                     dest="raw_data",
                     default=False,
-                    help="Migrate raw data."),
-        make_option("-g", "--migrate_signatures", action="store_true",
+                    help="Migrate raw data.")
+        parser.add_argument("-g", "--migrate_signatures", action="store_true",
                     dest="signatures",
                     default=False,
-                    help="Migrate signatures."),
-        make_option("-s", "--skip_prep", action="store_true", dest="skip",
+                    help="Migrate signatures.")
+        parser.add_argument("-s", "--skip_prep", action="store_true", dest="skip",
                     default=False,
-                    help="Skip prepping the database"),
-        make_option("-S", "--migrate_samples", action="store_true",
+                    help="Skip prepping the database")
+        parser.add_argument("-S", "--migrate_samples", action="store_true",
                     dest="samples",
                     default=False,
-                    help="Migrate samples."),
-        make_option("-T", "--migrate_targets", action="store_true",
+                    help="Migrate samples.")
+        parser.add_argument("-T", "--migrate_targets", action="store_true",
                     dest="targets",
                     default=False,
-                    help="Migrate targets."),
-        make_option("-x", "--migrate_exploits", action="store_true",
+                    help="Migrate targets.")
+        parser.add_argument("-x", "--migrate_exploits", action="store_true",
                     dest="exploits",
                     default=False,
-                    help="Migrate exploits."),
-    )
-    help = 'Upgrades MongoDB to latest version using mass-migration.'
+                    help="Migrate exploits.")
+        help = 'Upgrades MongoDB to latest version using mass-migration.'
+
 
     def handle(self, *args, **options):
         """
@@ -161,7 +159,6 @@ def migrate_collection(class_obj, sort_ids):
     # find all documents that don't have the latest schema version
     # and migrate those.
     version = class_obj._meta['latest_schema_version']
-
     print "\nMigrating %ss" % class_obj._meta['crits_type']
     if sort_ids:
         docs = (
@@ -169,6 +166,7 @@ def migrate_collection(class_obj, sort_ids):
             .order_by('+id')
             .timeout(False)
         )
+        total = docs.count()
     else:
         docs = class_obj.objects(schema_version__lt=version).timeout(False)
         total = docs.count()

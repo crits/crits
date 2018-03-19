@@ -68,22 +68,22 @@
         x.innerHTML = user_favorites;
         user_favorites = JSON.parse(x.innerHTML);
         var secure_cookie = "{{ secure_cookie }}";
-        var source_access = "{% url 'crits.core.views.source_access' %}";
+        var source_access = "{% url 'crits-core-views-source_access' %}";
 
-        var favorite_url = "{% url 'crits.core.views.toggle_favorite' %}";
-        var obj_types_url = "{% url 'crits.objects.views.get_object_type_dropdown' %}";
+        var favorite_url = "{% url 'crits-core-views-toggle_favorite' %}";
+        var obj_types_url = "{% url 'crits-objects-views-get_object_type_dropdown' %}";
 
         {% if enable_toasts == True %}
             var max_visible_notifications = "{{ max_visible_notifications }}";
             var newer_notifications_location = "{{ newer_notifications_location }}";
             var initial_notifications_display = "{{ initial_notifications_display }}";
-            var notifications_url = "{% url 'crits.notifications.views.poll' %}";
-            var notifications_ack_url = "{% url 'crits.notifications.views.acknowledge' %}";
+            var notifications_url = "{% url 'crits-notifications-views-poll' %}";
+            var notifications_ack_url = "{% url 'crits-notifications-views-acknowledge' %}";
             var notification_anchor_location = "{{ notification_anchor_location }}";
         {% endif %}
 
-        var get_relationship_type_dropdown = "{% url 'crits.relationships.views.get_relationship_type_dropdown' %}";
-        var get_search_help_url = "{% url 'crits.core.views.get_search_help' %}";
+        var get_relationship_type_dropdown = "{% url 'crits-relationships-views-get_relationship_type_dropdown' %}";
+        var get_search_help_url = "{% url 'crits-core-views-get_search_help' %}";
         {% if subscription.type %}
             var subscription_type = "{{ subscription.type }}";
         {% else %}
@@ -98,11 +98,11 @@
             var is_favorite = "{{ favorite }}";
         {% endif %}
     {% endif %}
-    var login_user = "{% url 'crits.core.views.login' %}";
-    var get_item_data_url = "{% url 'crits.core.views.get_item_data' %}";
-    var get_dialog_url = "{% url 'crits.core.views.get_dialog' %}";
-    var get_actions_for_tlo = "{% url 'crits.core.views.get_actions_for_tlo' %}";
-    var add_preferred_actions = "{% url 'crits.core.views.add_preferred_actions' %}";
+    var login_user = "{% url 'crits-core-views-login' %}";
+    var get_item_data_url = "{% url 'crits-core-views-get_item_data' %}";
+    var get_dialog_url = "{% url 'crits-core-views-get_dialog' %}";
+    var get_actions_for_tlo = "{% url 'crits-core-views-get_actions_for_tlo' %}";
+    var add_preferred_actions = "{% url 'crits-core-views-add_preferred_actions' %}";
     //only activates the qtip if in production
     {% if not hide_git_hash%}
         $(document).ready(function(){
@@ -143,13 +143,13 @@
       </div>
       <div id="show_username" class='top_item'>
         <p data-intro="Your Profile" data-position="bottom">
-          <a href="{% url 'crits.core.views.profile' %}">{{ user.first_name }} {{ user.last_name }}</a>
+          <a href="{% url 'crits-core-views-profile' %}">{{ user.first_name }} {{ user.last_name }}</a>
         </p>
       </div>
       {% if user_notifications and user_notifications > 0 %}
       <div class='top_item' data-intro="Notifications" data-position="bottom">
         <span class="ui-state-default ui-corner-all" style="border: 0px;">
-          <a href="{% url 'crits.core.views.profile' %}#notifications_button" class="ui-icon ui-icon-info notify_enable" title="Notifications ({{ user_notifications }})" style="margin-top: 3px;"></a>
+          <a href="{% url 'crits-core-views-profile' %}#notifications_button" class="ui-icon ui-icon-info notify_enable" title="Notifications ({{ user_notifications }})" style="margin-top: 3px;"></a>
         </span>
       </div>
       {% endif %}
@@ -161,7 +161,7 @@
         <div id="selected_item_topbar" class="clipboard_qtip_body" style="display: none;">Your clipboard is empty.</div>
       </div>
       <div class='top_item' id="favorites_container">
-        <a href="#" class="favorites_button" action="{% url 'crits.core.views.favorites' %}">
+        <a href="#" class="favorites_button" action="{% url 'crits-core-views-favorites' %}">
           <span class="ui-icon ui-icon-star favorites_icon favorites_icon_inactive" data-intro="Favorites" data-position="left"></span>
         </a>
         <div id="favorites_results" style="a:link {color:#FF0000;}; color: #FFFFFF; display: none;"></div>
@@ -175,7 +175,7 @@
 
       <!-- search section -->
       <div id="show_search" class='search'>
-        <form style='display: inline;' method="get" id="search" action="{% url 'crits.core.views.global_search_listing' %}" data-intro="Global Search" data-position="bottom">
+        <form style='display: inline;' method="get" id="search" action="{% url 'crits-core-views-global_search_listing' %}" data-intro="Global Search" data-position="bottom">
           <input id="global_search_box" type="text" size="40" name="q" class="global_search_box" placeholder=" Global Quick Search" />
           <input type="hidden" name='search_type' value='global' />
         </form>
@@ -198,7 +198,7 @@
     <div class="bottom">
     {% endif %}
       <span class="right">
-        <b>CRITs&trade;</b> Copyright &copy; {% now "Y" %} The MITRE Corporation. All Rights Reserved.
+        <b>CRITs&trade;</b> &copy; {% now "Y" %} The MITRE Corporation. All Rights Reserved.
       </span>
       {% if request.user.is_authenticated %}
       <span class="right" data-intro="Data Classification" data-position="top">
@@ -231,7 +231,7 @@
   <ul style="display:none;">
     <li>
       <b>Samples</b>
-      <form method="get" id="search" action="{% url 'crits.samples.views.samples_listing' %}">
+      <form method="get" id="search" action="{% url 'crits-samples-views-samples_listing' %}">
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="bucket_list">Bucket List</option>
@@ -249,7 +249,7 @@
     </li>
     <li>
       <b>Email</b>
-      <form method="get" id="mail_search" action="{% url 'crits.emails.views.emails_listing' %}">
+      <form method="get" id="mail_search" action="{% url 'crits-emails-views-emails_listing' %}">
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="bucket_list">Bucket List</option>
@@ -271,7 +271,7 @@
     </li>
     <li>
       <b>Indicators</b>
-      <form method="get" id="indicator_search" action="{% url 'crits.indicators.views.indicators_listing' %}">
+      <form method="get" id="indicator_search" action="{% url 'crits-indicators-views-indicators_listing' %}">
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="bucket_list">Bucket List</option>
@@ -289,7 +289,7 @@
     </li>
     <li>
       <b>Events</b>
-      <form method="get" id="event_search" action="{% url 'crits.events.views.events_listing' %}">
+      <form method="get" id="event_search" action="{% url 'crits-events-views-events_listing' %}">
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="bucket_list">Bucket List</option>
@@ -305,7 +305,7 @@
     </li>
     <li>
       <b>Domains</b>
-      <form method="get" id="domain_search" action="{% url 'crits.domains.views.domains_listing' %}">
+      <form method="get" id="domain_search" action="{% url 'crits-domains-views-domains_listing' %}">
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="domain" selected="selected">Domain</option>
@@ -315,7 +315,7 @@
     </li>
     <li>
       <b>IP Addresses</b>
-      <form method="get" id="ip_search" action="{% url 'crits.ips.views.ips_listing' %}">
+      <form method="get" id="ip_search" action="{% url 'crits-ips-views-ips_listing' %}">
         <input class='textbox' type='text' size='32' value='' name='q' id='s' />
         <select name="search_type" class="selectbox">
           <option value="ip">IP Address</option>
@@ -325,7 +325,7 @@
     </li>
     <li>
       <b>Raw Data</b>
-      <form method="get" id="raw_data_search" action="{% url 'crits.raw_data.views.raw_data_listing' %}">
+      <form method="get" id="raw_data_search" action="{% url 'crits-raw_data-views-raw_data_listing' %}">
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="data" selected="selected">Data</option>
@@ -338,7 +338,7 @@
     </li>
      <li>
       <b>Signatures</b>
-      <form method="get" id="signature_search" action="{% url 'crits.signatures.views.signatures_listing' %}">
+      <form method="get" id="signature_search" action="{% url 'crits-signatures-views-signatures_listing' %}">
         <input class='textbox' type="text" size = "32" value="" name="q" id="s" />
         <select name="search_type" class='selectbox'>
           <option value="data" selected="selected">Data</option>
@@ -350,7 +350,7 @@
     </li>
     <li>
       <b>Comments</b>
-      <form method="get" id="comment_search" action="{% url 'crits.comments.views.activity' %}">
+      <form method="get" id="comment_search" action="{% url 'crits-comments-views-activity' %}">
         <input class="textbox" type="text" size="32" value="" name="q" id="s" />
         <select name="search_type" class="selectbox">
           <option value="byuser">User</option>
@@ -363,7 +363,7 @@
     </li>
     <li>
       <b>Objects</b>
-      <form method="get" id="objects_search" action="{% url 'crits.core.views.global_search_listing' %}">
+      <form method="get" id="objects_search" action="{% url 'crits-core-views-global_search_listing' %}">
         <input class="textbox" type="text" size="32" value="" name="q" id="object_v" />
         <input type="hidden" name="search_type" value="object" />
         <select id="object_s" name="otype" class="selectbox">
@@ -373,7 +373,7 @@
     </li>
     <li>
       <b>Bucket Lists</b>
-      <form method="get" id="bucket_list_search" action="{% url 'crits.core.views.global_search_listing' %}">
+      <form method="get" id="bucket_list_search" action="{% url 'crits-core-views-global_search_listing' %}">
         <input type="hidden" name="search_type" value="bucket_list" />
         <input class="textbox" type="text" size="32" value="" name="q" id="bucket_v" />
         <input class="inputbutton" type="submit" name="search" value="Search" />
@@ -388,42 +388,42 @@
 <nav id="nav-menu">
   <ul class="main-nav mmenu" style="display: none;">
     <li class='nav_main mmenu_item'>
-      <a id="dashboard" href="{% url 'crits.dashboards.views.dashboard' %}">Dashboards</a>
+      <a id="dashboard" href="{% url 'crits-dashboards-views-dashboard' %}">Dashboards</a>
       <ul class='sub-mmenu'>
           <li class='mmenu_item'>
-             <a href="{% url 'crits.dashboards.views.dashboard' %}"> My Dashboards</a>
+             <a href="{% url 'crits-dashboards-views-dashboard' %}"> My Dashboards</a>
              <ul class='dashboard-nav-submenu' class='sub-mmenu'>
                  {% for dash in user.getDashboards %}
                      <li class='mmenu_item'>
-                         <a href='{% url "crits.dashboards.views.dashboard" dash.id %}'>{{dash.name}}</a>
+                         <a href='{% url "crits-dashboards-views-dashboard" dash.id %}'>{{dash.name}}</a>
                      </li>
                  {% endfor %}
              </ul>
          </li>
          <li class='mmenu_item'>
-              <a href="{% url 'crits.dashboards.views.saved_searches_list' %}">Configurations</a>
+              <a href="{% url 'crits-dashboards-views-saved_searches_list' %}">Configurations</a>
           </li>
       </ul>
     </li>
     <li class='nav_main mmenu_item'>
-      <a href="{% url 'crits.core.views.profile' %}">My CRITs</a>
+      <a href="{% url 'crits-core-views-profile' %}">My CRITs</a>
     </li>
     <li class='nav_main mmenu_item'>
-      <a href="{% url 'crits.core.views.bucket_list' %}">Bucket Lists</a>
+      <a href="{% url 'crits-core-views-bucket_list' %}">Bucket Lists</a>
     </li>
     <li class='nav_main mmenu_item'>
-      <a href="{% url 'crits.core.views.sector_list' %}">Sector Lists</a>
+      <a href="{% url 'crits-core-views-sector_list' %}">Sector Lists</a>
     </li>
       {% if acl.ACTOR_READ|has_access_to:user %}
       <li class='nav_objects mmenu_item'>
-          <a href="{% url 'crits.actors.views.actors_listing' %}">Actors</a>
+          <a href="{% url 'crits-actors-views-actors_listing' %}">Actors</a>
           {% if acl.ACTOR_WRITE|has_access_to:user %}
             <a href id="new-actor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor" persona="new" title="New Actor"></a>
           {% endif %}
           {% if acl.ACTOR_IDENTIFIERS_ADD|has_access_to:user %}
         <ul class='sub-mmenu'>
           <li class='mmenu_item'>
-            <a href="{% url 'crits.actors.views.actor_identifiers_listing' %}">Actor Identifiers</a>
+            <a href="{% url 'crits-actors-views-actor_identifiers_listing' %}">Actor Identifiers</a>
           <a href id="new-actor-identifier" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-actor-identifier" persona="new" title="New Actor Identifier"></a>
           </li>
         </ul>
@@ -432,7 +432,7 @@
     {% endif %}
       {% if acl.BACKDOOR_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.backdoors.views.backdoors_listing' %}">Backdoors</a>
+      <a href="{% url 'crits-backdoors-views-backdoors_listing' %}">Backdoors</a>
       {% if acl.BACKDOOR_WRITE|has_access_to:user %}
         <a href id="new-backdoor" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-backdoor" persona="new" title="New Backdoor"></a>
       {% endif %}
@@ -440,7 +440,7 @@
     {% endif %}
       {% if acl.CAMPAIGN_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.campaigns.views.campaigns_listing' %}">Campaigns</a>
+      <a href="{% url 'crits-campaigns-views-campaigns_listing' %}">Campaigns</a>
       {% if acl.CAMPAIGN_WRITE|has_access_to:user %}
         <a href id="new-campaign" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-campaign" persona="new" title="New Campaign"></a>
       {% endif %}
@@ -448,7 +448,7 @@
     {% endif %}
       {% if acl.CERTIFICATE_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.certificates.views.certificates_listing' %}">Certificates</a>
+      <a href="{% url 'crits-certificates-views-certificates_listing' %}">Certificates</a>
       {% if acl.CERTIFICATE_WRITE|has_access_to:user %}
         <a href id="new-certificate" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-certificate" persona="new" title="New Certificate"></a>
       {% endif %}
@@ -456,12 +456,12 @@
     {% endif %}
       {% if acl.DOMAIN_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.domains.views.domains_listing' %}">Domains</a>
+      <a href="{% url 'crits-domains-views-domains_listing' %}">Domains</a>
       {% if acl.DOMAIN_WRITE|has_access_to:user %}
         <a href id="new-domain" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-domain" persona="new" title="New Domain"></a>
         <ul class='sub-mmenu'>
           <li class='mmenu_item'>
-            <a href="{% url 'crits.domains.views.bulk_add_domain' %}" id="bulk_upload_domain">Bulk Upload Domains</a>
+            <a href="{% url 'crits-domains-views-bulk_add_domain' %}" id="bulk_upload_domain">Bulk Upload Domains</a>
           </li>
         </ul>
       {% endif %}
@@ -469,7 +469,7 @@
     {% endif %}
       {% if acl.EMAIL_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.emails.views.emails_listing' %}">Emails</a>
+      <a href="{% url 'crits-emails-views-emails_listing' %}">Emails</a>
       {% if acl.EMAIL_WRITE|has_access_to:user %}
         <a href id="new-email-fields" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-email-fields" persona="new" title="New Email"></a>
         <ul class='sub-mmenu'>
@@ -491,7 +491,7 @@
     {% endif %}
       {% if acl.EVENT_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.events.views.events_listing' %}">Events</a>
+      <a href="{% url 'crits-events-views-events_listing' %}">Events</a>
       {% if acl.EVENT_WRITE|has_access_to:user %}
         <a href id="new-event" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-event" persona="new" title="New Event"></a>
       {% endif %}
@@ -499,7 +499,7 @@
     {% endif %}
       {% if acl.EXPLOIT_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.exploits.views.exploits_listing' %}">Exploits</a>
+      <a href="{% url 'crits-exploits-views-exploits_listing' %}">Exploits</a>
       {% if acl.EXPLOIT_WRITE|has_access_to:user %}
         <a href id="new-exploit" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-exploit" persona="new" title="New Exploit"></a>
       {% endif %}
@@ -507,7 +507,7 @@
     {% endif %}
       {% if acl.INDICATOR_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.indicators.views.indicators_listing' %}">Indicators</a>
+      <a href="{% url 'crits-indicators-views-indicators_listing' %}">Indicators</a>
       {% if acl.INDICATOR_WRITE|has_access_to:user %}
         <a href id="new-indicator" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-indicator"  persona="new" title="New Indicator"></a>
         <ul class='sub-mmenu'>
@@ -523,12 +523,12 @@
     {% endif %}
       {% if acl.IP_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.ips.views.ips_listing' %}">IPs</a>
+      <a href="{% url 'crits-ips-views-ips_listing' %}">IPs</a>
       {% if acl.IP_WRITE|has_access_to:user %}
         <a href id="new-ip" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-ip" persona="new" title="New IP"></a>
         <ul class='sub-mmenu'>
           <li class='mmenu_item'>
-            <a href="{% url 'crits.ips.views.bulk_add_ip' %}" id="bulk_upload_ip">Bulk Upload IPs</a>
+            <a href="{% url 'crits-ips-views-bulk_add_ip' %}" id="bulk_upload_ip">Bulk Upload IPs</a>
           </li>
         </ul>
       {% endif %}
@@ -536,7 +536,7 @@
     {% endif %}
       {% if acl.PCAP_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.pcaps.views.pcaps_listing' %}">PCAPs</a>
+      <a href="{% url 'crits-pcaps-views-pcaps_listing' %}">PCAPs</a>
       {% if acl.PCAP_WRITE|has_access_to:user %}
         <a href id="new-pcap" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-pcap" persona="new" title="New PCAP"></a>
       {% endif %}
@@ -544,7 +544,7 @@
     {% endif %}
       {% if acl.RAWDATA_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.raw_data.views.raw_data_listing' %}">Raw Data</a>
+      <a href="{% url 'crits-raw_data-views-raw_data_listing' %}">Raw Data</a>
       {% if acl.RAWDATA_WRITE|has_access_to:user %}
         <a href id="new-raw-data" class="ui-icon ui-icon-plusthick add
             dialogClick" dialog="new-raw-data" persona="new" title="New Raw Data"></a>
@@ -558,22 +558,22 @@
     {% endif %}
       {% if acl.SAMPLE_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.samples.views.samples_listing' %}">Samples</a>
+      <a href="{% url 'crits-samples-views-samples_listing' %}">Samples</a>
       {% if acl.SAMPLE_WRITE|has_access_to:user %}
         <a href id="new-sample" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-sample" persona="new" title="New Sample"></a>
       {% endif %}
       <ul class='sub-mmenu'>
         {% if user_organization %}
         <li class='mmenu_item'>
-          <a href="{% url 'crits.samples.views.samples_listing' %}?source={{ user_organization }}">{{ user_organization }} Samples</a>
+          <a href="{% url 'crits-samples-views-samples_listing' %}?source={{ user_organization }}">{{ user_organization }} Samples</a>
         </li>
         {% endif %}
         <li class='mmenu_item'>
-          <a href="{% url 'crits.samples.views.sources' %}">Source Samples</a>
+          <a href="{% url 'crits-samples-views-sources' %}">Source Samples</a>
         </li>
         {% if acl.SAMPLE_WRITE|has_access_to:user %}
           <li class='mmenu_item'>
-            <a href="{% url 'crits.samples.views.bulk_add_md5_sample' %}" id="bulk_upload_md5_sample">Bulk Upload MD5 Samples</a>
+            <a href="{% url 'crits-samples-views-bulk_add_md5_sample' %}" id="bulk_upload_md5_sample">Bulk Upload MD5 Samples</a>
           </li>
         {% endif %}
       </ul>
@@ -581,7 +581,7 @@
     {% endif %}
       {% if acl.SAMPLE_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.screenshots.views.screenshots_listing' %}">Screenshots</a>
+      <a href="{% url 'crits-screenshots-views-screenshots_listing' %}">Screenshots</a>
     </li>
     {% endif %}
       {% if acl.CONTROL_PANEL_SERVICES_READ|has_access_to:user %}
@@ -589,7 +589,7 @@
       <a href class="noclick">Services</a>
       <ul class='sub-mmenu'>
         <li class='mmenu_item'>
-          <a href="{% url 'crits.services.views.analysis_results_listing' %}">Analysis Results</a>
+          <a href="{% url 'crits-services-views-analysis_results_listing' %}">Analysis Results</a>
         </li>
         {% for nav_template in service_nav_templates %}
         {% include nav_template %}
@@ -599,7 +599,7 @@
     {% endif %}
       {% if acl.SIGNATURE_READ|has_access_to:user %}
      <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.signatures.views.signatures_listing' %}">Signatures</a>
+      <a href="{% url 'crits-signatures-views-signatures_listing' %}">Signatures</a>
       {% if acl.SIGNATURE_WRITE|has_access_to:user %}
         <a href id="new-signature" class="ui-icon ui-icon-plusthick add
             dialogClick" dialog="new-signature" persona="new" title="New Signature"></a>
@@ -608,7 +608,7 @@
     {% endif %}
       {% if acl.TARGET_READ|has_access_to:user %}
     <li class='nav_objects mmenu_item'>
-      <a href="{% url 'crits.targets.views.targets_listing' %}">Targets</a>
+      <a href="{% url 'crits-targets-views-targets_listing' %}">Targets</a>
       {% if acl.TARGET_WRITE|has_access_to:user %}
         <a href id="new-target" class="ui-icon ui-icon-plusthick add dialogClick" dialog="new-target" persona="new" title="New Target"></a>
       {% endif %}
@@ -618,18 +618,18 @@
       <a href class="noclick">Timelines</a>
       <ul class='sub-mmenu'>
         <li class='mmenu_item'>
-          <a href="{% url 'crits.core.views.timeline' 'dns' %}">DNS Watch</a>
+          <a href="{% url 'crits-core-views-timeline' 'dns' %}">DNS Watch</a>
         </li>
         <li class='mmenu_item'>
-          <a href="{% url 'crits.core.views.timeline' 'email' %}">Emails</a>
+          <a href="{% url 'crits-core-views-timeline' 'email' %}">Emails</a>
         </li>
         <li class='mmenu_item'>
-          <a href="{% url 'crits.core.views.timeline' 'indicator' %}">Indicators</a>
+          <a href="{% url 'crits-core-views-timeline' 'indicator' %}">Indicators</a>
         </li>
       </ul>
     </li>
     <li class='nav_main mmenu_item'>
-      <a href="{% url 'crits.comments.views.activity' %}">Recent Activity</a>
+      <a href="{% url 'crits-comments-views-activity' %}">Recent Activity</a>
     </li>
     <li class='nav_admin mmenu_item'>
       <a href class="noclick">Add New Item</a>
@@ -678,64 +678,64 @@
     </li>
     {% if GeneralACL.CONTROL_PANEL_READ|has_access_to:user %}
     <li class='nav_admin mmenu_item'>
-        <a href="{% url 'crits.config.views.crits_config' %}">CRITs Control Panel</a>
+        <a href="{% url 'crits-config-views-crits_config' %}">CRITs Control Panel</a>
         <ul class='sub-mmenu'>
             {% if GeneralACL.CONTROL_PANEL_SYSTEM_READ|has_access_to:user %}
             <li class='mmenu_item'>
-                <a href="{% url 'crits.config.views.crits_config' %}">System</a>
+                <a href="{% url 'crits-config-views-crits_config' %}">System</a>
                 <ul class='sub-mmenu'>
                     <li class='mmenu_item'>
-                        <a node='node_system' sub_node='CRITsTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#CRITsTab">CRITs Configuration</a>
+                        <a node='node_system' sub_node='CRITsTab' class='controlPanelNav' href="{% url 'crits-config-views-crits_config' %}#CRITsTab">CRITs Configuration</a>
                     </li>
                     <li class='mmenu_item'>
-                        <a node='node_system' sub_node='generalTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#generalTab">General</a>
+                        <a node='node_system' sub_node='generalTab' class='controlPanelNav' href="{% url 'crits-config-views-crits_config' %}#generalTab">General</a>
                     </li>
                     <li class='mmenu_item'>
-                        <a node='node_system' sub_node='LDAP' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#LDAP">LDAP Settings</a>
+                        <a node='node_system' sub_node='LDAP' class='controlPanelNav' href="{% url 'crits-config-views-crits_config' %}#LDAP">LDAP Settings</a>
                     </li>
                     <li class='mmenu_item'>
-                        <a node='node_system' sub_node='downloadTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#downloadTab">Downloading</a>
+                        <a node='node_system' sub_node='downloadTab' class='controlPanelNav' href="{% url 'crits-config-views-crits_config' %}#downloadTab">Downloading</a>
                     </li>
                     <li class='mmenu_item'>
-                        <a node='node_system' sub_node='securityTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#securityTab">Security</a>
+                        <a node='node_system' sub_node='securityTab' class='controlPanelNav' href="{% url 'crits-config-views-crits_config' %}#securityTab">Security</a>
                     </li>
                     <li class='mmenu_item'>
-                        <a node='node_system' sub_node='servicesTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#servicesTab">Services</a>
+                        <a node='node_system' sub_node='servicesTab' class='controlPanelNav' href="{% url 'crits-config-views-crits_config' %}#servicesTab">Services</a>
                     </li>
                     <li class='mmenu_item'>
-                        <a node='node_system' sub_node='loggingTab' class='controlPanelNav' href="{% url 'crits.config.views.crits_config' %}#loggingTab">Logging</a>
+                        <a node='node_system' sub_node='loggingTab' class='controlPanelNav' href="{% url 'crits-config-views-crits_config' %}#loggingTab">Logging</a>
                     </li>
                 </ul>
             </li>
             {% endif %}
             {% if GeneralACL.CONTROL_PANEL_READ|has_access_to:user %}
             <li class='mmenu_item'>
-               <a class='controlPanelNav' sub_node='actor_threat_identifiers_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_threat_identifiers_button">Items</a>
+               <a class='controlPanelNav' sub_node='actor_threat_identifiers_button' node='node_items' href="{% url 'crits-config-views-crits_config' %}#actor_threat_identifiers_button">Items</a>
                <ul class='sub-mmenu'>
                    <li class='mmenu_item'>
-                        <a class='controlPanelNav' sub_node='actor_threat_identifiers_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#actor_threat_identifiers_button">Actor Threat Identifiers</a>
+                        <a class='controlPanelNav' sub_node='actor_threat_identifiers_button' node='node_items' href="{% url 'crits-config-views-crits_config' %}#actor_threat_identifiers_button">Actor Threat Identifiers</a>
                    </li>
                     <li class='mmenu_item'>
-                        <a class='controlPanelNav' sub_node='campaign_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#campaign_button">Campaigns</a>
+                        <a class='controlPanelNav' sub_node='campaign_button' node='node_items' href="{% url 'crits-config-views-crits_config' %}#campaign_button">Campaigns</a>
                     </li>
                     <li class='mmenu_item'>
-                        <a class='controlPanelNav' sub_node='action_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#action_button">Actions</a>
+                        <a class='controlPanelNav' sub_node='action_button' node='node_items' href="{% url 'crits-config-views-crits_config' %}#action_button">Actions</a>
                     </li>
                     <li class='mmenu_item'>
-                        <a class='controlPanelNav' sub_node='rawdatatype_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#rawdatatype_button">Raw Data Types</a>
+                        <a class='controlPanelNav' sub_node='rawdatatype_button' node='node_items' href="{% url 'crits-config-views-crits_config' %}#rawdatatype_button">Raw Data Types</a>
                     </li>
                     <li class='mmenu_item'>
-                        <a class='controlPanelNav' sub_node='sourceaccess_button' node='node_items' href="{% url 'crits.config.views.crits_config' %}#sourceaccess_button">Sources</a>
+                        <a class='controlPanelNav' sub_node='sourceaccess_button' node='node_items' href="{% url 'crits-config-views-crits_config' %}#sourceaccess_button">Sources</a>
                     </li>
                </ul>
             </li>
             {% endif %}
             {% if GeneralACL.CONTROL_PANEL_ROLES_READ|has_access_to:user %}
             <li class='mmenu_item'>
-                <a class='controlPanelNav' node='node_roles' href="{% url 'crits.config.views.crits_config' %}#roles">Roles</a>
+                <a class='controlPanelNav' node='node_roles' href="{% url 'crits-config-views-crits_config' %}#roles">Roles</a>
             </li>
             <li class='mmenu_item'>
-                <a href="{% url 'crits.core.views.role_graph' %}">Roles Graph</a>
+                <a href="{% url 'crits-core-views-role_graph' %}">Roles Graph</a>
             </li>
             <li class='mmenu_item'>
               <a href class="dialogClick" persona="new" dialog="role_combine_preview" id="role_combine_preview">Role Combinator</a>
@@ -743,36 +743,36 @@
             {% endif %}
             {% if GeneralACL.CONTROL_PANEL_USERS_READ|has_access_to:user %}
             <li class='mmenu_item'>
-                <a class='controlPanelNav' node='node_users' href="{% url 'crits.config.views.crits_config' %}#users">Users</a>
+                <a class='controlPanelNav' node='node_users' href="{% url 'crits-config-views-crits_config' %}#users">Users</a>
             </li>
             {% endif %}
             {% if GeneralACL.CONTROL_PANEL_SERVICES_READ|has_access_to:user %}
             <li class='mmenu_item'>
-                <a class='controlPanelNav' node='node_services' href="{% url 'crits.config.views.crits_config' %}#services">Services</a>
+                <a class='controlPanelNav' node='node_services' href="{% url 'crits-config-views-crits_config' %}#services">Services</a>
             </li>
             {% endif %}
             {% if GeneralACL.CONTROL_PANEL_AUDIT_LOG_READ|has_access_to:user %}
             <li class='mmenu_item'>
-                <a class='controlPanelNav' node='node_audit_log' href="{% url 'crits.config.views.crits_config' %}#auditLog">Audit Log</a>
+                <a class='controlPanelNav' node='node_audit_log' href="{% url 'crits-config-views-crits_config' %}#auditLog">Audit Log</a>
             </li>
             {% endif %}
         </ul>
     </li>
     {% endif %}
     <li class='nav_help mmenu_item'>
-      <a href="{% url 'crits.core.views.about' %}">About CRITs</a>
+      <a href="{% url 'crits-core-views-about' %}">About CRITs</a>
     </li>
     <li class='nav_main mmenu_item'>
-        <a href="{% url 'crits.core.views.reset_password' %}">Reset Password</a>
+        <a href="{% url 'crits-core-views-reset_password' %}">Reset Password</a>
     </li>
     <li class='nav_help mmenu_item'>
-      <a id="help" href="{% url 'crits.core.views.help' %}">Help</a>
+      <a id="help" href="{% url 'crits-core-views-help' %}">Help</a>
     </li>
     <li class='nav_help mmenu_item'>
       <a href class="dialogClick" persona="new" dialog="shortcut_help" id="shortcut-keys">Shortcut Keys Help</a>
     </li>
     <li class='nav_main mmenu_item'>
-      <a id="logout" href="{% url 'django.contrib.auth.views.logout_then_login' %}">Log Out</a>
+      <a id="logout" href="{% url 'crits-core-views-logout_then_login' %}">Log Out</a>
     </li>
   </ul>
 </nav>

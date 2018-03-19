@@ -3,10 +3,12 @@ import urllib
 
 from django import forms
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
@@ -40,9 +42,8 @@ def events_listing(request, option=None):
             return generate_event_csv(request)
         return generate_event_jtable(request, option)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Event listing.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Event listing.'})
 
 
 @user_passes_test(user_can_view_data)
@@ -89,9 +90,7 @@ def add_event(request):
             return HttpResponse(json.dumps({'success':False,
                                             'message':'User does not have permission to add event.'}))
     else:
-        return render_to_response("error.html",
-                                  {"error": "Expected AJAX POST"},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": "Expected AJAX POST"})
 
 
 @user_passes_test(user_can_view_data)
@@ -106,7 +105,7 @@ def event_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')] = request.GET.get('q', '').strip()
-    return HttpResponseRedirect(reverse('crits.events.views.events_listing') +
+    return HttpResponseRedirect(reverse('crits-events-views-events_listing') +
                                 "?%s" % urllib.urlencode(query))
 
 
@@ -130,13 +129,11 @@ def view_event(request, eventid):
         (new_template, args) = get_event_details(eventid, user)
         if new_template:
             template = new_template
-        return render_to_response(template,
-                                  args,
-                                  RequestContext(request))
+        return render(request, template,
+                                  args)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Event Details.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Event Details.'})
 
 
 @user_passes_test(user_can_view_data)
@@ -161,13 +158,11 @@ def remove_event(request, _id):
 
     if result['success']:
         return HttpResponseRedirect(
-            reverse('crits.events.views.events_listing')
+            reverse('crits-events-views-events_listing')
         )
 
     else:
-        return render_to_response('error.html',
-                                  {'error': result['message']},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': result['message']})
 
 
 @user_passes_test(user_can_view_data)
@@ -196,9 +191,7 @@ def set_event_title(request, event_id):
                                             'message':'User does not have permission to edit event title.'}))
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error": error},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": error})
 
 
 @user_passes_test(user_can_view_data)
@@ -226,9 +219,7 @@ def set_event_type(request, event_id):
                                             'message':'User does not have permission to edit event type.'}))
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error": error},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": error})
 
 
 @user_passes_test(user_can_view_data)
@@ -248,6 +239,4 @@ def get_event_type_dropdown(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX"
-        return render_to_response("error.html",
-                                    {"error": error},
-                                    RequestContext(request))
+        return render(request, "error.html", {"error": error})

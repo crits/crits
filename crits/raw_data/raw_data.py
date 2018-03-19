@@ -2,7 +2,12 @@ import datetime
 import uuid
 
 from dateutil.parser import parse
-from mongoengine import Document, StringField, IntField, EmbeddedDocument
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import StringField, IntField, EmbeddedDocument
 from mongoengine import ListField, EmbeddedDocumentField, UUIDField
 from mongoengine import BooleanField
 from django.conf import settings
@@ -82,10 +87,10 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         "schema_doc": {
         },
         "jtable_opts": {
-                         'details_url': 'crits.raw_data.views.raw_data_details',
+                         'details_url': 'crits-raw_data-views-raw_data_details',
                          'details_url_key': 'id',
                          'default_sort': "modified DESC",
-                         'searchurl': 'crits.raw_data.views.raw_data_listing',
+                         'searchurl': 'crits-raw_data-views-raw_data_listing',
                          'fields': [ "title", "data_type", "version",
                                      "modified", "source", "campaign",
                                      "id", "status"],

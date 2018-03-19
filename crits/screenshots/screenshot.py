@@ -1,6 +1,11 @@
 import io
 
-from mongoengine import Document, StringField, ListField, IntField
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import StringField, ListField, IntField
 from django.conf import settings
 from PIL import Image
 
@@ -31,10 +36,10 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
             'source': 'List [] of source information about who provided the screenshot'
         },
         "jtable_opts": {
-                         'details_url': 'crits.screenshots.views.render_screenshot',
+                         'details_url': 'crits-screenshots-views-render_screenshot',
                          'details_url_key': 'id',
                          'default_sort': "created DESC",
-                         'searchurl': 'crits.screenshots.views.screenshots_listing',
+                         'searchurl': 'crits-screenshots-views-screenshots_listing',
                          'fields': [ "thumb", "description", "created",
                                      "source", "id", "md5", "tags" ],
                          'jtopts_fields': [ "details",

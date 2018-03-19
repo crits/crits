@@ -1,9 +1,11 @@
 import json
 
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 try:
     from mongoengine.base import ValidationError
 except ImportError:
@@ -318,9 +320,9 @@ def generate_target_jtable(request, option):
     jtopts = {
         'title': "Targets",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' %
+        'listurl': reverse('crits-%ss-views-%ss_listing' %
                            (type_, type_), args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' %
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' %
                              (type_, type_), args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -364,7 +366,7 @@ def generate_target_jtable(request, option):
         {
             'tooltip': "'Refresh target stats'",
             'text': "'Refresh'",
-            'click': "function () {$.get('"+reverse('crits.%ss.views.%ss_listing' % (type_,type_))+"', {'refresh': 'yes'}); $('target_listing').jtable('load');}",
+            'click': "function () {$.get('"+reverse('crits-%ss-views-%ss_listing' % (type_,type_))+"', {'refresh': 'yes'}); $('target_listing').jtable('load');}",
         },
         {
             'tooltip': "'Add Target'",
@@ -373,16 +375,16 @@ def generate_target_jtable(request, option):
         },
     ]
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button' : '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )
 
 def generate_division_jtable(request, option):
     """
@@ -418,7 +420,7 @@ def generate_division_jtable(request, option):
     jtopts = {
         'title': "Divisions",
         'default_sort': "email_count DESC",
-        'listurl': reverse('crits.targets.views.%ss_listing' % (type_,),
+        'listurl': reverse('crits-targets-views-%ss_listing' % (type_,),
                            args=('jtlist',)),
         'deleteurl': None,
         'searchurl': None,
@@ -431,17 +433,17 @@ def generate_division_jtable(request, option):
         {
             'tooltip': "'Refresh division stats'",
             'text': "'Refresh'",
-            'click': "function () {$.get('"+reverse('crits.targets.views.%ss_listing' % (type_))+"', {'refresh': 'yes'}); $('target_listing').jtable('load');}",
+            'click': "function () {$.get('"+reverse('crits-targets-views-%ss_listing' % (type_))+"', {'refresh': 'yes'}); $('target_listing').jtable('load');}",
         },
     ]
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button' : '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )
