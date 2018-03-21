@@ -2020,9 +2020,13 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     if results['crits_type'] != 'AuditLog':
         pro = {}
         #print('fields1: {0}'.format(projection))
+        #This is how mongoengine 0.15 does it... 0.8.x's code is problematic
+        doc_fields = col_obj._fields
+        _db_field_map = {k: getattr(v, 'db_field', k)
+                                  for k, v in doc_fields.items()}
         for i in projection:
             #print("i: {0}".format(i))
-            k = col_obj._db_field_map[i]
+            k = _db_field_map[i]
             if i == k:
                 pro[i] = 1
             else:
@@ -2044,7 +2048,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
             #print('fields2: {0}'.format(col_obj._fields))
             for i in col_obj._fields:
                 #print("i: {0}".format(i))
-                k = col_obj._db_field_map[i]
+                k = _db_field_map[i]
                 if i == k:
                     pro[i] = 1
                 else:
@@ -2123,7 +2127,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                     
                 #    print('query1a: {0} {1} {2} {3}'.format(repr(query), repr(pro2), repr(srt), repr(limit)))
                 #docs = list(col.find(query, projection=pro2).skip(skip).limit(limit))
-                docs = list(col.aggregate([{ '$project' : pro2},{ '$match': query}, {'$skip': skip}, {'$sort': SON(srt)}, {'$limit': limit} ]))
+                docs = list(col.aggregate([{ '$project' : pro2},{ '$match': query}, {'$skip': skip}, {'$sort': SON(srt)}, {'$limit': limit} ], cursor={}))
                 #for i in docs:
                 #    print("doc1: {0}\r\n".format(repr(i)))
             else:
@@ -2135,7 +2139,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                 if results['crits_type'] == 'AuditLog':
                     docs = list(col.find(query).sort(srt).skip(skip).limit(limit))
                 else:
-                    docs = list(col.aggregate([{ '$project' : pro}, {'$match': query}, {'$skip': skip}, {'$sort': SON(srt)}, {'$limit': limit} ]))
+                    docs = list(col.aggregate([{ '$project' : pro}, {'$match': query}, {'$skip': skip}, {'$sort': SON(srt)}, {'$limit': limit} ], cursor={}))
                 #for i in docs:
                 #    print("doc2: {0}\r\n".format(repr(i)))                  
         # Else, all other objects that have sources associated with them
@@ -2148,7 +2152,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
             # count via pymongo
             #results['count'] = col.find(query2).count()
             # count via pymongo and  aggregation pipeline
-            for i in col.aggregate([{'$match': query2 }, { '$group':{'_id':"uniqueDocs",'count':{'$sum':1}}}]):
+            for i in col.aggregate([{'$match': query2 }, { '$group':{'_id':"uniqueDocs",'count':{'$sum':1}}}], cursor={}):
                 #print('count1: {0}'.format(repr(i['count']))) 
                 results['count'] = i['count']
             #https://jira.mongodb.org/browse/SERVER-3645
@@ -2182,7 +2186,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
             flist3 = { '_id': {'$in':  filterlist }}
             #print('flist3: {0} projection:{1}'.format(repr(flist3), repr(pro)))
             #docs = list(col.find(flist3, projection=pro).sort(srt).skip(skip).limit(limit))
-            docs = list(col.aggregate([{ '$project' : pro},{ '$match': flist3}, {'$skip': skip}, {'$sort': SON(srt)}, {'$limit': limit} ]))
+            docs = list(col.aggregate([{ '$project' : pro},{ '$match': flist3}, {'$skip': skip}, {'$sort': SON(srt)}, {'$limit': limit} ], cursor={}))
             #docs = list(docz3)
             #for i in docs:
                 #print("doc3: {0}\r\n".format(repr(i)))
