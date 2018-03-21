@@ -2019,6 +2019,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
 
     if results['crits_type'] != 'AuditLog':
         pro = {}
+        #print('fields1: {0}'.format(projection))
         for i in projection:
             #print("i: {0}".format(i))
             k = col_obj._db_field_map[i]
@@ -2028,23 +2029,21 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                 #print("projection mapping: {0} <- db:{1}".format(i, k))
                 #print("{0}:{1}".format(i, k))
                 kk = '$'+k                
-                pro[i] = kk
+                pro[i] = kk # map the db_field to field
+                pro[k] = kk # map also the db_field
                 if i == 'id':
                     # map it for w2ui
                     pro['recid'] = kk
-                elif i == 'from_address':
-                    # just fill-in both from and from_address or dashboard is unhappy
-                    pro['from'] = kk
 
         for i in excludes:
             pro.pop(i, None)
 
-        if pro:
-            # slap on when projection/exclusion is not empty
-            pro['schema_version'] = 1
-        else:
+
+        if not pro:
             # empty projection... we need to map some fields
+            #print('fields2: {0}'.format(col_obj._fields))
             for i in col_obj._fields:
+                #print("i: {0}".format(i))
                 k = col_obj._db_field_map[i]
                 if i == k:
                     pro[i] = 1
@@ -2052,13 +2051,20 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                     #print("projecting all fields mapping: {0} <- db:{1}".format(i, k)) 
                     kk = '$'+k
                     pro[i] = kk   # get all the fields
+                    pro[k] = kk   # map also the db_field
                     if i == 'id':
                         #map it for w2ui
                         pro['recid'] = kk
-                    elif i == 'from_address':
-                        # just fill-in both from and from_address or dashboard is unhappy
-                        pro['from'] = kk 
+    else:
+        # For AuditLog
+        pro = None
+    
+    if pro:
+        # slap on when projection/exclusion is not empty
+        pro['schema_version'] = 1
+        pro['unsupported_attrs'] = 1
 
+    #print('pro: {0}'.format(repr(pro)))
 
     srt = []
     for i in sort:
