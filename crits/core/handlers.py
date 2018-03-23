@@ -2082,7 +2082,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
            t = (i, 1)
            srt.append(t)
     if not srt:
-        srt=[("$natural", 1)]
+        srt=[{'$natural': 1}]
 
     # Setup for pymongo-direct queries
     col = col_obj._get_collection()
@@ -2150,16 +2150,14 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
             query2 = query
             query2['source.name'] = {'$in': sourcefilt}
             # count via pymongo
-            #results['count'] = col.find(query2).count()
+            results['count'] = col.find(query2).count()
             # count via pymongo and  aggregation pipeline
-            for i in col.aggregate([{'$match': query2 }, { '$group':{'_id':"uniqueDocs",'count':{'$sum':1}}}], cursor={}):
-                #print('count1: {0}'.format(repr(i['count']))) 
-                results['count'] = i['count']
+            #for i in col.aggregate([{'$match': query2 }, { '$group':{'_id':"uniqueDocs",'count':{'$sum':1}}}], cursor={}):
+            #    #print('count1: {0}'.format(repr(i['count']))) 
+            #    results['count'] = i['count']
             #https://jira.mongodb.org/browse/SERVER-3645
             #Interestingly, an aggregation counting the documents returns the correct value:
             #db.collection.aggregate({$group:{_id:"uniqueDocs",count:{$sum:1}}})
-
-
 
             resy = col.find(query2, fily) #.sort(srt)
             for r in resy:
@@ -2167,7 +2165,6 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                     #print('r: {0}'.format(r))
                     filterlist.append(r.get('_id', None))
 
-            
             #results['count'] = len(filterlist)
             #print('filterlist: {0}'.format(filterlist))
             #print('count3: {0}'.format(results['count'])) 

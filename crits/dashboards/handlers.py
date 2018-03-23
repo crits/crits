@@ -125,13 +125,12 @@ def getRecordsForDefaultDashboardTable(user, tableName):
         response = data_query(Indicator, user, query={}, sort=["-created"], limit=5)
     elif tableName == "Top_Campaigns" or tableName == "Top Campaigns" and user.has_access_to(CampaignACL.READ):
         obj_type = "Campaign"
-        response = data_query(Campaign, user, query={}, limit=5)
+        response = data_query(Campaign, user, query={}, sort=["-modified"], limit=5)
     elif tableName == "Counts":
         response = generate_counts_jtable(None, "jtlist")
         records = json.loads(response.content)["Records"]
-# done via mapping in data_query
-#        for record in records:
-#            record["recid"] = record.pop("id")
+        for record in records:
+            record["recid"] = record.pop("id")
         return records
     else:
         # This only happens if we have a dashboard which is no longer valid.
