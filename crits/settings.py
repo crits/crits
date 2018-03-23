@@ -201,7 +201,7 @@ else:
             replicaset=MONGO_REPLICASET)
 
 # Get config from DB via pymongo
-def connect_pymongo(dbs=MONGO_DATABASE, dbhost=MONGO_HOST, dbport=MONGO_PORT, dbuser=MONGO_USER, dbpass=MONGO_PASSWORD, dbssl=MONGO_SSL, w=0):
+def connect_pymongo(dbs=MONGO_DATABASE, dbhost=MONGO_HOST, dbport=MONGO_PORT, dbuser=MONGO_USER, dbpass=MONGO_PASSWORD, dbssl=MONGO_SSL, w=1):
     from pymongo import version_tuple as pymongo_versiont
     if pymongo_versiont >= (3,0):
         c = MongoClient(dbhost, dbport, ssl=dbssl, w=w) #, connect=False)
@@ -212,7 +212,7 @@ def connect_pymongo(dbs=MONGO_DATABASE, dbhost=MONGO_HOST, dbport=MONGO_PORT, db
         dbase.authenticate(dbuser, dbpass)
     return dbase
 
-PY_DB = connect_pymongo(MONGO_DATABASE, MONGO_HOST, MONGO_PORT, MONGO_USER, MONGO_PASSWORD, MONGO_SSL, 0)
+PY_DB = connect_pymongo(MONGO_DATABASE, MONGO_HOST, MONGO_PORT, MONGO_USER, MONGO_PASSWORD, MONGO_SSL, 1)
 
 coll = PY_DB[COL_CONFIG]
 crits_config = coll.find_one({})
