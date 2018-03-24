@@ -34,7 +34,10 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
               :class:`crits.core.mongo_tools.MongoError`
     """
 
-    return settings.PY_DB[collection]
+    try:
+        return settings.PY_DB[collection]
+    except Exception as e:
+        raise MongoError("MongoError: %s" % e)
 
 def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
@@ -52,7 +55,10 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
               :class:`crits.core.mongo_tools.MongoError`
     """
 
-    return gridfs.GridFS(settings.PY_DB, collection)
+    try:
+        return gridfs.GridFS(settings.PY_DB, collection)
+    except Exception as e:
+        raise MongoError("MongoError: %s" % e)
 
 def get_file(sample_md5, collection=settings.COL_SAMPLES):
     """
