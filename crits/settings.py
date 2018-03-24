@@ -10,7 +10,6 @@ import subprocess
 from pymongo import ReadPreference, MongoClient
 from mongoengine import connect
 from mongoengine import __version__ as mongoengine_version
-from pymongo import version_tuple as pymongo_versiont
 
 from distutils.version import StrictVersion
 
@@ -201,15 +200,21 @@ else:
     connect(MONGO_DATABASE, host=MONGO_HOST, port=MONGO_PORT, read_preference=MONGO_READ_PREFERENCE, ssl=MONGO_SSL,
             replicaset=MONGO_REPLICASET)
 
-# Get config from DB
-if pymongo_versiont >=(3,0):
-    c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=0) #, connect=False)
-else:
-    c = MongoClient(MONGO_HOST, MONGO_PORT, ssl=MONGO_SSL, w=0)
-db = c[MONGO_DATABASE]
-if MONGO_USER:
-    db.authenticate(MONGO_USER, MONGO_PASSWORD)
-coll = db[COL_CONFIG]
+# Get config from DB via pymongo
+def connect_pymongo(dbs=MONGO_DATABASE, dbhost=MONGO_HOST, dbport=MONGO_PORT, dbuser=MONGO_USER, dbpass=MONGO_PASSWORD, dbssl=MONGO_SSL, w=1):
+    from pymongo import version_tuple as pymongo_versiont
+    if pymongo_versiont >= (3,0):
+        c = MongoClient(dbhost, dbport, ssl=dbssl, w=w) #, connect=False)
+    else:
+        c = MongoClient(dbhost, dbport, ssl=dbssl, w=w)
+    dbase = c[dbs]
+    if dbuser:
+        dbase.authenticate(dbuser, dbpass)
+    return dbase
+
+PY_DB = connect_pymongo(MONGO_DATABASE, MONGO_HOST, MONGO_PORT, MONGO_USER, MONGO_PASSWORD, MONGO_SSL, 1)
+
+coll = PY_DB[COL_CONFIG]
 crits_config = coll.find_one({})
 if not crits_config:
     crits_config = {}
