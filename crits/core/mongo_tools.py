@@ -16,11 +16,78 @@ class MongoError(Exception):
     """
     pass
 
-# TODO: mongo_connector() and gridfs_connector() can probably be combined into
+# TODO: _mongo_connector() and gridfs_connector() can probably be combined into
 # one function.
+def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
+    """
+    Connect to the mongo database if you need to use PyMongo directly and not
+    use MongoEngine.
+
+    :param collection: the collection to use.
+    :type collection: str
+    :param preference: PyMongo Read Preference for ReplicaSet/clustered DBs.
+    :type preference: str.
+    :returns: :class:`pymongo.MongoClient`,
+              :class:`crits.core.mongo_tools.MongoError`
+    """
+
+    try:
+        if settings.SERVICE_MODEL.startswith('process'):
+            connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
+                                            settings.MONGO_PORT,
+                                            read_preference=preference,
+                                            ssl=settings.MONGO_SSL,
+                                           w=1) #, connect=False)
+            db = connection[settings.MONGO_DATABASE]
+            if settings.MONGO_USER:
+                db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
+            return db[collection]
+        else:
+            return settings.PY_DB[collection]
+    except pymongo.errors.ConnectionFailure as e:
+        raise MongoError("Error connecting to Mongo database: %s" % e)
+    except KeyError as e:
+        raise MongoError("Unknown database or collection: %s" % e)
+    except Exception as e:
+        raise MongoError("MongoError: %s" % e)
+
+def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
+    """
+    Connect to the mongo database if you need to use PyMongo directly and not
+    use MongoEngine. Used specifically for accessing GridFS.
+
+    :param collection: the collection to use.
+    :type collection: str
+    :param preference: PyMongo Read Preference for ReplicaSet/clustered DBs.
+    :type preference: str.
+    :returns: :class:`gridfs.GridFS`,
+              :class:`crits.core.mongo_tools.MongoError`
+    """
+
+    try:
+        # w=0 writes to GridFS are now prohibited.
+        #if pymongo.version_tuple >=(3,0):
+        if settings.SERVICE_MODEL.startswith('process'):
+            connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
+                                            settings.MONGO_PORT,
+                                            read_preference=preference,
+                                            ssl=settings.MONGO_SSL,
+                                            w=1) #, connect=False)
+            db = connection[settings.MONGO_DATABASE]
+            if settings.MONGO_USER:
+                db.authenticate(settings.MONGO_USER, settings.MONGO_PASSWORD)
+            return gridfs.GridFS(db, collection)
+        else:
+            return gridfs.GridFS(settings.PY_DB, collection)
+    except pymongo.errors.ConnectionFailure as e:
+        raise MongoError("Error connecting to Mongo database: %s" % e)
+    except KeyError as e:
+        raise MongoError("Unknown database: %s" % e)
+    except Exception as e:
+        raise MongoError("MongoError: %s" % e)
 
 # Setup standard connector to the MongoDB instance for use in any functions
-def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
+def _mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
     Connect to the mongo database if you need to use PyMongo directly and not
     use MongoEngine. Uses pooled connection created in settings.py rather than
@@ -39,7 +106,7 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     except Exception as e:
         raise MongoError("MongoError: %s" % e)
 
-def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
+def _gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
     Connect to the mongo database if you need to use PyMongo directly and not
     use MongoEngine. Uses pooled connection created in settings.py rather than
@@ -139,6 +206,85 @@ def put_file_gridfs(m, data, collection=settings.COL_SAMPLES):
         return None
     return m
 
+def _get_file(sample_md5, collection=settings.COL_SAMPLES):
+    """
+    Get a file from GridFS (or S3 if that's what you've configured).
+
+    :param sample_md5: The MD5 of the file to download.
+    :type sample_md5: str
+    :param collection: The collection to grab the file from.
+    :type collection: str
+    :returns: str
+    """
+
+    # Workaround until pcap download uses pcap object
+    if settings.FILE_DB == settings.GRIDFS:
+        return _get_file_gridfs(sample_md5, collection)
+    elif settings.FILE_DB == settings.S3:
+        objs = _mongo_connector(collection)
+        obj = objs.find_one({"md5": sample_md5})
+        oid = obj['filedata']
+        return get_file_s3(oid,collection)
+
+def _put_file(m, data, collection=settings.COL_SAMPLES):
+    """
+    Add a file to storage.
+
+    :param m: The filename.
+    :type m: str
+    :param data: The data to add.
+    :type data: str
+    :param collection: The collection to grab the file from.
+    :type collection: str
+    :returns: str
+    """
+
+    return put_file_gridfs(m, data, collection)
+
+def _get_file_gridfs(sample_md5, collection=settings.COL_SAMPLES):
+    """
+    Get a file from GridFS.
+
+    :param sample_md5: The MD5 of the file to download.
+    :type sample_md5: str
+    :param collection: The collection to grab the file from.
+    :type collection: str
+    :returns: str
+    """
+
+    data = None
+    try:
+        fm = _mongo_connector("%s.files" % collection)
+        objectid = fm.find_one({'md5': sample_md5}, {'_id': 1})['_id']
+        fs = _gridfs_connector("%s" % collection)
+        data = fs.get(objectid).read()
+    except Exception as e:
+        logger.error(e)
+        return None
+    return data
+
+def _put_file_gridfs(m, data, collection=settings.COL_SAMPLES):
+    """
+    Add a file to storage.
+
+    :param m: The filename.
+    :type m: str
+    :param data: The data to add.
+    :type data: str
+    :param collection: The collection to grab the file from.
+    :type collection: str
+    :returns: str
+    """
+
+    mimetype = magic.from_buffer(data, mime=True)
+    try:
+        fs = _gridfs_connector("%s" % collection)
+        fs.put(data, content_type="%s" % mimetype, filename="%s" % m)
+    except Exception as e:
+        logger.error(e)
+        return None
+    return m
+
 def delete_file(sample_md5, collection=settings.COL_SAMPLES):
     """
     delete_file allows you to delete a file from a gridfs collection specified
@@ -158,6 +304,32 @@ def delete_file(sample_md5, collection=settings.COL_SAMPLES):
     if sample:
         objectid = sample["_id"]
         fs = gridfs_connector("%s" % collection)
+        try:
+            fs.delete(objectid)
+            return True
+        except:
+            return None
+    return success
+
+def _delete_file(sample_md5, collection=settings.COL_SAMPLES):
+    """
+    delete_file allows you to delete a file from a gridfs collection specified
+    in the collection parameter.
+    this will only remove the file object, not metadata from assocatiated collections
+    for full deletion of metadata and file use delete_sample
+
+    :param sample_md5: The MD5 of the file to delete.
+    :type sample_md5: str
+    :param collection: The collection to delete the file from.
+    :type collection: str
+    :returns: True, False, None
+    """
+    fm = _mongo_connector("%s.files" % collection)
+    sample = fm.find_one({'md5': sample_md5}, {'_id': 1})
+    success = None
+    if sample:
+        objectid = sample["_id"]
+        fs = _gridfs_connector("%s" % collection)
         try:
             fs.delete(objectid)
             return True
@@ -191,7 +363,7 @@ def mongo_find_one(collection, query, fields=None, skip=0, sort=None,
     :returns: PyMongo cursor.
     """
 
-    col = mongo_connector(collection)
+    col = _mongo_connector(collection)
     return col.find_one(query, fields, skip=skip, sort=sort, *args, **kwargs)
 
 # Wrapper for pymongo's find function
@@ -217,7 +389,7 @@ def mongo_find(collection, query, fields=None, skip=0, limit=0, sort=None,
     :returns: PyMongo cursor, int
     """
 
-    col = mongo_connector(collection)
+    col = _mongo_connector(collection)
     results = col.find(query, fields, skip=skip, limit=limit, sort=sort,
                        *args, **kwargs)
     if not kwargs.get('timeout', True):
@@ -247,7 +419,7 @@ def mongo_insert(collection, doc_or_docs, username=None, safe=True, *args,
               "object" (insertion response) if successful.
     """
 
-    col = mongo_connector(collection)
+    col = _mongo_connector(collection)
     try:
         col.insert(doc_or_docs, safe=safe, check_keys=True, *args, **kwargs)
         return {'success':True, 'message':[], 'object':doc_or_docs}
@@ -279,7 +451,7 @@ def mongo_update(collection, query, alter, username=None,
     :returns: dict with keys "success" (boolean) and "message" (list)
     """
 
-    col = mongo_connector(collection)
+    col = _mongo_connector(collection)
     try:
         r = col.update(query, alter, multi=multi, upsert=upsert,
                        check_keys=True, safe=safe, *args, **kwargs)
@@ -303,7 +475,7 @@ def mongo_save(collection, to_save, username=None, safe=True, *args, **kwargs):
     :returns: dict with keys "success" (boolean) and "message" (list)
     """
 
-    col = mongo_connector(collection)
+    col = _mongo_connector(collection)
     try:
         r = col.save(to_save, check_keys=True, manipulate=True, safe=safe,
                      *args, **kwargs)
@@ -342,7 +514,7 @@ def mongo_find_and_modify(collection, query, alter, fields=None, username=None,
               "object" (cursor) if successful.
     """
     try:
-        col = mongo_connector(collection)
+        col = _mongo_connector(collection)
         result = col.find_and_modify(query, update=alter, fields=fields,
                                      remove=remove, new=new, upsert=upsert,
                                      sort=sort, *args, **kwargs)
@@ -376,7 +548,7 @@ def mongo_remove(collection, query=None, username=None, safe=True, verify=False,
         return {'success': False, 'message':['No query supplied to remove']}
     else:
         try:
-            col = mongo_connector(collection)
+            col = _mongo_connector(collection)
             col.remove(query, safe=safe, *args, **kwargs)
             if verify:
                 if mongo_find(collection, query, count=True):

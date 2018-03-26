@@ -195,10 +195,10 @@ def migrate_roles():
     Migrate legacy role objects to new RBAC Role objects
 
     """
-    from crits.core.mongo_tools import mongo_connector
+    from crits.core.mongo_tools import _mongo_connector
     import sys
 
-    collection = mongo_connector(settings.COL_USERS)
+    collection = _mongo_connector(settings.COL_USERS)
     users = collection.find()
 
     for user in users:

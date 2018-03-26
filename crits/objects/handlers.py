@@ -13,7 +13,7 @@ from crits.core import form_consts
 from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.data_tools import convert_string_to_bool, detect_pcap
 from crits.core.handsontable_tools import form_to_dict, get_field_from_label
-from crits.core.mongo_tools import put_file, mongo_connector
+from crits.core.mongo_tools import put_file, _mongo_connector
 from crits.core.user_tools import get_user_organization
 from crits.indicators.indicator import Indicator
 from crits.objects.forms import AddObjectForm
@@ -291,7 +291,7 @@ def add_object(type_, id_, object_type, source, method, reference, tlp, user,
                 #XXX: MongoEngine provides no direct GridFS access so we
                 #     need to use pymongo directly.
                 col = settings.COL_OBJECTS
-                grid = mongo_connector("%s.files" % col)
+                grid = _mongo_connector("%s.files" % col)
                 if grid.find({'md5': md5sum}).count() == 0:
                     put_file(filename, data, collection=col)
 
@@ -373,7 +373,7 @@ def delete_object_file(value):
             break
     else:
         col = settings.COL_OBJECTS
-        grid = mongo_connector("%s.files" % col)
+        grid = _mongo_connector("%s.files" % col)
         grid.remove({'md5': value})
     return
 

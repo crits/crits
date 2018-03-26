@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from crits.config.config import CRITsConfig
-from crits.core.mongo_tools import mongo_update, mongo_remove, mongo_connector
+from crits.core.mongo_tools import mongo_update, mongo_remove, _mongo_connector
 
 
 
