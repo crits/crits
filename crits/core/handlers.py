@@ -2001,16 +2001,15 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
         projection = projection.split(',')
     if not projection:
         projection = []
-# This could reduce fields when projection is Null 
-#        try:
-#            projection = col_obj._meta['jtable_opts']['fields']
-#        except KeyError:
-#            projection = []
+        
+    # It came from: https://stackoverflow.com/questions/12068558/use-mongoengine-and-pymongo-together    
+    col = col_obj._get_collection()
+    
     docs = None
     try:
-        if not issubclass(col_obj,CritsSourceDocument): 
+        if not issubclass(col_obj,CritsSourceDocument):
+            results['count'] = col.find(query).count()
             if count:
-                results['count'] = col_obj.objects(__raw__=query).as_pymongo().count()
                 results['result'] = "OK"
                 return results
             if col_obj._meta['crits_type'] == 'User':
@@ -2023,15 +2022,12 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
                     docs = col_obj.objects(__raw__=query).\
                                     order_by(*sort).\
                                     skip(skip).limit(limit)
-            results['count'] = len(docs)
         # Else, all other objects that have sources associated with them
         # need to be filtered appropriately for source access and TLP access
         else:
             fily = {'id': 1, 'tlp':1,'source':1}
             filterlist = []
             query['source.name'] = {'$in': sourcefilt}
-            # Inspiration came from: https://stackoverflow.com/questions/12068558/use-mongoengine-and-pymongo-together
-            col = col_obj._get_collection()
             resy = col.find(query, fily).sort(*sort)
             for r in resy:
                 if user.check_dict_source_tlp(r):
