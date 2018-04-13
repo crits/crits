@@ -2,10 +2,12 @@ import json
 
 from django import forms
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core import form_consts
 from crits.core.crits_mongoengine import EmbeddedCampaign
@@ -59,13 +61,11 @@ def detail(request, sample_md5):
             return HttpResponse(args, content_type="text/plain")
         elif template == "json":
             return HttpResponse(json.dumps(args), content_type="application/json")
-        return render_to_response(template,
-                                  args,
-                                  RequestContext(request))
+        return render(request, template,
+                                  args)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Sample details.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Sample details.'})
 
 
 @user_passes_test(user_can_view_data)
@@ -86,9 +86,8 @@ def samples_listing(request,option=None):
             return generate_sample_csv(request)
         return generate_sample_jtable(request, option)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Sample listing.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Sample listing.'})
 
 
 @user_passes_test(user_can_view_data)
@@ -124,10 +123,10 @@ def view_upload_list(request, filename, md5s):
         md5s = md5s[:-1]
     import ast
     md5s = ast.literal_eval(md5s)
-    return render_to_response('samples_uploadList.html',
+    return render(request, 'samples_uploadList.html',
                               {'sample_md5': md5s,
                                'archivename': filename},
-                              RequestContext(request))
+                              )
 
 @user_passes_test(user_can_view_data)
 def bulk_add_md5_sample(request):
@@ -158,14 +157,14 @@ def bulk_add_md5_sample(request):
                             default=json_handler),
                             content_type="application/json")
     else:
-        return render_to_response('bulk_add_default.html',
+        return render(request, 'bulk_add_default.html',
                                   {'formdict': formdict,
                                   'objectformdict': objectformdict,
                                   'title': "Bulk Add Samples",
                                   'table_name': 'sample',
                                   'local_validate_columns': [form_consts.Sample.MD5],
                                   'is_bulk_add_objects': True},
-                                  RequestContext(request));
+                                  )
 
 @user_passes_test(user_can_view_data)
 def upload_file(request, related_md5=None):
@@ -208,9 +207,7 @@ def upload_file(request, related_md5=None):
                 related_sample = Sample.objects(md5=related_md5).first()
                 if not related_sample:
                     response['message'] = ("Upload Failed. Unable to locate related sample. %s" % related_md5)
-                    return render_to_response("file_upload_response.html",
-                                              {'response': json.dumps(response)},
-                                              RequestContext(request))
+                    return render(request, "file_upload_response.html", {'response': json.dumps(response)})
                 # If selected, new sample inherits the campaigns of the related sample.
                 if form.cleaned_data['inherit_campaigns']:
                     if campaign:
@@ -225,7 +222,7 @@ def upload_file(request, related_md5=None):
                 if not related_obj:
                     response['success'] = False
                     response['message'] = ("Upload Failed. Unable to locate related Item")
-                    return render_to_response("file_upload_response.html",{'response': json.dumps(response)}, RequestContext(request))
+                    return render(request, "file_upload_response.html",{'response': json.dumps(response)}, )
 
                 else:
                     if form.cleaned_data['inherit_campaigns']:
@@ -295,16 +292,14 @@ def upload_file(request, related_md5=None):
                         description=description)
 
             except ZipFileError, zfe:
-                return render_to_response('file_upload_response.html',
-                                          {'response': json.dumps({'success': False,
-                                                                   'message': zfe.value})},
-                                          RequestContext(request))
+                return render(request, 'file_upload_response.html', {'response': json.dumps({'success': False,
+                                'message': zfe.value})})
             else:
                 # zip file upload, etc; result is a list of strings (1 hash per file)
                 if len(result) > 0 and not isinstance(result[0], dict):
                     filedata = request.FILES['filedata']
                     message = ('<a href="%s">View Uploaded Samples.</a>'
-                               % reverse('crits.samples.views.view_upload_list',
+                               % reverse('crits-samples-views-view_upload_list',
                                          args=[filedata.name, result]))
                     response = {'success': True,
                                 'message': message }
@@ -327,19 +322,15 @@ def upload_file(request, related_md5=None):
                                 msg = "<br>Error emailing sample %s: %s\n" % (s, email_errmsg)
                                 response['message'] = response['message'] + msg
                     if reload_page:
-                        response['redirect_url'] = reverse('crits.samples.views.detail', args=[related_md5])
-                return render_to_response("file_upload_response.html",
-                                          {'response': json.dumps(response)},
-                                          RequestContext(request))
+                        response['redirect_url'] = reverse('crits-samples-views-detail', args=[related_md5])
+                return render(request, "file_upload_response.html", {'response': json.dumps(response)})
         else:
             if related_md5: #if this is a 'related' upload, hide field so it doesn't reappear
                 form.fields['related_md5'].widget = forms.HiddenInput()
-            return render_to_response('file_upload_response.html',
-                                      {'response': json.dumps({'success': False,
-                                                               'form': form.as_table()})},
-                                      RequestContext(request))
+            return render(request, 'file_upload_response.html', {'response': json.dumps({'success': False,
+                        'form': form.as_table()})})
     else:
-        return HttpResponseRedirect(reverse('crits.samples.views.samples_listing'))
+        return HttpResponseRedirect(reverse('crits-samples-views-samples_listing'))
 
 @user_passes_test(user_can_view_data)
 def strings(request, sample_md5):
@@ -360,9 +351,7 @@ def strings(request, sample_md5):
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected AJAX."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected AJAX."})
 
 @user_passes_test(user_can_view_data)
 def stackstrings(request, sample_md5):
@@ -382,9 +371,7 @@ def stackstrings(request, sample_md5):
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected AJAX."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected AJAX."})
 
 @user_passes_test(user_can_view_data)
 def hex(request,sample_md5):
@@ -404,9 +391,7 @@ def hex(request,sample_md5):
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected AJAX."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected AJAX."})
 
 @user_passes_test(user_can_view_data)
 def xor(request,sample_md5):
@@ -430,9 +415,7 @@ def xor(request,sample_md5):
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected AJAX."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected AJAX."})
 
 @user_passes_test(user_can_view_data)
 def xor_searcher(request, sample_md5):
@@ -476,13 +459,9 @@ def xor_searcher(request, sample_md5):
             return HttpResponse(json.dumps(result),
                                 content_type="application/json")
         else:
-            return render_to_response('error.html',
-                                      {'error': "Invalid Form."},
-                                      RequestContext(request))
+            return render(request, 'error.html', {'error': "Invalid Form."})
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected AJAX POST."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected AJAX POST."})
 
 @user_passes_test(user_can_view_data)
 def unzip_sample(request, md5):
@@ -503,15 +482,11 @@ def unzip_sample(request, md5):
             try:
                 handle_unzip_file(md5, user=request.user, password=pwd)
             except ZipFileError, zfe:
-                return render_to_response('error.html',
-                                          {'error' : zfe.value},
-                                          RequestContext(request))
-        return HttpResponseRedirect(reverse('crits.samples.views.detail',
+                return render(request, 'error.html', {'error' : zfe.value})
+        return HttpResponseRedirect(reverse('crits-samples-views-detail',
                                             args=[md5]))
     else:
-        return render_to_response('error.html',
-                                  {'error': 'Expecting POST.'},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': 'Expecting POST.'})
 
 
 #TODO: convert to jtable
@@ -529,9 +504,7 @@ def sources(request):
     if refresh == "yes":
         generate_sources()
     sources_list = get_source_counts(request.user)
-    return render_to_response('samples_sources.html',
-                              {'sources': sources_list},
-                              RequestContext(request))
+    return render(request, 'samples_sources.html', {'sources': sources_list})
 
 @user_passes_test(user_can_view_data)
 def remove_sample(request, md5):
@@ -548,12 +521,10 @@ def remove_sample(request, md5):
     result = delete_sample(md5, '%s' % request.user.username)
     if result:
         org = get_user_organization(request.user.username)
-        return HttpResponseRedirect(reverse('crits.samples.views.samples_listing')
+        return HttpResponseRedirect(reverse('crits-samples-views-samples_listing')
                                     +'?source=%s' % org)
     else:
-        return render_to_response('error.html',
-                                  {'error': "Could not delete sample"},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Could not delete sample"})
 
 @user_passes_test(user_can_view_data)
 def set_sample_filename(request):
@@ -575,9 +546,7 @@ def set_sample_filename(request):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def set_sample_filenames(request):
@@ -598,5 +567,4 @@ def set_sample_filenames(request):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html", {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })

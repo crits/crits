@@ -1,10 +1,12 @@
 import json
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
@@ -41,9 +43,8 @@ def certificates_listing(request,option=None):
                                 content_type="application/json")
         return generate_cert_jtable(request, option)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Certificate listing.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Certificate listing.'})
 
 @user_passes_test(user_can_view_data)
 def certificate_details(request, md5):
@@ -64,13 +65,11 @@ def certificate_details(request, md5):
         (new_template, args) = get_certificate_details(md5, user)
         if new_template:
             template = new_template
-        return render_to_response(template,
-                                  args,
-                                  RequestContext(request))
+        return render(request, template,
+                                  args)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Certificate.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Certificate.'})
 
 @user_passes_test(user_can_view_data)
 def upload_certificate(request):
@@ -110,26 +109,18 @@ def upload_certificate(request):
                           'message':'User does not have permission to add Certificate.'}
 
             if status['success']:
-                return render_to_response('file_upload_response.html',
+                return render(request, 'file_upload_response.html',
                                           {'response': json.dumps({
                     'message': 'Certificate uploaded successfully! <a href="%s">View Certificate</a>'
-                        % reverse('crits.certificates.views.certificate_details',
+                        % reverse('crits-certificates-views-certificate_details',
                                   args=[status['md5']]), 'success': True})},
-                                          RequestContext(request))
+                                          )
             else:
-                return render_to_response('file_upload_response.html',
-                                          {'response': json.dumps({ 'success': False,
-                                                                   'message': status['message']})}
-                                          , RequestContext(request))
+                return render(request, 'file_upload_response.html', {'response': json.dumps({ 'success': False})})
         else:
-            return render_to_response('file_upload_response.html',
-                                      {'response': json.dumps({'success': False,
-                                                               'form': form.as_table()})},
-                RequestContext(request))
+            return render(request, 'file_upload_response.html', {'response': json.dumps({'success': False})})
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected POST."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected POST."})
 
 @user_passes_test(user_can_view_data)
 def remove_certificate(request, md5):
@@ -149,7 +140,7 @@ def remove_certificate(request, md5):
         result = {'success':False,
                   'message':'User does not have permission to delete certificate.'}
     if result:
-        return HttpResponseRedirect(reverse('crits.certificates.views.certificates_listing'))
+        return HttpResponseRedirect(reverse('crits-certificates-views-certificates_listing'))
     else:
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                                   {'error': "Could not delete certificate"})

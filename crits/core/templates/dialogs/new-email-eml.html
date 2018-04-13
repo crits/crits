@@ -2,7 +2,7 @@
 
 <div id="dialog-{{ request.GET.dialog }}" title="Upload Email (EML)">
     <form id="form-{{ request.GET.dialog }}" 
-	  action='{% url "crits.emails.views.email_eml_add" %}' 
+	  action='{% url "crits-emails-views-email_eml_add" %}' 
 	  method='POST' enctype="multipart/form-data" target="eml-iframe"
 	  item-type="email-eml" submit-action="default">
     <table class="form">{{ upload_email_eml.as_table }}</table>

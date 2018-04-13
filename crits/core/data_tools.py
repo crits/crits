@@ -36,8 +36,8 @@ def get_file_fs(sample_md5):
                    'rb')
         data = fin.read()
         fin.close()
-    except:
-        raise
+    except Exception as e:
+        raise("error: %s" % e)
     return data
 
 def put_file_fs(data):
@@ -61,8 +61,8 @@ def put_file_fs(data):
                     'wb')
         fout.write(data)
         fout.close()
-    except:
-        raise
+    except Exception as e:
+        raise("error: %s" % e)
     return sample_md5
 
 def create_zip(files, pw_protect=True):

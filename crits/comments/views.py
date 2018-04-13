@@ -4,10 +4,12 @@ import urllib
 
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.template.loader import render_to_string
 
 from crits.comments.forms import AddCommentForm
@@ -31,8 +33,8 @@ def comment_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
-    #return render_to_response('error.html', {'error': query})
-    return HttpResponseRedirect(reverse('crits.comments.views.comments_listing')+
+    #return render(request, 'error.html', {'error': query})
+    return HttpResponseRedirect(reverse('crits-comments-views-comments_listing')+
                                 "?%s" % urllib.urlencode(query))
 
 
@@ -97,7 +99,7 @@ def add_update_comment(request, method, obj_type, obj_id):
         return HttpResponse(json.dumps({'success':False,
                                         'form':form.as_table()}),
                             content_type="application/json")
-    return render_to_response("error.html", {'error':'Expected AJAX/POST'})
+    return render(request, "error.html", {'error':'Expected AJAX/POST'})
 
 @user_passes_test(user_can_view_data)
 def remove_comment(request, obj_type, obj_id):
@@ -124,7 +126,7 @@ def remove_comment(request, obj_type, obj_id):
             result = {"success":False,
                       "message":"User does not have permission to remove comments."}
         return HttpResponse(json.dumps(result), content_type="application/json")
-    return render_to_response("error.html", {'error':'Expected AJAX/POST'})
+    return render(request, "error.html", {'error':'Expected AJAX/POST'})
 
 @user_passes_test(user_can_view_data)
 def get_new_comments(request):
@@ -159,13 +161,13 @@ def get_new_comments(request):
         for comment in comments:
             username = {'username': '%s' % request.user.username}
             context = {'comment': comment, 'user': username}
-            html += render_to_string('comments_row_widget.html', context)
+            html += render_to_string('comments_row_widget.html', context, request=request)
         result = {'success': True, 'html': html}
         return HttpResponse(json.dumps(result,
                                        default=json_handler),
                             content_type="application/json")
     else:
-        return render_to_response("error.html", {'error':'Expected AJAX/POST'})
+        return render(request, "error.html", {'error':'Expected AJAX/POST'})
 
 @user_passes_test(user_can_view_data)
 def activity(request, atype=None, value=None):
@@ -184,7 +186,7 @@ def activity(request, atype=None, value=None):
     user = request.user
     analyst = user.username
     if not user.has_access_to(GeneralACL.RECENT_ACTIVITY_READ):
-        return render_to_response("error.html", {'error':'User does not have permission to view Recent Activity.'})
+        return render(request, "error.html", {'error':'User does not have permission to view Recent Activity.'})
     if request.method == "POST" and request.is_ajax():
         atype = request.POST.get('atype', 'all')
         value = request.POST.get('value', None)
@@ -210,4 +212,4 @@ def activity(request, atype=None, value=None):
                                         date,
                                         analyst,
                                         ajax)
-        return render_to_response(template, args, RequestContext(request))
+        return render(request, template, args, )

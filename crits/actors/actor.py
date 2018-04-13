@@ -1,7 +1,13 @@
 import datetime
 
-from mongoengine import Document, EmbeddedDocument, StringField, ListField
-from mongoengine import EmbeddedDocumentField, BooleanField
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import EmbeddedDocument, StringField, ListField, BooleanField
+from mongoengine import EmbeddedDocumentField
+
 from django.conf import settings
 
 from crits.actors.migrate import migrate_actor
@@ -61,7 +67,7 @@ class ActorIdentifier(CritsDocument, CritsSchemaDocument, CritsSourceDocument,
             'details_url': '',
             'details_url_key': '',
             'default_sort': "created DESC",
-            'searchurl': 'crits.actors.views.actor_identifiers_listing',
+            'searchurl': 'crits-actors-views-actor_identifiers_listing',
             'fields': ["name", "created", "source", "identifier_type", "id"],
             'jtopts_fields': ["name", "identifier_type", "created", "source"],
             'hidden_fields': [],
@@ -98,10 +104,10 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         "schema_doc": {
         },
         "jtable_opts": {
-            'details_url': 'crits.actors.views.actor_detail',
+            'details_url': 'crits-actors-views-actor_detail',
             'details_url_key': 'id',
             'default_sort': "modified DESC",
-            'searchurl': 'crits.actors.views.actors_listing',
+            'searchurl': 'crits-actors-views-actors_listing',
             'fields': ["name", "description", "modified", "source", "campaign",
                        "status", "id"],
             'jtopts_fields': ["details", "name", "description", "modified",

@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load url from future %}
 {% load filters %}
 
 {% block title %} Role Detail {% endblock %}
@@ -7,12 +6,12 @@
 {% block content %}
 
 <script>
-    var role_value_change = "{% url 'crits.core.views.role_value_change' %}";
-    var role_add_source = "{% url 'crits.core.views.role_add_source' %}";
-    var role_remove_source = "{% url 'crits.core.views.role_remove_source' %}";
-    var toggle_item_active = "{% url 'crits.core.views.toggle_item_active' %}";
-    var update_role_name = "{% url 'crits.core.views.update_role_name' %}";
-    var update_role_description = "{% url 'crits.core.views.update_role_description' %}";
+    var role_value_change = "{% url 'crits-core-views-role_value_change' %}";
+    var role_add_source = "{% url 'crits-core-views-role_add_source' %}";
+    var role_remove_source = "{% url 'crits-core-views-role_remove_source' %}";
+    var toggle_item_active = "{% url 'crits-core-views-toggle_item_active' %}";
+    var update_role_name = "{% url 'crits-core-views-update_role_name' %}";
+    var update_role_description = "{% url 'crits-core-views-update_role_description' %}";
     var rid = "{{ rid }}";
     var do_copy = false;
     {% if show_roles %}

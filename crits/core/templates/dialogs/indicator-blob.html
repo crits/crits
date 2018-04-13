@@ -7,7 +7,7 @@
         Separate multiple Tickets, Actions, and/or Bucket List values with commas, and<br/>
         surround with quotes (e.g. "value1,value2,value3").</p>
     <form id="form-{{ request.GET.dialog }}"
-	  action='{% url "crits.indicators.views.upload_indicator" %}'
+	  action='{% url "crits-indicators-views-upload_indicator" %}'
 	  method='POST' enctype="multipart/form-data"
 	  item-type="indicator" input_clear_filter="[type!='hidden'][id!='id_data']">
     <table class="form">{{ upload_text.as_table }}</table>

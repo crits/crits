@@ -1,10 +1,12 @@
 import json
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core.handlers import get_item_names
 from crits.core.user_tools import user_can_view_data
@@ -47,9 +49,8 @@ def raw_data_listing(request,option=None):
             return generate_raw_data_csv(request)
         return generate_raw_data_jtable(request, option)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Raw Data listing.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Raw Data listing.'})
 
 
 @user_passes_test(user_can_view_data)
@@ -73,9 +74,7 @@ def set_raw_data_tool_details(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def set_raw_data_tool_name(request, _id):
@@ -98,9 +97,7 @@ def set_raw_data_tool_name(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def set_raw_data_type(request, _id):
@@ -123,9 +120,7 @@ def set_raw_data_type(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def set_raw_data_highlight_comment(request, _id):
@@ -150,9 +145,7 @@ def set_raw_data_highlight_comment(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def set_raw_data_highlight_date(request, _id):
@@ -177,9 +170,7 @@ def set_raw_data_highlight_date(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def add_inline_comment(request, _id):
@@ -204,9 +195,7 @@ def add_inline_comment(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def add_highlight(request, _id):
@@ -231,9 +220,7 @@ def add_highlight(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def remove_highlight(request, _id):
@@ -256,9 +243,7 @@ def remove_highlight(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def get_inline_comments(request, _id):
@@ -277,9 +262,7 @@ def get_inline_comments(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def get_raw_data_versions(request, _id):
@@ -298,9 +281,7 @@ def get_raw_data_versions(request, _id):
                             content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html",
-                                  {"error" : error },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : error })
 
 @user_passes_test(user_can_view_data)
 def raw_data_details(request, _id):
@@ -321,13 +302,11 @@ def raw_data_details(request, _id):
         (new_template, args) = get_raw_data_details(_id, user)
         if new_template:
             template = new_template
-        return render_to_response(template,
-                                  args,
-                                  RequestContext(request))
+        return render(request, template,
+                                  args)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Raw Data Details.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Raw Data Details.'})
 
 
 @user_passes_test(user_can_view_data)
@@ -407,33 +386,25 @@ def upload_raw_data(request, link_id=None):
             if status['success']:
                 jdump = json.dumps({
                     'message': 'raw_data uploaded successfully! <a href="%s">View raw_data</a>'
-                    % reverse('crits.raw_data.views.raw_data_details',
+                    % reverse('crits-raw_data-views-raw_data_details',
                               args=[status['_id']]), 'success': True})
                 if not has_file:
                     return HttpResponse(jdump, content_type="application/json")
-                return render_to_response('file_upload_response.html',
-                                          {'response': jdump},
-                                          RequestContext(request))
+                return render(request, 'file_upload_response.html', {'response': jdump})
             else:
                 jdump = json.dumps({'success': False,
                                     'message': status['message']})
                 if not has_file:
                     return HttpResponse(jdump, content_type="application/json")
-                return render_to_response('file_upload_response.html',
-                                          {'response': jdump},
-                                          RequestContext(request))
+                return render(request, 'file_upload_response.html', {'response': jdump})
         else:
             jdump = json.dumps({'success': False,
                                 'form': form.as_table()})
             if not has_file:
                 return HttpResponse(jdump, content_type="application/json")
-            return render_to_response('file_upload_response.html',
-                                      {'response': jdump},
-                                      RequestContext(request))
+            return render(request, 'file_upload_response.html', {'response': jdump})
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected POST."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected POST."})
 
 @user_passes_test(user_can_view_data)
 def remove_raw_data(request, _id):
@@ -449,9 +420,9 @@ def remove_raw_data(request, _id):
 
     result = delete_raw_data(_id, '%s' % request.user.username)
     if result:
-        return HttpResponseRedirect(reverse('crits.raw_data.views.raw_data_listing'))
+        return HttpResponseRedirect(reverse('crits-raw_data-views-raw_data_listing'))
     else:
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                                   {'error': "Could not delete raw_data"})
 
 @user_passes_test(user_can_view_data)
@@ -484,7 +455,7 @@ def new_raw_data_type(request):
             message = {'form': form.as_table()}
         return HttpResponse(json.dumps(message),
                             content_type="application/json")
-    return render_to_response('error.html',
+    return render(request, 'error.html',
                               {'error':'Expected AJAX POST'})
 
 
@@ -508,6 +479,4 @@ def get_raw_data_type_dropdown(request):
                             content_type="application/json")
     else:
         error = "Expected AJAX POST"
-        return render_to_response("error.html",
-                                  {'error': error},
-                                  RequestContext(request))
+        return render(request, "error.html", {'error': error})

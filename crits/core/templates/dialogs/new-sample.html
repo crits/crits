@@ -2,7 +2,7 @@
 
 <div id="dialog-{{ request.GET.dialog }}" title="Upload Sample">
     <form id="form-{{ request.GET.dialog }}" 
-	  action='{% url "crits.samples.views.upload_file" %}' 
+	  action='{% url "crits-samples-views-upload_file" %}' 
 	  method='POST' enctype="multipart/form-data" target="new-sample-iframe"
 	  item-type="new-sample"
 	  input_clear_filter="[type!='hidden']">

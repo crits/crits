@@ -1,8 +1,8 @@
 {% load filters %}
 <script>
-    var global_search = "{% url 'crits.core.views.global_search_listing' %}";
-    var actor_tags_modify = "{% url 'crits.actors.views.actor_tags_modify' %}";
-    var actor_tags_list = "{% url 'crits.actors.views.get_actor_tags' %}";
+    var global_search = "{% url 'crits-core-views-global_search_listing' %}";
+    var actor_tags_modify = "{% url 'crits-actors-views-actor_tags_modify' %}";
+    var actor_tags_list = "{% url 'crits-actors-views-get_actor_tags' %}";
 </script>
 {% if ActorACL.INTENDED_EFFECTS_READ|has_access_to:user %}
 <tr>

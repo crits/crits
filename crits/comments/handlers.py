@@ -2,10 +2,12 @@ import datetime
 import json
 
 from django.conf import settings
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.template.loader import render_to_string
 try:
     from mongoengine.base import ValidationError
@@ -166,13 +168,13 @@ def generate_comment_jtable(request, option):
     jtopts = {
         'title': "Comments",
         'default_sort': "date DESC",
-        'listurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'listurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                             type_),
                            args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' % (type_,
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' % (type_,
                                                               type_),
                              args=('jtdelete',)),
-        'searchurl': reverse('crits.%ss.views.%ss_listing' % (type_,type_)),
+        'searchurl': reverse('crits-%ss-views-%ss_listing' % (type_,type_)),
         'fields': ["details",
                    "obj_type",
                    "comment",
@@ -187,16 +189,16 @@ def generate_comment_jtable(request, option):
     }
     jtable = build_jtable(jtopts,request)
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button' : '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )
 
 def comment_add(cleaned_data, obj_type, obj_id, method, subscr, analyst):
     """

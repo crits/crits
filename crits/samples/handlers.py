@@ -8,10 +8,12 @@ import time
 
 from bson.objectid import ObjectId
 from django.core.mail import send_mail
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from hashlib import md5
 try:
     from mongoengine.base import ValidationError
@@ -257,9 +259,9 @@ def generate_sample_jtable(request, option):
     jtopts = {
         'title': "Samples",
         'default_sort': mapper['default_sort'],
-        'listurl': reverse('crits.%ss.views.%ss_listing' %
+        'listurl': reverse('crits-%ss-views-%ss_listing' %
                            (type_, type_), args=('jtlist',)),
-        'deleteurl': reverse('crits.%ss.views.%ss_listing' %
+        'deleteurl': reverse('crits-%ss-views-%ss_listing' %
                              (type_, type_), args=('jtdelete',)),
         'searchurl': reverse(mapper['searchurl']),
         'fields': mapper['jtopts_fields'],
@@ -308,16 +310,16 @@ def generate_sample_jtable(request, option):
         },
     ]
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_,
                                    'button' : '%ss_tab' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%s_listing.html" % type_,
+        return render(request, "%s_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%s_listing' % type_},
-                                  RequestContext(request))
+                                  )
 
 def generate_yarahit_jtable(request, option):
     """
@@ -337,7 +339,7 @@ def generate_yarahit_jtable(request, option):
     type_ = "yarahit"
     if option == "jtlist":
         # Sets display url
-        details_url = 'crits.samples.views.samples_listing'
+        details_url = 'crits-samples-views-samples_listing'
         details_url_key = "detectexact"
         response = jtable_ajax_list(obj_type,
                                     details_url,
@@ -349,10 +351,10 @@ def generate_yarahit_jtable(request, option):
     jtopts = {
         'title': "Yara Hits",
         'default_sort': "result ASC",
-        'listurl': reverse('crits.samples.views.%ss_listing' % (type_,),
+        'listurl': reverse('crits-samples-views-%ss_listing' % (type_,),
                            args=('jtlist',)),
         'deleteurl': "",
-        'searchurl': reverse('crits.samples.views.%ss_listing' % (type_,)),
+        'searchurl': reverse('crits-samples-views-%ss_listing' % (type_,)),
         'fields': ["result", "engine", "version", "sample_count","_id"],
         'hidden_fields': ["_id"],
         'linked_fields': []
@@ -362,21 +364,21 @@ def generate_yarahit_jtable(request, option):
         {
             'tooltip': "'Refresh Yara Hits'",
             'text': "'Refresh Stats'",
-            'click': "function () {$.get('"+reverse('crits.samples.views.%ss_listing' % type_)+"', {'refresh': 'yes'}, function () { $('#yarahits_listing').jtable('reload');});}"
+            'click': "function () {$.get('"+reverse('crits-samples-views-%ss_listing' % type_)+"', {'refresh': 'yes'}, function () { $('#yarahits_listing').jtable('reload');});}"
         },
     ]
 
     if option == "inline":
-        return render_to_response("jtable.html",
+        return render(request, "jtable.html",
                                   {'jtable': jtable,
                                    'jtid': '%ss_listing' % type_,
                                    'button' : '%ss_button' % type_},
-                                  RequestContext(request))
+                                  )
     else:
-        return render_to_response("%ss_listing.html" % type_,
+        return render(request, "%ss_listing.html" % type_,
                                   {'jtable': jtable,
                                    'jtid': '%ss_listing' % type_},
-                                  RequestContext(request))
+                                  )
 
 def get_filename(md5=None):
     """
@@ -505,8 +507,8 @@ def handle_unzip_file(md5, user=None, password=None):
     source = sample.source[0].name
     campaign = sample.campaign
     reference = ''
-    return unzip_file(md5, user, password, data, source, method="Unzip Existing Sample",
-                      reference=reference, campaign=campaign, related_md5=md5, )
+    return unzip_file(md5, user, password, data, source, source_method="Unzip Existing Sample",
+                      source_reference=reference, campaign=campaign, related_md5=md5, )
 
 def unzip_file(filename, user=None, password=None, data=None, source=None,
                source_method='Zip', source_reference='', source_tlp='',
@@ -764,7 +766,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
                     if is_return_only_md5 == True:
                         return pres['md5'].lower()
                     retVal['message'] += ('Detected a PCAP! New PCAP: <a href="%s">%s.</a>'
-                                        % (reverse('crits.pcaps.views.pcap_details',
+                                        % (reverse('crits-pcaps-views-pcap_details',
                                                     args=[pres['md5'].lower()]),
                                                     pres['md5'].lower()))
                 else:
@@ -1015,7 +1017,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
         # New sample, and successfully uploaded
         if is_validate_only == False:
             retVal['message'] += ('Success: Added new sample <a href="%s">%s.</a>'
-                                  % (reverse('crits.samples.views.detail',
+                                  % (reverse('crits-samples-views-detail',
                                              args=[sample.md5.lower()]),
                                              sample.md5.lower()))
             # Update Cache
@@ -1025,7 +1027,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
         # Duplicate sample, but uploaded anyways
         if is_validate_only == False:
             message = ('Success: Updated sample <a href="%s">%s.</a>'
-                                  % (reverse('crits.samples.views.detail',
+                                  % (reverse('crits-samples-views-detail',
                                              args=[sample.md5.lower()]),
                                             sample.md5.lower()))
             retVal['message'] += message
@@ -1039,7 +1041,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
                                     ' when MD5 already exists as file [' +
                                     sample.filename  + ']'
                                     '<a href="%s">%s.</a>'
-                                    % (reverse('crits.samples.views.detail',
+                                    % (reverse('crits-samples-views-detail',
                                                args=[sample.md5.lower()]),
                                                sample.md5.lower()))
                 retVal['message'] += warning_message

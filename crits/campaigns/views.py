@@ -3,11 +3,13 @@ import json
 
 from bson import json_util
 from django.conf import settings
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.http import HttpResponse
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import user_passes_test
 
 from crits.campaigns.forms import AddCampaignForm, CampaignForm
@@ -49,9 +51,7 @@ def campaign_stats(request):
                                        default=json_util.default),
                             content_type="application/json")
     else:
-        return render_to_response("campaign_monthly.html",
-                                  {'campaign': campaign},
-                                  RequestContext(request))
+        return render(request, "campaign_monthly.html", {'campaign': campaign})
 
 
 @user_passes_test(user_can_view_data)
@@ -73,9 +73,8 @@ def campaigns_listing(request, option=None):
         return generate_campaign_jtable(request, option)
 
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Campaign listing.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Campaign listing.'})
 
 @user_passes_test(user_can_view_data)
 def campaign_names(request, active_only=True):
@@ -117,13 +116,11 @@ def campaign_details(request, campaign_name):
                                                     request.user.username)
         if new_template:
             template = new_template
-        return render_to_response(template,
-                                  args,
-                                  RequestContext(request))
+        return render(request, template,
+                                  args)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Campaign.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Campaign.'})
 
 @user_passes_test(user_can_view_data)
 def add_campaign(request):
@@ -165,7 +162,7 @@ def add_campaign(request):
                           'message':'User does not have permission to add new campaigns.'}
             if result['success']:
                 message = {
-                    'message': '<div>Campaign <a href="%s">%s</a> added successfully!</div>' % (reverse('crits.campaigns.views.campaign_details', args=[campaign_name]), campaign_name),
+                    'message': '<div>Campaign <a href="%s">%s</a> added successfully!</div>' % (reverse('crits-campaigns-views-campaign_details', args=[campaign_name]), campaign_name),
                     'success': True}
             else:
                 message = {
@@ -174,7 +171,7 @@ def add_campaign(request):
             return HttpResponse(json.dumps(message), content_type="application/json")
         else:
             return HttpResponse(json.dumps({'form': campaign_form.as_table(), 'success': False, 'message': "Please correct form errors."}), content_type="application/json")
-    return render_to_response("error.html", {"error": 'Expected AJAX POST'}, RequestContext(request))
+    return render(request, "error.html", {"error": 'Expected AJAX POST'})
 
 @user_passes_test(user_can_view_data)
 def campaign_add(request, ctype, objectid):
@@ -317,9 +314,7 @@ def remove_campaign(request, ctype, objectid):
                       'message':'User does not have permission to delete campaign from TLO.'}
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error": 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": 'Expected AJAX POST.'})
 
 @user_passes_test(user_can_view_data)
 def campaign_ttp(request, cid):
@@ -364,14 +359,12 @@ def campaign_ttp(request, cid):
             campaign = result['campaign']
             html = render_to_string('campaign_ttps_data_widget.html',
                                     {'campaign_detail': campaign},
-                                    RequestContext(request))
+                                    request=request)
             del result['campaign']
             result['html'] = html
         return HttpResponse(json.dumps(result), content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error": 'Expected AJAX POST.'},
-                                  RequestContext(request))
+        return render(request, "error.html", {"error": 'Expected AJAX POST.'})
 
 @user_passes_test(user_can_view_data)
 def campaign_aliases(request):
@@ -399,4 +392,4 @@ def campaign_aliases(request):
                                 content_type="application/json")
     else:
         error = "Expected POST"
-        return render_to_response("error.html", {"error": error}, RequestContext(request))
+        return render(request, "error.html", {"error": error})

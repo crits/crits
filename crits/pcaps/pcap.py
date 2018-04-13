@@ -1,4 +1,9 @@
-from mongoengine import Document, StringField, IntField
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import StringField, IntField
 from mongoengine import EmbeddedDocument
 from django.conf import settings
 
@@ -29,10 +34,10 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
             'source': 'List [] of source information about who provided the PCAP'
         },
         "jtable_opts": {
-                         'details_url': 'crits.pcaps.views.pcap_details',
+                         'details_url': 'crits-pcaps-views-pcap_details',
                          'details_url_key': 'md5',
                          'default_sort': "modified DESC",
-                         'searchurl': 'crits.pcaps.views.pcaps_listing',
+                         'searchurl': 'crits-pcaps-views-pcaps_listing',
                          'fields': [ "filename", "description", "length",
                                      "modified", "source", "campaign", "id",
                                      "md5", "status"],

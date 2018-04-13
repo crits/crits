@@ -1,10 +1,12 @@
 import json
 
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from crits.core import form_consts
 from crits.core.user_tools import user_can_view_data
@@ -34,9 +36,8 @@ def pcaps_listing(request,option=None):
             return generate_pcap_csv(request)
         return generate_pcap_jtable(request, option)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view PCAP listing.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view PCAP listing.'})
 
 
 @user_passes_test(user_can_view_data)
@@ -58,14 +59,11 @@ def pcap_details(request, md5):
         (new_template, args) = get_pcap_details(md5, user)
         if new_template:
             template = new_template
-        return render_to_response(template,
-                                  args,
-                                  RequestContext(request))
+        return render(request, template,
+                                  args)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view PCAP Details.'},
-                                  RequestContext(request))
-
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view PCAP Details.'})
 
 @user_passes_test(user_can_view_data)
 def upload_pcap(request):
@@ -101,26 +99,18 @@ def upload_pcap(request):
                                       method=method, reference=reference, tlp=tlp,
                                       bucket_list=bucket_list, ticket=ticket)
             if status['success']:
-                return render_to_response('file_upload_response.html',
+                return render(request, 'file_upload_response.html',
                                           {'response': json.dumps({
                     'message': 'PCAP uploaded successfully! <a href="%s">View PCAP</a>'
-                        % reverse('crits.pcaps.views.pcap_details',
+                        % reverse('crits-pcaps-views-pcap_details',
                                   args=[status['md5']]), 'success': True})},
-                                          RequestContext(request))
+                                          )
             else:
-                return render_to_response('file_upload_response.html',
-                                          {'response': json.dumps({ 'success': False,
-                                                                   'message': status['message']})}
-                                          , RequestContext(request))
+                return render(request, 'file_upload_response.html', {'response': json.dumps({ 'success': False})})
         else:
-            return render_to_response('file_upload_response.html',
-                                      {'response': json.dumps({'success': False,
-                                                               'form': form.as_table()})},
-                RequestContext(request))
+            return render(request, 'file_upload_response.html', {'response': json.dumps({'success': False})})
     else:
-        return render_to_response('error.html',
-                                  {'error': "Expected POST."},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': "Expected POST."})
 
 @user_passes_test(user_can_view_data)
 def remove_pcap(request, md5):
@@ -136,7 +126,7 @@ def remove_pcap(request, md5):
 
     result = delete_pcap(md5, '%s' % request.user.username)
     if result:
-        return HttpResponseRedirect(reverse('crits.pcaps.views.pcaps_listing'))
+        return HttpResponseRedirect(reverse('crits-pcaps-views-pcaps_listing'))
     else:
-        return render_to_response('error.html',
+        return render(request, 'error.html',
                                   {'error': "Could not delete pcap"})

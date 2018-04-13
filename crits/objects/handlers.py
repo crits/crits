@@ -4,7 +4,6 @@ from hashlib import md5
 
 from django.conf import settings
 from django.template.loader import render_to_string
-from django.template import RequestContext
 try:
     from mongoengine.base import ValidationError
 except ImportError:
@@ -582,7 +581,7 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
                                             {'relationship': relationship,
                                              'nohide': True,
                                              'relationships': results['message']},
-                                            RequestContext(request))
+                                             request=request)
                 result = {'success': True, 'message': message}
             else:
                 message = "Indicator created. Could not create relationship"

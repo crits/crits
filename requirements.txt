@@ -1,4 +1,5 @@
-Django<1.9
+#Django 2.0+ requires Python 3.x
+Django<2.0
 Pillow
 amqp
 anyjson
@@ -8,24 +9,28 @@ celery
 defusedxml
 django-celery
 django-debug-toolbar
-git+https://github.com/brianz/django-debug-toolbar-mongo.git
+#git+https://github.com/brianz/django-debug-toolbar-mongo.git
+git+https://github.com/conversocial/django-debug-toolbar-mongo.git
 django-debug-toolbar-template-profiler
-django-debug-toolbar-template-timings
+django-debug-toolbar-template-timings>0.8
 django-debug-toolbar-vcs-info
-django-tastypie==0.13.3
-git+https://github.com/apolkosnik-old/django-tastypie-mongoengine.git
+django-tastypie
+git+https://github.com/Work4Labs/django-tastypie-mongoengine.git
 future
 kombu
 lxml
-mongoengine==0.8.8
-git+https://github.com/MongoEngine/django-mongoengine.git
+#mongoengine from 0.9 to the latest: 0.15 makes CRITs painfully slow
+#mongoengine - below in a patched version of MongoEngine 0.8.8 that works with Django 1.11
+git+https://github.com/apolkosnik/mongoengine.git@v0.8.9
+# This is here in case you'd like to try the more recent versions of mongoengine
+git+https://github.com/MongoEngine/django-mongoengine.git@v0.3
 pip>=8.1.2
-pydeep==0.2
-pymongo==2.8.1
+pydeep>=0.2
+pymongo
 pyparsing
 python-dateutil
 python-ldap
-python-magic==0.4.6
+python-magic>=0.4.6
 python-mimeparse
 pytz
 pyyaml

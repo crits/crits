@@ -1,6 +1,11 @@
 import uuid
 
-from mongoengine import Document, StringField, UUIDField, BooleanField
+try:
+	from django_mongoengine import Document
+except ImportError:
+	from mongoengine import Document
+
+from mongoengine import StringField, UUIDField, BooleanField
 from mongoengine import EmbeddedDocument
 from django.conf import settings
 
@@ -46,10 +51,10 @@ class Event(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
                 ' event')
         },
         "jtable_opts": {
-                         'details_url': 'crits.events.views.view_event',
+                         'details_url': 'crits-events-views-view_event',
                          'details_url_key': 'id',
                          'default_sort': "created DESC",
-                         'searchurl': 'crits.events.views.events_listing',
+                         'searchurl': 'crits-events-views-events_listing',
                          'fields': [ "title", "event_type", "created",
                                      "source", "campaign", "status", "id"],
                          'jtopts_fields': [ "details",

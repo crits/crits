@@ -3,9 +3,11 @@ import json
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
+from django.shortcuts import render
 from django.forms.utils import ErrorList
 
 from crits.core import form_consts
@@ -43,13 +45,11 @@ def domain_detail(request, domain):
                                                   user)
         if new_template:
             template = new_template
-        return render_to_response(template,
-                                  args,
-                                  RequestContext(request))
+        return render(request, template,
+                                  args)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Domain details.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Domain details.'})
 
 @user_passes_test(user_can_view_data)
 def bulk_add_domain(request):
@@ -87,15 +87,14 @@ def bulk_add_domain(request):
     else:
         if user.has_access_to(DomainACL.WRITE):
             objectformdict = form_to_dict(AddObjectForm(request.user))
-            return render_to_response('bulk_add_default.html',
+            return render(request, 'bulk_add_default.html',
                                      {'formdict': formdict,
                                       'objectformdict': objectformdict,
                                       'title': "Bulk Add Domains",
                                       'table_name': 'domain',
                                       'local_validate_columns': [form_consts.Domain.DOMAIN_NAME],
                                       'custom_js': "domain_handsontable.js",
-                                      'is_bulk_add_objects': True},
-                                      RequestContext(request));
+                                      'is_bulk_add_objects': True});
         else:
             response = {"success":False,
                         "message":"User does not have permission to add domains."}
@@ -127,9 +126,8 @@ def domains_listing(request,option=None):
                                 content_type="application/json")
         return generate_domain_jtable(request, option)
     else:
-        return render_to_response("error.html",
-                                  {'error': 'User does not have permission to view Domain listing.'},
-                                  RequestContext(request))
+        return render(request, "error.html",
+                                  {'error': 'User does not have permission to view Domain listing.'})
 
 @user_passes_test(user_can_view_data)
 def add_domain(request):
@@ -182,9 +180,7 @@ def add_domain(request):
                                        default=json_handler),
                             content_type="application/json")
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected POST' },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected POST' })
 
 @user_passes_test(user_can_view_data)
 def edit_domain(request, domain):
@@ -206,9 +202,7 @@ def edit_domain(request, domain):
         else:
             return HttpResponse(domain)
     else:
-        return render_to_response("error.html",
-                                  {"error" : 'Expected AJAX POST' },
-                                  RequestContext(request))
+        return render(request, "error.html", {"error" : 'Expected AJAX POST' })
 
 @user_passes_test(user_can_view_data)
 def domain_search(request):
@@ -222,8 +216,8 @@ def domain_search(request):
 
     query = {}
     query[request.GET.get('search_type', '')]=request.GET.get('q', '').strip()
-    #return render_to_response('error.html', {'error': query})
-    return HttpResponseRedirect(reverse('crits.domains.views.domains_listing')
+    #return render(request, 'error.html', {'error': query})
+    return HttpResponseRedirect(reverse('crits-domains-views-domains_listing')
                                 + "?%s" % urllib.urlencode(query))
 
 @user_passes_test(user_can_view_data)
@@ -244,15 +238,11 @@ def tld_update(request):
             if result['success']:
                 response = {'success': True,
                             'message': 'Success! <a href="%s">Go to Domains.</a>'
-                            % reverse('crits.domains.views.domains_listing')}
+                            % reverse('crits-domains-views-domains_listing')}
             else:
                 response = {'success': False, 'form': form.as_table()}
         else:
             response = {'success': False, 'form': form.as_table()}
-        return render_to_response('file_upload_response.html',
-                                  {'response': json.dumps(response)},
-            RequestContext(request))
+        return render(request, 'file_upload_response.html', {'response': json.dumps(response)})
     else:
-        return render_to_response('error.html',
-                                  {'error': 'Expected POST'},
-                                  RequestContext(request))
+        return render(request, 'error.html', {'error': 'Expected POST'})
