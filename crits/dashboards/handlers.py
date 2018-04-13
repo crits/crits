@@ -138,7 +138,7 @@ def getRecordsForDefaultDashboardTable(user, tableName):
         # dashboard is no longer valid. Produce an "empty" response.
         response = {'data': []}
         obj_type = None
-        
+
     return parseDocumentsForW2ui(response, obj_type)
 
 def constructSavedTable(table, records):
