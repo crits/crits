@@ -46,6 +46,7 @@ class Role(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_ROLES,
+        "auto_create_index": False,
         "crits_type": 'Role',
         "latest_schema_version": 1,
         "schema_doc": {

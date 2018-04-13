@@ -17,8 +17,9 @@ class CRITsService(CritsDocument, CritsSchemaDocument, Document):
     """
 
     meta = {
-        "crits_type": "Service",
         "collection": settings.COL_SERVICES,
+        "auto_create_index": False,
+        "crits_type": "Service",
         "latest_schema_version": 1,
         "schema_doc": {
             'name': 'Name of the service',

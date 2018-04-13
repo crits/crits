@@ -7,6 +7,7 @@ class SavedSearch(CritsDocument, CritsSchemaDocument, DynamicDocument):
     """
     meta = {
         "collection": "saved_search",
+        "auto_create_index": False,
         "crits_type": "saved_search",
         "latest_schema_version": 1,
         "schema_doc": {}
@@ -44,6 +45,7 @@ class Dashboard(CritsDocument, CritsSchemaDocument, DynamicDocument):
     """
     meta = {
         "collection": "dashboard",
+        "auto_create_index": False,
         "crits_type": "dashboard",
         "latest_schema_version": 1,
         "schema_doc": {}

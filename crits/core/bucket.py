@@ -21,6 +21,7 @@ class Bucket(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_BUCKET_LISTS,
+        "auto_create_index": False,
         "crits_type": 'Bucketlist',
         "latest_schema_version": 2,
         "schema_doc": {

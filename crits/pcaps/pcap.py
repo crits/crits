@@ -22,6 +22,7 @@ class PCAP(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
     meta = {
         "collection": settings.COL_PCAPS,
+        "auto_create_index": False,
         "crits_type": 'PCAP',
         "latest_schema_version": 3,
         "shard_key": ('md5',),

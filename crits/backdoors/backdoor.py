@@ -26,6 +26,7 @@ class Backdoor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
     meta = {
         "collection": settings.COL_BACKDOORS,
+        "auto_create_index": False,
         "crits_type": 'Backdoor',
         "latest_schema_version": 1,
         "schema_doc": {

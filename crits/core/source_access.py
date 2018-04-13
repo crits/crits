@@ -15,8 +15,9 @@ class SourceAccess(CritsDocument, CritsSchemaDocument, Document):
     """
 
     meta = {
-        "crits_type": "SourceAccess",
         "collection": settings.COL_SOURCE_ACCESS,
+        "auto_create_index": False,
+        "crits_type": "SourceAccess",
         "latest_schema_version": 1,
         "schema_doc": {
             'name': 'Name of the source',

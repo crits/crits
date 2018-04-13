@@ -21,6 +21,7 @@ class Target(CritsBaseAttributes, CritsActionsDocument, Document):
 
     meta = {
         "collection": settings.COL_TARGETS,
+        "auto_create_index": False,
         "crits_type": 'Target',
         "latest_schema_version": 3,
         "schema_doc": {

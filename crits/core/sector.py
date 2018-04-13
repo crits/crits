@@ -21,6 +21,7 @@ class Sector(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_SECTOR_LISTS,
+        "auto_create_index": False,
         "crits_type": 'Sectorlist',
         "latest_schema_version": 1,
         "schema_doc": {

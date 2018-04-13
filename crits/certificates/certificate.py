@@ -20,6 +20,7 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument
 
     meta = {
         "collection": settings.COL_CERTIFICATES,
+        "auto_create_index": False,
         "crits_type": 'Certificate',
         "latest_schema_version": 2,
         "schema_doc": {

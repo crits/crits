@@ -25,6 +25,7 @@ class Sample(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
     meta = {
         "collection": settings.COL_SAMPLES,
+        "auto_create_index": False,
         "crits_type": 'Sample',
         "latest_schema_version": 5,
         "shard_key": ('md5',),

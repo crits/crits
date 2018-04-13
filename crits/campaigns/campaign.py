@@ -32,6 +32,7 @@ class Campaign(CritsBaseAttributes, CritsActionsDocument, Document):
 
     meta = {
         "collection": settings.COL_CAMPAIGNS,
+        "auto_create_index": False,
         "crits_type": 'Campaign',
         "latest_schema_version": 3,
         "schema_doc": {
