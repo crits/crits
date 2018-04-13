@@ -16,7 +16,7 @@ class MongoError(Exception):
     """
     pass
 
-# TODO: _mongo_connector() and gridfs_connector() can probably be combined into
+# TODO: mongo_connector() and gridfs_connector() can probably be combined into
 # one function.
 def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
@@ -239,7 +239,7 @@ def _put_file(m, data, collection=settings.COL_SAMPLES):
     :returns: str
     """
 
-    return put_file_gridfs(m, data, collection)
+    return _put_file_gridfs(m, data, collection)
 
 def _get_file_gridfs(sample_md5, collection=settings.COL_SAMPLES):
     """
