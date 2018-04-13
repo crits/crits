@@ -140,6 +140,7 @@ def getRecordsForDefaultDashboardTable(user, tableName):
         obj_type = None
     return parseDocumentsForW2ui(response, obj_type)
 
+
 def constructSavedTable(table, records):
     """
     Creates all the needed parameters to be passed into constructTable.
@@ -195,7 +196,6 @@ def parseDocumentsForW2ui(response, obj_type):
     #create a list of dicts
     for record in response["data"]:
         records.append(record.to_mongo())
-    records = response.pop('data')
     return parseDocObjectsToStrings(records, obj_type)
 
 def parseDocObjectsToStrings(records, obj_type):
