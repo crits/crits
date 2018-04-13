@@ -63,6 +63,7 @@ class TestSourceObject(CritsBaseAttributes, CritsSourceDocument, Document):
 
     meta = {
         "collection": TCOLS,
+        "auto_create_index": False,
         "crits_type": "TestSourceBase",
         "latest_schema_version": 1,
         "schema_doc": {
@@ -81,6 +82,7 @@ class TestObject(CritsBaseAttributes, Document):
 
     meta = {
         "collection": TCOL,
+        "auto_create_index": False,
         "crits_type": "TestBase",
         "latest_schema_version": 1,
         "schema_doc": {

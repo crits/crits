@@ -15,6 +15,7 @@ class UserRole(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_USER_ROLES,
+        "auto_create_index": False,
         "crits_type": 'UserRole',
         "latest_schema_version": 1,
         "schema_doc": {

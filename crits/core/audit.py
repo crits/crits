@@ -17,9 +17,10 @@ class AuditLog(CritsDocument, CritsSchemaDocument, Document):
     Audit Log Class
     """
     meta = {
+        "collection": settings.COL_AUDIT_LOG,
+        "auto_create_index": False,
         "allow_inheritance": False,
         "crits_type": "AuditLog",
-        "collection": settings.COL_AUDIT_LOG,
         "latest_schema_version": 1,
         "schema_doc": {
             'value': 'Value of the audit log entry',

@@ -40,6 +40,7 @@ class Event(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
     meta = {
         "collection": settings.COL_EVENTS,
+        "auto_create_index": False,
         "crits_type": 'Event',
         "latest_schema_version": 3,
         "schema_doc": {

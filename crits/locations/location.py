@@ -19,6 +19,7 @@ class Location(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_LOCATIONS,
+        "auto_create_index": False,
         "crits_type": 'Location',
         "latest_schema_version": 1,
         "schema_doc": {

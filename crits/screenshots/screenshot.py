@@ -23,6 +23,7 @@ class Screenshot(CritsBaseDocument, CritsSourceDocument, CritsSchemaDocument,
 
     meta = {
         "collection": settings.COL_SCREENSHOTS,
+        "auto_create_index": False,
         "crits_type": 'Screenshot',
         "latest_schema_version": 1,
         "schema_doc": {

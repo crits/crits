@@ -28,6 +28,7 @@ class RawDataType(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_RAW_DATA_TYPES,
+        "auto_create_index": False,
         "crits_type": 'RawDataType',
         "latest_schema_version": 1,
         "schema_doc": {
@@ -82,6 +83,7 @@ class RawData(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
     meta = {
         "collection": settings.COL_RAW_DATA,
+        "auto_create_index": False,
         "crits_type": 'RawData',
         "latest_schema_version": 2,
         "schema_doc": {

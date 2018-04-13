@@ -22,6 +22,7 @@ class TLD(CritsDocument, Document):
 
     meta = {
         "collection": settings.COL_EFFECTIVE_TLDS,
+        "auto_create_index": False,
         "crits_type": 'TLD',
         "latest_schema_version": 1,
         "schema_doc": {
@@ -37,6 +38,7 @@ class EmbeddedWhoIs(DynamicEmbeddedDocument, CritsDocumentFormatter):
     """
 
     meta = {
+        "auto_create_index": False,
         'allow_inheritance': False
     }
 
@@ -48,6 +50,7 @@ class Domain(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
     meta = {
         "collection": settings.COL_DOMAINS,
+        "auto_create_index": False,
         "crits_type": 'Domain',
         "latest_schema_version": 3,
         "schema_doc": {

@@ -203,6 +203,7 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_USERS,
+        "auto_create_index": False,
         'indexes': [
             {'fields': ['username'],
              'unique': True,

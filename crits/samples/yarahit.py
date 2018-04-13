@@ -16,6 +16,7 @@ class YaraHit(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_YARAHITS,
+        "auto_create_index": False,
         "crits_type": "YaraHit",
         "latest_schema_version": 1,
         "schema_doc": {

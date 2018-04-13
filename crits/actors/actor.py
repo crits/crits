@@ -25,8 +25,9 @@ class ActorThreatIdentifier(CritsDocument, CritsSchemaDocument, Document):
     """
 
     meta = {
-        "crits_type": "ActorThreatIdentifier",
         "collection": settings.COL_ACTOR_THREAT_IDENTIFIERS,
+        "auto_create_index": False,
+        "crits_type": "ActorThreatIdentifier",
         "latest_schema_version": 1,
         "schema_doc": {
             'name': 'Name of the Idenfifier',
@@ -57,6 +58,7 @@ class ActorIdentifier(CritsDocument, CritsSchemaDocument, CritsSourceDocument,
 
     meta = {
         "collection": settings.COL_ACTOR_IDENTIFIERS,
+        "auto_create_index": False,
         "crits_type": 'ActorIdentifier',
         "latest_schema_version": 1,
         "schema_doc": {
@@ -99,6 +101,7 @@ class Actor(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
     meta = {
         "collection": settings.COL_ACTORS,
+        "auto_create_index": False,
         "crits_type": 'Actor',
         "latest_schema_version": 2,
         "schema_doc": {

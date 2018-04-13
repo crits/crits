@@ -15,6 +15,7 @@ class Division(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_DIVISION_DATA,
+        "auto_create_index": False,
         "crits_type": 'Division',
         "latest_schema_version": 1,
         "schema_doc": {

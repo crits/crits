@@ -55,6 +55,7 @@ class Email(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
         #So we'll turn inheritance off.
         # (See http://mongoengine-odm.readthedocs.org/en/latest/guide/defining-documents.html#working-with-existing-data)
         "collection": settings.COL_EMAIL,
+        "auto_create_index": False,
         "crits_type": 'Email',
         "latest_schema_version": 2,
         "schema_doc": {

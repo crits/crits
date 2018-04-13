@@ -58,6 +58,7 @@ class Indicator(CritsBaseAttributes, CritsActionsDocument, CritsSourceDocument, 
 
     meta = {
         "collection": settings.COL_INDICATORS,
+        "auto_create_index": False,
         "crits_type": 'Indicator',
         "latest_schema_version": 5,
         "schema_doc": {

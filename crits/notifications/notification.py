@@ -19,6 +19,7 @@ class Notification(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_NOTIFICATIONS,
+        "auto_create_index": False,
         "crits_type": "Notification",
         "latest_schema_version": 1,
         "schema_doc": {

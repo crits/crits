@@ -19,6 +19,7 @@ class CRITsConfig(CritsDocument, Document):
 
     meta = {
         "collection": settings.COL_CONFIG,
+        "auto_create_index": False,
         "crits_type": 'Config',
         "latest_schema_version": 1,
         "schema_doc": {

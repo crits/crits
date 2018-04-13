@@ -23,6 +23,7 @@ class SignatureDependency(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_SIGNATURE_DEPENDENCY,
+        "auto_create_index": False,
         "crits_type": 'SignatureDependency',
         "latest_schema_version": 1,
         "schema_doc": {
@@ -42,6 +43,7 @@ class SignatureType(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_SIGNATURE_TYPES,
+        "auto_create_index": False,
         "crits_type": 'SignatureType',
         "latest_schema_version": 1,
         "schema_doc": {
@@ -62,6 +64,7 @@ class Signature(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument,
 
     meta = {
         "collection": settings.COL_SIGNATURES,
+        "auto_create_index": False,
         "crits_type": 'Signature',
         "latest_schema_version": 1,
         "schema_doc": {

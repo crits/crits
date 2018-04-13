@@ -319,7 +319,7 @@ class UnsupportedAttrs(DynamicEmbeddedDocument, CritsDocumentFormatter):
     Inherit to allow a top-level object to store unsupported attributes.
     """
 
-    meta = {}
+    meta = {"auto_create_index": False,}
 
 
 class CritsDocument(BaseDocument):
@@ -338,7 +338,8 @@ class CritsDocument(BaseDocument):
         'migrated': False,
         'migrating': False,
         'needs_migration': False,
-        'queryset_class': CritsQuerySet
+        'queryset_class': CritsQuerySet,
+        "auto_create_index": False,
     }
 
     unsupported_attrs = EmbeddedDocumentField(UnsupportedAttrs)
@@ -730,6 +731,7 @@ class Action(CritsDocument, CritsSchemaDocument, Document):
 
     meta = {
         "collection": settings.COL_IDB_ACTIONS,
+        "auto_create_index": False,
         "crits_type": 'Action',
         "latest_schema_version": 1,
         "schema_doc": {

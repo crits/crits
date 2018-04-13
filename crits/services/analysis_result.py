@@ -17,7 +17,7 @@ class AnalysisConfig(DynamicEmbeddedDocument, CritsDocumentFormatter):
     Embedded Analysis Configuration dictionary.
     """
 
-    meta = {}
+    meta = {"auto_create_index": False,}
 
 
 class EmbeddedAnalysisResultLog(EmbeddedDocument, CritsDocumentFormatter):
@@ -38,8 +38,9 @@ class AnalysisResult(CritsDocument, CritsSchemaDocument, CritsDocumentFormatter,
     """
 
     meta = {
-        "crits_type": "AnalysisResult",
         "collection": settings.COL_ANALYSIS_RESULTS,
+        "auto_create_index": False,
+        "crits_type": "AnalysisResult",
         "latest_schema_version": 1,
         "schema_doc": {
             'analyst': 'Analyst who ran the service.',
