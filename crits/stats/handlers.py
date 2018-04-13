@@ -2,7 +2,7 @@ from bson import Code
 import datetime
 
 from django.conf import settings
-from crits.core.mongo_tools import mongo_connector
+from crits.core.mongo_tools import _mongo_connector
 
 from crits.emails.email import Email
 from crits.samples.yarahit import YaraHit
@@ -14,7 +14,7 @@ def generate_yara_hits():
     Generate yara hits mapreduce.
     """
 
-    samples = mongo_connector(settings.COL_SAMPLES)
+    samples = _mongo_connector(settings.COL_SAMPLES)
     map_code = """
     function() {
             this.analysis.forEach(function(z) {
@@ -33,7 +33,7 @@ def generate_yara_hits():
                                              query={'analysis.service_name': 'yara'})
     except:
         return
-    yarahits_col = mongo_connector(settings.COL_YARAHITS)
+    yarahits_col = _mongo_connector(settings.COL_YARAHITS)
     yarahits_col.drop()
     sv = YaraHit._meta['latest_schema_version']
     for hit in yarahits:
@@ -50,7 +50,7 @@ def generate_sources():
     Generate sources mapreduce.
     """
 
-    samples = mongo_connector(settings.COL_SAMPLES)
+    samples = _mongo_connector(settings.COL_SAMPLES)
     m = Code('function() { this.source.forEach(function(z) {emit({name: z.name}, {count: 1});}) }', {})
     r = Code('function(k,v) { var count=0; v.forEach(function(v) { count += v["count"]; }); return {count: count}; }', {})
     try:
@@ -58,7 +58,7 @@ def generate_sources():
                                             query={"source.name": {"$exists": 1}})
     except:
         return
-    source_access = mongo_connector(settings.COL_SOURCE_ACCESS)
+    source_access = _mongo_connector(settings.COL_SOURCE_ACCESS)
     for source in sources:
         source_access.update({"name": source["_id"]["name"]},
                              {"$set": {"sample_count": source["value"]["count"]}})
@@ -68,7 +68,7 @@ def generate_filetypes():
     Generate filetypes mapreduce.
     """
 
-    samples = mongo_connector(settings.COL_SAMPLES)
+    samples = _mongo_connector(settings.COL_SAMPLES)
     m = Code('function() emit({filetype: this.mimetype} ,{count: 1});}) }', {})
     r = Code('function(k,v) { var count = 0; v.forEach(function(v) { count += v["count"]; }); return {count: count}; }', {})
     try:
@@ -135,17 +135,17 @@ def generate_campaign_stats(source_name=None):
     stat_query["campaign.name"] = {"$exists": "true"}
     if source_name:
         stat_query["source.name"] = source_name
-    actors = mongo_connector(settings.COL_ACTORS)
-    backdoors = mongo_connector(settings.COL_BACKDOORS)
-    campaigns = mongo_connector(settings.COL_CAMPAIGNS)
-    domains = mongo_connector(settings.COL_DOMAINS)
-    emails = mongo_connector(settings.COL_EMAIL)
-    events = mongo_connector(settings.COL_EVENTS)
-    exploits = mongo_connector(settings.COL_EXPLOITS)
-    indicators = mongo_connector(settings.COL_INDICATORS)
-    ips = mongo_connector(settings.COL_IPS)
-    pcaps = mongo_connector(settings.COL_PCAPS)
-    samples = mongo_connector(settings.COL_SAMPLES)
+    actors = _mongo_connector(settings.COL_ACTORS)
+    backdoors = _mongo_connector(settings.COL_BACKDOORS)
+    campaigns = _mongo_connector(settings.COL_CAMPAIGNS)
+    domains = _mongo_connector(settings.COL_DOMAINS)
+    emails = _mongo_connector(settings.COL_EMAIL)
+    events = _mongo_connector(settings.COL_EVENTS)
+    exploits = _mongo_connector(settings.COL_EXPLOITS)
+    indicators = _mongo_connector(settings.COL_INDICATORS)
+    ips = _mongo_connector(settings.COL_IPS)
+    pcaps = _mongo_connector(settings.COL_PCAPS)
+    samples = _mongo_connector(settings.COL_SAMPLES)
     # generate an initial campaign listing so we can make sure all campaigns get updated
     campaign_listing = campaigns.find({}, {'name': 1})
     # initialize each campaign to zeroed out stats
@@ -193,12 +193,12 @@ def generate_counts():
     Generate dashboard counts.
     """
 
-    counts = mongo_connector(settings.COL_COUNTS)
-    samples = mongo_connector(settings.COL_SAMPLES)
-    emails = mongo_connector(settings.COL_EMAIL)
-    indicators = mongo_connector(settings.COL_INDICATORS)
-    domains = mongo_connector(settings.COL_DOMAINS)
-    pcaps = mongo_connector(settings.COL_PCAPS)
+    counts = _mongo_connector(settings.COL_COUNTS)
+    samples = _mongo_connector(settings.COL_SAMPLES)
+    emails = _mongo_connector(settings.COL_EMAIL)
+    indicators = _mongo_connector(settings.COL_INDICATORS)
+    domains = _mongo_connector(settings.COL_DOMAINS)
+    pcaps = _mongo_connector(settings.COL_PCAPS)
     today = datetime.datetime.fromordinal(datetime.datetime.now().toordinal())
     start = datetime.datetime.now()
     last_seven = start - datetime.timedelta(7)
@@ -287,7 +287,7 @@ def campaign_date_stats():
     Generate Campaign date stats.
     """
 
-    emails = mongo_connector(settings.COL_EMAIL)
+    emails = _mongo_connector(settings.COL_EMAIL)
     mapcode = """
             function () {
                     try {
@@ -325,7 +325,7 @@ def campaign_date_stats():
     m = Code(mapcode, {})
     r = Code(reducecode, {})
     results = emails.inline_map_reduce(m, r)
-    stat_coll = mongo_connector(settings.COL_STATISTICS)
+    stat_coll = _mongo_connector(settings.COL_STATISTICS)
     stats = {}
     stats["results"] = []
     for result in results:

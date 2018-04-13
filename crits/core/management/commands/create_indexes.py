@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 
 
-from crits.core.mongo_tools import mongo_connector
+from crits.core.mongo_tools import _mongo_connector
 
 class Command(BaseCommand):
     """
@@ -67,7 +67,7 @@ def remove_indexes():
 
     for coll in coll_list:
         print "Removing index for: %s" % coll
-        c = mongo_connector(coll)
+        c = _mongo_connector(coll)
         c.drop_indexes()
 
 def create_indexes():
@@ -79,7 +79,7 @@ def create_indexes():
 
     print "Creating indexes (duplicates will be ignored automatically)"
 
-    analysis_results = mongo_connector(settings.COL_ANALYSIS_RESULTS)
+    analysis_results = _mongo_connector(settings.COL_ANALYSIS_RESULTS)
     analysis_results.create_index("service_name", background=True)
     analysis_results.create_index("object_type", background=True)
     analysis_results.create_index("object_id", background=True)
@@ -88,31 +88,31 @@ def create_indexes():
     analysis_results.create_index("version", background=True)
     analysis_results.create_index("analysis_id", background=True)
 
-    bucket_lists = mongo_connector(settings.COL_BUCKET_LISTS)
+    bucket_lists = _mongo_connector(settings.COL_BUCKET_LISTS)
     bucket_lists.create_index("name", background=True)
 
-    backdoors = mongo_connector(settings.COL_BACKDOORS)
+    backdoors = _mongo_connector(settings.COL_BACKDOORS)
     backdoors.create_index("name", background=True)
 
-    campaigns = mongo_connector(settings.COL_CAMPAIGNS)
+    campaigns = _mongo_connector(settings.COL_CAMPAIGNS)
     campaigns.create_index("objects.value", background=True)
     campaigns.create_index("relationships.value", background=True)
     campaigns.create_index("bucket_list", background=True)
 
-    comments = mongo_connector(settings.COL_COMMENTS)
+    comments = _mongo_connector(settings.COL_COMMENTS)
     comments.create_index("obj_id", background=True)
     comments.create_index("users", background=True)
     comments.create_index("tags", background=True)
     comments.create_index("status", background=True)
 
-    domains = mongo_connector(settings.COL_DOMAINS)
+    domains = _mongo_connector(settings.COL_DOMAINS)
     domains.create_index("domain", background=True)
     domains.create_index("objects.value", background=True)
     domains.create_index("relationships.value", background=True)
     domains.create_index("campaign.name", background=True)
     domains.create_index("bucket_list", background=True)
 
-    emails = mongo_connector(settings.COL_EMAIL)
+    emails = _mongo_connector(settings.COL_EMAIL)
     emails.create_index("objects.value", background=True)
     emails.create_index("relationships.value", background=True)
     emails.create_index("campaign.name", background=True)
@@ -124,7 +124,7 @@ def create_indexes():
     emails.create_index("subject", background=True)
     emails.create_index("isodate", background=True)
 
-    events = mongo_connector(settings.COL_EVENTS)
+    events = _mongo_connector(settings.COL_EVENTS)
     events.create_index("objects.value", background=True)
     events.create_index("title", background=True)
     events.create_index("relationships.value", background=True)
@@ -136,10 +136,10 @@ def create_indexes():
     events.create_index("event_type", background=True)
     events.create_index("bucket_list", background=True)
 
-    exploits = mongo_connector(settings.COL_EXPLOITS)
+    exploits = _mongo_connector(settings.COL_EXPLOITS)
     exploits.create_index("name", background=True)
 
-    indicators = mongo_connector(settings.COL_INDICATORS)
+    indicators = _mongo_connector(settings.COL_INDICATORS)
     indicators.create_index("value", background=True)
     indicators.create_index("lower", background=True)
     indicators.create_index("objects.value", background=True)
@@ -152,7 +152,7 @@ def create_indexes():
     indicators.create_index("source.name", background=True)
     indicators.create_index("bucket_list", background=True)
 
-    ips = mongo_connector(settings.COL_IPS)
+    ips = _mongo_connector(settings.COL_IPS)
     ips.create_index("ip", background=True)
     ips.create_index("objects.value", background=True)
     ips.create_index("relationships.value", background=True)
@@ -166,22 +166,22 @@ def create_indexes():
     ips.create_index("bucket_list", background=True)
 
     if settings.FILE_DB == settings.GRIDFS:
-        objects_files = mongo_connector('%s.files' % settings.COL_OBJECTS)
+        objects_files = _mongo_connector('%s.files' % settings.COL_OBJECTS)
         objects_files.create_index("md5", background=True)
 
-        objects_chunks = mongo_connector('%s.chunks' % settings.COL_OBJECTS)
+        objects_chunks = _mongo_connector('%s.chunks' % settings.COL_OBJECTS)
         objects_chunks.create_index([("files_id",pymongo.ASCENDING),
                                 ("n", pymongo.ASCENDING)],
                                unique=True)
 
-    notifications = mongo_connector(settings.COL_NOTIFICATIONS)
+    notifications = _mongo_connector(settings.COL_NOTIFICATIONS)
     notifications.create_index("obj_id", background=True)
     # auto-expire notifications after 30 days
     notifications.create_index("date", background=True,
                                expireAfterSeconds=2592000)
     notifications.create_index("users", background=True)
 
-    pcaps = mongo_connector(settings.COL_PCAPS)
+    pcaps = _mongo_connector(settings.COL_PCAPS)
     pcaps.create_index("md5", background=True)
     pcaps.create_index("objects.value", background=True)
     pcaps.create_index("relationships.value", background=True)
@@ -196,15 +196,15 @@ def create_indexes():
     pcaps.create_index("bucket_list", background=True)
 
     if settings.FILE_DB == settings.GRIDFS:
-        pcaps_files = mongo_connector('%s.files' % settings.COL_PCAPS)
+        pcaps_files = _mongo_connector('%s.files' % settings.COL_PCAPS)
         pcaps_files.create_index("md5", background=True)
 
-        pcaps_chunks = mongo_connector('%s.chunks' % settings.COL_PCAPS)
+        pcaps_chunks = _mongo_connector('%s.chunks' % settings.COL_PCAPS)
         pcaps_chunks.create_index([("files_id", pymongo.ASCENDING),
                                 ("n", pymongo.ASCENDING)],
                                unique=True)
 
-    raw_data = mongo_connector(settings.COL_RAW_DATA)
+    raw_data = _mongo_connector(settings.COL_RAW_DATA)
     raw_data.create_index("link_id", background=True)
     raw_data.create_index("md5", background=True)
     raw_data.create_index("title", background=True)
@@ -219,7 +219,7 @@ def create_indexes():
     raw_data.create_index("favorite", background=True)
     raw_data.create_index("bucket_list", background=True)
 
-    samples = mongo_connector(settings.COL_SAMPLES)
+    samples = _mongo_connector(settings.COL_SAMPLES)
     samples.create_index("source.name", background=True)
     samples.create_index("md5", background=True)
     samples.create_index("sha1", background=True)
@@ -242,18 +242,18 @@ def create_indexes():
     samples.create_index("status", background=True)
 
     if settings.FILE_DB == settings.GRIDFS:
-        samples_files = mongo_connector('%s.files' % settings.COL_SAMPLES)
+        samples_files = _mongo_connector('%s.files' % settings.COL_SAMPLES)
         samples_files.create_index("md5", background=True)
 
-        samples_chunks = mongo_connector('%s.chunks' % settings.COL_SAMPLES)
+        samples_chunks = _mongo_connector('%s.chunks' % settings.COL_SAMPLES)
         samples_chunks.create_index([("files_id", pymongo.ASCENDING),
                                   ("n", pymongo.ASCENDING)],
                                  unique=True)
 
-    screenshots = mongo_connector(settings.COL_SCREENSHOTS)
+    screenshots = _mongo_connector(settings.COL_SCREENSHOTS)
     screenshots.create_index("tags", background=True)
 
-    signature = mongo_connector(settings.COL_SIGNATURES)
+    signature = _mongo_connector(settings.COL_SIGNATURES)
     signature.create_index("link_id", background=True)
     signature.create_index("md5", background=True)
     signature.create_index("title", background=True)
@@ -271,7 +271,7 @@ def create_indexes():
     signature.create_index("favorite", background=True)
     signature.create_index("bucket_list", background=True)
 
-    targets = mongo_connector(settings.COL_TARGETS)
+    targets = _mongo_connector(settings.COL_TARGETS)
     targets.create_index("objects.value", background=True)
     targets.create_index("relationships.value", background=True)
     targets.create_index("email_address", background=True)

@@ -114,9 +114,9 @@ class Certificate(CritsBaseAttributes, CritsSourceDocument, CritsActionsDocument
         Queries GridFS for a matching binary to this Certificate document.
         """
 
-        from crits.core.mongo_tools import mongo_connector
+        from crits.core.mongo_tools import _mongo_connector
 
-        fm = mongo_connector("%s.files" % self._meta['collection'])
+        fm = _mongo_connector("%s.files" % self._meta['collection'])
         objectid = fm.find_one({'md5': self.md5}, {'_id': 1})
         if objectid:
             self.filedata.grid_id = objectid['_id']

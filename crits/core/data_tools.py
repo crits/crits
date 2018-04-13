@@ -16,7 +16,7 @@ from hashlib import md5
 
 from crits.core.class_mapper import class_from_value
 from crits.core.exceptions import ZipFileError
-from crits.core.mongo_tools import get_file
+from crits.core.mongo_tools import _get_file
 
 def get_file_fs(sample_md5):
     """
@@ -348,7 +348,7 @@ def make_ascii_strings(md5=None, data=None):
     """
 
     if md5:
-        data = get_file(md5)
+        data = _get_file(md5)
     strings_data = 'ASCII Strings\n'
     strings_data += "-" * 30
     strings_data += "\n"
@@ -369,7 +369,7 @@ def make_unicode_strings(md5=None, data=None):
     """
 
     if md5:
-        data = get_file(md5)
+        data = _get_file(md5)
     strings_data = 'Unicode Strings\n'
     strings_data += "-" * 30
     strings_data += "\n"
@@ -390,7 +390,7 @@ def make_stackstrings(md5=None, data=None):
     """
 
     if md5:
-        data = get_file(md5)
+        data = _get_file(md5)
     x = 0
     prev = 0
     strings = ''
@@ -428,7 +428,7 @@ def make_hex(md5=None, data=None):
     """
 
     if md5:
-        data = get_file(md5)
+        data = _get_file(md5)
     length = 16
     hex_data = ''
     digits = 4 if isinstance(data, unicode) else 2
@@ -455,7 +455,7 @@ def xor_string(md5=None, data=None, key=0, null=0):
     """
 
     if md5:
-        data = get_file(md5)
+        data = _get_file(md5)
     out = ''
     for c in data:
         if ord(c) == 0 and null == 1:
@@ -484,7 +484,7 @@ def xor_search(md5=None, data=None, string=None, skip_nulls=0):
     """
 
     if md5:
-        data = get_file(md5)
+        data = _get_file(md5)
     if string is None or string == '':
         plaintext_list = [
                         'This program',
