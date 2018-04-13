@@ -21,7 +21,8 @@ class MongoError(Exception):
 def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
     Connect to the mongo database if you need to use PyMongo directly and not
-    use MongoEngine.
+    use MongoEngine. Uses pooled connection created in settings.py rather than
+    opening a fresh connection every call.
 
     :param collection: the collection to use.
     :type collection: str
@@ -54,7 +55,10 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
 def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
     Connect to the mongo database if you need to use PyMongo directly and not
-    use MongoEngine. Used specifically for accessing GridFS.
+    use MongoEngine. Uses pooled connection created in settings.py rather than
+    opening a fresh connection every call.
+    
+    Used specifically for accessing GridFS.
 
     :param collection: the collection to use.
     :type collection: str
