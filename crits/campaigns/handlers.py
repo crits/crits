@@ -18,7 +18,7 @@ from crits.core.class_mapper import class_from_id, class_from_type
 from crits.core.crits_mongoengine import EmbeddedCampaign, json_handler
 from crits.core.handlers import jtable_ajax_list, build_jtable
 from crits.core.handlers import csv_export, get_item_names
-from crits.core.mongo_tools import mongo_connector
+from crits.core.mongo_tools import _mongo_connector
 from crits.core.user_tools import user_sources, is_user_subscribed
 from crits.core.user_tools import is_user_favorite
 from crits.notifications.handlers import remove_user_from_notification
@@ -143,7 +143,7 @@ def get_campaign_stats(campaign):
 
     # The Statistics collection has a bunch of documents which are not
     # in the same format, so we can't class it at this time.
-    stats = mongo_connector(settings.COL_STATISTICS)
+    stats = _mongo_connector(settings.COL_STATISTICS)
     stat = stats.find_one({"name": "campaign_monthly"})
     data_list = []
     if stat:

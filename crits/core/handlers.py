@@ -45,7 +45,7 @@ from crits.core.crits_mongoengine import CritsSourceDocument
 from crits.core.crits_mongoengine import EmbeddedPreferredAction
 from crits.core.source_access import SourceAccess
 from crits.core.data_tools import create_zip, format_file
-from crits.core.mongo_tools import mongo_connector, get_file
+from crits.core.mongo_tools import _mongo_connector, _get_file
 from crits.core.role import Role
 from crits.core.sector import Sector
 from crits.core.user import CRITsUser, EmbeddedSubscriptions
@@ -979,10 +979,10 @@ def alter_bucket_list(obj, buckets, val):
     soi = { k: 0 for k in Bucket._meta['schema_doc'].keys() if k != 'name' and k != obj._meta['crits_type'] }
     soi['schema_version'] = Bucket._meta['latest_schema_version']
 
-    # We are using mongo_connector here because mongoengine does not have
+    # We are using _mongo_connector here because mongoengine does not have
     # support for a setOnInsert option. If mongoengine were to gain support
     # for this we should switch to using it instead of pymongo here.
-    buckets_col = mongo_connector(settings.COL_BUCKET_LISTS)
+    buckets_col = _mongo_connector(settings.COL_BUCKET_LISTS)
     for name in buckets:
         buckets_col.update({'name': name},
                            {'$inc': {obj._meta['crits_type']: val},
@@ -3736,36 +3736,36 @@ def download_grid_file(request, dtype, sample_md5):
     """
 
     if dtype == 'object':
-        grid = mongo_connector("%s.files" % settings.COL_OBJECTS)
+        grid = _mongo_connector("%s.files" % settings.COL_OBJECTS)
         obj = grid.find_one({'md5': sample_md5})
         if obj is None:
             dtype = 'pcap'
         else:
-            data = [(obj['filename'], get_file(sample_md5, "objects"))]
+            data = [(obj['filename'], _get_file(sample_md5, "objects"))]
             zip_data = create_zip(data, False)
             response = HttpResponse(zip_data, content_type="application/octet-stream")
             response['Content-Disposition'] = 'attachment; filename=%s' % obj['filename'] + ".zip"
             return response
     if dtype == 'pcap':
-        pcaps = mongo_connector(settings.COL_PCAPS)
+        pcaps = _mongo_connector(settings.COL_PCAPS)
         pcap = pcaps.find_one({"md5": sample_md5})
         if not pcap:
             return render(request, 'error.html',
                                       {'data': request,
                                        'error': "File not found."})
-        data = [(pcap['filename'], get_file(sample_md5, "pcaps"))]
+        data = [(pcap['filename'], _get_file(sample_md5, "pcaps"))]
         zip_data = create_zip(data, False)
         response = HttpResponse(zip_data, content_type="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s' % pcap['filename'] + ".zip"
         return response
     if dtype == 'cert':
-        certificates = mongo_connector(settings.COL_CERTIFICATES)
+        certificates = _mongo_connector(settings.COL_CERTIFICATES)
         cert = certificates.find_one({"md5": sample_md5})
         if not cert:
             return render(request, 'error.html',
                                       {'data': request,
                                        'error': "File not found."})
-        data = [(cert['filename'], get_file(sample_md5, "certificates"))]
+        data = [(cert['filename'], _get_file(sample_md5, "certificates"))]
         zip_data = create_zip(data, False)
         response = HttpResponse(zip_data, content_type="application/octet-stream")
         response['Content-Disposition'] = 'attachment; filename=%s' % cert['filename'] + ".zip"
@@ -3784,7 +3784,7 @@ def generate_counts_jtable(request, option):
     """
 
     if option == "jtlist":
-        count = mongo_connector(settings.COL_COUNTS)
+        count = _mongo_connector(settings.COL_COUNTS)
         counts = count.find_one({'name': 'counts'})
         response = {}
         response['Result'] = "OK"
@@ -4145,10 +4145,10 @@ def alter_sector_list(obj, sectors, val):
     soi = { k: 0 for k in Sector._meta['schema_doc'].keys() if k != 'name' and k != obj._meta['crits_type'] }
     soi['schema_version'] = Sector._meta['latest_schema_version']
 
-    # We are using mongo_connector here because mongoengine does not have
+    # We are using _mongo_connector here because mongoengine does not have
     # support for a setOnInsert option. If mongoengine were to gain support
     # for this we should switch to using it instead of pymongo here.
-    sectors_col = mongo_connector(settings.COL_SECTOR_LISTS)
+    sectors_col = _mongo_connector(settings.COL_SECTOR_LISTS)
     for name in sectors:
         sectors_col.update({'name': name},
                            {'$inc': {obj._meta['crits_type']: val},
