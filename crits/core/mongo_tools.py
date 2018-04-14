@@ -34,7 +34,7 @@ def mongo_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     """
 
     try:
-        if settings.SERVICE_MODEL.startswith('process'):
+        if settings.SERVICE_MODEL_MULTIPROC:
             connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
                                             settings.MONGO_PORT,
                                             read_preference=preference,
@@ -69,7 +69,7 @@ def gridfs_connector(collection, preference=settings.MONGO_READ_PREFERENCE):
     try:
         # w=0 writes to GridFS are now prohibited.
         #if pymongo.version_tuple >=(3,0):
-        if settings.SERVICE_MODEL.startswith('process'):
+        if settings.SERVICE_MODEL_MULTIPROC:
             connection = pymongo.MongoClient("%s" % settings.MONGO_HOST,
                                             settings.MONGO_PORT,
                                             read_preference=preference,
