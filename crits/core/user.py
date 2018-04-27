@@ -927,9 +927,9 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
         """
         if not object:
             return False
-        user_source_list_red = [x.name for x in filter(lambda us: us.tlp_red, self.acl.get('sources'))]
-        user_source_list_amber = [x.name for x in filter(lambda us: us.tlp_amber, self.acl.get('sources'))]
-        user_source_list_green = [x.name for x in filter(lambda us: us.tlp_green, self.acl.get('sources'))]
+        user_source_list_red = [x.name for x in filter(lambda us: us.tlp_red and us.read, self.acl.get('sources'))]
+        user_source_list_amber = [x.name for x in filter(lambda us: us.tlp_amber and us.read, self.acl.get('sources'))]
+        user_source_list_green = [x.name for x in filter(lambda us: us.tlp_green and us.read, self.acl.get('sources'))]
         source_tlp_filter = {'$elemMatch': {'$or': [{'instances.tlp': 'white'}, # Consider 'TLP white' open to all, even users who don't have permission on the source
                                                     # If the TLP isn't specified on any source instance, treat it like TLP Red
                                                     {'name': {'$in': user_source_list_red}, 'instances': {'$elemMatch': {'tlp': {'$exists': False}}}},
