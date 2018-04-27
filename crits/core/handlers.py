@@ -2025,21 +2025,27 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
         # Else, all other objects that have sources associated with them
         # need to be filtered appropriately for source access and TLP access
         else:
-            fily = {'id': 1, 'tlp':1,'source':1}
-            filterlist = []
-            query['source.name'] = {'$in': sourcefilt}
-            resy = col.find(query, fily).sort(*sort)
-            for r in resy:
-                if user.check_dict_source_tlp(r):
-                    filterlist.append(str(r['_id']))
-            results['count'] = len(filterlist)
+            #fily = {'id': 1, 'tlp':1,'source':1}
+            #filterlist = []
+            #query['source.name'] = {'$in': sourcefilt}
+            #resy = col.find(query, fily).sort(*sort)
+            #for r in resy:
+            #    if user.check_dict_source_tlp(r):
+            #        filterlist.append(str(r['_id']))
+            #results['count'] = len(filterlist)
+            #if count:
+            #    results['result'] = "OK"
+            #    return results
+
+            #docs = col_obj.objects.filter(id__in=filterlist).\
+            tlp_filter_query = user.filter_dict_source_tlp(query)
+            docs = col_obj.objects.filter(__raw__=tlp_filter_query).\
+                                            order_by(*sort).skip(skip).\
+                                            only(*projection).limit(limit)
+            results['count'] = docs.count()
             if count:
                 results['result'] = "OK"
                 return results
-
-            docs = col_obj.objects.filter(id__in=filterlist).\
-                                            order_by(*sort).skip(skip).\
-                                            only(*projection).limit(limit)
 
         for doc in docs:
             if hasattr(doc, "sanitize_sources"):
