@@ -283,7 +283,7 @@
         {% if GeneralACL.CONTROL_PANEL_SYSTEM_READ|has_access_to:user %}
           <div id='systemContainer' class='rightContent forceInvisible'>
                  <div id="config_results"></div>
-              <form id="config_form" action='{% url "crits-config-views-modify_config" %}' method='POST'>
+              <form id="config_form" action='{% url "crits-config-views-modify_config" %}' method='POST'> {% csrf_token %}
                   <div id='CRITsTab' class='box forceInvisible'>
                       <table class="systemTable">{{ config_CRITs_form.as_table }}</table>
                   </div>
