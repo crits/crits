@@ -2059,7 +2059,7 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
     results['result'] = "OK"
     return results
 
-def csv_query(col_obj,user,fields=[],limit=10000,skip=0,sort=[],query={}):
+def csv_query(col_obj,user,fields=[],limit=0,skip=0,sort=[],query={}):
     """
     Runs query and returns items in CSV format with fields as row headers
 
@@ -2078,6 +2078,15 @@ def csv_query(col_obj,user,fields=[],limit=10000,skip=0,sort=[],query={}):
     :param query: MongoDB query
     :type query: dict
     """
+
+    # Use maximum row count from config if an invalid value is given
+    crits_config = CRITsConfig.objects().first()
+    if crits_config:
+        csv_max = crits_config.csv_max
+    else:
+        csv_max = 25000 # Arbitrary Default
+    if not isinstance(limit, int) or limit < 1 or limit > csv_max:
+        limit = csv_max
 
     results = data_query(col_obj, user=user, limit=limit,
                               skip=skip, sort=sort, query=query,
@@ -2126,7 +2135,7 @@ def parse_query_request(request,col_obj):
 
         resp['fields'] = goodfields
     resp['sort'] = request.GET.get('sort',[])
-    resp['limit'] = int(request.GET.get('limit',10000))
+    resp['limit'] = int(request.GET.get('limit', 0))
     resp['skip'] = int(request.GET.get('skip',0))
     return resp
 

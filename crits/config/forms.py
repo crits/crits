@@ -229,6 +229,11 @@ class ConfigDownloadForm(forms.Form):
         help_text='Maximum relationships an object can have while downloading',
         initial='50',
         required=False)
+    csv_max = forms.CharField(
+        widget=forms.TextInput,
+        help_text='Maximum number of rows in CSV files',
+        initial='25000',
+        required=False)
     def __init__(self, *args, **kwargs):
         super(ConfigDownloadForm, self).__init__(*args, **kwargs)
 
