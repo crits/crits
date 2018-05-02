@@ -538,6 +538,8 @@ class CRITsAPIResource(MongoEngineResource):
         if no_sources and sources:
             querydict['source.name'] = {'$in': source_list}
 
+        querydict_tlp_filter = user.filter_dict_source_tlp(querydict)
+
         if only or exclude:
             required = [k for k,f in klass._fields.iteritems() if f.required]
         if only:
@@ -548,28 +550,28 @@ class CRITsAPIResource(MongoEngineResource):
             for r in required:
                 if r not in fields:
                     fields.append(r)
-            results = klass.objects(__raw__=querydict).only(*fields)
+            results = klass.objects(__raw__=querydict_tlp_filter).only(*fields)
         elif exclude:
             fields = exclude.split(',')
             for r in required:
                 if r not in fields:
                     fields.append(r)
-            results = klass.objects(__raw__=querydict).exclude(*fields)
+            results = klass.objects(__raw__=querydict_tlp_filter).exclude(*fields)
         else:
-            results = klass.objects(__raw__=querydict)
+            results = klass.objects(__raw__=querydict_tlp_filter)
 
         # There has to be a better way to do this...
         # Final scrub to remove results the user does not have access to
-        id_list = []
+        #id_list = []
 
-        if not klass._meta['crits_type']:
-            return results
+        #if not klass._meta['crits_type']:
+        #    return results
 
-        for result in results:
-            if user.check_source_tlp(result):
-                id_list.append(result.id)
+        #for result in results:
+        #    if user.check_source_tlp(result):
+        #        id_list.append(result.id)
 
-        results = klass.objects(id__in=id_list)
+        #results = klass.objects(id__in=id_list)
 
         return results
 

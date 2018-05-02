@@ -921,26 +921,38 @@ class CRITsUser(CritsDocument, CritsSchemaDocument, Document):
                         return True
         return False
 
-    def check_dict_source_tlp(self, object):
+    def filter_dict_source_tlp(self, filter_dict):
         """
         pymongo dict version of check_source_tlp()
         """
         if not object:
             return False
+        user_source_list_red = [x.name for x in filter(lambda us: us.tlp_red and us.read, self.acl.get('sources'))]
+        user_source_list_amber = [x.name for x in filter(lambda us: us.tlp_amber and us.read, self.acl.get('sources'))]
+        user_source_list_green = [x.name for x in filter(lambda us: us.tlp_green and us.read, self.acl.get('sources'))]
+        source_tlp_filter = {'$elemMatch': {'$or': [{'instances.tlp': 'white'}, # Consider 'TLP white' open to all, even users who don't have permission on the source
+                                                    # If the TLP isn't specified on any source instance, treat it like TLP Red
+                                                    {'name': {'$in': user_source_list_red}, 'instances': {'$elemMatch': {'tlp': {'$exists': False}}}},
+                                                    # Check the user can see TLP:Red for a source, and see if this intel was released at that level (or below)
+                                                    {'name': {'$in': user_source_list_red}, 'instances.tlp': 'red'},
+                                                    # Check the user can see TLP:Amber for a source, and see if this intel was released at that level (or below)
+                                                    {'name': {'$in': user_source_list_amber}, 'instances.tlp': 'amber'},
+                                                    # Check the user can see TLP:Green for a source, and see if this intel was released at that level
+                                                    {'name': {'$in': user_source_list_green}, 'instances.tlp': 'green'}]}}
+        return {'$and': [filter_dict, {'source': source_tlp_filter}]} # Merge these as an $and relationship with the original query
 
-        user_source_objects = self.acl.get('sources')
-        for source in object['source']:
-            for instance in source['instances']:
-                itlp = instance.get('tlp', 'red')
-                if itlp == "white":
-                    return True
-                elif itlp == "red" and [True for usource in user_source_objects if usource.name == source['name'] and usource.tlp_red and usource.read]:
-                    return True
-                elif itlp == "amber" and [True for usource in user_source_objects if usource.name == source['name']  and usource.tlp_amber and usource.read]:
-                    return True
-                elif itlp == "green" and [True for usource in user_source_objects if usource.name == source['name']  and usource.tlp_green and usource.read]:
-                    return True
-        return False
+        #for source in object['source']:
+        #    for instance in source['instances']:
+        #        itlp = instance.get('tlp', 'red')
+        #        if itlp == "white":
+        #            return True
+        #        elif itlp == "red" and [True for usource in user_source_objects if usource.name == source['name'] and usource.tlp_red and usource.read]:
+        #            return True
+        #        elif itlp == "amber" and [True for usource in user_source_objects if usource.name == source['name']  and usource.tlp_amber and usource.read]:
+        #            return True
+        #        elif itlp == "green" and [True for usource in user_source_objects if usource.name == source['name']  and usource.tlp_green and usource.read]:
+        #            return True
+        #return False
 
     def check_source_write(self, source):
         """
