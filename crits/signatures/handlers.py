@@ -426,9 +426,11 @@ def handle_signature_file(data, source_name, user=None,
     if related_id and related_type:
         related_obj = class_from_id(related_type, related_id)
         if not related_obj:
-            retVal['success'] = False
-            retVal['message'] = 'Related Object not found.'
-            return retVal
+            status = {
+                'success':   False,
+                'message':  'Related Object not found.'
+            }
+            return status
 
     signature.save(username=user.username)
 
