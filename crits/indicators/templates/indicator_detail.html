@@ -161,7 +161,7 @@
             </div>
         </td>
         </tr>
-        {% if INDICATORACL|has_access_to:user.STATUS_READ|has_access_to:user %}
+        {% if IndicatorACL.STATUS_READ|has_access_to:user %}
           <tr>
             <td class="key">Status
                 <span style="float: right;" class="object_status_response"></span>
