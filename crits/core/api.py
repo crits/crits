@@ -537,9 +537,10 @@ class CRITsAPIResource(MongoEngineResource):
             querydict = tmp
         if no_sources and sources:
             querydict['source.name'] = {'$in': source_list}
-
-        querydict_tlp_filter = user.filter_dict_source_tlp(querydict)
-
+            querydict_tlp_filter = user.filter_dict_source_tlp(querydict)
+        else:
+            querydict_tlp_filter = querydict
+            
         if only or exclude:
             required = [k for k,f in klass._fields.iteritems() if f.required]
         if only:
