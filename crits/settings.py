@@ -335,13 +335,19 @@ _TEMPLATE_LOADERS = [
 ]
 #'django.template.loaders.eggs.load_template_source',
 
+# Caches
+# See https://djangobook.com/djangos-cache-framework/ for details
 
+# Memcached 
 #CACHES = {
 #    'default': {
 #        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#        #'LOCATION': '127.0.0.1:11211',
 #        'LOCATION': 'unix:/data/memcached.sock',
 #    }
 #}
+
+# In-memory cache
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -349,11 +355,12 @@ CACHES = {
     }
 }
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-    }
-}
+# Dummy cache, does nothing
+#CACHES = {
+#    'default': {
+#        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+#    }
+#}
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -533,7 +540,9 @@ if old_mongoengine:
         )
 
     _MIDDLEWARE = (
+    'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
@@ -611,7 +620,9 @@ else:
         )
 
     _MIDDLEWARE = (
+        'django.middleware.cache.UpdateCacheMiddleware',
         'django.middleware.common.CommonMiddleware',
+        'django.middleware.cache.FetchFromCacheMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
@@ -647,7 +658,9 @@ if REMOTE_USER:
     )
     if old_mongoengine:
         _MIDDLEWARE = (
+            'django.middleware.cache.UpdateCacheMiddleware',
             'django.middleware.common.CommonMiddleware',
+            'django.middleware.cache.FetchFromCacheMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
             'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
@@ -669,7 +682,9 @@ if REMOTE_USER:
             )
     else:
         _MIDDLEWARE = (
+            'django.middleware.cache.UpdateCacheMiddleware',
             'django.middleware.common.CommonMiddleware',
+            'django.middleware.cache.FetchFromCacheMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
             'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
