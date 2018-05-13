@@ -475,7 +475,7 @@ class CRITsAPIResource(MongoEngineResource):
                 except ValueError:
                     op_index = None
                 if op_index is not None:
-                    if op in ('$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin', '$exists'):
+                    if op in ('$gt', '$gte', '$lt', '$lte', '$ne', '$in', '$nin', '$exists', '$eq'):
                         val = v
                         if field in ('created', 'modified'):
                             try:
@@ -512,7 +512,10 @@ class CRITsAPIResource(MongoEngineResource):
                                 except:
                                     val = None
                         if val or val == 0:
-                            querydict[field] = {op: val}
+                            if op == '$eq':
+                                querydict[field] = remove_quotes(val)
+                            else:
+                                querydict[field] = {op: remove_quotes(val)}
                 elif field in ('size', 'schema_version'):
                     querydict[field] = v_int
                 elif field in ('created', 'modified'):
