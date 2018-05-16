@@ -347,13 +347,13 @@ _TEMPLATE_LOADERS = [
 #    }
 #}
 
-# In-memory cache
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-crits',
-    }
-}
+# In-memory cache, simplest to set up, fastest if you have the memory
+#CACHES = {
+#    'default': {
+#        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+#        'LOCATION': 'unique-crits',
+#    }
+#}
 
 # Dummy cache, does nothing
 #CACHES = {
