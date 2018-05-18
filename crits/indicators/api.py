@@ -170,7 +170,7 @@ class IndicatorActivityResource(CRITsAPIResource):
                     'end_date': end_date,
                     'description': description,
                     'date': datetime.datetime.now()}
-        result = activity_add(object_id, activity)
+        result = activity_add(object_id, activity, user)
         if not result['success']:
             content['message'] = result['message']
             self.crits_response(content)
