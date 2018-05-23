@@ -34,11 +34,11 @@
 
     {% with height='undefined' navigation_control='false' %}
     if(typeof(Handsontable) === 'undefined') {
+        {% include "handsontable.js" with formdict=formdict prefix="Inline" %}
+
         $.when($.getScript("/js/handsontable/jquery.handsontable.full.js"),
                $.getScript("{{ STATIC_URL }}js/bulk_add_default.js")).done(function() {
             var defaultInlineTableName = '{{ table_name }}';
-
-            {% include "handsontable.js" with formdict=formdict prefix="Inline" %}
 
             {% if not is_prevent_initial_table %}
                 initializeHandsOnTableInline('handsontable_{{ table_name }}', '{{ table_name }}');
