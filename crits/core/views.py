@@ -350,7 +350,7 @@ def login(request):
     user = request.user
 
     # Is the user already authenticated?
-    if (request.user.is_authenticated if django_version >= (1, 10) else request.user.is_authenticated()) and user.has_access_to(GeneralACL.WEB_INTERFACE):
+    if (request.user.is_authenticated if django_version >= (1, 10) else request.user.is_authenticated()) and user.has_access_to(GeneralACL.WEB_INTERFACE) and not request.is_ajax:
         resp = validate_next(next_url)
         if not resp['success']:
             return render(request, 'error.html',
