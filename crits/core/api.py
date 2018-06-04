@@ -424,6 +424,10 @@ class CRITsAPIResource(MongoEngineResource):
         regex = request.GET.get('regex', False)
         only = request.GET.get('only', None)
         exclude = request.GET.get('exclude', None)
+        sort_field_text = request.GET.get('sort', None)
+        sort_fields = []
+        if sort_field_text:
+            sort_fields = sort_field_text.split(',')
         source_list = user.get_sources_list()
         no_sources = True
 
@@ -554,15 +558,15 @@ class CRITsAPIResource(MongoEngineResource):
             for r in required:
                 if r not in fields:
                     fields.append(r)
-            results = klass.objects(__raw__=querydict_tlp_filter).only(*fields)
+            results = klass.objects(__raw__=querydict_tlp_filter).order_by(*sort_fields).only(*fields)
         elif exclude:
             fields = exclude.split(',')
             for r in required:
                 if r not in fields:
                     fields.append(r)
-            results = klass.objects(__raw__=querydict_tlp_filter).exclude(*fields)
+            results = klass.objects(__raw__=querydict_tlp_filter).order_by(*sort_fields).exclude(*fields)
         else:
-            results = klass.objects(__raw__=querydict_tlp_filter)
+            results = klass.objects(__raw__=querydict_tlp_filter).order_by(*sort_fields)
 
         # There has to be a better way to do this...
         # Final scrub to remove results the user does not have access to
