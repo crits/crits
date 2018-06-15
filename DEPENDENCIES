@@ -41,7 +41,7 @@ Provides: PIL
 PyYAML
 Provides: yaml
 
-django<1.9
+Django<2.0
 Provides: django
 
 pymongo==3.2.2
