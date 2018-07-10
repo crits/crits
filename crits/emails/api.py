@@ -94,8 +94,8 @@ class EmailResource(CRITsAPIResource):
                 content['message'] = 'No file uploaded.'
                 self.crits_response(content)
             filedata = file_.read()
-            result = handle_eml(filedata, source, reference,
-                                user, 'EML Upload' + method, tlp=tlp, campaign=campaign,
+            result = handle_eml(data=filedata, sourcename=source, reference=reference,
+                                user=user, method='EML Upload' + method, tlp=tlp, campaign=campaign,
                                 confidence=confidence, bucket_list=bucket_list, ticket=ticket)
         if type_ == 'msg':
             raw_email = bundle.data.get('filedata', None)
