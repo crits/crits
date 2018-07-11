@@ -626,7 +626,6 @@ else:
         _MIDDLEWARE += ('django.middleware.cache.UpdateCacheMiddleware',)
     _MIDDLEWARE += (
         'django.middleware.common.CommonMiddleware',
-        'django.middleware.cache.FetchFromCacheMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
@@ -668,7 +667,6 @@ if REMOTE_USER:
         _MIDDLEWARE += (
             'django.middleware.cache.UpdateCacheMiddleware',
             'django.middleware.common.CommonMiddleware',
-            'django.middleware.cache.FetchFromCacheMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
             'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
@@ -692,7 +690,6 @@ if REMOTE_USER:
         _MIDDLEWARE += (
             'django.middleware.cache.UpdateCacheMiddleware',
             'django.middleware.common.CommonMiddleware',
-            'django.middleware.cache.FetchFromCacheMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
             'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
