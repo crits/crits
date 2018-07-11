@@ -238,6 +238,7 @@ CRITS_EMAIL_SUBJECT_TAG =   crits_config.get('crits_email_subject_tag', '')
 CRITS_EMAIL_END_TAG =       crits_config.get('crits_email_end_tag', True)
 DEBUG =                     crits_config.get('debug', True)
 ENABLE_DT =                 crits_config.get('enable_dt', False)
+ENABLE_DJ_CACHE =           crits_config.get('enable_dj_cache', False)
 if crits_config.get('email_host', None):
     EMAIL_HOST =            crits_config.get('email_host', None)
 if crits_config.get('email_port', None):
