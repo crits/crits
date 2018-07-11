@@ -342,18 +342,20 @@ _TEMPLATE_LOADERS = [
 #CACHES = {
 #    'default': {
 #        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-#        #'LOCATION': '127.0.0.1:11211',
-#        'LOCATION': 'unix:/data/memcached.sock',
+#        'LOCATION': '127.0.0.1:11211', # slower, but can sit on the network
+#        #'LOCATION': 'unix:/data/memcached.sock', # faster for local 
+#                      # instance if you have the memory on the webservver
 #    }
 #}
 
 # In-memory cache, simplest to set up, fastest if you have the memory
-#CACHES = {
-#    'default': {
-#        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-#        'LOCATION': 'unique-crits',
-#    }
-#}
+# in the webserver processes
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-crits',
+    }
+}
 
 # Dummy cache, does nothing
 #CACHES = {
@@ -495,6 +497,8 @@ else:
         'crits.core.views.user_context',
     )
 
+_MIDDLEWARE = ()
+
 if old_mongoengine:
     INSTALLED_APPS = (
         'crits.core',
@@ -527,8 +531,6 @@ if old_mongoengine:
         'tastypie',
         'tastypie_mongoengine',
         'mongoengine.django.mongo_auth',
-
-
     )
     if ENABLE_DT:
         INSTALLED_APPS += (
@@ -538,11 +540,10 @@ if old_mongoengine:
             'vcs_info_panel',
             'debug_toolbar',
         )
-
-    _MIDDLEWARE = (
-    'django.middleware.cache.UpdateCacheMiddleware',
+    if ENABLE_DJ_CACHE:
+        _MIDDLEWARE += ('django.middleware.cache.UpdateCacheMiddleware',)
+    _MIDDLEWARE += (
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.cache.FetchFromCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
@@ -562,6 +563,8 @@ if old_mongoengine:
     # Only needed for mongoengine<0.10
     _MIDDLEWARE += ('crits.core.user.AuthenticationMiddleware',)
 
+    if ENABLE_DJ_CACHE:
+        _MIDDLEWARE += ('django.middleware.cache.FetchFromCacheMiddleware',)
 
     SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
     #SESSION_ENGINE = 'mongoengine.django.sessions'
@@ -618,9 +621,9 @@ else:
             'vcs_info_panel',
             'debug_toolbar',
         )
-
-    _MIDDLEWARE = (
-        'django.middleware.cache.UpdateCacheMiddleware',
+    if ENABLE_DJ_CACHE:
+        _MIDDLEWARE += ('django.middleware.cache.UpdateCacheMiddleware',)
+    _MIDDLEWARE += (
         'django.middleware.common.CommonMiddleware',
         'django.middleware.cache.FetchFromCacheMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
@@ -632,13 +635,14 @@ else:
     )
     if ENABLE_DT:
         _MIDDLEWARE += (
-            'debug_toolbar.middleware.DebugToolbarMiddleware',
-
-        )
+            'debug_toolbar.middleware.DebugToolbarMiddleware',)
 
     if django.VERSION >= (1,8,0):
         _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
 
+    if ENABLE_DJ_CACHE:
+        _MIDDLEWARE += ('django.middleware.cache.FetchFromCacheMiddleware',)
+        
     SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
     #SESSION_ENGINE = 'django_mongoengine.sessions'
 
@@ -656,8 +660,11 @@ if REMOTE_USER:
     AUTHENTICATION_BACKENDS = (
         'crits.core.user.CRITsRemoteUserBackend',
     )
+    if ENABLE_DJ_CACHE:
+        _MIDDLEWARE += ('django.middleware.cache.UpdateCacheMiddleware',)
+    
     if old_mongoengine:
-        _MIDDLEWARE = (
+        _MIDDLEWARE += (
             'django.middleware.cache.UpdateCacheMiddleware',
             'django.middleware.common.CommonMiddleware',
             'django.middleware.cache.FetchFromCacheMiddleware',
@@ -681,7 +688,7 @@ if REMOTE_USER:
                 'debug_toolbar.middleware.DebugToolbarMiddleware',
             )
     else:
-        _MIDDLEWARE = (
+        _MIDDLEWARE += (
             'django.middleware.cache.UpdateCacheMiddleware',
             'django.middleware.common.CommonMiddleware',
             'django.middleware.cache.FetchFromCacheMiddleware',
@@ -702,7 +709,10 @@ if REMOTE_USER:
             _MIDDLEWARE += ('django.middleware.security.SecurityMiddleware',)
 
         _MIDDLEWARE += ('django.contrib.auth.middleware.RemoteUserMiddleware',)
-
+    
+    if ENABLE_DJ_CACHE:
+        _MIDDLEWARE += ('django.middleware.cache.FetchFromCacheMiddleware',)
+    
 MONGODB_DATABASES = {
     "default": {
         "name": 'crits',
