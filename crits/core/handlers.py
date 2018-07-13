@@ -2001,10 +2001,10 @@ def data_query(col_obj, user, limit=25, skip=0, sort=[], query={},
         projection = projection.split(',')
     if not projection:
         projection = []
-        
-    # It came from: https://stackoverflow.com/questions/12068558/use-mongoengine-and-pymongo-together    
+
+    # It came from: https://stackoverflow.com/questions/12068558/use-mongoengine-and-pymongo-together
     col = col_obj._get_collection()
-    
+
     docs = None
     try:
         if not issubclass(col_obj,CritsSourceDocument):
@@ -2160,7 +2160,7 @@ def csv_export(request, col_obj, query={}):
             response = render(request, "error.html", {"error": resp['Message'] })
             return response
         query = resp['query']
-    result = csv_query(col_obj, request.user.username, fields=opts['fields'],
+    result = csv_query(col_obj, request.user, fields=opts['fields'],
                         sort=opts['sort'], query=query, limit=opts['limit'],
                         skip=opts['skip'])
     if isinstance(result, basestring):
