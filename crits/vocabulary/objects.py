@@ -114,6 +114,7 @@ class ObjectTypes(vocab):
     TS_END = "TS End"
     TS_START = "TS Start"
     URI = "URI"
+    URI_PATH = "URI Path"
     USER_AGENT = "User Agent"
     USER_ID = "User ID"
     VICTIM_IP = "Victim IP"
