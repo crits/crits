@@ -516,10 +516,12 @@ class CRITsAPIResource(MongoEngineResource):
                                 except:
                                     val = None
                         if val or val == 0:
+                            if not isinstance(val, list):
+                                val = remove_quotes(val)
                             if op == '$eq':
-                                querydict[field] = remove_quotes(val)
+                                querydict[field] = val
                             else:
-                                querydict[field] = {op: remove_quotes(val)}
+                                querydict[field] = {op: val}
                 elif field in ('size', 'schema_version'):
                     querydict[field] = v_int
                 elif field in ('created', 'modified'):
@@ -547,7 +549,7 @@ class CRITsAPIResource(MongoEngineResource):
             querydict_tlp_filter = user.filter_dict_source_tlp(querydict)
         else:
             querydict_tlp_filter = querydict
-            
+
         if only or exclude:
             required = [k for k,f in klass._fields.iteritems() if f.required]
         if only:
