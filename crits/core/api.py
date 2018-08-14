@@ -516,7 +516,7 @@ class CRITsAPIResource(MongoEngineResource):
                                 except:
                                     val = None
                         if val or val == 0:
-                            if not isinstance(val, list):
+                            if isinstance(val, str):
                                 val = remove_quotes(val)
                             if op == '$eq':
                                 querydict[field] = val
