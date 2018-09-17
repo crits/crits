@@ -158,7 +158,7 @@ def upload_indicator(request):
                                               source_method=request.POST['source_method'],
                                               source_reference=request.POST['source_reference'],
                                               source_tlp=request.POST['source_tlp'],
-                                              user=user.username,
+                                              user=user,
                                               add_domain=True,
                                               related_id=request.POST['related_id'],
                                               related_type=request.POST['related_type'],
@@ -180,7 +180,7 @@ def upload_indicator(request):
                                               source_method=request.POST['source_method'],
                                               source_reference=request.POST['source_reference'],
                                               source_tlp=request.POST['source_tlp'],
-                                              user=user.username,
+                                              user=user,
                                               add_domain=True,
                                               related_id=request.POST['related_id'],
                                               related_type=request.POST['related_type'],
@@ -266,7 +266,7 @@ def add_update_activity(request, method, indicator_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        user = request.user.username
+        user = request.user
         form = IndicatorActivityForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
@@ -311,7 +311,7 @@ def remove_activity(request, indicator_id):
     """
 
     if request.method == "POST" and request.is_ajax():
-        user = request.user.username
+        user = request.user
         date = datetime.datetime.strptime(request.POST['key'],
                                             settings.PY_DATETIME_FORMAT)
         date = date.replace(microsecond=date.microsecond/1000*1000)
@@ -336,7 +336,7 @@ def update_ci(request, indicator_id, ci_type):
 
     if request.method == "POST" and request.is_ajax():
         value = request.POST['value']
-        user = request.user.username
+        user = request.user
         return HttpResponse(json.dumps(ci_update(indicator_id,
                                                  ci_type,
                                                  value,
@@ -369,7 +369,7 @@ def indicator_and_ip(request):
             result = create_indicator_and_ip(type_,
                                              id_,
                                              ip,
-                                             request.user.username)
+                                             request.user)
             if result['success']:
                 relationship = {'type': type_,
                                 'value': result['value']}
@@ -413,7 +413,7 @@ def indicator_from_tlo(request):
         else:
             result = create_indicator_from_tlo(tlo_type,
                                                None,
-                                               request.user.username,
+                                               request.user,
                                                source,
                                                tlo_id,
                                                ind_type,
@@ -487,7 +487,7 @@ def update_indicator_type(request, indicator_id):
         if 'type' in request.POST and len(request.POST['type']) > 0:
             result = set_indicator_type(indicator_id,
                                         request.POST['type'],
-                                        '%s' % request.user.username)
+                                        request.user)
             if result['success']:
                 message = {'success': True}
             else:
@@ -515,7 +515,7 @@ def threat_type_modify(request, indicator_id):
     if request.method == "POST" and request.is_ajax():
         threat_types = request.POST['threat_types'].split(",")
         result = modify_threat_types(indicator_id, threat_types,
-                                     user=request.user.username)
+                                     user=request.user)
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:
@@ -537,7 +537,7 @@ def attack_type_modify(request, indicator_id):
     if request.method == "POST" and request.is_ajax():
         attack_types = request.POST['attack_types'].split(",")
         result = modify_attack_types(indicator_id, attack_types,
-                                     user=request.user.username)
+                                     user=request.user)
         return HttpResponse(json.dumps(result),
                             content_type="application/json")
     else:

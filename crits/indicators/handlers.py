@@ -185,12 +185,12 @@ def get_indicator_details(indicator_id, user):
     :param indicator_id: The ObjectId of the Indicator to get details for.
     :type indicator_id: str
     :param user: The user requesting this information.
-    :type user: str
+    :type user: CRITsUser
     :returns: template (str), arguments (dict)
     """
 
     template = None
-    users_sources = user_sources(user)
+    users_sources = user_sources(user.username)
 
     indicator = Indicator.objects(id=indicator_id,
                                   source__name__in=users_sources).first()
@@ -205,23 +205,23 @@ def get_indicator_details(indicator_id, user):
         args = {'error': error}
         return template, args
     forms = {}
-    forms['new_activity'] = IndicatorActivityForm(initial={'analyst': user,
+    forms['new_activity'] = IndicatorActivityForm(initial={'analyst': user.username,
                                                            'date': datetime.datetime.now()})
     forms['new_campaign'] = CampaignForm()#'date': datetime.datetime.now(),
     forms['new_source'] = SourceForm(user, initial={'date': datetime.datetime.now()})
     forms['download_form'] = DownloadFileForm(initial={"obj_type": 'Indicator',
                                                        "obj_id": indicator_id})
 
-    indicator.sanitize("%s" % user)
+    indicator.sanitize("%s" % user.username)
 
     # remove pending notifications for user
-    remove_user_from_notification("%s" % user, indicator_id, 'Indicator')
+    remove_user_from_notification("%s" % user.username, indicator_id, 'Indicator')
 
     # subscription
     subscription = {
         'type': 'Indicator',
         'id': indicator_id,
-        'subscribed': is_user_subscribed("%s" % user,
+        'subscribed': is_user_subscribed("%s" % user.username,
                                          'Indicator',
                                          indicator_id),
     }
@@ -243,10 +243,10 @@ def get_indicator_details(indicator_id, user):
                 'url_key': indicator_id}
 
     #screenshots
-    screenshots = indicator.get_screenshots(user)
+    screenshots = indicator.get_screenshots(user.username)
 
     # favorites
-    favorite = is_user_favorite("%s" % user, 'Indicator', indicator.id)
+    favorite = is_user_favorite("%s" % user.username, 'Indicator', indicator.id)
 
     # services
     service_list = get_supported_services('Indicator')
@@ -356,7 +356,7 @@ def handle_indicator_csv(csv_data, ctype, user, source, source_method=None,
     :param ctype: The CSV type.
     :type ctype: str ("file" or "blob")
     :param user: The user adding these indicators.
-    :type user: str
+    :type user: CRITsUser
     :param add_domain: If the indicators being added are also other top-level
                        objects, add those too.
     :type add_domain: boolean
@@ -476,7 +476,7 @@ def handle_indicator_csv(csv_data, ctype, user, source, source_method=None,
         if response['success']:
             if actions:
                 action = {'active': 'on',
-                          'analyst': user,
+                          'analyst': user.username,
                           'begin_date': '',
                           'end_date': '',
                           'performed_date': '',
@@ -518,7 +518,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     :param attack_type: The indicator attack type.
     :type attack_type: str
     :param user: The user adding this indicator.
-    :type user: str
+    :type user: CRITsUser
     :param method: The method of acquisition of this indicator.
     :type method: str
     :param reference: The reference to this data.
@@ -611,7 +611,7 @@ def handle_indicator_ind(value, source, ctype, threat_type, attack_type,
     return result
 
 def handle_indicator_insert(ind, source, source_reference=None, source_method=None,
-                            source_tlp=None, user='', add_domain=False,
+                            source_tlp=None, user=None, add_domain=False,
                             add_relationship=False, cache={}, related_id=None,
                             related_type=None, relationship_type=None):
 
@@ -632,7 +632,7 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
     :param reference: The reference to the data.
     :type reference: str
     :param user: The user adding this indicator.
-    :type user: str
+    :type user: CRITsUser
     :param method: Method of acquiring this indicator.
     :type method: str
     :param add_domain: If this indicator is also a top-level object, try to add
@@ -752,14 +752,14 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
     if form_consts.Common.BUCKET_LIST_VARIABLE_NAME in ind:
         bucket_list = ind[form_consts.Common.BUCKET_LIST_VARIABLE_NAME]
         if bucket_list:
-            indicator.add_bucket_list(bucket_list, user)
+            indicator.add_bucket_list(bucket_list, user.username)
 
     ticket = None
 
     if form_consts.Common.TICKET_VARIABLE_NAME in ind:
         ticket = ind[form_consts.Common.TICKET_VARIABLE_NAME]
         if ticket:
-            indicator.add_ticket(ticket, user)
+            indicator.add_ticket(ticket, user.username)
 
     # generate new source information and add to indicator
     if isinstance(source, basestring) and source:
@@ -967,7 +967,7 @@ def set_indicator_type(indicator_id, itype, user):
     :param itype: The new indicator type.
     :type itype: str
     :param user: The user updating the indicator.
-    :type user: str
+    :type user: CRITsUser
     :returns: dict with key "success" (boolean)
     """
 
@@ -995,7 +995,7 @@ def modify_threat_types(id_, threat_types, user, **kwargs):
     :param threat_types: The new indicator threat types.
     :type threat_types: list,str
     :param user: The user updating the indicator.
-    :type user: str
+    :type user: CRITsUser
     :returns: dict with key "success" (boolean)
     """
 
@@ -1007,7 +1007,7 @@ def modify_threat_types(id_, threat_types, user, **kwargs):
             return {'success': False,
                     'message': "Not a valid Threat Type: %s" % t}
     try:
-        indicator.add_threat_type_list(threat_types, user, append=False)
+        indicator.add_threat_type_list(threat_types, user.username, append=False)
         indicator.save(username=user.username)
         return {'success': True}
     except ValidationError:
@@ -1022,7 +1022,7 @@ def modify_attack_types(id_, attack_types, user, **kwargs):
     :param attack_types: The new indicator attack types.
     :type attack_type: list,str
     :param user: The user updating the indicator.
-    :type user: str
+    :type user: CRITsUser
     :returns: dict with key "success" (boolean)
     """
 
@@ -1034,7 +1034,7 @@ def modify_attack_types(id_, attack_types, user, **kwargs):
             return {'success': False,
                     'message': "Not a valid Attack Type: %s" % a}
     try:
-        indicator.add_attack_type_list(attack_types, user, append=False)
+        indicator.add_attack_type_list(attack_types, user.username, append=False)
         indicator.save(username=user.username)
         return {'success': True}
     except ValidationError:
@@ -1067,14 +1067,14 @@ def activity_add(id_, activity, user, **kwargs):
     :param activity: The activity information.
     :type activity: dict
     :param user: The user adding the activitty.
-    :type user: str
+    :type user: CRITsUser
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed,
               "object" (dict) if successful.
     """
 
-    sources = user_sources(user)
+    sources = user_sources(user.username)
     indicator = Indicator.objects(id=id_,
                                   source__name__in=sources).first()
     if not indicator:
@@ -1082,7 +1082,7 @@ def activity_add(id_, activity, user, **kwargs):
                 'message': 'Could not find Indicator'}
     try:
 
-        activity['analyst'] = user
+        activity['analyst'] = user.username
         indicator.add_activity(activity['analyst'],
                                activity['start_date'],
                                activity['end_date'],
@@ -1104,14 +1104,14 @@ def activity_update(id_, activity, user=None, **kwargs):
     :param activity: The activity information.
     :type activity: dict
     :param user: The user updating the activity.
-    :type user: str
+    :type user: CRITsUser
     :returns: dict with keys:
               "success" (boolean),
               "message" (str) if failed,
               "object" (dict) if successful.
     """
 
-    sources = user_sources(user)
+    sources = user_sources(user.username)
     indicator = Indicator.objects(id=id_,
                                   source__name__in=sources).first()
     if not indicator:
@@ -1119,7 +1119,7 @@ def activity_update(id_, activity, user=None, **kwargs):
                 'message': 'Could not find Indicator'}
     try:
         activity = datetime_parser(activity)
-        activity['analyst'] = user
+        activity['analyst'] = user.username
         indicator.edit_activity(activity['analyst'],
                                 activity['start_date'],
                                 activity['end_date'],
@@ -1139,7 +1139,7 @@ def activity_remove(id_, date, user, **kwargs):
     :param date: The date of the activity to remove.
     :type date: datetime.datetime
     :param user: The user removing this activity.
-    :type user: str
+    :type user: CRITsUser
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
@@ -1167,7 +1167,7 @@ def ci_update(id_, ci_type, value, user, **kwargs):
     :param value: The value to set.
     :type value: str ("unknown", "benign", "low", "medium", "high")
     :param user: The user updating this indicator.
-    :type user: str
+    :type user: CRITsUser
     :returns: dict with keys "success" (boolean) and "message" (str) if failed.
     """
 
@@ -1178,9 +1178,9 @@ def ci_update(id_, ci_type, value, user, **kwargs):
     if ci_type == "confidence" or ci_type == "impact":
         try:
             if ci_type == "confidence":
-                indicator.set_confidence(user, value)
+                indicator.set_confidence(user.username, value)
             else:
-                indicator.set_impact(user, value)
+                indicator.set_impact(user.username, value)
             indicator.save(username=user.username)
             return {'success': True}
         except ValidationError, e:
@@ -1200,7 +1200,7 @@ def create_indicator_and_ip(type_, id_, ip, user):
     :param ip: The IP address to generate an indicator out of.
     :type ip: str
     :param user: The user adding this indicator.
-    :type user: str
+    :type user: CRITsUser
     :returns: dict with keys:
               "success" (boolean),
               "message" (str),
@@ -1255,7 +1255,7 @@ def create_indicator_and_ip(type_, id_, ip, user):
             ip_class.save(username=user.username)
             ind_class.save(username=user.username)
             if message['success']:
-                rels = obj_class.sort_relationships("%s" % user, meta=True)
+                rels = obj_class.sort_relationships("%s" % user.username, meta=True)
                 return {'success': True, 'message': rels, 'value': obj_class.id}
             else:
                 return {'success': False, 'message': message['message']}
@@ -1276,7 +1276,7 @@ def create_indicator_from_tlo(tlo_type, tlo, user, source_name=None,
     :param tlo: A CRITs parent TLO class object
     :type tlo: class - some CRITs TLO
     :param user: The user creating this indicator.
-    :type user: str
+    :type user: CRITsUser
     :param source_name: The source name for the new source instance that
     records this indicator being added.
     :type source_name: str
@@ -1368,7 +1368,7 @@ def create_indicator_from_tlo(tlo_type, tlo, user, source_name=None,
                                              analyst=user.username)
             ind.save(username=user.username)
             tlo.reload()
-            rels = tlo.sort_relationships("%s" % user, meta=True)
+            rels = tlo.sort_relationships("%s" % user.username, meta=True)
             return {'success': True, 'message': rels,
                     'value': tlo.id, 'indicator': ind}
         else:
