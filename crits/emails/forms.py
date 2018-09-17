@@ -32,10 +32,10 @@ class EmailOutlookForm(SourceInForm):
                                           label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
-    def __init__(self, username, *args, **kwargs):
-        super(EmailOutlookForm, self).__init__(username, *args, **kwargs)
+    def __init__(self, user, *args, **kwargs):
+        super(EmailOutlookForm, self).__init__(user, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        if username.has_access_to(Common.CAMPAIGN_READ):
+        if user.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
@@ -65,10 +65,10 @@ class EmailYAMLForm(SourceInForm):
     relationship_type = forms.ChoiceField(required=False,
                                           label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
-    def __init__(self, username, *args, **kwargs):
-        super(EmailYAMLForm, self).__init__(username, *args, **kwargs)
+    def __init__(self, user, *args, **kwargs):
+        super(EmailYAMLForm, self).__init__(user, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        if username.has_access_to(Common.CAMPAIGN_READ):
+        if user.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
@@ -96,10 +96,10 @@ class EmailEMLForm(SourceInForm):
                                           label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
-    def __init__(self, username, *args, **kwargs):
-        super(EmailEMLForm, self).__init__(username, *args, **kwargs)
+    def __init__(self, user, *args, **kwargs):
+        super(EmailEMLForm, self).__init__(user, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        if username.has_access_to(Common.CAMPAIGN_READ):
+        if user.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
@@ -128,10 +128,10 @@ class EmailRawUploadForm(SourceInForm):
                                           label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
-    def __init__(self, username, *args, **kwargs):
-        super(EmailRawUploadForm, self).__init__(username, *args, **kwargs)
+    def __init__(self, user, *args, **kwargs):
+        super(EmailRawUploadForm, self).__init__(user, *args, **kwargs)
         self.fields['campaign'].choices = [("","")]
-        if username.has_access_to(Common.CAMPAIGN_READ):
+        if user.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
@@ -175,12 +175,12 @@ class EmailUploadForm(SourceInForm):
                                           label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
-    def __init__(self, username, *args, **kwargs):
-        super(EmailUploadForm, self).__init__(username, *args, **kwargs)
+    def __init__(self, user, *args, **kwargs):
+        super(EmailUploadForm, self).__init__(user, *args, **kwargs)
         add_bucketlist_to_form(self)
         add_ticket_to_form(self)
         self.fields['campaign'].choices = [("","")]
-        if username.has_access_to(Common.CAMPAIGN_READ):
+        if user.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
         self.fields['campaign_confidence'].choices = [("", ""),
