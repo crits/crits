@@ -24,6 +24,10 @@ class CampaignResource(CRITsAPIResource):
         object_class = Campaign
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "campaigns"
+        ordering = ("name", "aliases", "status",
+                    "actors", "backdoors", "exploits", "indicators",
+                    "emails", "domains", "samples", "events", "ips",
+                    "pcaps", "modified", "favorite", "id")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

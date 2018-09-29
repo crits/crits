@@ -24,6 +24,7 @@ class ActorResource(CRITsAPIResource):
         object_class = Actor
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "actors"
+        ordering = ("name", "description", "modified", "status", "id")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

@@ -23,6 +23,8 @@ class CertificateResource(CRITsAPIResource):
         object_class = Certificate
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "certificates"
+        ordering = ("filename", "description", "filetype", "size",
+                    "modified", "status", "md5", "favorite", "id")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

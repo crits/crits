@@ -26,6 +26,8 @@ class IndicatorResource(CRITsAPIResource):
         object_class = Indicator
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "indicators"
+        ordering = ("value", "ind_type", "threat_types", "attack_types",
+                    "created", "modified", "status", "id")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

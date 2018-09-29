@@ -25,6 +25,8 @@ class EmailResource(CRITsAPIResource):
         object_class = Email
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "emails"
+        ordering = ("from", "recip", "subject", "isodate", "status", 
+                    "favorite", "id")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

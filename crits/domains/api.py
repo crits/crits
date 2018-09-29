@@ -22,6 +22,7 @@ class DomainResource(CRITsAPIResource):
         object_class = Domain
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "domains"
+        ordering = ("domain", "modified", "status", "favorite", "id")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

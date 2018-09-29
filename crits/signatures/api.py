@@ -23,6 +23,9 @@ class SignatureResource(CRITsAPIResource):
         object_class = Signature
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "signatures"
+        ordering = ("title", "data_type", "data_type_min_version",
+                    "data_type_max_version", "data_type_dependency", 
+                    "version", "modified", "id", "status")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

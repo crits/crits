@@ -24,6 +24,8 @@ class RawDataResource(CRITsAPIResource):
         object_class = RawData
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "raw_data"
+        ordering = ("title", "data_type", "version", "modified", "id",
+                    "status")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

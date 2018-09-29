@@ -17,6 +17,7 @@ class CommentResource(CRITsAPIResource):
         object_class = Comment
         allowed_methods = ('post')
         resource_name = "comments"
+        ordering = ("obj_type", "comment", "date", "analyst", "id")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

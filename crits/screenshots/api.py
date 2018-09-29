@@ -23,6 +23,7 @@ class ScreenshotResource(CRITsAPIResource):
         object_class = Screenshot
         allowed_methods = ('get', 'post')
         resource_name = "screenshots"
+        ordering = ("thumb", "description", "created", "id", "md5", "tags")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

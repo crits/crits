@@ -24,6 +24,8 @@ class PCAPResource(CRITsAPIResource):
         object_class = PCAP
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "pcaps"
+        ordering = ("filename", "description", "length", "modified", 
+                    "id", "md5", "status")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

@@ -24,6 +24,8 @@ class SampleResource(CRITsAPIResource):
         object_class = Sample
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "samples"
+        ordering = ("filename", "size", "filetype", "created", "modified",
+                    "md5", "id", "status")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()
