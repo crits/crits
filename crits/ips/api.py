@@ -24,6 +24,7 @@ class IPResource(CRITsAPIResource):
         object_class = IP
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "ips"
+        ordering = ("ip", "ip_type", "created", "modified", "status", "id")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

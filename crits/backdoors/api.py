@@ -23,6 +23,8 @@ class BackdoorResource(CRITsAPIResource):
         object_class = Backdoor
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "backdoors"
+        ordering = ("name", "version", "description", "modified", "status",
+                    "favorite", "id")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

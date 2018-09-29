@@ -25,6 +25,7 @@ class EventResource(CRITsAPIResource):
         object_class = Event
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "events"
+        ordering = ("title", "event_type", "created", "status", "id")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()

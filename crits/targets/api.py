@@ -24,6 +24,8 @@ class TargetResource(CRITsAPIResource):
         object_class = Target
         allowed_methods = ('get', 'post', 'patch')
         resource_name = "targets"
+        ordering = ("email_address","firstname", "lastname", "email_count",
+                    "department", "division", "status", "id")
         authentication = MultiAuthentication(CRITsApiKeyAuthentication(),
                                              CRITsSessionAuthentication())
         authorization = authorization.Authorization()
