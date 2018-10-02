@@ -109,7 +109,7 @@ def get_backdoor_details(id_, user):
     :param id_: The Backdoor ObjectId to get details for.
     :type id_: str
     :param user: The user requesting this information.
-    :type user: str
+    :type user: CRITsUser
     :returns: template (str), arguments (dict)
     """
 
@@ -127,16 +127,16 @@ def get_backdoor_details(id_, user):
                  ' permission to view it.')
         args = {'error': error}
     else:
-        backdoor.sanitize("%s" % user.username)
+        backdoor.sanitize(user.username)
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % user, backdoor.id, 'Backdoor')
+        remove_user_from_notification(user.username, backdoor.id, 'Backdoor')
 
         # subscription
         subscription = {
             'type': 'Backdoor',
             'id': backdoor.id,
-            'subscribed': is_user_subscribed("%s" % user,
+            'subscribed': is_user_subscribed(user.username,
                                              'Backdoor',
                                              backdoor.id),
         }
@@ -145,7 +145,7 @@ def get_backdoor_details(id_, user):
         objects = backdoor.sort_objects()
 
         #relationships
-        relationships = backdoor.sort_relationships("%s" % user, meta=True)
+        relationships = backdoor.sort_relationships(user.username, meta=True)
 
         # relationship
         relationship = {
@@ -161,7 +161,7 @@ def get_backdoor_details(id_, user):
         screenshots = backdoor.get_screenshots(user)
 
         # favorites
-        favorite = is_user_favorite("%s" % user, 'Backdoor', backdoor.id)
+        favorite = is_user_favorite(user.username, 'Backdoor', backdoor.id)
 
         # services
         service_list = get_supported_services('Backdoor')
@@ -209,7 +209,7 @@ def add_new_backdoor(name, version=None, aliases=None, description=None,
     :param confidence: Confidence level in the campaign attribution.
     :type confidence: str ("low", "medium", "high")
     :param user: The user adding this backdoor.
-    :type user: str
+    :type user: CRITsUser
     :param bucket_list: Buckets to assign to this backdoor.
     :type bucket_list: str
     :param ticket: Ticket to assign to this backdoor.
