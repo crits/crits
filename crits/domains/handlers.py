@@ -71,7 +71,7 @@ def get_domain_details(domain, user):
     :param domain: The name of the Domain to get details for.
     :type domain: str
     :param user: The user requesting this information.
-    :type user: str
+    :type user: CRITsUser
     :returns: template (str), arguments (dict)
     """
 

@@ -150,12 +150,12 @@ def get_email_detail(email_id, user):
     :param email_id: The ObjectId of the email.
     :type email_id: str
     :param user: The user requesting the data.
-    :type user: str
+    :type user: CRITsUser
     :returns: tuple
     """
 
     template = None
-    sources = user_sources(user)
+    sources = user_sources(user.username)
     email = Email.objects(id=email_id, source__name__in=sources).first()
 
     if not user.check_source_tlp(email):
@@ -165,20 +165,20 @@ def get_email_detail(email_id, user):
         template = "error.html"
         args = {'error': "ID does not exist or insufficient privs for source"}
     else:
-        email.sanitize(username="%s" % user, sources=sources)
+        email.sanitize(username="%s" % user.username, sources=sources)
         update_data_form = EmailYAMLForm(user)
         campaign_form = CampaignForm()
         download_form = DownloadFileForm(initial={"obj_type": 'Email',
                                                   "obj_id":email_id})
 
         # remove pending notifications for user
-        remove_user_from_notification("%s" % user, email.id, 'Email')
+        remove_user_from_notification("%s" % user.username, email.id, 'Email')
 
         # subscription
         subscription = {
                 'type': 'Email',
                 'id': email.id,
-                'subscribed': is_user_subscribed("%s" % user, 'Email',
+                'subscribed': is_user_subscribed("%s" % user.username, 'Email',
                                                  email.id),
         }
 
@@ -186,7 +186,7 @@ def get_email_detail(email_id, user):
         objects = email.sort_objects()
 
         # relationships
-        relationships = email.sort_relationships("%s" % user, meta=True)
+        relationships = email.sort_relationships("%s" % user.username, meta=True)
 
         # Get count of related Events for each related Indicator
         for ind in relationships.get('Indicator', []):
@@ -211,10 +211,10 @@ def get_email_detail(email_id, user):
                     'url_key': email.id}
 
         #screenshots
-        screenshots = email.get_screenshots(user)
+        screenshots = email.get_screenshots(user.username)
 
         # favorites
-        favorite = is_user_favorite("%s" % user, 'Email', email.id)
+        favorite = is_user_favorite("%s" % user.username, 'Email', email.id)
 
         email_fields = []
         email_fields.append(create_email_field_dict(
@@ -472,7 +472,7 @@ def handle_email_fields(data, user, method, related_id=None,
 
     :param data: The fields to include in the email.
     :type data: dict
-    :param user.username: The user creating this email object.
+    :param user: The user creating this email object.
     :type user: CRITsUser
     :param method: The method of acquiring this email.
     :type method: str
@@ -700,7 +700,7 @@ def handle_yaml(data, sourcename, reference, method, tlp, user, email_id=None,
     :type method: str
     :param tlp: The tlp of the source of this email.
     :type method: str
-    :param user.username: The user creating this email object.
+    :param user: The user creating this email object.
     :type user: CRITsUser
     :param email_id: The ObjectId of the existing email to update.
     :type email_id: str
@@ -837,7 +837,7 @@ def handle_msg(data, sourcename, reference, method, tlp, user, password='',
     :param TLP: The TLP to the data from the source.
     :type TLP: str
     :param user: The user creating this email object.
-    :type user: str
+    :type user: CRITsUser
     :param method: The method of acquiring this email.
     :type method: str
     :param password: The password for the attachment.

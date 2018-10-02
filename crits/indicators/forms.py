@@ -64,8 +64,8 @@ class UploadIndicatorCSVForm(SourceInForm):
                                           label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
-    def __init__(self, username, *args, **kwargs):
-        super(UploadIndicatorCSVForm, self).__init__(username, *args, **kwargs)
+    def __init__(self, user, *args, **kwargs):
+        super(UploadIndicatorCSVForm, self).__init__(user, *args, **kwargs)
         self.fields['relationship_type'].choices = relationship_choices
         self.fields['relationship_type'].initial = RelationshipTypes.RELATED_TO
 
@@ -85,8 +85,8 @@ class UploadIndicatorTextForm(SourceInForm):
                                           label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
-    def __init__(self, username, *args, **kwargs):
-        super(UploadIndicatorTextForm, self).__init__(username, *args, **kwargs)
+    def __init__(self, user, *args, **kwargs):
+        super(UploadIndicatorTextForm, self).__init__(user, *args, **kwargs)
         dt = "Indicator, Type, Threat Type, Attack Type, Description, Campaign, Campaign Confidence, Confidence, Impact, Bucket List, Ticket, Action, Status\n"
         self.fields['data'].initial = dt
         self.fields['relationship_type'].choices = relationship_choices
@@ -119,8 +119,8 @@ class UploadIndicatorForm(SourceInForm):
                                           label=form_consts.Common.RELATIONSHIP_TYPE,
                                           widget=forms.Select(attrs={'id':'relationship_type'}))
 
-    def __init__(self, username, *args, **kwargs):
-        super(UploadIndicatorForm, self).__init__(username, *args, **kwargs)
+    def __init__(self, user, *args, **kwargs):
+        super(UploadIndicatorForm, self).__init__(user, *args, **kwargs)
         self.fields['status'].choices = [
             (c,c) for c in Status.values()
         ]
@@ -136,7 +136,7 @@ class UploadIndicatorForm(SourceInForm):
         ]
         self.fields['attack_type'].initial = IndicatorAttackTypes.UNKNOWN
         self.fields['indicator_type'].widget.attrs = {'class': 'object-types'}
-        if username.has_access_to(Common.CAMPAIGN_READ):
+        if user.has_access_to(Common.CAMPAIGN_READ):
             self.fields['campaign'].choices = [('', '')] + [
                 (c.name, c.name) for c in get_item_names(Campaign, True)]
 
