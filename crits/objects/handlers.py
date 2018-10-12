@@ -211,7 +211,7 @@ def add_object(type_, id_, object_type, source, method, reference, tlp, user,
     :param reference: The reference for this object.
     :type reference: str
     :param user: The user adding this object.
-    :type user: str
+    :type user: CRITsUser
     :param value: The value of the object.
     :type value: str
     :param file_: The file if the object is a file upload.
@@ -265,7 +265,7 @@ def add_object(type_, id_, object_type, source, method, reference, tlp, user,
             value = md5sum
             reference = filename
         ret = tlo.add_object(object_type, value,
-                             source, method, reference, user)
+                             source, method, reference, "%s" % user)
 
         if not ret['success']:
             msg = '%s! [Type: "%s"][Value: "%s"]'

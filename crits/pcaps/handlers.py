@@ -231,7 +231,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
                        :class:`crits.core.crits_mongoengine.EmbeddedSource`,
                        list of :class:`crits.core.crits_mongoengine.EmbeddedSource`
     :param user: The user adding the PCAP.
-    :type user: str
+    :type user: CRITsUser
     :param description: Description of the PCAP.
     :type description: str
     :param related_id: ObjectId of a top-level object related to this PCAP.
@@ -355,7 +355,7 @@ def handle_pcap_file(filename, data, source_name, user=None,
             relationship = RelationshipTypes.RELATED_TO
         pcap.add_relationship(related_obj,
                               relationship,
-                              analyst=user,
+                              analyst=user.username,
                               get_rels=False)
         pcap.save(username=user)
 

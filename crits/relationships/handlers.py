@@ -89,7 +89,7 @@ def forge_relationship(type_=None, id_=None,
     try:
         # forge relationship
         results = class_.add_relationship(right_class, rel_type, rel_date,
-                                          user, rel_confidence, rel_reason)
+                                          "%s" % user, rel_confidence, rel_reason)
     except Exception as e:
         return {'success': False, 'message': e}
 
