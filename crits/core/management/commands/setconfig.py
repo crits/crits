@@ -46,7 +46,7 @@ class Command(BaseCommand):
                         'database, even though defaults specified by the ' +
                         'document in Python is correct. This has the third ' +
                         'highest precedence over other options.'),
-
+        parser.add_argument('args', nargs='*')
         args = """<configuration option> <value>
 
                Available configuration options:
