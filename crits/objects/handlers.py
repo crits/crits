@@ -211,7 +211,7 @@ def add_object(type_, id_, object_type, source, method, reference, tlp, user,
     :param reference: The reference for this object.
     :type reference: str
     :param user: The user adding this object.
-    :type user: str
+    :type user: CRITsUser
     :param value: The value of the object.
     :type value: str
     :param file_: The file if the object is a file upload.
@@ -265,7 +265,7 @@ def add_object(type_, id_, object_type, source, method, reference, tlp, user,
             value = md5sum
             reference = filename
         ret = tlo.add_object(object_type, value,
-                             source, method, reference, user)
+                             source, method, reference, user.username)
 
         if not ret['success']:
             msg = '%s! [Type: "%s"][Value: "%s"]'
@@ -315,13 +315,13 @@ def add_object(type_, id_, object_type, source, method, reference, tlp, user,
                 forge_relationship(class_=tlo,
                                    right_class=ind_res['object'],
                                    rel_type=RelationshipTypes.RELATED_TO,
-                                   user=user)
+                                   user=user.username)
             else:
                 msg = "Object added, but failed to add Indicator.<br>Error: %s"
                 results['message'] = msg % ind_res.get('message')
 
         if is_sort_relationships == True:
-            results['relationships'] = tlo.sort_relationships(user, meta=True)
+            results['relationships'] = tlo.sort_relationships(user.username, meta=True)
 
         if get_objects:
             results['objects'] = tlo.sort_objects()
@@ -517,7 +517,7 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
     :param reference: The source reference for the indicator.
     :type reference: str
     :param analyst: The user creating this indicator.
-    :type analyst: str
+    :type analyst: CRITsUser
     :param request: The Django request.
     :type request: :class:`django.http.HttpRequest`
     :returns: dict with keys "success" (bool) and "message" (str)
@@ -572,7 +572,7 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
         else:
             results = me.add_relationship(indicator,
                                           RelationshipTypes.RELATED_TO,
-                                          analyst=analyst,
+                                          analyst=analyst.username,
                                           get_rels=True)
             if results['success']:
                 me.save(username=analyst)

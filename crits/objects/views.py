@@ -72,7 +72,7 @@ def add_new_object(request):
                                  method,
                                  reference,
                                  tlp,
-                                 user.username,
+                                 user,
                                  value=value,
                                  file_=data,
                                  add_indicator=add_indicator,
@@ -429,7 +429,7 @@ def indicator_from_object(request):
         method = request.POST.get('method', None)
         reference = request.POST.get('reference', None)
         tlp = request.POST.get('tlp', None)
-        analyst = request.user.username
+        analyst = request.user
 
         result = create_indicator_from_object(rel_type,
                                               rel_id,
