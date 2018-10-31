@@ -517,7 +517,7 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
     :param reference: The source reference for the indicator.
     :type reference: str
     :param analyst: The user creating this indicator.
-    :type analyst: str
+    :type analyst: CRITsUser
     :param request: The Django request.
     :type request: :class:`django.http.HttpRequest`
     :returns: dict with keys "success" (bool) and "message" (str)
@@ -572,7 +572,7 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
         else:
             results = me.add_relationship(indicator,
                                           RelationshipTypes.RELATED_TO,
-                                          analyst=analyst,
+                                          analyst=analyst.username,
                                           get_rels=True)
             if results['success']:
                 me.save(username=analyst)
