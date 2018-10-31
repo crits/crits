@@ -72,7 +72,7 @@ def add_new_object(request):
                                  method,
                                  reference,
                                  tlp,
-                                 user.username,
+                                 user,
                                  value=value,
                                  file_=data,
                                  add_indicator=add_indicator,
