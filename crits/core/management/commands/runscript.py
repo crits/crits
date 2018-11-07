@@ -23,6 +23,7 @@ class Command(BaseCommand):
                         help="Username to log in with (will prompt if not provided).")
         parser.add_argument("-p", "--password", dest='password', default=None,
                         help="Password to log in with (will prompt if not provided).")
+        parser.add_argument('args', nargs='*')
         args = '<location> <script> -- <script argument 1> ...'
         help = ('Runs scripts using the CRITs environment.\n'
                 '<location>:\t"crits_scripts" (without quotes) to run a CRITs script '
