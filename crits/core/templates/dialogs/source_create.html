@@ -1,7 +1,5 @@
 
-
 {% if user_role %}
-{% if source_add %}
 
 <div id="dialog-{{ request.GET.dialog }}" title="Add New Source">
   <form id="form-{{ request.GET.dialog }}" 
@@ -11,5 +9,4 @@
   </form>
 </div>
 
-{% endif %}
 {% endif %}
