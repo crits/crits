@@ -88,7 +88,7 @@ class AnalysisResult(CritsDocument, CritsSchemaDocument, CritsDocumentFormatter,
     log = ListField(EmbeddedDocumentField(EmbeddedAnalysisResultLog))
     object_type = StringField(required=True)
     object_id = StringField(required=True)
-    results = ListField(DynamicField(DictField))
+    results = ListField(DynamicField())
     service_name = StringField()
     source = StringField()
     start_date = StringField()
