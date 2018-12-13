@@ -215,11 +215,121 @@ def get_dialog(request):
     :type request: :class:`django.http.HttpRequest`
     :returns: :class:`django.http.HttpResponse`
     """
-
     dialog = request.GET.get('dialog', '')
-    # Regex in urls.py doesn't seem to be working, should sanity check dialog
+    params = {}
+
+    # Only prepare & serve the single form being requested
+    try:
+        # These require no params
+        if dialog == 'action_add':
+            params['add_new_action'] = NewActionForm()
+        elif dialog == 'new-target':
+            params['add_target'] = TargetInfoForm()
+        elif dialog == 'comments':
+            params['comment_add'] = AddCommentForm()
+        elif dialog == 'new-inline-comment':
+            params['inline_comment_add'] = InlineCommentForm()
+        elif dialog == 'new-campaign':
+            params['campaign_add'] = AddCampaignForm()
+        elif dialog == 'campaign-add':
+            params['campaign_form'] = CampaignForm()
+        elif dialog == 'location-add':
+            params['location_add'] = AddLocationForm()
+        elif dialog == 'raw_data_type_add':
+            params['add_raw_data_type'] = NewRawDataTypeForm()
+        elif dialog == 'forge-relationship':
+            params['relationship_form'] = ForgeRelationshipForm()
+        elif dialog == 'signature_type_add':
+            params['add_signature_type'] = NewSignatureTypeForm()
+        elif dialog == 'signature_dependency_add':
+            params['add_signature_dependency'] = NewSignatureDependencyForm()
+        elif dialog == 'upload_tlds':
+            params['upload_tlds'] = TLDUpdateForm()
+        elif dialog == 'user_role':
+            params['user_role_add'] = AddUserRoleForm()
+        elif dialog == 'actor_identifier_type_add':
+            params['add_actor_identifier_type'] = AddActorIdentifierTypeForm()
+        elif dialog == 'attribute_actor_identifier':
+            params['attribute_actor_identifier'] = AttributeIdentifierForm()
+        # These require user as parameter
+        elif dialog == 'new-actor':
+            params['actor_add'] = AddActorForm(request.user.username)
+        elif dialog == 'new-actor-identifier':
+            params['add_actor_identifier'] = AddActorIdentifierForm(request.user.username)
+        elif dialog == 'new-backdoor':
+            params['backdoor_add'] = AddBackdoorForm(request.user.username)
+        elif dialog == 'new-exploit':
+            params['exploit_add'] = AddExploitForm(request.user.username)
+        elif dialog == 'new-domain':
+            params['add_domain'] = AddDomainForm(request.user.username)
+        elif dialog == 'new-certificate':
+            params['upload_cert'] = UploadCertificateForm(request.user.username)
+        elif dialog == 'new-indicator-csv':
+            params['upload_csv'] = UploadIndicatorCSVForm(request.user.username)
+        elif dialog == 'new-email-outlook':
+            params['upload_email_outlook'] = EmailOutlookForm(request.user.username)
+        elif dialog == 'new-email-eml':
+            params['upload_email_eml'] = EmailEMLForm(request.user.username)
+        elif dialog == 'new-email-fields':
+            params['upload_email_fields'] = EmailUploadForm(request.user.username)
+        elif dialog == 'new-email-yaml':
+            params['upload_email_yaml'] = EmailYAMLForm(request.user.username)
+        elif dialog == 'new-email-raw':
+            params['upload_email_raw'] = EmailRawUploadForm(request.user.username)
+        elif dialog == 'new-event':
+            params['upload_event'] = EventForm(request.user.username)
+        elif dialog == 'new-indicator':
+            params['upload_ind'] = UploadIndicatorForm(request.user.username)
+        elif dialog == 'new-pcap':
+            params['upload_pcap'] = UploadPcapForm(request.user.username)
+        elif dialog == 'indicator-blob':
+            params['upload_text'] = UploadIndicatorTextForm(request.user.username)
+        elif dialog == 'new-sample':
+            params['upload_sample'] = UploadFileForm(request.user.username)
+        elif dialog == 'add-object':
+            params['object_form'] = AddObjectForm(request.user.username)
+        elif dialog == 'releasability-add':
+            params['releasability_form'] = AddReleasabilityForm(request.user.username)
+        elif dialog == 'add-screenshot':
+            params['screenshots_form'] = AddScreenshotForm(request.user.username)
+        elif dialog == 'new-raw-data':
+            params['upload_raw_data'] = UploadRawDataForm(request.user.username)
+        elif dialog == 'new-raw-data-file':
+            params['upload_raw_data_file'] = UploadRawDataFileForm(request.user.username)
+        elif dialog == 'new-signature':
+            params['upload_signature'] = UploadSignatureForm(request.user.username)
+        # Others
+        elif dialog == 'ticket':
+            params['new_ticket'] = TicketForm(initial={'date': datetime.datetime.now()})
+        elif dialog == 'new-ip':
+            params['ip_form'] = AddIPForm(request.user.username, None)
+        elif dialog == 'action_add':
+            params['new_action'] = ActionsForm(initial={'analyst': request.user.username,
+                                               'active': "off",
+                                               'date': datetime.datetime.now()})
+        elif dialog == 'source-add':
+            params['source_add'] = SourceForm(request.user, initial={'analyst': request.user.username})
+        # Admin required
+        elif dialog == 'source_create':
+            if is_admin(request.user.username):
+                params['source_create'] = AddSourceForm()
+            else:
+                # User not an admin; Pass error
+                dialog = 'error'
+                params['error'] = "Permissions error"
+        # If this is hit, dialog does not exist.
+        else:
+            dialog = 'error'
+            params['error'] = "Dialog does not exist"
+
+    except Exception, e:
+        dialog = 'error'
+        params['error'] = 'Error preparing requested dialog'
+        logger.warning("Dialog error: %s" % e)
+
+
     return render_to_response(dialog + ".html",
-                              {"error" : 'Dialog not found'},
+                              params,
                               RequestContext(request))
 
 @user_passes_test(user_can_view_data)
@@ -1088,135 +1198,19 @@ def base_context(request):
     base_context['service_tab_templates'] = settings.SERVICE_TAB_TEMPLATES
     if request.user.is_authenticated():
         user = request.user.username
-        # Forms that don't require a user
-        base_context['add_new_action'] = NewActionForm()
-        base_context['add_target'] = TargetInfoForm()
-        base_context['campaign_add'] = AddCampaignForm()
-        base_context['comment_add'] = AddCommentForm()
-        base_context['inline_comment_add'] = InlineCommentForm()
-        base_context['campaign_form'] = CampaignForm()
-        base_context['location_add'] = AddLocationForm()
-        base_context['add_raw_data_type'] = NewRawDataTypeForm()
-        base_context['relationship_form'] = ForgeRelationshipForm()
-        base_context['add_signature_type'] = NewSignatureTypeForm()
-        base_context['add_signature_dependency'] = NewSignatureDependencyForm()
-        base_context['source_access'] = SourceAccessForm()
-        base_context['upload_tlds'] = TLDUpdateForm()
-        base_context['user_role_add'] = AddUserRoleForm()
-        base_context['new_ticket'] = TicketForm(initial={'date': datetime.datetime.now()})
-        base_context['add_actor_identifier_type'] = AddActorIdentifierTypeForm()
-        base_context['attribute_actor_identifier'] = AttributeIdentifierForm()
 
-        # Forms that require a user
-        try:
-            base_context['actor_add'] = AddActorForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddActorForm Error: %s" % e)
-        try:
-            base_context['add_actor_identifier'] = AddActorIdentifierForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddActorIdentifierForm Error: %s" % e)
-        try:
-            base_context['backdoor_add'] = AddBackdoorForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddBackdoorForm Error: %s" % e)
-        try:
-            base_context['exploit_add'] = AddExploitForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddExploitForm Error: %s" % e)
-        try:
-            base_context['add_domain'] = AddDomainForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddDomainForm Error: %s" % e)
-        try:
-            base_context['ip_form'] = AddIPForm(user, None)
-        except Exception, e:
-            logger.warning("Base Context AddIPForm Error: %s" % e)
+        # This next method is not loaded by a request for dialog and must stay here for now
         try:
             base_context['new_action'] = ActionsForm(initial={'analyst': user,
                 'active': "off",
                 'date': datetime.datetime.now()})
         except Exception, e:
             logger.warning("Base Context ActionsForm Error: %s" % e)
-        try:
-            base_context['source_add'] = SourceForm(user,
-                                                    initial={'analyst': user})
-        except Exception, e:
-            logger.warning("Base Context SourceForm Error: %s" % e)
-        try:
-            base_context['upload_cert'] = UploadCertificateForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadCertificateForm Error: %s" % e)
-        try:
-            base_context['upload_csv'] = UploadIndicatorCSVForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadIndicatorCSVForm Error: %s" % e)
-        try:
-            base_context['upload_email_outlook'] = EmailOutlookForm(user)
-        except Exception, e:
-            logger.warning("Base Context EmailOutlookForm Error: %s" % e)
-        try:
-            base_context['upload_email_eml'] = EmailEMLForm(user)
-        except Exception, e:
-            logger.warning("Base Context EmailEMLForm Error: %s" % e)
-        try:
-            base_context['upload_email_fields'] = EmailUploadForm(user)
-        except Exception, e:
-            logger.warning("Base Context EmailUploadForm Error: %s" % e)
-        try:
-            base_context['upload_email_yaml'] = EmailYAMLForm(user)
-        except Exception, e:
-            logger.warning("Base Context EmailYAMLForm Error: %s" % e)
-        try:
-            base_context['upload_email_raw'] = EmailRawUploadForm(user)
-        except Exception, e:
-            logger.warning("Base Context EmailRawUploadForm Error: %s" % e)
-        try:
-            base_context['upload_event'] = EventForm(user)
-        except Exception, e:
-            logger.warning("Base Context EventForm Error: %s" % e)
-        try:
-            base_context['upload_ind'] = UploadIndicatorForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadIndicatorForm Error: %s" % e)
-        try:
-            base_context['upload_pcap'] = UploadPcapForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadPcapForm Error: %s" % e)
-        try:
-            base_context['upload_text'] = UploadIndicatorTextForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadIndicatorTextForm Error: %s" % e)
-        try:
-            base_context['upload_sample'] = UploadFileForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadFileForm Error: %s" % e)
-        try:
-            base_context['object_form'] = AddObjectForm(user, None)
-        except Exception, e:
-            logger.warning("Base Context AddObjectForm Error: %s" % e)
-        try:
-            base_context['releasability_form'] = AddReleasabilityForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddReleasabilityForm Error: %s" % e)
-        try:
-            base_context['screenshots_form'] = AddScreenshotForm(user)
-        except Exception, e:
-            logger.warning("Base Context AddScreenshotForm Error: %s" % e)
-        try:
-            base_context['upload_raw_data'] = UploadRawDataForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadRawDataForm Error: %s" % e)
-        try:
-            base_context['upload_raw_data_file'] = UploadRawDataFileForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadRawDataFileForm Error: %s" % e)
-        try:
-            base_context['upload_signature'] = UploadSignatureForm(user)
-        except Exception, e:
-            logger.warning("Base Context UploadSignatureForm Error: %s" % e)
 
-        # Other info acquired from functions
+        # Don't believe we need this next line as it looks like this info gets pulled from
+        # /user_source_access/
+        #base_context['source_access'] = SourceAccessForm() 
+
         try:
             base_context['user_list'] = get_user_list()
         except Exception, e:
@@ -1258,10 +1252,6 @@ def base_context(request):
                                       'hover_background_color': request.user.prefs.nav.get('hover_background_color')}
 
     if is_admin(request.user.username):
-        try:
-            base_context['source_create'] = AddSourceForm()
-        except Exception, e:
-            logger.warning("Base Context AddSourceForm Error: %s" % e)
         base_context['category_list'] = [
                                         {'collection': '', 'name': ''},
                                         {'collection': settings.COL_BACKDOORS,
