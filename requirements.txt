@@ -4,10 +4,8 @@ amqp
 anyjson
 billiard
 biplist
-celery
 defusedxml
-django-celery
-django-debug-toolbar
+django-debug-toolbar<1.9
 git+https://github.com/brianz/django-debug-toolbar-mongo.git
 django-debug-toolbar-template-profiler
 django-debug-toolbar-template-timings
@@ -17,12 +15,14 @@ git+https://github.com/frbapolkosnik/django-tastypie-mongoengine.git
 future
 kombu
 lxml
-mongoengine==0.10.6
+#mongoengine from 0.9 to the latest: 0.15 makes CRITs painfully slow
+mongoengine<0.9
+# This is here in case you'd like to try the more recent versions of mongoengine
 #git+https://github.com/MongoEngine/django-mongoengine.git
 git+https://github.com/MongoEngine/django-mongoengine.git@v0.2.1
 pip>=8.1.2
 pydeep==0.2
-pymongo==3.2.2
+pymongo<2.9
 pyparsing
 python-dateutil
 python-ldap
