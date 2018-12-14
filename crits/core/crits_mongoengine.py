@@ -69,9 +69,10 @@ class CritsQuerySet(QS):
 
         if self._len is not None:
             return self._len
-        if self._has_more:
-            # populate the cache
-            list(self._iter_results())
+        if settings.QUERY_CACHING:
+            if self._has_more:
+                # populate the cache
+                list(self._iter_results())
             self._len = len(self._result_cache)
         else:
             self._len = self.count()
@@ -330,7 +331,7 @@ class CritsDocument(BaseDocument):
         super(CritsDocument, self).__init__(**values)
 
     def _custom_save(self, force_insert=False, validate=True, clean=False,
-        write_concern=None,  cascade=None, cascade_kwargs=None,
+        write_concern=1,  cascade=None, cascade_kwargs=None,
         _refs=None, username=None, **kwargs):
         """
         Custom save function. Extended to check for valid schema versions,
@@ -354,10 +355,18 @@ class CritsDocument(BaseDocument):
             audit_entry(self, username, "save")
         else:
             do_audit = True
-        super(self.__class__, self).save(force_insert=force_insert,
+        if hasattr(super(self.__class__, self).save(), 'w'):
+            super(self.__class__, self).save(force_insert=force_insert,
+                                             validate=validate,
+                                             clean=clean,
+                                             w=write_concern,
+                                             cascade=cascade,
+                                             cascade_kwargs=cascade_kwargs,
+                                             _refs=_refs)
+        else:
+            super(self.__class__, self).save(force_insert=force_insert,
                                          validate=validate,
                                          clean=clean,
-                                         write_concern=write_concern,
                                          cascade=cascade,
                                          cascade_kwargs=cascade_kwargs,
                                          _refs=_refs)
@@ -365,7 +374,7 @@ class CritsDocument(BaseDocument):
             audit_entry(self, username, "save", new_doc=True)
         return
 
-    def _custom_delete(self, username=None, **write_concern):
+    def _custom_delete(self, username=None, **kwargs):
         """
         Custom delete function. Overridden to allow us to extend to other parts
         of CRITs and clean up dangling relationships, comments, objects, GridFS
