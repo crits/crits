@@ -424,7 +424,10 @@ def about(request):
     :returns: :class:`django.http.HttpResponse`
     """
 
-    return render(request, 'about.html', {})
+    # All loaded modules without dot in the name, with __path__, and with __version__
+    mods = [(m.__name__.lower(), getattr(m, '__version__', ''), m.__path__[0]) for m in sys.modules.values() if getattr(m, '__path__', '') and getattr(m, '__version__', '') and not '.' in m.__name__]
+    mods=sorted(mods)
+    return render(request, 'about.html', {"loaded_mods": mods,})
 
 def help(request):
     """
@@ -1227,9 +1230,6 @@ def base_context(request):
 
     crits_config = CRITsConfig.objects().first()
     base_context = {}
-    # All loaded modules without dot in the name, with __path__, and with __version__
-    mods = [(m.__name__.lower(), getattr(m, '__version__', ''), m.__path__[0]) for m in sys.modules.values() if getattr(m, '__path__', '') and getattr(m, '__version__', '') and not '.' in m.__name__]
-    mods=sorted(mods)
     classification = getattr(crits_config,
                              'classification',
                              settings.CLASSIFICATION)
@@ -1271,7 +1271,6 @@ def base_context(request):
     base_context['instance_name'] = instance_name
     base_context['company_name'] = company_name
     base_context['crits_version'] = crits_version
-    base_context['loaded_mods'] = mods
     base_context['enable_toasts'] = enable_toasts
     if git_repo_url:
         base_context['git_repo_link'] = "<a href='"+git_repo_url+"/commit/"+git_hash_long+"'>"+git_branch+':'+git_hash+"</a>"
