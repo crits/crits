@@ -1296,6 +1296,12 @@ def base_context(request):
         except Exception, e:
             logger.warning("Base Context ActionsForm Error: %s" % e)
 
+        # This must stay too
+        try:
+            base_context['add_new_action'] = NewActionForm()
+        except Exception, e:
+            logger.warning("Base Context NewActionForm Error: %s" % e)
+
         # Other info acquired from functions
         try:
             base_context['email_notifications'] = get_user_email_notification(user.username)
