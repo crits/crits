@@ -479,7 +479,8 @@ if old_mongoengine:
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
 
-    SESSION_ENGINE = 'mongoengine.django.sessions'
+    SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+    #SESSION_ENGINE = 'mongoengine.django.sessions'
 
     SESSION_SERIALIZER = 'mongoengine.django.sessions.BSONSerializer'
 
@@ -536,7 +537,8 @@ else:
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
         'debug_toolbar.middleware.DebugToolbarMiddleware',
     )
-    SESSION_ENGINE = 'django_mongoengine.sessions'
+    SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+    #SESSION_ENGINE = 'django_mongoengine.sessions'
 
     SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
 
