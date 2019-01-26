@@ -98,7 +98,7 @@ class ConfigLDAPForm(forms.Form):
         required=False,
         help_text=('bind_dn for binding to LDAP'))
     ldap_bind_password = forms.CharField(
-        widget=forms.TextInput,
+        widget=forms.PasswordInput(render_value=True),
         required=False,
         help_text=('bind_password for binding to LDAP'))
     ldap_usercn = forms.CharField(
