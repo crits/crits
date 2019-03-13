@@ -319,8 +319,9 @@ def get_dialog(request):
                 params['error'] = "Permissions error"
         # If this is hit, dialog does not exist.
         else:
-            dialog = 'error'
-            params['error'] = "Dialog does not exist"
+            #dialog = 'error'
+            #params['error'] = "Dialog does not exist"
+            pass
 
     except Exception, e:
         dialog = 'error'
