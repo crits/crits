@@ -668,7 +668,9 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
             return {'success': False,
                     'message': "Not a valid Indicator Attack Type: " % a}
 
+    given_val = ind['value'] # Preserve the original value for later
     (ind['value'], error) = validate_indicator_value(ind['value'], ind['type'])
+    ind['lower'] = ind['value'].lower()
 
     if error:
         return {"success": False, "message": error}
@@ -709,7 +711,7 @@ def handle_indicator_insert(ind, source, source_reference=None, source_method=No
         if ind['status'] != Status.NEW:
             indicator.status = ind['status']
         add_desc = "\nSeen on %s as: %s" % (str(datetime.datetime.now()),
-                                          ind['value'])
+                                            given_val)
         if not indicator.description:
             indicator.description = ind.get('description', '') + add_desc
         elif indicator.description != ind['description']:
