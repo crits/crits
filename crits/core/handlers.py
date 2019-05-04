@@ -1213,6 +1213,9 @@ def download_object_handler(total_limit, depth_limit, rel_limit, rst_fmt,
         fname = "CRITs_%s_%s_%s" % (obj_type, obj_id, stamp)
     else:
         fname = "CRITs_%s" % stamp
+        
+    if not json_docs: # Fail if no docs to return
+        return {'success': False}
     if rst_fmt != 'zip': # JSON File
         return {'success': True,
                 'data': "[%s]" % ",".join(doc[2] for doc in json_docs),
