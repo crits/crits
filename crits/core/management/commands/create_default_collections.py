@@ -68,7 +68,7 @@ def populate_actions(drop):
     actions = ['Blocked Outbound At Firewall', 'Blocked Outbound At Desktop Firewall']
     if drop:
         Action.drop_collection()
-    if len(Action.objects()) < 1:
+    if Action.objects().count() < 1:
         for action in actions:
             ia = Action()
             ia.name = action
@@ -90,7 +90,7 @@ def populate_raw_data_types(drop):
     data_types = ['Text', 'JSON']
     if drop:
         RawDataType.drop_collection()
-    if len(RawDataType.objects()) < 1:
+    if RawDataType.objects().count() < 1:
         for data_type in data_types:
             dt = RawDataType()
             dt.name = data_type
@@ -112,7 +112,7 @@ def populate_signature_types(drop):
     data_types = ['Bro', 'Snort', 'Yara']
     if drop:
         SignatureType.drop_collection()
-    if len(SignatureType.objects()) < 1:
+    if SignatureType.objects().count() < 1:
         for data_type in data_types:
             dt = SignatureType()
             dt.name = data_type

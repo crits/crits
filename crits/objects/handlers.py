@@ -368,7 +368,7 @@ def delete_object_file(value):
     query = {'objects.value': value}
     for obj in obj_list:
         obj_class = class_from_type(obj)
-        count += len(obj_class.objects(__raw__=query))
+        count += obj_class.objects(__raw__=query).count()
         if count > 1:
             break
     else:

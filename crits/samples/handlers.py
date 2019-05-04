@@ -1007,7 +1007,7 @@ def handle_file(filename, data, source, source_method='', source_reference='',
         sample.reload()
 
         # run sample triage:
-        if len(AnalysisResult.objects(object_id=str(sample.id))) < 1:
+        if AnalysisResult.objects(object_id=str(sample.id)).count() < 1:
             run_triage(sample, user)
 
             if is_return_only_md5 == False:
