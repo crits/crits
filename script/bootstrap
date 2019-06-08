@@ -265,9 +265,6 @@ ubuntu_install()
     printf "${INFO}Installing dependencies with apt-get${END}\n"
     sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
     echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
-    #sudo -E apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
-    #echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
-    #sudo -E add-apt-repository universe
     sudo -E apt-get update
     sudo -E DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing build-essential curl git libevent-dev libz-dev libjpeg-dev libfuzzy-dev libldap2-dev libpcap-dev libpcre3-dev libsasl2-dev libxml2-dev libxslt1-dev libyaml-dev mongodb-org numactl p7zip-full python-dev python-pip ssdeep upx zip libssl-dev
     sudo ldconfig
