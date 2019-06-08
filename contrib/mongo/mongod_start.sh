@@ -7,5 +7,5 @@
 if [ -f /usr/local/bin/mongod ]; then
   /usr/local/bin/mongod --fork --logpath /data/logs/mongodb.log --logappend --nohttpinterface --dbpath /data/db --smallfiles
 else
-  mongod --fork --logpath /data/logs/mongodb.log --logappend --nohttpinterface --dbpath /data/db --smallfiles
+  mongod --fork --logpath /data/logs/mongodb.log --logappend --dbpath /data/db --smallfiles
 fi

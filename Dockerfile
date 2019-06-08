@@ -15,7 +15,8 @@ RUN apt-get install -y sudo
 RUN apt-get install -y software-properties-common
 
 # Clone the repo
-RUN git clone --depth 1 https://github.com/crits/crits.git 
+#RUN git clone --depth 1 https://github.com/crits/crits.git 
+COPY . crits
 
 WORKDIR crits
 # Install the dependencies
@@ -25,5 +26,4 @@ RUN TERM=xterm sh ./script/bootstrap < docker_inputs
 RUN sh contrib/mongo/mongod_start.sh && python manage.py users -R UberAdmin -u admin -p "pass1PASS123!" -s -i -a -e admin@crits.crits -f "first" -l "last" -o "no-org"
 
 EXPOSE 8080
-
 CMD sh contrib/mongo/mongod_start.sh && python manage.py runserver 0.0.0.0:8080
