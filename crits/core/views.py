@@ -1344,8 +1344,6 @@ def base_context(request):
                                         'name': 'Event Types'},
                                     {'collection': settings.COL_IDB_ACTIONS,
                                         'name': 'Indicator Actions'},
-                                    {'collection': settings.COL_INTERNAL_LOCATIONS,
-                                        'name': 'Internal Locations'},
                                     {'collection': settings.COL_OBJECT_TYPES,
                                         'name': 'Object Types'},
                                     {'collection': settings.COL_RAW_DATA_TYPES,
