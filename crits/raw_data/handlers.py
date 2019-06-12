@@ -110,7 +110,7 @@ def get_raw_data_details(_id, user):
                 'value': raw_data.id
         }
 
-        versions = len(RawData.objects(link_id=raw_data.link_id).only('id'))
+        versions = RawData.objects(link_id=raw_data.link_id).only('id').count()
 
         #comments
         comments = {'comments': raw_data.get_comments(),
@@ -437,7 +437,7 @@ def handle_raw_data_file(data, source_name, user=None,
                                                       analyst=user.username)
 
 
-    raw_data.version = len(RawData.objects(link_id=link_id)) + 1
+    raw_data.version = RawData.objects(link_id=link_id).count() + 1
 
     if bucket_list:
         raw_data.add_bucket_list(bucket_list, user)

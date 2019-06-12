@@ -110,7 +110,7 @@ def get_signature_details(_id, user):
                 'value': signature.id
         }
 
-        versions = len(Signature.objects(link_id=signature.link_id).only('id'))
+        versions = Signature.objects(link_id=signature.link_id).only('id').count()
 
         #comments
         comments = {'comments': signature.get_comments(),
@@ -397,7 +397,7 @@ def handle_signature_file(data, source_name, user=None,
             if isinstance(s, EmbeddedSource):
                 signature.add_source(s, method=source_method, reference=source_reference, source_tlp=source_tlp)
 
-    signature.version = len(Signature.objects(link_id=link_id)) + 1
+    signature.version = Signature.objects(link_id=link_id).count() + 1
 
     if link_id:
         signature.link_id = link_id

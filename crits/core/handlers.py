@@ -627,7 +627,7 @@ def does_source_exist(source, active=False):
     query = {'name': source}
     if active:
         query['active'] = 'on'
-    if len(SourceAccess.objects(__raw__=query)) > 0:
+    if SourceAccess.objects(__raw__=query).count() > 0:
         return True
     else:
         return False
@@ -982,6 +982,7 @@ def alter_bucket_list(obj, buckets, val):
     # We are using mongo_connector here because mongoengine does not have
     # support for a setOnInsert option. If mongoengine were to gain support
     # for this we should switch to using it instead of pymongo here.
+    ###TODO: SetOnInsert is supported since mongoengine 0.8.0 (see commits #308/#309)
     buckets_col = mongo_connector(settings.COL_BUCKET_LISTS)
     for name in buckets:
         buckets_col.update({'name': name},

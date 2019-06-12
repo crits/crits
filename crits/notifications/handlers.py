@@ -511,14 +511,16 @@ def get_user_notifications(username, count=False, newer_than=None):
     n = None
 
     if newer_than is None or newer_than == None:
-        n = Notification.objects(users=username).order_by('-created')
+        if count:
+            n = Notification.objects(users=username).order_by('-created').count()
+        else:
+            n = Notification.objects(users=username).order_by('-created')
     else:
-        n = Notification.objects(Q(users=username) & Q(created__gt=newer_than)).order_by('-created')
-
-    if count:
-        return len(n)
-    else:
-        return n
+        if count:
+            n = Notification.objects(Q(users=username) & Q(created__gt=newer_than)).order_by('-created').count()
+        else:
+            n = Notification.objects(Q(users=username) & Q(created__gt=newer_than)).order_by('-created')
+    return n
 
 __supported_notification_types__ = {
     'Actor': 'name',
