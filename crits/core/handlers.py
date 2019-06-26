@@ -4051,7 +4051,7 @@ def ticket_add(type_, id_, ticket, user, **kwargs):
         return {'success': False, 'message': 'Could not find object.'}
     try:
         ticket = datetime_parser(ticket)
-        ticket['analyst'] = user.username
+        ticket['analyst'] = user
         obj.add_ticket(ticket['ticket_number'],
                              ticket['analyst'],
                              ticket['date'])
