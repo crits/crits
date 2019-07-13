@@ -21,7 +21,7 @@ kombu
 lxml
 #mongoengine from 0.9 to the latest: 0.15 makes CRITs painfully slow
 #mongoengine - below in a patched version of MongoEngine 0.8.8 that works with Django 1.11
-git+https://github.com/apolkosnik/mongoengine.git@v0.8.9
+git+https://github.com/apolkosnik/mongoengine.git@v0.8.10
 # This is here in case you'd like to try the more recent versions of mongoengine
 git+https://github.com/MongoEngine/django-mongoengine.git@v0.3
 pip>=8.1.2
