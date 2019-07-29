@@ -714,6 +714,7 @@ def source_releasability(request):
         error = "Expected AJAX POST!"
         return render(request, "error.html", {"error" : error })
 
+@user_passes_test(user_can_view_data)
 def source_access(request):
     """
     Modify a user's profile. Should be an AJAX POST.
