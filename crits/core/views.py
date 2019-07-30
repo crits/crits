@@ -157,7 +157,7 @@ def update_object_data(request):
         return HttpResponse(json.dumps(data_update(type_,
                                                           id_,
                                                           data,
-                                                          user)),
+                                                          user.username)),
                             content_type="application/json")
     else:
         return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
@@ -178,7 +178,7 @@ def toggle_favorite(request):
         user = request.user
         return HttpResponse(json.dumps(favorite_update(type_,
                                                        id_,
-                                                       user)),
+                                                       user.username)),
                             content_type="application/json")
     else:
         return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
@@ -195,7 +195,7 @@ def favorites(request):
 
     if request.method == "POST" and request.is_ajax():
         user = request.user
-        return HttpResponse(json.dumps(get_favorites(user)),
+        return HttpResponse(json.dumps(get_favorites(user.username)),
                             content_type="application/json")
     else:
         return render(request, "error.html", {"error" : 'Expected AJAX POST.'})
