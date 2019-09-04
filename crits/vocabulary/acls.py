@@ -1207,7 +1207,15 @@ class ScreenshotACL(vocab):
     """
     Vocabulary for Screenshot ACLs
     """
-
+    SCREENSHOT = "Screenshot."
+    DESCRIPTION_READ = SCREENSHOT + Common.DESCRIPTION_READ
+    DESCRIPTION_EDIT = SCREENSHOT + Common.DESCRIPTION_EDIT
+    
+    SOURCES_READ = SCREENSHOT + Common.SOURCES_READ
+    SOURCES_ADD = SCREENSHOT + Common.SOURCES_ADD
+    SOURCES_EDIT = SCREENSHOT + Common.SOURCES_EDIT
+    SOURCES_DELETE = SCREENSHOT + Common.SOURCES_DELETE
+    
     SCREENSHOT_ADD = ".screenshots_add"
     SCREENSHOT_DELETE = ".screenshots_delete"
 

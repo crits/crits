@@ -873,8 +873,12 @@ def handle_msg(data, sourcename, reference, method, tlp, user, password='',
     result['email']['ticket'] = ticket
 
     if result['email'].has_key('date'):
-        result['email']['isodate'] = date_parser(result['email']['date'],
-                                                 fuzzy=True)
+        try:
+            result['email']['isodate'] = date_parser(result['email']['date'],
+                                                     fuzzy=True)
+        except:
+            response['reason'] = 'Error parse date.'
+            return response
 
     obj = handle_email_fields(result['email'], user, method,
                               related_id=related_id, related_type=related_type,
@@ -938,7 +942,7 @@ def handle_msg(data, sourcename, reference, method, tlp, user, password='',
                                    right_type=rel.rel_type,
                                    right_id=rel.object_id,
                                    rel_type=RelationshipTypes.RELATED_TO,
-                                   user=user.username)
+                                   user=user)
 
     response['status'] = True
     response['obj_id'] = obj['object'].id
@@ -1633,22 +1637,22 @@ def parse_ole_file(file):
             if entry[0] not in attachments:
                 attachments[entry[0]] = {}
             if msg['attachment_name'] in entry[-1]:
-                attachments[entry[0]].update({'name': get_stream_data(entry).decode(msg_encoding['encoding'])})
+                attachments[entry[0]].update({'name': get_stream_data(entry).decode(msg_encoding['encoding']).replace('\x00', '')})
             if msg['attachment_data'] in entry[-1]:
                 attachments[entry[0]].update({'data': get_stream_data(entry)})
             if msg['attachment_type'] in entry[-1]:
                 attachments[entry[0]].update({'type': get_stream_data(entry).decode(msg_encoding['encoding'])})
         else:
             if msg['subject'] in entry[-1]:
-                email['subject'] = get_stream_data(entry).decode(msg_encoding['encoding'])
+                email['subject'] = get_stream_data(entry).decode(msg_encoding['encoding']).replace('\x00', '')
             if msg['body'] in entry[-1]:
-                email['raw_body'] = get_stream_data(entry).decode(msg_encoding['encoding'])
+                email['raw_body'] = get_stream_data(entry).decode(msg_encoding['encoding']).replace('\x00', '')
             if msg['header'] in entry[-1]:
-                email['raw_header'] = get_stream_data(entry).decode(msg_encoding['encoding'])
+                email['raw_header'] = get_stream_data(entry).decode(msg_encoding['encoding']).replace('\x00', '')
             if msg['recipient_email'] in entry[-1]:
-                email['to'].append(get_stream_data(entry).decode(msg_encoding['encoding']).lower())
+                email['to'].append(get_stream_data(entry).decode(msg_encoding['encoding']).lower().replace('\x00', ''))
             if msg['message_class'] in entry[-1]:
-                message_class = get_stream_data(entry).decode(msg_encoding['encoding']).lower()
+                message_class = get_stream_data(entry).decode(msg_encoding['encoding']).lower().replace('\x00', '')
     ole.close()
 
     # Process headers to extract data

@@ -29,7 +29,7 @@ def add_new_object(request):
     """
 
     if request.method == 'POST':
-        analyst = "%s" % request.user
+        analyst = request.user
         user = request.user
         result = ""
         message = ""

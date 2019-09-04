@@ -95,6 +95,7 @@ class IndicatorTypes(vocab):
     SERVICE_NAME = "Service Name"
     SHA1 = "SHA1"
     SHA256 = "SHA256"
+    SIMHASH = "SIMHASH"
     SMS_ORIGIN = "SMS Origin"
     SOURCE_PORT = "Source Port"
     SSDEEP = "SSDEEP"

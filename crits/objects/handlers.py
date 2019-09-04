@@ -538,6 +538,9 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
     elif source_name == None or source_name.strip() == "":
         result = {'success':  False,
                   'message':  "Can't create indicator with an empty source field"}
+    elif tlp == None or tlp.strip() == "":
+        result = {'success':  False,
+                  'message':  "Can't create indicator with an empty source tlp"}
     else:
         value = value.lower().strip()
         ind_type = ind_type.strip()
@@ -575,7 +578,7 @@ def create_indicator_from_object(rel_type, rel_id, ind_type, value,
                                           analyst=analyst.username,
                                           get_rels=True)
             if results['success']:
-                me.save(username=analyst)
+                me.save(username=analyst.username)
                 relationship= {'type': rel_type, 'value': rel_id}
                 message = render_to_string('relationships_listing_widget.html',
                                             {'relationship': relationship,
