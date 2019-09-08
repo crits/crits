@@ -2,6 +2,8 @@ FROM ubuntu:latest
 
 MAINTAINER crits
 
+ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get -qq update
 # git command
 RUN apt-get install -y git
