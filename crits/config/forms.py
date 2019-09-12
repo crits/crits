@@ -19,6 +19,11 @@ class ConfigGeneralForm(forms.Form):
         initial=False,
         label="Enable Debug Toolbar",
         required=False)
+    enable_dj_cache = forms.BooleanField(
+        help_text='*Requires a web server restart.',
+        initial=False,
+        label="Django Cache",
+        required=False)
     email_host = forms.CharField(
         widget=forms.TextInput,
         help_text='*Requires a web server restart.',

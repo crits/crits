@@ -41,6 +41,7 @@ class CRITsConfig(CritsDocument, Document):
     csv_max = IntField(default=25000)
     debug = BooleanField(default=True)
     enable_dt = BooleanField(default=False)
+    enable_dj_cache = BooleanField(default=False)
     depth_max = IntField(default=10)
     email_host = StringField(default='')
     email_port = StringField(default='')
