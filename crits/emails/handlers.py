@@ -647,7 +647,14 @@ def handle_json(data, sourcename, reference, method, tlp, user,
 
     result['data'] = converted
 
-    new_email = dict_to_email(result['data'], save_unsupported=save_unsupported)
+    dict_to_email_result = dict_to_email(result['data'], save_unsupported=save_unsupported)
+    if dict_to_email_result['success'] is False:
+        result['status'] = False
+        result['reason'] = dict_to_email_result.get('message')
+        return result
+
+    new_email = dict_to_email_result['email_obj']
+
     if bucket_list:
         new_email.add_bucket_list(bucket_list, user.username)
     if ticket:
@@ -739,6 +746,14 @@ def handle_yaml(data, sourcename, reference, method, tlp, user, email_id=None,
     result['data'] = converted
 
     new_email = dict_to_email(result['data'], save_unsupported=save_unsupported)
+    dict_to_email_result = dict_to_email(result['data'], save_unsupported=save_unsupported)
+    if dict_to_email_result['success'] is False:
+        result['status'] = False
+        result['reason'] = dict_to_email_result.get('message')
+        return result
+
+    new_email = dict_to_email_result['email_obj']
+
     if bucket_list:
         new_email.add_bucket_list(bucket_list, user.username)
     if ticket:
@@ -1171,7 +1186,13 @@ def handle_eml(data, sourcename, reference, method, tlp, user, campaign=None,
 
     result['data'] = msg_import
 
-    new_email = dict_to_email(result['data'])
+    dict_to_email_result = dict_to_email(result['data'])
+    if dict_to_email_result['success'] is False:
+        result['status'] = False
+        result['reason'] = dict_to_email_result.get('message')
+        return result
+
+    new_email = dict_to_email_result['email_obj']
     if bucket_list:
         new_email.add_bucket_list(bucket_list, user.username)
     if ticket:
@@ -1278,6 +1299,10 @@ def dict_to_email(d, save_unsupported=True):
     :returns: :class:`crits.email.email.Email`
     """
 
+    result = {'success': False,
+              'message': "Successfuly converted dict to email.",
+              'email_obj': None}
+
     for key in d:
         newkey = re.sub('[\s-]', '_', key)
         newkey = re.sub('[\W]', '', newkey)
@@ -1305,7 +1330,12 @@ def dict_to_email(d, save_unsupported=True):
             d['isodate'] = d['date']
             d['date'] = str(d['date'])
         else:
-            d['isodate'] = date_parser(d['date'], fuzzy=True)
+            try:
+                d['isodate'] = date_parser(d['date'], fuzzy=True)
+            except:
+                result['sucess'] = False
+                result['message'] = "Could not parse \'date\' field. Is it malformed?"
+                return result
 
     if 'to' in d and isinstance(d['to'], basestring) and len(d['to']) > 0:
         d['to'] = [d['to']]
@@ -1326,7 +1356,9 @@ def dict_to_email(d, save_unsupported=True):
 
     crits_email = Email()
     crits_email.merge(d)
-    return crits_email
+    result['email_obj'] = crits_email
+    result['success'] = True
+    return result
 
 def update_email_header_value(email_id, type_, value, analyst):
     """
