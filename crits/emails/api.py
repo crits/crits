@@ -72,7 +72,7 @@ class EmailResource(CRITsAPIResource):
         result = None
 
         # Extract common information
-        source = bundle.data.get('source_name', None)
+        source = bundle.data.get('source', None)
         method = bundle.data.get('source_method', '')
         reference = bundle.data.get('source_reference', None)
         tlp = bundle.data.get('source_tlp', 'amber')
