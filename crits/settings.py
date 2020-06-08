@@ -277,6 +277,11 @@ TOTAL_MAX =                 crits_config.get('total_max', '250')
 REL_MAX =                   crits_config.get('rel_max', '50')
 TOTP =                      crits_config.get('totp', False)
 
+# Flag for mutliprocessing
+if SERVICE_MODEL.startswith('process'):
+    SERVICE_MODEL_MULTIPROC = True
+else:
+    SERVICE_MODEL_MULTIPROC = False
 
 COLLECTION_TO_BUCKET_MAPPING = {
     COL_PCAPS: BUCKET_PCAPS,
